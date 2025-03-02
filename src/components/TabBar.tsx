@@ -260,6 +260,14 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
   const visibleTabs = tabIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean) as typeof tabs;
   const activeSideTabId = isRightSide ? splitView.activeRightTabId : splitView.activeLeftTabId;
   
+  // Calculate line counts and find the maximum
+  const getTabLineCount = (content: string): number => {
+    return content.split('\n').length;
+  };
+  
+  const tabLineCounts = visibleTabs.map(tab => getTabLineCount(tab.content));
+  const maxLineCount = Math.max(...tabLineCounts, 1); // Avoid division by zero
+  
   useEffect(() => {
     if (editingTabId && inputRef.current) {
       inputRef.current.focus();
@@ -342,42 +350,56 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
       onDoubleClick={handleEmptyAreaDoubleClick}
       key={tabsKey} // Add a key to force re-render when tab order changes
     >
-      {visibleTabs.map((tab) => (
-        <div
-          key={tab.id}
-          className={`flex items-center px-3 py-1 cursor-pointer border-r border-gray-700 text-xs ${
-            activeSideTabId === tab.id ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
-          onClick={() => handleTabClick(tab.id)}
-          onContextMenu={(e) => handleContextMenu(e, tab.id)}
-          onDoubleClick={(e) => handleDoubleClick(tab, e)}
-        >
-          {editingTabId === tab.id ? (
-            <input
-              ref={inputRef}
-              type="text"
-              value={editingTitle}
-              onChange={(e) => setEditingTitle(e.target.value)}
-              onBlur={handleInputBlur}
-              onKeyDown={handleInputKeyDown}
-              className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs"
-            />
-          ) : (
-            <span className="mr-2">
-              {tab.title}
-            </span>
-          )}
-          <button
-            className="hover:bg-gray-600 rounded p-0.5"
-            onClick={(e) => {
-              e.stopPropagation();
-              removeTab(tab.id);
-            }}
+      {visibleTabs.map((tab, index) => {
+        // Calculate the relative height of the indicator bar
+        const lineCount = getTabLineCount(tab.content);
+        const relativeHeight = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
+        
+        return (
+          <div
+            key={tab.id}
+            className={`relative flex items-center px-3 py-1 cursor-pointer border-r border-gray-700 text-xs ${
+              activeSideTabId === tab.id ? 'bg-gray-700' : 'hover:bg-gray-700'
+            }`}
+            onClick={() => handleTabClick(tab.id)}
+            onContextMenu={(e) => handleContextMenu(e, tab.id)}
+            onDoubleClick={(e) => handleDoubleClick(tab, e)}
           >
-            <X size={12} />
-          </button>
-        </div>
-      ))}
+            {/* Line count indicator bar */}
+            <div 
+              className="absolute left-0 bottom-0 w-0.5 bg-gray-500 opacity-50" 
+              style={{ 
+                height: `${relativeHeight}%`,
+              }}
+            />
+            
+            {editingTabId === tab.id ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={editingTitle}
+                onChange={(e) => setEditingTitle(e.target.value)}
+                onBlur={handleInputBlur}
+                onKeyDown={handleInputKeyDown}
+                className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs"
+              />
+            ) : (
+              <span className="mr-2 ml-1">
+                {tab.title}
+              </span>
+            )}
+            <button
+              className="hover:bg-gray-600 rounded p-0.5"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeTab(tab.id);
+              }}
+            >
+              <X size={12} />
+            </button>
+          </div>
+        );
+      })}
       
       {contextMenu && (
         <TabContextMenu 
