@@ -241,7 +241,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
     setActiveRightTab,
     addTab,
     canAddNewTab,
-    forceUpdate // Add this to force re-render when tabs are reordered
   } = useEditorStore();
   
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
@@ -256,7 +255,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
   const tabIds = isRightSide ? splitView.rightTabs : splitView.leftTabs;
   
   // Use a key derived from the tab IDs to force re-render when the order changes
-  const tabsKey = tabIds.join('-') + '-' + forceUpdate;
+  const tabsKey = tabIds.join('-');
   
   // Create visibleTabs array that preserves the order of tabIds
   const visibleTabs = tabIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean) as typeof tabs;

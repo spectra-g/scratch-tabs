@@ -7,7 +7,6 @@ interface EditorStore {
   cursorPosition: EditorPosition;
   previewMode: boolean;
   splitView: SplitViewState;
-  forceUpdate: number; // Add a counter to force re-renders
   
   // Tab management
   addTab: (tab: Tab, toRightSide?: boolean) => void;
@@ -44,7 +43,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   activeTabId: null,
   cursorPosition: { lineNumber: 1, column: 1 },
   previewMode: false,
-  forceUpdate: 0, // Initialize counter
   splitView: {
     isSplit: false,
     leftTabs: [],
@@ -538,10 +536,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       newSplitView.leftTabs = [...groupedTabs]; // Create a new array to ensure reference change
     }
     
-    // Increment the force update counter to trigger re-renders
+    // Return the updated state
     return {
       splitView: newSplitView,
-      forceUpdate: state.forceUpdate + 1,
     };
   }),
   
