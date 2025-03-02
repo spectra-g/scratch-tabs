@@ -42,27 +42,3 @@ interface EditorStore {
 export const useEditorStore = useRootStore;
 
 export default useRootStore;
-
-// Helper function to group tabs by language
-function groupTabsByLanguage(tabs: { id: string; language: string }[]): string[] {
-  // Create a map of language -> tab IDs
-  const languageMap: Record<string, string[]> = {};
-  
-  // Group tabs by language
-  tabs.forEach(tab => {
-    if (!languageMap[tab.language]) {
-      languageMap[tab.language] = [];
-    }
-    languageMap[tab.language].push(tab.id);
-  });
-  
-  // Flatten the map back to an array, preserving the order of languages
-  const languages = Object.keys(languageMap);
-  const result: string[] = [];
-  
-  languages.forEach(language => {
-    result.push(...languageMap[language]);
-  });
-  
-  return result;
-}
