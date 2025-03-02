@@ -351,9 +351,9 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
       key={tabsKey} // Add a key to force re-render when tab order changes
     >
       {visibleTabs.map((tab, index) => {
-        // Calculate the relative height of the indicator bar
+        // Calculate the relative width of the indicator bar
         const lineCount = getTabLineCount(tab.content);
-        const relativeHeight = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
+        const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
         
         return (
           <div
@@ -365,11 +365,11 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
             onContextMenu={(e) => handleContextMenu(e, tab.id)}
             onDoubleClick={(e) => handleDoubleClick(tab, e)}
           >
-            {/* Line count indicator bar */}
+            {/* Line count indicator bar - horizontal at bottom */}
             <div 
-              className="absolute left-0 bottom-0 w-0.5 bg-gray-500 opacity-50" 
+              className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50" 
               style={{ 
-                height: `${relativeHeight}%`,
+                width: `${relativeWidth}%`,
               }}
             />
             
@@ -384,7 +384,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
                 className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs"
               />
             ) : (
-              <span className="mr-2 ml-1">
+              <span className="mr-2">
                 {tab.title}
               </span>
             )}
