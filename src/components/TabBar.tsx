@@ -258,7 +258,8 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
   // Use a key derived from the tab IDs to force re-render when the order changes
   const tabsKey = tabIds.join('-') + '-' + forceUpdate;
   
-  const visibleTabs = tabs.filter(tab => tabIds.includes(tab.id));
+  // Create visibleTabs array that preserves the order of tabIds
+  const visibleTabs = tabIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean) as typeof tabs;
   const activeSideTabId = isRightSide ? splitView.activeRightTabId : splitView.activeLeftTabId;
   
   useEffect(() => {
