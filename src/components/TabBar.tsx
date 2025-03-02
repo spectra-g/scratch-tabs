@@ -63,7 +63,6 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClos
     if (uniqueLanguages.size < 2) return false;
     
     // Check if the tabs are already grouped by type
-    let isAlreadyGrouped = true;
     let currentLanguage = tabLanguages[0];
     let languageChangePoints = 0;
     
@@ -268,9 +267,37 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
     }
   }, [editingTabId]);
   
-  const handleDoubleClick = (tab: { id: string; title: string }) => {
-    setEditingTabId(tab.id);
-    setEditingTitle(tab.title);
+  const handleDoubleClick = (tab: { id: string; title: string }, e: React.MouseEvent) => {
+    // Check if the double click was on the text span
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'SPAN' && target.textContent === tab.title) {
+      // Double click on the text - edit the title
+      setEditingTabId(tab.id);
+      setEditingTitle(tab.title);
+    } else {
+      // Double click elsewhere in the tab - create a new tab
+      handleCreateNewTab();
+    }
+    
+    // Stop propagation to prevent the empty area handler from firing
+    e.stopPropagation();
+  };
+  
+  const handleCreateNewTab = () => {
+    // Check if we can add a new tab
+    if (!canAddNewTab(isRightSide)) {
+      // Don't add a new tab if we've reached the limit of empty tabs
+      return;
+    }
+    
+    const newTabId = crypto.randomUUID();
+    addTab({
+      id: newTabId,
+      title: `new ${tabs.length + 1}`,
+      content: '',
+      language: 'plaintext',
+      languageLocked: false
+    }, isRightSide);
   };
   
   const handleInputBlur = () => {
@@ -304,20 +331,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
   const handleEmptyAreaDoubleClick = (e: React.MouseEvent) => {
     // Only handle double clicks on the tab bar itself, not on tabs
     if (e.currentTarget === e.target) {
-      // Check if we can add a new tab
-      if (!canAddNewTab(isRightSide)) {
-        // Don't add a new tab if we've reached the limit of empty tabs
-        return;
-      }
-      
-      const newTabId = crypto.randomUUID();
-      addTab({
-        id: newTabId,
-        title: `new ${tabs.length + 1}`,
-        content: '',
-        language: 'plaintext',
-        languageLocked: false
-      }, isRightSide);
+      handleCreateNewTab();
     }
   };
   
@@ -336,6 +350,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
           }`}
           onClick={() => handleTabClick(tab.id)}
           onContextMenu={(e) => handleContextMenu(e, tab.id)}
+          onDoubleClick={(e) => handleDoubleClick(tab, e)}
         >
           {editingTabId === tab.id ? (
             <input
@@ -348,10 +363,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
               className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs"
             />
           ) : (
-            <span
-              className="mr-2"
-              onDoubleClick={() => handleDoubleClick(tab)}
-            >
+            <span className="mr-2">
               {tab.title}
             </span>
           )}

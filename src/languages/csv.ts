@@ -1,101 +1,148 @@
-export const registerCsvProvider = (monaco: any) => {
-  // Register CSV language if not already registered
-  if (!monaco.languages.getLanguages().some((lang: any) => lang.id === 'csv')) {
-    monaco.languages.register({ id: 'csv' });
-  }
+import { BaseLanguageDetector } from './baseDetector';
+import { languageRegistry } from './registry';
 
-  // Configure CSV formatting provider
-  monaco.languages.registerDocumentFormattingEditProvider('csv', {
-    provideDocumentFormattingEdits(model: any) {
-      const content = model.getValue();
-      const lines = content.split('\n');
-      
-      // Format CSV by aligning columns
-      const formattedLines = formatCsvColumns(lines);
-
-      return [{
-        range: model.getFullModelRange(),
-        text: formattedLines.join('\n')
-      }];
-    }
-  });
-};
-
-// Helper function to format CSV by aligning columns
-function formatCsvColumns(lines: string[]): string[] {
-  if (lines.length === 0) return lines;
+/**
+ * CSV language detector
+ */
+export class CsvLanguageDetector extends BaseLanguageDetector {
+  id = 'csv';
+  name = 'CSV';
+  extensions = ['csv', 'tsv'];
+  priority = 4;
   
-  // Determine the delimiter (comma, semicolon, or tab)
-  const firstLine = lines[0];
-  let delimiter = ',';
-  
-  if (firstLine.includes(';') && !firstLine.includes(',')) {
-    delimiter = ';';
-  } else if (firstLine.includes('\t') && !firstLine.includes(',')) {
-    delimiter = '\t';
-  }
-  
-  // Parse all lines into cells
-  const rows = lines.map(line => {
-    // Handle quoted fields correctly
-    const cells: string[] = [];
-    let currentCell = '';
-    let inQuotes = false;
+  /**
+   * Check if content matches CSV patterns
+   */
+  isMatch(content: string): boolean {
+    // Split into lines and check if we have at least one line
+    const lines = content.trim().split('\n');
+    if (lines.length === 0) return false;
     
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
+    // Determine the most likely delimiter
+    const firstLine = lines[0];
+    let delimiter = ',';
+    let delimiterCount = (firstLine.match(/,/g) || []).length;
+    
+    const semicolonCount = (firstLine.match(/;/g) || []).length;
+    if (semicolonCount > delimiterCount) {
+      delimiter = ';';
+      delimiterCount = semicolonCount;
+    }
+    
+    const tabCount = (firstLine.match(/\t/g) || []).length;
+    if (tabCount > delimiterCount) {
+      delimiter = '\t';
+      delimiterCount = tabCount;
+    }
+    
+    // If no delimiters found, it's not a CSV
+    if (delimiterCount === 0) return false;
+    
+    // Check if all lines have approximately the same number of delimiters
+    // (allowing for empty lines and some variation)
+    const expectedFields = delimiterCount + 1;
+    
+    // Check at least the first 5 lines (or all if fewer)
+    const linesToCheck = Math.min(5, lines.length);
+    let validLines = 0;
+    
+    for (let i = 0; i < linesToCheck; i++) {
+      const line = lines[i].trim();
+      if (!line) continue; // Skip empty lines
       
-      if (char === '"') {
-        // Toggle quote state
-        inQuotes = !inQuotes;
-        currentCell += char;
-      } else if (char === delimiter && !inQuotes) {
-        // End of cell
-        cells.push(currentCell);
-        currentCell = '';
-      } else {
-        // Add character to current cell
-        currentCell += char;
+      const fieldCount = (line.match(new RegExp(delimiter, 'g')) || []).length + 1;
+      
+      // Allow for some variation in field count (±1)
+      if (Math.abs(fieldCount - expectedFields) <= 1) {
+        validLines++;
       }
     }
     
-    // Add the last cell
-    cells.push(currentCell);
-    return cells;
-  });
+    // If most of the checked lines match our CSV pattern, consider it a CSV
+    return validLines >= Math.ceil(linesToCheck * 0.6);
+  }
   
-  // Find the maximum width for each column
-  const columnWidths: number[] = [];
-  
-  rows.forEach(row => {
-    row.forEach((cell, columnIndex) => {
-      // Remove quotes for width calculation
-      const cellContent = cell.replace(/^"(.*)"$/, '$1');
-      const cellWidth = cellContent.length;
+  /**
+   * Register CSV language provider with Monaco
+   */
+  registerProvider(monaco: any): void {
+    // Register CSV language if not already registered
+    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === 'csv')) {
+      monaco.languages.register({ id: 'csv' });
       
-      if (!columnWidths[columnIndex] || cellWidth > columnWidths[columnIndex]) {
-        columnWidths[columnIndex] = cellWidth;
+      // Define CSV syntax highlighting
+      monaco.languages.setMonarchTokensProvider('csv', {
+        tokenizer: {
+          root: [
+            [/^[^,\r\n]+/, 'header'],
+            [/,(?=[^,\r\n]*$)/, 'delimiter.comma'],
+            [/,/, 'delimiter.comma'],
+            [/[^,\r\n]+/, 'field']
+          ]
+        }
+      });
+      
+      // Define CSV theme
+      monaco.editor.defineTheme('csv-theme', {
+        base: 'vs',
+        inherit: true,
+        rules: [
+          { token: 'header', foreground: '0000FF', fontStyle: 'bold' },
+          { token: 'delimiter.comma', foreground: 'FF0000' },
+          { token: 'field', foreground: '000000' }
+        ],
+        colors: {}
+      });
+    }
+    
+    // Configure CSV formatting provider
+    monaco.languages.registerDocumentFormattingEditProvider('csv', {
+      provideDocumentFormattingEdits(model: any) {
+        const content = model.getValue();
+        const lines = content.split('\n');
+        
+        // Determine the delimiter
+        const firstLine = lines[0] || '';
+        let delimiter = ',';
+        let delimiterCount = (firstLine.match(/,/g) || []).length;
+        
+        const semicolonCount = (firstLine.match(/;/g) || []).length;
+        if (semicolonCount > delimiterCount) {
+          delimiter = ';';
+          delimiterCount = semicolonCount;
+        }
+        
+        const tabCount = (firstLine.match(/\t/g) || []).length;
+        if (tabCount > delimiterCount) {
+          delimiter = '\t';
+          delimiterCount = tabCount;
+        }
+        
+        // Format each line
+        const formattedLines = lines.map((line: string) => {
+          if (!line.trim()) return '';
+          
+          // Split the line by the delimiter
+          const fields = line.split(delimiter);
+          
+          // Trim each field and rejoin with the delimiter
+          return fields.map((field: string) => field.trim()).join(delimiter);
+        });
+        
+        return [{
+          range: model.getFullModelRange(),
+          text: formattedLines.join('\n')
+        }];
       }
     });
-  });
-  
-  // Format each row with proper padding
-  return rows.map(row => {
-    return row.map((cell, columnIndex) => {
-      // Don't pad the last column
-      if (columnIndex === row.length - 1) {
-        return cell;
-      }
-      
-      // If cell is quoted, pad the content inside quotes
-      if (cell.startsWith('"') && cell.endsWith('"')) {
-        const content = cell.substring(1, cell.length - 1);
-        const paddedContent = content.padEnd(columnWidths[columnIndex], ' ');
-        return `"${paddedContent}"`;
-      }
-      
-      // Otherwise pad the whole cell
-      return cell.padEnd(columnWidths[columnIndex], ' ');
-    }).join(delimiter);
-  });
+  }
 }
+
+// Create and register the detector
+const csvDetector = new CsvLanguageDetector();
+languageRegistry.register(csvDetector);
+
+// Export for backward compatibility
+export const registerCsvProvider = (monaco: any) => {
+  csvDetector.registerProvider(monaco);
+};
