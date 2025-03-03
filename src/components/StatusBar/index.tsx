@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEditorStore } from '../../store';
 import { getLanguageStatusItem } from './LanguageStatusItems';
+import { Macro } from '../Macro';
 
 interface StatusBarProps {
   side?: 'left' | 'right';
@@ -32,6 +33,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
           </div>
         )}
       </div>
+      {!isRightSide && <Macro />}
     </div>
   );
 };
