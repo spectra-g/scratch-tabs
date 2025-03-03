@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Disc, Square, Play } from 'lucide-react';
+import { Disc, Square, Play, PlayCircle } from 'lucide-react';
 import { useEditorStore } from '../../store';
 
 type MacroMode = 'idle' | 'recording' | 'recorded';
@@ -29,25 +29,17 @@ export const Macro: React.FC = () => {
   const [keystrokes, setKeystrokes] = useState<KeystrokeEvent[]>([]);
   const [nextPosition, setNextPosition] = useState<{ line: number; column: number } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayingToEnd, setIsPlayingToEnd] = useState(false);
   const { updateTabContent, splitView, tabs } = useEditorStore();
 
-  // Handle keydown events during recording
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (mode !== 'recording') return;
-
-    // Prevent default behavior for arrow keys during recording
-    if (e.key.startsWith('Arrow')) {
-      e.preventDefault();
-    }
-
-    // Record printable characters and special keys
+    if (e.key.startsWith('Arrow')) e.preventDefault();
     if (e.key.length === 1 || RECORDABLE_KEYS.includes(e.key)) {
-      const timestamp = Date.now() - recordStartTime;
-      setKeystrokes(prev => [...prev, { key: e.key, timestamp }]);
+      setKeystrokes(prev => [...prev, { key: e.key, timestamp: Date.now() - recordStartTime }]);
     }
   }, [mode, recordStartTime]);
 
-  // Set up and clean up keyboard event listeners
   useEffect(() => {
     if (mode === 'recording') {
       document.addEventListener('keydown', handleKeyDown, true);
@@ -55,7 +47,103 @@ export const Macro: React.FC = () => {
     }
   }, [mode, handleKeyDown]);
 
-  // Start recording
+  const getCursorPosition = (content: string, cursorPos: number) => {
+    const contentBeforeCursor = content.slice(0, cursorPos);
+    const lines = contentBeforeCursor.split('\n');
+    return {
+      line: lines.length,
+      column: lines[lines.length - 1].length
+    };
+  };
+
+  const getContentPosition = (content: string, line: number, column: number) => {
+    const allLines = content.split('\n');
+    let position = 0;
+    for (let i = 0; i < line - 1; i++) {
+      position += allLines[i].length + 1;
+    }
+    return position + column;
+  };
+
+  const processKeystrokes = (
+    content: string,
+    currentLine: number,
+    currentCol: number,
+    keystrokes: KeystrokeEvent[]
+  ): { content: string; line: number; column: number } => {
+    const allLines = content.split('\n');
+    let position = getContentPosition(content, currentLine, currentCol);
+
+    keystrokes.forEach(keystroke => {
+      if (keystroke.key === 'Backspace') {
+        if (position > 0) {
+          content = content.slice(0, position - 1) + content.slice(position);
+          if (currentCol > 0) {
+            currentCol--;
+          } else if (currentLine > 1) {
+            currentLine--;
+            currentCol = allLines[currentLine - 1].length;
+          }
+          position--;
+        }
+      } else if (keystroke.key === 'Enter') {
+        content = content.slice(0, position) + '\n' + content.slice(position);
+        currentLine++;
+        currentCol = 0;
+        position++;
+      } else if (keystroke.key === 'ArrowLeft') {
+        if (currentCol > 0) {
+          currentCol--;
+          position--;
+        } else if (currentLine > 1) {
+          currentLine--;
+          currentCol = allLines[currentLine - 1].length;
+          position--;
+        }
+      } else if (keystroke.key === 'ArrowRight') {
+        if (currentCol < allLines[currentLine - 1].length) {
+          currentCol++;
+          position++;
+        } else if (currentLine < allLines.length) {
+          currentLine++;
+          currentCol = 0;
+          position++;
+        }
+      } else if (keystroke.key === 'ArrowUp') {
+        if (currentLine > 1) {
+          currentLine--;
+          const targetLine = allLines[currentLine - 1];
+          currentCol = Math.min(currentCol, targetLine.length);
+          position = position - (allLines[currentLine].length + 1) + (currentCol - targetLine.length);
+        }
+      } else if (keystroke.key === 'ArrowDown') {
+        if (currentLine < allLines.length) {
+          const prevLineLength = allLines[currentLine - 1].length;
+          currentLine++;
+          const targetLine = allLines[currentLine - 1];
+          currentCol = Math.min(currentCol, targetLine.length);
+          position = position + prevLineLength + 1 + (currentCol - prevLineLength);
+        }
+      } else if (!keystroke.key.startsWith('Arrow')) {
+        content = content.slice(0, position) + keystroke.key + content.slice(position);
+        currentCol++;
+        position++;
+      }
+    });
+
+    return { content, line: currentLine, column: currentCol };
+  };
+
+  const getActiveTab = () => {
+    const activeTabId = splitView.activeLeftTabId || splitView.activeRightTabId;
+    if (!activeTabId) return null;
+    return tabs.find(t => t.id === activeTabId);
+  };
+
+  const getTextarea = () => {
+    return document.querySelector('.monaco-editor textarea.inputarea') as HTMLTextAreaElement;
+  };
+
   const handleRecord = (e: React.MouseEvent) => {
     e.preventDefault();
     setMode('recording');
@@ -64,125 +152,79 @@ export const Macro: React.FC = () => {
     setNextPosition(null);
   };
 
-  // Stop recording
   const handleStop = (e: React.MouseEvent) => {
     e.preventDefault();
     setMode('recorded');
   };
 
-  // Play back recording
   const handlePlay = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (mode !== 'recorded' || keystrokes.length === 0 || isPlaying) return;
 
     setIsPlaying(true);
-
-    const activeTabId = splitView.activeLeftTabId || splitView.activeRightTabId;
-    if (!activeTabId) {
-      setIsPlaying(false);
-      return;
-    }
-
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (!tab) {
-      setIsPlaying(false);
-      return;
-    }
-
-    // Get editor textarea
-    const textarea = document.querySelector('.monaco-editor textarea.inputarea') as HTMLTextAreaElement;
-    if (!textarea) {
+    const tab = getActiveTab();
+    const textarea = getTextarea();
+    if (!tab || !textarea) {
       setIsPlaying(false);
       return;
     }
 
     try {
-      // Get the current cursor position and calculate line/column
-      const cursorPos = textarea.selectionStart;
-      const contentBeforeCursor = tab.content.slice(0, cursorPos);
-      const lines = contentBeforeCursor.split('\n');
-      const allLines = tab.content.split('\n');
-      
-      // Use stored position or calculate from cursor
-      let currentLine = nextPosition?.line ?? lines.length;
-      let currentCol = nextPosition?.column ?? lines[lines.length - 1].length;
-      
-      // Calculate the actual position in the content
-      let currentPosition = 0;
-      for (let i = 0; i < currentLine - 1; i++) {
-        currentPosition += allLines[i].length + 1;
-      }
-      currentPosition += currentCol;
+      const { line, column } = getCursorPosition(tab.content, textarea.selectionStart);
+      const currentLine = nextPosition?.line ?? line;
+      const currentCol = nextPosition?.column ?? column;
 
-      let content = tab.content;
-
-      // Process each keystroke
-      keystrokes.forEach(keystroke => {
-        if (keystroke.key === 'Backspace') {
-          if (currentPosition > 0) {
-            content = content.slice(0, currentPosition - 1) + content.slice(currentPosition);
-            if (currentCol > 0) {
-              currentCol--;
-            } else if (currentLine > 1) {
-              currentLine--;
-              currentCol = allLines[currentLine - 1].length;
-            }
-            currentPosition--;
-          }
-        } else if (keystroke.key === 'Enter') {
-          content = content.slice(0, currentPosition) + '\n' + content.slice(currentPosition);
-          currentLine++;
-          currentCol = 0;
-          currentPosition++;
-        } else if (keystroke.key === 'ArrowLeft') {
-          if (currentCol > 0) {
-            currentCol--;
-            currentPosition--;
-          } else if (currentLine > 1) {
-            currentLine--;
-            currentCol = allLines[currentLine - 1].length;
-            currentPosition--;
-          }
-        } else if (keystroke.key === 'ArrowRight') {
-          if (currentCol < allLines[currentLine - 1].length) {
-            currentCol++;
-            currentPosition++;
-          } else if (currentLine < allLines.length) {
-            currentLine++;
-            currentCol = 0;
-            currentPosition++;
-          }
-        } else if (keystroke.key === 'ArrowUp') {
-          if (currentLine > 1) {
-            currentLine--;
-            const targetLine = allLines[currentLine - 1];
-            currentCol = Math.min(currentCol, targetLine.length);
-            currentPosition = currentPosition - (allLines[currentLine].length + 1) + (currentCol - targetLine.length);
-          }
-        } else if (keystroke.key === 'ArrowDown') {
-          if (currentLine < allLines.length) {
-            const prevLineLength = allLines[currentLine - 1].length;
-            currentLine++;
-            const targetLine = allLines[currentLine - 1];
-            currentCol = Math.min(currentCol, targetLine.length);
-            currentPosition = currentPosition + prevLineLength + 1 + (currentCol - prevLineLength);
-          }
-        } else if (!keystroke.key.startsWith('Arrow')) {
-          content = content.slice(0, currentPosition) + keystroke.key + content.slice(currentPosition);
-          currentCol++;
-          currentPosition++;
-        }
-      });
+      const { content, line: newLine, column: newColumn } = processKeystrokes(tab.content, currentLine, currentCol, keystrokes);
       
-      updateTabContent(activeTabId, content);
-      setNextPosition({ line: currentLine, column: currentCol });
+      updateTabContent(tab.id, content);
+      setNextPosition({ line: newLine, column: newColumn });
 
-      // Set the cursor position in the textarea
-      textarea.selectionStart = currentPosition;
-      textarea.selectionEnd = currentPosition;
+      const position = getContentPosition(content, newLine, newColumn);
+      textarea.selectionStart = position;
+      textarea.selectionEnd = position;
       textarea.focus();
     } finally {
       setIsPlaying(false);
+    }
+  };
+
+  const handlePlayToEnd = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (mode !== 'recorded' || keystrokes.length === 0 || isPlaying || isPlayingToEnd) return;
+
+    setIsPlayingToEnd(true);
+    const tab = getActiveTab();
+    const textarea = getTextarea();
+    if (!tab || !textarea) {
+      setIsPlayingToEnd(false);
+      return;
+    }
+
+    try {
+      const { line, column } = getCursorPosition(tab.content, textarea.selectionStart);
+      let currentLine = line;
+      let currentCol = column;
+      let content = tab.content;
+
+      while (true) {
+        if (currentLine >= content.split('\n').length) break;
+
+        const result = processKeystrokes(content, currentLine, currentCol, keystrokes);
+        content = result.content;
+        currentLine = result.line;
+        currentCol = result.column;
+
+        updateTabContent(tab.id, content);
+        
+        const position = getContentPosition(content, currentLine, currentCol);
+        textarea.selectionStart = position;
+        textarea.selectionEnd = position;
+        textarea.focus();
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    } finally {
+      setIsPlayingToEnd(false);
     }
   };
 
@@ -193,7 +235,7 @@ export const Macro: React.FC = () => {
           mode === 'recording' ? 'text-red-500' : 'text-gray-400'
         }`}
         onClick={handleRecord}
-        disabled={mode === 'recording' || isPlaying}
+        disabled={mode === 'recording' || isPlaying || isPlayingToEnd}
         title="Record keystrokes"
         onMouseDown={(e) => e.preventDefault()}
       >
@@ -204,7 +246,7 @@ export const Macro: React.FC = () => {
           mode === 'recording' ? 'text-gray-400' : 'text-gray-600'
         }`}
         onClick={handleStop}
-        disabled={mode !== 'recording' || isPlaying}
+        disabled={mode !== 'recording' || isPlaying || isPlayingToEnd}
         title="Stop recording"
         onMouseDown={(e) => e.preventDefault()}
       >
@@ -215,11 +257,22 @@ export const Macro: React.FC = () => {
           mode === 'recorded' ? 'text-gray-400' : 'text-gray-600'
         }`}
         onClick={handlePlay}
-        disabled={mode !== 'recorded' || keystrokes.length === 0 || isPlaying}
+        disabled={mode !== 'recorded' || keystrokes.length === 0 || isPlaying || isPlayingToEnd}
         title="Play recorded keystrokes"
         onMouseDown={(e) => e.preventDefault()}
       >
         <Play size={14} />
+      </button>
+      <button
+        className={`p-1 rounded hover:bg-gray-700 ${
+          mode === 'recorded' ? 'text-gray-400' : 'text-gray-600'
+        }`}
+        onClick={handlePlayToEnd}
+        disabled={mode !== 'recorded' || keystrokes.length === 0 || isPlaying || isPlayingToEnd}
+        title="Play to end of file"
+        onMouseDown={(e) => e.preventDefault()}
+      >
+        <PlayCircle size={14} />
       </button>
     </div>
   );
