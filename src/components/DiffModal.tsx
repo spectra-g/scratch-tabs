@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, Undo2, Redo2 } from 'lucide-react';
 import { useEditorStore } from '../store';
 
 interface DiffModalProps {
@@ -16,29 +16,71 @@ interface DiffLine {
   type: 'unchanged' | 'added' | 'removed' | 'modified';
 }
 
+interface ChangeHistoryEntry {
+  leftContent: string;
+  rightContent: string;
+}
+
 export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onClose }) => {
   const { tabs, updateTabContent } = useEditorStore();
   const [diffLines, setDiffLines] = useState<DiffLine[]>([]);
+  
+  // History management
+  const [changeHistory, setChangeHistory] = useState<ChangeHistoryEntry[]>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
   
   // Find the tabs
   const leftTab = tabs.find(tab => tab.id === leftTabId);
   const rightTab = tabs.find(tab => tab.id === rightTabId);
   
-  // Calculate diff when tabs change
+  // Initialize history when the modal opens
   useEffect(() => {
     if (leftTab && rightTab) {
-      const diff = calculateDiff(leftTab.content, rightTab.content);
+      setChangeHistory([{ leftContent: leftTab.content, rightContent: rightTab.content }]);
+      setCurrentHistoryIndex(0);
+    }
+  }, []);
+  
+  // Calculate diff when tabs change or history changes
+  useEffect(() => {
+    if (leftTab && rightTab && currentHistoryIndex >= 0) {
+      const currentState = changeHistory[currentHistoryIndex];
+      const diff = calculateDiff(currentState.leftContent, currentState.rightContent);
       setDiffLines(diff);
     }
-  }, [leftTab, rightTab]);
+  }, [leftTab, rightTab, currentHistoryIndex, changeHistory]);
+  
+  const canUndo = currentHistoryIndex > 0;
+  const canRedo = currentHistoryIndex < changeHistory.length - 1;
+  
+  const handleUndo = () => {
+    if (!canUndo) return;
+    
+    const previousState = changeHistory[currentHistoryIndex - 1];
+    updateTabContent(leftTabId, previousState.leftContent);
+    updateTabContent(rightTabId, previousState.rightContent);
+    setCurrentHistoryIndex(currentHistoryIndex - 1);
+  };
+  
+  const handleRedo = () => {
+    if (!canRedo) return;
+    
+    const nextState = changeHistory[currentHistoryIndex + 1];
+    updateTabContent(leftTabId, nextState.leftContent);
+    updateTabContent(rightTabId, nextState.rightContent);
+    setCurrentHistoryIndex(currentHistoryIndex + 1);
+  };
   
   // Apply a change from one side to the other
   const applyChange = (line: DiffLine, direction: 'left-to-right' | 'right-to-left') => {
     if (!leftTab || !rightTab) return;
     
+    let newLeftContent = changeHistory[currentHistoryIndex].leftContent;
+    let newRightContent = changeHistory[currentHistoryIndex].rightContent;
+    
     if (direction === 'left-to-right') {
       // Apply left content to right tab
-      const rightLines = rightTab.content.split('\n');
+      const rightLines = newRightContent.split('\n');
       
       if (line.type === 'added') {
         // Line exists in left but not right - insert it
@@ -58,10 +100,10 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
         }
       }
       
-      updateTabContent(rightTabId, rightLines.join('\n'));
+      newRightContent = rightLines.join('\n');
     } else {
       // Apply right content to left tab
-      const leftLines = leftTab.content.split('\n');
+      const leftLines = newLeftContent.split('\n');
       
       if (line.type === 'removed') {
         // Line exists in right but not left - insert it
@@ -81,19 +123,18 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
         }
       }
       
-      updateTabContent(leftTabId, leftLines.join('\n'));
+      newLeftContent = leftLines.join('\n');
     }
     
-    // Recalculate diff after applying changes
-    if (leftTab && rightTab) {
-      const updatedLeftTab = tabs.find(tab => tab.id === leftTabId);
-      const updatedRightTab = tabs.find(tab => tab.id === rightTabId);
-      
-      if (updatedLeftTab && updatedRightTab) {
-        const diff = calculateDiff(updatedLeftTab.content, updatedRightTab.content);
-        setDiffLines(diff);
-      }
-    }
+    // Update the content
+    updateTabContent(leftTabId, newLeftContent);
+    updateTabContent(rightTabId, newRightContent);
+    
+    // Add to history
+    const newHistory = changeHistory.slice(0, currentHistoryIndex + 1);
+    newHistory.push({ leftContent: newLeftContent, rightContent: newRightContent });
+    setChangeHistory(newHistory);
+    setCurrentHistoryIndex(currentHistoryIndex + 1);
   };
   
   // Find the index where a line should be inserted
@@ -232,6 +273,34 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
     return result;
   };
   
+  // Add keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if Ctrl (or Cmd on Mac) is pressed
+      const ctrlPressed = e.ctrlKey || e.metaKey;
+      
+      if (ctrlPressed && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          // Ctrl+Shift+Z for Redo
+          handleRedo();
+        } else {
+          // Ctrl+Z for Undo
+          handleUndo();
+        }
+      } else if (ctrlPressed && e.key === 'y') {
+        e.preventDefault();
+        // Ctrl+Y for Redo
+        handleRedo();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleUndo, handleRedo]);
+  
   if (!leftTab || !rightTab) {
     return null;
   }
@@ -243,6 +312,24 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
           <h2 className="text-gray-200 font-medium">
             Compare: {leftTab.title} ↔ {rightTab.title}
           </h2>
+          <div className="flex items-center space-x-2">
+            <button 
+              className={`p-1 rounded hover:bg-gray-600 ${canUndo ? 'text-gray-200' : 'text-gray-500'}`}
+              onClick={handleUndo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 size={16} />
+            </button>
+            <button 
+              className={`p-1 rounded hover:bg-gray-600 ${canRedo ? 'text-gray-200' : 'text-gray-500'}`}
+              onClick={handleRedo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 size={16} />
+            </button>
+          </div>
         </div>
         <button 
           className="text-gray-400 hover:text-gray-200"
