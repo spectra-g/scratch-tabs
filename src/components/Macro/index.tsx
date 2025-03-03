@@ -1,23 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Disc, Square, Play } from 'lucide-react';
 import { useEditorStore } from '../../store';
 
 type MacroMode = 'idle' | 'recording' | 'recorded';
 
+interface KeystrokeEvent {
+  key: string;
+  timestamp: number;
+}
+
 /**
  * Macro component that provides recording and playback functionality.
- * Currently implements a simple test mode that inserts 'x' characters
- * sequentially from the cursor position.
+ * Records keystrokes with timing information and plays them back at
+ * the original speed.
  */
 export const Macro: React.FC = () => {
   const [mode, setMode] = useState<MacroMode>('idle');
-  const [lastCursorPos, setLastCursorPos] = useState<number | null>(null);
+  const [recordStartTime, setRecordStartTime] = useState<number>(0);
+  const [keystrokes, setKeystrokes] = useState<KeystrokeEvent[]>([]);
+  const [nextInsertPosition, setNextInsertPosition] = useState<number | null>(null);
   const { updateTabContent, splitView, tabs } = useEditorStore();
+
+  // Handle keydown events during recording
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (mode !== 'recording') return;
+
+    // Only record printable characters, Enter, and Backspace
+    if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace') {
+      const timestamp = Date.now() - recordStartTime;
+      setKeystrokes(prev => [...prev, { key: e.key, timestamp }]);
+    }
+  }, [mode, recordStartTime]);
+
+  // Set up and clean up keyboard event listeners
+  useEffect(() => {
+    if (mode === 'recording') {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [mode, handleKeyDown]);
 
   // Start recording
   const handleRecord = (e: React.MouseEvent) => {
     e.preventDefault();
     setMode('recording');
+    setRecordStartTime(Date.now());
+    setKeystrokes([]);
+    setNextInsertPosition(null);
   };
 
   // Stop recording
@@ -29,39 +58,39 @@ export const Macro: React.FC = () => {
   // Play back recording
   const handlePlay = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (mode !== 'recorded') return;
+    if (mode !== 'recorded' || keystrokes.length === 0) return;
 
-    // Get active tab and its content
     const activeTabId = splitView.activeLeftTabId || splitView.activeRightTabId;
     if (!activeTabId) return;
 
     const tab = tabs.find(t => t.id === activeTabId);
     if (!tab) return;
 
-    // Get editor textarea and cursor position
+    // Get editor textarea
     const textarea = document.querySelector('.monaco-editor textarea.inputarea') as HTMLTextAreaElement;
     if (!textarea) return;
 
-    // Insert 'x' at the current or last cursor position
-    const cursorPos = lastCursorPos !== null ? lastCursorPos : textarea.selectionStart;
-    const newContent = tab.content.slice(0, cursorPos) + 'x' + tab.content.slice(cursorPos);
-    
-    // Update content and store next cursor position
-    updateTabContent(activeTabId, newContent);
-    setLastCursorPos(cursorPos + 1);
+    // Use stored position or current cursor position
+    const insertPosition = nextInsertPosition !== null ? nextInsertPosition : textarea.selectionStart;
+    let content = tab.content;
 
-    // Remove editor focus and move it to the play button
-    requestAnimationFrame(() => {
-      textarea.blur();
-      const editorElement = document.querySelector('.monaco-editor') as HTMLElement;
-      if (editorElement) {
-        editorElement.blur();
+    // Create a copy of the keystrokes to apply
+    const recordedText = keystrokes.reduce((acc, keystroke) => {
+      if (keystroke.key === 'Backspace') {
+        return acc.slice(0, -1);
+      } else if (keystroke.key === 'Enter') {
+        return acc + '\n';
+      } else {
+        return acc + keystroke.key;
       }
-      const playButton = document.querySelector('button[title="Play recorded keystrokes"]');
-      if (playButton instanceof HTMLElement) {
-        playButton.focus();
-      }
-    });
+    }, '');
+
+    // Insert the recorded text
+    const newContent = content.slice(0, insertPosition) + recordedText + content.slice(insertPosition);
+    updateTabContent(activeTabId, newContent);
+
+    // Store the next insert position
+    setNextInsertPosition(insertPosition + recordedText.length);
   };
 
   return (
@@ -93,7 +122,7 @@ export const Macro: React.FC = () => {
           mode === 'recorded' ? 'text-gray-400' : 'text-gray-600'
         }`}
         onClick={handlePlay}
-        disabled={mode !== 'recorded'}
+        disabled={mode !== 'recorded' || keystrokes.length === 0}
         title="Play recorded keystrokes"
         onMouseDown={(e) => e.preventDefault()}
       >
