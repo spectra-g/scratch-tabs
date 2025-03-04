@@ -170,19 +170,29 @@ export const Macro: React.FC = () => {
     }
 
     try {
-      const { line, column } = getCursorPosition(tab.content, textarea.selectionStart);
-      const currentLine = nextPosition?.line ?? line;
-      const currentCol = nextPosition?.column ?? column;
-
+      // Get the current cursor position from the textarea
+      const visibleCursorPos = textarea.selectionStart;
+      textarea.blur();
+      
+      let currentLine, currentCol;
+      
+      // If this is the first play (nextPosition is null) or the cursor has been manually repositioned
+      // to a position other than 0 or the end, use the visible cursor position
+      if (nextPosition === null || (visibleCursorPos !== 0 && Math.abs(visibleCursorPos - tab.content.length) > 5)) {
+        const { line, column } = getCursorPosition(tab.content, visibleCursorPos);
+        currentLine = line;
+        currentCol = column;
+      } else {
+        // Otherwise, use the stored next position
+        currentLine = nextPosition.line;
+        currentCol = nextPosition.column;
+      }
+      
       const { content, line: newLine, column: newColumn } = processKeystrokes(tab.content, currentLine, currentCol, keystrokes);
       
       updateTabContent(tab.id, content);
       setNextPosition({ line: newLine, column: newColumn });
 
-      const position = getContentPosition(content, newLine, newColumn);
-      textarea.selectionStart = position;
-      textarea.selectionEnd = position;
-      textarea.focus();
     } finally {
       setIsPlaying(false);
     }
@@ -201,9 +211,26 @@ export const Macro: React.FC = () => {
     }
 
     try {
-      const { line, column } = getCursorPosition(tab.content, textarea.selectionStart);
-      let currentLine = line;
-      let currentCol = column;
+      // Get the current cursor position from the textarea
+      const visibleCursorPos = textarea.selectionStart;
+      textarea.blur();
+      
+      let startLine, startCol;
+      
+      // If this is the first play (nextPosition is null) or the cursor has been manually repositioned
+      // to a position other than 0 or the end, use the visible cursor position
+      if (nextPosition === null || (visibleCursorPos !== 0 && Math.abs(visibleCursorPos - tab.content.length) > 5)) {
+        const { line, column } = getCursorPosition(tab.content, visibleCursorPos);
+        startLine = line;
+        startCol = column;
+      } else {
+        // Otherwise, use the stored next position
+        startLine = nextPosition.line;
+        startCol = nextPosition.column;
+      }
+      
+      let currentLine = startLine;
+      let currentCol = startCol;
       let content = tab.content;
 
       while (true) {
@@ -216,10 +243,8 @@ export const Macro: React.FC = () => {
 
         updateTabContent(tab.id, content);
         
-        const position = getContentPosition(content, currentLine, currentCol);
-        textarea.selectionStart = position;
-        textarea.selectionEnd = position;
-        textarea.focus();
+        // Update nextPosition for potential future plays
+        setNextPosition({ line: currentLine, column: currentCol });
 
         await new Promise(resolve => setTimeout(resolve, 50));
       }
