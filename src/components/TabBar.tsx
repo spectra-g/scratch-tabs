@@ -405,7 +405,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
             onDoubleClick={handleEmptyAreaDoubleClick}
             key={tabsKey} // Add a key to force re-render when tab order changes
         >
-          {visibleTabs.map((tab, index) => {
+          {visibleTabs.map(tab=> {
             // Calculate the relative width of the indicator bar
             const lineCount = getTabLineCount(tab.content);
             const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;

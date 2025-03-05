@@ -7,13 +7,10 @@ import {
   findTabById,
   isTabEmpty,
   countEmptyTabs
-} from '../utils/tabUtils';
+} from '../utils';
 import {
   groupTabsByLanguage
-} from '../utils/splitViewUtils';
-import {
-  groupBy
-} from '../utils/arrayUtils';
+} from '../utils';
 
 // Define the combined store interface
 interface RootStore {

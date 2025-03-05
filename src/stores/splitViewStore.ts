@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 import { SplitViewState } from '../types';
 import {
-  createDefaultSplitViewState,
-  groupTabsByLanguage
-} from '../utils/splitViewUtils';
+  createDefaultSplitViewState
+} from '../utils';
 
 interface SplitViewStore {
   splitView: SplitViewState;
@@ -176,7 +175,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
   }),
 
   removeTabFromSide: (tabId) => set((state) => {
-    let newSplitView = { ...state.splitView };
+    const newSplitView = { ...state.splitView };
 
     // Remove from left tabs if present
     if (newSplitView.leftTabs.includes(tabId)) {
@@ -229,7 +228,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     const tabsToClose = currentTabList.slice(0, tabIndex);
 
     // Update the tab lists
-    let newSplitView = { ...state.splitView };
+    const newSplitView = { ...state.splitView };
 
     if (isRightSide) {
       newSplitView.rightTabs = newSplitView.rightTabs.filter(id => !tabsToClose.includes(id));
@@ -253,7 +252,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     const tabsToClose = currentTabList.slice(tabIndex + 1);
 
     // Update the tab lists
-    let newSplitView = { ...state.splitView };
+    const newSplitView = { ...state.splitView };
 
     if (isRightSide) {
       newSplitView.rightTabs = newSplitView.rightTabs.filter(id => !tabsToClose.includes(id));
@@ -281,7 +280,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     if (currentTabList.length <= 1) return state; // Only one tab, nothing to close
 
     // Update the tab lists
-    let newSplitView = { ...state.splitView };
+    const newSplitView = { ...state.splitView };
 
     if (isRightSide) {
       newSplitView.rightTabs = [tabId];
@@ -294,7 +293,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     return { splitView: newSplitView };
   }),
 
-  groupTabsByType: (isRightSide) => set((state) => {
+  groupTabsByType: (_isRightSide) => set((state) => {
     // This function will be connected with the tabsStore in the rootStore
     // For now, we'll just return the current state
     return state;
