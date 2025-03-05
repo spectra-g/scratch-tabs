@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowRight, ArrowLeft, Undo2, Redo2, XCircle } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, Undo2, Redo2 } from 'lucide-react';
 import { useEditorStore } from '../store';
 
 interface DiffModalProps {
@@ -296,52 +296,6 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
       }
 
       newLeftContent = leftLines.join('\n');
-    }
-
-    // Update the content
-    updateTabContent(leftTabId, newLeftContent);
-    updateTabContent(rightTabId, newRightContent);
-
-    // Add to history
-    const newHistory = changeHistory.slice(0, currentHistoryIndex + 1);
-    newHistory.push({ leftContent: newLeftContent, rightContent: newRightContent });
-    setChangeHistory(newHistory);
-    setCurrentHistoryIndex(currentHistoryIndex + 1);
-  };
-
-  // Reject a change from one side
-  const rejectChange = (line: DiffLine, side: 'left' | 'right') => {
-    if (!leftTab || !rightTab) return;
-
-    let newLeftContent = changeHistory[currentHistoryIndex].leftContent;
-    let newRightContent = changeHistory[currentHistoryIndex].rightContent;
-
-    if (side === 'left') {
-      // Remove the change from the left side
-      const leftLines = newLeftContent.split('\n');
-
-      if (line.type === 'added' && line.leftLineNumber !== null) {
-        // Remove the added line
-        leftLines.splice(line.leftLineNumber - 1, 1);
-      } else if (line.type === 'modified' && line.leftLineNumber !== null) {
-        // Revert to right content
-        leftLines[line.leftLineNumber - 1] = line.rightContent;
-      }
-
-      newLeftContent = leftLines.join('\n');
-    } else {
-      // Remove the change from the right side
-      const rightLines = newRightContent.split('\n');
-
-      if (line.type === 'removed' && line.rightLineNumber !== null) {
-        // Remove the line that was marked for removal
-        rightLines.splice(line.rightLineNumber - 1, 1);
-      } else if (line.type === 'modified' && line.rightLineNumber !== null) {
-        // Revert to left content
-        rightLines[line.rightLineNumber - 1] = line.leftContent;
-      }
-
-      newRightContent = rightLines.join('\n');
     }
 
     // Update the content
@@ -654,23 +608,14 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
                       }
                     </div>
                     <div className="flex items-center">
-                      {(line.type === 'added' || line.type === 'modified') && (
-                          <>
-                            <button
-                                className="px-1 text-gray-400 hover:text-white"
-                                onClick={() => applyChange(line, 'left-to-right')}
-                                title="Apply to right"
-                            >
-                              <ArrowRight size={14} />
-                            </button>
-                            <button
-                                className="px-1 text-gray-400 hover:text-red-400"
-                                onClick={() => rejectChange(line, 'left')}
-                                title="Remove this change"
-                            >
-                              <XCircle size={14} />
-                            </button>
-                          </>
+                      {line.type !== 'unchanged' && (
+                          <button
+                              className="px-1 text-gray-400 hover:text-white"
+                              onClick={() => applyChange(line, 'left-to-right')}
+                              title="Apply to right"
+                          >
+                            <ArrowRight size={14} />
+                          </button>
                       )}
                     </div>
                   </div>
@@ -685,23 +630,14 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
                       }
                     </div>
                     <div className="flex items-center">
-                      {(line.type === 'removed' || line.type === 'modified') && (
-                          <>
-                            <button
-                                className="px-1 text-gray-400 hover:text-red-400"
-                                onClick={() => rejectChange(line, 'right')}
-                                title="Remove this change"
-                            >
-                              <XCircle size={14} />
-                            </button>
-                            <button
-                                className="px-1 text-gray-400 hover:text-white"
-                                onClick={() => applyChange(line, 'right-to-left')}
-                                title="Apply to left"
-                            >
-                              <ArrowLeft size={14} />
-                            </button>
-                          </>
+                      {line.type !== 'unchanged' && (
+                          <button
+                              className="px-1 text-gray-400 hover:text-white"
+                              onClick={() => applyChange(line, 'right-to-left')}
+                              title="Apply to left"
+                          >
+                            <ArrowLeft size={14} />
+                          </button>
                       )}
                     </div>
                   </div>
