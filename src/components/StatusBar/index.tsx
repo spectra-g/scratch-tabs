@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEditorStore } from '../../store';
 import { getLanguageStatusItem } from './LanguageStatusItems';
-import { Macro } from '../../../dist/Macro.tsx';
+import { Macro } from '../Macro';
 
 interface StatusBarProps {
   side?: 'left' | 'right';
@@ -21,8 +21,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
   const LanguageStatusItem = activeTab ? getLanguageStatusItem(activeTab.language) : null;
 
   return (
-    <div className="h-5 flex items-center justify-between px-2 bg-gray-800 text-gray-300 text-xs border-t border-gray-700">
-      <div className="flex items-center space-x-3">
+    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">
+      <div className="flex items-center space-x-4">
         <span>
           Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}
         </span>
