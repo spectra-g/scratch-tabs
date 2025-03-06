@@ -256,7 +256,7 @@ export const Macro: React.FC = () => {
   return (
       <div className="flex items-center space-x-2 px-2">
         <button
-            className={`p-1 rounded hover:bg-gray-700 ${
+            className={`p-0.5 rounded hover:bg-gray-700 ${
                 mode === 'recording' ? 'text-red-500' : 'text-gray-400'
             }`}
             onClick={handleRecord}
@@ -267,7 +267,7 @@ export const Macro: React.FC = () => {
           <Disc size={14} />
         </button>
         <button
-            className={`p-1 rounded hover:bg-gray-700 ${
+            className={`p-0.5 rounded hover:bg-gray-700 ${
                 mode === 'recording' ? 'text-gray-400' : 'text-gray-600'
             }`}
             onClick={handleStop}
@@ -278,7 +278,7 @@ export const Macro: React.FC = () => {
           <Square size={14} />
         </button>
         <button
-            className={`p-1 rounded hover:bg-gray-700 ${
+            className={`p-0.5 rounded hover:bg-gray-700 ${
                 mode === 'recorded' ? 'text-gray-400' : 'text-gray-600'
             }`}
             onClick={handlePlay}
@@ -289,7 +289,7 @@ export const Macro: React.FC = () => {
           <Play size={14} />
         </button>
         <button
-            className={`p-1 rounded hover:bg-gray-700 ${
+            className={`p-0.5 rounded hover:bg-gray-700 ${
                 mode === 'recorded' ? 'text-gray-400' : 'text-gray-600'
             }`}
             onClick={handlePlayToEnd}
