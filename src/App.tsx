@@ -250,7 +250,7 @@ function createThrottledResizeObserver(callback: ResizeObserverCallback, delay: 
 }
 
 function App() {
-  const { tabs, splitView, addTab, activeTabId, setActiveTab, canAddNewTab, setSplitRatio } = useEditorStore();
+  const { tabs, splitView, addTab, activeTabId, canAddNewTab, setSplitRatio } = useEditorStore();
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [leftWidth, setLeftWidth] = useState(`${splitView.splitRatio * 100}%`);
