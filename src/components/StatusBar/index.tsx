@@ -27,7 +27,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
           Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}
         </span>
         {activeTab && (
-          <div className="flex items-center space-x-2">
+          <div className="p-0.5 flex items-center space-x-2">
             <span className="capitalize">{activeTab.language}</span>
             {LanguageStatusItem && <LanguageStatusItem />}
           </div>
