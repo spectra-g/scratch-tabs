@@ -254,7 +254,7 @@ export const Macro: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center space-x-2 px-2">
+    <div className="flex items-center space-x-2 pr-2">
       <button
         className={`p-1 rounded hover:bg-gray-700 ${
           mode === 'recording' ? 'text-red-500' : 'text-gray-400'
@@ -264,7 +264,7 @@ export const Macro: React.FC = () => {
         title="Record keystrokes"
         onMouseDown={(e) => e.preventDefault()}
       >
-        <Disc size={14} />
+        <Disc size={12} />
       </button>
       <button
         className={`p-1 rounded hover:bg-gray-700 ${
@@ -275,7 +275,7 @@ export const Macro: React.FC = () => {
         title="Stop recording"
         onMouseDown={(e) => e.preventDefault()}
       >
-        <Square size={14} />
+        <Square size={12} />
       </button>
       <button
         className={`p-1 rounded hover:bg-gray-700 ${
@@ -286,7 +286,7 @@ export const Macro: React.FC = () => {
         title="Play recorded keystrokes"
         onMouseDown={(e) => e.preventDefault()}
       >
-        <Play size={14} />
+        <Play size={12} />
       </button>
       <button
         className={`p-1 rounded hover:bg-gray-700 ${
@@ -297,7 +297,7 @@ export const Macro: React.FC = () => {
         title="Play to end of file"
         onMouseDown={(e) => e.preventDefault()}
       >
-        <PlayCircle size={14} />
+        <PlayCircle size={12} />
       </button>
     </div>
   );
