@@ -13,9 +13,11 @@ initializeLanguageProviders();
 // Configure marked for secure rendering
 marked.setOptions({
   gfm: true,
-  breaks: true,
-  sanitize: true
+  breaks: true
 });
+
+// Add at the top level, outside of any component
+const scrollPositions: { [tabId: string]: number } = {};
 
 interface EditorPaneProps {
   side: 'left' | 'right';
@@ -36,9 +38,34 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
   const editorRef = useRef<any>(null);
   const previousContentRef = useRef<string>('');
   
-  // Get the active tab for this side
   const activeTabId = side === 'left' ? splitView.activeLeftTabId : splitView.activeRightTabId;
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
+  
+  // Save scroll position when switching tabs
+  useEffect(() => {
+    if (!activeTabId || !editorRef.current) return;
+
+    // Restore scroll position when switching to a tab
+    const savedPosition = scrollPositions[activeTabId] ?? 0;
+    editorRef.current.setScrollTop(savedPosition);
+
+    // Save scroll position when leaving a tab
+    return () => {
+      if (editorRef.current) {
+        scrollPositions[activeTabId] = editorRef.current.getScrollTop();
+      }
+    };
+  }, [activeTabId]);
+
+  // Clean up scroll positions when tabs are removed
+  useEffect(() => {
+    const currentTabIds = tabs.map(tab => tab.id);
+    Object.keys(scrollPositions).forEach(tabId => {
+      if (!currentTabIds.includes(tabId)) {
+        delete scrollPositions[tabId];
+      }
+    });
+  }, [tabs]);
   
   // Focus editor when activeTabId changes
   useEffect(() => {
@@ -96,6 +123,11 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     
+    // Restore initial scroll position
+    if (activeTabId && scrollPositions[activeTabId]) {
+      editor.setScrollTop(scrollPositions[activeTabId]);
+    }
+    
     editor.onDidChangeCursorPosition((e: any) => {
       setCursorPosition({
         lineNumber: e.position.lineNumber,
@@ -103,7 +135,6 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
       });
     });
     
-    // Add keyboard shortcut for formatting
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
       editor.getAction('editor.action.formatDocument').run();
     });
@@ -150,7 +181,6 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
               value={activeTab.content}
               onChange={handleEditorChange}
               onMount={handleEditorDidMount}
-              onFocus={handleEditorFocus}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
