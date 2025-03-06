@@ -16,6 +16,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   const [tablets, setTablets] = useState<Tablet[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+  const selectorRef = useRef<HTMLDivElement>(null);
   
   // Update search results when query changes
   useEffect(() => {
@@ -26,6 +27,9 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Stop event propagation to prevent Monaco Editor from handling these keys
+      e.stopPropagation();
+      
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
@@ -47,9 +51,10 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
           break;
       }
     };
-    
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+
+    // Use capture phase to intercept events before they reach the editor
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [tablets, selectedIndex, onSelect, onClose]);
   
   // Scroll selected item into view
@@ -64,7 +69,10 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   
   if (tablets.length === 0) {
     return (
-      <div className="absolute z-50 w-72 bg-gray-800/95 backdrop-blur border border-gray-600/50 rounded-lg shadow-xl p-2">
+      <div 
+        ref={selectorRef}
+        className="absolute z-50 w-72 bg-gray-800/95 backdrop-blur border border-gray-600/50 rounded-lg shadow-xl p-2"
+      >
         <div className="text-gray-300 text-sm p-2">
           No tablets found
         </div>
@@ -74,26 +82,28 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   
   return (
     <div 
-      ref={listRef}
+      ref={selectorRef}
       className="absolute z-50 w-72 bg-gray-800/95 backdrop-blur border border-gray-600/50 rounded-lg shadow-xl max-h-72 overflow-y-auto"
     >
-      {tablets.map((tablet, index) => (
-        <div
-          key={tablet.id}
-          className={`p-3 cursor-pointer transition-colors ${
-            index === selectedIndex 
-              ? 'bg-blue-500/20 border-l-2 border-blue-500' 
-              : 'hover:bg-gray-700/50 border-l-2 border-transparent'
-          }`}
-          onClick={() => onSelect(tablet)}
-          onMouseEnter={() => setSelectedIndex(index)}
-        >
-          <div className="font-medium text-gray-100">{tablet.label}</div>
-          <div className="text-xs text-gray-400 mt-0.5">
-            {tablet.keywords.join(', ')}
+      <div ref={listRef}>
+        {tablets.map((tablet, index) => (
+          <div
+            key={tablet.id}
+            className={`p-3 cursor-pointer transition-colors ${
+              index === selectedIndex 
+                ? 'bg-blue-500/20 border-l-2 border-blue-500' 
+                : 'hover:bg-gray-700/50 border-l-2 border-transparent'
+            }`}
+            onClick={() => onSelect(tablet)}
+            onMouseEnter={() => setSelectedIndex(index)}
+          >
+            <div className="font-medium text-gray-100">{tablet.label}</div>
+            <div className="text-xs text-gray-400 mt-0.5">
+              {tablet.keywords.join(', ')}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
