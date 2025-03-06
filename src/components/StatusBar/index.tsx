@@ -2,6 +2,7 @@ import React from 'react';
 import { useEditorStore } from '../../store';
 import { getLanguageStatusItem } from './LanguageStatusItems';
 import { Macro } from '../Macro';
+import { tabletRegistry } from '../../tablets';
 
 interface StatusBarProps {
   side?: 'left' | 'right';
@@ -18,7 +19,22 @@ export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
     state.tabs.find((tab) => tab.id === activeTabId)
   );
 
-  const LanguageStatusItem = activeTab ? getLanguageStatusItem(activeTab.language) : null;
+  // Get the tablet if this is a tablet tab
+  let tabletLabel = '';
+  if (activeTab?.isTablet && activeTab.tabletState) {
+    try {
+      const state = JSON.parse(activeTab.tabletState);
+      const tablet = tabletRegistry.getById(state.type);
+      if (tablet) {
+        tabletLabel = tablet.label;
+      }
+    } catch (e) {
+      // If there's an error parsing the state, fall back to showing the language
+      console.error('Error parsing tablet state:', e);
+    }
+  }
+
+  const LanguageStatusItem = activeTab && !activeTab.isTablet ? getLanguageStatusItem(activeTab.language) : null;
 
   return (
     <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">
@@ -28,7 +44,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
         </span>
         {activeTab && (
           <div className="p-0.5 flex items-center space-x-2">
-            <span className="capitalize">{activeTab.language}</span>
+            <span className="capitalize">
+              {tabletLabel || activeTab.language}
+            </span>
             {LanguageStatusItem && <LanguageStatusItem />}
           </div>
         )}

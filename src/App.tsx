@@ -4,6 +4,8 @@ import { Plus } from 'lucide-react';
 import { marked } from 'marked';
 import { TabBar } from './components/TabBar';
 import { StatusBar } from './components/StatusBar';
+import { TabletView } from './components/TabletView';
+import { TabletSelector } from './tablets';
 import { useEditorStore } from './store';
 import { initializeLanguageProviders, detectLanguage, isAmbiguousLanguage } from './languages';
 
@@ -32,11 +34,15 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     setCursorPosition, 
     updateTabLanguage,
     setActiveLeftTab,
-    setActiveRightTab
+    setActiveRightTab,
+    updateTabState
   } = useEditorStore();
   
   const editorRef = useRef<any>(null);
   const previousContentRef = useRef<string>('');
+  const [showTabletSelector, setShowTabletSelector] = useState(false);
+  const [tabletQuery, setTabletQuery] = useState('');
+  const [selectorPosition, setSelectorPosition] = useState({ x: 0, y: 0 });
   
   const activeTabId = side === 'left' ? splitView.activeLeftTabId : splitView.activeRightTabId;
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
@@ -80,37 +86,83 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
       previousContentRef.current = activeTab.content;
     }
   }, [activeTabId]);
+
+  // Handle keyboard events for the editor
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showTabletSelector) {
+        e.preventDefault();
+        setShowTabletSelector(false);
+        if (activeTabId) {
+          updateTabContent(activeTabId, '');
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showTabletSelector, activeTabId, updateTabContent]);
   
   const handleEditorChange = (value: string | undefined) => {
     if (activeTabId && value !== undefined && activeTab) {
       const prevContent = previousContentRef.current;
       const newContent = value;
-      
-      // Update the content
+
+      // Update the content first
       updateTabContent(activeTabId, newContent);
-      
-      // If content is empty, reset to plaintext and unlock
-      if (newContent.trim().length === 0) {
-        updateTabLanguage(activeTabId, 'plaintext', false);
-      } else {
-        // Check if this is a complete content replacement
-        const isCompleteReplacement = 
-          Math.abs(prevContent.length - newContent.length) > 10 && // Length changed significantly
-          !newContent.includes(prevContent) && // New content doesn't contain old content
-          !prevContent.includes(newContent); // Old content doesn't contain new content
+
+      // Check if we should show/hide the tablet selector
+      if (!activeTab.isTablet) {
+        const trimmedContent = newContent.trim();
         
-        // If it's a complete replacement, unlock the language for recalculation
-        if (isCompleteReplacement) {
-          const detectedLanguage = detectLanguage(newContent);
-          const shouldLock = detectedLanguage !== 'plaintext' && !isAmbiguousLanguage(newContent);
-          updateTabLanguage(activeTabId, detectedLanguage, shouldLock);
-        } 
-        // Otherwise, only detect if not locked
-        else if (!activeTab.languageLocked) {
-          const detectedLanguage = detectLanguage(newContent);
-          if (detectedLanguage !== activeTab.language) {
+        if (trimmedContent === '') {
+          // Content is empty, hide selector
+          setShowTabletSelector(false);
+          setTabletQuery('');
+        } else if (trimmedContent.startsWith('/')) {
+          // Show tablet selector and update query
+          if (!showTabletSelector) {
+            const editor = editorRef.current;
+            if (editor) {
+              const position = editor.getPosition();
+              const coordinates = editor.getScrolledVisiblePosition(position);
+              const editorContainer = editor.getContainerDomNode();
+              const rect = editorContainer.getBoundingClientRect();
+
+              setSelectorPosition({
+                x: rect.left + coordinates.left,
+                y: rect.top + coordinates.top + 20
+              });
+              setShowTabletSelector(true);
+            }
+          }
+          // Update search query (remove the leading slash)
+          setTabletQuery(trimmedContent.slice(1));
+        } else {
+          // Content doesn't start with /, hide selector
+          setShowTabletSelector(false);
+          setTabletQuery('');
+        }
+
+        // Handle language detection
+        if (trimmedContent.length === 0) {
+          updateTabLanguage(activeTabId, 'plaintext', false);
+        } else {
+          const isCompleteReplacement = 
+            Math.abs(prevContent.length - newContent.length) > 10 &&
+            !newContent.includes(prevContent) &&
+            !prevContent.includes(newContent);
+          
+          if (isCompleteReplacement) {
+            const detectedLanguage = detectLanguage(newContent);
             const shouldLock = detectedLanguage !== 'plaintext' && !isAmbiguousLanguage(newContent);
             updateTabLanguage(activeTabId, detectedLanguage, shouldLock);
+          } else if (!activeTab.languageLocked) {
+            const detectedLanguage = detectLanguage(newContent);
+            if (detectedLanguage !== activeTab.language) {
+              const shouldLock = detectedLanguage !== 'plaintext' && !isAmbiguousLanguage(newContent);
+              updateTabLanguage(activeTabId, detectedLanguage, shouldLock);
+            }
           }
         }
       }
@@ -119,7 +171,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
       previousContentRef.current = newContent;
     }
   };
-  
+
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     
@@ -133,6 +185,18 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
         lineNumber: e.position.lineNumber,
         column: e.position.column
       });
+
+      // Hide tablet selector if cursor moves to a different line
+      if (showTabletSelector) {
+        const content = editor.getValue();
+        const lines = content.split('\n');
+        const currentLine = lines[e.position.lineNumber - 1] || '';
+        
+        if (!currentLine.trim().startsWith('/')) {
+          setShowTabletSelector(false);
+          setTabletQuery('');
+        }
+      }
     });
     
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
@@ -154,6 +218,30 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     }
   };
   
+  const handleTabletSelect = (tablet: any) => {
+    if (!activeTabId || !activeTab) return;
+
+    // Create initial tablet state
+    const state = tablet.createInitialState();
+    const serializedState = tablet.serializeState(state);
+
+    // Update the tab
+    updateTabState(activeTabId, {
+      isTablet: true,
+      tabletState: serializedState,
+      content: '', // Clear the content since we're using tablet state
+      language: 'plaintext' // Reset language
+    });
+
+    setShowTabletSelector(false);
+    setTabletQuery('');
+  };
+
+  const handleTabletStateChange = (newState: string) => {
+    if (!activeTabId) return;
+    updateTabState(activeTabId, { tabletState: newState });
+  };
+  
   const renderMarkdownPreview = () => {
     if (!activeTab?.content) return <div className="p-8">No content to preview</div>;
     
@@ -168,32 +256,51 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
   
   return (
     <div className="flex flex-col h-full w-full">
-      <div className="flex-1 overflow-hidden w-full" onClick={handleEditorFocus}>
+      <div className="flex-1 overflow-hidden w-full relative" onClick={handleEditorFocus}>
         {activeTab ? (
-          activeTab.language === 'markdown' && previewMode ? (
+          activeTab.isTablet ? (
+            <TabletView tab={activeTab} onChange={handleTabletStateChange} />
+          ) : activeTab.language === 'markdown' && previewMode ? (
             renderMarkdownPreview()
           ) : (
-            <Editor
-              height="100%"
-              width="100%"
-              theme="vs-dark"
-              language={activeTab.language}
-              value={activeTab.content}
-              onChange={handleEditorChange}
-              onMount={handleEditorDidMount}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                wordWrap: 'on',
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                formatOnPaste: true,
-                formatOnType: true,
-                find: {
-                  addExtraSpaceOnTop: false,
-                },
-              }}
-            />
+            <>
+              <Editor
+                height="100%"
+                width="100%"
+                theme="vs-dark"
+                language={activeTab.language}
+                value={activeTab.content}
+                onChange={handleEditorChange}
+                onMount={handleEditorDidMount}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  wordWrap: 'on',
+                  automaticLayout: true,
+                  scrollBeyondLastLine: false,
+                  formatOnPaste: true,
+                  formatOnType: true,
+                  find: {
+                    addExtraSpaceOnTop: false,
+                  },
+                }}
+              />
+              {showTabletSelector && (
+                <div style={{ position: 'absolute', left: selectorPosition.x, top: selectorPosition.y }}>
+                  <TabletSelector
+                    searchQuery={tabletQuery}
+                    onSelect={handleTabletSelect}
+                    onClose={() => {
+                      setShowTabletSelector(false);
+                      setTabletQuery('');
+                      if (activeTabId) {
+                        updateTabContent(activeTabId, '');
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </>
           )
         ) : (
           <div className="h-full flex items-center justify-center text-gray-400">

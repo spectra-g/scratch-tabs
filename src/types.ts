@@ -4,6 +4,8 @@ export interface Tab {
   content: string;
   language: string;
   languageLocked: boolean;
+  isTablet?: boolean;
+  tabletState?: string;
 }
 
 export interface EditorPosition {
@@ -13,9 +15,9 @@ export interface EditorPosition {
 
 export interface SplitViewState {
   isSplit: boolean;
-  leftTabs: string[]; // Tab IDs
-  rightTabs: string[]; // Tab IDs
+  leftTabs: string[];
+  rightTabs: string[];
   activeLeftTabId: string | null;
   activeRightTabId: string | null;
-  splitRatio: number; // Ratio between left and right panes (0 to 1)
+  splitRatio: number;
 }

@@ -8,9 +8,6 @@ import {
   isTabEmpty,
   countEmptyTabs
 } from '../utils';
-import {
-  groupTabsByLanguage
-} from '../utils';
 
 // Define the combined store interface
 interface RootStore {
@@ -23,6 +20,7 @@ interface RootStore {
   updateTabContent: (id: string, content: string) => void;
   updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
   updateTabTitle: (id: string, title: string) => void;
+  updateTabState: (id: string, updates: Partial<Tab>) => void;
 
   // Editor state
   cursorPosition: { lineNumber: number; column: number };
@@ -139,6 +137,10 @@ export const useRootStore = create<RootStore>((set, get) => {
       useTabsStore.getState().updateTabTitle(id, title);
     },
 
+    updateTabState: (id, updates) => {
+      useTabsStore.getState().updateTabState(id, updates);
+    },
+
     // Editor state functions
     setCursorPosition: (position) => {
       useEditorStore.getState().setCursorPosition(position);
@@ -158,8 +160,8 @@ export const useRootStore = create<RootStore>((set, get) => {
       } else {
         // Get all tabs except the one being moved to the right
         const otherTabIds = tabs
-            .filter(tab => tab.id !== leftTabId)
-            .map(tab => tab.id);
+          .filter(tab => tab.id !== leftTabId)
+          .map(tab => tab.id);
 
         useSplitViewStore.getState().splitScreen(leftTabId, otherTabIds);
       }
