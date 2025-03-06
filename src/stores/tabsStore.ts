@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Tab } from '../types';
-import { generateTabId, duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
+import { duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
 
 interface TabsStore {
   tabs: Tab[];

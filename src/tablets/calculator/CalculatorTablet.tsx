@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Tablet, TabletState } from '../types';
-import { Calculator, Equal, Delete, RotateCcw } from 'lucide-react';
+import { Calculator, Delete, RotateCcw } from 'lucide-react';
 
 interface CalculatorTabletState extends TabletState {
   type: 'calculator';
