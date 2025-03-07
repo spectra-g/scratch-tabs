@@ -3,6 +3,7 @@ import { Copy } from 'lucide-react';
 import { Tablet, TabletState } from '../types';
 
 interface PasswordConfig {
+  label: string;
   length: number;
   useUppercase: boolean;
   useLowercase: boolean;
@@ -25,6 +26,7 @@ interface PasswordTabletState extends TabletState {
 
 const DEFAULT_CONFIGS: PasswordConfig[] = [
   {
+    label: 'Basic',
     length: 12,
     useUppercase: true,
     useLowercase: true,
@@ -32,6 +34,7 @@ const DEFAULT_CONFIGS: PasswordConfig[] = [
     useSpecial: false,
   },
   {
+    label: 'Special characters',
     length: 16,
     useUppercase: true,
     useLowercase: true,
@@ -39,6 +42,7 @@ const DEFAULT_CONFIGS: PasswordConfig[] = [
     useSpecial: true,
   },
   {
+    label: 'Super strong',
     length: 32,
     useUppercase: true,
     useLowercase: true,
@@ -77,7 +81,7 @@ export const PasswordTablet: Tablet = {
       type: 'password',
       data: {
         passwords: DEFAULT_CONFIGS.map((config, i) => ({
-          label: `Password ${i + 1}`,
+          label: config.label,
           config,
           value: generatePassword(config),
         })),

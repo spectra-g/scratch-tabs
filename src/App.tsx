@@ -35,7 +35,8 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     updateTabLanguage,
     setActiveLeftTab,
     setActiveRightTab,
-    updateTabState
+    updateTabState,
+    updateTabTitle
   } = useEditorStore();
   
   const editorRef = useRef<any>(null);
@@ -225,12 +226,13 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     const state = tablet.createInitialState();
     const serializedState = tablet.serializeState(state);
 
-    // Update the tab
+    // Update the tab with tablet state and title
     updateTabState(activeTabId, {
       isTablet: true,
       tabletState: serializedState,
       content: '', // Clear the content since we're using tablet state
-      language: 'plaintext' // Reset language
+      language: 'plaintext', // Reset language
+      title: tablet.label // Set the title to the tablet's label
     });
 
     setShowTabletSelector(false);

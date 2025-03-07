@@ -83,9 +83,12 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   return (
     <div 
       ref={selectorRef}
-      className="absolute z-50 w-72 bg-gray-800/95 backdrop-blur border border-gray-600/50 rounded-lg shadow-xl max-h-72 overflow-y-auto"
+      className="absolute z-50 w-72 bg-gray-800/95 backdrop-blur border border-gray-600/50 rounded-lg shadow-xl"
     >
-      <div ref={listRef}>
+      <div 
+        ref={listRef}
+        className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500"
+      >
         {tablets.map((tablet, index) => (
           <div
             key={tablet.id}
