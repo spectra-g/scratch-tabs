@@ -8,6 +8,8 @@ class TabletRegistryImpl implements TabletRegistry {
       throw new Error(`Tablet with ID ${tablet.id} is already registered`);
     }
     this.tablets.push(tablet);
+    // Sort tablets by label whenever a new one is registered
+    this.tablets.sort((a, b) => a.label.localeCompare(b.label));
   }
   
   getAll(): Tablet[] {
