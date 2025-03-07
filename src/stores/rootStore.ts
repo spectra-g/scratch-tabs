@@ -6,9 +6,7 @@ import { Tab } from '../types';
 import {
   findTabById,
   isTabEmpty,
-  countEmptyTabs
-} from '../utils';
-import {
+  countEmptyTabs,
   groupTabsByLanguage
 } from '../utils';
 
@@ -23,6 +21,7 @@ interface RootStore {
   updateTabContent: (id: string, content: string) => void;
   updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
   updateTabTitle: (id: string, title: string) => void;
+  updateTabState: (id: string, updates: Partial<Tab>) => void;
 
   // Editor state
   cursorPosition: { lineNumber: number; column: number };
@@ -139,6 +138,10 @@ export const useRootStore = create<RootStore>((set, get) => {
       useTabsStore.getState().updateTabTitle(id, title);
     },
 
+    updateTabState: (id, updates) => {
+      useTabsStore.getState().updateTabState(id, updates);
+    },
+
     // Editor state functions
     setCursorPosition: (position) => {
       useEditorStore.getState().setCursorPosition(position);
@@ -149,21 +152,35 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     // Split view functions
-    splitScreen: (leftTabId, rightTabId) => {
-      const { tabs } = get();
+    splitScreen: (tabId) => {
+      const { splitView } = get();
+      
+      // If already split, do nothing
+      if (splitView.isSplit) return;
 
-      if (rightTabId) {
-        // If a right tab is specified, use it directly
-        useSplitViewStore.getState().splitScreen(leftTabId, [rightTabId]);
-      } else {
-        // Get all tabs except the one being moved to the right
-        const otherTabIds = tabs
-            .filter(tab => tab.id !== leftTabId)
-            .map(tab => tab.id);
-
-        useSplitViewStore.getState().splitScreen(leftTabId, otherTabIds);
+      // Move the selected tab to the right side
+      const rightTabs = [tabId];
+      
+      // Keep all other tabs on the left side
+      const leftTabs = splitView.leftTabs.filter(id => id !== tabId);
+      
+      // If no tabs would be left on the left side, keep the first one
+      if (leftTabs.length === 0 && rightTabs.length > 0) {
+        leftTabs.push(rightTabs.shift()!);
       }
-      useTabsStore.getState().setActiveTab(leftTabId);
+
+      // Update split view
+      useSplitViewStore.getState().setSplitView({
+        isSplit: true,
+        leftTabs,
+        rightTabs,
+        activeLeftTabId: leftTabs[0] || null,
+        activeRightTabId: rightTabs[0] || null,
+        splitRatio: 0.5
+      });
+
+      // Set active tab
+      useTabsStore.getState().setActiveTab(tabId);
     },
 
     unsplitScreen: (fromRight) => {

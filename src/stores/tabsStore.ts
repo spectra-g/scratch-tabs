@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Tab } from '../types';
-import { generateTabId, duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
+import { duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
 
 interface TabsStore {
   tabs: Tab[];
@@ -13,6 +13,7 @@ interface TabsStore {
   updateTabContent: (id: string, content: string) => void;
   updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
   updateTabTitle: (id: string, title: string) => void;
+  updateTabState: (id: string, updates: Partial<Tab>) => void;
   duplicateTab: (tabId: string) => string; // Returns the new tab ID
 }
 
@@ -62,6 +63,12 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       tab.id === id ? { ...tab, title } : tab
     ),
   })),
+
+  updateTabState: (id, updates) => set((state) => ({
+    tabs: state.tabs.map((tab) =>
+      tab.id === id ? { ...tab, ...updates } : tab
+    ),
+  })),
   
   duplicateTab: (tabId) => {
     const state = get();
@@ -78,4 +85,4 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     
     return newTab.id;
   },
-})); 
+}));
