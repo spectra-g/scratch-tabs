@@ -21,3 +21,5 @@ export interface SplitViewState {
   activeRightTabId: string | null;
   splitRatio: number;
 }
+
+export type ResizeObserverCallback = (entries: ResizeObserverEntry[], observer: ResizeObserver) => void;
