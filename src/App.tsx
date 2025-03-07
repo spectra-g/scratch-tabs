@@ -35,8 +35,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     updateTabLanguage,
     setActiveLeftTab,
     setActiveRightTab,
-    updateTabState,
-    updateTabTitle
+    updateTabState
   } = useEditorStore();
   
   const editorRef = useRef<any>(null);
@@ -570,10 +569,23 @@ function App() {
             </div>
           ) : (
             <div 
-              className="h-full w-full flex items-center justify-center text-gray-400 cursor-pointer"
+              className="h-full w-full flex flex-col items-center justify-center text-gray-400 cursor-pointer"
               onDoubleClick={handleNewTab}
             >
-              <p>Double-click here or click the + button to create a new tab</p>
+              <img 
+                src="/favicon.svg" 
+                alt="Scratch Tabs Logo" 
+                className="w-12 h-12 mb-4 text-gray-500"
+              />
+              <h1 className="text-xl font-semibold mb-2">Welcome to Scratch Tabs beta!</h1>
+              <div className="text-center">
+                <p className="mb-4">To start Scratching:</p>
+                <ol className="list-decimal list-inside text-left space-y-2">
+                  <li>Double click or click the plus icon to open a new tab</li>
+                  <li>Paste content here to open a new tab</li>
+                  <li>Type '/' to open a Tablets</li>
+                </ol>
+              </div>
             </div>
           )
         )}

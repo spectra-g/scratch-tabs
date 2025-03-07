@@ -8,43 +8,66 @@ export class JavaScriptLanguageDetector extends BaseLanguageDetector {
   id = 'javascript';
   name = 'JavaScript';
   extensions = ['js', 'jsx', 'mjs'];
-  priority = 4;
-  
+  priority = 6; // Higher priority than CSV
+
   /**
    * Check if content matches JavaScript patterns
    */
   isMatch(content: string): boolean {
-    // Normalize content for better detection
-    const normalizedContent = content.trim();
-    
+    // First check for definitive JavaScript patterns
+    const definitivePatterns = [
+      /\bimport\s+.*\s+from\s+['"]/i,          // Import statements
+      /\bexport\s+(default\s+)?\w+/i,          // Export statements
+      /\basync\s+function/i,                   // Async functions
+      /\bawait\s+\w+/i,                        // Await expressions
+      /=>\s*{/i,                               // Arrow functions
+      /\bclass\s+\w+(\s+extends\s+\w+)?\s*\{/i // Class declarations
+    ];
+
+    // If any definitive pattern matches, it's definitely JavaScript
+    if (definitivePatterns.some(pattern => pattern.test(content))) {
+      return true;
+    }
+
     // Check for common JavaScript patterns
     const jsPatterns = [
       /\bfunction\s+\w+\s*\(/i,                // Function declarations
       /\bconst\s+\w+\s*=/i,                    // Const declarations
       /\blet\s+\w+\s*=/i,                      // Let declarations
       /\bvar\s+\w+\s*=/i,                      // Var declarations
-      /\bimport\s+.*\s+from\s+['"]/i,          // Import statements
-      /\bexport\s+(default\s+)?\w+/i,          // Export statements
-      /\bclass\s+\w+(\s+extends\s+\w+)?\s*\{/i, // Class declarations
       /\bnew\s+\w+\(/i,                        // Object instantiation
       /\b(if|for|while|switch)\s*\(/i,         // Control structures
-      /\b(return|break|continue)\b/i,          // Flow control
+      /\b(return|break|continue)\b/i,           // Flow control
       /\b\w+\s*\.\s*\w+/i,                     // Object property access
       /\bdocument\s*\.\s*\w+/i,                // DOM manipulation
       /\bconsole\s*\.\s*log\(/i,               // Console logging
-      /=>\s*{/i,                               // Arrow functions
-      /\basync\s+function/i,                   // Async functions
-      /\bawait\s+\w+/i                         // Await expressions
     ];
     
     // Count how many JavaScript patterns match
     const matchCount = jsPatterns.reduce((count, pattern) => 
-      count + (pattern.test(normalizedContent) ? 1 : 0), 0);
+      count + (pattern.test(content) ? 1 : 0), 0);
     
     // If at least 3 patterns match, consider it JavaScript
     return matchCount >= 3;
   }
   
+  /**
+   * Count JavaScript-specific patterns
+   */
+  countSpecificPatterns(content: string): number {
+    const specificPatterns = [
+      /\bimport\s+.*\s+from\s+['"]/i,          // Import statements
+      /\bexport\s+(default\s+)?\w+/i,          // Export statements
+      /\basync\s+function/i,                   // Async functions
+      /\bawait\s+\w+/i,                        // Await expressions
+      /=>\s*{/i,                               // Arrow functions
+      /\bclass\s+\w+(\s+extends\s+\w+)?\s*\{/i // Class declarations
+    ];
+    
+    return specificPatterns.reduce((count, pattern) => 
+      count + (pattern.test(content) ? 1 : 0), 0);
+  }
+
   /**
    * Register JavaScript language provider with Monaco
    */
@@ -263,4 +286,4 @@ export const registerJavaScriptProvider = (monaco: any) => {
 
 export const registerTypeScriptProvider = (monaco: any) => {
   tsDetector.registerProvider(monaco);
-}; 
+};
