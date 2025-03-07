@@ -8,12 +8,25 @@ export class CsvLanguageDetector extends BaseLanguageDetector {
   id = 'csv';
   name = 'CSV';
   extensions = ['csv', 'tsv'];
-  priority = 4;
-  
+  priority = 3; // Lower priority than JavaScript
+
   /**
    * Check if content matches CSV patterns
    */
   isMatch(content: string): boolean {
+    // Skip if content looks like JavaScript/code
+    if (
+      content.includes('import') || 
+      content.includes('export') || 
+      content.includes('function') ||
+      content.includes('class') ||
+      content.includes('const ') ||
+      content.includes('let ') ||
+      content.includes('var ')
+    ) {
+      return false;
+    }
+    
     // Split into lines and check if we have at least one line
     const lines = content.trim().split('\n');
     if (lines.length === 0) return false;
@@ -61,7 +74,7 @@ export class CsvLanguageDetector extends BaseLanguageDetector {
     // If most of the checked lines match our CSV pattern, consider it a CSV
     return validLines >= Math.ceil(linesToCheck * 0.6);
   }
-  
+
   /**
    * Register CSV language provider with Monaco
    */

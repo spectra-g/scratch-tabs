@@ -8,6 +8,7 @@ import { TabletView } from './components/TabletView';
 import { TabletSelector } from './tablets';
 import { useEditorStore } from './store';
 import { initializeLanguageProviders, detectLanguage, isAmbiguousLanguage } from './languages';
+import { debounce, createThrottledResizeObserver } from './utils/domUtils';
 
 // Initialize language providers
 initializeLanguageProviders();
@@ -35,8 +36,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     updateTabLanguage,
     setActiveLeftTab,
     setActiveRightTab,
-    updateTabState,
-    updateTabTitle
+    updateTabState
   } = useEditorStore();
   
   const editorRef = useRef<any>(null);
@@ -316,48 +316,6 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
   );
 };
 
-// Utility function to debounce function calls
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: number | null = null;
-  
-  return function(...args: Parameters<T>) {
-    if (timeout !== null) {
-      window.clearTimeout(timeout);
-    }
-    
-    timeout = window.setTimeout(() => {
-      func(...args);
-      timeout = null;
-    }, wait);
-  };
-}
-
-// Utility to throttle resize observer notifications
-function createThrottledResizeObserver(callback: ResizeObserverCallback, delay: number): ResizeObserver {
-  let timeoutId: number | null = null;
-  let pendingEntries: ResizeObserverEntry[] = [];
-  
-  const throttledCallback: ResizeObserverCallback = (entries, observer) => {
-    // Store the latest entries
-    pendingEntries = entries;
-    
-    // If we already have a timeout scheduled, don't do anything
-    if (timeoutId !== null) return;
-    
-    // Schedule processing on the next animation frame to avoid layout thrashing
-    timeoutId = window.requestAnimationFrame(() => {
-      callback(pendingEntries, observer);
-      pendingEntries = [];
-      timeoutId = null;
-    });
-  };
-  
-  return new ResizeObserver(throttledCallback);
-}
-
 function App() {
   const { tabs, splitView, addTab, activeTabId, canAddNewTab, setSplitRatio } = useEditorStore();
   const [isDragging, setIsDragging] = useState(false);
@@ -367,66 +325,114 @@ function App() {
   const dragTimeoutRef = useRef<number | null>(null);
   const lastRatioRef = useRef<number>(splitView.splitRatio);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  
+  const [showTabletSelector, setShowTabletSelector] = useState(false);
+  const [selectorPosition, setSelectorPosition] = useState({ x: 0, y: 0 });
+  const welcomeRef = useRef<HTMLDivElement>(null);
+
   // Update width calculations when split ratio changes
   useEffect(() => {
     setLeftWidth(`${splitView.splitRatio * 100}%`);
     setRightWidth(`${(1 - splitView.splitRatio) * 100}%`);
   }, [splitView.splitRatio]);
-  
+
   // Set up throttled resize observer
   useEffect(() => {
     if (!containerRef.current) return;
-    
-    // Create a throttled resize observer to prevent loop errors
+
     const handleResize = (entries: ResizeObserverEntry[]) => {
-      // Only update if we're not currently dragging
       if (!isDragging && entries.length > 0) {
-        // Recalculate widths based on current ratio
         setLeftWidth(`${splitView.splitRatio * 100}%`);
         setRightWidth(`${(1 - splitView.splitRatio) * 100}%`);
       }
     };
-    
+
     resizeObserverRef.current = createThrottledResizeObserver(handleResize, 100);
     resizeObserverRef.current.observe(containerRef.current);
-    
+
     return () => {
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
       }
     };
   }, [splitView.splitRatio, isDragging]);
-  
-  const handleNewTab = () => {
+
+  const handleNewTab = (content?: string) => {
     // Determine which side is active based on the current activeTabId
     const isRightSideActive = splitView.isSplit && 
       splitView.rightTabs.includes(splitView.activeRightTabId || '') && 
       activeTabId === splitView.activeRightTabId;
-    
+
     // Check if we can add a new tab
     if (!canAddNewTab(isRightSideActive)) {
-      // Don't add a new tab if we've reached the limit of empty tabs
       return;
     }
-    
+
+    // Detect language if content is provided
+    const language = content ? detectLanguage(content) : 'plaintext';
+    const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
+
     addTab({
       id: crypto.randomUUID(),
       title: `new ${tabs.length + 1}`,
-      content: '',
-      language: 'plaintext',
-      languageLocked: false
+      content: content || '',
+      language,
+      languageLocked: shouldLock
     }, isRightSideActive);
   };
-  
+
+  // Handle keyboard events for tablet selector
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (tabs.length === 0 && e.key === '/') {
+      e.preventDefault();
+      if (!showTabletSelector && welcomeRef.current) {
+        const rect = welcomeRef.current.getBoundingClientRect();
+        setSelectorPosition({
+          x: rect.left + rect.width / 2 - 144, // Center the selector (width is 288px)
+          y: rect.top + rect.height / 2
+        });
+        setShowTabletSelector(true);
+      }
+    } else if (e.key === 'Escape' && showTabletSelector) {
+      setShowTabletSelector(false);
+    }
+  };
+
+  // Handle tablet selection
+  const handleTabletSelect = (tablet: any) => {
+    // Create initial tablet state
+    const state = tablet.createInitialState();
+    const serializedState = tablet.serializeState(state);
+
+    // Create a new tab with the tablet
+    addTab({
+      id: crypto.randomUUID(),
+      title: tablet.label,
+      content: '',
+      language: 'plaintext',
+      languageLocked: false,
+      isTablet: true,
+      tabletState: serializedState
+    });
+
+    setShowTabletSelector(false);
+  };
+
+  // Handle paste event on the welcome screen
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    if (tabs.length > 0) return;
+    const text = e.clipboardData.getData('text');
+    if (!text) return;
+    handleNewTab(text);
+  };
+
   // Debounced version of setSplitRatio to prevent too many updates
   const debouncedSetSplitRatio = useCallback(
     debounce((ratio: number) => {
       setSplitRatio(ratio);
-    }, 50), // Increased debounce time to further reduce updates
+    }, 50),
     [setSplitRatio]
   );
-  
+
   // Update local state immediately for smooth UI, but debounce the store update
   const updateSplitRatio = useCallback((ratio: number) => {
     // Update local state immediately for smooth UI
@@ -434,12 +440,12 @@ function App() {
     setRightWidth(`${(1 - ratio) * 100}%`);
     
     // Only update the store if the ratio has changed significantly
-    if (Math.abs(ratio - lastRatioRef.current) > 0.01) { // Increased threshold to reduce updates
+    if (Math.abs(ratio - lastRatioRef.current) > 0.01) {
       lastRatioRef.current = ratio;
       debouncedSetSplitRatio(ratio);
     }
   }, [debouncedSetSplitRatio]);
-  
+
   const handleDragStart = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -501,7 +507,7 @@ function App() {
     document.addEventListener('mousemove', handleDragMove);
     document.addEventListener('mouseup', handleDragEnd);
   };
-  
+
   // Clean up any pending timeouts when component unmounts
   useEffect(() => {
     return () => {
@@ -510,19 +516,16 @@ function App() {
       }
     };
   }, []);
-  
+
   return (
     <div className="h-screen flex flex-col bg-gray-900">
       {/* Header with tabs */}
       <div className="flex items-center bg-gray-800 text-white">
         {splitView.isSplit ? (
           <>
-            {/* Left side tabs */}
             <div style={{ width: leftWidth }}>
               <TabBar side="left" />
             </div>
-            
-            {/* Right side tabs */}
             <div style={{ width: rightWidth }}>
               <TabBar side="right" />
             </div>
@@ -532,15 +535,14 @@ function App() {
             <TabBar side="left" />
           </div>
         )}
-        
         <button
-          onClick={handleNewTab}
+          onClick={() => handleNewTab()}
           className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
         >
           <Plus size={16} />
         </button>
       </div>
-      
+
       {/* Editor area */}
       <div className="flex-1 overflow-hidden flex" ref={containerRef}>
         {splitView.isSplit ? (
@@ -548,8 +550,6 @@ function App() {
             <div style={{ width: leftWidth }} className="h-full">
               <EditorPane side="left" />
             </div>
-            
-            {/* Draggable divider */}
             <div 
               className={`w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize relative ${isDragging ? 'bg-blue-500' : ''}`}
               onMouseDown={handleDragStart}
@@ -558,7 +558,6 @@ function App() {
                 <div className="w-0.5 h-4 bg-gray-400 rounded-full"></div>
               </div>
             </div>
-            
             <div style={{ width: rightWidth }} className="h-full">
               <EditorPane side="right" />
             </div>
@@ -570,15 +569,44 @@ function App() {
             </div>
           ) : (
             <div 
-              className="h-full w-full flex items-center justify-center text-gray-400 cursor-pointer"
-              onDoubleClick={handleNewTab}
+              ref={welcomeRef}
+              className="h-full w-full flex flex-col items-center justify-center text-gray-400 cursor-pointer relative"
+              onDoubleClick={() => handleNewTab()}
+              onPaste={handlePaste}
+              onKeyDown={handleKeyDown}
+              tabIndex={0}
             >
-              <p>Double-click here or click the + button to create a new tab</p>
+              <img 
+                src="/favicon.svg" 
+                alt="Scratch Tabs Logo" 
+                className="w-12 h-12 mb-4 text-gray-500"
+              />
+              <h1 className="text-xl font-semibold mb-2">Welcome to Scratch Tabs beta!</h1>
+              <div className="text-center">
+                <p className="mb-4">To start Scratching:</p>
+                <ol className="list-decimal list-inside text-left space-y-2">
+                  <li>Double click or click the plus icon to open a new tab</li>
+                  <li>Paste content here to open a new tab</li>
+                  <li>Type '/' to open Tablet</li>
+                </ol>
+              </div>
+              {showTabletSelector && (
+                <div style={{ 
+                  position: 'absolute',
+                  left: selectorPosition.x,
+                  top: selectorPosition.y
+                }}>
+                  <TabletSelector
+                    searchQuery=""
+                    onSelect={handleTabletSelect}
+                    onClose={() => setShowTabletSelector(false)}
+                  />
+                </div>
+              )}
             </div>
           )
         )}
       </div>
-      
       {!splitView.isSplit && tabs.length === 0 && <StatusBar />}
     </div>
   );
