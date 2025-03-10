@@ -1,6 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, ChevronRight, ChevronLeft, Maximize, XCircle, ChevronLeftSquare, ChevronRightSquare, Copy, Layers, GitCompare, Split } from 'lucide-react';
-import { useEditorStore } from '../store';
+import {
+  X,
+  ChevronRight,
+  ChevronLeft,
+  Maximize,
+  XCircle,
+  ChevronLeftSquare,
+  ChevronRightSquare,
+  Copy,
+  Layers,
+  GitCompare,
+  Split,
+  Plus
+} from 'lucide-react';
+import { useRootStore } from '../stores';
 import { DiffModal } from './DiffModal';
 
 interface TabContextMenuProps {
@@ -23,7 +36,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClos
     closeAllExcept,
     duplicateTab,
     groupTabsByType
-  } = useEditorStore();
+  } = useRootStore();
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -271,12 +284,13 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
     tabs,
     splitView,
     removeTab,
+    handleNewTab,
     updateTabTitle,
     setActiveLeftTab,
     setActiveRightTab,
     addTab,
     canAddNewTab,
-  } = useEditorStore();
+  } = useRootStore();
 
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
@@ -316,7 +330,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
     // Check if the double click was on the text span
     const target = e.target as HTMLElement;
     if (target.tagName === 'SPAN' && target.textContent === tab.title) {
-      // Double click on the text - edit the title
+      // Double-click on the text - edit the title
       setEditingTabId(tab.id);
       setEditingTitle(tab.title);
     } else {
@@ -405,7 +419,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
             onDoubleClick={handleEmptyAreaDoubleClick}
             key={tabsKey} // Add a key to force re-render when tab order changes
         >
-          {visibleTabs.map(tab=> {
+          {visibleTabs.map(tab => {
             // Calculate the relative width of the indicator bar
             const lineCount = getTabLineCount(tab.content);
             const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
@@ -450,16 +464,21 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
                         removeTab(tab.id);
                       }}
                   >
-                    <X size={12} />
+                    <X size={12}/>
                   </button>
                 </div>
             );
           })}
-
+          <button
+              onClick={() => handleNewTab(isRightSide)}
+              className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+          >
+            <Plus size={16}/>
+          </button>
           {contextMenu && (
               <TabContextMenu
                   tabId={contextMenu.tabId}
-                  position={{ x: contextMenu.x, y: contextMenu.y }}
+                  position={{x: contextMenu.x, y: contextMenu.y}}
                   onClose={handleContextMenuClose}
                   isRightSide={isRightSide}
               />

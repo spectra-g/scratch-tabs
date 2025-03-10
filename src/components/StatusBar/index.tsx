@@ -1,5 +1,5 @@
 import React from 'react';
-import { useEditorStore } from '../../store';
+import { useRootStore } from '../../stores';
 import { getLanguageStatusItem } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
@@ -9,13 +9,13 @@ interface StatusBarProps {
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
-  const { cursorPosition, splitView } = useEditorStore();
+  const { cursorPosition, splitView } = useRootStore();
   
   // Determine which tab to show based on the side
   const isRightSide = side === 'right';
   const activeTabId = isRightSide ? splitView.activeRightTabId : splitView.activeLeftTabId;
   
-  const activeTab = useEditorStore((state) => 
+  const activeTab = useRootStore((state) =>
     state.tabs.find((tab) => tab.id === activeTabId)
   );
 

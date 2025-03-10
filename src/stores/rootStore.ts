@@ -9,6 +9,7 @@ import {
   countEmptyTabs,
   groupTabsByLanguage
 } from '../utils';
+import {detectLanguage, isAmbiguousLanguage} from "../languages";
 
 // Define the combined store interface
 interface RootStore {
@@ -16,6 +17,7 @@ interface RootStore {
   tabs: Tab[];
   activeTabId: string | null;
   addTab: (tab: Tab, toRightSide?: boolean) => void;
+  handleNewTab: (isRightSide: boolean, content?: string) => void;
   removeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   updateTabContent: (id: string, content: string) => void;
@@ -100,6 +102,27 @@ export const useRootStore = create<RootStore>((set, get) => {
 
       // Add the tab to the appropriate side in split view
       useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
+    },
+
+    handleNewTab: (isRightSide: boolean, content?: string) => {
+      const { tabs, canAddNewTab, addTab } = get();
+
+      // Check if we can add a new tab
+      if (!canAddNewTab(isRightSide)) {
+        return;
+      }
+
+      // Detect language if content is provided
+      const language = content ? detectLanguage(content) : 'plaintext';
+      const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
+
+      addTab({
+        id: crypto.randomUUID(),
+        title: `new ${tabs.length + 1}`,
+        content: content || '',
+        language,
+        languageLocked: shouldLock
+      }, isRightSide);
     },
 
     removeTab: (id) => {

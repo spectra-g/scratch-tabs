@@ -130,7 +130,7 @@ export const CalculatorTablet: Tablet = {
         addToHistory(`${display} = ${formatted}`);
         updateDisplay(formatted);
       } catch (e) {
-        updateDisplay('Error');
+        updateDisplay('Error ' + e.message);
         setTimeout(() => updateDisplay('0'), 1000);
       }
     };

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Eye, Edit2 } from 'lucide-react';
-import { useEditorStore } from '../../../store';
+import { useRootStore } from '../../../stores';
 import { StatusItemProps } from '../types';
 
 export const MarkdownStatusItem: React.FC<StatusItemProps> = () => {
-  const { previewMode, togglePreviewMode } = useEditorStore();
+  const { previewMode, togglePreviewMode } = useRootStore();
 
   return (
     <button

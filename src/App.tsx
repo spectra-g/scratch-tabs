@@ -1,12 +1,11 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { Plus } from 'lucide-react';
 import { marked } from 'marked';
 import { TabBar } from './components/TabBar';
 import { StatusBar } from './components/StatusBar';
 import { TabletView } from './components/TabletView';
 import { TabletSelector } from './tablets';
-import { useEditorStore } from './store';
+import { useRootStore } from './stores';
 import { initializeLanguageProviders, detectLanguage, isAmbiguousLanguage } from './languages';
 import { debounce, createThrottledResizeObserver } from './utils/domUtils';
 
@@ -37,7 +36,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     setActiveLeftTab,
     setActiveRightTab,
     updateTabState
-  } = useEditorStore();
+  } = useRootStore();
 
   const editorRef = useRef<any>(null);
   const previousContentRef = useRef<string>('');
@@ -317,7 +316,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
 };
 
 function App() {
-  const { tabs, splitView, addTab, activeTabId, canAddNewTab, setSplitRatio } = useEditorStore();
+  const { tabs, splitView, addTab, handleNewTab, setSplitRatio } = useRootStore();
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [leftWidth, setLeftWidth] = useState(`${splitView.splitRatio * 100}%`);
@@ -355,30 +354,6 @@ function App() {
       }
     };
   }, [splitView.splitRatio, isDragging]);
-
-  const handleNewTab = (content?: string) => {
-    // Determine which side is active based on the current activeTabId
-    const isRightSideActive = splitView.isSplit &&
-        splitView.rightTabs.includes(splitView.activeRightTabId || '') &&
-        activeTabId === splitView.activeRightTabId;
-
-    // Check if we can add a new tab
-    if (!canAddNewTab(isRightSideActive)) {
-      return;
-    }
-
-    // Detect language if content is provided
-    const language = content ? detectLanguage(content) : 'plaintext';
-    const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
-
-    addTab({
-      id: crypto.randomUUID(),
-      title: `new ${tabs.length + 1}`,
-      content: content || '',
-      language,
-      languageLocked: shouldLock
-    }, isRightSideActive);
-  };
 
   // Global keyboard event handler
   useEffect(() => {
@@ -427,7 +402,7 @@ function App() {
     if (tabs.length > 0) return;
     const text = e.clipboardData.getData('text');
     if (!text) return;
-    handleNewTab(text);
+    handleNewTab(false, text);
   };
 
   // Debounced version of setSplitRatio to prevent too many updates
@@ -540,12 +515,6 @@ function App() {
                 <TabBar side="left" />
               </div>
           )}
-          <button
-              onClick={() => handleNewTab()}
-              className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-          >
-            <Plus size={16} />
-          </button>
         </div>
 
         {/* Editor area */}
@@ -576,7 +545,7 @@ function App() {
                   <div
                       ref={welcomeRef}
                       className="h-full w-full flex flex-col items-center pt-32 text-gray-400 cursor-pointer relative outline-none"
-                      onDoubleClick={() => handleNewTab()}
+                      onDoubleClick={() => handleNewTab(false)}
                       onPaste={handlePaste}
                   >
                     <img

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Disc, Square, Play, PlayCircle } from 'lucide-react';
-import { useEditorStore } from '../../store';
+import { useRootStore } from '../../stores';
 
 type MacroMode = 'idle' | 'recording' | 'recorded';
 
@@ -30,7 +30,7 @@ export const Macro: React.FC = () => {
   const [nextPosition, setNextPosition] = useState<{ line: number; column: number } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingToEnd, setIsPlayingToEnd] = useState(false);
-  const { updateTabContent, splitView, tabs } = useEditorStore();
+  const { updateTabContent, splitView, tabs } = useRootStore();
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (mode !== 'recording') return;
