@@ -309,8 +309,6 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
               </div>
           )}
         </div>
-
-        <StatusBar side={side} />
       </div>
   );
 };
@@ -579,7 +577,7 @@ function App() {
               )
           )}
         </div>
-        {!splitView.isSplit && tabs.length === 0 && <StatusBar />}
+        {tabs.length > 0 && <StatusBar />}
       </div>
   );
 }
