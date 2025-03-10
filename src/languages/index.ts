@@ -1,9 +1,4 @@
 import { loader } from '@monaco-editor/react';
-import { registerYamlProvider } from './yaml';
-import { registerMarkdownProvider } from './markdown';
-import { registerJsonProvider } from './json';
-import { registerBashProvider } from './bash';
-import { registerCsvProvider } from './csv';
 import { languageRegistry } from './registry';
 import { LanguageDetector } from './types';
 
@@ -16,6 +11,7 @@ import './bash';
 import './sql';
 import './html';
 import './javascript';
+import './java';
 
 // Export the registry for use in the application
 export { languageRegistry };
@@ -37,6 +33,7 @@ export { registerBashProvider } from './bash';
 export { registerSqlProvider } from './sql';
 export { registerHtmlProvider } from './html';
 export { registerJavaScriptProvider, registerTypeScriptProvider } from './javascript';
+export { registerJavaProvider } from './java';
 
 /**
  * Initialize all language providers with Monaco
