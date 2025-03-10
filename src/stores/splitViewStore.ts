@@ -9,7 +9,7 @@ interface SplitViewStore {
 
   // Split view management
   setSplitView: (splitView: Partial<SplitViewState>) => void;
-  splitScreen: (leftTabId: string, rightTabIds: string[]) => void;
+  splitScreen: (leftTabIds: string[], rightTabId: string) => void;
   unsplitScreen: (fromRight: boolean) => void;
   moveTabToRight: (tabId: string) => void;
   moveTabToLeft: (tabId: string) => void;
@@ -26,23 +26,23 @@ interface SplitViewStore {
   groupTabsByType: (isRightSide: boolean) => void;
 }
 
-export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
+export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
   splitView: createDefaultSplitViewState(),
 
   setSplitView: (newSplitView) => set((state) => ({
     splitView: { ...state.splitView, ...newSplitView }
   })),
 
-  splitScreen: (leftTabId, rightTabIds) => set((state) => {
+  splitScreen: (leftTabIds, rightTabId) => set((state) => {
     if (state.splitView.isSplit) return state; // Already split
 
     return {
       splitView: {
         isSplit: true,
-        leftTabs: [leftTabId],
-        rightTabs: rightTabIds,
-        activeLeftTabId: leftTabId,
-        activeRightTabId: rightTabIds[0] || null,
+        leftTabs: leftTabIds,
+        rightTabs: [rightTabId],
+        activeLeftTabId: leftTabIds[0],
+        activeRightTabId: rightTabId,
         splitRatio: 0.5, // Default to 50/50 split
       }
     };
@@ -51,7 +51,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
   unsplitScreen: (fromRight) => set((state) => {
     if (!state.splitView.isSplit) return state;
 
-    // If unsplitting from right, move right tabs to left
+    // If un-splitting from right, move right tabs to left
     if (fromRight) {
       const allTabs = [...state.splitView.leftTabs, ...state.splitView.rightTabs];
       return {
@@ -65,7 +65,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
         }
       };
     }
-    // If unsplitting from left, move left tabs to right
+    // If un-splitting from left, move left tabs to right
     else {
       const allTabs = [...state.splitView.leftTabs, ...state.splitView.rightTabs];
       return {
@@ -88,7 +88,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     // Remove from left tabs
     const newLeftTabs = state.splitView.leftTabs.filter(id => id !== tabId);
 
-    // If this would leave left side empty, don't allow the move
+    // If this might leave left side empty, don't allow the move
     if (newLeftTabs.length === 0) return state;
 
     // Add to right tabs
@@ -114,7 +114,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     // Remove from right tabs
     const newRightTabs = state.splitView.rightTabs.filter(id => id !== tabId);
 
-    // If this would leave right side empty, don't allow the move
+    // If this leaves right side empty, don't allow the move
     if (newRightTabs.length === 0) return state;
 
     // Add to left tabs
