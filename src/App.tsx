@@ -278,6 +278,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
                           fontSize: 14,
                           wordWrap: 'on',
                           automaticLayout: true,
+                          copyWithSyntaxHighlighting: false,
                           scrollBeyondLastLine: false,
                           formatOnPaste: true,
                           formatOnType: true,

@@ -316,7 +316,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
     return content.split('\n').length;
   };
 
-  const tabLineCounts = visibleTabs.map(tab => getTabLineCount(tab.content));
+  const tabLineCounts = tabs.filter(tab => tab.isTablet != true).map(tab => getTabLineCount(tab.content));
   const maxLineCount = Math.max(...tabLineCounts, 1); // Avoid division by zero
 
   useEffect(() => {
@@ -423,7 +423,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
             // Calculate the relative width of the indicator bar
             const lineCount = getTabLineCount(tab.content);
             const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
-
             return (
                 <div
                     key={tab.id}
