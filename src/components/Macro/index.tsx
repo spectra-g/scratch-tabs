@@ -15,7 +15,8 @@ const RECORDABLE_KEYS = [
   'ArrowUp',
   'ArrowDown',
   'Enter',
-  'Backspace'
+  'Backspace',
+  'Delete'
 ];
 
 /**
@@ -75,7 +76,11 @@ export const Macro: React.FC = () => {
     let position = getContentPosition(content, currentLine, currentCol);
 
     keystrokes.forEach(keystroke => {
-      if (keystroke.key === 'Backspace') {
+      if (keystroke.key === 'Delete') {
+        if (position < content.length) {
+          content = content.slice(0, position) + content.slice(position + 1);
+        }
+      } else if (keystroke.key === 'Backspace') {
         if (position > 0) {
           content = content.slice(0, position - 1) + content.slice(position);
           if (currentCol > 0) {
