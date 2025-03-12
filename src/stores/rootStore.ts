@@ -18,6 +18,7 @@ interface RootStore {
   activeTabId: string | null;
   addTab: (tab: Tab, toRightSide?: boolean) => void;
   handleNewTab: (isRightSide: boolean, content?: string) => void;
+  handleNewTabFromPaste: (isRightSide: boolean) => void;
   removeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   updateTabContent: (id: string, content: string) => void;
@@ -123,6 +124,15 @@ export const useRootStore = create<RootStore>((set, get) => {
         language,
         languageLocked: shouldLock
       }, isRightSide);
+    },
+
+    // Handle paste event on the welcome screen
+    handleNewTabFromPaste: (isRightSide: boolean) => {
+      const { handleNewTab } = get();
+      async function paste() {
+        return await navigator.clipboard.readText();
+      }
+      paste().then(content => handleNewTab(isRightSide, content));
     },
 
     removeTab: (id) => {

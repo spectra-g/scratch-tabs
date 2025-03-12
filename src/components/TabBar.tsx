@@ -11,7 +11,8 @@ import {
   Layers,
   GitCompare,
   Split,
-  Plus
+  Plus,
+  ClipboardPlus
 } from 'lucide-react';
 import { useRootStore } from '../stores';
 import { DiffModal } from './DiffModal';
@@ -285,6 +286,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
     splitView,
     removeTab,
     handleNewTab,
+    handleNewTabFromPaste,
     updateTabTitle,
     setActiveLeftTab,
     setActiveRightTab,
@@ -471,8 +473,16 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
           <button
               onClick={() => handleNewTab(isRightSide)}
               className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+              title={"New tab"}
           >
             <Plus size={16}/>
+          </button>
+          <button
+              onClick={() => handleNewTabFromPaste(isRightSide)}
+              className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+              title={"New tab with contents from the clipboard"}
+          >
+            <ClipboardPlus size={16}/>
           </button>
           {contextMenu && (
               <TabContextMenu
