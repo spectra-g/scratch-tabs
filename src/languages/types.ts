@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 /**
  * Interface for language detector implementations
  */
@@ -37,6 +39,11 @@ export interface LanguageDetector {
    * Register language provider with Monaco editor
    */
   registerProvider: (monaco: any) => void;
+
+  /**
+   * Get sample content for this language
+   */
+  sampleContent: () => string;
 }
 
 /**
@@ -72,4 +79,4 @@ export interface LanguageRegistry {
    * Initialize all language providers with Monaco
    */
   initializeProviders: (monaco: any) => void;
-} 
+}

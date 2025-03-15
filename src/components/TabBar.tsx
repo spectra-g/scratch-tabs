@@ -12,10 +12,12 @@ import {
   GitCompare,
   Split,
   Plus,
-  ClipboardPlus
+  ClipboardPlus,
+  FileCode
 } from 'lucide-react';
 import { useRootStore } from '../stores';
 import { DiffModal } from './DiffModal';
+import { languageRegistry } from '../languages';
 
 interface TabContextMenuProps {
   tabId: string;
@@ -36,10 +38,14 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClos
     closeTabsToRight,
     closeAllExcept,
     duplicateTab,
-    groupTabsByType
+    groupTabsByType,
+    updateTabContent,
+    updateTabLanguage
   } = useRootStore();
 
   const menuRef = useRef<HTMLDivElement>(null);
+  const [showLanguages, setShowLanguages] = useState(false);
+  const [languagesPosition, setLanguagesPosition] = useState({ x: 0, y: 0 });
 
   // Determine which menu items to show
   const canSplit = !splitView.isSplit && tabs.length >= 2;
@@ -118,6 +124,28 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClos
     onClose();
   };
 
+  const handleFromSample = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setLanguagesPosition({
+      x: rect.right,
+      y: rect.top
+    });
+    setShowLanguages(true);
+  };
+
+  const handleLanguageSelect = (languageId: string) => {
+    const language = languageRegistry.getById(languageId);
+    if (language && language.sampleContent) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (tab && !tab.isTablet) {
+        updateTabContent(tabId, language.sampleContent());
+        updateTabLanguage(tabId, languageId, true);
+      }
+    }
+    setShowLanguages(false);
+    onClose();
+  };
+
   return (
       <div
           ref={menuRef}
@@ -128,6 +156,35 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClos
             minWidth: "200px"
           }}
       >
+        <button
+            className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs group relative"
+            onClick={handleFromSample}
+            onMouseEnter={(e) => handleFromSample(e)}
+            onMouseLeave={() => setShowLanguages(false)}
+        >
+          <FileCode size={14} className="mr-2" />
+          From sample
+          {showLanguages && (
+              <div
+                  className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg py-1 left-full top-0 min-w-[150px]"
+                  style={{
+                    left: languagesPosition.x - position.x,
+                    top: languagesPosition.y - position.y,
+                  }}
+              >
+                {languageRegistry.getAll().map(lang => (
+                    <button
+                        key={lang.id}
+                        className="w-full text-left px-3 py-1.5 hover:bg-gray-600 text-xs"
+                        onClick={() => handleLanguageSelect(lang.id)}
+                    >
+                      {lang.name}
+                    </button>
+                ))}
+              </div>
+          )}
+        </button>
+
         <button
             className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
             onClick={() => {

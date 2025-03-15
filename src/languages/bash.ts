@@ -9,7 +9,92 @@ export class BashLanguageDetector extends BaseLanguageDetector {
   name = 'Bash/Shell';
   extensions = ['sh', 'bash'];
   priority = 3;
-  
+
+  sampleContent(): string {
+    return `
+#!/bin/bash
+
+# Variable declaration
+greeting="Hello"
+name="User"
+
+# Function definition
+function greet_user {
+    echo "$greeting, $1!"
+}
+
+# Function to check if a number is even or odd
+function check_even_odd {
+    if (( $1 % 2 == 0 )); then
+        echo "$1 is even."
+    else
+        echo "$1 is odd."
+    fi
+}
+
+# Print greeting using the function
+greet_user "$name"
+
+# While loop example: count from 1 to 5
+counter=1
+while [ $counter -le 5 ]; do
+    echo "Counter is $counter"
+    ((counter++))
+done
+
+# Read user input
+echo "Please enter a number to check if it's even or odd:"
+read number
+check_even_odd $number
+
+# If-else example
+echo "Checking if the number is greater than 10:"
+if (( $number > 10 )); then
+    echo "The number is greater than 10."
+else
+    echo "The number is 10 or less."
+fi
+
+# Array example
+numbers=("one" "two" "three" "four")
+echo "Array of numbers: \${numbers[@]}"
+
+# For loop example: Iterate through array
+echo "Looping through the array:"
+for num in "\${numbers[@]}"; do
+    echo "Number: $num"
+done
+
+# Case example
+echo "Enter a day of the week (e.g., Monday, Tuesday):"
+read day
+case $day in
+    Monday)
+        echo "Start of the week!"
+        ;;
+    Tuesday)
+        echo "Second day of the week!"
+        ;;
+    Wednesday)
+        echo "Midweek!"
+        ;;
+    Thursday)
+        echo "Almost there!"
+        ;;
+    Friday)
+        echo "It's Friday!"
+        ;;
+    *)
+        echo "Unknown day!"
+        ;;
+esac
+
+# Exit with a status code
+echo "Exiting the script."
+exit 0
+    `;
+  }
+
   /**
    * Check if content matches Bash/Shell patterns
    */

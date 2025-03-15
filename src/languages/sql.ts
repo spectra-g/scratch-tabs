@@ -11,6 +11,65 @@ export class SqlLanguageDetector extends BaseLanguageDetector {
   priority = 3;
   
   /**
+   * Get sample content for SQL
+   */
+  sampleContent(): string {
+    return `-- Create tables
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE posts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    title VARCHAR(200) NOT NULL,
+    content TEXT,
+    status VARCHAR(20) DEFAULT 'draft',
+    published_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert sample data
+INSERT INTO users (username, email, password_hash) VALUES
+    ('john_doe', 'john@example.com', 'hash123'),
+    ('jane_smith', 'jane@example.com', 'hash456');
+
+INSERT INTO posts (user_id, title, content, status, published_at) VALUES
+    (1, 'First Post', 'This is my first blog post!', 'published', CURRENT_TIMESTAMP),
+    (1, 'Draft Post', 'Work in progress...', 'draft', NULL),
+    (2, 'Hello World', 'Welcome to my blog!', 'published', CURRENT_TIMESTAMP);
+
+-- Sample queries
+SELECT 
+    p.title,
+    p.content,
+    u.username,
+    p.published_at
+FROM posts p
+JOIN users u ON p.user_id = u.id
+WHERE p.status = 'published'
+ORDER BY p.published_at DESC;
+
+-- Complex query with aggregation
+SELECT 
+    u.username,
+    COUNT(p.id) as post_count,
+    MAX(p.published_at) as last_published
+FROM users u
+LEFT JOIN posts p ON u.id = p.user_id
+WHERE p.status = 'published'
+GROUP BY u.username
+HAVING COUNT(p.id) > 0
+ORDER BY post_count DESC;`;
+  }
+  
+  /**
    * Check if content matches SQL patterns
    */
   isMatch(content: string): boolean {
@@ -80,4 +139,4 @@ languageRegistry.register(sqlDetector);
 // Export for backward compatibility
 export const registerSqlProvider = (monaco: any) => {
   sqlDetector.registerProvider(monaco);
-}; 
+};

@@ -11,6 +11,102 @@ export class HtmlLanguageDetector extends BaseLanguageDetector {
   priority = 4;
   
   /**
+   * Get sample content for HTML
+   */
+  sampleContent(): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample HTML Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to My Website</h1>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="container">
+            <h2>Home Section</h2>
+            <p>This is a sample HTML page demonstrating various HTML elements and structure.</p>
+            <img src="https://picsum.photos/400/200" alt="Random sample image">
+        </section>
+
+        <section id="about" class="container">
+            <h2>About Us</h2>
+            <p>Learn more about our company and what we do.</p>
+            <ul>
+                <li>Feature 1</li>
+                <li>Feature 2</li>
+                <li>Feature 3</li>
+            </ul>
+        </section>
+
+        <section id="contact" class="container">
+            <h2>Contact Form</h2>
+            <form action="/submit" method="POST">
+                <div>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" rows="4"></textarea>
+                </div>
+                <button type="submit" class="btn">Send Message</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 My Website. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded!');
+        });
+    </script>
+</body>
+</html>`;
+  }
+  
+  /**
    * Check if content matches HTML patterns
    */
   isMatch(content: string): boolean {
@@ -124,4 +220,4 @@ languageRegistry.register(htmlDetector);
 // Export for backward compatibility
 export const registerHtmlProvider = (monaco: any) => {
   htmlDetector.registerProvider(monaco);
-}; 
+};

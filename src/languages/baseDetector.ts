@@ -26,7 +26,7 @@ export abstract class BaseLanguageDetector implements LanguageDetector {
   priority: number = 0;
   
   /**
-   * Check if the content matches this language
+   * Check if content matches this language
    */
   abstract isMatch(content: string): boolean;
   
@@ -46,4 +46,12 @@ export abstract class BaseLanguageDetector implements LanguageDetector {
   registerProvider(monaco: any): void {
     // Default implementation does nothing
   }
-} 
+
+  /**
+   * Get sample content for this language
+   * Default implementation returns empty string
+   */
+  sampleContent(): string {
+    return '';
+  }
+}
