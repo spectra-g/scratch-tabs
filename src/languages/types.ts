@@ -1,4 +1,5 @@
-import { ReactNode } from 'react';
+import React from 'react';
+import { StatusItemProps } from '../components/StatusBar/types';
 
 /**
  * Interface for language detector implementations
@@ -44,6 +45,11 @@ export interface LanguageDetector {
    * Get sample content for this language
    */
   sampleContent: () => string;
+
+  /**
+   * Get status item component for this language (optional)
+   */
+  getStatusItem?: () => React.FC<StatusItemProps>;
 }
 
 /**

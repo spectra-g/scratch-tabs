@@ -1,5 +1,7 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown.tsx";
+import React from 'react';
 
 /**
  * Markdown language detector
@@ -177,6 +179,13 @@ That's all for this sample!`;
         }];
       }
     });
+  }
+
+  /**
+   * Get status item component for JSON
+   */
+  getStatusItem(): React.FC<{ content?: string }> {
+    return MarkdownStatusItem;
   }
 }
 

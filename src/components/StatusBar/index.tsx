@@ -28,7 +28,8 @@ export const StatusBar: React.FC<StatusBarProps> = () => {
     }
   }
 
-  const LanguageStatusItem = activeTab && !activeTab.isTablet ? getLanguageStatusItem(activeTab.language) : null;
+  const LanguageStatusItem = activeTab && !activeTab.isTablet ? 
+    getLanguageStatusItem(activeTab.language, activeTab.content) : null;
 
   return (
     <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">

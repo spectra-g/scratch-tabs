@@ -1,5 +1,7 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import { registerJsonValidationProvider } from './json/validation';
+import { JsonStatusItem } from './json/StatusItem';
 
 /**
  * JSON language detector
@@ -106,9 +108,16 @@ export class JsonLanguageDetector extends BaseLanguageDetector {
   /**
    * Register JSON language provider with Monaco
    */
-  registerProvider(_monaco: any): void {
-    // JSON formatting is built into Monaco, so we don't need to register a custom provider
-    // This method exists for consistency and future customization if needed
+  registerProvider(monaco: any): void {
+    // Register validation provider
+    registerJsonValidationProvider(monaco);
+  }
+
+  /**
+   * Get status item component for JSON
+   */
+  getStatusItem(): React.FC<{ content?: string }> {
+    return JsonStatusItem;
   }
 }
 
