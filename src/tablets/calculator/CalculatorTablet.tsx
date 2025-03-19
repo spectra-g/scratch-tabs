@@ -227,7 +227,7 @@ export const CalculatorTablet: Tablet = {
                 ...state,
                 data: { ...state.data, notes: e.target.value }
               })}
-              className="w-full h-[calc(100%-2rem)] bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none"
+              className="w-full h-[calc(100%-2rem)] bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500"
               placeholder="Add notes..."
             />
           </div>

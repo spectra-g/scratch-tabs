@@ -40,10 +40,10 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
           <X size={20} />
         </button>
       </div>
-      <div className="flex-1 p-6 overflow-auto">
-        <div 
-          className="prose prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: email.body || '' }}
+      <div className="flex-1 p-6 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500">
+        <div
+            className="prose prose-invert max-w-none"
+            dangerouslySetInnerHTML={{__html: email.body || ''}}
         />
       </div>
     </div>

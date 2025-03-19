@@ -221,7 +221,7 @@ export const RunCodeTablet: Tablet = {
           </div>
 
           {/* Output Content */}
-          <div className="flex-1 p-4 overflow-auto">
+          <div className="flex-1 p-4 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500">
             {state.data.status === 'idle' && (
               <div className="text-gray-500 text-sm">
                 {supportedLanguages.has(state.data.language)
