@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Editor } from '@monaco-editor/react';
 import { Users, Copy, RotateCw } from 'lucide-react';

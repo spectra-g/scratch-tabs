@@ -507,18 +507,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
     }
   };
 
-  // Handle click outside to close tablet selector
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (showTabletSelector && !tabletButtonRef.current?.contains(e.target as Node)) {
-        setShowTabletSelector(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showTabletSelector]);
-
   return (
     <>
       <div

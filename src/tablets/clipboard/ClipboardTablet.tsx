@@ -79,7 +79,7 @@ export const ClipboardTablet: Tablet = {
       }, 1000); // Check every second
 
       return () => clearInterval(interval);
-    }, [state.data.items]);
+    }, [onChange, state.data.items]);
 
     const handlePaste = async () => {
       try {

@@ -71,16 +71,6 @@ export const CalculatorTablet: Tablet = {
             });
         };
 
-        const addToHistory = (entry: string) => {
-            onChange({
-                ...state,
-                data: {
-                    ...state.data,
-                    history: [...state.data.history, entry].slice(-10) // Keep last 10 entries
-                }
-            });
-        };
-
         const handleNumber = (num: string) => {
             const display = state.data.display;
             if (display === '0') {

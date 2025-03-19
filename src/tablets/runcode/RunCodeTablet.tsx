@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Editor } from '@monaco-editor/react';
 import { Play, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';

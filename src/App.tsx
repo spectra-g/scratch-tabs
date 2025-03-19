@@ -85,7 +85,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     if (activeTab) {
       previousContentRef.current = activeTab.content;
     }
-  }, [activeTabId]);
+  }, [activeTab, activeTabId]);
 
   // Handle keyboard events for the editor
   useEffect(() => {
@@ -571,6 +571,7 @@ function App() {
                               searchQuery=""
                               onSelect={handleTabletSelect}
                               onClose={() => setShowTabletSelector(false)}
+                              showSearch={true}
                           />
                         </div>
                     )}
