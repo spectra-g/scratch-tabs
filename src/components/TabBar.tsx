@@ -13,11 +13,13 @@ import {
   Split,
   Plus,
   ClipboardPlus,
-  FileCode
+  FileCode,
+  Tablet
 } from 'lucide-react';
 import { useRootStore } from '../stores';
 import { DiffModal } from './DiffModal';
 import { languageRegistry } from '../languages';
+import { TabletSelector } from '../tablets';
 
 interface TabContextMenuProps {
   tabId: string;
@@ -355,9 +357,12 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
   const [editingTitle, setEditingTitle] = useState('');
   const [contextMenu, setContextMenu] = useState<{ tabId: string; x: number; y: number } | null>(null);
   const [diffModal, setDiffModal] = useState<{ leftTabId: string; rightTabId: string } | null>(null);
+  const [showTabletSelector, setShowTabletSelector] = useState(false);
+  const [tabletSelectorPosition, setTabletSelectorPosition] = useState({ x: 0, y: 0 });
 
   const inputRef = useRef<HTMLInputElement>(null);
   const tabBarRef = useRef<HTMLDivElement>(null);
+  const tabletButtonRef = useRef<HTMLButtonElement>(null);
 
   // Determine which tabs to show based on the side
   const isRightSide = side === 'right';
@@ -470,94 +475,164 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
     }
   };
 
-  return (
-      <>
-        <div
-            ref={tabBarRef}
-            className="flex bg-gray-800 text-gray-300 overflow-x-auto w-full h-8"
-            onDoubleClick={handleEmptyAreaDoubleClick}
-            key={tabsKey} // Add a key to force re-render when tab order changes
-        >
-          {visibleTabs.map(tab => {
-            // Calculate the relative width of the indicator bar
-            const lineCount = getTabLineCount(tab.content);
-            const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
-            return (
-                <div
-                    key={tab.id}
-                    className={`relative flex items-center px-3 py-1 cursor-pointer border-r border-gray-700 text-xs ${
-                        activeSideTabId === tab.id ? 'bg-gray-700' : 'hover:bg-gray-700'
-                    }`}
-                    onClick={() => handleTabClick(tab.id)}
-                    onContextMenu={(e) => handleContextMenu(e, tab.id)}
-                    onDoubleClick={(e) => handleDoubleClick(tab, e)}
-                >
-                  {/* Line count indicator bar - horizontal at bottom */}
-                  <div
-                      className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50"
-                      style={{
-                        width: `${relativeWidth}%`,
-                      }}
-                  />
+  // Handle tablet selection
+  const handleTabletSelect = (tablet: any) => {
+    // Create initial tablet state
+    const state = tablet.createInitialState();
+    const serializedState = tablet.serializeState(state);
 
-                  {editingTabId === tab.id ? (
-                      <input
-                          ref={inputRef}
-                          type="text"
-                          value={editingTitle}
-                          onChange={(e) => setEditingTitle(e.target.value)}
-                          onBlur={handleInputBlur}
-                          onKeyDown={handleInputKeyDown}
-                          className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs"
-                      />
-                  ) : (
-                      <span className="mr-2">
+    // Create a new tab with the tablet
+    addTab({
+      id: crypto.randomUUID(),
+      title: tablet.label,
+      content: '',
+      language: 'plaintext',
+      languageLocked: false,
+      isTablet: true,
+      tabletState: serializedState
+    }, side === 'right');
+
+    setShowTabletSelector(false);
+  };
+
+  // Show tablet selector
+  const handleShowTabletSelector = () => {
+    if (tabletButtonRef.current) {
+      const rect = tabletButtonRef.current.getBoundingClientRect();
+      setTabletSelectorPosition({
+        x: rect.left,
+        y: rect.bottom + 4
+      });
+      setShowTabletSelector(true);
+    }
+  };
+
+  // Handle click outside to close tablet selector
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showTabletSelector && !tabletButtonRef.current?.contains(e.target as Node)) {
+        setShowTabletSelector(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTabletSelector]);
+
+  return (
+    <>
+      <div
+        ref={tabBarRef}
+        className="flex bg-gray-800 text-gray-300 overflow-x-auto w-full h-8"
+        onDoubleClick={handleEmptyAreaDoubleClick}
+        key={tabsKey}
+      >
+        {visibleTabs.map(tab => {
+          // Calculate the relative width of the indicator bar
+          const lineCount = getTabLineCount(tab.content);
+          const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
+          return (
+            <div
+              key={tab.id}
+              className={`relative flex items-center px-3 py-1 cursor-pointer border-r border-gray-700 text-xs ${
+                activeSideTabId === tab.id ? 'bg-gray-700' : 'hover:bg-gray-700'
+              }`}
+              onClick={() => handleTabClick(tab.id)}
+              onContextMenu={(e) => handleContextMenu(e, tab.id)}
+              onDoubleClick={(e) => handleDoubleClick(tab, e)}
+            >
+              {/* Line count indicator bar - horizontal at bottom */}
+              <div
+                className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50"
+                style={{
+                  width: `${relativeWidth}%`,
+                }}
+              />
+
+              {editingTabId === tab.id ? (
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={editingTitle}
+                  onChange={(e) => setEditingTitle(e.target.value)}
+                  onBlur={handleInputBlur}
+                  onKeyDown={handleInputKeyDown}
+                  className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs"
+                />
+              ) : (
+                <span className="mr-2">
                   {tab.title}
                 </span>
-                  )}
-                  <button
-                      className="hover:bg-gray-600 rounded p-0.5"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTab(tab.id);
-                      }}
-                  >
-                    <X size={12}/>
-                  </button>
-                </div>
-            );
-          })}
-          <button
-              onClick={() => handleNewTab(isRightSide)}
-              className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-              title={"New tab"}
+              )}
+              <button
+                className="hover:bg-gray-600 rounded p-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeTab(tab.id);
+                }}
+              >
+                <X size={12}/>
+              </button>
+            </div>
+          );
+        })}
+        <button
+          onClick={() => handleNewTab(isRightSide)}
+          className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+          title="New tab"
+        >
+          <Plus size={16} />
+        </button>
+        <button
+          onClick={() => handleNewTabFromPaste(isRightSide)}
+          className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+          title="New tab with contents from clipboard"
+        >
+          <ClipboardPlus size={16} />
+        </button>
+        <button
+          ref={tabletButtonRef}
+          onClick={handleShowTabletSelector}
+          className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+          title="New tablet"
+        >
+          <Tablet size={16} />
+        </button>
+        {showTabletSelector && (
+          <div
+            style={{
+              position: 'fixed',
+              left: tabletSelectorPosition.x,
+              top: tabletSelectorPosition.y,
+              zIndex: 50
+            }}
           >
-            <Plus size={16}/>
-          </button>
-          <button
-              onClick={() => handleNewTabFromPaste(isRightSide)}
-              className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-              title={"New tab with contents from the clipboard"}
-          >
-            <ClipboardPlus size={16}/>
-          </button>
-          {contextMenu && (
-              <TabContextMenu
-                  tabId={contextMenu.tabId}
-                  position={{x: contextMenu.x, y: contextMenu.y}}
-                  onClose={handleContextMenuClose}
-                  isRightSide={isRightSide}
-              />
-          )}
-        </div>
-
-        {diffModal && (
-            <DiffModal
-                leftTabId={diffModal.leftTabId}
-                rightTabId={diffModal.rightTabId}
-                onClose={() => setDiffModal(null)}
+            <TabletSelector
+              searchQuery=""
+              onSelect={handleTabletSelect}
+              onClose={() => setShowTabletSelector(false)}
+              showSearch={true}
             />
+          </div>
         )}
-      </>
+      </div>
+
+      {contextMenu && (
+        <TabContextMenu
+          tabId={contextMenu.tabId}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onClose={handleContextMenuClose}
+          isRightSide={isRightSide}
+        />
+      )}
+
+      {diffModal && (
+        <DiffModal
+          leftTabId={diffModal.leftTabId}
+          rightTabId={diffModal.rightTabId}
+          onClose={() => setDiffModal(null)}
+        />
+      )}
+    </>
   );
 };
