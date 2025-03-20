@@ -556,9 +556,10 @@ function App() {
                     <div className="text-center">
                       <p className="mb-8 text-lg">To start Scratching:</p>
                       <ol className="list-decimal list-inside text-left space-y-3">
-                        <li>Double click or click the plus icon to open a new tab</li>
-                        <li>Click here and paste content to open a new tab</li>
-                        <li>Type '/' to open Tablet</li>
+                        <li>Double click here</li>
+                        <li>Click the icons at the top left</li>
+                        <li>Click here and paste</li>
+                        <li>Type '/'</li>
                       </ol>
                     </div>
                     {showTabletSelector && (
