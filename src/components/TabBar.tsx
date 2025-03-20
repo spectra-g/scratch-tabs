@@ -102,8 +102,17 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClos
   })();
 
   // Determine if we can compare with the other side
-  const canCompare = splitView.isSplit &&
-      (isRightSide ? splitView.activeLeftTabId !== null : splitView.activeRightTabId !== null);
+  const canCompare = (() => {
+    if (!splitView.isSplit) return false;
+
+    // Get the current tab and the active tab from the other side
+    const currentTab = tabs.find(t => t.id === tabId);
+    const otherSideTabId = isRightSide ? splitView.activeLeftTabId : splitView.activeRightTabId;
+    const otherSideTab = tabs.find(t => t.id === otherSideTabId);
+
+    // Can only compare if both tabs exist and neither is a tablet
+    return currentTab && otherSideTab && !currentTab.isTablet && !otherSideTab.isTablet;
+  })();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -508,119 +517,119 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left' }) => {
   };
 
   return (
-    <>
-      <div
-        ref={tabBarRef}
-        className="flex bg-gray-800 text-gray-300 overflow-x-auto w-full h-8"
-        onDoubleClick={handleEmptyAreaDoubleClick}
-        key={tabsKey}
-      >
-        {visibleTabs.map(tab => {
-          // Calculate the relative width of the indicator bar
-          const lineCount = getTabLineCount(tab.content);
-          const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
-          return (
-            <div
-              key={tab.id}
-              className={`relative flex items-center px-3 py-1 cursor-pointer border-r border-gray-700 text-xs ${
-                activeSideTabId === tab.id ? 'bg-gray-700' : 'hover:bg-gray-700'
-              }`}
-              onClick={() => handleTabClick(tab.id)}
-              onContextMenu={(e) => handleContextMenu(e, tab.id)}
-              onDoubleClick={(e) => handleDoubleClick(tab, e)}
-            >
-              {/* Line count indicator bar - horizontal at bottom */}
-              <div
-                className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50"
-                style={{
-                  width: `${relativeWidth}%`,
-                }}
-              />
+      <>
+        <div
+            ref={tabBarRef}
+            className="flex bg-gray-800 text-gray-300 overflow-x-auto w-full h-8"
+            onDoubleClick={handleEmptyAreaDoubleClick}
+            key={tabsKey}
+        >
+          {visibleTabs.map(tab => {
+            // Calculate the relative width of the indicator bar
+            const lineCount = getTabLineCount(tab.content);
+            const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
+            return (
+                <div
+                    key={tab.id}
+                    className={`relative flex items-center px-3 py-1 cursor-pointer border-r border-gray-700 text-xs ${
+                        activeSideTabId === tab.id ? 'bg-gray-700' : 'hover:bg-gray-700'
+                    }`}
+                    onClick={() => handleTabClick(tab.id)}
+                    onContextMenu={(e) => handleContextMenu(e, tab.id)}
+                    onDoubleClick={(e) => handleDoubleClick(tab, e)}
+                >
+                  {/* Line count indicator bar - horizontal at bottom */}
+                  <div
+                      className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50"
+                      style={{
+                        width: `${relativeWidth}%`,
+                      }}
+                  />
 
-              {editingTabId === tab.id ? (
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={editingTitle}
-                  onChange={(e) => setEditingTitle(e.target.value)}
-                  onBlur={handleInputBlur}
-                  onKeyDown={handleInputKeyDown}
-                  className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs"
-                />
-              ) : (
-                <span className="mr-2">
+                  {editingTabId === tab.id ? (
+                      <input
+                          ref={inputRef}
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onBlur={handleInputBlur}
+                          onKeyDown={handleInputKeyDown}
+                          className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs"
+                      />
+                  ) : (
+                      <span className="mr-2">
                   {tab.title}
                 </span>
-              )}
-              <button
-                className="hover:bg-gray-600 rounded p-0.5"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeTab(tab.id);
-                }}
-              >
-                <X size={12}/>
-              </button>
-            </div>
-          );
-        })}
-        <button
-          onClick={() => handleNewTab(isRightSide)}
-          className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-          title="New tab"
-        >
-          <Plus size={16} />
-        </button>
-        <button
-          onClick={() => handleNewTabFromPaste(isRightSide)}
-          className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-          title="New tab with contents from clipboard"
-        >
-          <ClipboardPlus size={16} />
-        </button>
-        <button
-          ref={tabletButtonRef}
-          onClick={handleShowTabletSelector}
-          className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-          title="New tablet"
-        >
-          <Tablet size={16} />
-        </button>
-        {showTabletSelector && (
-          <div
-            style={{
-              position: 'fixed',
-              left: tabletSelectorPosition.x,
-              top: tabletSelectorPosition.y,
-              zIndex: 50
-            }}
+                  )}
+                  <button
+                      className="hover:bg-gray-600 rounded p-0.5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTab(tab.id);
+                      }}
+                  >
+                    <X size={12}/>
+                  </button>
+                </div>
+            );
+          })}
+          <button
+              onClick={() => handleNewTab(isRightSide)}
+              className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+              title="New tab"
           >
-            <TabletSelector
-              searchQuery=""
-              onSelect={handleTabletSelect}
-              onClose={() => setShowTabletSelector(false)}
-              showSearch={true}
+            <Plus size={16} />
+          </button>
+          <button
+              onClick={() => handleNewTabFromPaste(isRightSide)}
+              className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+              title="New tab with contents from clipboard"
+          >
+            <ClipboardPlus size={16} />
+          </button>
+          <button
+              ref={tabletButtonRef}
+              onClick={handleShowTabletSelector}
+              className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+              title="New tablet"
+          >
+            <Tablet size={16} />
+          </button>
+          {showTabletSelector && (
+              <div
+                  style={{
+                    position: 'fixed',
+                    left: tabletSelectorPosition.x,
+                    top: tabletSelectorPosition.y,
+                    zIndex: 50
+                  }}
+              >
+                <TabletSelector
+                    searchQuery=""
+                    onSelect={handleTabletSelect}
+                    onClose={() => setShowTabletSelector(false)}
+                    showSearch={true}
+                />
+              </div>
+          )}
+        </div>
+
+        {contextMenu && (
+            <TabContextMenu
+                tabId={contextMenu.tabId}
+                position={{ x: contextMenu.x, y: contextMenu.y }}
+                onClose={handleContextMenuClose}
+                isRightSide={isRightSide}
             />
-          </div>
         )}
-      </div>
 
-      {contextMenu && (
-        <TabContextMenu
-          tabId={contextMenu.tabId}
-          position={{ x: contextMenu.x, y: contextMenu.y }}
-          onClose={handleContextMenuClose}
-          isRightSide={isRightSide}
-        />
-      )}
-
-      {diffModal && (
-        <DiffModal
-          leftTabId={diffModal.leftTabId}
-          rightTabId={diffModal.rightTabId}
-          onClose={() => setDiffModal(null)}
-        />
-      )}
-    </>
+        {diffModal && (
+            <DiffModal
+                leftTabId={diffModal.leftTabId}
+                rightTabId={diffModal.rightTabId}
+                onClose={() => setDiffModal(null)}
+            />
+        )}
+      </>
   );
 };

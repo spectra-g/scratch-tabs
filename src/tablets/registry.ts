@@ -5,7 +5,7 @@ class TabletRegistryImpl implements TabletRegistry {
   
   register(tablet: Tablet): void {
     if (this.tablets.some(t => t.id === tablet.id)) {
-      throw new Error(`Tablet with ID ${tablet.id} is already registered`);
+      return;
     }
     this.tablets.push(tablet);
     // Sort tablets by label whenever a new one is registered
