@@ -13,6 +13,7 @@ import './html';
 import './javascript';
 import './java';
 import './stacktrace';
+import './curl';
 
 // Export the registry for use in the application
 export { languageRegistry };
@@ -35,7 +36,8 @@ export { registerSqlProvider } from './sql';
 export { registerHtmlProvider } from './html';
 export { registerJavaScriptProvider, registerTypeScriptProvider } from './javascript';
 export { registerJavaProvider } from './java';
-export { registerStacktraceProvider } from './stacktrace.ts';
+export { registerStacktraceProvider } from './stacktrace';
+export { registerCurlProvider } from './curl';
 
 /**
  * Initialize all language providers with Monaco
