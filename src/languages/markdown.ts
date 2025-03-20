@@ -173,9 +173,21 @@ That's all for this sample!`;
           return trimmedLine;
         });
 
+        const removeConsecutiveEmptyLines = (lines: string[]) => {
+          return lines.reduce((result, current) => {
+            // If the current element is an empty string, check if the last added element is not empty
+            if (current === '' && result[result.length - 1] === '') {
+              return result; // Skip this empty string as it's consecutive
+            }
+            // Otherwise, add the current element to the result array
+            result.push(current);
+            return result;
+          }, []);
+        };
+
         return [{
           range: model.getFullModelRange(),
-          text: formattedLines.join('\n\n')
+          text: removeConsecutiveEmptyLines(formattedLines).join('\n')
         }];
       }
     });
