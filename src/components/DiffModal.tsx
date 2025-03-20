@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ArrowRight, ArrowLeft, Undo2, Redo2 } from 'lucide-react';
-import { useEditorStore } from '../store';
+import { useRootStore } from '../stores';
 
 interface DiffModalProps {
   leftTabId: string;
@@ -32,7 +32,7 @@ interface Token {
 }
 
 export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onClose }) => {
-  const { tabs, updateTabContent } = useEditorStore();
+  const { tabs, updateTabContent } = useRootStore();
   const [diffLines, setDiffLines] = useState<DiffLine[]>([]);
 
   // History management

@@ -11,6 +11,64 @@ export class YamlLanguageDetector extends BaseLanguageDetector {
   priority = 4;
   
   /**
+   * Get sample content for YAML
+   */
+  sampleContent(): string {
+    return `# Project Configuration
+name: my-awesome-project
+version: 1.0.0
+
+# Development settings
+development:
+  port: 3000
+  database:
+    host: localhost
+    port: 5432
+    name: dev_db
+    credentials:
+      username: admin
+      password: secret
+
+# Environment variables
+environment:
+  - NODE_ENV=development
+  - DEBUG=true
+  - LOG_LEVEL=info
+
+# Dependencies
+dependencies:
+  frontend:
+    - react: ^18.0.0
+    - typescript: ^4.8.0
+  backend:
+    - express: ^4.17.0
+    - postgres: ^8.7.0
+
+# Deployment configuration
+deployment:
+  provider: aws
+  regions:
+    - us-east-1
+    - eu-west-1
+  services:
+    - name: web
+      instances: 2
+      memory: 512Mi
+    - name: worker
+      instances: 1
+      memory: 1Gi
+
+# Feature flags
+features:
+  darkMode: true
+  betaFeatures: false
+  analytics:
+    enabled: true
+    provider: google
+`;
+  }
+
+  /**
    * Check if content matches YAML patterns
    */
   isMatch(content: string): boolean {

@@ -10,6 +10,86 @@ export class JavaScriptLanguageDetector extends BaseLanguageDetector {
   extensions = ['js', 'jsx', 'mjs'];
   priority = 6; // Higher priority than CSV
 
+  sampleContent(): string {
+    return `
+// Variable declaration
+let greeting = "Hello";
+let name = "User";
+
+// Function definition
+function greetUser(name) {
+    console.log(\`\${greeting}, \${name}!\`);
+}
+
+// Function to check if a number is even or odd
+function checkEvenOdd(number) {
+    if (number % 2 === 0) {
+        console.log(\`\${number} is even.\`);
+    } else {
+        console.log(\`\${number} is odd.\`);
+    }
+}
+
+// Call the greetUser function
+greetUser(name);
+
+// While loop example: count from 1 to 5
+let counter = 1;
+while (counter <= 5) {
+    console.log(\`Counter is \${counter}\`);
+    counter++;
+}
+
+// Read user input (using prompt in the browser or Node.js readline module in Node.js)
+let number = parseInt(prompt("Please enter a number to check if it's even or odd:"));
+checkEvenOdd(number);
+
+// If-else example
+console.log("Checking if the number is greater than 10:");
+if (number > 10) {
+    console.log("The number is greater than 10.");
+} else {
+    console.log("The number is 10 or less.");
+}
+
+// Array example
+let numbers = ["one", "two", "three", "four"];
+console.log("Array of numbers:", numbers);
+
+// For loop example: Iterate through array
+console.log("Looping through the array:");
+for (let i = 0; i < numbers.length; i++) {
+    console.log(\`Number: \${numbers[i]}\`);
+}
+
+// Switch statement example
+let day = prompt("Enter a day of the week (e.g., Monday, Tuesday):");
+
+switch (day) {
+    case "Monday":
+        console.log("Start of the week!");
+        break;
+    case "Tuesday":
+        console.log("Second day of the week!");
+        break;
+    case "Wednesday":
+        console.log("Midweek!");
+        break;
+    case "Thursday":
+        console.log("Almost there!");
+        break;
+    case "Friday":
+        console.log("It's Friday!");
+        break;
+    default:
+        console.log("Unknown day!");
+}
+
+// End of the script
+console.log("Exiting the script.");    
+    `;
+  }
+
   /**
    * Check if content matches JavaScript patterns
    */
@@ -155,7 +235,54 @@ export class TypeScriptLanguageDetector extends BaseLanguageDetector {
   name = 'TypeScript';
   extensions = ['ts', 'tsx'];
   priority = 5;
-  
+
+  sampleContent(): string {
+    return `
+type Point = {
+    x: number;
+    y: number;
+};
+
+interface Shape {
+    area(): number;
+    perimeter(): number;
+}
+
+interface Circle extends Shape {
+    radius: number;
+}
+
+function addNumbers(a: number, b: number): number {
+    return a + b;
+}
+    
+class Rectangle implements Shape {
+    width: number;
+    height: number;
+
+    constructor(width: number, height: number) {
+        this.width = width;
+        this.height = height;
+    }
+
+    area(): number {
+        return this.width * this.height;
+    }
+
+    perimeter(): number {
+        return 2 * (this.width + this.height);
+    }
+}
+
+enum Color {
+    Red = "RED",
+    Green = "GREEN",
+    Blue = "BLUE"
+}
+
+    `;
+  }
+
   /**
    * Check if content matches TypeScript patterns
    */

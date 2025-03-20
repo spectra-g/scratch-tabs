@@ -1,28 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { tabletRegistry } from '../registry';
 import { Tablet } from '../types';
+import { Search } from 'lucide-react';
 
 interface TabletSelectorProps {
   onSelect: (tablet: Tablet) => void;
   onClose: () => void;
   searchQuery: string;
+  showSearch?: boolean;
 }
 
 export const TabletSelector: React.FC<TabletSelectorProps> = ({ 
   onSelect, 
   onClose,
-  searchQuery 
+  searchQuery: initialQuery,
+  showSearch = false
 }) => {
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [tablets, setTablets] = useState<Tablet[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Update search results when query changes
   useEffect(() => {
     setTablets(tabletRegistry.search(searchQuery));
     setSelectedIndex(0);
   }, [searchQuery]);
+
+  // Focus search input when shown
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
   
   // Handle keyboard navigation
   useEffect(() => {
@@ -73,6 +85,21 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
         ref={selectorRef}
         className="absolute z-50 w-72 bg-gray-800/95 backdrop-blur border border-gray-600/50 rounded-lg shadow-xl p-2"
       >
+        {showSearch && (
+          <div className="p-2 border-b border-gray-600/50">
+            <div className="relative">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search tablets..."
+                className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md pl-8 pr-3 py-1.5 text-sm text-gray-200 placeholder-gray-400"
+              />
+              <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+            </div>
+          </div>
+        )}
         <div className="text-gray-300 text-sm p-2">
           No tablets found
         </div>
@@ -85,6 +112,21 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       ref={selectorRef}
       className="absolute z-50 w-72 bg-gray-800/95 backdrop-blur border border-gray-600/50 rounded-lg shadow-xl"
     >
+      {showSearch && (
+        <div className="p-2 border-b border-gray-600/50">
+          <div className="relative">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tablets..."
+              className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md pl-8 pr-3 py-1.5 text-sm text-gray-200 placeholder-gray-400"
+            />
+            <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+          </div>
+        </div>
+      )}
       <div 
         ref={listRef}
         className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500"

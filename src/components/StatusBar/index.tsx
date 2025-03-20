@@ -1,21 +1,15 @@
 import React from 'react';
-import { useEditorStore } from '../../store';
+import { useRootStore } from '../../stores';
 import { getLanguageStatusItem } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
 
-interface StatusBarProps {
-  side?: 'left' | 'right';
-}
+interface StatusBarProps {}
 
-export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
-  const { cursorPosition, splitView } = useEditorStore();
-  
-  // Determine which tab to show based on the side
-  const isRightSide = side === 'right';
-  const activeTabId = isRightSide ? splitView.activeRightTabId : splitView.activeLeftTabId;
-  
-  const activeTab = useEditorStore((state) => 
+export const StatusBar: React.FC<StatusBarProps> = () => {
+  const { cursorPosition, activeTabId } = useRootStore();
+
+  const activeTab = useRootStore((state) =>
     state.tabs.find((tab) => tab.id === activeTabId)
   );
 
@@ -34,7 +28,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
     }
   }
 
-  const LanguageStatusItem = activeTab && !activeTab.isTablet ? getLanguageStatusItem(activeTab.language) : null;
+  const LanguageStatusItem = activeTab && !activeTab.isTablet ? 
+    getLanguageStatusItem(activeTab.language, activeTab.content) : null;
 
   return (
     <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">
@@ -51,7 +46,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({ side = 'left' }) => {
           </div>
         )}
       </div>
-      {!isRightSide && <Macro />}
+      <Macro />
     </div>
   );
 };

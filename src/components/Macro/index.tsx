@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Disc, Square, Play, PlayCircle } from 'lucide-react';
-import { useEditorStore } from '../../store';
+import { useRootStore } from '../../stores';
 
 type MacroMode = 'idle' | 'recording' | 'recorded';
 
@@ -15,7 +15,8 @@ const RECORDABLE_KEYS = [
   'ArrowUp',
   'ArrowDown',
   'Enter',
-  'Backspace'
+  'Backspace',
+  'Delete'
 ];
 
 /**
@@ -30,7 +31,7 @@ export const Macro: React.FC = () => {
   const [nextPosition, setNextPosition] = useState<{ line: number; column: number } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingToEnd, setIsPlayingToEnd] = useState(false);
-  const { updateTabContent, splitView, tabs } = useEditorStore();
+  const { updateTabContent, splitView, tabs } = useRootStore();
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (mode !== 'recording') return;
@@ -75,7 +76,11 @@ export const Macro: React.FC = () => {
     let position = getContentPosition(content, currentLine, currentCol);
 
     keystrokes.forEach(keystroke => {
-      if (keystroke.key === 'Backspace') {
+      if (keystroke.key === 'Delete') {
+        if (position < content.length) {
+          content = content.slice(0, position) + content.slice(position + 1);
+        }
+      } else if (keystroke.key === 'Backspace') {
         if (position > 0) {
           content = content.slice(0, position - 1) + content.slice(position);
           if (currentCol > 0) {

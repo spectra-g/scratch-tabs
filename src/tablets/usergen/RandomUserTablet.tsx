@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Editor } from '@monaco-editor/react';
 import { Users, Copy, RotateCw } from 'lucide-react';
@@ -346,7 +346,7 @@ export const RandomUserTablet: Tablet = {
           </div>
 
           {/* History List */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500">
             {state.data.results.length === 0 ? (
               <div className="p-4 text-sm text-gray-400">
                 No generations yet

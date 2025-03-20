@@ -1,3 +1,6 @@
+import React from 'react';
+import { StatusItemProps } from '../components/StatusBar/types';
+
 /**
  * Interface for language detector implementations
  */
@@ -37,6 +40,16 @@ export interface LanguageDetector {
    * Register language provider with Monaco editor
    */
   registerProvider: (monaco: any) => void;
+
+  /**
+   * Get sample content for this language
+   */
+  sampleContent: () => string;
+
+  /**
+   * Get status item component for this language (optional)
+   */
+  getStatusItem?: () => React.FC<StatusItemProps>;
 }
 
 /**
@@ -72,4 +85,4 @@ export interface LanguageRegistry {
    * Initialize all language providers with Monaco
    */
   initializeProviders: (monaco: any) => void;
-} 
+}

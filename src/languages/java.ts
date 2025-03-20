@@ -11,6 +11,51 @@ export class JavaLanguageDetector extends BaseLanguageDetector {
     priority = 7; // Higher priority than JavaScript to handle ambiguous cases
 
     /**
+     * Get sample content for Java
+     */
+    sampleContent(): string {
+        return `public class HelloWorld {
+    // Instance variables
+    private String message;
+    
+    // Constructor
+    public HelloWorld(String message) {
+        this.message = message;
+    }
+    
+    // Main method
+    public static void main(String[] args) {
+        HelloWorld hello = new HelloWorld("Hello, World!");
+        hello.printMessage();
+        
+        // Example of different data types
+        int number = 42;
+        double pi = 3.14159;
+        boolean isJava = true;
+        
+        // Array example
+        String[] colors = {"Red", "Green", "Blue"};
+        
+        // For loop example
+        for (String color : colors) {
+            System.out.println("Color: " + color);
+        }
+        
+        // If statement example
+        if (isJava) {
+            System.out.println("Number: " + number);
+            System.out.println("Pi: " + pi);
+        }
+    }
+    
+    // Instance method
+    public void printMessage() {
+        System.out.println(message);
+    }
+}`;
+    }
+
+    /**
      * Check if content matches Java patterns
      */
     isMatch(content: string): boolean {

@@ -1,5 +1,7 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown.tsx";
+import React from 'react';
 
 /**
  * Markdown language detector
@@ -9,6 +11,67 @@ export class MarkdownLanguageDetector extends BaseLanguageDetector {
   name = 'Markdown';
   extensions = ['md', 'markdown'];
   priority = 2;
+  
+  /**
+   * Get sample content for Markdown
+   */
+  sampleContent(): string {
+    return `# Sample Markdown Document
+
+## Introduction
+
+This is a sample Markdown document that demonstrates various Markdown features.
+
+### Text Formatting
+
+You can make text **bold**, *italic*, or ***both***. You can also add ~~strikethrough~~.
+
+### Lists
+
+Unordered list:
+- Item 1
+- Item 2
+  - Subitem 2.1
+  - Subitem 2.2
+- Item 3
+
+Ordered list:
+1. First item
+2. Second item
+3. Third item
+
+### Links and Images
+
+[Visit StackBlitz](https://stackblitz.com)
+
+![Sample Image](https://picsum.photos/200/300)
+
+### Code
+
+Inline code: \`console.log('Hello World');\`
+
+\`\`\`javascript
+function greet(name) {
+  return \`Hello, \${name}!\`;
+}
+\`\`\`
+
+### Blockquotes
+
+> This is a blockquote.
+> It can span multiple lines.
+> - You can even include lists
+
+### Task List
+
+- [x] Completed task
+- [ ] Pending task
+- [ ] Another pending task
+
+---
+
+That's all for this sample!`;
+  }
   
   /**
    * Check if content matches Markdown patterns
@@ -116,6 +179,13 @@ export class MarkdownLanguageDetector extends BaseLanguageDetector {
         }];
       }
     });
+  }
+
+  /**
+   * Get status item component for JSON
+   */
+  getStatusItem(): React.FC<{ content?: string }> {
+    return MarkdownStatusItem;
   }
 }
 

@@ -9,6 +9,7 @@ import {
   countEmptyTabs,
   groupTabsByLanguage
 } from '../utils';
+import {detectLanguage, isAmbiguousLanguage} from "../languages";
 
 // Define the combined store interface
 interface RootStore {
@@ -16,6 +17,8 @@ interface RootStore {
   tabs: Tab[];
   activeTabId: string | null;
   addTab: (tab: Tab, toRightSide?: boolean) => void;
+  handleNewTab: (isRightSide: boolean, content?: string) => void;
+  handleNewTabFromPaste: (isRightSide: boolean) => void;
   removeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   updateTabContent: (id: string, content: string) => void;
@@ -102,6 +105,36 @@ export const useRootStore = create<RootStore>((set, get) => {
       useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
     },
 
+    handleNewTab: (isRightSide: boolean, content?: string) => {
+      const { tabs, canAddNewTab, addTab } = get();
+
+      // Check if we can add a new tab
+      if (!canAddNewTab(isRightSide)) {
+        return;
+      }
+
+      // Detect language if content is provided
+      const language = content ? detectLanguage(content) : 'plaintext';
+      const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
+
+      addTab({
+        id: crypto.randomUUID(),
+        title: `new ${tabs.length + 1}`,
+        content: content || '',
+        language,
+        languageLocked: shouldLock
+      }, isRightSide);
+    },
+
+    // Handle paste event on the welcome screen
+    handleNewTabFromPaste: (isRightSide: boolean) => {
+      const { handleNewTab } = get();
+      async function paste() {
+        return await navigator.clipboard.readText();
+      }
+      paste().then(content => handleNewTab(isRightSide, content));
+    },
+
     removeTab: (id) => {
       // Remove the tab from the split view
       useSplitViewStore.getState().removeTabFromSide(id);
@@ -152,35 +185,22 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     // Split view functions
-    splitScreen: (tabId) => {
-      const { splitView } = get();
-      
-      // If already split, do nothing
-      if (splitView.isSplit) return;
+    splitScreen: (leftTabId, rightTabId) => {
+      const { tabs } = get();
 
-      // Move the selected tab to the right side
-      const rightTabs = [tabId];
-      
-      // Keep all other tabs on the left side
-      const leftTabs = splitView.leftTabs.filter(id => id !== tabId);
-      
-      // If no tabs would be left on the left side, keep the first one
-      if (leftTabs.length === 0 && rightTabs.length > 0) {
-        leftTabs.push(rightTabs.shift()!);
+      const removeTab = (tabId: string) => {
+        return tabs
+        .filter(tab => tab.id !== tabId)
+        .map(tab => tab.id);
       }
 
-      // Update split view
-      useSplitViewStore.getState().setSplitView({
-        isSplit: true,
-        leftTabs,
-        rightTabs,
-        activeLeftTabId: leftTabs[0] || null,
-        activeRightTabId: rightTabs[0] || null,
-        splitRatio: 0.5
-      });
-
-      // Set active tab
-      useTabsStore.getState().setActiveTab(tabId);
+      if (rightTabId) {
+        // If a right tab is specified, use it directly
+        useSplitViewStore.getState().splitScreen(removeTab(rightTabId), rightTabId);
+      } else {
+        // Get all tabs except the one being moved to the right
+        useSplitViewStore.getState().splitScreen(removeTab(leftTabId), leftTabId);
+      }
     },
 
     unsplitScreen: (fromRight) => {
