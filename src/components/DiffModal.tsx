@@ -517,10 +517,6 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
     };
   }, [handleUndo, handleRedo]);
 
-  if (!leftTab || !rightTab) {
-    return null;
-  }
-
   // Render a line with character-level diff highlighting
   const renderDiffContent = (content: string, diffs?: { start: number; end: number; type: 'unchanged' | 'modified' }[]) => {
     if (!diffs) return content;
@@ -528,123 +524,127 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
     return diffs.map((diff, index) => {
       const segment = content.slice(diff.start, diff.end);
       return (
-          <span
-              key={index}
-              className={diff.type === 'modified' ? 'bg-yellow-500/30' : ''}
-          >
+        <span
+          key={index}
+          className={diff.type === 'modified' ? 'bg-yellow-500/30' : ''}
+        >
           {segment}
         </span>
       );
     });
   };
 
+  if (!leftTab || !rightTab) {
+    return null;
+  }
+
   return (
-      <div className="fixed inset-8 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between bg-gray-700 px-4 py-2">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-gray-200 font-medium">
-              Compare: {leftTab.title} ↔ {rightTab.title}
-            </h2>
-            <div className="flex items-center space-x-2">
-              <button
-                  className={`p-1 rounded hover:bg-gray-600 ${canUndo ? 'text-gray-200' : 'text-gray-500'}`}
-                  onClick={handleUndo}
-                  disabled={!canUndo}
-                  title="Undo (Ctrl+Z)"
-              >
-                <Undo2 size={16} />
-              </button>
-              <button
-                  className={`p-1 rounded hover:bg-gray-600 ${canRedo ? 'text-gray-200' : 'text-gray-500'}`}
-                  onClick={handleRedo}
-                  disabled={!canRedo}
-                  title="Redo (Ctrl+Y)"
-              >
-                <Redo2 size={16} />
-              </button>
+    <div className="fixed inset-8 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between bg-gray-700 px-4 py-2">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-gray-200 font-medium">
+            Compare: {leftTab.title} ↔ {rightTab.title}
+          </h2>
+          <div className="flex items-center space-x-2">
+            <button
+              className={`p-1 rounded hover:bg-gray-600 ${canUndo ? 'text-gray-200' : 'text-gray-500'}`}
+              onClick={handleUndo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 size={16} />
+            </button>
+            <button
+              className={`p-1 rounded hover:bg-gray-600 ${canRedo ? 'text-gray-200' : 'text-gray-500'}`}
+              onClick={handleRedo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 size={16} />
+            </button>
+          </div>
+        </div>
+        <button
+          className="text-gray-400 hover:text-gray-200"
+          onClick={onClose}
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-auto">
+        <div className="flex text-xs font-mono">
+          <div className="w-1/2 border-r border-gray-600">
+            <div className="sticky top-0 bg-gray-700 px-4 py-2 text-gray-300 font-semibold">
+              {leftTab.title}
             </div>
           </div>
-          <button
-              className="text-gray-400 hover:text-gray-200"
-              onClick={onClose}
-          >
-            <X size={20} />
-          </button>
+          <div className="w-1/2">
+            <div className="sticky top-0 bg-gray-700 px-4 py-2 text-gray-300 font-semibold">
+              {rightTab.title}
+            </div>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
-          <div className="flex text-xs font-mono">
-            <div className="w-1/2 border-r border-gray-600">
-              <div className="sticky top-0 bg-gray-700 px-4 py-2 text-gray-300 font-semibold">
-                {leftTab.title}
-              </div>
-            </div>
-            <div className="w-1/2">
-              <div className="sticky top-0 bg-gray-700 px-4 py-2 text-gray-300 font-semibold">
-                {rightTab.title}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col text-xs font-mono">
-            {diffLines.map((line, index) => (
-                <div
-                    key={index}
-                    className={`flex hover:bg-gray-700 ${
-                        line.type === 'unchanged' ? 'bg-gray-800' :
-                            line.type === 'added' ? 'bg-green-900/30' :
-                                line.type === 'removed' ? 'bg-red-900/30' :
-                                    'bg-yellow-900/30' // modified
-                    }`}
-                >
-                  <div className="w-1/2 border-r border-gray-600 flex">
-                    <div className="w-8 text-right px-2 text-gray-500 select-none border-r border-gray-700">
-                      {line.leftLineNumber || ' '}
-                    </div>
-                    <div className="flex-1 px-2 overflow-x-auto whitespace-pre">
-                      {line.type === 'modified' ?
-                          renderDiffContent(line.leftContent, line.charDiffs?.left) :
-                          line.leftContent
-                      }
-                    </div>
-                    <div className="flex items-center">
-                      {line.type !== 'unchanged' && (
-                          <button
-                              className="px-1 text-gray-400 hover:text-white"
-                              onClick={() => applyChange(line, 'left-to-right')}
-                              title="Apply to right"
-                          >
-                            <ArrowRight size={14} />
-                          </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="w-1/2 flex">
-                    <div className="w-8 text-right px-2 text-gray-500 select-none border-r border-gray-700">
-                      {line.rightLineNumber || ' '}
-                    </div>
-                    <div className="flex-1 px-2 overflow-x-auto whitespace-pre">
-                      {line.type === 'modified' ?
-                          renderDiffContent(line.rightContent, line.charDiffs?.right) :
-                          line.rightContent
-                      }
-                    </div>
-                    <div className="flex items-center">
-                      {line.type !== 'unchanged' && (
-                          <button
-                              className="px-1 text-gray-400 hover:text-white"
-                              onClick={() => applyChange(line, 'right-to-left')}
-                              title="Apply to left"
-                          >
-                            <ArrowLeft size={14} />
-                          </button>
-                      )}
-                    </div>
-                  </div>
+        <div className="flex flex-col text-xs font-mono">
+          {diffLines.map((line, index) => (
+            <div
+              key={index}
+              className={`flex hover:bg-gray-700 ${
+                line.type === 'unchanged' ? 'bg-gray-800' :
+                line.type === 'added' ? 'bg-green-900/30' :
+                line.type === 'removed' ? 'bg-red-900/30' :
+                'bg-yellow-900/30' // modified
+              }`}
+            >
+              <div className="w-1/2 border-r border-gray-600 flex">
+                <div className="w-8 text-right px-2 text-gray-500 select-none border-r border-gray-700 flex-shrink-0">
+                  {line.leftLineNumber || ' '}
                 </div>
-            ))}
-          </div>
+                <div className="flex-1 px-2 whitespace-pre overflow-hidden">
+                  {line.type === 'modified' ?
+                    renderDiffContent(line.leftContent, line.charDiffs?.left) :
+                    line.leftContent
+                  }
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  {line.type !== 'unchanged' && (
+                    <button
+                      className="px-1 text-gray-400 hover:text-white"
+                      onClick={() => applyChange(line, 'left-to-right')}
+                      title="Apply to right"
+                    >
+                      <ArrowRight size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="w-1/2 flex">
+                <div className="w-8 text-right px-2 text-gray-500 select-none border-r border-gray-700 flex-shrink-0">
+                  {line.rightLineNumber || ' '}
+                </div>
+                <div className="flex-1 px-2 whitespace-pre overflow-hidden">
+                  {line.type === 'modified' ?
+                    renderDiffContent(line.rightContent, line.charDiffs?.right) :
+                    line.rightContent
+                  }
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  {line.type !== 'unchanged' && (
+                    <button
+                      className="px-1 text-gray-400 hover:text-white"
+                      onClick={() => applyChange(line, 'right-to-left')}
+                      title="Apply to left"
+                    >
+                      <ArrowLeft size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+    </div>
   );
 };
