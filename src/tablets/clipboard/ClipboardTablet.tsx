@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Tablet, TabletState } from '../types';
-import { Clipboard, Copy, ClipboardPaste, XCircle, RefreshCw } from 'lucide-react';
+import { Clipboard, Copy, ClipboardPaste, XCircle, RefreshCw, ExternalLink } from 'lucide-react';
+import { detectLanguage } from '../../languages';
+import { useRootStore, useSplitViewStore, useTabsStore } from '../../stores';
 
 interface ClipboardItem {
   id: string;
@@ -44,12 +46,15 @@ export const ClipboardTablet: Tablet = {
 
   render(state: ClipboardTabletState, onChange) {
     const [hasDuplicates, setHasDuplicates] = useState(false);
+    const { addTab, splitView } = useRootStore();
+    const { setSplitView } = useSplitViewStore();
+    const { activeTabId } = useTabsStore();
 
     // Check for duplicates whenever items change
     useEffect(() => {
       const contentSet = new Set();
       let duplicateFound = false;
-      
+
       for (const item of state.data.items) {
         if (contentSet.has(item.content)) {
           duplicateFound = true;
@@ -57,7 +62,7 @@ export const ClipboardTablet: Tablet = {
         }
         contentSet.add(item.content);
       }
-      
+
       setHasDuplicates(duplicateFound);
     }, [state.data.items]);
 
@@ -66,7 +71,7 @@ export const ClipboardTablet: Tablet = {
       const interval = setInterval(() => {
         const now = Date.now();
         const updatedItems = state.data.items.filter(item => item.expiresAt > now);
-        
+
         if (updatedItems.length !== state.data.items.length) {
           onChange({
             ...state,
@@ -167,6 +172,43 @@ export const ClipboardTablet: Tablet = {
       return `${minutes} min${minutes !== 1 ? 's' : ''}`;
     };
 
+    // Function to handle opening content in a new tab
+    const handleOpenInNewTab = (content: string, timestamp: number) => {
+      // Create a new tab with the content
+      const newTabId = crypto.randomUUID();
+      const language = detectLanguage(content);
+      const shouldLock = language !== 'plaintext';
+
+      // Find the index of the current tab in its side's tab list
+      const isRightSide = splitView.rightTabs.includes(activeTabId);
+      const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
+      const currentTabIndex = currentTabList.indexOf(activeTabId);
+
+      // Add the new tab immediately after the current tab
+      addTab({
+        id: newTabId,
+        title: `Clipboard ${new Date(timestamp).toLocaleTimeString()}`,
+        content,
+        language,
+        languageLocked: shouldLock
+      }, isRightSide);
+
+      // Move the new tab to the correct position
+      if (currentTabIndex !== -1) {
+        const newTabList = [...currentTabList];
+
+        // Insert after the clipboard tab
+        newTabList.splice(currentTabIndex + 1, 0, newTabId);
+
+        // Update the tab list for the appropriate side
+        if (isRightSide) {
+          setSplitView({ rightTabs: newTabList });
+        } else {
+          setSplitView({ leftTabs: newTabList });
+        }
+      }
+    };
+
     return (
       <div className="h-full bg-gray-900 flex flex-col">
         {/* Header */}
@@ -244,6 +286,13 @@ export const ClipboardTablet: Tablet = {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleOpenInNewTab(item.content, item.timestamp)}
+                        className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                        title="Open in new tab"
+                      >
+                        <ExternalLink size={16} />
+                      </button>
                       <button
                         onClick={() => handleCopyItem(item.content)}
                         className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
