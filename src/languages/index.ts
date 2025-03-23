@@ -14,6 +14,11 @@ import './javascript';
 import './java';
 import './stacktrace';
 import './curl';
+import './python';
+import './ruby';
+import './rust';
+import './go';
+import './php';
 
 // Export the registry for use in the application
 export { languageRegistry };
@@ -38,6 +43,11 @@ export { registerJavaScriptProvider, registerTypeScriptProvider } from './javasc
 export { registerJavaProvider } from './java';
 export { registerStacktraceProvider } from './stacktrace';
 export { registerCurlProvider } from './curl';
+export { registerPythonProvider } from './python';
+export { registerRubyProvider } from './ruby';
+export { registerRustProvider } from './rust';
+export { registerGoProvider } from './go';
+export { registerPhpProvider } from './php';
 
 /**
  * Initialize all language providers with Monaco
