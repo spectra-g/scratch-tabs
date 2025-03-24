@@ -25,7 +25,7 @@ interface EditorPaneProps {
   side: 'left' | 'right';
 }
 
-const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
+const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
   const {
     tabs,
     previewMode,
@@ -42,7 +42,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
   const previousContentRef = useRef<string>('');
   const [showTabletSelector, setShowTabletSelector] = useState(false);
   const [tabletQuery, setTabletQuery] = useState('');
-  const [selectorPosition, setSelectorPosition] = useState({ x: 0, y: 0 });
+  const [selectorPosition, setSelectorPosition] = useState({x: 0, y: 0});
 
   const activeTabId = side === 'left' ? splitView.activeLeftTabId : splitView.activeRightTabId;
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
@@ -87,22 +87,6 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
     }
   }, [activeTab, activeTabId]);
 
-  // Handle keyboard events for the editor
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showTabletSelector) {
-        e.preventDefault();
-        setShowTabletSelector(false);
-        if (activeTabId) {
-          updateTabContent(activeTabId, '');
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showTabletSelector, activeTabId, updateTabContent]);
-
   const handleEditorChange = (value: string | undefined) => {
     if (activeTabId && value !== undefined && activeTab) {
       const prevContent = previousContentRef.current;
@@ -136,6 +120,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
               setShowTabletSelector(true);
             }
           }
+          console.log("Updating query: " + trimmedContent);
           // Update search query (remove the leading slash)
           setTabletQuery(trimmedContent.slice(1));
         } else {
@@ -149,9 +134,9 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
           updateTabLanguage(activeTabId, 'plaintext', false);
         } else {
           const isCompleteReplacement =
-              Math.abs(prevContent.length - newContent.length) > 10 &&
-              !newContent.includes(prevContent) &&
-              !prevContent.includes(newContent);
+            Math.abs(prevContent.length - newContent.length) > 10 &&
+            !newContent.includes(prevContent) &&
+            !prevContent.includes(newContent);
 
           if (isCompleteReplacement) {
             const detectedLanguage = detectLanguage(newContent);
@@ -240,7 +225,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
 
   const handleTabletStateChange = (newState: string) => {
     if (!activeTabId) return;
-    updateTabState(activeTabId, { tabletState: newState });
+    updateTabState(activeTabId, {tabletState: newState});
   };
 
   const renderMarkdownPreview = () => {
@@ -248,74 +233,74 @@ const EditorPane: React.FC<EditorPaneProps> = ({ side }) => {
 
     const htmlContent = marked(activeTab.content);
     return (
-        <div
-            className="prose prose-invert max-w-none p-8 overflow-auto"
-            dangerouslySetInnerHTML={{ __html: htmlContent }}
-        />
+      <div
+        className="prose prose-invert max-w-none p-8 overflow-auto"
+        dangerouslySetInnerHTML={{__html: htmlContent}}
+      />
     );
   };
 
   return (
-      <div className="flex flex-col h-full w-full">
-        <div className="flex-1 overflow-hidden w-full relative" onClick={handleEditorFocus}>
-          {activeTab ? (
-              activeTab.isTablet ? (
-                  <TabletView tab={activeTab} onChange={handleTabletStateChange} />
-              ) : activeTab.language === 'markdown' && previewMode ? (
-                  renderMarkdownPreview()
-              ) : (
-                  <>
-                    <Editor
-                        height="100%"
-                        width="100%"
-                        theme="vs-dark"
-                        language={activeTab.language}
-                        value={activeTab.content}
-                        onChange={handleEditorChange}
-                        onMount={handleEditorDidMount}
-                        options={{
-                          minimap: { enabled: false },
-                          fontSize: 14,
-                          wordWrap: 'on',
-                          automaticLayout: true,
-                          copyWithSyntaxHighlighting: false,
-                          scrollBeyondLastLine: false,
-                          formatOnPaste: true,
-                          formatOnType: true,
-                          find: {
-                            addExtraSpaceOnTop: false,
-                          },
-                        }}
-                    />
-                    {showTabletSelector && (
-                        <div style={{ position: 'absolute', left: selectorPosition.x, top: selectorPosition.y }}>
-                          <TabletSelector
-                              searchQuery={tabletQuery}
-                              onSelect={handleTabletSelect}
-                              onClose={() => {
-                                setShowTabletSelector(false);
-                                setTabletQuery('');
-                                if (activeTabId) {
-                                  updateTabContent(activeTabId, '');
-                                }
-                              }}
-                          />
-                        </div>
-                    )}
-                  </>
-              )
+    <div className="flex flex-col h-full w-full">
+      <div className="flex-1 overflow-hidden w-full relative" onClick={handleEditorFocus}>
+        {activeTab ? (
+          activeTab.isTablet ? (
+            <TabletView tab={activeTab} onChange={handleTabletStateChange}/>
+          ) : activeTab.language === 'markdown' && previewMode ? (
+            renderMarkdownPreview()
           ) : (
-              <div className="h-full flex items-center justify-center text-gray-400">
-                <p>No tab selected</p>
-              </div>
-          )}
-        </div>
+            <>
+              <Editor
+                height="100%"
+                width="100%"
+                theme="vs-dark"
+                language={activeTab.language}
+                value={activeTab.content}
+                onChange={handleEditorChange}
+                onMount={handleEditorDidMount}
+                options={{
+                  minimap: {enabled: false},
+                  fontSize: 14,
+                  wordWrap: 'on',
+                  automaticLayout: true,
+                  copyWithSyntaxHighlighting: false,
+                  scrollBeyondLastLine: false,
+                  formatOnPaste: true,
+                  formatOnType: true,
+                  find: {
+                    addExtraSpaceOnTop: false,
+                  },
+                }}
+              />
+              {showTabletSelector && (
+                <div style={{position: 'absolute', left: selectorPosition.x, top: selectorPosition.y}}>
+                  <TabletSelector
+                    searchQuery={tabletQuery}
+                    onSelect={handleTabletSelect}
+                    onClose={() => {
+                      setShowTabletSelector(false);
+                      setTabletQuery('');
+                      if (activeTabId) {
+                        updateTabContent(activeTabId, '');
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </>
+          )
+        ) : (
+          <div className="h-full flex items-center justify-center text-gray-400">
+            <p>No tab selected</p>
+          </div>
+        )}
       </div>
+    </div>
   );
 };
 
 function App() {
-  const { tabs, splitView, addTab, handleNewTab, setSplitRatio } = useRootStore();
+  const {tabs, splitView, addTab, handleNewTab, setSplitRatio} = useRootStore();
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [leftWidth, setLeftWidth] = useState(`${splitView.splitRatio * 100}%`);
@@ -324,14 +309,14 @@ function App() {
   const lastRatioRef = useRef<number>(splitView.splitRatio);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const [showTabletSelector, setShowTabletSelector] = useState(false);
-  const [selectorPosition, setSelectorPosition] = useState({ x: 0, y: 0 });
+  const [selectorPosition, setSelectorPosition] = useState({x: 0, y: 0});
   const welcomeRef = useRef<HTMLDivElement>(null);
 
   // Update width calculations when split ratio changes
   useEffect(() => {
-    setLeftWidth(`${splitView.splitRatio * 100}%`);
+    setLeftWidth(`${(splitView.isSplit ? splitView.splitRatio : 1) * 100}%`);
     setRightWidth(`${(1 - splitView.splitRatio) * 100}%`);
-  }, [splitView.splitRatio]);
+  }, [splitView.splitRatio, splitView.isSplit]);
 
   // Set up throttled resize observer
   useEffect(() => {
@@ -339,7 +324,7 @@ function App() {
 
     const handleResize = (entries: ResizeObserverEntry[]) => {
       if (!isDragging && entries.length > 0) {
-        setLeftWidth(`${splitView.splitRatio * 100}%`);
+        setLeftWidth(`${(splitView.isSplit ? splitView.splitRatio : 1) * 100}%`);
         setRightWidth(`${(1 - splitView.splitRatio) * 100}%`);
       }
     };
@@ -367,8 +352,6 @@ function App() {
           });
           setShowTabletSelector(true);
         }
-      } else if (e.key === 'Escape' && showTabletSelector) {
-        setShowTabletSelector(false);
       }
     };
 
@@ -406,10 +389,10 @@ function App() {
 
   // Debounced version of setSplitRatio to prevent too many updates
   const debouncedSetSplitRatio = useCallback(
-      debounce((ratio: number) => {
-        setSplitRatio(ratio);
-      }, 50),
-      [setSplitRatio]
+    debounce((ratio: number) => {
+      setSplitRatio(ratio);
+    }, 50),
+    [setSplitRatio]
   );
 
   // Update local state immediately for smooth UI, but debounce the store update
@@ -497,91 +480,90 @@ function App() {
   }, []);
 
   return (
-      <div className="h-screen flex flex-col bg-gray-900">
-        {/* Header with tabs */}
-        <div className="items-center bg-gray-800 text-white">
-          {splitView.isSplit ? (
-              <>
-                <div style={{ width: leftWidth }}>
-                  <TabBar side="left" />
-                </div>
-                <div style={{ width: rightWidth }}>
-                  <TabBar side="right" />
-                </div>
-              </>
-          ) : (
-              <div className="flex-1">
-                <TabBar side="left" />
-              </div>
-          )}
-        </div>
+    <div className="h-screen flex flex-col bg-gray-900">
+      {/* Header with tabs */}
 
-        {/* Editor area */}
-        <div className="flex-1 overflow-hidden flex" ref={containerRef}>
-          {splitView.isSplit ? (
-              <>
-                <div style={{ width: leftWidth }} className="h-full">
-                  <EditorPane side="left" />
+      <div id={"above-status-bar"} className="flex w-full h-full" ref={containerRef}>
+
+        {tabs.length == 0 ? (
+          <>
+            <div
+              ref={welcomeRef}
+              className="h-full w-full flex flex-col items-center pt-32 text-gray-400 cursor-pointer relative outline-none"
+              onDoubleClick={() => handleNewTab(false)}
+              onPaste={handlePaste}
+            >
+              <img
+                src="/favicon-gray.svg"
+                alt="Scratch Tabs Logo"
+                className="w-16 h-16 mb-6"
+              />
+              <h1 className="text-2xl font-semibold mb-8">Welcome to Scratch Tabs beta!</h1>
+              <div className="text-center">
+                <p className="mb-8 text-lg">To start Scratching:</p>
+                <ol className="list-decimal list-inside text-left space-y-3">
+                  <li>Double click here</li>
+                  <li>Or click the icons at the top left</li>
+                  <li>Or click here and paste</li>
+                  <li>Or type '/'</li>
+                </ol>
+              </div>
+              {showTabletSelector && (
+                <div style={{
+                  position: 'absolute',
+                  left: selectorPosition.x,
+                  top: selectorPosition.y
+                }}>
+                  <TabletSelector
+                    searchQuery=""
+                    onSelect={handleTabletSelect}
+                    onClose={() => setShowTabletSelector(false)}
+                    showSearch={true}
+                  />
                 </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div id={"left-split"}
+                 className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
+                 style={{width: leftWidth}}>
+              <div id={"tab-wrapper"} className="w-full">
+                <TabBar side="left"/>
+              </div>
+              <div id={"tab-content"} className="w-full h-full">
+                <EditorPane side="left"/>
+              </div>
+            </div>
+            {splitView.isSplit && (
+              <>
                 <div
-                    className={`w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize relative ${isDragging ? 'bg-blue-500' : ''}`}
-                    onMouseDown={handleDragStart}
+                  className={`w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize relative ${isDragging ? 'bg-blue-500' : ''}`}
+                  onMouseDown={handleDragStart}
                 >
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-8 flex items-center justify-center">
+                  <div
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-8 flex items-center justify-center">
                     <div className="w-0.5 h-4 bg-gray-400 rounded-full"></div>
                   </div>
                 </div>
-                <div style={{ width: rightWidth }} className="h-full">
-                  <EditorPane side="right" />
+                <div id={"right-split"}
+                     className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
+                     style={{width: rightWidth}}>
+                  <div id={"tab-wrapper"} className="w-full">
+                    <TabBar side="right"/>
+                  </div>
+                  <div id={"tab-content"} className="w-full h-full">
+                    <EditorPane side="right"/>
+                  </div>
                 </div>
               </>
-          ) : (
-              tabs.length > 0 ? (
-                  <div className="w-full h-full">
-                    <EditorPane side="left" />
-                  </div>
-              ) : (
-                  <div
-                      ref={welcomeRef}
-                      className="h-full w-full flex flex-col items-center pt-32 text-gray-400 cursor-pointer relative outline-none"
-                      onDoubleClick={() => handleNewTab(false)}
-                      onPaste={handlePaste}
-                  >
-                    <img
-                        src="/favicon-gray.svg"
-                        alt="Scratch Tabs Logo"
-                        className="w-16 h-16 mb-6"
-                    />
-                    <h1 className="text-2xl font-semibold mb-8">Welcome to Scratch Tabs beta!</h1>
-                    <div className="text-center">
-                      <p className="mb-8 text-lg">To start Scratching:</p>
-                      <ol className="list-decimal list-inside text-left space-y-3">
-                        <li>Double click here</li>
-                        <li>Or click the icons at the top left</li>
-                        <li>Or click here and paste</li>
-                        <li>Or type '/'</li>
-                      </ol>
-                    </div>
-                    {showTabletSelector && (
-                        <div style={{
-                          position: 'absolute',
-                          left: selectorPosition.x,
-                          top: selectorPosition.y
-                        }}>
-                          <TabletSelector
-                              searchQuery=""
-                              onSelect={handleTabletSelect}
-                              onClose={() => setShowTabletSelector(false)}
-                              showSearch={true}
-                          />
-                        </div>
-                    )}
-                  </div>
-              )
-          )}
-        </div>
-        {tabs.length > 0 && <StatusBar />}
+            )}
+          </>
+        )}
       </div>
+      {tabs.length > 0 && <StatusBar/>}
+    </div>
   );
 }
 
