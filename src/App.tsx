@@ -499,7 +499,7 @@ function App() {
   return (
       <div className="h-screen flex flex-col bg-gray-900">
         {/* Header with tabs */}
-        <div className="flex items-center bg-gray-800 text-white">
+        <div className="items-center bg-gray-800 text-white">
           {splitView.isSplit ? (
               <>
                 <div style={{ width: leftWidth }}>
