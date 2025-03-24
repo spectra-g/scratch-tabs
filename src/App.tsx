@@ -122,6 +122,8 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
           }
           // Update search query (remove the leading slash)
           setTabletQuery(trimmedContent.slice(1));
+          setShowTabletSelector(false);
+          setTimeout(() => setShowTabletSelector(true), 0);
         } else {
           // Content doesn't start with /, hide selector
           setShowTabletSelector(false);
