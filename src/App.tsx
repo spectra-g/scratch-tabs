@@ -120,7 +120,6 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
               setShowTabletSelector(true);
             }
           }
-          console.log("Updating query: " + trimmedContent);
           // Update search query (remove the leading slash)
           setTabletQuery(trimmedContent.slice(1));
         } else {
