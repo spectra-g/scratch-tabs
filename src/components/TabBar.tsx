@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   X,
   ChevronRight,
@@ -16,10 +16,10 @@ import {
   FileCode,
   Tablet
 } from 'lucide-react';
-import {useRootStore} from '../stores';
-import {DiffModal} from './DiffModal';
-import {languageRegistry} from '../languages';
-import {TabletSelector} from '../tablets';
+import { useRootStore } from '../stores';
+import { DiffModal } from './DiffModal';
+import { languageRegistry } from '../languages';
+import { TabletSelector } from '../tablets';
 
 interface TabContextMenuProps {
   tabId: string;
@@ -114,6 +114,11 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
     return currentTab && otherSideTab && !currentTab.isTablet && !otherSideTab.isTablet;
   })();
 
+  const canShowFromSample = (() => {
+    const currentTab = tabs.find(t => t.id === tabId);
+    return currentTab && !currentTab.isTablet;
+  })();
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -167,34 +172,36 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
         minWidth: "200px"
       }}
     >
-      <button
-        className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs group relative"
-        onClick={handleFromSample}
-        onMouseEnter={(e) => handleFromSample(e)}
-        onMouseLeave={() => setShowLanguages(false)}
-      >
-        <FileCode size={14} className="mr-2"/>
-        From sample
-        {showLanguages && (
-          <div
-            className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg py-1 left-full top-0 min-w-[150px]"
-            style={{
-              left: languagesPosition.x - position.x,
-              top: languagesPosition.y - position.y,
-            }}
-          >
-            {languageRegistry.getAll().map(lang => (
-              <button
-                key={lang.id}
-                className="w-full text-left px-3 py-1.5 hover:bg-gray-600 text-xs"
-                onClick={() => handleLanguageSelect(lang.id)}
-              >
-                {lang.name}
-              </button>
-            ))}
-          </div>
-        )}
-      </button>
+      {canShowFromSample && (
+        <button
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs group relative"
+          onClick={handleFromSample}
+          onMouseEnter={(e) => handleFromSample(e)}
+          onMouseLeave={() => setShowLanguages(false)}
+        >
+          <FileCode size={14} className="mr-2"/>
+          From sample
+          {showLanguages && (
+            <div
+              className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg py-1 left-full top-0 min-w-[150px]"
+              style={{
+                left: languagesPosition.x - position.x,
+                top: languagesPosition.y - position.y,
+              }}
+            >
+              {languageRegistry.getAll().map(lang => (
+                <button
+                  key={lang.id}
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-600 text-xs"
+                  onClick={() => handleLanguageSelect(lang.id)}
+                >
+                  {lang.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </button>
+      )}
 
       <button
         className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
