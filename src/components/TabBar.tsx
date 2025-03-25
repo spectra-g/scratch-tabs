@@ -174,7 +174,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
     >
       {canShowFromSample && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs group relative"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs group relative text-gray-200"
           onClick={handleFromSample}
           onMouseEnter={(e) => handleFromSample(e)}
           onMouseLeave={() => setShowLanguages(false)}
@@ -192,7 +192,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
               {languageRegistry.getAll().map(lang => (
                 <button
                   key={lang.id}
-                  className="w-full text-left px-3 py-1.5 hover:bg-gray-600 text-xs"
+                  className="w-full text-left px-3 py-1.5 hover:bg-gray-600 text-xs text-gray-200"
                   onClick={() => handleLanguageSelect(lang.id)}
                 >
                   {lang.name}
@@ -204,7 +204,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
       )}
 
       <button
-        className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+        className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
         onClick={() => {
           duplicateTab(tabId, isRightSide);
           onClose();
@@ -216,7 +216,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canDuplicateAndSplit && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={handleDuplicateAndSplit}
         >
           <Split size={14} className="mr-2"/>
@@ -226,7 +226,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canCompare && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             onClose('compare');
           }}
@@ -238,7 +238,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canGroupTypes && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             groupTabsByType(isRightSide);
             onClose();
@@ -255,7 +255,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canSplit && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             splitScreen(tabId);
             onClose();
@@ -268,7 +268,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canMoveRight && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             moveTabToRight(tabId);
             onClose();
@@ -281,7 +281,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canMoveLeft && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             moveTabToLeft(tabId);
             onClose();
@@ -294,7 +294,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canUnsplit && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             unsplitScreen(isRightSide);
             onClose();
@@ -311,7 +311,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canCloseAllExcept && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             closeAllExcept(tabId, isRightSide);
             onClose();
@@ -324,7 +324,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canCloseToLeft && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             closeTabsToLeft(tabId, isRightSide);
             onClose();
@@ -337,7 +337,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
       {canCloseToRight && (
         <button
-          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs"
+          className="w-full text-left px-3 py-1.5 hover:bg-gray-600 flex items-center text-xs text-gray-200"
           onClick={() => {
             closeTabsToRight(tabId, isRightSide);
             onClose();
@@ -573,12 +573,12 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left'}) => {
       <div
         ref={tabBarRef}
         className="flex bg-gray-800 text-gray-300 w-full h-8 overflow-hidden"
-        onDoubleClick={handleEmptyAreaDoubleClick}
         key={tabsKey}
       >
         <div
           ref={tabsContainerRef}
           className="flex-1 flex min-w-0 overflow-hidden"
+          onDoubleClick={handleEmptyAreaDoubleClick}
         >
           {visibleTabs.map(tab => {
             // Calculate the relative width of the indicator bar
@@ -595,13 +595,14 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left'}) => {
                 onDoubleClick={(e) => handleDoubleClick(tab, e)}
               >
                 {/* Line count indicator bar - horizontal at bottom */}
-                <div
-                  className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50"
-                  style={{
-                    width: `${relativeWidth}%`,
-                  }}
-                />
-
+                {!tab.isTablet && (
+                  <div
+                    className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50"
+                    style={{
+                      width: `${relativeWidth}%`,
+                    }}
+                  />
+                )}
                 {editingTabId === tab.id ? (
                   <input
                     ref={inputRef}
