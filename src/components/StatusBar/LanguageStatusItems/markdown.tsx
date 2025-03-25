@@ -9,7 +9,7 @@ export const MarkdownStatusItem: React.FC<StatusItemProps> = () => {
   return (
     <button
       onClick={togglePreviewMode}
-      className="p-1 hover:bg-gray-700 rounded transition-colors"
+      className="p-0.75 hover:bg-gray-700 rounded transition-colors"
       title={previewMode ? "Switch to editor" : "Switch to preview"}
     >
       {previewMode ? <Edit2 size={14} /> : <Eye size={14} />}

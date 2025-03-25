@@ -601,7 +601,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
                 <div className="w-8 text-right px-2 text-gray-500 select-none border-r border-gray-700 flex-shrink-0">
                   {line.leftLineNumber || ' '}
                 </div>
-                <div className="flex-1 px-2 whitespace-pre overflow-hidden">
+                <div className="flex-1 px-2 whitespace-pre overflow-hidden text-gray-200">
                   {line.type === 'modified' ?
                     renderDiffContent(line.leftContent, line.charDiffs?.left) :
                     line.leftContent
@@ -623,7 +623,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
                 <div className="w-8 text-right px-2 text-gray-500 select-none border-r border-gray-700 flex-shrink-0">
                   {line.rightLineNumber || ' '}
                 </div>
-                <div className="flex-1 px-2 whitespace-pre overflow-hidden">
+                <div className="flex-1 px-2 whitespace-pre overflow-hidden text-gray-200">
                   {line.type === 'modified' ?
                     renderDiffContent(line.rightContent, line.charDiffs?.right) :
                     line.rightContent

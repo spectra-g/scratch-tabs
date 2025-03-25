@@ -79,34 +79,6 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
     }
   }, [selectedIndex]);
   
-  if (tablets.length === 0) {
-    return (
-      <div 
-        ref={selectorRef}
-        className="absolute z-50 w-72 bg-gray-800/95 backdrop-blur border border-gray-600/50 rounded-lg shadow-xl p-2"
-      >
-        {showSearch && (
-          <div className="p-2 border-b border-gray-600/50">
-            <div className="relative">
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tablets..."
-                className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md pl-8 pr-3 py-1.5 text-sm text-gray-200 placeholder-gray-400"
-              />
-              <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
-            </div>
-          </div>
-        )}
-        <div className="text-gray-300 text-sm p-2">
-          No tablets found
-        </div>
-      </div>
-    );
-  }
-  
   return (
     <div 
       ref={selectorRef}
@@ -127,28 +99,35 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
           </div>
         </div>
       )}
-      <div 
-        ref={listRef}
-        className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500"
-      >
-        {tablets.map((tablet, index) => (
-          <div
-            key={tablet.id}
-            className={`p-3 cursor-pointer transition-colors ${
-              index === selectedIndex 
-                ? 'bg-blue-500/20 border-l-2 border-blue-500' 
-                : 'hover:bg-gray-700/50 border-l-2 border-transparent'
-            }`}
-            onClick={() => onSelect(tablet)}
-            onMouseEnter={() => setSelectedIndex(index)}
-          >
-            <div className="font-medium text-gray-100">{tablet.label}</div>
-            <div className="text-xs text-gray-400 mt-0.5">
-              {tablet.keywords.join(', ')}
+
+      {tablets.length > 0 ? (
+        <div
+          ref={listRef}
+          className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500"
+        >
+          {tablets.map((tablet, index) => (
+            <div
+              key={tablet.id}
+              className={`p-3 cursor-pointer transition-colors ${
+                index === selectedIndex
+                  ? 'bg-blue-500/20 border-l-2 border-blue-500'
+                  : 'hover:bg-gray-700/50 border-l-2 border-transparent'
+              }`}
+              onClick={() => onSelect(tablet)}
+              onMouseEnter={() => setSelectedIndex(index)}
+            >
+              <div className="font-medium text-gray-100">{tablet.label}</div>
+              <div className="text-xs text-gray-400 mt-0.5">
+                {tablet.keywords.join(', ')}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-gray-300 text-sm p-2">
+          No tablets found
+        </div>
+      )}
     </div>
   );
 };
