@@ -249,7 +249,7 @@ export const CalculatorTablet: Tablet = {
                     {/* History */}
                     <div className="mb-6">
                         <h3 className="text-lg font-medium text-gray-200 mb-3">History</h3>
-                        <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500">
+                        <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 h-48 overflow-y-auto custom-scrollbar">
                             {state.data.history.length === 0 ? (
                                 <div className="text-gray-500 text-sm">No calculations yet</div>
                             ) : (
@@ -271,7 +271,7 @@ export const CalculatorTablet: Tablet = {
                                 ...state,
                                 data: { ...state.data, notes: e.target.value }
                             })}
-                            className="w-full h-[calc(100%-2rem)] bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500"
+                            className="w-full h-[calc(100%-2rem)] bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none custom-scrollbar"
                             placeholder="Add notes..."
                         />
                     </div>

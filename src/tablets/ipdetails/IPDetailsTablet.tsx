@@ -124,7 +124,7 @@ export const IPDetailsTablet: Tablet = {
           </div>
         </div>
 
-        <div className="flex-1 px-6 pb-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500">
+        <div className="flex-1 px-6 pb-6 overflow-y-auto custom-scrollbar">
           {state.data.error ? (
             <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 text-red-400">
               {state.data.error}

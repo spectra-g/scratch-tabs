@@ -40,7 +40,7 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
           <X size={20} />
         </button>
       </div>
-      <div className="flex-1 p-6 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500">
+      <div className="flex-1 p-6 overflow-auto custom-scrollbar">
         <div
             className="prose prose-invert max-w-none"
             dangerouslySetInnerHTML={{__html: email.body || ''}}
@@ -250,7 +250,7 @@ export const TempEmailTablet: Tablet = {
         </div>
 
         {/* Email List */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto custom-scrollbar">
           {state.data.emailAddress ? (
             state.data.emails.length > 0 ? (
               <div className="divide-y divide-gray-700/50">

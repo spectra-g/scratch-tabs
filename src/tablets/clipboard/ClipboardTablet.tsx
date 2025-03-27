@@ -262,7 +262,7 @@ export const ClipboardTablet: Tablet = {
         </div>
 
         {/* Items List */}
-        <div className="flex-1 overflow-auto p-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500">
+        <div className="flex-1 overflow-auto p-6 custom-scrollbar">
           {state.data.items.length === 0 ? (
             <div className="text-center text-gray-400 mt-8">
               <ClipboardPaste size={48} className="mx-auto mb-4 opacity-50" />
@@ -309,7 +309,7 @@ export const ClipboardTablet: Tablet = {
                       </button>
                     </div>
                   </div>
-                  <div className="p-4 max-h-24 overflow-auto whitespace-pre-wrap text-sm text-gray-200 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500">
+                  <div className="p-4 max-h-24 overflow-auto whitespace-pre-wrap text-sm text-gray-200 custom-scrollbar">
                     {item.content}
                   </div>
                 </div>

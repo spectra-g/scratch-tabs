@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer utilities {
+    .custom-scrollbar {
+        @apply scrollbar-thin scrollbar-thumb-[#4e4e4e] scrollbar-track-[#1e1e1e];
+    /*
+       scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500
+
+       */
+    }
+}

@@ -572,7 +572,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto custom-scrollbar">
         <div className="flex text-xs font-mono">
           <div className="w-1/2 border-r border-gray-600">
             <div className="sticky top-0 bg-gray-700 px-4 py-2 text-gray-300 font-semibold">
