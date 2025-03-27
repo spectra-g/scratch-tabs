@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { marked } from 'marked';
+import Markdown from 'react-markdown';
 import { TabBar } from './components/TabBar';
 import { StatusBar } from './components/StatusBar';
 import { TabletView } from './components/TabletView';
@@ -11,12 +11,6 @@ import { debounce, createThrottledResizeObserver } from './utils/domUtils';
 
 // Initialize language providers
 initializeLanguageProviders();
-
-// Configure marked for secure rendering
-marked.setOptions({
-  gfm: true,
-  breaks: true
-});
 
 // Add at the top level, outside of any component
 const scrollPositions: { [tabId: string]: number } = {};
@@ -229,77 +223,94 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
     updateTabState(activeTabId, {tabletState: newState});
   };
 
-  const renderMarkdownPreview = () => {
-    if (!activeTab?.content) return <div className="p-8">No content to preview</div>;
+  // Determine if markdown preview should be active based on flags and tab
+  const shouldShowMarkdownPreview = previewMode && activeTab?.language === 'markdown';
+  const isFullPreview = false;
 
-    const htmlContent = marked(activeTab.content);
+  // --- Full Preview Mode ---
+  if (isFullPreview && shouldShowMarkdownPreview) {
     return (
-      <div
-        className="prose prose-invert max-w-none p-8 overflow-auto"
-        dangerouslySetInnerHTML={{__html: htmlContent}}
-      />
+        <div className="flex flex-col h-full w-full">
+          <div className="flex-1 w-full h-full overflow-auto p-4 custom-scrollbar">
+            <div className="prose prose-invert max-w-none p-4">
+              <Markdown>{activeTab.content}</Markdown>
+            </div>
+          </div>
+        </div>
     );
-  };
+  }
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <div className="flex-1 overflow-hidden w-full relative" onClick={handleEditorFocus}>
-        {activeTab ? (
-          activeTab.isTablet ? (
-            <TabletView tab={activeTab} onChange={handleTabletStateChange}/>
-          ) : activeTab.language === 'markdown' && previewMode ? (
-            renderMarkdownPreview()
+      <div className={`flex h-full w-full ${previewMode ? 'flex-row' : 'flex-col'}`}>
+        <div
+            className={`flex-1 overflow-hidden relative ${previewMode ? 'w-1/2' : 'w-full'} h-full`}
+            onClick={!previewMode ? handleEditorFocus : undefined} // Only apply focus click to full editor container
+        >
+          {activeTab ? (
+              activeTab.isTablet ? (
+                  <TabletView tab={activeTab} onChange={handleTabletStateChange} />
+              ) : (
+                  // Container for Editor and potential TabletSelector overlay
+                  <div className="w-full h-full relative" onClick={previewMode ? handleEditorFocus : undefined}> {/* Apply focus click here in split view */}
+                    <Editor
+                        height="100%" // Takes full height of its parent div
+                        width="100%"  // Takes full width of its parent div
+                        theme="vs-dark"
+                        language={activeTab.language}
+                        value={activeTab.content}
+                        onChange={handleEditorChange}
+                        onMount={handleEditorDidMount}
+                        options={{
+                          minimap: { enabled: false },
+                          fontSize: 14,
+                          wordWrap: 'on',
+                          automaticLayout: true,
+                          copyWithSyntaxHighlighting: false,
+                          scrollBeyondLastLine: false,
+                          formatOnPaste: true,
+                          formatOnType: true,
+                          find: {
+                            addExtraSpaceOnTop: false,
+                          },
+                        }}
+                    />
+                    {/* Tablet Selector positioned relative to this container */}
+                    {showTabletSelector && (
+                        <div style={{ position: 'absolute', left: selectorPosition.x, top: selectorPosition.y, zIndex: 10 }}> {/* Added z-index */}
+                          <TabletSelector
+                              searchQuery={tabletQuery}
+                              onSelect={handleTabletSelect}
+                              onClose={() => {
+                                setShowTabletSelector(false);
+                                setTabletQuery('');
+                                if (activeTabId) {
+                                  updateTabContent(activeTabId, '');
+                                }
+                              }}
+                          />
+                        </div>
+                    )}
+                  </div>
+              )
           ) : (
-            <>
-              <Editor
-                height="100%"
-                width="100%"
-                theme="vs-dark"
-                language={activeTab.language}
-                value={activeTab.content}
-                onChange={handleEditorChange}
-                onMount={handleEditorDidMount}
-                options={{
-                  minimap: {enabled: false},
-                  fontSize: 14,
-                  wordWrap: 'on',
-                  automaticLayout: true,
-                  copyWithSyntaxHighlighting: false,
-                  scrollBeyondLastLine: false,
-                  formatOnPaste: true,
-                  formatOnType: true,
-                  find: {
-                    addExtraSpaceOnTop: false,
-                  },
-                }}
-              />
-              {showTabletSelector && (
-                <div style={{position: 'absolute', left: selectorPosition.x, top: selectorPosition.y}}>
-                  <TabletSelector
-                    searchQuery={tabletQuery}
-                    onSelect={handleTabletSelect}
-                    onClose={() => {
-                      setShowTabletSelector(false);
-                      setTabletQuery('');
-                      if (activeTabId) {
-                        updateTabContent(activeTabId, '');
-                      }
-                    }}
-                  />
+              <div className="h-full flex items-center justify-center text-gray-400">
+                <p>No tab selected</p>
+              </div>
+          )}
+        </div>
+
+        {shouldShowMarkdownPreview && (
+            <div className="w-1/2 h-full flex-1 flex flex-col overflow-hidden"> {/* Added border */}
+              <div className="flex-1 w-full h-full overflow-auto p-4 custom-scrollbar"> {/* Ensure bg/text contrast */}
+                <div className="prose prose-invert max-w-none p-0.5 ">
+                  <Markdown>{activeTab.content}</Markdown>
                 </div>
-              )}
-            </>
-          )
-        ) : (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            <p>No tab selected</p>
-          </div>
+              </div>
+            </div>
         )}
       </div>
-    </div>
   );
-};
-
+}
 function App() {
   const {tabs, splitView, addTab, handleNewTab, setSplitRatio} = useRootStore();
   const [isDragging, setIsDragging] = useState(false);
@@ -482,10 +493,7 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-900">
-      {/* Header with tabs */}
-
-      <div id={"above-status-bar"} className="flex w-full h-full" ref={containerRef}>
-
+      <div className="flex w-full h-full overflow-hidden" ref={containerRef}>
         {tabs.length == 0 ? (
           <>
             <div
@@ -527,13 +535,12 @@ function App() {
           </>
         ) : (
           <>
-            <div id={"left-split"}
-                 className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
+            <div className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
                  style={{width: leftWidth}}>
-              <div id={"tab-wrapper"} className="w-full">
+              <div className="w-full">
                 <TabBar side="left"/>
               </div>
-              <div id={"tab-content"} className="w-full h-full">
+              <div className="w-full h-full overflow-hidden">
                 <EditorPane side="left"/>
               </div>
             </div>
@@ -548,13 +555,12 @@ function App() {
                     <div className="w-0.5 h-4 bg-gray-400 rounded-full"></div>
                   </div>
                 </div>
-                <div id={"right-split"}
-                     className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
+                <div className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
                      style={{width: rightWidth}}>
-                  <div id={"tab-wrapper"} className="w-full">
+                  <div className="w-full">
                     <TabBar side="right"/>
                   </div>
-                  <div id={"tab-content"} className="w-full h-full">
+                  <div className="w-full h-full overflow-hidden">
                     <EditorPane side="right"/>
                   </div>
                 </div>

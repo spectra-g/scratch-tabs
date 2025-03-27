@@ -103,7 +103,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       {tablets.length > 0 ? (
         <div
           ref={listRef}
-          className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500"
+          className="max-h-72 overflow-y-auto custom-scrollbar"
         >
           {tablets.map((tablet, index) => (
             <div
