@@ -69,34 +69,101 @@ if __name__ == "__main__":
     main()`;
   }
 
-  isMatch(content: string): boolean {
-    const pythonPatterns = [
-      /^def\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\([^)]*\):/m,  // Function definition
-      /^class\s+[A-Z][a-zA-Z0-9_]*[:(]/m,             // Class definition
-      /\bself\.[a-zA-Z_][a-zA-Z0-9_]*/m,              // Self reference
-      /\bif\s+__name__\s*==\s*['"]__main__['"]/m,     // Main guard
-      /from\s+[a-zA-Z_.]+\s+import\s+/m,              // From import
-      /^\s*@[a-zA-Z_][a-zA-Z0-9_]*/m,                 // Decorators
-      /\s*->\s*[a-zA-Z_][a-zA-Z0-9_]*/m,              // Type hints
-      /\[([a-zA-Z_][a-zA-Z0-9_]*,?\s*)*\]/m,         // List comprehension
+  // Patterns for isMatch - Aim for common constructs
+  private getGeneralPatterns(): RegExp[] {
+    return [
+      // --- Definitions ---
+      /^def\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\([^)]*\)\s*:/m,  // Function definition (requires colon)
+      /^class\s+[A-Z][a-zA-Z0-9_]*(\([^)]*\))?\s*:/m,   // Class definition (requires colon, allows inheritance)
+
+      // --- Imports ---
+      /^\s*import\s+[a-zA-Z_][a-zA-Z0-9_.]*(\s+as\s+[a-zA-Z_][a-zA-Z0-9_]*)?/m, // import foo / import foo as bar
+      /^\s*from\s+[a-zA-Z_][a-zA-Z0-9_.]+\s+import\s+(?:\*|\w+|\([^)]+\))/m, // from foo import bar / * / (baz, qux)
+
+      // --- Control Flow & Keywords (with colons where applicable) ---
+      /^\s*if\s+.+:/m,        // If statement
+      /^\s*elif\s+.+:/m,      // Elif statement
+      /^\s*else:/m,         // Else statement
+      /^\s*for\s+\w+\s+in\s+.+:/m, // For loop
+      /^\s*while\s+.+:/m,     // While loop
+      /^\s*try:/m,          // Try block
+      /^\s*except(\s+[\w.]+)?(\s+as\s+\w+)?:/m, // Except block
+      /^\s*finally:/m,       // Finally block
+      /^\s*with\s+.+(\s+as\s+\w+)?:/m, // With statement
+
+      // --- Common Idioms / Keywords ---
+      /\bself\.[a-zA-Z_][a-zA-Z0-9_]*/m,          // Self reference (still useful indicator)
+      /\bif\s+__name__\s*==\s*(['"])__main__\1/m, // Main guard (improved quotes)
+      /\b(True|False|None)\b/,                   // Boolean/None literals
+      /\b(in|is|not|and|or)\b/,                 // Common operators/keywords
+
+      // --- Other Features ---
+      /^\s*@[a-zA-Z_][a-zA-Z0-9_.]*/m,            // Decorators (at line start)
+      /\s*->\s*[\w\[\], .]+/m,                    // Type hints for return (more flexible type)
+      /\w+\s*:\s*[\w\[\], .]+/,                  // Type hints for variables/args
+      /f(['"])/,                                 // f-string prefix
     ];
+  }
 
-    const matchCount = pythonPatterns.reduce((count, pattern) =>
-      count + (pattern.test(content) ? 1 : 0), 0);
+  // Patterns for countSpecificPatterns - Aim for highly distinctive features
+  private getSpecificPatterns(): RegExp[] {
+    return [
+      /\bif\s+__name__\s*==\s*(['"])__main__\1/m, // Main guard (very specific)
+      /^\s*@[a-zA-Z_][a-zA-Z0-9_.]+/m,            // Decorators (strong indicator)
+      /^\s*from\s+[\w.]+\s+import\s+\(/m,        // from ... import ( ... ) multiline import syntax
+      /^\s*async\s+def\b/m,                     // Async function definition
+      /\bawait\s+/m,                            // Await keyword
+      /\byield\s+/m,                            // Yield keyword (generators)
+      /^\s*with\s+.+\s+as\s+\w+:/m,             // With...as...: statement (specific form)
+      /\s*->\s*[\w\[\], .]+/,                    // Function return type hints
+      /^\s*"""|'''/,                            // Docstring start (at beginning of line, possibly indented)
+      /\{\s*f?(['"]).*?\{.*?}.*?\1\s*\}/,       // Looks for dict with f-string-like interpolation (heuristic)
+      /\[.+for\s+\w+\s+in\s+.+(if\s+.+)?\]/,     // List comprehension (more complete structure)
+      /\{.+for\s+\w+\s+in\s+.+(if\s+.+)?\}/,     // Set/Dict comprehension
+    ];
+  }
 
-    return matchCount >= 3;
+  isMatch(content: string): boolean {
+    // Avoid matching if it looks *strongly* like JSON or YAML first
+    // (This might be better handled in the central registry logic, but can add safety here)
+    const trimmed = content.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      // If it looks like complete JSON, parse it. If it parses, it's not Python.
+      try {
+        JSON.parse(trimmed);
+        return false; // It's valid JSON
+      } catch { /* Ignore parsing error */ }
+    }
+    // Basic check for YAML structure (key: value at start of line)
+    if (/^\s*[\w.-]+:\s+/.test(trimmed.split('\n')[0])) {
+      // Could be YAML, be more cautious
+      // Maybe require a higher match count? For now, proceed.
+    }
+
+
+    const patterns = this.getGeneralPatterns();
+    let matchCount = 0;
+    for (const pattern of patterns) {
+      if (pattern.test(content)) {
+        matchCount++;
+      }
+    }
+
+    // Require a reasonable number of general Python patterns
+    // Adjust this threshold based on testing. 3 seems like a decent starting point.
+    const requiredMatches = 3;
+    return matchCount >= requiredMatches;
   }
 
   countSpecificPatterns(content: string): number {
-    const specificPatterns = [
-      /\bif\s+__name__\s*==\s*['"]__main__['"]/m,     // Main guard
-      /^\s*@[a-zA-Z_][a-zA-Z0-9_]*/m,                 // Decorators
-      /\s*->\s*[a-zA-Z_][a-zA-Z0-9_]*/m,              // Type hints
-      /from\s+typing\s+import\s+/m,                    // Typing imports
-    ];
-
-    return specificPatterns.reduce((count, pattern) =>
-      count + (pattern.test(content) ? 1 : 0), 0);
+    const patterns = this.getSpecificPatterns();
+    let count = 0;
+    for (const pattern of patterns) {
+      if (pattern.test(content)) {
+        count++;
+      }
+    }
+    return count;
   }
 
   registerProvider(monaco: any): void {
