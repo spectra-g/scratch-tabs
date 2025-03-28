@@ -17,7 +17,6 @@ import {
   Tablet
 } from 'lucide-react';
 import { useRootStore } from '../stores';
-import { DiffModal } from './DiffModal';
 import { languageRegistry } from '../languages';
 import { TabletSelector } from '../tablets';
 
@@ -353,9 +352,10 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({tabId, position, onClose
 
 interface TabBarProps {
   side?: 'left' | 'right';
+  onOpenDiffModal: () => void;
 }
 
-export const TabBar: React.FC<TabBarProps> = ({side = 'left'}) => {
+export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) => {
   const {
     tabs,
     splitView,
@@ -372,7 +372,6 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left'}) => {
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [contextMenu, setContextMenu] = useState<{ tabId: string; x: number; y: number } | null>(null);
-  const [diffModal, setDiffModal] = useState<{ leftTabId: string; rightTabId: string } | null>(null);
   const [showTabletSelector, setShowTabletSelector] = useState(false);
   const [tabletSelectorPosition, setTabletSelectorPosition] = useState({x: 0, y: 0});
 
@@ -502,18 +501,8 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left'}) => {
 
   const handleContextMenuClose = (action?: 'compare') => {
     if (action === 'compare' && contextMenu) {
-      const isRightSide = side === 'right';
-      const otherSideTabId = isRightSide ? splitView.activeLeftTabId : splitView.activeRightTabId;
-
-      if (splitView.isSplit && otherSideTabId) {
-        // Open diff modal
-        const leftTabId = isRightSide ? otherSideTabId : contextMenu.tabId;
-        const rightTabId = isRightSide ? contextMenu.tabId : otherSideTabId;
-
-        setDiffModal({leftTabId, rightTabId});
-      }
+      onOpenDiffModal();
     }
-
     setContextMenu(null);
   };
 
@@ -683,14 +672,6 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left'}) => {
           position={{x: contextMenu.x, y: contextMenu.y}}
           onClose={handleContextMenuClose}
           isRightSide={isRightSide}
-        />
-      )}
-
-      {diffModal && (
-        <DiffModal
-          leftTabId={diffModal.leftTabId}
-          rightTabId={diffModal.rightTabId}
-          onClose={() => setDiffModal(null)}
         />
       )}
     </>

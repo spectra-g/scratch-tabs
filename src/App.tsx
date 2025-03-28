@@ -8,6 +8,7 @@ import { TabletSelector } from './tablets';
 import { useRootStore } from './stores';
 import { initializeLanguageProviders, detectLanguage, isAmbiguousLanguage } from './languages';
 import { debounce, createThrottledResizeObserver } from './utils/domUtils';
+import {DiffModal} from "./components/DiffModal.tsx";
 
 // Initialize language providers
 initializeLanguageProviders();
@@ -323,6 +324,7 @@ function App() {
   const [showTabletSelector, setShowTabletSelector] = useState(false);
   const [selectorPosition, setSelectorPosition] = useState({x: 0, y: 0});
   const welcomeRef = useRef<HTMLDivElement>(null);
+  const [diffModal, setDiffModal] = useState<{ leftTabId: string | null; rightTabId: string | null } | null>(null);
 
   // Update width calculations when split ratio changes
   useEffect(() => {
@@ -370,6 +372,11 @@ function App() {
     document.addEventListener('keydown', handleGlobalKeyDown);
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
   }, [tabs.length, showTabletSelector]);
+
+  const handleOpenDiffModal = () => {
+    // console.log('App: Opening Diff Modal for', leftTabId, rightTabId);
+    setDiffModal({ leftTabId : splitView.activeLeftTabId, rightTabId: splitView.activeRightTabId });
+  };
 
   // Handle tablet selection
   const handleTabletSelect = (tablet: any) => {
@@ -538,7 +545,7 @@ function App() {
             <div className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
                  style={{width: leftWidth}}>
               <div className="w-full">
-                <TabBar side="left"/>
+                <TabBar side="left" onOpenDiffModal={handleOpenDiffModal}/>
               </div>
               <div className="w-full h-full overflow-hidden">
                 <EditorPane side="left"/>
@@ -558,7 +565,7 @@ function App() {
                 <div className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
                      style={{width: rightWidth}}>
                   <div className="w-full">
-                    <TabBar side="right"/>
+                    <TabBar side="right" onOpenDiffModal={handleOpenDiffModal}/>
                   </div>
                   <div className="w-full h-full overflow-hidden">
                     <EditorPane side="right"/>
@@ -566,6 +573,14 @@ function App() {
                 </div>
               </>
             )}
+            {diffModal && (
+                <DiffModal
+                    leftTabId={diffModal.leftTabId || ""}
+                    rightTabId={diffModal.rightTabId || ""}
+                    onClose={() => setDiffModal(null)}
+                />
+            )}
+
           </>
         )}
       </div>
