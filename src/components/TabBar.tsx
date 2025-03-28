@@ -379,6 +379,7 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
   const tabBarRef = useRef<HTMLDivElement>(null);
   const tabletButtonRef = useRef<HTMLButtonElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const tabletSelectorTabBarRef = useRef<HTMLDivElement>(null);
 
   // Determine which tabs to show based on the side
   const isRightSide = side === 'right';
@@ -398,6 +399,30 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
 
   const tabLineCounts = tabs.filter(tab => tab.isTablet != true).map(tab => getTabLineCount(tab.content));
   const maxLineCount = Math.max(...tabLineCounts, 1); // Avoid division by zero
+
+  // --- Add Effect for Click Outside Detection (TabBar's TabletSelector) ---
+  useEffect(() => {
+    // Only run if this specific selector is shown
+    if (!showTabletSelector) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check click against this selector's ref
+      if (tabletSelectorTabBarRef.current && !tabletSelectorTabBarRef.current.contains(event.target as Node)) {
+        // Also check if the click was on the button that opens it, otherwise it closes immediately
+        if (tabletButtonRef.current && !tabletButtonRef.current.contains(event.target as Node)) {
+          setShowTabletSelector(false); // Close the selector
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+    // Depend on showTabletSelector to add/remove listener
+  }, [showTabletSelector]);
 
   useEffect(() => {
     const updateTabWidths = () => {
@@ -650,7 +675,8 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
 
       {showTabletSelector && (
         <div
-          style={{
+            ref={tabletSelectorTabBarRef}
+            style={{
             position: 'fixed',
             left: tabletSelectorPosition.x - 255,
             top: tabletSelectorPosition.y,
