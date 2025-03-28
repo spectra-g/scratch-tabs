@@ -71,7 +71,8 @@ export interface StorageProvider {
 // IndexedDB implementation
 export class IndexedDBStorage implements StorageProvider {
   private static instance: IndexedDBStorage;
-  private lastSaveTime: number = 0;
+  private lastSaveTabsTime: number = 0;
+  private lastSaveSplitViewTime: number = 0;
   private readonly DEBOUNCE_TIME = 2000; // 10 seconds
 
   private constructor() {}
@@ -96,11 +97,10 @@ export class IndexedDBStorage implements StorageProvider {
   async saveTab(tab: Tab): Promise<void> {
     try {
       const now = Date.now();
-      if (now - this.lastSaveTime < this.DEBOUNCE_TIME) {
+      if (now - this.lastSaveTabsTime < this.DEBOUNCE_TIME) {
         return;
       }
-      this.lastSaveTime = now;
-      console.log("Saving tabs: " + JSON.stringify(tab))
+      this.lastSaveTabsTime = now;
       await db.tabs.put(toTabRecord(tab));
     } catch (error) {
       console.error('Failed to save tab to IndexedDB:', error);
@@ -110,15 +110,12 @@ export class IndexedDBStorage implements StorageProvider {
   async saveTabs(tabs: Tab[]): Promise<void> {
     try {
       const now = Date.now();
-      if (now - this.lastSaveTime < this.DEBOUNCE_TIME) {
+      if (now - this.lastSaveTabsTime < this.DEBOUNCE_TIME) {
         return;
       }
-      this.lastSaveTime = now;
-      console.log("Saving tabs: " + JSON.stringify(tabs))
+      this.lastSaveTabsTime = now;
       const records = tabs.map(toTabRecord);
       await db.tabs.bulkPut(records);
-      const count = await db.tabs.count()
-      console.log("Total tabs: " + count)
     } catch (error) {
       console.error('Failed to save tabs to IndexedDB:', error);
     }
@@ -144,10 +141,10 @@ export class IndexedDBStorage implements StorageProvider {
   async saveSplitView(splitView: SplitViewRecord): Promise<void> {
     try {
       const now = Date.now();
-      if (now - this.lastSaveTime < this.DEBOUNCE_TIME) {
+      if (now - this.lastSaveSplitViewTime < this.DEBOUNCE_TIME) {
         return;
       }
-      this.lastSaveTime = now;
+      this.lastSaveSplitViewTime = now;
       await db.splitView.put(splitView);
     } catch (error) {
       console.error('Failed to save split view to IndexedDB:', error);
