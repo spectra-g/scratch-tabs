@@ -99,7 +99,7 @@ That's all for this sample!`;
     // Count how many Markdown patterns match
     const matchCount = markdownPatterns.reduce((count, pattern) => 
       count + (pattern.test(content) ? 1 : 0), 0);
-    
+
     // If content has "---" but also has key-value pairs, it's likely YAML
     if (/^---$/m.test(content) && /^[\s]*[a-zA-Z0-9_-]+[\s]*:(?:\s.*)?$/m.test(content)) {
       // Only consider it Markdown if it has strong Markdown indicators
@@ -107,7 +107,7 @@ That's all for this sample!`;
     }
     
     // Otherwise, require at least one Markdown pattern
-    return matchCount >= 1;
+    return matchCount >= 2;
   }
   
   /**
@@ -115,15 +115,15 @@ That's all for this sample!`;
    */
   countSpecificPatterns(content: string): number {
     const markdownSpecificPatterns = [
-      /^#{2,6}\s/m,                  // Headers with more than one #
-      /\[.+?\]\(.+?\)/m,             // Links
-      /!\[.+?\]\(.+?\)/m,            // Images
-      /`{3}[\s\S]+?`{3}/m,           // Code blocks
-      /\*\*.+?\*\*/m,                // Bold text
-      /_.+?_/m,                      // Italic text
-      /^>\s.+/m,                     // Blockquotes
-      /^- \[[ x]\] /im,              // Task lists
-      /^\d+\.\s/m                    // Ordered lists
+      /^#{2,6}\s/m,              // Headers H2-H6 (H1 is too ambiguous)
+      /\[.+?\]\(.+?\)/m,         // Links
+      /!\[.+?\]\(.+?\)/m,        // Images
+      /`{3}[\s\S]+?`{3}/m,       // Multi-line code blocks
+      /^- \[[ x]\] /im,          // Task lists
+      /^\d+\.\s/m,               // Ordered lists (fairly specific)
+      /^---$/m,                  // Horizontal rules (often specific)
+      /^\*\*\*$/m,               // Horizontal rules (often specific)
+      /^___$/m                   // Horizontal rules (often specific)
     ];
     
     return markdownSpecificPatterns.reduce((count, pattern) => 

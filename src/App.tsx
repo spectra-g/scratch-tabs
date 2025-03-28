@@ -8,6 +8,7 @@ import { TabletSelector } from './tablets';
 import { useRootStore } from './stores';
 import { initializeLanguageProviders, detectLanguage, isAmbiguousLanguage } from './languages';
 import { debounce, createThrottledResizeObserver } from './utils/domUtils';
+import {DiffModal} from "./components/DiffModal.tsx";
 
 // Initialize language providers
 initializeLanguageProviders();
@@ -37,9 +38,40 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
   const [showTabletSelector, setShowTabletSelector] = useState(false);
   const [tabletQuery, setTabletQuery] = useState('');
   const [selectorPosition, setSelectorPosition] = useState({x: 0, y: 0});
+  // --- Add Ref for the TabletSelector container ---
+  const tabletSelectorRef = useRef<HTMLDivElement>(null);
 
   const activeTabId = side === 'left' ? splitView.activeLeftTabId : splitView.activeRightTabId;
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
+
+  // --- Add Effect for Click Outside Detection ---
+  useEffect(() => {
+    if (!showTabletSelector) {
+      return; // Only run if selector is visible
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if the click target is outside the TabletSelector's container
+      if (tabletSelectorRef.current && !tabletSelectorRef.current.contains(event.target as Node)) {
+        setShowTabletSelector(false);
+        setTabletQuery('');
+        // Optional: Clear content only if it still starts with /?
+        // Check if activeTabId exists before using it
+        if (activeTabId && editorRef.current?.getValue()?.trim()?.startsWith('/')) {
+          updateTabContent(activeTabId, ''); // Pass activeTabId here
+        }
+      }
+    };
+
+    // Add the listener when the effect runs (i.e., when selector is shown)
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Return a cleanup function to remove the listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+    // Re-run this effect if showTabletSelector changes
+  }, [showTabletSelector, activeTabId, updateTabContent]); // Include dependencies
 
   // Save scroll position when switching tabs
   useEffect(() => {
@@ -276,7 +308,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
                     />
                     {/* Tablet Selector positioned relative to this container */}
                     {showTabletSelector && (
-                        <div style={{ position: 'absolute', left: selectorPosition.x, top: selectorPosition.y, zIndex: 10 }}> {/* Added z-index */}
+                        <div ref={tabletSelectorRef} style={{ position: 'absolute', left: selectorPosition.x, top: selectorPosition.y, zIndex: 10 }}> {/* Added z-index */}
                           <TabletSelector
                               searchQuery={tabletQuery}
                               onSelect={handleTabletSelect}
@@ -323,6 +355,8 @@ function App() {
   const [showTabletSelector, setShowTabletSelector] = useState(false);
   const [selectorPosition, setSelectorPosition] = useState({x: 0, y: 0});
   const welcomeRef = useRef<HTMLDivElement>(null);
+  const tabletSelectorWelcomeRef = useRef<HTMLDivElement>(null);
+  const [diffModal, setDiffModal] = useState<{ leftTabId: string | null; rightTabId: string | null } | null>(null);
 
   // Update width calculations when split ratio changes
   useEffect(() => {
@@ -370,6 +404,30 @@ function App() {
     document.addEventListener('keydown', handleGlobalKeyDown);
     return () => document.removeEventListener('keydown', handleGlobalKeyDown);
   }, [tabs.length, showTabletSelector]);
+
+  // --- Add Effect for Click Outside Detection (Welcome Screen) ---
+  useEffect(() => {
+    // Only run if welcome selector is shown and there are no tabs
+    if (!showTabletSelector || tabs.length > 0) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside the welcome selector's container
+      if (tabletSelectorWelcomeRef.current && !tabletSelectorWelcomeRef.current.contains(event.target as Node)) {
+        setShowTabletSelector(false); // Close the selector
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showTabletSelector, tabs.length]); // Dependencies
+
+  const handleOpenDiffModal = () => {
+    setDiffModal({ leftTabId : splitView.activeLeftTabId, rightTabId: splitView.activeRightTabId });
+  };
 
   // Handle tablet selection
   const handleTabletSelect = (tablet: any) => {
@@ -518,10 +576,11 @@ function App() {
                 </ol>
               </div>
               {showTabletSelector && (
-                <div style={{
+                <div ref={tabletSelectorWelcomeRef} style={{
                   position: 'absolute',
                   left: selectorPosition.x,
-                  top: selectorPosition.y
+                  top: selectorPosition.y,
+                  zIndex: 50
                 }}>
                   <TabletSelector
                     searchQuery=""
@@ -538,7 +597,7 @@ function App() {
             <div className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
                  style={{width: leftWidth}}>
               <div className="w-full">
-                <TabBar side="left"/>
+                <TabBar side="left" onOpenDiffModal={handleOpenDiffModal}/>
               </div>
               <div className="w-full h-full overflow-hidden">
                 <EditorPane side="left"/>
@@ -558,7 +617,7 @@ function App() {
                 <div className={`flex ${splitView.isSplit ? "w-1/2" : "w-full"} flex-col`}
                      style={{width: rightWidth}}>
                   <div className="w-full">
-                    <TabBar side="right"/>
+                    <TabBar side="right" onOpenDiffModal={handleOpenDiffModal}/>
                   </div>
                   <div className="w-full h-full overflow-hidden">
                     <EditorPane side="right"/>
@@ -566,6 +625,14 @@ function App() {
                 </div>
               </>
             )}
+            {diffModal && (
+                <DiffModal
+                    leftTabId={diffModal.leftTabId || ""}
+                    rightTabId={diffModal.rightTabId || ""}
+                    onClose={() => setDiffModal(null)}
+                />
+            )}
+
           </>
         )}
       </div>
