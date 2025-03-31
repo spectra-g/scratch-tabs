@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { useEditorStore } from './editorStore';
+import { usePersistenceStore } from './persistenceStore';
 import { Tab } from '../types';
 import {
   findTabById,
@@ -9,7 +10,8 @@ import {
   countEmptyTabs,
   groupTabsByLanguage
 } from '../utils';
-import {detectLanguage, isAmbiguousLanguage} from "../languages";
+import { detectLanguage, isAmbiguousLanguage } from "../languages";
+import { StorageProviderFactory } from '../db';
 
 // Define the combined store interface
 interface RootStore {
@@ -66,6 +68,31 @@ export const useRootStore = create<RootStore>((set, get) => {
   const tabsStore = useTabsStore.getState();
   const splitViewStore = useSplitViewStore.getState();
   const editorStore = useEditorStore.getState();
+  const persistenceStore = usePersistenceStore.getState();
+  const storage = StorageProviderFactory.getProvider();
+
+  // Initialize persistence
+  persistenceStore.initialize();
+
+  // Set up auto-save interval
+  setInterval(() => {
+    persistenceStore.saveState();
+  }, 10000); // Save every 10 seconds
+
+  // Set up event listeners for persistence
+  window.addEventListener('loadPersistedTabs', ((event: CustomEvent) => {
+    useTabsStore.setState({ tabs: event.detail });
+  }) as EventListener);
+
+  window.addEventListener('loadPersistedSplitView', ((event: CustomEvent) => {
+    useSplitViewStore.setState({ splitView: event.detail });
+  }) as EventListener);
+
+  window.addEventListener('requestSaveState', ((event: CustomEvent) => {
+    const tabs = useTabsStore.getState().tabs;
+    const splitView = useSplitViewStore.getState().splitView;
+    event.detail.callback(tabs, splitView);
+  }) as EventListener);
 
   // Set up subscriptions to keep the root store in sync with individual stores
   useTabsStore.subscribe((state) => {
@@ -126,7 +153,6 @@ export const useRootStore = create<RootStore>((set, get) => {
       }, isRightSide);
     },
 
-    // Handle paste event on the welcome screen
     handleNewTabFromPaste: (isRightSide: boolean) => {
       const { handleNewTab } = get();
       async function paste() {
@@ -135,12 +161,15 @@ export const useRootStore = create<RootStore>((set, get) => {
       paste().then(content => handleNewTab(isRightSide, content));
     },
 
-    removeTab: (id) => {
+    removeTab: async (id) => {
       // Remove the tab from the split view
       useSplitViewStore.getState().removeTabFromSide(id);
 
       // Remove the tab from the tabs store
       useTabsStore.getState().removeTab(id);
+
+      // Delete the tab from persistence
+      await storage.deleteTab(id);
     },
 
     setActiveTab: (id) => {
@@ -190,8 +219,8 @@ export const useRootStore = create<RootStore>((set, get) => {
 
       const removeTab = (tabId: string) => {
         return tabs
-        .filter(tab => tab.id !== tabId)
-        .map(tab => tab.id);
+          .filter(tab => tab.id !== tabId)
+          .map(tab => tab.id);
       }
 
       if (rightTabId) {
@@ -240,7 +269,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     // Bulk tab operations
-    closeTabsToLeft: (tabId, isRightSide) => {
+    closeTabsToLeft: async (tabId, isRightSide) => {
       const { splitView } = get();
       const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
       const tabIndex = currentTabList.indexOf(tabId);
@@ -253,13 +282,14 @@ export const useRootStore = create<RootStore>((set, get) => {
       // Close the tabs in the split view
       useSplitViewStore.getState().closeTabsToLeft(tabId, isRightSide);
 
-      // Remove the tabs from the tabs store
-      tabsToClose.forEach(id => {
+      // Remove the tabs from the tabs store and persistence
+      for (const id of tabsToClose) {
         useTabsStore.getState().removeTab(id);
-      });
+        await storage.deleteTab(id);
+      }
     },
 
-    closeTabsToRight: (tabId, isRightSide) => {
+    closeTabsToRight: async (tabId, isRightSide) => {
       const { splitView } = get();
       const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
       const tabIndex = currentTabList.indexOf(tabId);
@@ -272,10 +302,11 @@ export const useRootStore = create<RootStore>((set, get) => {
       // Close the tabs in the split view
       useSplitViewStore.getState().closeTabsToRight(tabId, isRightSide);
 
-      // Remove the tabs from the tabs store
-      tabsToClose.forEach(id => {
+      // Remove the tabs from the tabs store and persistence
+      for (const id of tabsToClose) {
         useTabsStore.getState().removeTab(id);
-      });
+        await storage.deleteTab(id);
+      }
 
       // Set the active tab
       if (isRightSide) {
@@ -286,7 +317,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       useTabsStore.getState().setActiveTab(tabId);
     },
 
-    closeAllExcept: (tabId, isRightSide) => {
+    closeAllExcept: async (tabId, isRightSide) => {
       const { splitView } = get();
       const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
 
@@ -298,10 +329,11 @@ export const useRootStore = create<RootStore>((set, get) => {
       // Close the tabs in the split view
       useSplitViewStore.getState().closeAllExcept(tabId, isRightSide);
 
-      // Remove the tabs from the tabs store
-      tabsToClose.forEach(id => {
+      // Remove the tabs from the tabs store and persistence
+      for (const id of tabsToClose) {
         useTabsStore.getState().removeTab(id);
-      });
+        await storage.deleteTab(id);
+      }
 
       // Set the active tab
       if (isRightSide) {
