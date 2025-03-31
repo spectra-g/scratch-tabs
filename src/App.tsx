@@ -113,6 +113,8 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
     }
   }, [activeTab, activeTabId]);
 
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+
   const handleEditorChange = (value: string | undefined) => {
     if (activeTabId && value !== undefined && activeTab) {
       const prevContent = previousContentRef.current;
@@ -273,73 +275,76 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
   }
 
   return (
-      <div className={`flex h-full w-full ${previewMode ? 'flex-row' : 'flex-col'}`}>
-        <div
-            className={`flex-1 overflow-hidden relative ${previewMode ? 'w-1/2' : 'w-full'} h-full`}
-            onClick={!previewMode ? handleEditorFocus : undefined} // Only apply focus click to full editor container
-        >
-          {activeTab ? (
-              activeTab.isTablet ? (
-                  <TabletView tab={activeTab} onChange={handleTabletStateChange} />
+      <div className={"flex h-full w-full flex-col"}>
+          <div className={`flex h-full w-full ${previewMode ? 'flex-row' : 'flex-col'}`}>
+            <div
+                className={`flex-1 overflow-hidden relative ${previewMode ? 'w-1/2' : 'w-full'} h-full`}
+                onClick={!previewMode ? handleEditorFocus : undefined} // Only apply focus click to full editor container
+            >
+              {activeTab ? (
+                  activeTab.isTablet ? (
+                      <TabletView tab={activeTab} onChange={handleTabletStateChange} />
+                  ) : (
+                      // Container for Editor and potential TabletSelector overlay
+                      <div ref={editorContainerRef} className="w-full h-full relative" onClick={previewMode ? handleEditorFocus : undefined}> {/* Apply focus click here in split view */}
+                        <Editor
+                            height="100%" // Takes full height of its parent div
+                            width="100%"  // Takes full width of its parent div
+                            theme="vs-dark"
+                            language={activeTab.language}
+                            value={activeTab.content}
+                            onChange={handleEditorChange}
+                            onMount={handleEditorDidMount}
+                            options={{
+                              minimap: { enabled: false },
+                              fontSize: 14,
+                              wordWrap: 'on',
+                              automaticLayout: true,
+                              copyWithSyntaxHighlighting: false,
+                              scrollBeyondLastLine: false,
+                              formatOnPaste: true,
+                              formatOnType: true,
+                              find: {
+                                addExtraSpaceOnTop: false,
+                              },
+                            }}
+                        />
+                        {/* Tablet Selector positioned relative to this container */}
+                        {showTabletSelector && (
+                            <div ref={tabletSelectorRef} style={{ position: 'absolute', left: selectorPosition.x, top: selectorPosition.y, zIndex: 10 }}> {/* Added z-index */}
+                              <TabletSelector
+                                  searchQuery={tabletQuery}
+                                  onSelect={handleTabletSelect}
+                                  onClose={() => {
+                                    setShowTabletSelector(false);
+                                    setTabletQuery('');
+                                    if (activeTabId) {
+                                      updateTabContent(activeTabId, '');
+                                    }
+                                  }}
+                              />
+                            </div>
+                        )}
+                      </div>
+                  )
               ) : (
-                  // Container for Editor and potential TabletSelector overlay
-                  <div className="w-full h-full relative" onClick={previewMode ? handleEditorFocus : undefined}> {/* Apply focus click here in split view */}
-                    <Editor
-                        height="100%" // Takes full height of its parent div
-                        width="100%"  // Takes full width of its parent div
-                        theme="vs-dark"
-                        language={activeTab.language}
-                        value={activeTab.content}
-                        onChange={handleEditorChange}
-                        onMount={handleEditorDidMount}
-                        options={{
-                          minimap: { enabled: false },
-                          fontSize: 14,
-                          wordWrap: 'on',
-                          automaticLayout: true,
-                          copyWithSyntaxHighlighting: false,
-                          scrollBeyondLastLine: false,
-                          formatOnPaste: true,
-                          formatOnType: true,
-                          find: {
-                            addExtraSpaceOnTop: false,
-                          },
-                        }}
-                    />
-                    {/* Tablet Selector positioned relative to this container */}
-                    {showTabletSelector && (
-                        <div ref={tabletSelectorRef} style={{ position: 'absolute', left: selectorPosition.x, top: selectorPosition.y, zIndex: 10 }}> {/* Added z-index */}
-                          <TabletSelector
-                              searchQuery={tabletQuery}
-                              onSelect={handleTabletSelect}
-                              onClose={() => {
-                                setShowTabletSelector(false);
-                                setTabletQuery('');
-                                if (activeTabId) {
-                                  updateTabContent(activeTabId, '');
-                                }
-                              }}
-                          />
-                        </div>
-                    )}
+                  <div className="h-full flex items-center justify-center text-gray-400">
+                    <p>No tab selected</p>
                   </div>
-              )
-          ) : (
-              <div className="h-full flex items-center justify-center text-gray-400">
-                <p>No tab selected</p>
-              </div>
-          )}
-        </div>
-
-        {shouldShowMarkdownPreview && (
-            <div className="w-1/2 h-full flex-1 flex flex-col overflow-hidden"> {/* Added border */}
-              <div className="flex-1 w-full h-full overflow-auto p-4 custom-scrollbar"> {/* Ensure bg/text contrast */}
-                <div className="prose prose-invert max-w-none p-0.5 ">
-                  <Markdown>{activeTab.content}</Markdown>
-                </div>
-              </div>
+              )}
             </div>
-        )}
+
+            {shouldShowMarkdownPreview && (
+                <div className="w-1/2 h-full flex-1 flex flex-col overflow-hidden"> {/* Added border */}
+                  <div className="flex-1 w-full h-full overflow-auto p-4 custom-scrollbar"> {/* Ensure bg/text contrast */}
+                    <div className="prose prose-invert max-w-none p-0.5 ">
+                      <Markdown>{activeTab.content}</Markdown>
+                    </div>
+                  </div>
+                </div>
+            )}
+          </div>
+        {tabs.length > 0 && <StatusBar editor={editorRef?.current}/>}
       </div>
   );
 }
@@ -636,7 +641,6 @@ function App() {
           </>
         )}
       </div>
-      {tabs.length > 0 && <StatusBar/>}
     </div>
   );
 }

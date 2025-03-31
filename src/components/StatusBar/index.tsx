@@ -3,10 +3,14 @@ import { useRootStore } from '../../stores';
 import { getLanguageStatusItem } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
-interface StatusBarProps {}
 
-export const StatusBar: React.FC<StatusBarProps> = () => {
+interface StatusBarProps {
+  editor: monaco.editor.IStandaloneCodeEditor | null
+}
+
+export const StatusBar: React.FC<StatusBarProps> = ({editor}) => {
   const { cursorPosition, activeTabId } = useRootStore();
 
   const activeTab = useRootStore((state) =>
@@ -46,7 +50,7 @@ export const StatusBar: React.FC<StatusBarProps> = () => {
           </div>
         )}
       </div>
-      <Macro />
+      <Macro editor={editor}/>
     </div>
   );
 };
