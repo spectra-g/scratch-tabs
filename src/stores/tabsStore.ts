@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Tab } from '../types';
+import {EditorPosition, Tab} from '../types';
 import { duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
 
 interface TabsStore {
@@ -15,14 +15,22 @@ interface TabsStore {
   updateTabTitle: (id: string, title: string) => void;
   updateTabState: (id: string, updates: Partial<Tab>) => void;
   duplicateTab: (tabId: string) => string; // Returns the new tab ID
+  setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
 }
 
 export const useTabsStore = create<TabsStore>((set, get) => ({
+  cursorPosition: { lineNumber: 1, column: 1 },
   tabs: [],
   activeTabId: null,
-  
+
+  setCursorPosition: (tabId, cursorPosition) => set((state) => ({
+    tabs: state.tabs.map((tab) =>
+        tab.id === tabId ? { ...tab, cursorPosition } : tab
+    ),
+  })),
+
   addTab: (tab) => set((state) => {
-    const newTab = { ...tab, languageLocked: tab.languageLocked ?? false };
+    const newTab = { ...tab, languageLocked: tab.languageLocked ?? false, cursorPosition: { lineNumber: 1, column: 1 } };
     return {
       tabs: [...state.tabs, newTab],
       activeTabId: tab.id,
