@@ -113,7 +113,6 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
       const shift = e.shiftKey;
 
       let actionToAdd: Action | null = null;
-      let preventDefault = false; // Only prevent if we explicitly handle the action *instead* of Monaco
       let isPasteIntent = false;
 
       // --- Handle only non-character keys or modified keys ---
@@ -138,8 +137,8 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
         // Let other Ctrl/Cmd combinations fall through
       } else { // No Shift or Ctrl/Cmd
         // Keys that *replace* default behavior or aren't caught by onDidType
-        if (key === 'Backspace') { actionToAdd = { type: ACTION_TYPE.DELETE_LEFT }; preventDefault = true; } // Prevent default as we record it
-        else if (key === 'Delete') { actionToAdd = { type: ACTION_TYPE.DELETE_RIGHT }; preventDefault = true; } // Prevent default
+        if (key === 'Backspace') { actionToAdd = { type: ACTION_TYPE.DELETE_LEFT }; }
+        else if (key === 'Delete') { actionToAdd = { type: ACTION_TYPE.DELETE_RIGHT }; }
         else if (key === 'Enter') { actionToAdd = { type: ACTION_TYPE.NEW_LINE }; } // Don't prevent default, let Monaco insert newline
         else if (key === 'Tab') { actionToAdd = { type: ACTION_TYPE.CHAR, value: '\t' }; } // Record Tab as a character
         // Navigation keys (don't prevent default)
@@ -162,10 +161,6 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
 
       if (actionToAdd) {
         setRecordedActions(prev => [...prev, actionToAdd!]);
-        if (preventDefault) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
       }
     }));
 
