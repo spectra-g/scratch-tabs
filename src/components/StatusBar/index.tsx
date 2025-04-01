@@ -1,21 +1,17 @@
 import React from 'react';
-import { useRootStore } from '../../stores';
 import { getLanguageStatusItem } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import {Tab} from "../../types.ts";
 
 
 interface StatusBarProps {
-  editor: monaco.editor.IStandaloneCodeEditor | null
+  editor: monaco.editor.IStandaloneCodeEditor | null,
+  activeTab: Tab
 }
 
-export const StatusBar: React.FC<StatusBarProps> = ({editor}) => {
-  const { cursorPosition, activeTabId } = useRootStore();
-
-  const activeTab = useRootStore((state) =>
-    state.tabs.find((tab) => tab.id === activeTabId)
-  );
+export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab}) => {
 
   // Get the tablet if this is a tablet tab
   let tabletLabel = '';
@@ -38,16 +34,18 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor}) => {
   return (
     <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">
       <div className="flex items-center space-x-4">
-        <span>
-          Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}
-        </span>
         {activeTab && (
-          <div className="p-0.5 flex items-center space-x-2">
-            <span className="capitalize">
-              {tabletLabel || activeTab.language}
+          <>
+            <span>
+              Ln {activeTab.cursorPosition.lineNumber}, Col {activeTab.cursorPosition.column}
             </span>
-            {LanguageStatusItem && <LanguageStatusItem />}
-          </div>
+            <div className="p-0.5 flex items-center space-x-2">
+              <span className="capitalize">
+                {tabletLabel || activeTab.language}
+              </span>
+              {LanguageStatusItem && <LanguageStatusItem />}
+            </div>
+          </>
         )}
       </div>
       <Macro editor={editor}/>

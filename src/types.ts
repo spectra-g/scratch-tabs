@@ -6,6 +6,7 @@ export interface Tab {
   languageLocked: boolean;
   isTablet?: boolean;
   tabletState?: string;
+  cursorPosition: EditorPosition;
 }
 
 export interface EditorPosition {

@@ -3,7 +3,7 @@ import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { useEditorStore } from './editorStore';
 import { usePersistenceStore } from './persistenceStore';
-import { Tab } from '../types';
+import {EditorPosition, Tab} from '../types';
 import {
   findTabById,
   isTabEmpty,
@@ -29,9 +29,7 @@ interface RootStore {
   updateTabState: (id: string, updates: Partial<Tab>) => void;
 
   // Editor state
-  cursorPosition: { lineNumber: number; column: number };
   previewMode: boolean;
-  setCursorPosition: (position: { lineNumber: number; column: number }) => void;
   togglePreviewMode: () => void;
 
   // Split view
@@ -56,6 +54,7 @@ interface RootStore {
   closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
   closeAllExcept: (tabId: string, isRightSide: boolean) => void;
   duplicateTab: (tabId: string, isRightSide: boolean) => string;
+  setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
   groupTabsByType: (isRightSide: boolean) => void;
 
   // Tab limit checks
@@ -110,7 +109,6 @@ export const useRootStore = create<RootStore>((set, get) => {
 
   useEditorStore.subscribe((state) => {
     set({
-      cursorPosition: state.cursorPosition,
       previewMode: state.previewMode,
     });
   });
@@ -119,7 +117,6 @@ export const useRootStore = create<RootStore>((set, get) => {
     // Initial state from individual stores
     tabs: tabsStore.tabs,
     activeTabId: tabsStore.activeTabId,
-    cursorPosition: editorStore.cursorPosition,
     previewMode: editorStore.previewMode,
     splitView: splitViewStore.splitView,
 
@@ -205,10 +202,6 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     // Editor state functions
-    setCursorPosition: (position) => {
-      useEditorStore.getState().setCursorPosition(position);
-    },
-
     togglePreviewMode: () => {
       useEditorStore.getState().togglePreviewMode();
     },
@@ -376,6 +369,10 @@ export const useRootStore = create<RootStore>((set, get) => {
       useTabsStore.getState().setActiveTab(newTabId);
 
       return newTabId;
+    },
+
+    setCursorPosition: (tabId, cursorPosition) => {
+      useTabsStore.getState().setCursorPosition(tabId, cursorPosition);
     },
 
     groupTabsByType: (isRightSide) => {

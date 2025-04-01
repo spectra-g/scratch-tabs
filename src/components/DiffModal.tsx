@@ -211,7 +211,6 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
 
   // --- Close and Save Handler ---
   const handleCloseAndSave = useCallback(() => {
-    console.log("Closing and saving diff modal...");
     // 1. Force record any pending debounced changes
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -225,17 +224,11 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
 
     // 3. Check if tabs and content exist before updating
     if (leftTab && finalLeftContent !== undefined && leftTab.content !== finalLeftContent) {
-      console.log("Updating left tab content on close.");
       updateTabContent(leftTabId, finalLeftContent);
-    } else {
-      console.log("No changes detected or left tab missing, skipping update.");
     }
 
     if (rightTab && finalRightContent !== undefined && rightTab.content !== finalRightContent) {
-      console.log("Updating right tab content on close.");
       updateTabContent(rightTabId, finalRightContent);
-    } else {
-      console.log("No changes detected or right tab missing, skipping update.");
     }
 
     // 4. Call the original onClose handler passed from the parent

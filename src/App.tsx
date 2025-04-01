@@ -195,11 +195,12 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
     }
 
     editor.onDidChangeCursorPosition((e: any) => {
-      setCursorPosition({
-        lineNumber: e.position.lineNumber,
-        column: e.position.column
-      });
-
+      if (activeTabId) {
+        setCursorPosition(activeTabId, {
+          lineNumber: e.position.lineNumber,
+          column: e.position.column
+        });
+      }
       // Hide tablet selector if cursor moves to a different line
       if (showTabletSelector) {
         const content = editor.getValue();
@@ -344,7 +345,7 @@ const EditorPane: React.FC<EditorPaneProps> = ({side}) => {
                 </div>
             )}
           </div>
-        {tabs.length > 0 && <StatusBar editor={editorRef?.current}/>}
+        {activeTab && <StatusBar activeTab={activeTab} editor={editorRef?.current}/>}
       </div>
   );
 }
