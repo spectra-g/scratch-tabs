@@ -163,7 +163,6 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
       if (actionToAdd) {
         setRecordedActions(prev => [...prev, actionToAdd!]);
         if (preventDefault) {
-          console.log("Preventing default for:", key);
           e.preventDefault();
           e.stopPropagation();
         }
@@ -195,7 +194,6 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
   // --- Action Handlers ---
   const handleStartRecording = useCallback(() => {
     if (!editor || status !== 'idle') return;
-    console.log("Starting recording...");
     setRecordedActions([]);
     setStatus('recording');
     editor.focus();
@@ -205,11 +203,9 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
     const hasRecorded = recordedActions.length > 0;
     // If currently playing to end, signal it to stop
     if (status === 'playingToEnd') {
-      console.log("Signalling playToEnd to stop.");
       stopPlayToEndRef.current = true; // Signal the loop to stop
       // The loop's finally block will set status to idle
     } else if (status === 'recording' || hasRecorded) {
-      console.log("Stopping recording or clearing macro.");
       setStatus('idle');
       // Clear actions only if stopping from idle with actions already present
       if (status === 'idle' && hasRecorded) {
@@ -227,7 +223,7 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
       return { success: false, startPos: null, endPos: null };
     }
 
-    let startPos: monaco.Position | null = editor.getPosition(); // Get start position before loop
+    const startPos: monaco.Position | null = editor.getPosition(); // Get start position before loop
     let currentPos = startPos; // Track position through actions
 
     try {
@@ -245,8 +241,6 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
             throw new Error(`Could not get selection before action: ${action.type}`);
           }
         }
-
-        console.log("Playing action:", action.type, (action as any).value ?? ''); // Debug log
 
         // --- Playback Action Execution ---
         switch (action.type) {
@@ -294,7 +288,6 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
       } // End for loop
 
       currentPos = editor.getPosition(); // Get final position after all actions
-      // console.log("Single Iteration Success. Start:", startPos?.toString(), "End:", currentPos?.toString());
       return { success: true, startPos, endPos: currentPos };
 
     } catch (error) {
@@ -307,7 +300,6 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
   // --- Playback Handlers ---
   const handlePlayRecording = useCallback(async () => {
     if (!editor || status !== 'idle' || recordedActions.length === 0) return;
-    console.log("Playing macro once...");
     setStatus('playingOnce');
     stopPlayToEndRef.current = false; // Ensure flag is reset
     try {
@@ -318,13 +310,11 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
     finally {
       setStatus('idle');
       editor?.focus();
-      console.log("Single play finished.");
     }
   }, [editor, status, recordedActions.length, playSingleMacroIteration]);
 
   const handlePlayToEnd = useCallback(async () => {
     if (!editor || status !== 'idle' || recordedActions.length === 0) return;
-    console.log("Playing macro to end...");
     setStatus('playingToEnd');
     stopPlayToEndRef.current = false; // Reset stop flag
 
@@ -349,23 +339,20 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
           )
       {
         iterations++;
-        console.log(`PlayToEnd Iteration: ${iterations}`);
         // Store the line number *before* this iteration runs
         const lineNumBeforeIteration = endPosOfPreviousIteration.lineNumber;
 
 
         // --- Execute one full macro iteration ---
-        const { success, startPos, endPos } = await playSingleMacroIteration();
+        const { success, endPos } = await playSingleMacroIteration();
 
         // --- Termination Checks ---
 
         // 1. Manual Stop or Error
         if (stopPlayToEndRef.current) {
-          console.log("PlayToEnd: Stop flag detected, breaking loop.");
           break;
         }
         if (!success || !endPos) {
-          console.warn("PlayToEnd: Iteration failed or ended without position, stopping.");
           break;
         }
 
@@ -374,14 +361,12 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
         // the line number before this iteration started.
         // This correctly handles cases where DOWN fails on the last line.
         if (endPos.lineNumber <= lineNumBeforeIteration) {
-          console.log(`PlayToEnd: Line number did not increase (Before: ${lineNumBeforeIteration}, After: ${endPos.lineNumber}), stopping.`);
           break;
         }
 
         // 3. Position Equality Check (as a fallback for non-line-advancing macros)
         // This helps if the macro *doesn't* have a DOWN but should still stop if stuck.
         if (endPosOfPreviousIteration && endPosOfPreviousIteration.equals(endPos)) {
-          console.log("PlayToEnd: End position same as previous iteration (fallback check), stopping.", endPos.toString());
           break; // Stop if no progress between iterations
         }
 
@@ -402,7 +387,6 @@ export const Macro: React.FC<MacroProps> = ({ editor }) => {
     } catch (loopError) {
       console.error("Error during PlayToEnd loop:", loopError);
     } finally {
-      console.log("PlayToEnd: Finishing.");
       setStatus('idle');
       stopPlayToEndRef.current = false; // Reset flag
       editor?.focus();
