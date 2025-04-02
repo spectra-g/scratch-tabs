@@ -54,6 +54,7 @@ interface RootStore {
   closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
   closeAllExcept: (tabId: string, isRightSide: boolean) => void;
   duplicateTab: (tabId: string, isRightSide: boolean) => string;
+  duplicateAndSplitTab: (tabId: string) => string;
   setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
   groupTabsByType: (isRightSide: boolean) => void;
 
@@ -369,6 +370,13 @@ export const useRootStore = create<RootStore>((set, get) => {
       useTabsStore.getState().setActiveTab(newTabId);
 
       return newTabId;
+    },
+
+    duplicateAndSplitTab: (tabId) => {
+      const { duplicateTab, splitScreen } = get();
+
+      const rightTabId = duplicateTab(tabId, true);
+      splitScreen(tabId, rightTabId);
     },
 
     setCursorPosition: (tabId, cursorPosition) => {
