@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
-import { tabletRegistry } from '../tablets';
-import { Tab } from '../types';
+import { tabletRegistry } from '../../tablets';
+import { Tab } from '../../types.ts';
 
 interface TabletViewProps {
   tab: Tab;

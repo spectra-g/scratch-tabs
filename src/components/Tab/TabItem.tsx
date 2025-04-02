@@ -1,0 +1,100 @@
+import React, { useRef, useEffect } from 'react';
+import { X } from 'lucide-react';
+import { Tab } from '../../types';
+
+interface TabItemProps {
+    tab: Tab;
+    isActive: boolean;
+    isEditing: boolean;
+    editingTitle: string;
+    maxLineCount: number; // For indicator bar calculation
+    onClick: (tabId: string) => void;
+    onClose: (tabId: string, e: React.MouseEvent) => void;
+    onDoubleClick: (tab: Tab, e: React.MouseEvent) => void;
+    onContextMenu: (tabId: string, e: React.MouseEvent) => void;
+    onEditChange: (value: string) => void;
+    onEditSubmit: () => void;
+    onEditCancel: () => void;
+}
+
+export const TabItem: React.FC<TabItemProps> = ({
+                                                    tab,
+                                                    isActive,
+                                                    isEditing,
+                                                    editingTitle,
+                                                    maxLineCount,
+                                                    onClick,
+                                                    onClose,
+                                                    onDoubleClick,
+                                                    onContextMenu,
+                                                    onEditChange,
+                                                    onEditSubmit,
+                                                    onEditCancel,
+                                                }) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isEditing && inputRef.current) {
+            inputRef.current.focus();
+            inputRef.current.select();
+        }
+    }, [isEditing]);
+
+    const getTabLineCount = (content: string): number => content.split('\n').length;
+    const lineCount = getTabLineCount(tab.content);
+    const relativeWidth = Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100;
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') onEditSubmit();
+        else if (e.key === 'Escape') onEditCancel();
+    };
+
+    const handleCloseClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent tab click
+        onClose(tab.id, e);
+    };
+
+    return (
+        <div
+            key={tab.id} // Key should ideally be on the element in the map in the parent
+            className={`tab-item relative flex items-center flex-shrink-0 px-1 py-1 cursor-pointer border-r border-gray-700 text-xs ${
+                isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
+            }`}
+            style={{ /* Add dynamic width styles here if needed based on TabBar's calculation */ }}
+            onClick={() => onClick(tab.id)}
+            onContextMenu={(e) => onContextMenu(tab.id, e)}
+            onDoubleClick={(e) => onDoubleClick(tab, e)}
+        >
+            {/* Line count indicator bar */}
+            {!tab.isTablet && (
+                <div
+                    className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50"
+                    style={{ width: `${relativeWidth}%` }}
+                />
+            )}
+            {isEditing ? (
+                <input
+                    ref={inputRef}
+                    type="text"
+                    value={editingTitle}
+                    onChange={(e) => onEditChange(e.target.value)}
+                    onBlur={onEditSubmit} // Submit on blur
+                    onKeyDown={handleKeyDown}
+                    onClick={(e) => e.stopPropagation()} // Prevent tab click while editing
+                    className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs z-10" // Ensure input is clickable
+                />
+            ) : (
+                <div className="flex-1 min-w-0 flex items-center">
+                    <span className="truncate">{tab.title}</span>
+                </div>
+            )}
+            <button
+                className="flex-shrink-0 hover:bg-gray-600 rounded p-0.5 ml-1"
+                onClick={handleCloseClick}
+                aria-label={`Close tab ${tab.title}`}
+            >
+                <X size={12} />
+            </button>
+        </div>
+    );
+};

@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
 import Markdown from 'react-markdown';
-import { TabBar } from './components/TabBar';
+import { TabBar } from './components/Tab/TabBar.tsx';
 import { StatusBar } from './components/StatusBar';
-import { TabletView } from './components/TabletView';
+import { TabletView } from './components/Tab/TabletView.tsx';
 import { TabletSelector } from './tablets';
 import { useRootStore } from './stores';
 import { initializeLanguageProviders, detectLanguage, isAmbiguousLanguage } from './languages';
@@ -449,7 +449,11 @@ function App() {
       language: 'plaintext',
       languageLocked: false,
       isTablet: true,
-      tabletState: serializedState
+      tabletState: serializedState,
+      cursorPosition: {
+        lineNumber: 1,
+        column: 1
+      }
     });
 
     setShowTabletSelector(false);
