@@ -26,7 +26,7 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
             // Delay hiding slightly to allow moving cursor to submenu
             leaveTimeout.current = window.setTimeout(() => {
                 setIsSubmenuVisible(false);
-            }, 150);
+            }, 150); // Adjust delay as needed
         }
     };
 
@@ -65,7 +65,7 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
 
             {item.submenu && isSubmenuVisible && (
                 <div
-                    className="absolute left-full top-[-5px] ml-1 bg-gray-700 border border-gray-600 rounded shadow-lg z-[60] py-1 min-w-[150px]"
+                    className="absolute left-full top-[-5px] ml-1 bg-gray-700 border border-gray-600 rounded shadow-lg z-[60] py-1 min-w-[150px]" // Adjust z-index if needed
                     onMouseEnter={handleSubmenuMouseEnter} // Keep submenu open if mouse enters it
                     onMouseLeave={handleMouseLeave} // Hide if mouse leaves submenu too
                 >
