@@ -30,7 +30,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
   splitView: createDefaultSplitViewState(),
 
   setSplitView: (newSplitView) => set((state) => ({
-    splitView: { ...state.splitView, ...newSplitView }
+    splitView: {...state.splitView, ...newSplitView}
   })),
 
   splitScreen: (leftTabIds, rightTabId) => set((state) => {
@@ -100,8 +100,8 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
         leftTabs: newLeftTabs,
         rightTabs: newRightTabs,
         activeLeftTabId: state.splitView.activeLeftTabId === tabId
-            ? newLeftTabs[0] || null
-            : state.splitView.activeLeftTabId,
+          ? newLeftTabs[0] || null
+          : state.splitView.activeLeftTabId,
         activeRightTabId: tabId,
       }
     };
@@ -126,8 +126,8 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
         leftTabs: newLeftTabs,
         rightTabs: newRightTabs,
         activeRightTabId: state.splitView.activeRightTabId === tabId
-            ? newRightTabs[0] || null
-            : state.splitView.activeRightTabId,
+          ? newRightTabs[0] || null
+          : state.splitView.activeRightTabId,
         activeLeftTabId: tabId,
       }
     };
@@ -175,7 +175,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
   }),
 
   removeTabFromSide: (tabId) => set((state) => {
-    const newSplitView = { ...state.splitView };
+    const newSplitView = {...state.splitView};
 
     // Remove from left tabs if present
     if (newSplitView.leftTabs.includes(tabId)) {
@@ -212,7 +212,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
       }
     }
 
-    return { splitView: newSplitView };
+    return {splitView: newSplitView};
   }),
 
   closeTabsToLeft: (tabId, isRightSide) => set((state) => {
@@ -228,7 +228,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
     const tabsToClose = currentTabList.slice(0, tabIndex);
 
     // Update the tab lists
-    const newSplitView = { ...state.splitView };
+    const newSplitView = {...state.splitView};
 
     if (isRightSide) {
       newSplitView.rightTabs = newSplitView.rightTabs.filter(id => !tabsToClose.includes(id));
@@ -236,7 +236,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
       newSplitView.leftTabs = newSplitView.leftTabs.filter(id => !tabsToClose.includes(id));
     }
 
-    return { splitView: newSplitView };
+    return {splitView: newSplitView};
   }),
 
   closeTabsToRight: (tabId, isRightSide) => set((state) => {
@@ -252,7 +252,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
     const tabsToClose = currentTabList.slice(tabIndex + 1);
 
     // Update the tab lists
-    const newSplitView = { ...state.splitView };
+    const newSplitView = {...state.splitView};
 
     if (isRightSide) {
       newSplitView.rightTabs = newSplitView.rightTabs.filter(id => !tabsToClose.includes(id));
@@ -270,7 +270,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
       }
     }
 
-    return { splitView: newSplitView };
+    return {splitView: newSplitView};
   }),
 
   closeAllExcept: (tabId, isRightSide) => set((state) => {
@@ -280,7 +280,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
     if (currentTabList.length <= 1) return state; // Only one tab, nothing to close
 
     // Update the tab lists
-    const newSplitView = { ...state.splitView };
+    const newSplitView = {...state.splitView};
 
     if (isRightSide) {
       newSplitView.rightTabs = [tabId];
@@ -290,7 +290,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, _get) => ({
       newSplitView.activeLeftTabId = tabId;
     }
 
-    return { splitView: newSplitView };
+    return {splitView: newSplitView};
   }),
 
   groupTabsByType: (_isRightSide) => set((state) => {

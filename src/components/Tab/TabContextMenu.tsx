@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useClickOutside } from '../../hooks/useClickOutside';
-import { useContextMenuConfig } from './UseContextMenuConfig'; // Adjust path
-import { ContextMenuItem } from './ContextMenuItem'; // Adjust path
+import { useContextMenuConfig } from './UseContextMenuConfig';
+import { ContextMenuItem } from './ContextMenuItem';
 
 interface TabContextMenuProps {
     tabId: string;
