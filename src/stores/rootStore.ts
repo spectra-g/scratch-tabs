@@ -3,7 +3,7 @@ import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { useEditorStore } from './editorStore';
 import { usePersistenceStore } from './persistenceStore';
-import {EditorPosition, Tab} from '../types';
+import { EditorPosition, Tab } from '../types';
 import {
   findTabById,
   isTabEmpty,
@@ -60,6 +60,8 @@ interface RootStore {
 
   // Tab limit checks
   canAddNewTab: (toRightSide?: boolean) => boolean;
+
+  compareFromClipboard: (originalTabId: string, isRightSide: boolean) => Promise<void>; // Make it async
 }
 
 // Create the combined store
@@ -81,11 +83,11 @@ export const useRootStore = create<RootStore>((set, get) => {
 
   // Set up event listeners for persistence
   window.addEventListener('loadPersistedTabs', ((event: CustomEvent) => {
-    useTabsStore.setState({ tabs: event.detail });
+    useTabsStore.setState({tabs: event.detail});
   }) as EventListener);
 
   window.addEventListener('loadPersistedSplitView', ((event: CustomEvent) => {
-    useSplitViewStore.setState({ splitView: event.detail });
+    useSplitViewStore.setState({splitView: event.detail});
   }) as EventListener);
 
   window.addEventListener('requestSaveState', ((event: CustomEvent) => {
@@ -131,7 +133,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     handleNewTab: (isRightSide: boolean, content?: string) => {
-      const { tabs, canAddNewTab, addTab } = get();
+      const {tabs, canAddNewTab, addTab} = get();
 
       // Check if we can add a new tab
       if (!canAddNewTab(isRightSide)) {
@@ -152,10 +154,12 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     handleNewTabFromPaste: (isRightSide: boolean) => {
-      const { handleNewTab } = get();
+      const {handleNewTab} = get();
+
       async function paste() {
         return await navigator.clipboard.readText();
       }
+
       paste().then(content => handleNewTab(isRightSide, content));
     },
 
@@ -171,7 +175,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     setActiveTab: (id) => {
-      const { splitView } = get();
+      const {splitView} = get();
 
       // Set the active tab in the tabs store
       useTabsStore.getState().setActiveTab(id);
@@ -209,7 +213,7 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     // Split view functions
     splitScreen: (leftTabId, rightTabId) => {
-      const { tabs } = get();
+      const {tabs} = get();
 
       const removeTab = (tabId: string) => {
         return tabs
@@ -226,11 +230,85 @@ export const useRootStore = create<RootStore>((set, get) => {
       }
     },
 
+    compareFromClipboard: async (originalTabId, isRightSide) => {
+      const {splitView, addTab, setActiveLeftTab, setActiveRightTab} = get();
+      const tabsStore = useTabsStore.getState();
+      const splitViewStore = useSplitViewStore.getState();
+
+      let clipboardContent = '';
+      try {
+        clipboardContent = await navigator.clipboard.readText();
+      } catch (err) {
+        console.error("Failed to read clipboard contents: ", err);
+        // Optionally show a user notification here
+        return; // Stop if clipboard access fails
+      }
+
+      // Determine target side for the new tab
+      const addNewTabToRight = !isRightSide;
+
+      // Create the new tab data
+      const language = detectLanguage(clipboardContent);
+      const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(clipboardContent);
+      const newTabId = crypto.randomUUID();
+      const newTab: Tab = {
+        id: newTabId,
+        title: "Clipboard Compare",
+        content: clipboardContent,
+        language,
+        languageLocked: shouldLock,
+        cursorPosition: {
+          lineNumber: 0,
+          column: 0
+        },
+        isTablet: false, // Clipboard content is text, not a tablet
+      };
+
+      if (!splitView.isSplit) {
+        // --- Handle case: Not currently split ---
+        // 1. Add the new tab to the main store *first*
+        tabsStore.addTab(newTab);
+
+        // 2. Manually set up the split view state
+        const updatedSplitView = {
+          isSplit: true,
+          leftTabs: [originalTabId], // Original tab goes to the left
+          rightTabs: [newTabId],     // New clipboard tab goes to the right
+          activeLeftTabId: originalTabId,
+          activeRightTabId: newTabId,
+          splitRatio: splitView.splitRatio, // Keep existing ratio or default
+        };
+        splitViewStore.setSplitView(updatedSplitView);
+
+        // 3. Ensure the global active tab is set (optional, might depend on desired focus)
+        // setActiveTab(originalTabId); // Or newTabId if you want focus on the new one
+
+      } else {
+        // --- Handle case: Already split ---
+        // 1. Add the tab using the root store's addTab, specifying the side
+        addTab(newTab, addNewTabToRight); // This should handle adding to the correct list and setting active state
+
+        // 2. Explicitly ensure the new tab is active on its side (addTab might already do this, but being explicit is safer)
+        if (addNewTabToRight) {
+          setActiveRightTab(newTabId);
+        } else {
+          setActiveLeftTab(newTabId);
+        }
+        // 3. Ensure the original tab remains active on its side
+        if (isRightSide) {
+          setActiveRightTab(originalTabId);
+        } else {
+          setActiveLeftTab(originalTabId);
+        }
+      }
+      // The diff modal opening will be handled by the onClose('compare') in the context menu config
+    },
+
     unsplitScreen: (fromRight) => {
       useSplitViewStore.getState().unsplitScreen(fromRight);
 
       // Set the active tab based on which side was active
-      const { splitView } = useSplitViewStore.getState();
+      const {splitView} = useSplitViewStore.getState();
       if (fromRight) {
         useTabsStore.getState().setActiveTab(splitView.activeLeftTabId || '');
       } else {
@@ -264,7 +342,7 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     // Bulk tab operations
     closeTabsToLeft: async (tabId, isRightSide) => {
-      const { splitView } = get();
+      const {splitView} = get();
       const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
       const tabIndex = currentTabList.indexOf(tabId);
 
@@ -284,7 +362,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     closeTabsToRight: async (tabId, isRightSide) => {
-      const { splitView } = get();
+      const {splitView} = get();
       const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
       const tabIndex = currentTabList.indexOf(tabId);
 
@@ -312,7 +390,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     closeAllExcept: async (tabId, isRightSide) => {
-      const { splitView } = get();
+      const {splitView} = get();
       const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
 
       if (currentTabList.length <= 1) return; // Only one tab, nothing to close
@@ -345,7 +423,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       if (!newTabId) return '';
 
       // Add the new tab to the appropriate side in split view
-      const { splitView } = get();
+      const {splitView} = get();
       const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
       const tabIndex = currentTabList.indexOf(tabId);
 
@@ -373,7 +451,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     duplicateAndSplitTab: (tabId) => {
-      const { duplicateTab, splitScreen } = get();
+      const {duplicateTab, splitScreen} = get();
 
       const rightTabId = duplicateTab(tabId, true);
       splitScreen(tabId, rightTabId);
@@ -384,7 +462,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     groupTabsByType: (isRightSide) => {
-      const { tabs, splitView } = get();
+      const {tabs, splitView} = get();
       const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
 
       // Use the utility function to group tabs by language
@@ -404,7 +482,7 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     // Tab limit checks
     canAddNewTab: (toRightSide = false) => {
-      const { tabs, splitView } = get();
+      const {tabs, splitView} = get();
 
       // If in split view, check the appropriate side
       if (splitView.isSplit) {
