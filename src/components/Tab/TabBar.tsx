@@ -1,20 +1,16 @@
-import React, {useState, useRef, useEffect} from 'react';
-import {
-    Plus,
-    ClipboardPlus,
-    Tablet
-} from 'lucide-react';
-import {useRootStore} from '../../stores';
-import {TabletSelector} from '../../tablets';
-import {TabItem} from "./TabItem";
-import {TabContextMenu} from "./TabContextMenu";
+import React, { useState, useRef, useEffect } from 'react';
+import { useRootStore } from '../../stores';
+import { TabletSelector } from '../../tablets';
+import { TabItem } from "./TabItem";
+import { TabContextMenu } from "./TabContextMenu";
+import { TabActions } from './TabActions';
 
 interface TabBarProps {
-    side?: 'left' | 'right';
-    onOpenDiffModal: () => void;
+  side?: 'left' | 'right';
+  onOpenDiffModal: () => void;
 }
 
-export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) => {
+export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }) => {
     const {
         tabs,
         splitView,
@@ -40,38 +36,30 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const tabletSelectorTabBarRef = useRef<HTMLDivElement>(null);
 
-    // Determine which tabs to show based on the side
     const isRightSide = side === 'right';
     const tabIds = isRightSide ? splitView.rightTabs : splitView.leftTabs;
 
-    // Use a key derived from the tab IDs to force re-render when the order changes
     const tabsKey = tabIds.join('-');
 
-    // Create visibleTabs array that preserves the order of tabIds
     const visibleTabs = tabIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean) as typeof tabs;
     const activeSideTabId = isRightSide ? splitView.activeRightTabId : splitView.activeLeftTabId;
 
-    // Calculate line counts and find the maximum
     const getTabLineCount = (content: string): number => {
         return content.split('\n').length;
     };
 
     const tabLineCounts = tabs.filter(tab => tab.isTablet != true).map(tab => getTabLineCount(tab.content));
-    const maxLineCount = Math.max(...tabLineCounts, 1); // Avoid division by zero
+    const maxLineCount = Math.max(...tabLineCounts, 1);
 
-    // --- Add Effect for Click Outside Detection (TabBar's TabletSelector) ---
     useEffect(() => {
-        // Only run if this specific selector is shown
         if (!showTabletSelector) {
             return;
         }
 
         const handleClickOutside = (event: MouseEvent) => {
-            // Check click against this selector's ref
             if (tabletSelectorTabBarRef.current && !tabletSelectorTabBarRef.current.contains(event.target as Node)) {
-                // Also check if the click was on the button that opens it, otherwise it closes immediately
                 if (tabletButtonRef.current && !tabletButtonRef.current.contains(event.target as Node)) {
-                    setShowTabletSelector(false); // Close the selector
+                    setShowTabletSelector(false);
                 }
             }
         };
@@ -80,7 +68,6 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-        // Depend on showTabletSelector to add/remove listener
     }, [showTabletSelector]);
 
     useEffect(() => {
@@ -93,20 +80,15 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
 
             if (numTabs < 7) return;
 
-            // Calculate available width for tabs (subtracting width of action buttons)
-            const actionButtonsWidth = 0; // Approximate width of all action buttons
+            const actionButtonsWidth = 0;
             const availableWidth = containerWidth - actionButtonsWidth;
 
-            // Minimum tab width before text is hidden completely
-            const minTabWidth = 5; // You can adjust this value as needed
+            const minTabWidth = 5;
 
-            // Calculate the ideal tab width based on the available space
             let tabWidth = availableWidth / numTabs;
 
-            // Apply minimum width to prevent tabs from shrinking too small
             tabWidth = Math.max(tabWidth, minTabWidth);
 
-            // Apply the calculated width to each tab
             const tabs = container.getElementsByClassName('tab-item');
             Array.from(tabs).forEach((tab: Element) => {
                 (tab as HTMLElement).style.width = `${tabWidth}px`;
@@ -115,12 +97,11 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
             });
         };
 
-        // Update tab widths initially and on window resize
         updateTabWidths();
         window.addEventListener('resize', updateTabWidths);
 
         return () => window.removeEventListener('resize', updateTabWidths);
-    }, [visibleTabs.length]); // Recalculate whenever the number of visible tabs changes
+    }, [visibleTabs.length]);
 
     useEffect(() => {
         if (editingTabId && inputRef.current) {
@@ -130,25 +111,19 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
     }, [editingTabId]);
 
     const handleDoubleClick = (tab: { id: string; title: string }, e: React.MouseEvent) => {
-        // Check if the double click was on the text span
         const target = e.target as HTMLElement;
         if (target.tagName === 'SPAN' && target.textContent === tab.title) {
-            // Double-click on the text - edit the title
             setEditingTabId(tab.id);
             setEditingTitle(tab.title);
         } else {
-            // Double click elsewhere in the tab - create a new tab
             handleCreateNewTab();
         }
 
-        // Stop propagation to prevent the empty area handler from firing
         e.stopPropagation();
     };
 
     const handleCreateNewTab = () => {
-        // Check if we can add a new tab
         if (!canAddNewTab(isRightSide)) {
-            // Don't add a new tab if we've reached the limit of empty tabs
             return;
         }
 
@@ -194,19 +169,15 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
     };
 
     const handleEmptyAreaDoubleClick = (e: React.MouseEvent) => {
-        // Only handle double clicks on the tab bar itself, not on tabs
         if (e.currentTarget === e.target) {
             handleCreateNewTab();
         }
     };
 
-    // Handle tablet selection
     const handleTabletSelect = (tablet: any) => {
-        // Create initial tablet state
         const state = tablet.createInitialState();
         const serializedState = tablet.serializeState(state);
 
-        // Create a new tab with the tablet
         addTab({
             id: crypto.randomUUID(),
             title: tablet.label,
@@ -222,22 +193,6 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
         }, side === 'right');
 
         setShowTabletSelector(false);
-    };
-
-    // Show tablet selector
-    const handleShowTabletSelector = () => {
-        if (tabletButtonRef.current) {
-            if (showTabletSelector) {
-                setShowTabletSelector(false);
-            } else {
-                const rect = tabletButtonRef.current.getBoundingClientRect();
-                setTabletSelectorPosition({
-                    x: rect.left,
-                    y: rect.bottom + 4
-                });
-                setShowTabletSelector(true);
-            }
-        }
     };
 
     return (
@@ -261,41 +216,36 @@ export const TabBar: React.FC<TabBarProps> = ({side = 'left', onOpenDiffModal}) 
                             editingTitle={editingTitle}
                             maxLineCount={maxLineCount}
                             onClick={handleTabClick}
-                            onClose={(tabId, e) => { /* stopPropagation already handled inside */
+                            onClose={(tabId, e) => {
                                 removeTab(tabId);
                             }}
                             onDoubleClick={handleDoubleClick}
                             onContextMenu={(tabId, e) => handleContextMenu(e, tabId)}
                             onEditChange={setEditingTitle}
-                            onEditSubmit={handleInputBlur} // Renamed from handleInputBlur
+                            onEditSubmit={handleInputBlur}
                             onEditCancel={() => setEditingTabId(null)}
                         />
                     ))}
                 </div>
 
-                <button
-                    onClick={() => handleNewTab(isRightSide)}
-                    className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-                    title="New tab"
-                >
-                    <Plus size={16}/>
-                </button>
-                <button
-                    onClick={() => handleNewTabFromPaste(isRightSide)}
-                    className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-                    title="New tab with contents from clipboard"
-                >
-                    <ClipboardPlus size={16}/>
-                </button>
-                <button
-                    ref={tabletButtonRef}
-                    onClick={handleShowTabletSelector}
-                    className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-                    title="New tablet"
-                >
-                    <Tablet size={16}/>
-                </button>
-
+                <TabActions
+                    side={side}
+                    onShowTabletSelector={() => {
+                        if (tabletButtonRef.current) {
+                            if (showTabletSelector) {
+                                setShowTabletSelector(false);
+                            } else {
+                                const rect = tabletButtonRef.current.getBoundingClientRect();
+                                setTabletSelectorPosition({
+                                    x: rect.left,
+                                    y: rect.bottom + 4
+                                });
+                                setShowTabletSelector(true);
+                            }
+                        }
+                    }}
+                    tabletButtonRef={tabletButtonRef}
+                />
             </div>
 
             {showTabletSelector && (
