@@ -1,5 +1,6 @@
 import React from 'react';
 import { StatusItemProps } from '../components/StatusBar/types';
+import * as monaco from 'monaco-editor';
 
 /**
  * Interface for language detector implementations
@@ -50,6 +51,11 @@ export interface LanguageDetector {
    * Get status item component for this language (optional)
    */
   getStatusItem?: () => React.FC<StatusItemProps>;
+
+  /**
+   * Get options menu component for this language (optional)
+   */
+  getOptionsMenu?: () => React.FC<{ editor: monaco.editor.IStandaloneCodeEditor }>;
 }
 
 /**

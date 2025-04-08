@@ -1,5 +1,5 @@
 import React from 'react';
-import { getLanguageStatusItem } from './LanguageStatusItems';
+import { getLanguageStatusItem, getLanguageOptionsMenu } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
@@ -31,9 +31,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab}) => {
   const LanguageStatusItem = activeTab && !activeTab.isTablet ? 
     getLanguageStatusItem(activeTab.language, activeTab.content) : null;
 
+  const LanguageOptionsMenu = activeTab && !activeTab.isTablet ? 
+    getLanguageOptionsMenu(activeTab.language, editor) : null;
+
   return (
-    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">
-      <div className="flex items-center space-x-4">
+   <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs"> 
+    <div className="flex items-center space-x-4">
         {activeTab && (
           <>
             <span>
@@ -44,6 +47,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab}) => {
                 {tabletLabel || activeTab.language}
               </span>
               {LanguageStatusItem && <LanguageStatusItem />}
+              {LanguageOptionsMenu && <LanguageOptionsMenu editor={editor} />}
             </div>
           </>
         )}

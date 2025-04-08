@@ -54,4 +54,22 @@ export abstract class BaseLanguageDetector implements LanguageDetector {
   sampleContent(): string {
     return '';
   }
+
+  /**
+   * Get status item component for this language
+   * Default implementation returns undefined
+   */
+  getStatusItem?(): React.FC<any> {
+    return undefined;
+  }
+
+  /**
+   * Get options menu component for this language
+   * Default implementation returns undefined
+   */
+  getOptionsMenu?(): React.FC<any> {
+    return undefined;
+  }
 }
+
+//export { BaseLanguageDetector }
