@@ -2,6 +2,8 @@ import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { registerJsonValidationProvider } from './json/validation';
 import { JsonStatusItem } from './json/StatusItem';
+import { JsonOptionsMenu } from './json/JsonOptionsMenu';
+import * as monaco from 'monaco-editor';
 
 /**
  * JSON language detector
@@ -118,6 +120,13 @@ export class JsonLanguageDetector extends BaseLanguageDetector {
    */
   getStatusItem(): React.FC<{ content?: string }> {
     return JsonStatusItem;
+  }
+
+  /**
+   * Get Options menu
+   */
+  getOptionsMenu(): React.FC<{ editor: monaco.editor.IStandaloneCodeEditor }> {
+    return JsonOptionsMenu;
   }
 }
 
