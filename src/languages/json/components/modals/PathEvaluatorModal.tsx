@@ -67,7 +67,7 @@ export const PathEvaluatorModal: React.FC<PathEvaluatorModalProps> = ({ json, on
           <div className="bg-gray-900 rounded-lg p-4">
             <h3 className="text-sm font-medium text-gray-300 mb-2">Result:</h3>
             <Editor
-              height="200px"
+              height="100px"
               language="json"
               value={JSON.stringify(result, null, 2)}
               theme="vs-dark"
@@ -84,7 +84,7 @@ export const PathEvaluatorModal: React.FC<PathEvaluatorModalProps> = ({ json, on
         <div className="bg-gray-900 rounded-lg p-4">
           <h3 className="text-sm font-medium text-gray-300 mb-2">JSON Preview:</h3>
           <Editor
-            height="200px"
+            height="350px"
             language="json"
             value={JSON.stringify(json, null, 2)}
             theme="vs-dark"

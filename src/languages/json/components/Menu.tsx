@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import { MenuSection } from './MenuSection';
 import { MenuItem } from './MenuItem';
@@ -6,7 +6,6 @@ import { useJsonOperations } from '../hooks/useJsonOperations';
 import { useJsonConversions } from '../hooks/useJsonConversions';
 import { useJsonTransformations } from '../hooks/useJsonTransformations';
 import { useJsonValidation } from '../hooks/useJsonValidation';
-import { useJsonModals } from '../hooks/useJsonModals';
 import * as monaco from 'monaco-editor';
 import { Tab } from '../../../types';
 
@@ -14,12 +13,13 @@ interface MenuProps {
   editor: monaco.editor.IStandaloneCodeEditor;
   onClose: () => void;
   addTab: (tab: Tab) => void;
+  buttonRef: React.RefObject<HTMLButtonElement>;
 }
 
-export const Menu: React.FC<MenuProps> = ({ editor, onClose, addTab }) => {
+export const Menu: React.FC<MenuProps> = ({ editor, onClose, addTab, buttonRef }) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
   useClickOutside(menuRef, onClose);
-
+  const [ posLeft, ] = useState<number>(buttonRef?.current?.getBoundingClientRect()?.left ? buttonRef.current.getBoundingClientRect().left : 180)
   const {
     handleFormat,
     handleMinify,
@@ -54,18 +54,12 @@ export const Menu: React.FC<MenuProps> = ({ editor, onClose, addTab }) => {
     handleGenerateSchema
   } = useJsonValidation(editor, addTab);
 
-  const {
-    openStringifyModal,
-    openPathFinderModal,
-    openPathEvaluatorModal
-  } = useJsonModals();
-
   return (
     <div
       ref={menuRef}
       className="fixed z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-xl py-1 overflow-y-auto custom-scrollbar"
       style={{
-        bottom: '28px', left: '180px', width: '250px', height: '300px'
+        bottom: '28px', left: posLeft+'px', width: '250px', height: '300px'
       }}
       onClick={(e) => e.stopPropagation()} // Prevent clicks inside closing the menu
     >
@@ -76,36 +70,12 @@ export const Menu: React.FC<MenuProps> = ({ editor, onClose, addTab }) => {
         <MenuItem onClick={handleFlatten}>Flatten JSON</MenuItem>
         <MenuItem onClick={handleUnflatten}>Unflatten JSON</MenuItem>
         <MenuItem onClick={handleRemoveEmpty}>Remove Null/Empty Values</MenuItem>
-        <MenuItem onClick={() => {
-          try {
-            const content = editor.getValue();
-            const json = JSON.parse(content);
-            openStringifyModal(JSON.stringify(json), addTab);
-          } catch (error) {
-            console.error('Failed to stringify JSON:', error);
-          }
-        }}>Stringify</MenuItem>
+        <MenuItem onClick={handleStringify}>Stringify</MenuItem>
       </MenuSection>
 
       <MenuSection>
-        <MenuItem onClick={() => {
-          try {
-            const content = editor.getValue();
-            const json = JSON.parse(content);
-            openPathFinderModal(json);
-          } catch (error) {
-            console.error('Failed to open path finder:', error);
-          }
-        }}>Path Finder</MenuItem>
-        <MenuItem onClick={() => {
-          try {
-            const content = editor.getValue();
-            const json = JSON.parse(content);
-            openPathEvaluatorModal(json);
-          } catch (error) {
-            console.error('Failed to open path evaluator:', error);
-          }
-        }}>Path Evaluator</MenuItem>
+        <MenuItem onClick={handlePathFinder}>Path Finder</MenuItem>
+        <MenuItem onClick={handlePathEvaluator}>Path Evaluator</MenuItem>
       </MenuSection>
 
       <MenuSection>
