@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Tab } from '../types';
 
 interface ModalState {
-  type: 'stringify' | 'pathFinder' | 'pathEvaluator' | null;
+  type: 'stringify' | 'pathFinder' | 'pathEvaluator' | 'codeGeneration' | null;
   props?: any;
 }
 
@@ -11,6 +11,7 @@ interface JsonModalsStore {
   openStringifyModal: (stringified: string, addTab: (tab: Tab) => void) => void;
   openPathFinderModal: (json: any) => void;
   openPathEvaluatorModal: (json: any) => void;
+  openCodeGenerationModal: (tabs: { id: string; title: string; content: string; language: string; }[], addTab: (tab: Tab) => void) => void;
   closeModal: () => void;
 }
 
@@ -43,6 +44,17 @@ export const useJsonModalsStore = create<JsonModalsStore>((set) => ({
       type: 'pathEvaluator',
       props: {
         json,
+        onClose: () => set({ modalState: { type: null } })
+      }
+    }
+  }),
+
+  openCodeGenerationModal: (tabs, addTab) => set({
+    modalState: {
+      type: 'codeGeneration',
+      props: {
+        tabs,
+        addTab,
         onClose: () => set({ modalState: { type: null } })
       }
     }
