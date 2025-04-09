@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import * as monaco from 'monaco-editor';
 import { Tab } from '../../../types';
 import { useJsonModals } from './useJsonModals';
+import { generateJavaClasses } from '../utils/javaGenerator';
 
 export const useJsonConversions = (
   editor: monaco.editor.IStandaloneCodeEditor,
@@ -17,8 +18,20 @@ export const useJsonConversions = (
     try {
       const content = editor.getValue();
       const json = JSON.parse(content);
-      // Implementation of JSON to Java conversion
-      openCodeGenerationModal('java', json, addTab);
+      
+      // Generate Java classes
+      const javaClasses = generateJavaClasses(json);
+      
+      // Create tabs for each class
+      const tabs = javaClasses.map(javaClass => ({
+        id: crypto.randomUUID(),
+        title: javaClass.className,
+        content: javaClass.code,
+        language: 'java'
+      }));
+
+      // Open the code generation modal with the Java classes
+      openCodeGenerationModal(tabs, addTab);
     } catch (error) {
       console.error('Failed to convert to Java:', error);
     }

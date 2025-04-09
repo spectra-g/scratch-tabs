@@ -3,6 +3,7 @@ import { useJsonModalsStore } from '../../../stores/jsonModalsStore';
 import { StringifyModal } from '../components/modals/StringifyModal';
 import { PathFinderModal } from '../components/modals/PathFinderModal';
 import { PathEvaluatorModal } from '../components/modals/PathEvaluatorModal';
+import { CodeGenerationModal } from '../components/modals/CodeGenerationModal';
 
 export const useJsonModals = () => {
   const {
@@ -10,6 +11,7 @@ export const useJsonModals = () => {
     openStringifyModal,
     openPathFinderModal,
     openPathEvaluatorModal,
+    openCodeGenerationModal,
     closeModal
   } = useJsonModalsStore();
 
@@ -21,6 +23,8 @@ export const useJsonModals = () => {
         return <PathFinderModal {...modalState.props} />;
       case 'pathEvaluator':
         return <PathEvaluatorModal {...modalState.props} />;
+      case 'codeGeneration':
+        return <CodeGenerationModal {...modalState.props} />;
       default:
         return null;
     }
@@ -30,6 +34,7 @@ export const useJsonModals = () => {
     openStringifyModal,
     openPathFinderModal,
     openPathEvaluatorModal,
+    openCodeGenerationModal,
     renderModal,
     closeModal
   };

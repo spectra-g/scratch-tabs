@@ -60,7 +60,7 @@ export abstract class BaseLanguageDetector implements LanguageDetector {
    * Default implementation returns undefined
    */
   getStatusItem?(): React.FC<any> {
-    return undefined;
+    return () => null;
   }
 
   /**
@@ -68,7 +68,7 @@ export abstract class BaseLanguageDetector implements LanguageDetector {
    * Default implementation returns undefined
    */
   getOptionsMenu?(): React.FC<any> {
-    return undefined;
+    return () => null;
   }
 }
 
