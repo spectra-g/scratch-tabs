@@ -15,7 +15,7 @@ export const StringifyModal: React.FC<StringifyModalProps> = ({ content, onClose
       id: crypto.randomUUID(),
       title: 'Stringified JSON',
       content,
-      language: 'javascript',
+      language: 'plaintext',
       languageLocked: true,
       cursorPosition: { lineNumber: 1, column: 1 }
     });
@@ -26,8 +26,8 @@ export const StringifyModal: React.FC<StringifyModalProps> = ({ content, onClose
     <BaseModal title="Stringified JSON" onClose={onClose}>
       <div className="space-y-4">
         <Editor
-          height="300px"
-          language="javascript"
+          height="450px"
+          language="plaintext"
           value={content}
           theme="vs-dark"
           options={{

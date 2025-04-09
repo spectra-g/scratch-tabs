@@ -15,8 +15,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         tabs,
         splitView,
         removeTab,
-        handleNewTab,
-        handleNewTabFromPaste,
         updateTabTitle,
         setActiveLeftTab,
         setActiveRightTab,
