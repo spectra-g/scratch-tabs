@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { useRootStore } from '../stores';
-import { X, Undo2, Redo2 } from 'lucide-react';
+// Import necessary icons
+import { X, Undo2, Redo2, Eye, EyeOff } from 'lucide-react';
 
 // Define the structure for a history entry
 interface ChangeHistoryEntry {
@@ -11,6 +12,8 @@ interface ChangeHistoryEntry {
 }
 
 const DEBOUNCE_DELAY = 400;
+// --- NEW: Define context lines for hidden regions ---
+const DIFF_CONTEXT_LINES = 3;
 
 interface DiffModalProps {
   leftTabId: string;
@@ -34,21 +37,36 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
   const historyIndexRef = useRef(currentHistoryIndex);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // --- NEW STATE ---
+  const [areContentsIdentical, setAreContentsIdentical] = useState(false);
+  const [hideMatchingLines, setHideMatchingLines] = useState(false); // State for toggling matching lines visibility
+
   useEffect(() => {
     historyIndexRef.current = currentHistoryIndex;
   }, [currentHistoryIndex]);
 
+  // --- Function to check identical content ---
+  const checkIdentical = useCallback(() => {
+    // Use refs directly as models might not be updated instantly after setValue
+    const left = originalEditorRef.current?.getValue();
+    const right = modifiedEditorRef.current?.getValue();
+    setAreContentsIdentical(left !== undefined && right !== undefined && left === right);
+  }, []); // No dependencies needed
+
   const recordChangeActual = useCallback(() => {
-    // ... (recordChangeActual logic remains the same)
-    if (!originalEditorRef.current || !modifiedEditorRef.current) {
+    if (!originalEditorRef.current || !modifiedEditorRef.current || isRestoringHistory.current) {
       return;
     }
     const currentLeft = originalEditorRef.current.getValue();
     const currentRight = modifiedEditorRef.current.getValue();
     const latestIndex = historyIndexRef.current;
 
+    // --- UPDATE: Check identical status after recording change ---
+    setAreContentsIdentical(currentLeft === currentRight);
+
     setChangeHistory(prevHistory => {
       const lastEntry = prevHistory[latestIndex];
+      // Prevent recording identical consecutive states if content hasn't changed
       if (lastEntry && lastEntry.leftContent === currentLeft && lastEntry.rightContent === currentRight) {
         return prevHistory;
       }
@@ -57,61 +75,86 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
         rightContent: currentRight,
         timestamp: Date.now(),
       };
+      // Truncate history if we are undoing and then make a new change
       const newHistoryBase = prevHistory.slice(0, latestIndex + 1);
       const updatedHistory = [...newHistoryBase, newEntry];
-      const newIndex = newHistoryBase.length;
+      const newIndex = newHistoryBase.length; // Index of the new entry
       setCurrentHistoryIndex(newIndex); // Update state directly
       return updatedHistory;
     });
-  }, []);
+  }, []); // Removed checkIdentical from deps, it's called directly
 
   // --- Initial State Effect ---
   useEffect(() => {
-    // ... (Initial state effect remains the same)
     if (leftTab && rightTab) {
       const initialState: ChangeHistoryEntry = {
         leftContent: leftTab.content,
         rightContent: rightTab.content,
         timestamp: Date.now(),
       };
-      if (changeHistory.length === 0 || currentHistoryIndex === -1) {
-        setChangeHistory([initialState]);
-        setCurrentHistoryIndex(0);
-      } else {
-        setChangeHistory([initialState]);
-        setCurrentHistoryIndex(0);
-      }
+      // Always reset history and index when tabs change
+      setChangeHistory([initialState]);
+      setCurrentHistoryIndex(0);
+      // --- UPDATE: Initial identical check ---
+      setAreContentsIdentical(leftTab.content === rightTab.content);
+      // Reset view option
+      setHideMatchingLines(false);
     }
+    // Cleanup debounce timer on unmount or tab change
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
-    }
-  }, [leftTabId, rightTabId]);
+    };
+    // Only run when tabs change
+  }, [leftTabId, rightTabId]); // Keep dependencies minimal
 
   // --- Monaco Editor Setup Effect ---
   useEffect(() => {
-    // ... (Monaco setup effect remains the same)
     let editor: monaco.editor.IStandaloneDiffEditor | null = null;
     let listeners: monaco.IDisposable[] = [];
+
+    // Ensure cleanup runs before setup if tabs change
+    if (diffEditorRef.current) {
+        const currentEditor = diffEditorRef.current;
+        const model = currentEditor.getModel();
+        currentEditor.dispose();
+        diffEditorRef.current = null;
+        originalEditorRef.current = null;
+        modifiedEditorRef.current = null;
+        model?.original?.dispose();
+        model?.modified?.dispose();
+    }
+
+
     if (!editorContainerRef.current || !leftTab || !rightTab) {
       return;
     }
 
     const language = leftTab.language || 'plaintext';
+    // Use the definitive initial content from the tabs for setup
     const originalModel = monaco.editor.createModel(leftTab.content, language);
     const modifiedModel = monaco.editor.createModel(rightTab.content, language);
 
-    editor = monaco.editor.createDiffEditor(editorContainerRef.current, { /* options */
+    editor = monaco.editor.createDiffEditor(editorContainerRef.current, {
       originalEditable: true,
       modifiedEditable: true,
-      diffCodeLens: false,
-      renderIndicators: true,
-      renderSideBySide: true,
+      renderSideBySide: true, // Keep side-by-side
       theme: 'vs-dark',
       automaticLayout: true,
       enableSplitViewResizing: true,
       diffAlgorithm: 'advanced',
+      readOnly: false,
+      // --- NEW: Initial setting for hiding unchanged regions ---
+      hideUnchangedRegions: {
+        enabled: hideMatchingLines, // Use state here
+        contextLineCount: DIFF_CONTEXT_LINES,
+      },
+      // Consider adding scrollBeyondLastLine: false if preferred
+      scrollBeyondLastLine: false,
+      renderIndicators: true, // Show +/- indicators in the margin
+      diffCodeLens: false, // Usually off for cleaner diff
     });
     editor.setModel({ original: originalModel, modified: modifiedModel });
 
@@ -119,31 +162,39 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
     originalEditorRef.current = editor.getOriginalEditor();
     modifiedEditorRef.current = editor.getModifiedEditor();
 
+    // --- Initial check after editor is ready ---
+    // checkIdentical(); // This is now handled by the initial state effect
+
+    // Debounced handler for recording changes
     const debouncedRecordChangeHandler = () => {
-      if (isRestoringHistory.current) return;
+      // No need to check isRestoringHistory here, recordChangeActual does it
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
       debounceTimerRef.current = setTimeout(() => {
-        recordChangeActual();
+        recordChangeActual(); // This now also updates identical status
       }, DEBOUNCE_DELAY);
     };
 
+    // Attach listeners
     if (originalEditorRef.current) {
       listeners.push(originalEditorRef.current.onDidChangeModelContent(debouncedRecordChangeHandler));
     }
     if (modifiedEditorRef.current) {
       listeners.push(modifiedEditorRef.current.onDidChangeModelContent(debouncedRecordChangeHandler));
-      modifiedEditorRef.current.focus();
+      // Only focus if it makes sense (e.g., not read-only, maybe based on which tab was active)
+      // modifiedEditorRef.current.focus(); // Let's comment this out for now, might interfere
     }
 
-    return () => { /* cleanup */
+    // Cleanup function
+    return () => {
       listeners.forEach(listener => listener.dispose());
       listeners = [];
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
       }
+      // Check ref before disposing - ensure it hasn't been disposed already by effect re-run
       if (diffEditorRef.current) {
         const currentEditor = diffEditorRef.current;
         const model = currentEditor.getModel();
@@ -153,76 +204,126 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
         modifiedEditorRef.current = null;
         model?.original?.dispose();
         model?.modified?.dispose();
-      } else {
-        console.log("Monaco Cleanup: No editor ref found.");
       }
     };
-  }, [leftTabId, rightTabId, recordChangeActual]);
+    // This effect should ONLY run when the tabs change.
+    // `hideMatchingLines` changes will be handled by a separate effect.
+  }, [leftTabId, rightTabId, leftTab, rightTab]); // Added leftTab/rightTab to ensure content is updated if tab object changes but ID doesn't (less likely)
+
+
+  // --- Effect to Update Editor Options (like hiding lines) ---
+  useEffect(() => {
+    if (diffEditorRef.current) {
+      diffEditorRef.current.updateOptions({
+        hideUnchangedRegions: {
+          enabled: hideMatchingLines,
+          contextLineCount: DIFF_CONTEXT_LINES,
+        }
+      });
+    }
+    // This effect runs only when the toggle state changes
+  }, [hideMatchingLines]);
+
 
   // --- Undo/Redo Effect ---
   useEffect(() => {
-    // ... (Undo/Redo effect remains the same)
-    if (!isRestoringHistory.current || !diffEditorRef.current || currentHistoryIndex < 0) {
+    // Ensure we only run this when actively restoring history
+    if (!isRestoringHistory.current || currentHistoryIndex < 0) {
       return;
     }
+
     const historyEntry = changeHistory[currentHistoryIndex];
     if (!historyEntry) {
-      isRestoringHistory.current = false;
+      console.warn("History entry not found for index:", currentHistoryIndex);
+      isRestoringHistory.current = false; // Reset flag if entry is missing
       return;
     }
+
     const originalEditor = originalEditorRef.current;
     const modifiedEditor = modifiedEditorRef.current;
+
     if (!originalEditor || !modifiedEditor) {
-      isRestoringHistory.current = false;
+      console.warn("Editor refs not available during history restore.");
+      isRestoringHistory.current = false; // Reset flag if editors are missing
       return;
     }
 
+    let changed = false;
+    // Only set value if it's actually different to avoid unnecessary editor updates
     if (originalEditor.getValue() !== historyEntry.leftContent) {
+      // Preserve cursor/selection if possible (Monaco might handle this, but explicit can help)
+      // const selection = originalEditor.getSelection();
       originalEditor.setValue(historyEntry.leftContent);
+      // if (selection) originalEditor.setSelection(selection);
+      changed = true;
     }
     if (modifiedEditor.getValue() !== historyEntry.rightContent) {
+      // const selection = modifiedEditor.getSelection();
       modifiedEditor.setValue(historyEntry.rightContent);
+      // if (selection) modifiedEditor.setSelection(selection);
+      changed = true;
     }
 
+    // --- UPDATE: Check identical status after restoring history ---
+    if (changed) {
+        setAreContentsIdentical(historyEntry.leftContent === historyEntry.rightContent);
+    }
+
+    // Use setTimeout to allow Monaco to process the setValue operations
+    // before resetting the flag. This helps prevent the change listener
+    // from firing immediately with the restored content.
     setTimeout(() => {
       isRestoringHistory.current = false;
     }, 0);
+
+  // Depend only on the index and history array itself
   }, [currentHistoryIndex, changeHistory]);
 
   const canUndo = currentHistoryIndex > 0;
   const canRedo = currentHistoryIndex < changeHistory.length - 1;
 
-  const handleUndo = useCallback(() => { /* handleUndo logic remains same */
+  const handleUndo = useCallback(() => {
     if (!canUndo) return;
+    // Clear any pending debounced change before undoing
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
+      // It might be necessary to record the *absolute latest* state if the user typed
+      // something within the debounce delay before hitting undo.
       recordChangeActual();
     }
+    // Set flag *before* changing state to prevent immediate recording
     isRestoringHistory.current = true;
     setCurrentHistoryIndex(prevIndex => prevIndex - 1);
-  }, [canUndo, recordChangeActual]);
+  }, [canUndo, recordChangeActual]); // recordChangeActual needed here
 
-  const handleRedo = useCallback(() => { /* handleRedo logic remains same */
+  const handleRedo = useCallback(() => {
     if (!canRedo) return;
+    // No need to record change before redo
+    // Set flag *before* changing state
     isRestoringHistory.current = true;
     setCurrentHistoryIndex(prevIndex => prevIndex + 1);
   }, [canRedo]);
 
   // --- Close and Save Handler ---
   const handleCloseAndSave = useCallback(() => {
-    // 1. Force record any pending debounced changes
+    // 1. Force record any pending debounced changes if not restoring history
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
-      recordChangeActual(); // Record final state
+      // Make sure we don't record if we just undid/redid
+      if (!isRestoringHistory.current) {
+          recordChangeActual(); // Record final state before closing
+      }
     }
 
-    // 2. Get final content from editor panes (use refs)
-    const finalLeftContent = originalEditorRef.current?.getValue();
-    const finalRightContent = modifiedEditorRef.current?.getValue();
+    // 2. Get final content reliably from the *current* history state
+    // Use refs as fallback only if history is somehow invalid
+    const finalState = changeHistory[currentHistoryIndex];
+    const finalLeftContent = finalState?.leftContent ?? originalEditorRef.current?.getValue();
+    const finalRightContent = finalState?.rightContent ?? modifiedEditorRef.current?.getValue();
 
-    // 3. Check if tabs and content exist before updating
+    // 3. Check if tabs and content exist and if content *actually changed* from original tab state
     if (leftTab && finalLeftContent !== undefined && leftTab.content !== finalLeftContent) {
       updateTabContent(leftTabId, finalLeftContent);
     }
@@ -234,31 +335,61 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
     // 4. Call the original onClose handler passed from the parent
     onClose();
 
-  }, [leftTab, rightTab, leftTabId, rightTabId, updateTabContent, onClose, recordChangeActual]); // Dependencies
+  }, [leftTab, rightTab, leftTabId, rightTabId, updateTabContent, onClose, recordChangeActual, changeHistory, currentHistoryIndex]); // Added history deps
 
+
+  // --- NEW FUNCTION: Toggle Matching Lines Visibility ---
+  const toggleHideMatching = useCallback(() => {
+    setHideMatchingLines(prev => !prev);
+    // The separate useEffect hook handles updating the editor option
+  }, []);
 
   if (!leftTab || !rightTab) {
     return null;
   }
 
-  return ( /* JSX */
+  return (
       <div className="fixed inset-8 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between bg-gray-700 px-4 py-2">
-          <h2 className="text-gray-200 font-medium">
-            Compare: {leftTab.title} ↔ {rightTab.title}
+        {/* Header */}
+        <div className="flex items-center justify-between bg-gray-700 px-4 py-2 border-b border-gray-600 flex-wrap"> {/* Added flex-wrap */}
+          <h2 className="text-gray-200 font-medium mr-4 mb-1 sm:mb-0" title={`${leftTab.title} ↔ ${rightTab.title}`}> {/* Added margin */}
+            Compare: {leftTab.title} <span className="text-gray-400 mx-1">↔</span> {rightTab.title}
           </h2>
-          <div>
-            <button onClick={handleUndo} title="Undo" disabled={!canUndo} className="mr-2 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white disabled:opacity-50">
+          <div className="flex items-center flex-shrink-0">
+             {/* Toggle Hide Matching Lines Button */}
+             <button
+                onClick={toggleHideMatching}
+                title={hideMatchingLines ? "Show Matching Lines" : "Hide Matching Lines (Contextual Diff)"}
+                className="mr-4 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white flex items-center"
+             >
+                {hideMatchingLines
+                    ? <Eye size={14} className="mr-1" />
+                    : <EyeOff size={14} className="mr-1" />
+                }
+                {hideMatchingLines ? 'Show All' : 'Hide Matching'}
+             </button>
+            {/* Undo/Redo Buttons */}
+            <button onClick={handleUndo} title="Undo" disabled={!canUndo} className="mr-2 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white disabled:opacity-50 disabled:cursor-not-allowed">
               <Undo2 size={14} />
             </button>
-            <button onClick={handleRedo} title="Redo" disabled={!canRedo} className="mr-4 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white disabled:opacity-50">
+            <button onClick={handleRedo} title="Redo" disabled={!canRedo} className="mr-4 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white disabled:opacity-50 disabled:cursor-not-allowed">
               <Redo2 size={14} />
             </button>
-            <button className="text-gray-400 hover:text-gray-200" onClick={handleCloseAndSave}>
+            {/* Close Button */}
+            <button className="text-gray-400 hover:text-gray-200" onClick={handleCloseAndSave} title="Close and Save Changes">
               <X size={20} />
             </button>
           </div>
         </div>
+
+        {/* Identical Content Message */}
+        {areContentsIdentical && (
+          <div className="bg-green-900 bg-opacity-50 text-green-200 text-sm px-4 py-1 text-center border-b border-gray-600 flex-shrink-0"> {/* Added flex-shrink-0 */}
+            Contents are identical.
+          </div>
+        )}
+
+        {/* Editor Area */}
         <div ref={editorContainerRef} className="flex-1 overflow-hidden">
           {/* Monaco Editor renders here */}
         </div>
