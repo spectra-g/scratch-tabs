@@ -45,14 +45,6 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
     historyIndexRef.current = currentHistoryIndex;
   }, [currentHistoryIndex]);
 
-  // --- Function to check identical content ---
-  const checkIdentical = useCallback(() => {
-    // Use refs directly as models might not be updated instantly after setValue
-    const left = originalEditorRef.current?.getValue();
-    const right = modifiedEditorRef.current?.getValue();
-    setAreContentsIdentical(left !== undefined && right !== undefined && left === right);
-  }, []); // No dependencies needed
-
   const recordChangeActual = useCallback(() => {
     if (!originalEditorRef.current || !modifiedEditorRef.current || isRestoringHistory.current) {
       return;
@@ -108,15 +100,16 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
       }
     };
     // Only run when tabs change
-  }, [leftTabId, rightTabId]); // Keep dependencies minimal
+  }, [leftTab, rightTab]); // Keep dependencies minimal
 
   // --- Monaco Editor Setup Effect ---
   useEffect(() => {
     let editor: monaco.editor.IStandaloneDiffEditor | null = null;
     let listeners: monaco.IDisposable[] = [];
 
-    // Ensure cleanup runs before setup if tabs change
-    if (diffEditorRef.current) {
+    const cleanup = () => {
+      // Ensure cleanup runs before setup if tabs change
+      if (diffEditorRef.current) {
         const currentEditor = diffEditorRef.current;
         const model = currentEditor.getModel();
         currentEditor.dispose();
@@ -125,8 +118,10 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
         modifiedEditorRef.current = null;
         model?.original?.dispose();
         model?.modified?.dispose();
+      }
     }
 
+    cleanup();
 
     if (!editorContainerRef.current || !leftTab || !rightTab) {
       return;
@@ -162,9 +157,6 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
     originalEditorRef.current = editor.getOriginalEditor();
     modifiedEditorRef.current = editor.getModifiedEditor();
 
-    // --- Initial check after editor is ready ---
-    // checkIdentical(); // This is now handled by the initial state effect
-
     // Debounced handler for recording changes
     const debouncedRecordChangeHandler = () => {
       // No need to check isRestoringHistory here, recordChangeActual does it
@@ -195,16 +187,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
         debounceTimerRef.current = null;
       }
       // Check ref before disposing - ensure it hasn't been disposed already by effect re-run
-      if (diffEditorRef.current) {
-        const currentEditor = diffEditorRef.current;
-        const model = currentEditor.getModel();
-        currentEditor.dispose();
-        diffEditorRef.current = null;
-        originalEditorRef.current = null;
-        modifiedEditorRef.current = null;
-        model?.original?.dispose();
-        model?.modified?.dispose();
-      }
+      cleanup();
     };
     // This effect should ONLY run when the tabs change.
     // `hideMatchingLines` changes will be handled by a separate effect.
