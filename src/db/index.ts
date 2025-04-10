@@ -51,7 +51,7 @@ const toTabRecord = (tab: Tab): TabRecord => ({
 
 // Convert TabRecord to Tab
 const toTab = (record: TabRecord): Tab => {
-  const { lastModified, ...tab } = record;
+  const { ...tab } = record;
   return tab;
 };
 

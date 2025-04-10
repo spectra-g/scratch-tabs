@@ -1,19 +1,34 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import * as yaml from 'js-yaml'; // Import the library
+
+// --- Constants ---
+const MAX_LINES_TO_PARSE = 15; // How many lines to feed the parser initially
+const MIN_LINES_FOR_PARSE_ATTEMPT = 3; // Don't bother parsing very short snippets
 
 /**
- * YAML language detector
+ * YAML language detector - Using js-yaml for validation
  */
 export class YamlLanguageDetector extends BaseLanguageDetector {
   id = 'yaml';
   name = 'YAML';
   extensions = ['yaml', 'yml'];
-  priority = 4;
-  
-  /**
-   * Get sample content for YAML
-   */
+  priority = 4; // Lower than JSON
+
+  // --- Keep some basic Regex for quick checks/scoring ---
+  private directiveRegex = /^%YAML\s+[\d.]+/m;
+  private docStartRegex = /^---\s*(?:$|\n|#)/m;
+  private docEndRegex = /^\.\.\.\s*(?:$|\n|#)/m;
+  private listItemStartRegex = /^\s*-\s+\S/m;
+  private blockScalarRegex = /:\s*[|>][+-]?\s*(?:#.*)?$/m;
+  private unquotedKeyRegex = /^\s*[a-zA-Z_][a-zA-Z0-9_-]*\s*:/m; // Still useful for scoring/hints
+
+  // --- JSON Boundary Regex (for exclusion/penalty) ---
+  private jsonObjectBoundaryRegex = /^\s*\{[\s\S]*\}\s*$/;
+  private jsonArrayBoundaryRegex = /^\s*\[[\s\S]*\]\s*$/;
+
   sampleContent(): string {
+    // ... (sampleContent remains the same)
     return `# Project Configuration
 name: my-awesome-project
 version: 1.0.0
@@ -69,179 +84,135 @@ features:
   }
 
   /**
-   * Check if content matches YAML patterns
+   * Check if content is likely YAML, prioritizing validation via js-yaml.
    */
-
-      // Basic key pattern (simple key, colon, optional space/value/comment)
-      // Allows simple unquoted keys or basic quoted keys.
-  private basicKeyRegex = /^\s*([a-zA-Z0-9_-]+|"[^"]+"|'[^']+')\s*:\s*(?:.*)?$/m;
-
-  // Key followed immediately by newline, then indented content (strong indicator)
-  // Captures indent after key: \n(indentation)non-whitespace
-  private indentedBlockRegex = /^\s*([a-zA-Z0-9_-]+|"[^"]+"|'[^']+')\s*:\s*(?:#.*)?\n(\s+)\S/m;
-
-  // List item pattern (less ambiguous if looking for significant content or nested structure)
-  private listItemRegex = /^\s*-\s+\S+/m; // Simple list item start `- value`
-
-  // List item that contains a key (list of dictionaries - strong indicator)
-  private listDictItemRegex = /^\s*-\s+([a-zA-Z0-9_-]+|"[^"]+"|'[^']+')\s*:\s+/m;
-
-  // --- Specific Feature Patterns ---
-  private directiveRegex = /^%YAML\s+[\d.]+/m;
-  private docStartRegex = /^---(?:\s|$)/m; // Document start (allowing comment after ---)
-  private docEndRegex = /^\.\.\.(?:\s|$)/m; // Document end
-  private blockScalarRegex = /:\s*([|>])[+-]?\s*(?:#.*)?$/m; // key: | or key: >
-  private anchorRegex = /:\s+&\w+/m; // : &anchor
-  private aliasRegex = /:\s+\*\w+/m; // : *alias
-  private flowSequenceRegex = /:\s+\[.*?\]/m; // key: [item1, item2]
-  private flowMapRegex = /:\s+\{.*?:.*?\}/m; // key: {k: v}
-
-
   isMatch(content: string): boolean {
-    // Quick exit for empty or comment-only content
     const trimmed = content.trim();
-    if (!trimmed || trimmed.startsWith('#')) {
-      // Handle case where entire file might be comments, technically could be YAML
-      // but unlikely to be the *intended* format unless other YAML syntax exists.
-      // Check for deeper patterns if needed. For now, let's say no if ONLY comments.
-      if (!trimmed.includes('\n')) return false; // Single comment line
-      const lines = trimmed.split('\n');
-      if (lines.every(line => line.trim().startsWith('#') || line.trim() === '')) {
-        return false;
-      }
-    }
+    const lines = content.split('\n'); // Use original content for line splitting
 
-    // --- Strong Indicators ---
-    // 1. Directive at the start
-    if (this.directiveRegex.test(trimmed)) {
-      return true;
-    }
-    // 2. Document start marker followed by a key or nested content
-    if (this.docStartRegex.test(trimmed)) {
-      // Check if content after --- looks like YAML structure
-      const contentAfterDocStart = trimmed.substring(trimmed.indexOf('---') + 3);
-      if (this.basicKeyRegex.test(contentAfterDocStart) || this.listItemRegex.test(contentAfterDocStart)) {
+    // 1. Quick Exits
+    if (!trimmed) return false;
+    if (lines.every(line => line.trim().startsWith('#') || line.trim() === '')) return false;
+
+    // 2. Quick Wins - Strongest Indicators (Avoid parsing if unnecessary)
+    if (this.directiveRegex.test(trimmed)) return true;
+    // --- is very strong, but could be frontmatter. Let parser confirm structure.
+    // if (this.docStartRegex.test(trimmed)) return true;
+    if (this.blockScalarRegex.test(content)) return true; // | or > are quite unique
+
+    // 3. Attempt Parsing (The Core Logic)
+    // Only parse if there are enough lines to be meaningful
+    if (lines.length >= MIN_LINES_FOR_PARSE_ATTEMPT) {
+      // Take the first N lines to avoid performance issues on huge files
+      const contentToParse = lines.slice(0, MAX_LINES_TO_PARSE).join('\n');
+      try {
+        // Use safeLoad to prevent potential code execution from malicious YAML
+        // Use loadAll if multiple documents (separated by ---) are expected often
+        yaml.load(contentToParse);
         return true;
+      } catch (e) {
+        // Parsing failed. This means the first N lines are *not* valid YAML.
+        // It *could* still be intended as YAML, but it's broken.
+
+        // **Crucial Check:** If parsing failed AND it looks like JSON, strongly reject it.
+        if (this.jsonObjectBoundaryRegex.test(trimmed) || this.jsonArrayBoundaryRegex.test(trimmed)) {
+           // Check if the *reason* for failure might be JSON-like syntax errors
+           if (e instanceof yaml.YAMLException && /mapping values are not allowed here|unexpected token/i.test(e.message)) {
+               return false;
+           }
+        }
+        // If parsing failed but it doesn't look like JSON, it might be broken YAML.
+        // Fall through to weaker checks below, but with lower confidence.
       }
-      // If just ---, could be Markdown, so don't return true yet
-    }
-    // 3. Key followed by an indented block
-    if (this.indentedBlockRegex.test(content)) {
-      return true;
-    }
-    // 4. List item that is clearly a dictionary entry
-    if (this.listDictItemRegex.test(content)) {
-      return true;
     }
 
-    // --- Weaker Indicators (Require Combination) ---
-    const hasBasicKey = this.basicKeyRegex.test(content);
-    const hasListItem = this.listItemRegex.test(content); // Basic list item
+    // 4. Fallback - Weaker Heuristics (if parsing failed or wasn't attempted)
+    // These are now less important but can catch *intended* but broken YAML
+    // or very small snippets where parsing wasn't attempted.
 
-    // Require at least one key: value pair
-    if (!hasBasicKey) {
-      return false;
+    const hasUnquotedKey = this.unquotedKeyRegex.test(content);
+    const hasListItem = this.listItemStartRegex.test(content);
+    const hasDocStart = this.docStartRegex.test(trimmed);
+    const hasDocEnd = this.docEndRegex.test(trimmed);
+
+    // Require at least *some* structure if parsing failed
+    // Unquoted key OR list item is a decent sign of *intent*
+    if (hasUnquotedKey || hasListItem) {
+        // Avoid the specific failing case: {} boundaries + unquoted keys + parse failure
+        if ((this.jsonObjectBoundaryRegex.test(trimmed) || this.jsonArrayBoundaryRegex.test(trimmed)) && lines.length >= MIN_LINES_FOR_PARSE_ATTEMPT) {
+             // We already tried parsing and it failed, and it looks like JSON. Reject.
+             return false;
+        }
+        // Otherwise, if parsing failed but it has these features, maybe accept?
+        // Let's be conservative: only accept if it *also* has multiple keys/items or doc markers
+        const keyMatches = content.match(this.unquotedKeyRegex);
+        const itemMatches = content.match(this.listItemStartRegex);
+        const hasMultipleStructure = (keyMatches && keyMatches.length >= 2) || (itemMatches && itemMatches.length >= 2) || (hasUnquotedKey && hasListItem);
+
+        if (hasMultipleStructure || hasDocStart || hasDocEnd) {
+             return true; // Accept broken YAML if it has enough structure hints
+        }
     }
 
-    // If it has keys, also require either:
-    // - multiple keys OR
-    // - a list item OR
-    // - document start/end markers
-    const keyMatches = content.match(this.basicKeyRegex);
-    const hasMultipleKeys = keyMatches && keyMatches.length >= 2;
-    const hasDocMarker = this.docStartRegex.test(content) || this.docEndRegex.test(content);
-
-    if (hasMultipleKeys || hasListItem || hasDocMarker) {
-      // Basic structure looks plausible. Avoid obvious JSON structure just in case.
-      // This JSON check is weak, priority should handle most cases.
-      const probablyNotJson = !(/^\s*\{/.test(trimmed) && /\}\s*$/.test(trimmed)) &&
-          !(/^\s*\[/.test(trimmed) && /\]\s*$/.test(trimmed));
-      return probablyNotJson;
+    // If it has --- but parsing failed (maybe invalid structure after ---)
+    if (hasDocStart) {
+        return true; // Lower confidence match
     }
 
-    // Default to false if only one basic key found and no other structure
+    // 5. Default: Not enough evidence
+    // console.log("YAML Detector: All checks failed. Defaulting to false.");
     return false;
   }
 
 
   countSpecificPatterns(content: string): number {
-    let count = 0;
-    const patterns = [
-      this.indentedBlockRegex,  // Key followed by indent (very specific structure)
-      this.listDictItemRegex,   // List of dictionaries (very specific structure)
-      this.directiveRegex,      // %YAML directive
-      this.blockScalarRegex,    // | or > block scalars
-      this.anchorRegex,         // &anchor
-      this.aliasRegex,          // *alias
-      this.flowSequenceRegex,   // [flow sequence]
-      this.flowMapRegex,        // {flow map}
-      this.docStartRegex,       // --- doc start
-      this.docEndRegex          // ... doc end
-    ];
+    // Scoring can still use regex for speed, but parsing success should grant a huge bonus.
+    let score = 0;
+    const lines = content.split('\n');
+    const trimmed = content.trim();
 
-    for (const pattern of patterns) {
-      const matches = content.match(pattern);
-      if (matches) {
-        // Give more weight to highly structural patterns
-        if (pattern === this.indentedBlockRegex || pattern === this.listDictItemRegex) {
-          count += 2 * matches.length; // Count each occurrence, weighted higher
-        } else if (pattern === this.directiveRegex) {
-          count += 3; // Very specific
-        } else {
-          count += matches.length; // Count each occurrence
+    // Base score from regex patterns
+    if (this.directiveRegex.test(trimmed)) score += 5;
+    if (this.docStartRegex.test(trimmed)) score += 3;
+    if (this.blockScalarRegex.test(content)) score += 4;
+    if (this.unquotedKeyRegex.test(content)) score += 2 * (content.match(this.unquotedKeyRegex)?.length || 0); // Score per key
+    if (this.listItemStartRegex.test(content)) score += 1 * (content.match(this.listItemStartRegex)?.length || 0); // Score per item
+    if (this.docEndRegex.test(trimmed)) score += 2;
+
+    // Parsing Bonus/Penalty
+    if (lines.length >= MIN_LINES_FOR_PARSE_ATTEMPT) {
+        const contentToParse = lines.slice(0, MAX_LINES_TO_PARSE).join('\n');
+        try {
+            yaml.load(contentToParse);
+            score += 15; // Big bonus for successful parse
+        } catch (e) {
+            // Penalize if parsing failed AND it looks like JSON
+            if (this.jsonObjectBoundaryRegex.test(trimmed) || this.jsonArrayBoundaryRegex.test(trimmed)) {
+                 score = Math.max(0, score - 10); // Significant penalty
+            } else {
+                 score = Math.max(0, score - 3); // Smaller penalty for other parse failures
+            }
         }
-      }
+    } else {
+        // Penalize JSON lookalikes even if not parsed
+         if (this.jsonObjectBoundaryRegex.test(trimmed) || this.jsonArrayBoundaryRegex.test(trimmed)) {
+             score = Math.max(0, score - 5);
+         }
     }
 
-    // Bonus points if a document start marker is followed by structure
-    if (/^---\s*\n(\s*([a-zA-Z0-9_-]+|"[^"]+"|'[^']+')\s*:|\s*-)/m.test(content)) {
-      count += 2;
-    }
-
-    return count;
+    return score;
   }
 
-  /**
-   * Register YAML language provider with Monaco
-   */
+  // registerProvider remains the same
   registerProvider(monaco: any): void {
-    // Register YAML language if not already registered
+    // ... (no changes needed here)
     if (!monaco.languages.getLanguages().some((lang: any) => lang.id === 'yaml')) {
       monaco.languages.register({ id: 'yaml' });
     }
-
-    // Configure YAML formatting provider
     monaco.languages.registerDocumentFormattingEditProvider('yaml', {
       provideDocumentFormattingEdits(model: any) {
-        const content = model.getValue();
-        const lines = content.split('\n');
-        let indentLevel = 0;
-        const formattedLines = lines.map((line: string) => {
-          const trimmedLine = line.trim();
-          
-          // Decrease indent for closing indicators
-          if (trimmedLine.startsWith(']') || trimmedLine.startsWith('}')) {
-            indentLevel = Math.max(0, indentLevel - 1);
-          }
-
-          // Calculate the current line's indentation
-          const indent = '  '.repeat(indentLevel);
-          
-          // Increase indent after opening indicators
-          if (trimmedLine.endsWith(':') || trimmedLine.endsWith('[') || trimmedLine.endsWith('{')) {
-            indentLevel++;
-          }
-
-          // Skip empty lines
-          if (!trimmedLine) return '';
-          
-          return indent + trimmedLine;
-        });
-
-        return [{
-          range: model.getFullModelRange(),
-          text: formattedLines.join('\n')
-        }];
+         console.warn("YAML formatting requires a proper parser. Basic formatting disabled.");
+        return [];
       }
     });
   }

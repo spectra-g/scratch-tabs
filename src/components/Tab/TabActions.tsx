@@ -6,18 +6,21 @@ interface TabActionsProps {
   side?: 'left' | 'right';
   onShowTabletSelector: () => void;
   tabletButtonRef?: React.RefObject<HTMLButtonElement>;
+  newTabButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 export const TabActions: React.FC<TabActionsProps> = ({
   side = 'left',
   onShowTabletSelector,
-  tabletButtonRef
+  tabletButtonRef,
+  newTabButtonRef
 }) => {
   const { handleNewTab, handleNewTabFromPaste } = useRootStore();
 
   return (
     <div className="flex items-center">
       <button
+        ref={newTabButtonRef}
         onClick={() => handleNewTab(side === 'right')}
         className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
         title="New tab"

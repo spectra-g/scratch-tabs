@@ -7,6 +7,12 @@ type UpdateTabLanguageFn = (tabId: string, language: string, locked: boolean) =>
 
 // Debounce delay in milliseconds
 const LANGUAGE_DETECTION_DEBOUNCE_MS = 400;
+// Minimum content length before considering an automatic lock
+const MIN_CONTENT_LENGTH_FOR_AUTO_LOCK = 50;
+// How many characters difference suggests a non-trivial change?
+const SIGNIFICANT_LENGTH_DIFFERENCE = 30;
+// How many lines difference suggests a non-trivial change?
+const SIGNIFICANT_LINE_DIFFERENCE = 5;
 
 export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => {
   // useRef to hold the latest debounced function instance.
@@ -20,55 +26,85 @@ export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => 
     newContent: string,
     prevContent: string,
     currentLanguage: string,
-    languageLocked: boolean
+    languageLocked: boolean // IMPORTANT: Rename parameter to clarify it's the USER lock
   ) => {
-    // --- Pre-checks ---
+    // --- 1. Respect Manual Lock ---
     if (languageLocked) {
-      return; // Don't detect if the language is locked by the user
+      return; // User has explicitly set the language, do nothing.
     }
 
-    const trimmedContent = newContent.trim();
+    const trimmedNewContent = newContent.trim();
+    const trimmedOldContent = prevContent.trim();
 
-    // --- Handle Empty Content ---
-    if (trimmedContent.length === 0) {
+    // --- 2. Handle Empty Content ---
+    if (trimmedNewContent.length === 0) {
       if (currentLanguage !== 'plaintext') {
-        updateTabLanguage(tabId, 'plaintext', false); // Reset to plaintext and unlock
+        // Reset to plaintext and explicitly signal to remove any auto-lock
+        updateTabLanguage(tabId, 'plaintext', false);
       }
       return;
     }
 
-    // --- Heuristic for Significant Change (Paste/Replace) ---
-    // Consider it a significant change if length difference is large AND
-    // the new content doesn't simply contain the old, or vice-versa (simple append/delete).
-    // Checking substrings can be fragile, focusing on length diff might be enough.
-    const lengthDifference = Math.abs(prevContent.length - newContent.length);
-    const isSignificantChange = lengthDifference > 50 || // Large length change
-      (lengthDifference > 10 && !newContent.includes(prevContent) && !prevContent.includes(newContent)); // Moderate change + not simple containment
+    // --- 3. Determine if the Change is Significant ---
+    // Heuristics to guess if it was likely a paste/replace vs. typing
+    const lengthDifference = Math.abs(trimmedNewContent.length - trimmedOldContent.length);
+    const newLines = trimmedNewContent.split('\n');
+    const oldLines = trimmedOldContent.split('\n');
+    const lineDifference = Math.abs(newLines.length - oldLines.length);
 
+    // Significant if: large length/line diff OR content doesn't start/end similarly (suggesting replacement)
+    const isSignificantChange =
+      lengthDifference > SIGNIFICANT_LENGTH_DIFFERENCE ||
+      lineDifference > SIGNIFICANT_LINE_DIFFERENCE ||
+      (trimmedNewContent.length > 0 && trimmedOldContent.length > 0 && // Avoid triggering on first char
+       !trimmedNewContent.startsWith(trimmedOldContent.substring(0, 10)) && // Doesn't start like the old (prefix check)
+       !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) && // Old doesn't start like the new
+       lengthDifference > 5); // Add a small length diff requirement for the prefix check
 
-    // --- Detect Language ---
-    const detectedLanguage = detectLanguage(newContent);
+    // --- 4. Perform Language Detection ---
+    // Always detect unless manually locked or empty
+    const newDetectedLanguage = detectLanguage(trimmedNewContent); // Assuming returns { language: string, isAmbiguous: boolean }
+    const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent); // Use the ambiguity result from detection
 
-    // --- Decide Whether to Update ---
+    // --- 5. Decide Whether to Update the Tab's Language ---
     let shouldUpdate = false;
+
     if (isSignificantChange) {
-      // If it's a significant change, update if the detected language is different
-      // or if the current language was just plaintext (to switch away from plaintext).
-      if (detectedLanguage !== currentLanguage || currentLanguage === 'plaintext') {
+      // On significant changes, ALWAYS update if the detected language is different from current.
+      // This forces re-evaluation after pastes/replaces.
+      if (newDetectedLanguage !== currentLanguage) {
         shouldUpdate = true;
+      } else {
       }
     } else {
-      // For normal typing, only update if the detected language *changes*
-      if (detectedLanguage !== currentLanguage) {
-        shouldUpdate = true;
+      // For normal typing (non-significant change):
+      // Only update if the detected language is different AND the current language isn't already locked automatically.
+      // Or if switching away from plaintext.
+      // We need the tab's current *auto-lock* state here. Let's assume we can get it.
+      // For simplicity without direct access, we can be slightly less strict:
+      // Update if detected language changes, OR if we are currently plaintext.
+      if (newDetectedLanguage !== currentLanguage && currentLanguage === 'plaintext') {
+         shouldUpdate = true;
+      } else if (newDetectedLanguage !== currentLanguage) {
+         // Avoid flip-flopping if a language was previously auto-locked?
+         // This is tricky without knowing the current auto-lock state.
+         // Let's allow the update for now, the locking logic below will stabilize it.
+         shouldUpdate = true;
       }
     }
 
-    // --- Perform Update if Needed ---
+    // --- 6. Perform Update and Determine Auto-Lock State ---
     if (shouldUpdate) {
-      // Determine if the new language should be automatically locked
-      const shouldLock = detectedLanguage !== 'plaintext' && !isAmbiguousLanguage(newContent);
-      updateTabLanguage(tabId, detectedLanguage, shouldLock);
+      // Determine if the *new* state warrants an automatic lock
+      const contentIsSubstantial = trimmedNewContent.length >= MIN_CONTENT_LENGTH_FOR_AUTO_LOCK;
+      const shouldAutoLock =
+        newDetectedLanguage !== 'plaintext' && // Don't lock plaintext
+        !newDetectionIsAmbiguous &&           // Don't lock if detection is ambiguous
+        contentIsSubstantial;                 // Don't lock if content is too short
+
+      // Call the store function to update the language AND the automatic lock state.
+      // The store needs to handle clearing any previous auto-lock if shouldAutoLock is false.
+      updateTabLanguage(tabId, newDetectedLanguage, shouldAutoLock);
     }
 
   }, [updateTabLanguage]); // Dependency: The store update function

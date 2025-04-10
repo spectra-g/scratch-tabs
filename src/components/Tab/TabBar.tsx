@@ -31,6 +31,8 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     const inputRef = useRef<HTMLInputElement>(null);
     const tabBarRef = useRef<HTMLDivElement>(null);
     const tabletButtonRef = useRef<HTMLButtonElement>(null);
+    const newTabButtonRef = useRef<HTMLButtonElement>(null);
+    const tabsWrapperRef = useRef<HTMLDivElement>(null);
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const tabletSelectorTabBarRef = useRef<HTMLDivElement>(null);
 
@@ -70,13 +72,15 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
 
     useEffect(() => {
         const updateTabWidths = () => {
+            if (!newTabButtonRef.current) return;
+            if (!tabsWrapperRef.current) return;
+            if (newTabButtonRef.current.getBoundingClientRect().left > tabsWrapperRef.current.getBoundingClientRect().right) return;
+
             if (!tabsContainerRef.current) return;
 
             const container = tabsContainerRef.current;
             const containerWidth = container.offsetWidth;
             const numTabs = visibleTabs.length;
-
-            if (numTabs < 7) return;
 
             const actionButtonsWidth = 0;
             const availableWidth = containerWidth - actionButtonsWidth;
@@ -205,25 +209,27 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                     className="flex-1 flex min-w-0 overflow-hidden"
                     onDoubleClick={handleEmptyAreaDoubleClick}
                 >
-                    {visibleTabs.map(tab => (
-                        <TabItem
-                            key={tab.id}
-                            tab={tab}
-                            isActive={activeSideTabId === tab.id}
-                            isEditing={editingTabId === tab.id}
-                            editingTitle={editingTitle}
-                            maxLineCount={maxLineCount}
-                            onClick={handleTabClick}
-                            onClose={(tabId, e) => {
-                                removeTab(tabId);
-                            }}
-                            onDoubleClick={handleDoubleClick}
-                            onContextMenu={(tabId, e) => handleContextMenu(e, tabId)}
-                            onEditChange={setEditingTitle}
-                            onEditSubmit={handleInputBlur}
-                            onEditCancel={() => setEditingTabId(null)}
-                        />
-                    ))}
+                    <div className="flex" ref={tabsWrapperRef}>
+                        {visibleTabs.map(tab => (
+                            <TabItem
+                                key={tab.id}
+                                tab={tab}
+                                isActive={activeSideTabId === tab.id}
+                                isEditing={editingTabId === tab.id}
+                                editingTitle={editingTitle}
+                                maxLineCount={maxLineCount}
+                                onClick={handleTabClick}
+                                onClose={(tabId, e) => {
+                                    removeTab(tabId);
+                                }}
+                                onDoubleClick={handleDoubleClick}
+                                onContextMenu={(tabId, e) => handleContextMenu(e, tabId)}
+                                onEditChange={setEditingTitle}
+                                onEditSubmit={handleInputBlur}
+                                onEditCancel={() => setEditingTabId(null)}
+                            />
+                        ))}
+                    </div>
                 </div>
 
                 <TabActions
@@ -242,6 +248,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                             }
                         }
                     }}
+                    newTabButtonRef={newTabButtonRef}
                     tabletButtonRef={tabletButtonRef}
                 />
             </div>
