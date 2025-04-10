@@ -69,27 +69,46 @@ class LanguageRegistryImpl implements LanguageRegistry {
   }
   
   /**
-   * Resolve ambiguity between multiple matching languages
+   * Resolve ambiguity between multiple matching languages (Priority First)
    */
-  private resolveAmbiguity(content: string, matches: LanguageDetector[]): string {
-    // First try to resolve by counting specific patterns
-    const withPatternCounts = matches.map(detector => ({
-      detector,
-      count: detector.countSpecificPatterns(content)
-    }));
-    
-    // Sort by pattern count (descending)
-    withPatternCounts.sort((a, b) => b.count - a.count);
-    
-    // If the highest count is significantly higher than the second highest,
-    // use that language
-    if (withPatternCounts.length > 1 && 
-        withPatternCounts[0].count > withPatternCounts[1].count) {
-      return withPatternCounts[0].detector.id;
+  resolveAmbiguity(content: string, matches: LanguageDetector[]): string {
+    if (matches.length === 0) {
+        // Should not happen if called correctly, but handle defensively
+        return 'plaintext';
     }
-    
-    // If pattern counts don't resolve ambiguity, use priority
+    if (matches.length === 1) {
+        return matches[0].id;
+    }
+
+    // 1. Sort by Priority (descending)
     const sortedByPriority = [...matches].sort((a, b) => b.priority - a.priority);
+
+    const highestPriority = sortedByPriority[0].priority;
+    const topPriorityMatches = sortedByPriority.filter(match => match.priority === highestPriority);
+
+    // 2. If only one detector has the highest priority, use it.
+    if (topPriorityMatches.length === 1) {
+        return topPriorityMatches[0].id;
+    }
+
+    // 3. Tie in Priority: Use scores as a tie-breaker among the top priority matches
+    if (topPriorityMatches.length > 1) {
+        const withPatternCounts = topPriorityMatches.map(detector => ({
+            detector,
+            // Ensure countSpecificPatterns is called only on the tied matches
+            count: detector.countSpecificPatterns(content)
+        }));
+
+        // Sort the tied matches by score (descending)
+        withPatternCounts.sort((a, b) => b.count - a.count);
+
+        // Return the one with the highest score among the priority ties
+        // Optional: Add logic here if scores are *also* tied (e.g., return the first alphabetically?)
+        return withPatternCounts[0].detector.id;
+    }
+
+    // Fallback (should ideally not be reached with the logic above)
+    // If something went wrong, return the absolute highest priority one found initially.
     return sortedByPriority[0].id;
   }
 }

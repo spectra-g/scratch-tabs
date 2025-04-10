@@ -43,25 +43,52 @@ export class JsonLanguageDetector extends BaseLanguageDetector {
 }`;
   }
   
-  /**
-   * Check if content is valid JSON or matches JSON patterns
-   * Works with both complete and partial content
-   */
-  isMatch(content: string): boolean {
-    // First try to parse as JSON if it seems complete
-    // This is the most accurate method but requires complete content
-    if (this.looksLikeCompleteJson(content)) {
-      try {
-        JSON.parse(content);
-        return true;
-      } catch {
-        // If parsing fails, fall back to pattern matching
-      }
-    }
-    
-    // Pattern matching approach for partial content
-    return this.matchesJsonPatterns(content);
+/**
+ * Check if content is valid JSON or matches JSON patterns
+ * Works with both complete and partial content
+ */
+isMatch(content: string): boolean {
+  const trimmed = content.trim();
+  if (!trimmed) return false; // Added empty check
+
+  // Quick check for starting characters - Strong indicator
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+      return false;
   }
+
+  // If it looks complete, try parsing first (most reliable)
+  if (this.looksLikeCompleteJson(trimmed)) {
+      try {
+          JSON.parse(trimmed);
+          return true; // Valid JSON
+      } catch {
+          // Parsing failed, but it might still be partial JSON. Fall through.
+      }
+  }
+
+  // --- NEW: Handle incomplete structures ---
+  // If it starts with { or [ and isn't just the brace/bracket itself,
+  // consider it a potential match, especially if other detectors fail.
+  // This helps keep JSON selected while typing.
+  if ((trimmed.startsWith('{') || trimmed.startsWith('[')) && trimmed.length > 1) {
+       // Check for things that are definitely NOT JSON within the first few lines
+       const lines = content.split('\n').slice(0, 5); // Check first 5 lines
+       const hasYamlIndicators = lines.some(line =>
+          /^\s*-\s+\S/.test(line) || // Starts with `- `
+          /^\s*[a-zA-Z_][a-zA-Z0-9_-]*\s*:/.test(line) // Starts with unquoted key:
+       );
+       if (!hasYamlIndicators) {
+           // It starts like JSON and doesn't immediately contain obvious YAML block features
+           return true; // Assume it's intended JSON for now
+       }
+  }
+  // --- End NEW ---
+
+
+  // Original pattern matching as a fallback (less critical now)
+  return this.matchesJsonPatterns(content); // Keep this for slightly more complex partials
+}
+
   
   /**
    * Check if content looks like it might be complete JSON
