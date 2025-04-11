@@ -62,6 +62,7 @@ interface RootStore {
   canAddNewTab: (toRightSide?: boolean) => boolean;
 
   compareFromClipboard: (originalTabId: string, isRightSide: boolean) => Promise<void>; // Make it async
+  reorderTabs: (side: 'left' | 'right', newOrder: string[]) => void;
 }
 
 // Create the combined store
@@ -302,6 +303,18 @@ export const useRootStore = create<RootStore>((set, get) => {
         }
       }
       // The diff modal opening will be handled by the onClose('compare') in the context menu config
+    },
+
+    reorderTabs: (side, newOrder) => {
+        if (side === 'left') {
+            useSplitViewStore.getState().setSplitView({
+              leftTabs: newOrder
+            });
+        } else {
+            useSplitViewStore.getState().setSplitView({
+              rightTabs: newOrder
+            });
+        }
     },
 
     unsplitScreen: (fromRight) => {

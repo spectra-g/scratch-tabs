@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Tab } from '../../types';
+import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 
 interface TabItemProps {
     tab: Tab;
@@ -15,6 +16,8 @@ interface TabItemProps {
     onEditChange: (value: string) => void;
     onEditSubmit: () => void;
     onEditCancel: () => void;
+    provided: DraggableProvided;
+    snapshot: DraggableStateSnapshot;
 }
 
 export const TabItem: React.FC<TabItemProps> = ({
@@ -30,6 +33,8 @@ export const TabItem: React.FC<TabItemProps> = ({
                                                     onEditChange,
                                                     onEditSubmit,
                                                     onEditCancel,
+                                                    provided,
+                                                    snapshot,
                                                 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -50,17 +55,21 @@ export const TabItem: React.FC<TabItemProps> = ({
     };
 
     const handleCloseClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent tab click
+        e.stopPropagation(); 
         onClose(tab.id, e);
     };
 
     return (
         <div
-            key={tab.id} // Key should ideally be on the element in the map in the parent
+            ref={provided.innerRef} 
+            {...provided.draggableProps} 
+            {...provided.dragHandleProps} 
             className={`tab-item relative flex items-center flex-shrink-0 px-1 py-1 cursor-pointer border-r border-gray-700 text-xs ${
                 isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
-            }`}
-            style={{ /* Add dynamic width styles here if needed based on TabBar's calculation */ }}
+            } ${snapshot.isDragging ? 'bg-blue-500 text-white' : ''}`}
+            style={{
+                ...provided.draggableProps.style,
+            }}
             onClick={() => onClick(tab.id)}
             onContextMenu={(e) => onContextMenu(tab.id, e)}
             onDoubleClick={(e) => onDoubleClick(tab, e)}
