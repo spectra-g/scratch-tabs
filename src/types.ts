@@ -7,6 +7,7 @@ export interface Tab {
   isTablet?: boolean;
   tabletState?: string;
   cursorPosition: EditorPosition;
+  isPinned?: boolean;
 }
 
 export interface EditorPosition {

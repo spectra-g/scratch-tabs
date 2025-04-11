@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Pin } from 'lucide-react';
 import { Tab } from '../../types';
 import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 
@@ -8,7 +8,7 @@ interface TabItemProps {
     isActive: boolean;
     isEditing: boolean;
     editingTitle: string;
-    maxLineCount: number; // For indicator bar calculation
+    maxLineCount: number;
     onClick: (tabId: string) => void;
     onClose: (tabId: string, e: React.MouseEvent) => void;
     onDoubleClick: (tab: Tab, e: React.MouseEvent) => void;
@@ -21,21 +21,21 @@ interface TabItemProps {
 }
 
 export const TabItem: React.FC<TabItemProps> = ({
-                                                    tab,
-                                                    isActive,
-                                                    isEditing,
-                                                    editingTitle,
-                                                    maxLineCount,
-                                                    onClick,
-                                                    onClose,
-                                                    onDoubleClick,
-                                                    onContextMenu,
-                                                    onEditChange,
-                                                    onEditSubmit,
-                                                    onEditCancel,
-                                                    provided,
-                                                    snapshot,
-                                                }) => {
+    tab,
+    isActive,
+    isEditing,
+    editingTitle,
+    maxLineCount,
+    onClick,
+    onClose,
+    onDoubleClick,
+    onContextMenu,
+    onEditChange,
+    onEditSubmit,
+    onEditCancel,
+    provided,
+    snapshot,
+}) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -55,20 +55,23 @@ export const TabItem: React.FC<TabItemProps> = ({
     };
 
     const handleCloseClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         onClose(tab.id, e);
     };
 
     return (
         <div
-            ref={provided.innerRef} 
-            {...provided.draggableProps} 
-            {...provided.dragHandleProps} 
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
             className={`tab-item relative flex items-center flex-shrink-0 px-1 py-1 cursor-pointer border-r border-gray-700 text-xs ${
                 isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
-            } ${snapshot.isDragging ? 'bg-blue-500 text-white' : ''}`}
+            } ${snapshot.isDragging && !tab.isPinned ? 'bg-blue-500 text-white' : ''} ${
+                tab.isPinned ? 'bg-gray-600' : ''
+            }`}
             style={{
                 ...provided.draggableProps.style,
+                cursor: tab.isPinned ? 'default' : 'grab',
             }}
             onClick={() => onClick(tab.id)}
             onContextMenu={(e) => onContextMenu(tab.id, e)}
@@ -87,23 +90,27 @@ export const TabItem: React.FC<TabItemProps> = ({
                     type="text"
                     value={editingTitle}
                     onChange={(e) => onEditChange(e.target.value)}
-                    onBlur={onEditSubmit} // Submit on blur
+                    onBlur={onEditSubmit}
                     onKeyDown={handleKeyDown}
-                    onClick={(e) => e.stopPropagation()} // Prevent tab click while editing
-                    className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs z-10" // Ensure input is clickable
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none w-32 text-xs z-10"
                 />
             ) : (
                 <div className="flex-1 min-w-0 flex items-center">
                     <span className="truncate">{tab.title}</span>
                 </div>
             )}
-            <button
-                className="flex-shrink-0 hover:bg-gray-600 rounded p-0.5 ml-1"
-                onClick={handleCloseClick}
-                aria-label={`Close tab ${tab.title}`}
-            >
-                <X size={12} />
-            </button>
+            {tab.isPinned ? (
+                <Pin size={12} className="flex-shrink-0 ml-1 text-blue-400" />
+            ) : (
+                <button
+                    className="flex-shrink-0 hover:bg-gray-600 rounded p-0.5 ml-1"
+                    onClick={handleCloseClick}
+                    aria-label={`Close tab ${tab.title}`}
+                >
+                    <X size={12} />
+                </button>
+            )}
         </div>
     );
 };

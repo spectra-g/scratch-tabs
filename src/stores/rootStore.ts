@@ -27,6 +27,7 @@ interface RootStore {
   updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
   updateTabTitle: (id: string, title: string) => void;
   updateTabState: (id: string, updates: Partial<Tab>) => void;
+  toggleTabPin: (id: string) => void;
 
   // Editor state
   previewMode: boolean;
@@ -61,11 +62,10 @@ interface RootStore {
   // Tab limit checks
   canAddNewTab: (toRightSide?: boolean) => boolean;
 
-  compareFromClipboard: (originalTabId: string, isRightSide: boolean) => Promise<void>; // Make it async
+  compareFromClipboard: (originalTabId: string, isRightSide: boolean) => Promise<void>;
   reorderTabs: (side: 'left' | 'right', newOrder: string[]) => void;
 }
 
-// Create the combined store
 export const useRootStore = create<RootStore>((set, get) => {
   // Get the individual stores
   const tabsStore = useTabsStore.getState();
@@ -371,6 +371,44 @@ export const useRootStore = create<RootStore>((set, get) => {
       for (const id of tabsToClose) {
         useTabsStore.getState().removeTab(id);
         await storage.deleteTab(id);
+      }
+    },
+
+    toggleTabPin: (id: string) => {
+      const { tabs, splitView } = get();
+      const tab = findTabById(tabs, id);
+      if (!tab) return;
+
+      // Toggle the pin state
+      const isPinned = !tab.isPinned;
+
+      // Update the tab
+      useTabsStore.getState().updateTabState(id, { isPinned });
+
+      // If pinning, move to start of list after other pinned tabs
+      if (isPinned) {
+        const side = splitView.leftTabs.includes(id) ? 'left' : 'right';
+        const currentList = side === 'left' ? splitView.leftTabs : splitView.rightTabs;
+
+        // Find the last pinned tab index
+        const lastPinnedIndex = currentList.findIndex(tabId => {
+          const tab = findTabById(tabs, tabId);
+          return !tab?.isPinned;
+        });
+
+        // Remove the tab from its current position
+        const newList = currentList.filter(tabId => tabId !== id);
+
+        // Insert after the last pinned tab (or at start if no pinned tabs)
+        const insertIndex = lastPinnedIndex === -1 ? 0 : lastPinnedIndex;
+        newList.splice(insertIndex, 0, id);
+
+        // Update the split view
+        if (side === 'left') {
+          useSplitViewStore.getState().setSplitView({ leftTabs: newList });
+        } else {
+          useSplitViewStore.getState().setSplitView({ rightTabs: newList });
+        }
       }
     },
 

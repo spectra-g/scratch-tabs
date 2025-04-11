@@ -125,21 +125,48 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
 
     // --- Drag and Drop Logic ---
     const onDragEnd = (result: DropResult) => {
-        // Dropped outside the list
-        if (!result.destination) {
+        const { source, destination } = result;
+
+        // 1. Basic checks: Dropped outside, no movement.
+        if (!destination || destination.index === source.index) {
             return;
         }
 
-        // Dropped in the same position
-        if (result.destination.index === result.source.index) {
-            return;
+        // 2. Get the actual tab objects involved
+        const sourceIndex = source.index;
+        const destinationIndex = destination.index;
+        const draggedTab = visibleTabs[sourceIndex]; // The tab being dragged
+
+        // 3. Double-check: Should not be possible to drag a pinned tab due to isDragDisabled
+        if (draggedTab.isPinned) {
+             console.warn("Attempted to drag a pinned tab - this shouldn't happen.");
+             return;
         }
 
-        // Reorder the tabs for the current side
+        // 4. *** Pinning Logic: Check if the move crosses a pinned tab ***
+        const startIndex = Math.min(sourceIndex, destinationIndex);
+        const endIndex = Math.max(sourceIndex, destinationIndex);
+
+        for (let i = startIndex; i <= endIndex; i++) {
+            // Check the tab at the potential destination index AND
+            // any tabs between the source and destination.
+            // We don't need to check the source index itself because we know it's not pinned.
+            if (i === sourceIndex) continue;
+
+            const tabAtIndex = visibleTabs[i];
+            if (tabAtIndex && tabAtIndex.isPinned) {
+                // Found a pinned tab in the path of the drag.
+                // This move is invalid because it would change the relative position
+                // of the dragged item with respect to this pinned item.
+                return; // Cancel the reorder operation
+            }
+        }
+
+        // 5. If the loop completes without returning, the move is valid. Proceed with reorder.
         const newTabIds = reorder(
-            tabIds,
-            result.source.index,
-            result.destination.index
+            tabIds, // Use the original ID list
+            sourceIndex,
+            destinationIndex
         );
 
         // Update the store with the new order
@@ -252,7 +279,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                                     className="flex"
                                 >
                                     {visibleTabs.map((tab, index) => (
-                                        <Draggable key={tab.id} draggableId={tab.id} index={index}>
+                                        <Draggable key={tab.id} draggableId={tab.id} index={index} isDragDisabled={tab.isPinned}>
                                             {(provided: DraggableProvided, snapshot) => (
                                                 <TabItem
                                                     tab={tab}
