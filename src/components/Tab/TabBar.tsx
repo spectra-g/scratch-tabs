@@ -43,7 +43,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     const tabBarRef = useRef<HTMLDivElement>(null);
     const tabletButtonRef = useRef<HTMLButtonElement>(null);
     const newTabButtonRef = useRef<HTMLButtonElement>(null);
-    const tabsWrapperRef = useRef<HTMLDivElement>(null); // This will be the Droppable container
+    const tabsWrapperRef = useRef<HTMLDivElement>(null);
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const tabletSelectorTabBarRef = useRef<HTMLDivElement>(null);
 
@@ -264,7 +264,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                 <div
                     ref={tabBarRef}
                     className="flex bg-gray-800 text-gray-300 w-full h-8 overflow-hidden"
-                    key={tabsKey} 
+                    key={tabsKey}
                 >
                     <StrictModeDroppable droppableId={side} direction="horizontal">
                         {(provided: DroppableProvided) => (
@@ -303,7 +303,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                                             )}
                                         </Draggable>
                                     ))}
-                                    {provided.placeholder} 
+                                    {provided.placeholder}
                                 </div>
                             </div>
                         )}
