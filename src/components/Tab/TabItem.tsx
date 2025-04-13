@@ -66,9 +66,7 @@ export const TabItem: React.FC<TabItemProps> = ({
             {...provided.dragHandleProps}
             className={`tab-item relative flex items-center flex-shrink-0 px-1 py-1 cursor-pointer border-r border-gray-700 text-xs ${
                 isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
-            } ${snapshot.isDragging && !tab.isPinned ? 'bg-blue-500 text-white' : ''} ${
-                tab.isPinned ? 'bg-gray-600' : ''
-            }`}
+            } ${snapshot.isDragging && !tab.isPinned ? 'bg-blue-500 text-white' : ''}`}
             style={{
                 ...provided.draggableProps.style,
                 cursor: tab.isPinned ? 'default' : 'grab',
