@@ -18,12 +18,17 @@ export const useJsonMenuConfig = (
     editor: monaco.editor.IStandaloneCodeEditor | null,
     onClose: () => void
 ): MenuItem[] => {
-    const { addTab } = useRootStore();
+    const { addTab, addBackgroundTab } = useRootStore();
 
     // Pass addTab and ensure editor is not null before calling actions
     const handleAddTab = (tab: Tab) => {
         addTab(tab);
         onClose(); // Close menu after adding tab
+    };
+
+    // Pass addBackgroundTab and ensure editor is not null before calling actions
+    const handleAddBackgroundTab = (tab: Tab) => {
+        addBackgroundTab(tab);
     };
 
     const createAction = (actionFn: (editor: monaco.editor.IStandaloneCodeEditor) => void) => {
@@ -48,7 +53,7 @@ export const useJsonMenuConfig = (
     const {
         handleToJava, handleToTypeScript, handleToPython, handleToGo,
         handleToCSharp, handleToCsv, handleToYaml, handleToXml
-    } = useJsonConversions(editor, handleAddTab); // Pass handleAddTab
+    } = useJsonConversions(editor, handleAddBackgroundTab); // Pass handleAddTab
 
     const {
         handleValidateSchema, handleGenerateSchema

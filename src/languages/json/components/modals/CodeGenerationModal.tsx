@@ -39,7 +39,6 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
       languageLocked: true,
       cursorPosition: { lineNumber: 1, column: 1 }
     });
-    onClose();
   };
 
   const activeTab = tabs.find(t => t.id === activeTabId);

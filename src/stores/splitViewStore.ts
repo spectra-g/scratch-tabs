@@ -17,7 +17,7 @@ interface SplitViewStore {
   setActiveLeftTab: (id: string) => void;
   setActiveRightTab: (id: string) => void;
   setSplitRatio: (ratio: number) => void;
-  addTabToSide: (tabId: string, toRightSide: boolean) => void;
+  addTabToSide: (tabId: string, toRightSide: boolean, activeTabId?: string) => void;
   removeTabFromSide: (tabId: string) => void;
   closeTabsToLeft: (tabId: string, isRightSide: boolean) => void;
   closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
@@ -153,13 +153,13 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
     }
   })),
 
-  addTabToSide: (tabId, toRightSide) => set((state) => {
+  addTabToSide: (tabId, toRightSide, activeTabId) => set((state) => {
     if (toRightSide) {
       return {
         splitView: {
           ...state.splitView,
           rightTabs: [...state.splitView.rightTabs, tabId],
-          activeRightTabId: tabId,
+          activeRightTabId: activeTabId || tabId,
           rightTabHistory: updateTabHistory(state.splitView.rightTabHistory, tabId),
         }
       };
@@ -168,7 +168,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
         splitView: {
           ...state.splitView,
           leftTabs: [...state.splitView.leftTabs, tabId],
-          activeLeftTabId: tabId,
+          activeLeftTabId: activeTabId || tabId,
           leftTabHistory: updateTabHistory(state.splitView.leftTabHistory, tabId),
         }
       };

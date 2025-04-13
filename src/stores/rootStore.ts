@@ -19,6 +19,7 @@ interface RootStore {
   tabs: Tab[];
   activeTabId: string | null;
   addTab: (tab: Tab, toRightSide?: boolean) => void;
+  addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
   handleNewTab: (isRightSide: boolean, content?: string) => void;
   handleNewTabFromPaste: (isRightSide: boolean) => void;
   removeTab: (id: string) => void;
@@ -131,6 +132,16 @@ export const useRootStore = create<RootStore>((set, get) => {
 
       // Add the tab to the appropriate side in split view
       useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
+    },
+
+    addBackgroundTab: (tab, toRightSide = false) => {
+      const { activeTabId } = get();
+
+      // Add the tab to the tabs store
+      useTabsStore.getState().addBackgroundTab(tab);
+
+      // Add the tab to the appropriate side in split view
+      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide, activeTabId ?? undefined);
     },
 
     handleNewTab: (isRightSide: boolean, content?: string) => {
