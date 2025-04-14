@@ -33,8 +33,42 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
         // Update stores with loaded data
         if (tabs.length > 0) {
           window.dispatchEvent(new CustomEvent('loadPersistedTabs', { detail: tabs }));
+
+          if (splitView) {
+            const rightTabIds = splitView.rightTabs || [];
+            const leftTabIds = splitView.leftTabs || [];
+
+            // Set activeLeftTabId if missing
+            if (!splitView.activeLeftTabId) {
+              const firstLeftTab = tabs.find(tab => !rightTabIds.includes(tab.id));
+              if (firstLeftTab) {
+                splitView.activeLeftTabId = firstLeftTab.id;
+              }
+            }
+
+            // Ensure leftTabs array is initialized
+            if (!splitView.leftTabs) {
+              splitView.leftTabs = [];
+            }
+
+            // Add tabs that are not in either leftTabs or rightTabs to leftTabs
+            const allExistingTabIds = new Set([...leftTabIds, ...rightTabIds]);
+            tabs.forEach(tab => {
+              if (!allExistingTabIds.has(tab.id)) {
+                splitView.leftTabs.push(tab.id);
+              }
+            });
+
+            // Set activeRightTabId if missing
+            if (!splitView.activeRightTabId && rightTabIds.length > 0) {
+              const validRightTab = tabs.find(tab => tab.id === rightTabIds[0]);
+              if (validRightTab) {
+                splitView.activeRightTabId = validRightTab.id;
+              }
+            }
+          }
         }
-        
+
         if (splitView) {
           window.dispatchEvent(new CustomEvent('loadPersistedSplitView', { detail: splitView }));
         }

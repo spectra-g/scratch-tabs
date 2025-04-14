@@ -8,6 +8,7 @@ interface TabsStore {
   
   // Tab management
   addTab: (tab: Tab) => void;
+  addBackgroundTab: (tab: Tab) => void;
   removeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   updateTabContent: (id: string, content: string) => void;
@@ -37,6 +38,13 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     };
   }),
   
+  addBackgroundTab: (tab) => set((state) => {
+    const newTab = { ...tab, languageLocked: tab.languageLocked ?? false, cursorPosition: { lineNumber: 1, column: 1 } };
+    return {
+      tabs: [...state.tabs, newTab],
+    };
+  }),
+
   removeTab: (id) => set((state) => {
     const newTabs = state.tabs.filter((tab) => tab.id !== id);
     
