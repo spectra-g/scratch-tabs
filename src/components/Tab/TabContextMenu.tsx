@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useContextMenuConfig } from './UseContextMenuConfig';
 import { ContextMenuItem } from './ContextMenuItem';
+import { DownloadModal } from './DownloadModal';
 
 interface TabContextMenuProps {
     tabId: string;
@@ -12,25 +13,54 @@ interface TabContextMenuProps {
 
 export const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClose, isRightSide }) => {
     const menuRef = useRef<HTMLDivElement>(null);
-    useClickOutside(menuRef, () => onClose());
-    const menuConfig = useContextMenuConfig(tabId, isRightSide, onClose);
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const modalRef = useRef<HTMLDivElement>(null);
+    // Close the context menu when clicking outside
+    useClickOutside(menuRef, () => {
+        if (!showDownloadModal) { // Don't close if the modal is open (modal handles its own close)
+           onClose();
+        }
+    });
+
+    const handleOpenModal = () => {
+        setShowDownloadModal(true);
+    };
+
+    // --- Pass a function to trigger the modal state ---
+    const handleCloseModal = () => {
+        setShowDownloadModal(false);
+        onClose();
+    };
+
+    // --- Pass the trigger function to the hook ---
+    const menuConfig = useContextMenuConfig(
+        tabId,
+        isRightSide,
+        onClose,
+        handleOpenModal
+    );
 
     return (
-        <div
-            ref={menuRef}
-            className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg z-50 py-1"
-            style={{ top: `${position.y}px`, left: `${position.x}px`, minWidth: "200px" }}
-            // Prevent context menu trigger inside the menu itself
-            onContextMenu={(e) => e.preventDefault()}
-        >
-            {menuConfig.map((item) => {
-                if (item.isSeparator) {
-                    return <div key={item.id} className="border-t border-gray-600 my-1 mx-1"></div>; // Added mx-1 for slight indent
-                }
+        <>
+            <div
+                ref={menuRef}
+                className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg z-50 py-1"
+                style={{ top: `${position.y}px`, left: `${position.x}px`, minWidth: "200px" }}
+                onContextMenu={(e) => e.preventDefault()}
+            >
+                {menuConfig.map((item) => {
+                    if (item.isSeparator) {
+                        return <div key={item.id} className="border-t border-gray-600 my-1 mx-1"></div>;
+                    }
+                    return <ContextMenuItem key={item.id} item={item} />;
+                })}
+            </div>
 
-                // Delegate rendering and submenu logic to the specialized component
-                return <ContextMenuItem key={item.id} item={item} />;
-            })}
-        </div>
+            {showDownloadModal && (
+                <DownloadModal
+                    onClose={handleCloseModal}
+                />
+            )}
+        </>
     );
 };

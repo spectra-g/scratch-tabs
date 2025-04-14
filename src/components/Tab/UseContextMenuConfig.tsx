@@ -1,13 +1,18 @@
 import { useRootStore } from "../../stores";
 import {
   ChevronLeft, ChevronLeftSquare, ChevronRight, ChevronRightSquare, Copy, FileCode, GitCompare,
-  Layers, Maximize, Split, XCircle, ClipboardPaste, Pin
-} from "lucide-react";
+  Layers, Maximize, Split, XCircle, ClipboardPaste, Pin, Download
+} from 'lucide-react';
 import { LanguageSelector } from "./LanguageSelector";
-import { languageRegistry } from "../../languages";
+import { languageRegistry } from '../../languages';
 import { MenuItem } from './types';
 
-export const useContextMenuConfig = (tabId: string, isRightSide: boolean, onClose: (action?: 'compare') => void): MenuItem[] => {
+export const useContextMenuConfig = (
+    tabId: string,
+    isRightSide: boolean,
+    onClose: (action?: 'compare') => void,
+    handleOpenModal: () => void
+    ): MenuItem[] => {
   const store = useRootStore();
   const tab = store.tabs.find(t => t.id === tabId);
 
@@ -27,6 +32,7 @@ export const useContextMenuConfig = (tabId: string, isRightSide: boolean, onClos
   const canCloseAllExcept = currentTabList.length > 1;
   const canCompareFromClipboard = !!tab && !tab.isTablet;
   const isPinned = tab?.isPinned || false;
+  const canDownload = !!tab && !tab.isTablet;
   const canGroupTypes = (() => {
     if (currentTabList.length < 3) return false;
     const tabLanguages = currentTabList.map(id => {
@@ -74,6 +80,29 @@ export const useContextMenuConfig = (tabId: string, isRightSide: boolean, onClos
   const handleCompareFromClipboard = async () => {
     await store.compareFromClipboard(tabId, isRightSide);
     onClose('compare');
+  };
+
+  const handleDownload = () => {
+    if (!tab || tab.isTablet) return;
+
+    const detector = languageRegistry.getById(tab.language);
+    const extension = detector?.getFileExtension() || 'txt';
+
+    const blob = new Blob([tab.content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${tab.title}.${extension}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    onClose();
+  };
+
+  // --- Update handleDownloadAll to use the callback ---
+  const handleDownloadAll = () => {
+    handleOpenModal();
   };
 
   const menuItems: MenuItem[] = [
@@ -147,7 +176,22 @@ export const useContextMenuConfig = (tabId: string, isRightSide: boolean, onClos
       action: () => handleSimpleAction(store.unsplitScreen, isRightSide),
       condition: canUnsplit,
     },
-    {id: 'sep2', isSeparator: true, condition: canCloseToLeft || canCloseToRight || canCloseAllExcept},
+    {id: 'sep2', isSeparator: true, condition: canDownload},
+    {
+      id: 'download',
+      label: 'Download',
+      icon: Download,
+      action: handleDownload,
+      condition: canDownload,
+    },
+    {
+      id: 'downloadAll',
+      label: 'Download All...',
+      icon: Download,
+      action: handleDownloadAll,
+      condition: canDownload,
+    },
+    {id: 'sep3', isSeparator: true, condition: canCloseToLeft || canCloseToRight || canCloseAllExcept},
     {
       id: 'pin',
       label: isPinned ? 'Unpin Tab' : 'Pin Tab',
