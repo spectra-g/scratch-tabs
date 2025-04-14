@@ -70,6 +70,25 @@ export abstract class BaseLanguageDetector implements LanguageDetector {
   getOptionsMenu?(): React.FC<any> {
     return () => null;
   }
-}
 
-//export { BaseLanguageDetector }
+  /**
+   * Get the file extension for this language
+   * Default implementation returns the first extension or 'txt'
+   */
+  getFileExtension(): string {
+    // Special cases for common languages
+    switch (this.id) {
+      case 'plaintext':
+        return 'txt';
+      case 'javascript':
+        return 'js';
+      case 'typescript':
+        return 'ts';
+      case 'markdown':
+        return 'md';
+      default:
+        // Use the first defined extension or fallback to the language ID
+        return this.extensions[0] || this.id;
+    }
+  }
+}

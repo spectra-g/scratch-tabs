@@ -56,6 +56,8 @@ export interface LanguageDetector {
    * Get options menu component for this language (optional)
    */
   getOptionsMenu?: () => React.FC<{ editor: monaco.editor.IStandaloneCodeEditor }>;
+
+  getFileExtension: () => string;
 }
 
 /**

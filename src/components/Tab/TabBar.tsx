@@ -36,6 +36,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     const [editingTabId, setEditingTabId] = useState<string | null>(null);
     const [editingTitle, setEditingTitle] = useState('');
     const [contextMenu, setContextMenu] = useState<{ tabId: string; x: number; y: number } | null>(null);
+    const [isTabWidthsAdjusting, setIsTabWidthsAdjusting] = useState(false);
     const [showTabletSelector, setShowTabletSelector] = useState(false);
     const [tabletSelectorPosition, setTabletSelectorPosition] = useState({x: 0, y: 0});
 
@@ -82,15 +83,37 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     }, [showTabletSelector]);
 
     useEffect(() => {
-        const updateTabWidths = () => {
+
+        updateTabWidths();
+        window.addEventListener('resize', updateTabWidths);
+
+        return () => window.removeEventListener('resize', updateTabWidths);
+    }, [visibleTabs.length, splitView.splitRatio]);
+
+    useEffect(() => {
+        setIsTabWidthsAdjusting(false);
+    }, [tabs.length]);
+
+    useEffect(() => {
+        if (editingTabId && inputRef.current) {
+            inputRef.current.focus();
+            inputRef.current.select();
+        }
+    }, [editingTabId]);
+
+    const updateTabWidths = () => {
+        setTimeout(() => { // Add a small delay for testing
             if (!newTabButtonRef.current) return;
             if (!tabsWrapperRef.current) return;
-            if (newTabButtonRef.current.getBoundingClientRect().left > tabsWrapperRef.current.getBoundingClientRect().right) return;
 
+            if (newTabButtonRef.current.getBoundingClientRect().left > tabsWrapperRef.current.getBoundingClientRect().right && !isTabWidthsAdjusting) return;
             if (!tabsContainerRef.current) return;
+
+            setIsTabWidthsAdjusting(true);
 
             const container = tabsContainerRef.current;
             const containerWidth = container.offsetWidth;
+
             const numTabs = visibleTabs.length;
 
             const actionButtonsWidth = 0;
@@ -108,20 +131,8 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                 (tab as HTMLElement).style.minWidth = `${minTabWidth}px`;
                 (tab as HTMLElement).style.maxWidth = `${tabWidth}px`;
             });
-        };
-
-        updateTabWidths();
-        window.addEventListener('resize', updateTabWidths);
-
-        return () => window.removeEventListener('resize', updateTabWidths);
-    }, [visibleTabs.length]);
-
-    useEffect(() => {
-        if (editingTabId && inputRef.current) {
-            inputRef.current.focus();
-            inputRef.current.select();
-        }
-    }, [editingTabId]);
+        }, 0);
+    };
 
     // --- Drag and Drop Logic ---
     const onDragEnd = (result: DropResult) => {
@@ -171,6 +182,8 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
 
         // Update the store with the new order
         reorderTabs(side, newTabIds);
+
+        updateTabWidths();
     };
 
     const handleDoubleClick = (tab: { id: string; title: string }, e: React.MouseEvent) => {
@@ -260,76 +273,78 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
 
     return (
         <>
-            <DragDropContext onDragEnd={onDragEnd}>
+            <div
+                ref={tabBarRef}
+                className="flex bg-gray-800 text-gray-300 w-full h-8 overflow-hidden"
+                key={tabsKey}
+            >
                 <div
-                    ref={tabBarRef}
-                    className="flex bg-gray-800 text-gray-300 w-full h-8 overflow-hidden"
-                    key={tabsKey}
+                    ref={tabsContainerRef}
+                    className="flex-1 flex min-w-0 overflow-hidden"
+                    onDoubleClick={handleEmptyAreaDoubleClick}
                 >
-                    <StrictModeDroppable droppableId={side} direction="horizontal">
-                        {(provided: DroppableProvided) => (
-                            <div
-                                ref={tabsContainerRef}
-                                className="flex-1 flex min-w-0 overflow-hidden"
-                                onDoubleClick={handleEmptyAreaDoubleClick}
-                            >
-                                <div
-                                    ref={provided.innerRef} // Attach RBD's ref
-                                    {...provided.droppableProps} // Spread RBD's props
-                                    className="flex"
-                                >
-                                    {visibleTabs.map((tab, index) => (
-                                        <Draggable key={tab.id} draggableId={tab.id} index={index} isDragDisabled={tab.isPinned}>
-                                            {(provided: DraggableProvided, snapshot) => (
-                                                <TabItem
-                                                    tab={tab}
-                                                    isActive={activeSideTabId === tab.id}
-                                                    isEditing={editingTabId === tab.id}
-                                                    editingTitle={editingTitle}
-                                                    maxLineCount={maxLineCount}
-                                                    onClick={handleTabClick}
-                                                    onClose={(tabId, e) => {
-                                                        removeTab(tabId);
-                                                    }}
-                                                    onDoubleClick={handleDoubleClick}
-                                                    onContextMenu={(tabId, e) => handleContextMenu(e, tabId)}
-                                                    onEditChange={setEditingTitle}
-                                                    onEditSubmit={handleInputBlur}
-                                                    onEditCancel={() => setEditingTabId(null)}
-                                                    // Pass RBD props to TabItem
-                                                    provided={provided}
-                                                    snapshot={snapshot}
-                                                />
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-
-                    <TabActions
-                        side={side}
-                        onShowTabletSelector={() => {
-                            if (tabletButtonRef.current) {
-                                if (showTabletSelector) {
-                                    setShowTabletSelector(false);
-                                } else {
-                                    const rect = tabletButtonRef.current.getBoundingClientRect();
-                                    setTabletSelectorPosition({
-                                        x: rect.left,
-                                        y: rect.bottom + 4
-                                    });
-                                    setShowTabletSelector(true);
-                                }
-                            }
-                        }}
-                        newTabButtonRef={newTabButtonRef}
-                        tabletButtonRef={tabletButtonRef}
-                    />
+                    <div ref={tabsWrapperRef} className="flex">
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <StrictModeDroppable droppableId={side} direction="horizontal">
+                                {(provided: DroppableProvided) => (
+                                        <div
+                                            ref={provided.innerRef} // Attach RBD's ref
+                                            {...provided.droppableProps} // Spread RBD's props
+                                            className="flex"
+                                        >
+                                            {visibleTabs.map((tab, index) => (
+                                                <Draggable key={tab.id} draggableId={tab.id} index={index} isDragDisabled={tab.isPinned}>
+                                                    {(provided: DraggableProvided, snapshot) => (
+                                                        <TabItem
+                                                            tab={tab}
+                                                            isActive={activeSideTabId === tab.id}
+                                                            isEditing={editingTabId === tab.id}
+                                                            editingTitle={editingTitle}
+                                                            maxLineCount={maxLineCount}
+                                                            onClick={handleTabClick}
+                                                            onClose={(tabId, e) => {
+                                                                removeTab(tabId);
+                                                            }}
+                                                            onDoubleClick={handleDoubleClick}
+                                                            onContextMenu={(tabId, e) => handleContextMenu(e, tabId)}
+                                                            onEditChange={setEditingTitle}
+                                                            onEditSubmit={handleInputBlur}
+                                                            onEditCancel={() => setEditingTabId(null)}
+                                                            // Pass RBD props to TabItem
+                                                            provided={provided}
+                                                            snapshot={snapshot}
+                                                        />
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </div>
+                                )}
+                            </StrictModeDroppable>
+                        </DragDropContext>
+                    </div>
                 </div>
-            </DragDropContext>
+
+                <TabActions
+                    side={side}
+                    onShowTabletSelector={() => {
+                        if (tabletButtonRef.current) {
+                            if (showTabletSelector) {
+                                setShowTabletSelector(false);
+                            } else {
+                                const rect = tabletButtonRef.current.getBoundingClientRect();
+                                setTabletSelectorPosition({
+                                    x: rect.left,
+                                    y: rect.bottom + 4
+                                });
+                                setShowTabletSelector(true);
+                            }
+                        }
+                    }}
+                    newTabButtonRef={newTabButtonRef}
+                    tabletButtonRef={tabletButtonRef}
+                />
+            </div>
 
             {showTabletSelector && (
                 <div
