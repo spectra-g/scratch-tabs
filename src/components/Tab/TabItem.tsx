@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { X, Pin } from 'lucide-react';
 import { Tab } from '../../types';
 import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
+import { languageRegistry } from '../../languages';
 
 interface TabItemProps {
     tab: Tab;
@@ -18,6 +19,8 @@ interface TabItemProps {
     onEditCancel: () => void;
     provided: DraggableProvided;
     snapshot: DraggableStateSnapshot;
+    onMouseEnterTab: (tab: Tab, element: HTMLElement) => void;
+    onMouseLeaveTab: (tabId: string) => void;
 }
 
 export const TabItem: React.FC<TabItemProps> = ({
@@ -35,8 +38,11 @@ export const TabItem: React.FC<TabItemProps> = ({
     onEditCancel,
     provided,
     snapshot,
+    onMouseEnterTab,
+    onMouseLeaveTab,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
+    const tabRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (isEditing && inputRef.current) {
@@ -59,9 +65,22 @@ export const TabItem: React.FC<TabItemProps> = ({
         onClose(tab.id, e);
     };
 
+    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isEditing && tabRef.current) {
+            onMouseEnterTab(tab, tabRef.current);
+        }
+    };
+
+    const handleMouseLeave = () => {
+        onMouseLeaveTab(tab.id);
+    };
+
     return (
         <div
-            ref={provided.innerRef}
+            ref={(el) => {
+                provided.innerRef(el);
+                tabRef.current = el;
+            }}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
             className={`tab-item relative flex items-center flex-shrink-0 px-1 py-1 cursor-pointer border-r border-gray-700 text-xs ${
@@ -74,6 +93,8 @@ export const TabItem: React.FC<TabItemProps> = ({
             onClick={() => onClick(tab.id)}
             onContextMenu={(e) => onContextMenu(tab.id, e)}
             onDoubleClick={(e) => onDoubleClick(tab, e)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
             {/* Line count indicator bar */}
             {!tab.isTablet && (
