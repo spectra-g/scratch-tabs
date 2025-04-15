@@ -1,56 +1,88 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Tablet, TabletState } from '../types';
-import { Calculator, Delete, RotateCw } from 'lucide-react';
+import { Calculator, History, StickyNote, Delete, Percent, Divide, X as MultiplyIcon, Minus, Plus, Equal, Dot } from 'lucide-react';
+import { format } from 'mathjs'; // Import mathjs
+
+// --- State Interface ---
+interface CalculatorData {
+    display: string;        // What the user sees
+    currentOperand: string | null; // The number currently being entered or result
+    previousOperand: string | null; // The operand before the operator
+    operation: string | null;     // The pending operation (+, -, *, /)
+    overwrite: boolean;     // Should next number overwrite display (after equals/op)?
+    history: string[];
+    notes: string;
+    lastOperationForRepeat: string | null;
+    lastOperandForRepeat: string | null;
+}
 
 interface CalculatorTabletState extends TabletState {
     type: 'calculator';
-    data: {
-        display: string;
-        history: string[];
-        notes: string;
-        lastOperation: {
-            operator: string;
-            operand: string;
-        } | null;
-    };
+    data: CalculatorData;
 }
 
+// --- Button Component (Refined Styling) ---
 const CalculatorButton: React.FC<{
-    value: string;
+    value: string | React.ReactNode;
     onClick: () => void;
-    variant?: 'default' | 'operator' | 'action';
-    size?: 'normal' | 'wide';
-}> = ({ value, onClick, variant = 'default', size = 'normal' }) => (
-    <button
-        onClick={onClick}
-        className={`
-      ${size === 'wide' ? 'col-span-2' : ''}
-      ${variant === 'operator'
-            ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/50'
-            : variant === 'action'
-                ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/50'
-                : 'bg-gray-800/50 hover:bg-gray-700/50 text-gray-200 border-gray-700/50'}
-      border rounded-lg p-4 text-xl font-medium transition-colors
-      active:scale-95 transform duration-100
-    `}
-    >
-        {value}
-    </button>
-);
+    variant?: 'default' | 'operator' | 'action' | 'equals';
+    className?: string; // Allow additional classes
+    ariaLabel?: string;
+}> = ({ value, onClick, variant = 'default', className = '', ariaLabel }) => {
+    const baseStyle = `
+      border rounded-lg p-3 text-lg font-medium transition-all duration-100 ease-in-out
+      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900
+      active:scale-95 active:brightness-90 transform
+    `;
 
+    let variantStyle = '';
+    switch (variant) {
+        case 'operator':
+            variantStyle = 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/50 focus:ring-blue-500';
+            break;
+        case 'action':
+            // Make action buttons slightly less prominent than operators maybe
+            variantStyle = 'bg-gray-600/60 hover:bg-gray-500/60 text-gray-200 border-gray-600/50 focus:ring-gray-400';
+            break;
+        case 'equals':
+             // Standard size now, but distinct color
+            variantStyle = 'bg-green-500/30 hover:bg-green-500/40 text-green-300 border-green-500/50 focus:ring-green-500';
+            break;
+        default: // 'default'
+            variantStyle = 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-100 border-gray-600/50 focus:ring-gray-500';
+            break;
+    }
+     return (
+        <button
+            onClick={onClick}
+            className={`${baseStyle} ${variantStyle} ${className}`}
+            aria-label={ariaLabel || (typeof value === 'string' ? value : undefined)}
+        >
+            {value}
+        </button>
+    );
+};
+
+
+// --- Main Tablet Logic ---
 export const CalculatorTablet: Tablet = {
     id: 'calculator',
     label: 'Calculator',
-    keywords: ['calculator', 'math', 'compute'],
+    keywords: ['calculator', 'math', 'compute', 'numbers'],
 
     createInitialState(): CalculatorTabletState {
         return {
             type: 'calculator',
             data: {
                 display: '0',
+                currentOperand: '0',
+                previousOperand: null,
+                operation: null,
+                overwrite: false,
                 history: [],
                 notes: '',
-                lastOperation: null
+                lastOperationForRepeat: null,
+                lastOperandForRepeat: null,
             },
         };
     },
@@ -60,202 +92,324 @@ export const CalculatorTablet: Tablet = {
     },
 
     deserializeState(json: string): TabletState {
-        return JSON.parse(json);
+        try {
+            const parsed = JSON.parse(json);
+            // Add basic validation/migration if needed in the future
+            if (parsed.type === 'calculator' && parsed.data) {
+                 parsed.data.lastOperationForRepeat = parsed.data.lastOperationForRepeat || null;
+                 parsed.data.lastOperandForRepeat = parsed.data.lastOperandForRepeat || null;
+                 return parsed;
+            }
+        } catch (e) {
+            console.error("Failed to deserialize calculator state:", e);
+        }
+        // Return default state on error
+        return CalculatorTablet.createInitialState();
     },
 
     render(state: CalculatorTabletState, onChange) {
-        const updateDisplay = (newDisplay: string) => {
-            onChange({
-                ...state,
-                data: { ...state.data, display: newDisplay }
+        const { data } = state;
+
+        // Helper to update state immutably
+        const updateData = (newData: Partial<CalculatorData>) => {
+            onChange({ ...state, data: { ...data, ...newData } });
+        };
+
+        // --- Clear Repeat State Helper ---
+        const clearRepeatState = (): Partial<CalculatorData> => ({
+            lastOperationForRepeat: null,
+            lastOperandForRepeat: null,
+        });
+
+        // --- Calculation Logic (Modified for Repeat) ---
+        const performCalculation = useCallback((
+            op: string | null,
+            prev: string | null,
+            curr: string | null
+        ): string | null => {
+            if (op && prev && curr) {
+                try {
+                    const prevNum = parseFloat(prev);
+                    const currNum = parseFloat(curr);
+                    let result: number;
+
+                    switch (op) {
+                        case '+': result = prevNum + currNum; break;
+                        case '-': result = prevNum - currNum; break;
+                        case '*': result = prevNum * currNum; break;
+                        case '/':
+                            if (currNum === 0) throw new Error("Division by zero");
+                            result = prevNum / currNum;
+                            break;
+                        default: throw new Error("Invalid operation");
+                    }
+                    return format(result, { precision: 14 });
+                } catch (error: any) {
+                    console.error("Calculation Error:", error);
+                    return "Error";
+                }
+            }
+            return curr; // Return current if no calculation needed/possible
+        }, []);
+
+
+        // --- Event Handlers ---
+        const handleNumber = (num: string) => {
+            let newCurrentOperand: string;
+            const clearRepeat = clearRepeatState(); // Clear repeat state on new number input
+
+            if (data.overwrite || data.currentOperand === '0' || data.currentOperand === null) {
+                newCurrentOperand = num;
+            } else {
+                // Prevent excessively long numbers (optional)
+                if (data.currentOperand.length >= 16) return;
+                newCurrentOperand = data.currentOperand + num;
+            }
+            updateData({
+                currentOperand: newCurrentOperand,
+                display: newCurrentOperand,
+                overwrite: false,
+                ...clearRepeat // Apply cleared repeat state
             });
         };
 
-        const handleNumber = (num: string) => {
-            const display = state.data.display;
-            if (display === '0') {
-                updateDisplay(num);
-            } else {
-                updateDisplay(display + num);
+        const handleDecimal = () => {
+            const clearRepeat = clearRepeatState();
+            if (data.overwrite) {
+                updateData({ currentOperand: '0.', display: '0.', overwrite: false, ...clearRepeat });
+                return;
+            }
+            if (data.currentOperand && !data.currentOperand.includes('.')) {
+                const newCurrentOperand = data.currentOperand + '.';
+                updateData({ currentOperand: newCurrentOperand, display: newCurrentOperand, ...clearRepeat });
             }
         };
 
         const handleOperator = (op: string) => {
-            const display = state.data.display;
-            const lastChar = display[display.length - 1];
+            if (data.currentOperand === null && data.previousOperand === null) return;
 
-            if (['+', '-', '*', '/', '.'].includes(lastChar)) {
-                updateDisplay(display.slice(0, -1) + op);
-            } else {
-                updateDisplay(display + op);
-            }
-        };
+            const clearRepeat = clearRepeatState();
+            let result = data.currentOperand; // Default to current operand if no calc happens
 
-        const handleDecimal = () => {
-            const display = state.data.display;
-            const parts = display.split(/[-+*/]/);
-            const lastNumber = parts[parts.length - 1];
-
-            if (!lastNumber.includes('.')) {
-                updateDisplay(display + '.');
-            }
-        };
-
-        const handleDelete = () => {
-            const display = state.data.display;
-            if (display.length === 1) {
-                updateDisplay('0');
-            } else {
-                updateDisplay(display.slice(0, -1));
-            }
-        };
-
-        const handleClear = () => {
-            onChange({
-                ...state,
-                data: {
-                    ...state.data,
-                    display: '0',
-                    lastOperation: null
+            // If there's already a previous operand and operation, calculate first
+            // Only calculate if overwrite is false (meaning user typed a new number after last op)
+            if (data.previousOperand !== null && data.operation !== null && !data.overwrite) {
+                 result = performCalculation(data.operation, data.previousOperand, data.currentOperand);
+                if (result === "Error") {
+                    updateData({ display: "Error", currentOperand: null, previousOperand: null, operation: null, overwrite: true, ...clearRepeat });
+                    return;
                 }
+            } else if (data.previousOperand !== null && data.operation !== null && data.overwrite) {
+                 // If user presses another operator immediately after one, just update the operator
+                 updateData({ operation: op, ...clearRepeat });
+                 return;
+            } else {
+                 // Use the current display value if no calculation happened yet
+                 result = data.currentOperand ?? data.previousOperand;
+            }
+
+
+            updateData({
+                previousOperand: result, // Result or current value becomes previous
+                currentOperand: null, // Ready for next operand
+                operation: op,
+                display: result ?? '0', // Show result or the number being operated on
+                overwrite: true, // Next number should overwrite
+                ...clearRepeat,
             });
         };
 
         const handleEquals = () => {
-            try {
-                const display = state.data.display;
-                // Replace × with * and ÷ with /
-                const expression = display.replace(/×/g, '*').replace(/÷/g, '/');
+            let result: string | null = null;
+            let historyEntry: string | null = null;
+            let nextStateUpdate: Partial<CalculatorData> = {};
 
-                let result: number;
-                let historyEntry: string;
+            // --- Scenario 1: Standard Calculation ---
+            if (data.operation && data.previousOperand && data.currentOperand) {
+                result = performCalculation(data.operation, data.previousOperand, data.currentOperand);
+                historyEntry = `${data.previousOperand} ${data.operation} ${data.currentOperand} = ${result}`;
 
-                if (state.data.lastOperation && !expression.includes('+') &&
-                    !expression.includes('-') && !expression.includes('*') &&
-                    !expression.includes('/')) {
-                    // If we have a last operation and current display is just a number,
-                    // apply the last operation
-                    const { operator, operand } = state.data.lastOperation;
-                    const newExpression = `${expression}${operator}${operand}`;
-                    result = new Function('return ' + newExpression)();
-                    historyEntry = `${expression}${operator}${operand} = ${result}`;
+                if (result !== "Error") {
+                    nextStateUpdate = {
+                        // Store for potential repeat
+                        lastOperationForRepeat: data.operation,
+                        lastOperandForRepeat: data.currentOperand,
+                    };
                 } else {
-                    // Normal calculation
-                    result = new Function('return ' + expression)();
-                    historyEntry = `${display} = ${result}`;
-
-                    // Store last operation if this was a binary operation
-                    const match = expression.match(/([0-9.]+)\s*([-+*/])\s*([0-9.]+)$/);
-                    if (match) {
-                        const [, , operator, operand] = match;
-                        onChange({
-                            ...state,
-                            data: {
-                                ...state.data,
-                                display: result.toString(),
-                                history: [...state.data.history, historyEntry].slice(-10),
-                                lastOperation: { operator, operand }
-                            }
-                        });
-                        return;
-                    }
+                     nextStateUpdate = clearRepeatState(); // Clear repeat state on error
                 }
 
-                const formatted = Number.isInteger(result)
-                    ? result.toString()
-                    : result.toFixed(8).replace(/\.?0+$/, '');
+                nextStateUpdate = {
+                    ...nextStateUpdate,
+                    display: result ?? '0',
+                    currentOperand: result,
+                    previousOperand: null,
+                    operation: null,
+                    overwrite: true,
+                };
 
-                onChange({
-                    ...state,
-                    data: {
-                        ...state.data,
-                        display: formatted,
-                        history: [...state.data.history, historyEntry].slice(-10)
-                    }
-                });
-            } catch (e) {
-                updateDisplay('Error');
-                setTimeout(() => updateDisplay('0'), 1000);
+            // --- Scenario 2: Repeat Last Operation ---
+            } else if (data.lastOperationForRepeat && data.lastOperandForRepeat && data.currentOperand && !data.operation) {
+                // Use current display (which is the previous result) as the new previousOperand
+                const prev = data.currentOperand;
+                const curr = data.lastOperandForRepeat;
+                const op = data.lastOperationForRepeat;
+
+                result = performCalculation(op, prev, curr);
+                historyEntry = `${prev} ${op} ${curr} = ${result}`;
+
+                 // Don't clear repeat state here, keep it for subsequent presses
+                 if (result === "Error") {
+                     nextStateUpdate = clearRepeatState(); // Clear repeat state on error
+                 }
+
+                nextStateUpdate = {
+                    ...nextStateUpdate, // Keep existing repeat state if no error
+                    display: result ?? '0',
+                    currentOperand: result,
+                    previousOperand: null, // Keep previous null
+                    operation: null, // Keep operation null
+                    overwrite: true,
+                };
+
+            // --- Scenario 3: Nothing to do (e.g., pressing = on '0') ---
+            } else {
+                return; // Or maybe clear repeat state? updateData(clearRepeatState());
+            }
+
+            // --- Update State ---
+            if (historyEntry) {
+                 nextStateUpdate.history = [...data.history, historyEntry].slice(-20);
+            }
+            updateData(nextStateUpdate);
+        };
+
+        const handleAllClear = () => {
+            updateData({
+                display: '0',
+                currentOperand: '0',
+                previousOperand: null,
+                operation: null,
+                overwrite: false,
+                ...clearRepeatState(), // Also clear repeat state
+            });
+        };
+
+        const handleBackspace = () => {
+            if (data.overwrite || data.currentOperand === null || data.currentOperand === '0') return;
+
+            const clearRepeat = clearRepeatState();
+            let newCurrentOperand: string;
+
+            if (data.currentOperand.length === 1) {
+                newCurrentOperand = '0';
+            } else {
+                newCurrentOperand = data.currentOperand.slice(0, -1);
+            }
+            updateData({ currentOperand: newCurrentOperand, display: newCurrentOperand, ...clearRepeat });
+        };
+
+        const handlePercent = () => {
+            if (data.currentOperand) {
+                try {
+                    const value = parseFloat(data.currentOperand);
+                    const result = value / 100;
+                    const formattedResult = format(result, { precision: 14 });
+                    updateData({
+                        currentOperand: formattedResult,
+                        display: formattedResult,
+                        overwrite: true,
+                        ...clearRepeatState()
+                    });
+                } catch {
+                    updateData({ display: "Error", currentOperand: null, overwrite: true, ...clearRepeatState() });
+                }
             }
         };
 
+        // --- Dynamic Font Size for Display ---
+        const getDisplayFontSize = (text: string): string => {
+            const length = text?.length || 1;
+            if (length > 24) return 'text-lg'; // Smallest
+            if (length > 18) return 'text-xl';
+            if (length > 12) return 'text-2xl';
+            return 'text-3xl'; // Default largest
+        };
+
         return (
-            <div className="flex h-full bg-gray-900">
-                <div className="w-7/12 p-6 border-r border-gray-700/50">
-                    <div className="flex items-center space-x-3 mb-6">
-                        <Calculator className="text-gray-400" size={24} />
-                        <h2 className="text-xl font-semibold text-gray-100">Calculator</h2>
+            <div className="flex flex-col md:flex-row h-full bg-gray-900 text-gray-200">
+                {/* Calculator Section */}
+                <div className="w-full md:w-7/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-gray-700/50">
+                    {/* ... Header ... */}
+                     <div className="flex items-center space-x-2 mb-4 px-2">
+                        <Calculator className="text-gray-400" size={20} />
+                        <h2 className="text-lg font-semibold text-gray-100">Calculator</h2>
                     </div>
 
-                    {/* Display */}
-                    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 mb-6">
-                        <div className="font-mono text-right text-3xl text-gray-100 overflow-x-auto whitespace-nowrap">
-                            {state.data.display}
+                    {/* ... Display ... */}
+                    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 mb-4 text-right overflow-hidden">
+                        <div className="h-5 text-sm text-gray-400 font-mono truncate">
+                            {data.previousOperand} {data.operation}
+                        </div>
+                        <div
+                            className={`font-mono ${getDisplayFontSize(data.display)} text-gray-100 break-all h-10 flex items-center justify-end`}
+                            title={data.display}
+                        >
+                            {data.display}
                         </div>
                     </div>
 
-                    {/* Keypad */}
-                    <div className="grid grid-cols-4 gap-2">
-                        {/* First row */}
-                        <CalculatorButton value="C" onClick={handleClear} variant="action" />
-                        <CalculatorButton value="(" onClick={() => handleNumber('(')} />
-                        <CalculatorButton value=")" onClick={() => handleNumber(')')} />
-                        <CalculatorButton value="÷" onClick={() => handleOperator('/')} variant="operator" />
+                    {/* Keypad - Updated Layout */}
+                    <div className="grid grid-cols-4 grid-rows-5 gap-2 flex-grow">
+                        {/* Row 1 */}
+                        <CalculatorButton value="AC" onClick={handleAllClear} variant="action" ariaLabel="All Clear" />
+                        {/* CE replaced by Backspace */}
+                        <CalculatorButton value={<Delete size={18} />} onClick={handleBackspace} variant="action" ariaLabel="Backspace" />
+                        <CalculatorButton value={<Percent size={18} />} onClick={handlePercent} variant="operator" ariaLabel="Percent" />
+                        <CalculatorButton value={<Divide size={18} />} onClick={() => handleOperator('/')} variant="operator" ariaLabel="Divide" />
 
-                        {/* Second row */}
+                        {/* Row 2 */}
                         <CalculatorButton value="7" onClick={() => handleNumber('7')} />
                         <CalculatorButton value="8" onClick={() => handleNumber('8')} />
                         <CalculatorButton value="9" onClick={() => handleNumber('9')} />
-                        <CalculatorButton value="×" onClick={() => handleOperator('*')} variant="operator" />
+                        <CalculatorButton value={<MultiplyIcon size={18} />} onClick={() => handleOperator('*')} variant="operator" ariaLabel="Multiply" />
 
-                        {/* Third row */}
+                        {/* Row 3 */}
                         <CalculatorButton value="4" onClick={() => handleNumber('4')} />
                         <CalculatorButton value="5" onClick={() => handleNumber('5')} />
                         <CalculatorButton value="6" onClick={() => handleNumber('6')} />
-                        <CalculatorButton value="-" onClick={() => handleOperator('-')} variant="operator" />
+                        <CalculatorButton value={<Minus size={18} />} onClick={() => handleOperator('-')} variant="operator" ariaLabel="Subtract" />
 
-                        {/* Fourth row */}
+                        {/* Row 4 */}
                         <CalculatorButton value="1" onClick={() => handleNumber('1')} />
                         <CalculatorButton value="2" onClick={() => handleNumber('2')} />
                         <CalculatorButton value="3" onClick={() => handleNumber('3')} />
-                        <CalculatorButton value="+" onClick={() => handleOperator('+')} variant="operator" />
+                        <CalculatorButton value={<Plus size={18} />} onClick={() => handleOperator('+')} variant="operator" ariaLabel="Add" />
 
-                        {/* Fifth row */}
-                        <CalculatorButton value="0" onClick={() => handleNumber('0')} size="wide" />
-                        <CalculatorButton value="." onClick={handleDecimal} />
-                        <CalculatorButton value="=" onClick={handleEquals} variant="operator" />
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex justify-between mt-4">
-                        <button
-                            onClick={handleDelete}
-                            className="flex items-center space-x-2 px-3 py-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                        >
-                            <Delete size={16} />
-                            <span>Delete</span>
-                        </button>
-                        <button
-                            onClick={handleClear}
-                            className="flex items-center space-x-2 px-3 py-2 text-gray-400 hover:bg-gray-700/50 rounded-lg transition-colors"
-                        >
-                            <RotateCw size={16} />
-                            <span>Clear All</span>
-                        </button>
+                        {/* Row 5 */}
+                        <CalculatorButton value="0" onClick={() => handleNumber('0')} className="col-span-2" />
+                        <CalculatorButton value={<Dot size={18} />} onClick={handleDecimal} ariaLabel="Decimal" />
+                        {/* Equals button in the bottom right, standard size */}
+                        <CalculatorButton value={<Equal size={20} />} onClick={handleEquals} variant="equals" ariaLabel="Equals" />
+                        {/* Removed the extra backspace button from here */}
                     </div>
                 </div>
 
-                <div className="w-5/12 p-6 flex flex-col">
+                {/* History & Notes Section */}
+                <div className="w-full md:w-5/12 p-4 flex flex-col">
                     {/* History */}
-                    <div className="mb-6">
-                        <h3 className="text-lg font-medium text-gray-200 mb-3">History</h3>
-                        <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 h-48 overflow-y-auto custom-scrollbar">
-                            {state.data.history.length === 0 ? (
-                                <div className="text-gray-500 text-sm">No calculations yet</div>
+                    <div className="mb-4 flex-shrink-0">
+                        <div className="flex items-center space-x-2 mb-2 px-1">
+                            <History className="text-gray-400" size={18} />
+                            <h3 className="text-base font-medium text-gray-200">History</h3>
+                        </div>
+                        <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 h-40 overflow-y-auto custom-scrollbar">
+                            {data.history.length === 0 ? (
+                                <div className="text-gray-500 text-sm italic text-center mt-4">No history yet</div>
                             ) : (
-                                <div className="space-y-2">
-                                    {state.data.history.map((entry, i) => (
-                                        <div key={i} className="font-mono text-sm text-gray-300">{entry}</div>
+                                <div className="space-y-1.5">
+                                    {data.history.slice().reverse().map((entry, i) => ( // Show newest first
+                                        <div key={data.history.length - 1 - i} className="font-mono text-sm text-gray-300 break-words">{entry}</div>
                                     ))}
                                 </div>
                             )}
@@ -263,15 +417,15 @@ export const CalculatorTablet: Tablet = {
                     </div>
 
                     {/* Notes */}
-                    <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-200 mb-3">Notes</h3>
+                    <div className="flex-grow flex flex-col min-h-0"> {/* Allow notes to take remaining space */}
+                         <div className="flex items-center space-x-2 mb-2 px-1 flex-shrink-0">
+                            <StickyNote className="text-gray-400" size={18} />
+                            <h3 className="text-base font-medium text-gray-200">Notes</h3>
+                        </div>
                         <textarea
-                            value={state.data.notes}
-                            onChange={(e) => onChange({
-                                ...state,
-                                data: { ...state.data, notes: e.target.value }
-                            })}
-                            className="w-full h-[calc(100%-2rem)] bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none custom-scrollbar"
+                            value={data.notes}
+                            onChange={(e) => updateData({ notes: e.target.value })}
+                            className="w-full flex-grow bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none custom-scrollbar text-sm"
                             placeholder="Add notes..."
                         />
                     </div>
