@@ -2,13 +2,14 @@ import React, { useRef, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { useRootStore } from '../../stores';
-import { Tab } from '../../types'; // Assuming Tab type is exported
+import { Tab } from '../../types';
 import { useEditorScrollManager } from '../../hooks/useEditorScrollManager';
 import { useLanguageDetection } from '../../hooks/useLanguageDetection';
 import { useTabletSelector } from '../../hooks/useTabletSelector';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
-import { StatusBar } from '../StatusBar'; // Import StatusBar here
+import { StatusBar } from '../StatusBar';
+import { languageRegistry } from '../../languages';
 
 interface EditorInstanceProps {
   side: 'left' | 'right';
@@ -30,7 +31,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   const previousContentRef = useRef<string>(activeTab.content);
 
   // --- Custom Hooks ---
-  const {restoreScrollPosition} = useEditorScrollManager(editorRef, activeTab.id); // Pass activeTab.id
+  const {restoreScrollPosition} = useEditorScrollManager(editorRef, activeTab.id);
   const {detectAndSetLanguage} = useLanguageDetection(updateTabLanguage);
   const {
     showTabletSelector,
@@ -57,15 +58,29 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   // --- Editor Event Handlers ---
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
     editorRef.current = editor;
-    restoreScrollPosition(activeTab.id); // Restore scroll on mount
+    restoreScrollPosition(activeTab.id);
 
-    // --- Force a re-render AFTER editorRef is set ---
-    // This ensures StatusBar receives the non-null editor instance sooner.
-    // Use a simple state update for this.
-    forceUpdate(x => x + 1); // See below for forceUpdate implementation
+    // Add command for Ctrl+S
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      if (!activeTab.isTablet) {
+        const detector = languageRegistry.getById(activeTab.language);
+        const extension = detector?.getFileExtension() || 'txt';
+        const blob = new Blob([activeTab.content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${activeTab.title}.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    });
+
+    // Force a re-render AFTER editorRef is set
+    forceUpdate(x => x + 1);
 
     editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
-      // Use a functional update for setCursorPosition if it reads previous state
       setCursorPosition(activeTab.id, {
         lineNumber: e.position.lineNumber,
         column: e.position.column,
@@ -77,6 +92,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
         }
       }
     });
+
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
       editor.getAction('editor.action.formatDocument')?.run();
     });
@@ -106,9 +122,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     else setActiveRightTab(activeTab.id);
   };
 
-  // --- Tablet Selector Interaction ---
   const handleTabletSelect = (tablet: Tablet) => {
-    // ... (implementation remains the same)
     const state = tablet.createInitialState();
     const serializedState = tablet.serializeState ? tablet.serializeState(state) : JSON.stringify(state);
     updateTabState(activeTab.id, {
@@ -126,15 +140,11 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     closeTabletSelector(true);
   };
 
-  // --- Helper to force re-render after ref is set ---
   const [, forceUpdate] = React.useState(0);
 
   return (
-    // --- NEW: Outer flex container for Editor + StatusBar ---
     <div className="flex flex-col h-full w-full bg-gray-850">
-      {/* --- Editor Area (takes remaining space) --- */}
       <div className="flex-grow relative overflow-hidden">
-        {/* Container for Editor and potential TabletSelector overlay */}
         <div ref={editorContainerRef} className="w-full h-full absolute inset-0" onClick={handleEditorFocus}>
           <Editor
             height="100%"
@@ -157,9 +167,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
                 addExtraSpaceOnTop: false,
               },
             }}
-            key={activeTab.id} // Force remount on tab change
+            key={activeTab.id}
           />
-          {/* Tablet Selector positioned absolutely */}
           {showTabletSelector && (
             <div
               ref={tabletSelectorContainerRef}
@@ -179,9 +188,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
           )}
         </div>
       </div>
-      {/* --- StatusBar Area (fixed height at bottom) --- */}
       <div className="flex-shrink-0">
-        {/* Render StatusBar directly here, passing the current editor instance */}
         <StatusBar editor={editorRef.current} activeTab={activeTab}/>
       </div>
     </div>
