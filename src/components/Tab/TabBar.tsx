@@ -12,7 +12,7 @@ import { languageRegistry } from '../../languages';
 
 interface TabBarProps {
   side?: 'left' | 'right';
-  onOpenDiffModal: () => void;
+  onOpenDiffModal: (fromHistory?: boolean) => void;
 }
 
 interface TooltipContent {
@@ -57,7 +57,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     const initialDelayTimerRef = useRef<NodeJS.Timeout | null>(null);
     const hideTooltipTimerRef = useRef<NodeJS.Timeout | null>(null);
     const hoveredTabIdRef = useRef<string | null>(null);
-    const [tooltipContent, setTooltipContent] = useState<TooltipContent | null>(null); // Use the new type
+    const [tooltipContent, setTooltipContent] = useState<TooltipContent | null>(null);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const tabBarRef = useRef<HTMLDivElement>(null);
@@ -70,7 +70,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     const isRightSide = side === 'right';
     const tabIds = isRightSide ? splitView.rightTabs : splitView.leftTabs;
 
-    const tabsKey = tabIds.join('-'); // Key for the outer div to force re-render on order change
+    const tabsKey = tabIds.join('-');
 
     const visibleTabs = tabIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean) as typeof tabs;
     const activeSideTabId = isRightSide ? splitView.activeRightTabId : splitView.activeLeftTabId;
@@ -102,7 +102,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     }, [showTabletSelector]);
 
     useEffect(() => {
-
         updateTabWidths();
         window.addEventListener('resize', updateTabWidths);
 
@@ -143,12 +142,12 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     };
 
     const showTooltip = useCallback((tab: Tab, element: HTMLElement) => {
-        clearTooltipTimers(); // Clear any pending hide timer
+        clearTooltipTimers();
 
         const rect = element.getBoundingClientRect();
         const position = {
             x: rect.left + rect.width / 2,
-            y: rect.bottom + 6, // Position below the tab + small gap
+            y: rect.bottom + 6,
         };
 
         const content: TooltipContent = {
@@ -159,57 +158,47 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
             content.lineCount = getTabLineCount(tab.content);
             try {
                 const detector = languageRegistry.getById(tab.language);
-                // Check if detector exists AND has getName before calling it
                 if (detector && typeof detector.getName === 'function') {
                     content.language = detector.getName();
                 } else {
-                    // Fallback if detector is invalid or language string is set but unknown
                     content.language = tab.language || 'Unknown';
                 }
             } catch (error) {
-                content.language = tab.language || 'Error'; // Indicate an error occurred
+                content.language = tab.language || 'Error';
             }
         }
 
         setTooltipPosition(position);
         setTooltipContent(content);
         setTooltipVisible(true);
-    }, []); // No dependencies needed if getTabLineCount and languageRegistry are stable
+    }, []);
 
     const handleTabMouseEnter = useCallback((tab: Tab, element: HTMLElement) => {
         setHoveredTabId(tab.id);
-        hoveredTabIdRef.current = tab.id; // <<< Update the ref immediately
+        hoveredTabIdRef.current = tab.id;
 
-        clearTooltipTimers(); // Clear any pending timers
+        clearTooltipTimers();
 
         if (isMouseOverTabBar && hasInitialDelayPassed) {
-            // Already hovered on the bar, show immediately
             showTooltip(tab, element);
         } else {
-            // Start initial delay timer
             initialDelayTimerRef.current = setTimeout(() => {
                 if (hoveredTabIdRef.current === tab.id) {
                     showTooltip(tab, element);
                     setHasInitialDelayPassed(true);
                 }
                 initialDelayTimerRef.current = null;
-            }, 1000); // 1 second delay
+            }, 1000);
         }
-    }, [isMouseOverTabBar, hasInitialDelayPassed, showTooltip]); // Added hoveredTabId dependency
+    }, [isMouseOverTabBar, hasInitialDelayPassed, showTooltip]);
 
     const handleTabMouseLeave = useCallback((tabId: string) => {
-        // Clear the initial delay timer if it hasn't fired yet
         if (initialDelayTimerRef.current) {
             clearTimeout(initialDelayTimerRef.current);
             initialDelayTimerRef.current = null;
         }
 
-        // Don't reset hoveredTabIdRef here yet, wait for the hide timer or tab bar leave
-
-        // Start a short timer to hide the tooltip
         hideTooltipTimerRef.current = setTimeout(() => {
-            // Only truly hide if the mouse has left the *entire* tab bar
-            // And hasn't entered another tab (which would clear this timer)
             if (!isMouseOverTabBar) {
                  setTooltipVisible(false);
                  setHoveredTabId(null);
@@ -218,11 +207,10 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
              hideTooltipTimerRef.current = null;
         }, 50);
 
-    }, [isMouseOverTabBar]); // Dependency is correct
+    }, [isMouseOverTabBar]);
 
     const handleTabBarMouseEnter = () => {
         setIsMouseOverTabBar(true);
-        // Don't reset hasInitialDelayPassed here, reset it on MouseLeave
     };
 
     const handleTabBarMouseLeave = () => {
@@ -239,7 +227,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     };
 
     const updateTabWidths = () => {
-        setTimeout(() => { // Add a small delay for testing
+        setTimeout(() => {
             if (!newTabButtonRef.current) return;
             if (!tabsWrapperRef.current) return;
 
@@ -271,53 +259,40 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         }, 0);
     };
 
-    // --- Drag and Drop Logic ---
     const onDragEnd = (result: DropResult) => {
         const { source, destination } = result;
 
-        // 1. Basic checks: Dropped outside, no movement.
         if (!destination || destination.index === source.index) {
             return;
         }
 
-        // 2. Get the actual tab objects involved
         const sourceIndex = source.index;
         const destinationIndex = destination.index;
-        const draggedTab = visibleTabs[sourceIndex]; // The tab being dragged
+        const draggedTab = visibleTabs[sourceIndex];
 
-        // 3. Double-check: Should not be possible to drag a pinned tab due to isDragDisabled
         if (draggedTab.isPinned) {
              console.warn("Attempted to drag a pinned tab - this shouldn't happen.");
              return;
         }
 
-        // 4. *** Pinning Logic: Check if the move crosses a pinned tab ***
         const startIndex = Math.min(sourceIndex, destinationIndex);
         const endIndex = Math.max(sourceIndex, destinationIndex);
 
         for (let i = startIndex; i <= endIndex; i++) {
-            // Check the tab at the potential destination index AND
-            // any tabs between the source and destination.
-            // We don't need to check the source index itself because we know it's not pinned.
             if (i === sourceIndex) continue;
 
             const tabAtIndex = visibleTabs[i];
             if (tabAtIndex && tabAtIndex.isPinned) {
-                // Found a pinned tab in the path of the drag.
-                // This move is invalid because it would change the relative position
-                // of the dragged item with respect to this pinned item.
-                return; // Cancel the reorder operation
+                return;
             }
         }
 
-        // 5. If the loop completes without returning, the move is valid. Proceed with reorder.
         const newTabIds = reorder(
-            tabIds, // Use the original ID list
+            tabIds,
             sourceIndex,
             destinationIndex
         );
 
-        // Update the store with the new order
         reorderTabs(side, newTabIds);
 
         updateTabWidths();
@@ -371,8 +346,8 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     };
 
     const handleContextMenuClose = (action?: 'compare') => {
-        if (action === 'compare' && contextMenu) {
-            onOpenDiffModal();
+        if (action === 'compare') {
+            onOpenDiffModal(true);
         }
         setContextMenu(null);
     };
@@ -437,7 +412,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                                         >
                                             {visibleTabs.map((tab, index) => (
                                                 <Draggable key={tab.id} draggableId={tab.id} index={index} isDragDisabled={tab.isPinned}>
-                                                    {(providedDraggable: DraggableProvided, snapshot) => ( // Renamed provided to avoid conflict
+                                                    {(providedDraggable: DraggableProvided, snapshot) => (
                                                         <TabItem
                                                             tab={tab}
                                                             isActive={activeSideTabId === tab.id}
@@ -447,7 +422,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                                                             onClick={handleTabClick}
                                                             onClose={(tabId, e) => {
                                                                 removeTab(tabId);
-                                                                // Hide tooltip if the closed tab was hovered
                                                                 if (hoveredTabId === tabId) {
                                                                     setTooltipVisible(false);
                                                                     clearTooltipTimers();
@@ -459,7 +433,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                                                             onEditChange={setEditingTitle}
                                                             onEditSubmit={handleInputBlur}
                                                             onEditCancel={() => setEditingTabId(null)}
-                                                            provided={providedDraggable} // Use renamed prop
+                                                            provided={providedDraggable}
                                                             snapshot={snapshot}
                                                             onMouseEnterTab={handleTabMouseEnter}
                                                             onMouseLeaveTab={handleTabMouseLeave}

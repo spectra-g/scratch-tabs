@@ -12,7 +12,8 @@ const MainLayout: React.FC = () => {
 
   const [diffModal, setDiffModal] = React.useState<{
     leftTabId: string | null;
-    rightTabId: string | null
+    rightTabId: string | null;
+    fromHistory?: boolean;
   } | null>(null);
 
   // Encapsulate resizing logic within the hook
@@ -29,13 +30,30 @@ const MainLayout: React.FC = () => {
     setSplitRatio // Pass the store action directly (hook should handle debouncing)
   );
 
-  const handleOpenDiffModal = () => {
+  const handleOpenDiffModal = (fromHistory?: boolean) => {
     // Read the latest active tab IDs from the store when opening
     const currentSplitView = useRootStore.getState().splitView;
-    setDiffModal({
-      leftTabId: currentSplitView.activeLeftTabId,
-      rightTabId: currentSplitView.activeRightTabId
-    });
+
+    if (fromHistory) {
+      // For history comparison, use the current tab's history
+      const isRightSide = currentSplitView.rightTabs.includes(currentSplitView.activeRightTabId || '');
+      const history = isRightSide ? currentSplitView.rightTabHistory : currentSplitView.leftTabHistory;
+
+      if (history && history.length >= 2) {
+        setDiffModal({
+          leftTabId: history[0], // Current tab
+          rightTabId: history[1], // Previous tab
+          fromHistory: true
+        });
+      }
+    } else {
+      // For regular split view comparison
+      setDiffModal({
+        leftTabId: currentSplitView?.activeLeftTabId ?? null,
+        rightTabId: currentSplitView?.activeRightTabId ?? null,
+        fromHistory: false
+      });
+    }
   };
 
   const handleCloseDiffModal = () => {
@@ -99,7 +117,6 @@ const MainLayout: React.FC = () => {
       {/* --- Diff Modal (Rendered outside the flex container) --- */}
       {diffModal && (
         <DiffModal
-          // Provide default empty strings if IDs are null, though they should exist if modal is open
           leftTabId={diffModal.leftTabId || ""}
           rightTabId={diffModal.rightTabId || ""}
           onClose={handleCloseDiffModal}

@@ -1,7 +1,7 @@
 import { useRootStore } from "../../stores";
 import {
   ChevronLeft, ChevronLeftSquare, ChevronRight, ChevronRightSquare, Copy, FileCode, GitCompare,
-  Layers, Maximize, Split, XCircle, ClipboardPaste, Pin, Download
+  Layers, Maximize, Split, XCircle, ClipboardPaste, Pin, Download, History
 } from 'lucide-react';
 import { LanguageSelector } from "./LanguageSelector";
 import { languageRegistry } from '../../languages';
@@ -12,7 +12,7 @@ export const useContextMenuConfig = (
     isRightSide: boolean,
     onClose: (action?: 'compare') => void,
     handleOpenModal: () => void
-    ): MenuItem[] => {
+): MenuItem[] => {
   const store = useRootStore();
   const tab = store.tabs.find(t => t.id === tabId);
 
@@ -33,6 +33,12 @@ export const useContextMenuConfig = (
   const canCompareFromClipboard = !!tab && !tab.isTablet;
   const isPinned = tab?.isPinned || false;
   const canDownload = !!tab && !tab.isTablet;
+
+  // Get the history for the current side
+  const history = isRightSide ? store.splitView.rightTabHistory : store.splitView.leftTabHistory;
+  // Check if we have at least 2 items in history (current and previous)
+  const canCompareWithPrevious = history && history.length >= 2 && !tab?.isTablet;
+
   const canGroupTypes = (() => {
     if (currentTabList.length < 3) return false;
     const tabLanguages = currentTabList.map(id => {
@@ -82,6 +88,17 @@ export const useContextMenuConfig = (
     onClose('compare');
   };
 
+  const handleCompareWithPrevious = () => {
+    if (!canCompareWithPrevious || !history || history.length < 2) return;
+
+    // Get the previous tab ID from history (index 1 since current tab is at index 0)
+    const previousTabId = history[1];
+    if (!previousTabId) return;
+
+    // Open diff modal with current and previous tabs
+    onClose('compare');
+  };
+
   const handleDownload = () => {
     if (!tab || tab.isTablet) return;
 
@@ -100,7 +117,6 @@ export const useContextMenuConfig = (
     onClose();
   };
 
-  // --- Update handleDownloadAll to use the callback ---
   const handleDownloadAll = () => {
     handleOpenModal();
   };
@@ -132,6 +148,13 @@ export const useContextMenuConfig = (
       icon: GitCompare,
       action: () => onClose('compare'),
       condition: canCompare
+    },
+    {
+      id: 'comparePrevious',
+      label: 'Compare with previous tab',
+      icon: History,
+      action: handleCompareWithPrevious,
+      condition: canCompareWithPrevious
     },
     {
       id: 'compareFromClipboard',
