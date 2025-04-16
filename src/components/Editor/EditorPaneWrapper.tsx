@@ -1,12 +1,22 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useRootStore } from '../../stores';
 import { EditorInstance } from './EditorInstance';
 import { TabletView } from '../Tab/TabletView';
-import { MarkdownPreview } from '../Preview/MarkdownPreview';
 
 interface EditorPaneWrapperProps {
   side: 'left' | 'right';
 }
+
+const LazyMarkdownPreview = lazy(() => import('../Preview/MarkdownPreview')
+  .catch(err => {
+    console.error("Failed to load MarkdownPreview component:", err);
+    return { default: () => <div className="text-red-500 p-4">Error loading preview.</div> };
+  })
+);
+
+const PreviewLoadingFallback = () => (
+  <div className="text-gray-400 p-4 animate-pulse">Loading Preview...</div>
+);
 
 export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
   const {
@@ -55,12 +65,14 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
 
       {/* Markdown Preview Area (Conditional) */}
       {shouldShowMarkdownPreview && activeTab && (
-        <div className="w-1/2 h-full flex-1 flex flex-col overflow-hidden border-l border-gray-700">
-          <div className="flex-1 w-full h-full overflow-auto p-4 custom-scrollbar bg-gray-850">
-            <MarkdownPreview content={activeTab.content}/>
+          <div className="w-1/2 h-full flex-1 flex flex-col overflow-hidden border-l border-gray-700">
+            <div className="flex-1 w-full h-full overflow-auto p-4 custom-scrollbar bg-gray-850">
+              <Suspense fallback={<PreviewLoadingFallback />}>
+                <LazyMarkdownPreview content={activeTab.content} />
+              </Suspense>
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 };

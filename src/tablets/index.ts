@@ -6,6 +6,7 @@ import { TempEmailTablet } from './email/TempEmailTablet';
 import { RandomUserTablet } from './usergen/RandomUserTablet';
 import { IPDetailsTablet } from './ipdetails/IPDetailsTablet';
 import { ClipboardTablet } from './clipboard/ClipboardTablet';
+import { ConverterTablet } from './converter/ConverterTablet';
 
 // Register built-in tablets
 tabletRegistry.register(PasswordTablet);
@@ -15,6 +16,7 @@ tabletRegistry.register(TempEmailTablet);
 tabletRegistry.register(RandomUserTablet);
 tabletRegistry.register(IPDetailsTablet);
 tabletRegistry.register(ClipboardTablet);
+tabletRegistry.register(ConverterTablet);
 
 export { TabletSelector } from './components/TabletSelector';
 export { tabletRegistry } from './registry';

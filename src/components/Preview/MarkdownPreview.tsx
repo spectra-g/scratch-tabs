@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'; // Example: GitHub Flavored Markdown
+import remarkGfm from 'remark-gfm';
 
 interface MarkdownPreviewProps {
   content: string;
 }
 
-export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({content}) => {
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({content}) => {
   return (
     // Apply Tailwind's typography plugin classes for nice default styling.
     // 'prose-invert' is for dark mode themes.
@@ -19,3 +19,4 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({content}) => {
     </div>
   );
 };
+export default MarkdownPreview;

@@ -156,6 +156,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         };
 
         if (!tab.isTablet) {
+            content.lineCount = getTabLineCount(tab.content);
             try {
                 const detector = languageRegistry.getById(tab.language);
                 // Check if detector exists AND has getName before calling it
