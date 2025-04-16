@@ -1,45 +1,50 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
-import * as yaml from 'js-yaml';
 
 // --- Constants ---
-const MAX_LINES_TO_CHECK = 50; // Check more lines for patterns
-const MAX_LINES_TO_PARSE = 25; // Limit parsing depth for performance
-const MIN_LINES_FOR_PARSE_ATTEMPT = 2; // Don't parse single lines
+const MAX_LINES_TO_CHECK = 50; // How many lines to analyze
 
 // --- Markdown Patterns (for exclusion) ---
-// Borrowed/adapted from Markdown detector - focus on unambiguous ones
-const MARKDOWN_HEADER_REGEX = /^#{2,6}\s+/m; // H2-H6 are less ambiguous than H1
+const MARKDOWN_HEADER_REGEX = /^#{2,6}\s+/m;
 const MARKDOWN_LINK_REGEX = /\[.+?\]\(.+?\)/m;
 const MARKDOWN_IMAGE_REGEX = /!\[.+?\]\(.+?\)/m;
-const MARKDOWN_CODE_BLOCK_REGEX = /`{3}/m; // Start or end of code block
+const MARKDOWN_CODE_BLOCK_REGEX = /`{3}/m;
 const MARKDOWN_TASK_LIST_REGEX = /^- \[[ x]\] /im;
 const MARKDOWN_ORDERED_LIST_REGEX = /^\s*\d+\.\s+/m;
 const MARKDOWN_BLOCKQUOTE_REGEX = /^>\s+/m;
 
+// --- JSON Boundary Regex (for exclusion) ---
+const JSON_OBJECT_BOUNDARY_REGEX = /^\s*\{[\s\S]*\}\s*$/;
+const JSON_ARRAY_BOUNDARY_REGEX = /^\s*\[[\s\S]*\]\s*$/;
+
+
 /**
- * YAML language detector - Stricter checks and Markdown exclusion
+ * YAML language detector - Purely Regex-based approach
  */
 export class YamlLanguageDetector extends BaseLanguageDetector {
   id = 'yaml';
   name = 'YAML';
   extensions = ['yaml', 'yml'];
-  priority = 4; // Lower than JSON, potentially lower than Markdown if needed
+  priority = 4; // Adjust priority as needed
 
-  // --- YAML Specific Regex ---
-  private directiveRegex = /^%YAML\s+[\d.]+/m;
-  private docStartRegex = /^---\s*(?:$|\n|#)/m; // Document start
-  private docEndRegex = /^\.\.\.\s*(?:$|\n|#)/m; // Document end
-  private listItemStartRegex = /^\s*-\s+(?:\S|\n\s+\S)/m; // List item (allows multiline values)
-  private blockScalarRegex = /:\s*[|>][+-]?\s*(?:#.*)?$/m; // Block scalar indicator
-  private keyColonRegex = /^\s*(?:[a-zA-Z0-9_."'-]+|"[^"]+"|'[^']+')\s*:\s*(?:\S|$)/m; // Key followed by colon (quoted or unquoted)
+  // --- YAML Line Pattern Regexes ---
+  // More specific regexes for line classification
+  private directiveLineRegex = /^%YAML\s+[\d.]+\s*$/;
+  private docStartLineRegex = /^---\s*$/;
+  private docEndLineRegex = /^\.\.\.\s*$/;
+  // Key-Value: Allows quoted/unquoted keys, requires colon, allows empty value.
+  // Key part: `(?:[^#\s:"'][^:]*|"[^"]*"|'[^']*')` - Starts with non-#/space/quote OR is quoted. Avoids matching comments as keys.
+  private keyValueLineRegex = /^\s*(?:[^#\s:"'][^:]*|"[^"]*"|'[^']*')\s*:\s*(?:.*)?$/;
+  // List Item: Starts with '- ', requires some content after space.
+  private listItemLineRegex = /^\s*-\s+(?:\S.*)?$/;
+  private commentLineRegex = /^\s*#/;
+  private emptyLineRegex = /^\s*$/;
 
   // --- JSON Boundary Regex (for exclusion/penalty) ---
   private jsonObjectBoundaryRegex = /^\s*\{[\s\S]*\}\s*$/;
   private jsonArrayBoundaryRegex = /^\s*\[[\s\S]*\]\s*$/;
 
   sampleContent(): string {
-    // ... (sampleContent remains the same)
     return `# Project Configuration
 name: my-awesome-project
 version: 1.0.0
@@ -95,25 +100,28 @@ features:
   }
 
   /**
-   * Check if content is likely YAML, prioritizing structure and excluding Markdown.
+   * Check if content is likely YAML based on line patterns and thresholds.
    */
   isMatch(content: string): boolean {
     const trimmed = content.trim();
-    const lines = content.split('\n');
-    const contentToCheck = lines.slice(0, MAX_LINES_TO_CHECK).join('\n');
-
-    // 1. Quick Exits
     if (!trimmed) return false;
-    // If it's *only* comments or empty lines, it's not structured YAML
-    if (lines.every(line => line.trim().startsWith('#') || line.trim() === '')) return false;
 
-    // 2. Strong YAML Indicators (Quick Wins)
-    if (this.directiveRegex.test(trimmed)) return true;
-    if (this.blockScalarRegex.test(contentToCheck)) return true; // | or > are very strong
+    const lines = content.split('\n').slice(0, MAX_LINES_TO_CHECK);
+    if (lines.length === 0) return false;
 
-    // 3. Strong Markdown Exclusion (Crucial Step)
-    // Count unambiguous Markdown patterns in the first N lines
+    // --- Early Exclusions ---
+    // 1. JSON Exclusion
+    if (JSON_OBJECT_BOUNDARY_REGEX.test(trimmed) || JSON_ARRAY_BOUNDARY_REGEX.test(trimmed)) {
+      // If it looks like JSON, it's not YAML unless it *also* has strong YAML markers
+      if (!this.directiveLineRegex.test(lines[0]) && !this.docStartLineRegex.test(lines[0]) && !lines.some(line => this.listItemLineRegex.test(line))) {
+         // console.log("YAML Detector: Rejected due to JSON structure without strong YAML markers.");
+        return false;
+      }
+    }
+
+    // 2. Markdown Exclusion
     let markdownPatternCount = 0;
+    const contentToCheck = lines.join('\n'); // Use only checked lines for MD check
     if (MARKDOWN_HEADER_REGEX.test(contentToCheck)) markdownPatternCount++;
     if (MARKDOWN_LINK_REGEX.test(contentToCheck)) markdownPatternCount++;
     if (MARKDOWN_IMAGE_REGEX.test(contentToCheck)) markdownPatternCount++;
@@ -121,166 +129,152 @@ features:
     if (MARKDOWN_TASK_LIST_REGEX.test(contentToCheck)) markdownPatternCount++;
     if (MARKDOWN_ORDERED_LIST_REGEX.test(contentToCheck)) markdownPatternCount++;
     if (MARKDOWN_BLOCKQUOTE_REGEX.test(contentToCheck)) markdownPatternCount++;
-
-    // If multiple strong Markdown patterns exist, reject YAML immediately.
-    // Adjust the threshold (e.g., 2 or 3) based on testing.
-    if (markdownPatternCount >= 2) {
-        // console.log("YAML Detector: Rejected due to strong Markdown patterns:", markdownPatternCount);
-        return false;
+    if (markdownPatternCount >= 2) { // Require multiple MD patterns
+       // console.log("YAML Detector: Rejected due to strong Markdown patterns:", markdownPatternCount);
+      return false;
     }
+    // --- End Exclusions ---
 
-    // 4. Check for Core YAML Structure (Key:Value or List Items) using Regex
-    const hasKeyColon = this.keyColonRegex.test(contentToCheck);
-    const hasListItem = this.listItemStartRegex.test(contentToCheck);
-    const hasYamlStructure = hasKeyColon || hasListItem;
 
-    // If it has clear YAML structure, it's likely YAML (even if parsing fails later)
-    if (hasYamlStructure) {
-        // But double-check if it looks exactly like JSON
-        if (this.jsonObjectBoundaryRegex.test(trimmed) || this.jsonArrayBoundaryRegex.test(trimmed)) {
-            // If it looks like JSON and has YAML structure (e.g. key:),
-            // let parsing decide or fall through to heuristics.
-            // Don't return true immediately here.
-        } else {
-            // Has YAML structure, doesn't look like JSON -> Good chance it's YAML
-            // console.log("YAML Detector: Matched based on key/list structure.");
-            return true;
-        }
-    }
+    let yamlLineCount = 0;
+    let structuralLineCount = 0;
+    let nonEmptyCommentLineCount = 0;
+    const structuralPatternsFound = new Set<string>();
 
-    // 5. Attempt Parsing (Conditional)
-    // Only parse if there are enough lines and we haven't already decided.
-    // Parsing is now more of a confirmation or tie-breaker.
-    let parsedSuccessfully = false;
-    let parsedResultType: string | null = null;
-    if (lines.length >= MIN_LINES_FOR_PARSE_ATTEMPT) {
-      const contentToParse = lines.slice(0, MAX_LINES_TO_PARSE).join('\n');
-      try {
-        const result = yaml.load(contentToParse);
-        // Check if parsing yielded *something* (null is a valid YAML value)
-        if (result !== undefined) {
-            parsedSuccessfully = true;
-            parsedResultType = typeof result;
-            // console.log("YAML Detector: Parsed successfully. Type:", parsedResultType);
+    for (const line of lines) {
+      let isYamlLine = false;
+      let isStructural = false;
+      let patternType = '';
+
+      if (this.emptyLineRegex.test(line)) {
+        // Empty lines don't contribute positively or negatively unless checking strictness
+        continue;
+      }
+      if (this.commentLineRegex.test(line)) {
+        isYamlLine = true; // Comments are valid YAML lines
+        patternType = 'comment';
+        // Don't count comments as structural
+      } else if (this.directiveLineRegex.test(line)) {
+        isYamlLine = true; isStructural = true; patternType = 'directive';
+      } else if (this.docStartLineRegex.test(line)) {
+        isYamlLine = true; isStructural = true; patternType = 'docStart';
+      } else if (this.docEndLineRegex.test(line)) {
+         isYamlLine = true; isStructural = true; patternType = 'docEnd'; // Count docEnd as structural
+      } else if (this.keyValueLineRegex.test(line)) {
+        isYamlLine = true; isStructural = true; patternType = 'keyValue';
+      } else if (this.listItemLineRegex.test(line)) {
+        isYamlLine = true; isStructural = true; patternType = 'listItem';
+      }
+
+      if (isYamlLine) {
+        yamlLineCount++;
+        if (patternType !== 'comment' && patternType !== '') {
+             nonEmptyCommentLineCount++; // Count non-empty, non-comment lines
         }
-      } catch (e) {
-        // Parsing failed. Check if it failed *because* it looks like JSON.
-        if (this.jsonObjectBoundaryRegex.test(trimmed) || this.jsonArrayBoundaryRegex.test(trimmed)) {
-           // console.log("YAML Detector: Parsing failed, looks like JSON. Rejecting.");
-           return false; // Failed parsing + looks like JSON = Not YAML
-        }
-        // Otherwise, parsing failed, but doesn't look like JSON. Continue to fallbacks.
-        // console.log("YAML Detector: Parsing failed, but doesn't look like JSON.");
+      }
+      if (isStructural) {
+        structuralLineCount++;
+        structuralPatternsFound.add(patternType);
       }
     }
 
-    // 6. Evaluate Parsing Result & Final Heuristics
-    if (parsedSuccessfully) {
-        // If parsing succeeded:
-        // - AND the result is complex (object/array) -> Definitely YAML
-        // - OR the input *had* structural elements (key: or -) -> Likely YAML
-        // - BUT if result is simple (string/number/boolean) AND input lacked structure AND had Markdown hints -> Likely NOT YAML
-        const inputHadStructureInParsedSection = this.keyColonRegex.test(lines.slice(0, MAX_LINES_TO_PARSE).join('\n')) || this.listItemStartRegex.test(lines.slice(0, MAX_LINES_TO_PARSE).join('\n'));
-        const inputHadMarkdownHeadings = /^\s*#+\s+/.test(contentToCheck); // Check specifically for headings
+    // --- Apply Rules ---
 
-        if (parsedResultType === 'object' || parsedResultType === 'boolean' || parsedResultType === null) { // Objects, booleans, null are good indicators
-             // console.log("YAML Detector: Accepted based on successful parse to object/boolean/null.");
-             return true;
-        }
-        if (inputHadStructureInParsedSection) {
-             // console.log("YAML Detector: Accepted based on successful parse + input structure.");
-             return true;
-        }
-        if ((parsedResultType === 'string' || parsedResultType === 'number') && inputHadMarkdownHeadings && markdownPatternCount > 0) {
-             // Parsed to simple type, had no clear YAML structure in parsed section,
-             // AND had Markdown headings/patterns -> Reject YAML.
-             // console.log("YAML Detector: Rejected. Parsed to simple type but looks like Markdown.");
-             return false;
-        }
-         if (parsedResultType === 'string' || parsedResultType === 'number') {
-             // Parsed to simple type, but didn't have strong Markdown conflict signals.
-             // Could be very simple YAML (e.g., just 'my_string'). Accept with lower confidence.
-             // Check for document separators as a final hint.
-             // console.log("YAML Detector: Parsed to simple type. Checking for doc separators.");
-             return this.docStartRegex.test(trimmed) || this.docEndRegex.test(trimmed);
-         }
+    // Rule 0: Quick wins for very strong indicators
+    if (structuralPatternsFound.has('directive')) return true;
+    // --- might be frontmatter, don't return true immediately
+
+    // Rule 4 Check (Variety): Must have at least 2 different structural patterns
+    const hasVariety = structuralPatternsFound.size >= 2;
+
+    // Rule 2 Logic (< 4 non-empty/non-comment lines)
+    if (nonEmptyCommentLineCount > 0 && nonEmptyCommentLineCount < 4) {
+      // All non-empty/non-comment lines must be structural
+      const allStructural = structuralLineCount === nonEmptyCommentLineCount;
+      // console.log(`YAML Detector (<4 lines): NonEmptyComment=${nonEmptyCommentLineCount}, Structural=${structuralLineCount}, Variety=${hasVariety}`);
+      return allStructural && hasVariety;
     }
 
-    // 7. Final Fallback (if no structure found, parsing failed/skipped, not JSON, not Markdown)
-    // At this point, it lacks clear YAML structure and doesn't strongly look like Markdown/JSON.
-    // Only accept if it has document separators (`---` or `...`) as a last resort.
-    if (!hasYamlStructure && !parsedSuccessfully) {
-        const hasDocMarkers = this.docStartRegex.test(trimmed) || this.docEndRegex.test(trimmed);
-        // console.log("YAML Detector: Fallback check for doc markers:", hasDocMarkers);
-        return hasDocMarkers;
+    // Rule 3 Logic (>= 4 non-empty/non-comment lines)
+    if (nonEmptyCommentLineCount >= 4) {
+      // Calculate required percentage (example: starts at 60%, drops to 25%)
+      const totalSignificantLines = lines.filter(l => !this.emptyLineRegex.test(l)).length; // Count non-empty lines for percentage base
+      if (totalSignificantLines === 0) return false; // Avoid division by zero
+
+      let requiredPercentage = 0.25 + (0.60 - 0.25) * Math.exp(-0.1 * (totalSignificantLines - 4));
+      requiredPercentage = Math.max(0.25, Math.min(0.60, requiredPercentage)); // Clamp percentage
+
+      const actualPercentage = yamlLineCount / totalSignificantLines; // Percentage of *any* valid YAML line (incl comments)
+
+      // console.log(`YAML Detector (>=4 lines): TotalSig=${totalSignificantLines}, YamlLines=${yamlLineCount}, ActualPerc=${actualPercentage.toFixed(2)}, ReqPerc=${requiredPercentage.toFixed(2)}, Variety=${hasVariety}`);
+
+      // Require meeting percentage AND having variety
+      return actualPercentage >= requiredPercentage && hasVariety;
     }
 
-    // 8. Default: Not enough evidence
-    // console.log("YAML Detector: All checks failed. Defaulting to false.");
+    // Default: If none of the above conditions were met (e.g., only comments, few lines but not all structural)
+    // console.log("YAML Detector: Defaulting to false, conditions not met.");
     return false;
   }
 
 
   // --- countSpecificPatterns ---
-  // This should reflect the confidence based on the isMatch logic
+  // Score based on the regex matches and rules
   countSpecificPatterns(content: string): number {
     let score = 0;
+    const lines = content.split('\n').slice(0, MAX_LINES_TO_CHECK);
+    if (lines.length === 0) return 0;
+
+    // Penalize early for JSON/Markdown
     const trimmed = content.trim();
-    const lines = content.split('\n');
-    const contentToCheck = lines.slice(0, MAX_LINES_TO_CHECK).join('\n');
+    if (JSON_OBJECT_BOUNDARY_REGEX.test(trimmed) || JSON_ARRAY_BOUNDARY_REGEX.test(trimmed)) score -= 15;
+    // Add markdown penalty logic similar to isMatch if needed
 
-    // Strong Indicators
-    if (this.directiveRegex.test(trimmed)) score += 10;
-    if (this.blockScalarRegex.test(contentToCheck)) score += 8;
+    let yamlLineCount = 0;
+    let structuralLineCount = 0;
+    const structuralPatternsFound = new Set<string>();
 
-    // Core Structure Indicators
-    const keyMatches = contentToCheck.match(this.keyColonRegex);
-    const itemMatches = contentToCheck.match(this.listItemStartRegex);
-    if (keyMatches) score += 4 * keyMatches.length; // More keys = higher score
-    if (itemMatches) score += 3 * itemMatches.length; // More items = higher score
+    lines.forEach(line => {
+      let isStructural = false;
+      let patternType = '';
 
-    // Doc Markers
-    if (this.docStartRegex.test(trimmed)) score += 2;
-    if (this.docEndRegex.test(trimmed)) score += 1;
+       if (this.emptyLineRegex.test(line)) return;
+       if (this.commentLineRegex.test(line)) {
+           yamlLineCount++;
+           score += 0.5; // Small score for comments
+           return;
+       }
+       if (this.directiveLineRegex.test(line)) { isStructural = true; patternType = 'directive'; score += 10; }
+       else if (this.docStartLineRegex.test(line)) { isStructural = true; patternType = 'docStart'; score += 5; }
+       else if (this.docEndLineRegex.test(line)) { isStructural = true; patternType = 'docEnd'; score += 2; }
+       else if (this.keyValueLineRegex.test(line)) { isStructural = true; patternType = 'keyValue'; score += 3; }
+       else if (this.listItemLineRegex.test(line)) { isStructural = true; patternType = 'listItem'; score += 2; }
 
-    // Markdown Penalty
-    let markdownPatternCount = 0;
-    if (MARKDOWN_HEADER_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_LINK_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_IMAGE_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_CODE_BLOCK_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_TASK_LIST_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_ORDERED_LIST_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_BLOCKQUOTE_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (markdownPatternCount >= 2) score = Math.max(0, score - 15); // Heavy penalty
-    else if (markdownPatternCount === 1) score = Math.max(0, score - 5); // Lighter penalty
+       if (patternType) yamlLineCount++;
+       if (isStructural) {
+           structuralLineCount++;
+           structuralPatternsFound.add(patternType);
+       }
+    });
 
-    // Parsing Bonus/Penalty
-    if (lines.length >= MIN_LINES_FOR_PARSE_ATTEMPT) {
-        const contentToParse = lines.slice(0, MAX_LINES_TO_PARSE).join('\n');
-        try {
-            const result = yaml.load(contentToParse);
-            if (result !== undefined) {
-                if (typeof result === 'object') score += 10; // Big bonus for complex types
-                else if (typeof result === 'boolean' || result === null) score += 5;
-                else score += 2; // Small bonus for simple types
-            }
-        } catch (e) {
-            // Penalize if parsing failed AND it looks like JSON
-            if (this.jsonObjectBoundaryRegex.test(trimmed) || this.jsonArrayBoundaryRegex.test(trimmed)) {
-                 score = Math.max(0, score - 10); // Significant penalty
-            } else {
-                 score = Math.max(0, score - 3); // Smaller penalty for other parse failures
-            }
-        }
-    } else {
-        // Penalize JSON lookalikes even if not parsed
-         if (this.jsonObjectBoundaryRegex.test(trimmed) || this.jsonArrayBoundaryRegex.test(trimmed)) {
-             score = Math.max(0, score - 5);
-         }
+    // Bonus for variety
+    if (structuralPatternsFound.size >= 2) {
+        score += 5;
     }
 
-    return Math.max(0, score); // Ensure score is not negative
+    // Bonus/Penalty based on percentage rule (simplified check)
+    const totalSignificantLines = lines.filter(l => !this.emptyLineRegex.test(l)).length;
+    if (totalSignificantLines >= 4) {
+        const actualPercentage = totalSignificantLines > 0 ? yamlLineCount / totalSignificantLines : 0;
+        if (actualPercentage > 0.4) score += 5; // Bonus if > 40% YAML lines
+        else if (actualPercentage < 0.2) score -= 5; // Penalty if < 20%
+    } else if (totalSignificantLines > 0) {
+        // For < 4 lines, check if all are structural
+        if (structuralLineCount === totalSignificantLines) score += 5; // Bonus if all structural
+        else score -= 5; // Penalty if not all structural
+    }
+
+    return Math.max(0, Math.round(score)); // Return non-negative integer score
   }
 
   registerProvider(monaco: any): void {
