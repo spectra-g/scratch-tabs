@@ -2,6 +2,10 @@ import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown.tsx";
 import React from 'react';
+import * as yaml from 'js-yaml'; // Import js-yaml here too
+
+// --- Constants ---
+const MAX_LINES_TO_PARSE_YAML = 15; // Limit YAML parsing check
 
 /**
  * Markdown language detector
@@ -10,7 +14,7 @@ export class MarkdownLanguageDetector extends BaseLanguageDetector {
   id = 'markdown';
   name = 'Markdown';
   extensions = ['md', 'markdown'];
-  priority = 2;
+  priority = 3;
   
   /**
    * Get sample content for Markdown
@@ -74,62 +78,112 @@ That's all for this sample!`;
   }
   
   /**
-   * Check if content matches Markdown patterns
+   * Check if content matches Markdown patterns, excluding likely YAML.
    */
   isMatch(content: string): boolean {
-    // Skip if it looks like YAML with document start marker followed by a key
-    if (/^---\s*\n[\s]*[a-zA-Z0-9_-]+[\s]*:/m.test(content)) {
-      return false;
+    const trimmed = content.trim();
+    if (!trimmed) return false;
+
+    // --- YAML Exclusion ---
+    // 1. Check for YAML frontmatter structure more reliably
+    if (/^---\s*$/.test(trimmed.split('\n')[0]) && /^\s*([a-zA-Z0-9_.-]+|"([^"]*)"|'([^']*)')\s*:\s*(?:\S|$)/m.test(content)) {
+        // Starts with --- and contains key: value pattern -> Likely YAML frontmatter
+        // We might still want to detect this as Markdown *if* there's significant Markdown content *after* potential frontmatter.
+        // Let's check for YAML structure beyond just the frontmatter start.
+        try {
+            const docs = yaml.loadAll(content.slice(0, 1000)); // Parse first 1KB
+            if (docs.length > 0 && typeof docs[0] === 'object' && Object.keys(docs[0] || {}).length > 0) {
+                 // If the first part parses as a non-empty object, lean towards YAML unless strong MD follows.
+                 // This is tricky. For now, let's be conservative and reject MD if valid frontmatter object is found.
+                 // console.log("Markdown Detector: Rejected due to likely YAML frontmatter object.");
+                 // return false; // Re-evaluate this rule based on desired behavior for MD with frontmatter
+            }
+        } catch (e) { /* Ignore YAML parsing errors here */ }
     }
-    
+
+    // 2. Check if the content parses as complex YAML (object/array)
+    // This helps prevent classifying structured YAML as Markdown
+    try {
+        const lines = content.split('\n');
+        if (lines.length >= 2) { // Only check if more than one line
+            const contentToParse = lines.slice(0, MAX_LINES_TO_PARSE_YAML).join('\n');
+            // Check for minimal YAML structure first to avoid unnecessary parsing
+             if (/^\s*([a-zA-Z0-9_.-]+|"([^"]*)"|'([^']*)')\s*:\s*(?:\S|$)/m.test(contentToParse) || /^\s*-\s+(?:\S|\n\s+\S)/m.test(contentToParse)) {
+                const result = yaml.load(contentToParse);
+                if (typeof result === 'object' && result !== null) {
+                    // If it parses successfully into an object or array, it's unlikely Markdown.
+                    // console.log("Markdown Detector: Rejected due to successful complex YAML parse.");
+                    return false;
+                }
+            }
+        }
+    } catch (e) { /* Ignore YAML parsing errors */ }
+    // --- End YAML Exclusion ---
+
+
+    // --- Original Markdown Pattern Matching ---
     const markdownPatterns = [
-      /^#+ /m,                    // Headers
-      /^\s*[-*] /m,               // Unordered lists
-      /^\s*\d+\. /m,              // Ordered lists
+      /^#+\s+/m,                  // Headers (H1 included here, YAML check handles ambiguity)
+      /^\s*[-*+]\s+/m,            // Unordered lists (allow +)
+      /^\s*\d+\.\s+/m,            // Ordered lists
       /\[.+?\]\(.+?\)/m,          // Links
       /!\[.+?\]\(.+?\)/m,         // Images
-      /^>\s/m,                    // Blockquotes
-      /`{1,3}[^`]+`{1,3}/m,       // Code blocks/inline code
-      /\*\*.+?\*\*/m,             // Bold text
-      /_.+?_/m,                   // Italic text
+      /^>\s+/m,                   // Blockquotes
+      /`{1,3}[^`\n]+`{1,3}/m,     // Inline code / simple code blocks
+      /`{3}[\s\S]*?`{3}/m,        // Multiline code blocks
+      /(\*\*|__).+?\1/m,          // Bold text (** or __)
+      /(\*|_)[^\*\s_].*?\1/m,     // Italic text (* or _) - avoid matching **/__
       /^- \[[ x]\] /im,           // Task lists
-      /^---$/m                    // Horizontal rules
+      /^(?:---|\*\*\*|___)\s*$/m  // Horizontal rules
     ];
 
     // Count how many Markdown patterns match
-    const matchCount = markdownPatterns.reduce((count, pattern) => 
+    const matchCount = markdownPatterns.reduce((count, pattern) =>
       count + (pattern.test(content) ? 1 : 0), 0);
 
-    // If content has "---" but also has key-value pairs, it's likely YAML
-    if (/^---$/m.test(content) && /^[\s]*[a-zA-Z0-9_-]+[\s]*:(?:\s.*)?$/m.test(content)) {
-      // Only consider it Markdown if it has strong Markdown indicators
-      return matchCount >= 3 && this.countSpecificPatterns(content) >= 2;
-    }
-    
-    // Otherwise, require at least one Markdown pattern
+    // Require at least 2 distinct Markdown patterns. Adjust as needed.
+    // console.log("Markdown Detector: Match count =", matchCount);
     return matchCount >= 2;
   }
-  
-  /**
-   * Count Markdown-specific patterns (patterns that are unlikely to be in YAML)
-   */
+
+  // ... (countSpecificPatterns can remain similar, focusing on MD patterns) ...
   countSpecificPatterns(content: string): number {
-    const markdownSpecificPatterns = [
-      /^#{2,6}\s/m,              // Headers H2-H6 (H1 is too ambiguous)
-      /\[.+?\]\(.+?\)/m,         // Links
-      /!\[.+?\]\(.+?\)/m,        // Images
-      /`{3}[\s\S]+?`{3}/m,       // Multi-line code blocks
-      /^- \[[ x]\] /im,          // Task lists
-      /^\d+\.\s/m,               // Ordered lists (fairly specific)
-      /^---$/m,                  // Horizontal rules (often specific)
-      /^\*\*\*$/m,               // Horizontal rules (often specific)
-      /^___$/m                   // Horizontal rules (often specific)
-    ];
-    
-    return markdownSpecificPatterns.reduce((count, pattern) => 
-      count + (pattern.test(content) ? 1 : 0), 0);
-  }
-  
+     // Use a similar list as in isMatch, maybe weight some higher?
+     const markdownSpecificPatterns = [
+       /^#{1,6}\s+/m,             // Headers H1-H6
+       /\[.+?\]\(.+?\)/m,         // Links
+       /!\[.+?\]\(.+?\)/m,        // Images
+       /`{3}[\s\S]+?`{3}/m,       // Multi-line code blocks
+       /^- \[[ x]\] /im,          // Task lists
+       /^\s*\d+\.\s+/m,           // Ordered lists
+       /^(?:---|\*\*\*|___)\s*$/m,// Horizontal rules
+       /^\s*[-*+]\s+/m,           // Unordered lists
+       /^>\s+/m,                  // Blockquotes
+       /(\*\*|__).+?\1/m,         // Bold
+       /(\*|_)[^\*\s_].*?\1/m,    // Italic
+     ];
+
+     let score = markdownSpecificPatterns.reduce((count, pattern) =>
+       count + (pattern.test(content) ? (content.match(new RegExp(pattern.source, 'gm'))?.length || 0) : 0), // Count occurrences
+       0);
+
+     // Optional: Penalize if it parses as complex YAML
+     try {
+         const lines = content.split('\n');
+         if (lines.length >= 2) {
+             const contentToParse = lines.slice(0, MAX_LINES_TO_PARSE_YAML).join('\n');
+              if (/^\s*([a-zA-Z0-9_.-]+|"([^"]*)"|'([^']*)')\s*:\s*(?:\S|$)/m.test(contentToParse) || /^\s*-\s+(?:\S|\n\s+\S)/m.test(contentToParse)) {
+                 const result = yaml.load(contentToParse);
+                 if (typeof result === 'object' && result !== null) {
+                     score = Math.max(0, score - 10); // Penalize YAML structure
+                 }
+             }
+         }
+     } catch (e) { /* Ignore */ }
+
+     return score;
+   }
+
   /**
    * Register Markdown language provider with Monaco
    */

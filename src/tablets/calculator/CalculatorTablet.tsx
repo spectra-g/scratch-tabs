@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Calculator, History, StickyNote, Delete, Percent, Divide, X as MultiplyIcon, Minus, Plus, Equal, Dot } from 'lucide-react';
-import { format } from 'mathjs'; // Import mathjs
+// Removed: import { format } from 'mathjs'; // Import mathjs
 
 // --- State Interface ---
 interface CalculatorData {
@@ -20,6 +20,27 @@ interface CalculatorTabletState extends TabletState {
     type: 'calculator';
     data: CalculatorData;
 }
+
+// --- Helper Function for Number Formatting (replaces mathjs.format) ---
+const formatNumberResult = (num: number): string => {
+    // Handle non-finite numbers (Infinity, NaN)
+    if (!isFinite(num)) {
+        return "Error";
+    }
+
+    // Use toPrecision to control significant digits.
+    // 14 significant digits seems reasonable for a calculator display.
+    const precision = 14;
+    const preciseNumStr = num.toPrecision(precision);
+
+    // parseFloat(preciseNumStr).toString() has the nice effect of:
+    // 1. Removing trailing zeros after the decimal point (e.g., "1.2000" -> "1.2")
+    // 2. Converting back from scientific notation if possible within JS number limits,
+    //    but keeping it if necessary (e.g., "1e+21" remains "1e+21").
+    // 3. Handling integers correctly (e.g., "123.000" -> "123")
+    return parseFloat(preciseNumStr).toString();
+};
+
 
 // --- Button Component (Refined Styling) ---
 const CalculatorButton: React.FC<{
@@ -121,7 +142,7 @@ export const CalculatorTablet: Tablet = {
             lastOperandForRepeat: null,
         });
 
-        // --- Calculation Logic (Modified for Repeat) ---
+        // --- Calculation Logic (Modified for Repeat, removed mathjs) ---
         const performCalculation = useCallback((
             op: string | null,
             prev: string | null,
@@ -131,6 +152,13 @@ export const CalculatorTablet: Tablet = {
                 try {
                     const prevNum = parseFloat(prev);
                     const currNum = parseFloat(curr);
+
+                    // Check for invalid number inputs before calculation
+                    if (isNaN(prevNum) || isNaN(currNum)) {
+                        console.error("Invalid number input for calculation:", prev, curr);
+                        return "Error";
+                    }
+
                     let result: number;
 
                     switch (op) {
@@ -138,18 +166,26 @@ export const CalculatorTablet: Tablet = {
                         case '-': result = prevNum - currNum; break;
                         case '*': result = prevNum * currNum; break;
                         case '/':
-                            if (currNum === 0) throw new Error("Division by zero");
+                            if (currNum === 0) return "Error"; // Division by zero check
                             result = prevNum / currNum;
                             break;
-                        default: throw new Error("Invalid operation");
+                        default:
+                            console.error("Invalid operation received:", op);
+                            return "Error"; // Treat invalid operation as error
                     }
-                    return format(result, { precision: 14 });
+
+                    // Format the result using the helper function
+                    return formatNumberResult(result);
+
                 } catch (error: any) {
+                    // Catch any unexpected errors during parsing or calculation
                     console.error("Calculation Error:", error);
                     return "Error";
                 }
             }
-            return curr; // Return current if no calculation needed/possible
+            // Return current operand if no calculation is needed/possible
+            // (e.g., first operator press)
+            return curr;
         }, []);
 
 
@@ -159,10 +195,12 @@ export const CalculatorTablet: Tablet = {
             const clearRepeat = clearRepeatState(); // Clear repeat state on new number input
 
             if (data.overwrite || data.currentOperand === '0' || data.currentOperand === null) {
+                // Start new number or replace '0'
                 newCurrentOperand = num;
             } else {
-                // Prevent excessively long numbers (optional)
-                if (data.currentOperand.length >= 16) return;
+                 // Prevent excessively long numbers (optional display limit)
+                 // Using 16 as an arbitrary limit, adjust as needed
+                if (data.currentOperand.replace('.', '').replace('-', '').length >= 16) return;
                 newCurrentOperand = data.currentOperand + num;
             }
             updateData({
@@ -176,155 +214,218 @@ export const CalculatorTablet: Tablet = {
         const handleDecimal = () => {
             const clearRepeat = clearRepeatState();
             if (data.overwrite) {
+                // If overwriting (e.g., after equals or operator), start with "0."
                 updateData({ currentOperand: '0.', display: '0.', overwrite: false, ...clearRepeat });
                 return;
             }
+            // Add decimal only if not already present
             if (data.currentOperand && !data.currentOperand.includes('.')) {
                 const newCurrentOperand = data.currentOperand + '.';
                 updateData({ currentOperand: newCurrentOperand, display: newCurrentOperand, ...clearRepeat });
+            } else if (data.currentOperand === null) {
+                 // Handle case where user presses "." first
+                 updateData({ currentOperand: '0.', display: '0.', overwrite: false, ...clearRepeat });
             }
         };
 
         const handleOperator = (op: string) => {
+            // Prevent operator if nothing has been entered yet
             if (data.currentOperand === null && data.previousOperand === null) return;
 
             const clearRepeat = clearRepeatState();
             let result = data.currentOperand; // Default to current operand if no calc happens
 
-            // If there's already a previous operand and operation, calculate first
-            // Only calculate if overwrite is false (meaning user typed a new number after last op)
-            if (data.previousOperand !== null && data.operation !== null && !data.overwrite) {
+            // --- Case 1: Chaining operations (e.g., 5 + 3 - ) ---
+            // Calculate the previous operation *before* setting the new one,
+            // but only if a new number was entered (overwrite is false).
+            if (data.previousOperand !== null && data.operation !== null && !data.overwrite && data.currentOperand !== null) {
                  result = performCalculation(data.operation, data.previousOperand, data.currentOperand);
                 if (result === "Error") {
                     updateData({ display: "Error", currentOperand: null, previousOperand: null, operation: null, overwrite: true, ...clearRepeat });
                     return;
                 }
+                // The result becomes the new previous operand for the *next* operation
+                updateData({
+                    previousOperand: result,
+                    currentOperand: null, // Ready for next number
+                    operation: op,
+                    display: result ?? '0',
+                    overwrite: true,
+                    ...clearRepeat,
+                });
+
+            // --- Case 2: Changing operator (e.g., 5 + - ) ---
+            // If user presses another operator immediately after one (overwrite is true),
+            // just update the operator, using the existing previousOperand.
             } else if (data.previousOperand !== null && data.operation !== null && data.overwrite) {
-                 // If user presses another operator immediately after one, just update the operator
-                 updateData({ operation: op, ...clearRepeat });
-                 return;
+                 updateData({ operation: op, ...clearRepeat }); // Only change the operation
+
+            // --- Case 3: First operator or operator after equals ---
+            // No previous operation pending, or we just hit equals.
+            // Move current operand (or the existing previous operand if current is null) to previousOperand.
             } else {
-                 // Use the current display value if no calculation happened yet
-                 result = data.currentOperand ?? data.previousOperand;
+                 // If currentOperand is null (e.g., pressed operator right after another),
+                 // use the existing previousOperand. Otherwise, use the currentOperand.
+                 const valueToMove = data.currentOperand ?? data.previousOperand;
+
+                 updateData({
+                     previousOperand: valueToMove, // Current number becomes previous
+                     currentOperand: null, // Ready for next number
+                     operation: op,
+                     display: valueToMove ?? '0', // Show the number being operated on
+                     overwrite: true, // Next number should overwrite display
+                     ...clearRepeat,
+                 });
             }
-
-
-            updateData({
-                previousOperand: result, // Result or current value becomes previous
-                currentOperand: null, // Ready for next operand
-                operation: op,
-                display: result ?? '0', // Show result or the number being operated on
-                overwrite: true, // Next number should overwrite
-                ...clearRepeat,
-            });
         };
+
 
         const handleEquals = () => {
             let result: string | null = null;
             let historyEntry: string | null = null;
             let nextStateUpdate: Partial<CalculatorData> = {};
 
-            // --- Scenario 1: Standard Calculation ---
+            // --- Scenario 1: Standard Calculation (e.g., 5 + 3 =) ---
+            // Requires an operation, a previous operand, and a current operand.
             if (data.operation && data.previousOperand && data.currentOperand) {
                 result = performCalculation(data.operation, data.previousOperand, data.currentOperand);
-                historyEntry = `${data.previousOperand} ${data.operation} ${data.currentOperand} = ${result}`;
-
-                if (result !== "Error") {
+                // Check for error from calculation
+                 if (result === "Error") {
+                     nextStateUpdate = {
+                         display: "Error",
+                         currentOperand: null,
+                         previousOperand: null,
+                         operation: null,
+                         overwrite: true,
+                         ...clearRepeatState(), // Clear repeat state on error
+                     };
+                 } else {
+                    // Format history entry using the *inputs* to the calculation
+                    historyEntry = `${data.previousOperand} ${data.operation} ${data.currentOperand} = ${result}`;
                     nextStateUpdate = {
-                        // Store for potential repeat
+                        // Store details for potential repeat operation
                         lastOperationForRepeat: data.operation,
                         lastOperandForRepeat: data.currentOperand,
+                        // Update state with result
+                        display: result ?? '0',
+                        currentOperand: result, // Result becomes the new current operand
+                        previousOperand: null, // Clear previous operand
+                        operation: null, // Clear operation
+                        overwrite: true, // Next number input overwrites display
                     };
-                } else {
-                     nextStateUpdate = clearRepeatState(); // Clear repeat state on error
-                }
-
-                nextStateUpdate = {
-                    ...nextStateUpdate,
-                    display: result ?? '0',
-                    currentOperand: result,
-                    previousOperand: null,
-                    operation: null,
-                    overwrite: true,
-                };
-
-            // --- Scenario 2: Repeat Last Operation ---
-            } else if (data.lastOperationForRepeat && data.lastOperandForRepeat && data.currentOperand && !data.operation) {
-                // Use current display (which is the previous result) as the new previousOperand
-                const prev = data.currentOperand;
-                const curr = data.lastOperandForRepeat;
-                const op = data.lastOperationForRepeat;
-
-                result = performCalculation(op, prev, curr);
-                historyEntry = `${prev} ${op} ${curr} = ${result}`;
-
-                 // Don't clear repeat state here, keep it for subsequent presses
-                 if (result === "Error") {
-                     nextStateUpdate = clearRepeatState(); // Clear repeat state on error
                  }
 
-                nextStateUpdate = {
-                    ...nextStateUpdate, // Keep existing repeat state if no error
-                    display: result ?? '0',
-                    currentOperand: result,
-                    previousOperand: null, // Keep previous null
-                    operation: null, // Keep operation null
-                    overwrite: true,
-                };
+            // --- Scenario 2: Repeat Last Operation (e.g., 5 + 3 = = = ...) ---
+            // Requires a stored last operation/operand, a current operand (result of previous calc),
+            // and no *pending* operation.
+            } else if (data.lastOperationForRepeat && data.lastOperandForRepeat && data.currentOperand && !data.operation) {
+                // Use current display (which should be the previous result) as the new 'previous' operand
+                const prev = data.currentOperand;
+                const curr = data.lastOperandForRepeat; // The number to repeat the operation with
+                const op = data.lastOperationForRepeat; // The operation to repeat
 
-            // --- Scenario 3: Nothing to do (e.g., pressing = on '0') ---
+                result = performCalculation(op, prev, curr);
+
+                 if (result === "Error") {
+                     nextStateUpdate = {
+                         display: "Error",
+                         currentOperand: null,
+                         previousOperand: null,
+                         operation: null,
+                         overwrite: true,
+                         ...clearRepeatState(), // Clear repeat state on error
+                     };
+                 } else {
+                     // Format history entry using the *inputs* to this repeat calculation
+                    historyEntry = `${prev} ${op} ${curr} = ${result}`;
+                    // Don't clear repeat state here, keep it for subsequent presses
+                    nextStateUpdate = {
+                        display: result ?? '0',
+                        currentOperand: result, // Result becomes the new current operand
+                        previousOperand: null, // Keep previous null
+                        operation: null, // Keep operation null
+                        overwrite: true, // Next number input overwrites display
+                        // Keep existing lastOperationForRepeat & lastOperandForRepeat
+                    };
+                 }
+
+            // --- Scenario 3: Nothing to calculate ---
+            // e.g., pressing '=' when display is '0', or after 'AC'
             } else {
-                return; // Or maybe clear repeat state? updateData(clearRepeatState());
+                // Optionally clear repeat state if equals is pressed without a valid context
+                // updateData(clearRepeatState());
+                return; // Do nothing
             }
 
             // --- Update State ---
             if (historyEntry) {
-                 nextStateUpdate.history = [...data.history, historyEntry].slice(-20);
+                 // Add to history, ensuring it doesn't grow indefinitely
+                 nextStateUpdate.history = [...data.history, historyEntry].slice(-20); // Keep last 20 entries
             }
             updateData(nextStateUpdate);
         };
 
+
         const handleAllClear = () => {
             updateData({
                 display: '0',
-                currentOperand: '0',
+                currentOperand: '0', // Reset current operand to '0' for consistency
                 previousOperand: null,
                 operation: null,
-                overwrite: false,
+                overwrite: false, // Ready for new input
                 ...clearRepeatState(), // Also clear repeat state
             });
         };
 
         const handleBackspace = () => {
+            // Don't backspace if we should overwrite (e.g., after '=' or operator)
+            // or if the current operand is null or effectively zero
             if (data.overwrite || data.currentOperand === null || data.currentOperand === '0') return;
 
             const clearRepeat = clearRepeatState();
             let newCurrentOperand: string;
 
-            if (data.currentOperand.length === 1) {
+            if (data.currentOperand.length === 1 || (data.currentOperand.startsWith('-') && data.currentOperand.length === 2) ) {
+                // If only one digit left (or just '-'), reset to '0'
                 newCurrentOperand = '0';
             } else {
+                // Remove the last character
                 newCurrentOperand = data.currentOperand.slice(0, -1);
             }
             updateData({ currentOperand: newCurrentOperand, display: newCurrentOperand, ...clearRepeat });
         };
 
         const handlePercent = () => {
+             // Apply percent only to the current number being entered or the result
             if (data.currentOperand) {
+                 const clearRepeat = clearRepeatState();
                 try {
                     const value = parseFloat(data.currentOperand);
+                     if (isNaN(value)) throw new Error("Invalid number for percent");
+
+                    // Calculate percentage (divide by 100)
                     const result = value / 100;
-                    const formattedResult = format(result, { precision: 14 });
+
+                    // Format the result using the helper function
+                    const formattedResult = formatNumberResult(result);
+
+                     if (formattedResult === "Error") throw new Error("Percentage result formatting error");
+
                     updateData({
                         currentOperand: formattedResult,
                         display: formattedResult,
-                        overwrite: true,
-                        ...clearRepeatState()
+                        overwrite: true, // Treat % like an operation end; next number overwrites
+                        ...clearRepeat
                     });
-                } catch {
-                    updateData({ display: "Error", currentOperand: null, overwrite: true, ...clearRepeatState() });
+                } catch (error) {
+                     console.error("Percent Error:", error);
+                    updateData({ display: "Error", currentOperand: null, overwrite: true, ...clearRepeat });
                 }
             }
+             // Consider what happens if user presses % after an operator?
+             // Current logic only applies it to currentOperand. This seems reasonable.
+             // E.g., 5 + 10 % -> 5 + 0.1 (updates currentOperand before potential equals)
+             // If you wanted 5 + 10% (of 5), the logic would be more complex.
         };
 
         // --- Dynamic Font Size for Display ---
@@ -336,34 +437,40 @@ export const CalculatorTablet: Tablet = {
             return 'text-3xl'; // Default largest
         };
 
+        // --- Render UI ---
         return (
             <div className="flex flex-col md:flex-row h-full bg-gray-900 text-gray-200">
                 {/* Calculator Section */}
                 <div className="w-full md:w-7/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-gray-700/50">
-                    {/* ... Header ... */}
+                    {/* Header */}
                      <div className="flex items-center space-x-2 mb-4 px-2">
                         <Calculator className="text-gray-400" size={20} />
                         <h2 className="text-lg font-semibold text-gray-100">Calculator</h2>
                     </div>
 
-                    {/* ... Display ... */}
+                    {/* Display */}
                     <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 mb-4 text-right overflow-hidden">
-                        <div className="h-5 text-sm text-gray-400 font-mono truncate">
+                        {/* Mini display for context (previous op) */}
+                        <div className="h-5 text-sm text-gray-400 font-mono truncate" aria-live="polite">
+                            {/* Show pending operation context */}
                             {data.previousOperand} {data.operation}
                         </div>
+                         {/* Main display */}
                         <div
                             className={`font-mono ${getDisplayFontSize(data.display)} text-gray-100 break-all h-10 flex items-center justify-end`}
-                            title={data.display}
+                            title={data.display} // Tooltip for long numbers
+                            aria-live="polite" // Announce changes
+                            role="textbox" // Semantic role for display
+                            aria-readonly="true"
                         >
-                            {data.display}
+                            {data.display ?? '0'} {/* Ensure display isn't null */}
                         </div>
                     </div>
 
-                    {/* Keypad - Updated Layout */}
+                    {/* Keypad */}
                     <div className="grid grid-cols-4 grid-rows-5 gap-2 flex-grow">
                         {/* Row 1 */}
                         <CalculatorButton value="AC" onClick={handleAllClear} variant="action" ariaLabel="All Clear" />
-                        {/* CE replaced by Backspace */}
                         <CalculatorButton value={<Delete size={18} />} onClick={handleBackspace} variant="action" ariaLabel="Backspace" />
                         <CalculatorButton value={<Percent size={18} />} onClick={handlePercent} variant="operator" ariaLabel="Percent" />
                         <CalculatorButton value={<Divide size={18} />} onClick={() => handleOperator('/')} variant="operator" ariaLabel="Divide" />
@@ -389,9 +496,7 @@ export const CalculatorTablet: Tablet = {
                         {/* Row 5 */}
                         <CalculatorButton value="0" onClick={() => handleNumber('0')} className="col-span-2" />
                         <CalculatorButton value={<Dot size={18} />} onClick={handleDecimal} ariaLabel="Decimal" />
-                        {/* Equals button in the bottom right, standard size */}
                         <CalculatorButton value={<Equal size={20} />} onClick={handleEquals} variant="equals" ariaLabel="Equals" />
-                        {/* Removed the extra backspace button from here */}
                     </div>
                 </div>
 
@@ -407,7 +512,7 @@ export const CalculatorTablet: Tablet = {
                             {data.history.length === 0 ? (
                                 <div className="text-gray-500 text-sm italic text-center mt-4">No history yet</div>
                             ) : (
-                                <div className="space-y-1.5">
+                                <div className="space-y-1.5" aria-live="polite"> {/* Announce history changes */}
                                     {data.history.slice().reverse().map((entry, i) => ( // Show newest first
                                         <div key={data.history.length - 1 - i} className="font-mono text-sm text-gray-300 break-words">{entry}</div>
                                     ))}
@@ -427,6 +532,7 @@ export const CalculatorTablet: Tablet = {
                             onChange={(e) => updateData({ notes: e.target.value })}
                             className="w-full flex-grow bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none custom-scrollbar text-sm"
                             placeholder="Add notes..."
+                            aria-label="Calculator Notes"
                         />
                     </div>
                 </div>
