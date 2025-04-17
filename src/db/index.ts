@@ -11,6 +11,7 @@ interface TabRecord {
   isTablet?: boolean;
   tabletState?: string;
   lastModified: number;
+  dateCreated: number;
 }
 
 interface SplitViewRecord {
@@ -31,7 +32,7 @@ export class ScratchTabsDB extends Dexie {
 
   constructor() {
     super('ScratchTabsDB');
-    
+
     // Define tables and indexes
     this.version(1).stores({
       tabs: 'id, lastModified',
@@ -43,16 +44,20 @@ export class ScratchTabsDB extends Dexie {
 // Create and export a singleton instance
 export const db = new ScratchTabsDB();
 
-// Convert Tab to TabRecord
 const toTabRecord = (tab: Tab): TabRecord => ({
   ...tab,
-  lastModified: Date.now()
+  lastModified: tab.lastModified,
+  dateCreated: tab.dateCreated
 });
 
-// Convert TabRecord to Tab
 const toTab = (record: TabRecord): Tab => {
-  const { ...tab } = record;
-  return tab;
+  const now = Date.now();
+  return {
+    ...record,
+    dateCreated: record.dateCreated || now,
+    lastModified: record.lastModified || now,
+    cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 }
+  };
 };
 
 // Storage interface for abstraction

@@ -31,15 +31,29 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
   })),
 
   addTab: (tab) => set((state) => {
-    const newTab = { ...tab, languageLocked: tab.languageLocked ?? false, cursorPosition: { lineNumber: 1, column: 1 } };
+    const now = Date.now();
+    const newTab = {
+      ...tab,
+      languageLocked: tab.languageLocked ?? false,
+      cursorPosition: { lineNumber: 1, column: 1 },
+      dateCreated: tab.dateCreated ?? now,
+      lastModified: tab.lastModified ?? now
+    };
     return {
       tabs: [...state.tabs, newTab],
       activeTabId: tab.id,
     };
   }),
-  
+
   addBackgroundTab: (tab) => set((state) => {
-    const newTab = { ...tab, languageLocked: tab.languageLocked ?? false, cursorPosition: { lineNumber: 1, column: 1 } };
+    const now = Date.now();
+    const newTab = {
+      ...tab,
+      languageLocked: tab.languageLocked ?? false,
+      cursorPosition: { lineNumber: 1, column: 1 },
+      dateCreated: tab.dateCreated ?? now,
+      lastModified: tab.lastModified ?? now
+    };
     return {
       tabs: [...state.tabs, newTab],
     };
@@ -47,24 +61,24 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
 
   removeTab: (id) => set((state) => {
     const newTabs = state.tabs.filter((tab) => tab.id !== id);
-    
+
     // Determine the new active tab
     let newActiveTabId = state.activeTabId;
     if (state.activeTabId === id) {
       newActiveTabId = newTabs[0]?.id ?? null;
     }
-    
+
     return {
       tabs: newTabs,
       activeTabId: newActiveTabId,
     };
   }),
-  
+
   setActiveTab: (id) => set({ activeTabId: id }),
-  
+
   updateTabContent: (id, content) => set((state) => ({
-    tabs: state.tabs.map((tab) => 
-      tab.id === id ? { ...tab, content } : tab
+    tabs: state.tabs.map((tab) =>
+      tab.id === id ? { ...tab, content, lastModified: Date.now() } : tab
     ),
   })),
 
@@ -76,7 +90,7 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
 
   updateTabTitle: (id, title) => set((state) => ({
     tabs: state.tabs.map((tab) =>
-      tab.id === id ? { ...tab, title } : tab
+      tab.id === id ? { ...tab, title, lastModified: Date.now() } : tab
     ),
   })),
 
@@ -85,14 +99,19 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       tab.id === id ? { ...tab, ...updates } : tab
     ),
   })),
-  
+
   duplicateTab: (tabId) => {
     const state = get();
     const tabToDuplicate = state.tabs.find(tab => tab.id === tabId);
     if (!tabToDuplicate) return '';
-    
+
     // Use the utility function to create a duplicate tab
-    const newTab = duplicateTabUtil(tabToDuplicate);
+    const now = Date.now();
+    const newTab = {
+      ...duplicateTabUtil(tabToDuplicate),
+      dateCreated: now,
+      lastModified: now
+    };
     
     set((state) => ({
       tabs: [...state.tabs, newTab],
