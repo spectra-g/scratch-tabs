@@ -167,6 +167,8 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                 content.language = tab.language || 'Error';
             }
         }
+        content.dateCreated = tab.dateCreated;
+        content.lastModified = tab.lastModified;
 
         setTooltipPosition(position);
         setTooltipContent(content);

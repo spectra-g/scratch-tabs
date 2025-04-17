@@ -8,6 +8,8 @@ export interface Tab {
   tabletState?: string;
   cursorPosition: EditorPosition;
   isPinned?: boolean;
+  dateCreated: number; // Unix timestamp in milliseconds
+  lastModified: number; // Unix timestamp in milliseconds
 }
 
 export interface EditorPosition {
