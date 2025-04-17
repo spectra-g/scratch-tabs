@@ -9,6 +9,7 @@ import { StrictModeDroppable } from './StrictModeDroppable';
 import { TabTooltip } from './TabTooltip';
 import { Tab } from '../../types';
 import { languageRegistry } from '../../languages';
+import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
 
 interface TabBarProps {
   side?: 'left' | 'right';
@@ -72,8 +73,15 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
 
     const tabsKey = tabIds.join('-');
 
-    const visibleTabs = tabIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean) as typeof tabs;
     const activeSideTabId = isRightSide ? splitView.activeRightTabId : splitView.activeLeftTabId;
+
+    const { updateUrlOnManualActivation } = useUrlTabHandler();
+
+    const findTab = (tabId: string): Tab => {
+        return tabs.find(tab => tab.id === tabId);
+    };
+
+    const visibleTabs = tabIds.map(id => findTab(id)).filter(Boolean) as typeof tabs;
 
     const getTabLineCount = (content: string): number => {
         return content.split('\n').length;
@@ -358,6 +366,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         } else {
             setActiveLeftTab(tabId);
         }
+        updateUrlOnManualActivation(findTab(tabId));
     };
 
     const handleEmptyAreaDoubleClick = (e: React.MouseEvent) => {
