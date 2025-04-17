@@ -40,10 +40,6 @@ export class YamlLanguageDetector extends BaseLanguageDetector {
   private commentLineRegex = /^\s*#/;
   private emptyLineRegex = /^\s*$/;
 
-  // --- JSON Boundary Regex (for exclusion/penalty) ---
-  private jsonObjectBoundaryRegex = /^\s*\{[\s\S]*\}\s*$/;
-  private jsonArrayBoundaryRegex = /^\s*\[[\s\S]*\]\s*$/;
-
   sampleContent(): string {
     return `# Project Configuration
 name: my-awesome-project

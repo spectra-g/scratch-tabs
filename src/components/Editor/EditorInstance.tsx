@@ -30,6 +30,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const previousContentRef = useRef<string>(activeTab.content);
 
+  // --- Ref to hold the latest activeTab data ---
+  // This ref will be updated whenever the activeTab prop changes,
+  // allowing callbacks defined only once (like in handleEditorDidMount)
+  // to access the latest tab information.
+  const latestActiveTabRef = useRef(activeTab);
+  useEffect(() => {
+    latestActiveTabRef.current = activeTab;
+  }, [activeTab]);
+
   // --- Custom Hooks ---
   const {restoreScrollPosition} = useEditorScrollManager(editorRef, activeTab.id);
   const {detectAndSetLanguage} = useLanguageDetection(updateTabLanguage);
@@ -62,14 +71,22 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
 
     // Add command for Ctrl+S
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      if (!activeTab.isTablet) {
-        const detector = languageRegistry.getById(activeTab.language);
+      // --- Use the ref to get the LATEST tab data ---
+      const currentTab = latestActiveTabRef.current;
+      // --- Get the CURRENT content directly from the editor ---
+      const currentContent = editorRef.current?.getValue() ?? '';
+
+      if (!currentTab.isTablet) {
+        // --- Use the latest tab language ---
+        const detector = languageRegistry.getById(currentTab.language);
         const extension = detector?.getFileExtension() || 'txt';
-        const blob = new Blob([activeTab.content], { type: 'text/plain;charset=utf-8' });
+        // --- Use the current editor content ---
+        const blob = new Blob([currentContent], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${activeTab.title}.${extension}`;
+        // --- Use the latest tab title ---
+        a.download = `${currentTab.title}.${extension}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -78,14 +95,18 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     });
 
     // Force a re-render AFTER editorRef is set
+    // Note: This forceUpdate might not be strictly necessary if other state updates
+    // already cause re-renders, but keeping it if it was needed before.
     forceUpdate(x => x + 1);
 
     editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
-      setCursorPosition(activeTab.id, {
+      // Using latestActiveTabRef here too, just in case, although activeTab.id probably doesn't change
+      const currentTabId = latestActiveTabRef.current.id;
+      setCursorPosition(currentTabId, {
         lineNumber: e.position.lineNumber,
         column: e.position.column,
       });
-      if (showTabletSelector) {
+      if (showTabletSelector) { // showTabletSelector is state, so it's current
         const currentLineContent = editor.getModel()?.getLineContent(e.position.lineNumber) ?? '';
         if (!currentLineContent.trim().startsWith('/')) {
           closeTabletSelector(false);
@@ -103,6 +124,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     if (value === undefined) return;
     const newContent = value;
     const prevContent = previousContentRef.current;
+    // Update the store - this will eventually trigger the useEffect
+    // that updates latestActiveTabRef.current
     updateTabContent(activeTab.id, newContent);
     if (!activeTab.isTablet) {
       const trimmedContent = newContent.trim();
@@ -112,26 +135,29 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
       } else if (showTabletSelector) {
         closeTabletSelector(false);
       }
+      // Pass the latest activeTab properties needed by the detection logic
       detectAndSetLanguage(activeTab.id, newContent, prevContent, activeTab.language, activeTab.languageLocked);
     }
     previousContentRef.current = newContent;
   };
 
   const handleEditorFocus = () => {
+    // activeTab here is the prop passed during this render, so it's current for this action
     if (side === 'left') setActiveLeftTab(activeTab.id);
     else setActiveRightTab(activeTab.id);
   };
 
   const handleTabletSelect = (tablet: Tablet) => {
+    // activeTab here is the prop passed during this render
     const state = tablet.createInitialState();
     const serializedState = tablet.serializeState ? tablet.serializeState(state) : JSON.stringify(state);
     updateTabState(activeTab.id, {
       isTablet: true,
       tabletState: serializedState,
-      content: '',
-      language: 'plaintext',
+      content: '', // Clear content when switching to a tablet
+      language: 'plaintext', // Reset language? Or keep tablet-specific?
       languageLocked: true,
-      title: tablet.label,
+      title: tablet.label, // Update title
     });
     closeTabletSelector(true);
   };
@@ -140,7 +166,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     closeTabletSelector(true);
   };
 
-  const [, forceUpdate] = React.useState(0);
+  const [, forceUpdate] = React.useState(0); // Keep this if needed
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-850">
@@ -150,8 +176,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
             height="100%"
             width="100%"
             theme="vs-dark"
-            language={activeTab.language}
-            value={activeTab.content}
+            language={activeTab.language} // Use current language prop
+            value={activeTab.content}    // Use current content prop
             onChange={handleEditorChange}
             onMount={handleEditorDidMount}
             options={{
@@ -167,7 +193,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
                 addExtraSpaceOnTop: false,
               },
             }}
-            key={activeTab.id}
+            key={activeTab.id} // Key ensures component re-mounts if tab ID changes
           />
           {showTabletSelector && (
             <div
@@ -180,7 +206,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
               }}
             >
               <TabletSelector
-                searchQuery={tabletQuery}
+                searchQuery={tabletQuery} // state - current
                 onSelect={handleTabletSelect}
                 onClose={handleTabletSelectorClose}
               />
@@ -189,6 +215,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
         </div>
       </div>
       <div className="flex-shrink-0">
+        {/* Pass the current editor instance and the current activeTab prop */}
         <StatusBar editor={editorRef.current} activeTab={activeTab}/>
       </div>
     </div>
