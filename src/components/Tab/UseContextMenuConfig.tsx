@@ -146,7 +146,7 @@ export const useContextMenuConfig = (
       id: 'compare',
       label: 'Compare with other side',
       icon: GitCompare,
-      action: () => onClose('compare'),
+      action: () => onClose('compareSides'),
       condition: canCompare
     },
     {

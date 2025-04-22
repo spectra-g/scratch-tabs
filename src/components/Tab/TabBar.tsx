@@ -356,7 +356,9 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     };
 
     const handleContextMenuClose = (action?: 'compare') => {
-        if (action === 'compare') {
+        if (action === 'compareSides') {
+            onOpenDiffModal(false);
+        } else if (action === 'compare') {
             onOpenDiffModal(true);
         }
         setContextMenu(null);
