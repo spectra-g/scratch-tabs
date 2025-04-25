@@ -1,6 +1,6 @@
 import { useRootStore } from "../../stores";
 import {
-  ChevronLeft, ChevronLeftSquare, ChevronRight, ChevronRightSquare, Copy, FileCode, GitCompare,
+  ChevronLeft, ChevronLeftSquare, ChevronRight, ChevronRightSquare, Copy, Edit3, FileCode, GitCompare,
   Layers, Maximize, Split, XCircle, ClipboardPaste, Pin, Download, History
 } from 'lucide-react';
 import { LanguageSelector } from "./LanguageSelector";
@@ -11,7 +11,8 @@ export const useContextMenuConfig = (
     tabId: string,
     isRightSide: boolean,
     onClose: (action?: 'compare') => void,
-    handleOpenModal: () => void
+    handleOpenModal: () => void,
+    startEditingTab: (tabId: string) => void
 ): MenuItem[] => {
   const store = useRootStore();
   const tab = store.tabs.find(t => t.id === tabId);
@@ -33,6 +34,7 @@ export const useContextMenuConfig = (
   const canCompareFromClipboard = !!tab && !tab.isTablet;
   const isPinned = tab?.isPinned || false;
   const canDownload = !!tab && !tab.isTablet;
+  const canRename = !!tab;
 
   // Get the history for the current side
   const history = isRightSide ? store.splitView.rightTabHistory : store.splitView.leftTabHistory;
@@ -69,6 +71,11 @@ export const useContextMenuConfig = (
   const handleSimpleAction = (actionFn: (...args: any[]) => void, ...args: any[]) => {
     actionFn(...args);
     onClose();
+  };
+
+  const handleRename = () => {
+      startEditingTab(tabId);
+      onClose();
   };
 
   const handleLanguageSelect = (languageId: string) => {
@@ -122,6 +129,13 @@ export const useContextMenuConfig = (
   };
 
   const menuItems: MenuItem[] = [
+    {
+      id: 'rename',
+      label: 'Rename',
+      icon: Edit3,
+      action: handleRename,
+      condition: canRename,
+    },
     {
       id: 'fromSample',
       label: 'From sample',

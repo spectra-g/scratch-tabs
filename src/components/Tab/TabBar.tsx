@@ -310,6 +310,15 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         clearCommonTooltipState();
     };
 
+    const startEditingTab = useCallback((tabId: string) => {
+        const tabToEdit = findTab(tabId);
+        if (tabToEdit) {
+            clearCommonTooltipState();
+            setEditingTabId(tabId);
+            setEditingTitle(tabToEdit.title);
+        }
+    }, [tabs, findTab, clearCommonTooltipState, setEditingTabId, setEditingTitle]);
+
     const handleDoubleClick = (tab: { id: string; title: string }, e: React.MouseEvent) => {
         clearCommonTooltipState();
         const target = e.target as HTMLElement;
@@ -365,6 +374,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     };
 
     const handleTabClick = (tabId: string) => {
+        clearCommonTooltipState();
         if (isRightSide) {
             setActiveRightTab(tabId);
         } else {
@@ -508,6 +518,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                     position={{x: contextMenu.x, y: contextMenu.y}}
                     onClose={handleContextMenuClose}
                     isRightSide={isRightSide}
+                    startEditingTab={startEditingTab}
                 />
             )}
 
