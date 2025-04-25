@@ -38,7 +38,10 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
 
   return (
     // Main container for this pane
-    <div className={`flex h-full w-full overflow-hidden ${shouldShowMarkdownPreview ? 'flex-row' : 'flex-col'}`}>
+    <div
+      data-editor-pane-side={side}
+      className={`flex h-full w-full overflow-hidden ${shouldShowMarkdownPreview ? 'flex-row' : 'flex-col'}`}
+    >
       {/* Editor/Tablet Container */}
       <div
         className={`flex-1 overflow-hidden relative ${shouldShowMarkdownPreview ? 'w-1/2' : 'w-full'} h-full`}

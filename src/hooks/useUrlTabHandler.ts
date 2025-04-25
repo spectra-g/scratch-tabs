@@ -37,109 +37,104 @@ export const useUrlTabHandler = () => {
     useEffect(() => {
         const isInitial = isInitialLoadRef.current;
         if (isInitial) {
-            isInitialLoadRef.current = false; // Mark initial load as done after first run
+            isInitialLoadRef.current = false;
         }
 
-        // A. Handle No Identifier Case (Root Path '/')
         if (urlIdentifierParam === undefined) {
-            // Optional: Handle what happens when navigating back to '/'
-            // Could load last active based on history, or a default tab.
-            // For now, we primarily focus on when an identifier *is* present.
-            console.log("URL Sync: No identifier.");
             return;
         }
 
-        // B. Check if Current State Already Matches URL
+        // B. Check if *both* sides already match (more strict check for this logic)
         const currentLeftTab = tabs.find(tab => tab.id === splitView.activeLeftTabId);
         const currentRightTab = tabs.find(tab => tab.id === splitView.activeRightTabId);
-
         const isLeftSynced = currentLeftTab && generateUrlIdentifier(currentLeftTab) === urlIdentifierParam;
+        // Only consider right synced if split view is active
         const isRightSynced = splitView.isSplit && currentRightTab && generateUrlIdentifier(currentRightTab) === urlIdentifierParam;
 
-        // If *either* side is already synced, the URL change was likely handled
-        // by manual activation, OR the state is already correct. Do nothing more.
-        // Exception: On initial load, we *always* try to sync.
+        // If not initial load AND (left matches OR (split AND right matches)), assume state is okay
+        // This prevents loops from manual activation updating the URL
         if (!isInitial && (isLeftSynced || isRightSynced)) {
-            return; // State is consistent enough, likely due to manual nav
+             return;
         }
 
-        // C. State Needs Syncing (Initial Load OR Neither side matches URL)
-        // Find ALL candidate tabs matching the identifier
+        // C. State Needs Syncing
         const normalizedIdentifier = urlIdentifierParam.toLowerCase();
         const candidateTabs = tabs.filter(tab => {
-            // Check ID
             if (tab.id === urlIdentifierParam) return true;
-            // Check Title
             const normalizedTitle = tab.title.toLowerCase();
             if (normalizedTitle === normalizedIdentifier || normalizedTitle.replace(/[^a-z0-9]/g, '') === normalizedIdentifier.replace(/[^a-z0-9]/g, '')) return true;
-            // Check Language
             if (!tab.isTablet && tab.language === urlIdentifierParam && languageRegistry.getById(urlIdentifierParam)) return true;
-            // Check Tablet Type
             if (tab.isTablet && tab.tabletState) { try { const state = JSON.parse(tab.tabletState); if (state && typeof state === 'object' && state.type === urlIdentifierParam && tabletRegistry.getById(urlIdentifierParam)) return true; } catch (e) { /* ignore */ } }
-            // Check generated identifier
             if (generateUrlIdentifier(tab) === urlIdentifierParam) return true;
             return false;
         }).sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
 
-
         if (candidateTabs.length > 0) {
-            // --- Activate based on candidates ---
+            // --- Independent Activation Logic ---
+            let activatedLeftId: string | null = null;
+            let activatedRightId: string | null = null;
 
-            // Determine best candidate for the left side
-            const leftCandidate = candidateTabs.find(ct => !splitView.isSplit || splitView.leftTabs.includes(ct.id)) || candidateTabs[0];
+            // 1. Attempt to activate on Left Side
+            // Find best candidate specifically listed in leftTabs
+            const leftSpecificCandidate = candidateTabs.find(ct => splitView.leftTabs.includes(ct.id));
+            // Fallback: Use the overall best candidate if none specific to left found
+            const leftCandidate = leftSpecificCandidate || candidateTabs[0];
+
             if (leftCandidate && leftCandidate.id !== splitView.activeLeftTabId) {
                 setActiveLeftTab(leftCandidate.id);
+                activatedLeftId = leftCandidate.id; // Track which ID was activated
+            } else if (leftCandidate) {
+                activatedLeftId = leftCandidate.id; // Track even if already active
             }
 
-            // Determine best candidate for the right side (if split)
+            // 2. Attempt to activate on Right Side (if split view is enabled)
             if (splitView.isSplit) {
-                const rightCandidate = candidateTabs.find(ct => splitView.rightTabs.includes(ct.id));
-                // Use the ID of the candidate selected for the left side for comparison
-                const effectiveLeftId = leftCandidate?.id;
+                // Find best candidate specifically listed in rightTabs
+                const rightSpecificCandidate = candidateTabs.find(ct => splitView.rightTabs.includes(ct.id));
+                // Fallback: Use the overall best candidate *IF* it's different from the one activated on the left
+                const rightCandidate = rightSpecificCandidate || (candidateTabs[0] && candidateTabs[0].id !== activatedLeftId ? candidateTabs[0] : null);
 
-                // Activate right if found, different from current right, AND different from the left candidate
-                if (rightCandidate && rightCandidate.id !== splitView.activeRightTabId && rightCandidate.id !== effectiveLeftId) {
+                if (rightCandidate && rightCandidate.id !== splitView.activeRightTabId) {
                     setActiveRightTab(rightCandidate.id);
+                    activatedRightId = rightCandidate.id;
+                } else if (rightCandidate) {
+                    activatedRightId = rightCandidate.id;
                 }
-                 // Fallback: If no specific right candidate, use overall best if different from current right & left candidate
-                 else if (!rightCandidate && candidateTabs[0] && candidateTabs[0].id !== splitView.activeRightTabId && candidateTabs[0].id !== effectiveLeftId) {
-                     setActiveRightTab(candidateTabs[0].id);
-                 }
             }
-        } else {
-             // No existing tab matches -> Create a new one (Maybe only on initial load?)
-             // Let's restrict creation to initial load for now to prevent accidental creations
-             if (isInitial) {
-                 const newTab = createNewTab(urlIdentifierParam);
-                 addTab(newTab, false); // Add to left side
-                 setActiveLeftTab(newTab.id);
-             } else {
-                 // Maybe navigate away or show a 'not found' state?
-             }
-        }
 
+            // Optional: If NO tab was activated on either side (e.g., candidates exist but are already active)
+            // you might still want to ensure the URL reflects one of them if the URL param was different.
+            // This is less critical now that updateUrlOnManualActivation handles it.
+
+        } else {
+            // D. No Existing Tab Matches
+            if (isInitial) {
+                const newTab = createNewTab(urlIdentifierParam);
+                addTab(newTab, false); // Add to left side by default
+                setActiveLeftTab(newTab.id);
+            }
+        }
     }, [
         urlIdentifierParam,
-        tabs, // Need tabs list to find candidates and current tabs
+        tabs,
         addTab,
         setActiveLeftTab,
         setActiveRightTab,
         splitView.isSplit,
-        splitView.leftTabs, // Needed for finding candidates
-        splitView.rightTabs, // Needed for finding candidates
-        splitView.activeLeftTabId, // Needed for comparison
-        splitView.activeRightTabId, // Needed for comparison
+        splitView.leftTabs,
+        splitView.rightTabs,
+        splitView.activeLeftTabId,
+        splitView.activeRightTabId,
     ]);
-
 
     // --- Function to update URL on manual activation ---
     const updateUrlOnManualActivation = useCallback((tab: Tab | undefined, side: 'left' | 'right') => {
         if (!tab) return;
         const newUrlIdentifier = generateUrlIdentifier(tab);
-        // Get current identifier directly from window.location to avoid stale closures
         const currentPath = window.location.pathname;
-        const currentUrlIdentifier = currentPath.startsWith('/') ? currentPath.substring(1) : currentPath;
+        const currentUrlIdentifier = currentPath === '/' ? '' : currentPath.substring(1);
 
+        // Only navigate if the identifier is different and valid
         if (newUrlIdentifier && newUrlIdentifier !== currentUrlIdentifier) {
             navigate(`/${newUrlIdentifier}`, { replace: true });
         }

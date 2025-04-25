@@ -9,9 +9,10 @@ interface TabContextMenuProps {
     position: { x: number; y: number };
     onClose: (action?: 'compare') => void;
     isRightSide: boolean;
+    startEditingTab: (tabId: string) => void;
 }
 
-export const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClose, isRightSide }) => {
+export const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position, onClose, isRightSide, startEditingTab }) => {
     const menuRef = useRef<HTMLDivElement>(null);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,8 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position,
         tabId,
         isRightSide,
         onClose,
-        handleOpenModal
+        handleOpenModal,
+        startEditingTab
     );
 
     return (
