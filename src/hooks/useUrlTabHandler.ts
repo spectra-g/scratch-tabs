@@ -136,10 +136,7 @@ export const useUrlTabHandler = () => {
 
         // Only navigate if the identifier is different and valid
         if (newUrlIdentifier && newUrlIdentifier !== currentUrlIdentifier) {
-            console.log(`URL Sync: Manual activation of tab ${tab.id} (${newUrlIdentifier}), updating URL.`);
             navigate(`/${newUrlIdentifier}`, { replace: true });
-        } else {
-             console.log(`URL Sync: Manual activation of tab ${tab.id}, URL already matches or identifier is empty.`);
         }
     }, [navigate]);
 
