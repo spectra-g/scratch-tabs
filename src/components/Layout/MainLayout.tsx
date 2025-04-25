@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRootStore } from '../../stores';
 import { WelcomeScreen } from '../Welcome/WelcomeScreen';
 import { EditorPaneWrapper } from '../Editor/EditorPaneWrapper';
@@ -8,7 +8,21 @@ import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
 import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
 
 const MainLayout: React.FC = () => {
-  const { tabs, splitView, setSplitRatio } = useRootStore();
+  const {
+    tabs,
+    splitView,
+    setSplitRatio,
+    activeLeftTabId,
+    activeRightTabId,
+    saveTabDataById,
+  } = useRootStore(state => ({
+      tabs: state.tabs,
+      splitView: state.splitView,
+      setSplitRatio: state.setSplitRatio,
+      activeLeftTabId: state.splitView.activeLeftTabId,
+      activeRightTabId: state.splitView.activeRightTabId,
+      saveTabDataById: state.saveTabDataById,
+  }));
 
   const [diffModal, setDiffModal] = React.useState<{
     leftTabId: string | null;
@@ -55,6 +69,51 @@ const MainLayout: React.FC = () => {
   const handleCloseDiffModal = () => {
     setDiffModal(null);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+
+        const editorTextAreas = document.querySelectorAll<HTMLElement>('.monaco-editor textarea');
+        let focusedEditorSide: 'left' | 'right' | null = null;
+        let focusedElement: HTMLElement | null = null;
+
+        if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') {
+            for (const textArea of editorTextAreas) {
+                if (document.activeElement === textArea) {
+                     focusedElement = textArea;
+                     break;
+                }
+            }
+        }
+
+        if (focusedElement) {
+            const parentPane = focusedElement.closest<HTMLElement>('[data-editor-pane-side]');
+            if (parentPane) {
+                const sideAttr = parentPane.getAttribute('data-editor-pane-side');
+                if (sideAttr === 'left' || sideAttr === 'right') {
+                    focusedEditorSide = sideAttr;
+                }
+            }
+        }
+
+        if (focusedEditorSide) {
+          const tabIdToSave = focusedEditorSide === 'left' ? activeLeftTabId : activeRightTabId;
+
+          if (tabIdToSave) {
+            saveTabDataById(tabIdToSave);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeLeftTabId, activeRightTabId, saveTabDataById]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white">

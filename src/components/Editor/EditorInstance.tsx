@@ -9,7 +9,6 @@ import { useTabletSelector } from '../../hooks/useTabletSelector';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
 import { StatusBar } from '../StatusBar';
-import { languageRegistry } from '../../languages';
 
 interface EditorInstanceProps {
   side: 'left' | 'right';
@@ -31,9 +30,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   const previousContentRef = useRef<string>(activeTab.content);
 
   // --- Ref to hold the latest activeTab data ---
-  // This ref will be updated whenever the activeTab prop changes,
-  // allowing callbacks defined only once (like in handleEditorDidMount)
-  // to access the latest tab information.
   const latestActiveTabRef = useRef(activeTab);
   useEffect(() => {
     latestActiveTabRef.current = activeTab;
@@ -59,54 +55,38 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      editorRef.current?.focus();
-    }, 50);
+       if (editorRef.current) {
+          editorRef.current.focus();
+       }
+    }, 100);
     return () => clearTimeout(timer);
-  }, [activeTab.id]);
+  }, [side, activeTab.id]);
 
   // --- Editor Event Handlers ---
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
+    const currentTabId = activeTab.id;
+    const currentSide = side;
     editorRef.current = editor;
-    restoreScrollPosition(activeTab.id);
+    restoreScrollPosition(currentTabId);
 
-    // Add command for Ctrl+S
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // --- Use the ref to get the LATEST tab data ---
-      const currentTab = latestActiveTabRef.current;
-      // --- Get the CURRENT content directly from the editor ---
-      const currentContent = editorRef.current?.getValue() ?? '';
-
-      if (!currentTab.isTablet) {
-        // --- Use the latest tab language ---
-        const detector = languageRegistry.getById(currentTab.language);
-        const extension = detector?.getFileExtension() || 'txt';
-        // --- Use the current editor content ---
-        const blob = new Blob([currentContent], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        // --- Use the latest tab title ---
-        a.download = `${currentTab.title}.${extension}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
+    // --- Add Commands and Listeners ---
+    // Ctrl+K (Format)
+    const formatCommand = editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+       if (!editor.hasTextFocus()) {
+           return;
+       }
+       editor.getAction('editor.action.formatDocument')?.run();
     });
 
-    // Force a re-render AFTER editorRef is set
-    // Note: This forceUpdate might not be strictly necessary if other state updates
-    // already cause re-renders, but keeping it if it was needed before.
-    forceUpdate(x => x + 1);
-
-    editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
-      // Using latestActiveTabRef here too, just in case, although activeTab.id probably doesn't change
-      const currentTabId = latestActiveTabRef.current.id;
-      setCursorPosition(currentTabId, {
+    // Cursor Position Listener
+    const cursorListener = editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
+      const currentTabIdForCursor = latestActiveTabRef.current.id;
+      setCursorPosition(currentTabIdForCursor, {
         lineNumber: e.position.lineNumber,
         column: e.position.column,
       });
-      if (showTabletSelector) { // showTabletSelector is state, so it's current
+      // Tablet selector logic
+      if (showTabletSelector) { // Uses component state, which is up-to-date
         const currentLineContent = editor.getModel()?.getLineContent(e.position.lineNumber) ?? '';
         if (!currentLineContent.trim().startsWith('/')) {
           closeTabletSelector(false);
@@ -114,19 +94,26 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
       }
     });
 
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
-      editor.getAction('editor.action.formatDocument')?.run();
-    });
-    editor.focus();
+    return () => {
+        editorRef.current = null;
+
+        if (formatCommand) {
+             formatCommand.dispose();
+        }
+        if (cursorListener) {
+            cursorListener.dispose();
+        }
+    };
   };
 
   const handleEditorChange = (value: string | undefined) => {
     if (value === undefined) return;
     const newContent = value;
     const prevContent = previousContentRef.current;
-    // Update the store - this will eventually trigger the useEffect
-    // that updates latestActiveTabRef.current
-    updateTabContent(activeTab.id, newContent);
+    const currentTabId = activeTab.id;
+
+    updateTabContent(currentTabId, newContent);
+
     if (!activeTab.isTablet) {
       const trimmedContent = newContent.trim();
       if (trimmedContent.startsWith('/')) {
@@ -135,16 +122,17 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
       } else if (showTabletSelector) {
         closeTabletSelector(false);
       }
-      // Pass the latest activeTab properties needed by the detection logic
-      detectAndSetLanguage(activeTab.id, newContent, prevContent, activeTab.language, activeTab.languageLocked);
+      detectAndSetLanguage(currentTabId, newContent, prevContent, activeTab.language, activeTab.languageLocked);
     }
     previousContentRef.current = newContent;
   };
 
   const handleEditorFocus = () => {
-    // activeTab here is the prop passed during this render, so it's current for this action
-    if (side === 'left') setActiveLeftTab(activeTab.id);
-    else setActiveRightTab(activeTab.id);
+    if (side === 'left') {
+      setActiveLeftTab(activeTab.id);
+    } else {
+      setActiveRightTab(activeTab.id);
+    }
   };
 
   const handleTabletSelect = (tablet: Tablet) => {
@@ -166,12 +154,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     closeTabletSelector(true);
   };
 
-  const [, forceUpdate] = React.useState(0); // Keep this if needed
-
   return (
     <div className="flex flex-col h-full w-full bg-gray-850">
-      <div className="flex-grow relative overflow-hidden">
-        <div ref={editorContainerRef} className="w-full h-full absolute inset-0" onClick={handleEditorFocus}>
+      <div className="flex-grow relative overflow-hidden" ref={editorContainerRef}>
+        <div className="w-full h-full absolute inset-0">
           <Editor
             height="100%"
             width="100%"
@@ -180,6 +166,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
             value={activeTab.content}    // Use current content prop
             onChange={handleEditorChange}
             onMount={handleEditorDidMount}
+            onDidFocusEditorWidget={handleEditorFocus}
             options={{
               minimap: {enabled: false},
               fontSize: 14,

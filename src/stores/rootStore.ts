@@ -4,6 +4,8 @@ import { useSplitViewStore } from './splitViewStore';
 import { useEditorStore } from './editorStore';
 import { usePersistenceStore } from './persistenceStore';
 import { EditorPosition, Tab } from '../types';
+import { languageRegistry } from '../languages/registry';
+
 import {
   findTabById,
   isTabEmpty,
@@ -65,6 +67,8 @@ interface RootStore {
 
   compareFromClipboard: (originalTabId: string, isRightSide: boolean) => Promise<void>;
   reorderTabs: (side: 'left' | 'right', newOrder: string[]) => void;
+  focusedEditorSide: 'left' | 'right' | null;
+  saveTabDataById: (tabId: string) => void;
 }
 
 export const useRootStore = create<RootStore>((set, get) => {
@@ -353,11 +357,17 @@ export const useRootStore = create<RootStore>((set, get) => {
     setActiveLeftTab: (id) => {
       useSplitViewStore.getState().setActiveLeftTab(id);
       useTabsStore.getState().setActiveTab(id);
+      set({
+          focusedEditorSide: 'left'
+      });
     },
 
     setActiveRightTab: (id) => {
       useSplitViewStore.getState().setActiveRightTab(id);
       useTabsStore.getState().setActiveTab(id);
+      set({
+          focusedEditorSide: 'right'
+      });
     },
 
     setSplitRatio: (ratio) => {
@@ -571,6 +581,42 @@ export const useRootStore = create<RootStore>((set, get) => {
         // Not in split view, check all tabs
         return countEmptyTabs(tabs) < 3;
       }
+    },
+
+    focusedEditorSide: null,
+    saveTabDataById: (tabId: string) => {
+        const { tabs } = get();
+
+        if (!tabId) {
+             return;
+        }
+
+        const tabToSave = tabs.find(tab => tab.id === tabId);
+
+        if (!tabToSave) {
+            return;
+        }
+
+        if (tabToSave.isTablet) {
+            return;
+        }
+
+        try {
+            const currentContent = tabToSave.content;
+            const detector = languageRegistry.getById(tabToSave.language);
+            const extension = detector?.getFileExtension() || 'txt';
+            const blob = new Blob([currentContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${tabToSave.title}.${extension}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error(`[Store Save] Error during save for Tab ID ${tabToSave.id}:`, error);
+        }
     },
   };
 });
