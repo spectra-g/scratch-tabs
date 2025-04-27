@@ -23,6 +23,7 @@ export interface SplitViewState {
   rightTabs: string[];
   activeLeftTabId: string | null;
   activeRightTabId: string | null;
+  activeSide: string | null;
   splitRatio: number;
   leftTabHistory: string[];
   rightTabHistory: string[];

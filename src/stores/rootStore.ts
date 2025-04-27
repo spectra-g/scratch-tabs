@@ -44,6 +44,7 @@ interface RootStore {
     activeLeftTabId: string | null;
     activeRightTabId: string | null;
     splitRatio: number;
+    activeSide: string | null;
   };
   splitScreen: (leftTabId: string, rightTabId?: string) => void;
   unsplitScreen: (fromRight: boolean) => void;
@@ -51,6 +52,7 @@ interface RootStore {
   moveTabToLeft: (tabId: string) => void;
   setActiveLeftTab: (id: string) => void;
   setActiveRightTab: (id: string) => void;
+  setActiveSide: (string: string) => void;
   setSplitRatio: (ratio: number) => void;
 
   // Bulk tab operations
@@ -368,6 +370,10 @@ export const useRootStore = create<RootStore>((set, get) => {
       set({
           focusedEditorSide: 'right'
       });
+    },
+
+    setActiveSide: (side) => {
+      useSplitViewStore.getState().setActiveSide(side);
     },
 
     setSplitRatio: (ratio) => {

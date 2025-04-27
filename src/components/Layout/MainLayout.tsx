@@ -6,6 +6,7 @@ import { TabBar } from '../Tab/TabBar';
 import { DiffModal } from '../DiffModal';
 import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
 import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
+import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
 
 const MainLayout: React.FC = () => {
   const {
@@ -69,6 +70,8 @@ const MainLayout: React.FC = () => {
   const handleCloseDiffModal = () => {
     setDiffModal(null);
   };
+
+  useUrlTabHandler();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

@@ -65,7 +65,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   // --- Editor Event Handlers ---
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
     const currentTabId = activeTab.id;
-    const currentSide = side;
     editorRef.current = editor;
     restoreScrollPosition(currentTabId);
 
@@ -157,7 +156,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   return (
     <div className="flex flex-col h-full w-full bg-gray-850">
       <div className="flex-grow relative overflow-hidden" ref={editorContainerRef}>
-        <div className="w-full h-full absolute inset-0">
+        <div className="w-full h-full absolute inset-0" onClick={handleEditorFocus}>
           <Editor
             height="100%"
             width="100%"
@@ -166,7 +165,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
             value={activeTab.content}    // Use current content prop
             onChange={handleEditorChange}
             onMount={handleEditorDidMount}
-            onDidFocusEditorWidget={handleEditorFocus}
             options={{
               minimap: {enabled: false},
               fontSize: 14,
