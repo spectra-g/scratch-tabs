@@ -21,6 +21,7 @@ interface SplitViewRecord {
   rightTabs: string[];
   activeLeftTabId: string | null;
   activeRightTabId: string | null;
+  activeSide: string | null;
   splitRatio: number;
   lastModified: number;
 }

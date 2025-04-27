@@ -44,6 +44,8 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
               : [];
           };
 
+          if (!splitView.activeSide) splitView.activeSide = 'left';
+
           // Clean the tab ID arrays within splitView
           splitView.leftTabHistory = cleanTabIdArray(splitView.leftTabHistory);
           splitView.rightTabHistory = cleanTabIdArray(splitView.rightTabHistory);

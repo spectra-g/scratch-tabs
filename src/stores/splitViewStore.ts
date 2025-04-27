@@ -16,6 +16,7 @@ interface SplitViewStore {
   moveTabToLeft: (tabId: string) => void;
   setActiveLeftTab: (id: string) => void;
   setActiveRightTab: (id: string) => void;
+  setActiveSide: (side: string) => void;
   setSplitRatio: (ratio: number) => void;
   addTabToSide: (tabId: string, toRightSide: boolean, activeTabId?: string) => void;
   removeTabFromSide: (tabId: string) => void;
@@ -54,6 +55,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
         rightTabs: [rightTabId],
         activeLeftTabId: leftTabIds[0],
         activeRightTabId: rightTabId,
+        activeSide: 'right',
         splitRatio: 0.5,
         leftTabHistory: [leftTabIds[0]],
         rightTabHistory: [rightTabId],
@@ -75,6 +77,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
         rightTabs: [],
         activeLeftTabId: activeId || allTabs[0] || null,
         activeRightTabId: null,
+        activeSide: 'left',
         splitRatio: 0.5,
         leftTabHistory: [activeId || allTabs[0] || null].filter(Boolean) as string[],
         rightTabHistory: [],
@@ -100,6 +103,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
         rightTabs: newRightTabs,
         activeLeftTabId: newActiveLeftTabId,
         activeRightTabId: tabId,
+        activeSide: 'right',
         leftTabHistory: removeTabFromHistory(state.splitView.leftTabHistory, tabId),
         rightTabHistory: updateTabHistory(state.splitView.rightTabHistory, tabId),
       }
@@ -124,6 +128,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
         rightTabs: newRightTabs,
         activeRightTabId: newActiveRightTabId,
         activeLeftTabId: tabId,
+        activeSide: 'left',
         rightTabHistory: removeTabFromHistory(state.splitView.rightTabHistory, tabId),
         leftTabHistory: updateTabHistory(state.splitView.leftTabHistory, tabId),
       }
@@ -134,6 +139,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
     splitView: {
       ...state.splitView,
       activeLeftTabId: id,
+      activeSide: 'left',
       leftTabHistory: updateTabHistory(state.splitView.leftTabHistory, id),
     }
   })),
@@ -142,7 +148,15 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
     splitView: {
       ...state.splitView,
       activeRightTabId: id,
+      activeSide: 'right',
       rightTabHistory: updateTabHistory(state.splitView.rightTabHistory, id),
+    }
+  })),
+
+  setActiveSide: (side) => set((state) => ({
+    splitView: {
+      ...state.splitView,
+      activeSide: side,
     }
   })),
 
@@ -160,6 +174,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
           ...state.splitView,
           rightTabs: [...state.splitView.rightTabs, tabId],
           activeRightTabId: activeTabId || tabId,
+          activeSide: 'right',
           rightTabHistory: updateTabHistory(state.splitView.rightTabHistory, tabId),
         }
       };
@@ -169,6 +184,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
           ...state.splitView,
           leftTabs: [...state.splitView.leftTabs, tabId],
           activeLeftTabId: activeTabId || tabId,
+          activeSide: 'left',
           leftTabHistory: updateTabHistory(state.splitView.leftTabHistory, tabId),
         }
       };
@@ -182,6 +198,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
     if (newSplitView.leftTabs.includes(tabId)) {
       newSplitView.leftTabs = newSplitView.leftTabs.filter(id => id !== tabId);
       newSplitView.leftTabHistory = removeTabFromHistory(newSplitView.leftTabHistory, tabId);
+      newSplitView.activeSide = 'left';
 
       if (newSplitView.activeLeftTabId === tabId) {
         newSplitView.activeLeftTabId = getPreviousActiveTab(newSplitView.leftTabHistory, newSplitView.leftTabs);
@@ -192,6 +209,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
     if (newSplitView.rightTabs.includes(tabId)) {
       newSplitView.rightTabs = newSplitView.rightTabs.filter(id => id !== tabId);
       newSplitView.rightTabHistory = removeTabFromHistory(newSplitView.rightTabHistory, tabId);
+      newSplitView.activeSide = 'right';
 
       if (newSplitView.activeRightTabId === tabId) {
         newSplitView.activeRightTabId = getPreviousActiveTab(newSplitView.rightTabHistory, newSplitView.rightTabs);
@@ -206,6 +224,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
         newSplitView.rightTabs = [];
         newSplitView.activeLeftTabId = newSplitView.activeRightTabId;
         newSplitView.activeRightTabId = null;
+        newSplitView.activeSide = 'left';
         newSplitView.leftTabHistory = [...newSplitView.rightTabHistory];
         newSplitView.rightTabHistory = [];
       } else if (newSplitView.rightTabs.length === 0) {
@@ -213,6 +232,7 @@ export const useSplitViewStore = create<SplitViewStore>((set) => ({
         newSplitView.rightTabs = [];
         newSplitView.activeRightTabId = null;
         newSplitView.rightTabHistory = [];
+        newSplitView.activeSide = 'left';
       }
     }
 
