@@ -45,7 +45,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     const [editingTabId, setEditingTabId] = useState<string | null>(null);
     const [editingTitle, setEditingTitle] = useState('');
     const [contextMenu, setContextMenu] = useState<{ tabId: string; x: number; y: number } | null>(null);
-    const [isTabWidthsAdjusting, setIsTabWidthsAdjusting] = useState(false);
     const [isShrinkMode, setIsShrinkMode] = useState(false);
     const [showTabletSelector, setShowTabletSelector] = useState(false);
     const [tabletSelectorPosition, setTabletSelectorPosition] = useState({x: 0, y: 0});
@@ -113,10 +112,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
 
     // Handle initial tab rendering and width calculations
     useLayoutEffect(() => {
-        if (!tabsContainerRef.current) {
-            console.log('No container ref yet');
-            return;
-        }
+        if (!tabsContainerRef.current) return;
 
         const container = tabsContainerRef.current;
         
@@ -129,7 +125,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                 );
                 
                 if (hasTabChanges) {
-                    console.log('Tab changes detected, recalculating widths');
                     hasInitializedWidths.current = false;
                     calculateTabWidths();
                 }
@@ -157,17 +152,10 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
 
         const container = tabsContainerRef.current;
         const containerWidth = container.offsetWidth;
-        console.log('Container width:', containerWidth);
         containerWidthRef.current = containerWidth;
 
-        // Calculate total natural width needed
         const tabs = container.getElementsByClassName('tab-item');
-        console.log('Number of tabs found:', tabs.length);
-        
-        if (tabs.length === 0) {
-            console.log('No tabs found yet, skipping calculation');
-            return;
-        }
+        if (tabs.length === 0) return;
 
         let totalNaturalWidth = 0;
         
@@ -186,19 +174,14 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         Array.from(tabs).forEach((tab: Element) => {
             const tabElement = tab as HTMLElement;
             const naturalWidth = tabElement.offsetWidth;
-            console.log('Tab natural width:', naturalWidth, 'for tab:', tabElement.id);
             initialWidths.current[tabElement.id] = naturalWidth;
             totalNaturalWidth += naturalWidth;
         });
 
-        console.log('Total natural width:', totalNaturalWidth);
-
         // Check if we need to enter shrink mode
         const needsShrinkMode = totalNaturalWidth > containerWidth;
-        console.log('Needs shrink mode:', needsShrinkMode);
         
         if (needsShrinkMode !== isShrinkMode) {
-            console.log('Shrink mode changing from', isShrinkMode, 'to', needsShrinkMode);
             setIsShrinkMode(needsShrinkMode);
         }
 
@@ -208,11 +191,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
             const minTabWidth = 5;
             let tabWidth = availableWidth / visibleTabs.length;
             tabWidth = Math.max(tabWidth, minTabWidth);
-            console.log('Setting shrink mode widths:', {
-                availableWidth,
-                tabWidth,
-                minTabWidth
-            });
 
             Array.from(tabs).forEach((tab: Element) => {
                 const tabElement = tab as HTMLElement;
@@ -221,7 +199,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                 tabElement.style.maxWidth = `${tabWidth}px`;
             });
         } else {
-            console.log('Resetting to natural widths');
             // Reset to natural widths
             Array.from(tabs).forEach((tab: Element) => {
                 const tabElement = tab as HTMLElement;
@@ -232,19 +209,13 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         }
 
         hasInitializedWidths.current = true;
-        setIsTabWidthsAdjusting(false);
     };
 
     // Handle resize events
     useEffect(() => {
-        console.log('Resize effect running');
         const handleResize = () => {
             if (!tabsContainerRef.current) return;
             const newWidth = tabsContainerRef.current.offsetWidth;
-            console.log('Resize detected:', {
-                oldWidth: containerWidthRef.current,
-                newWidth
-            });
             if (newWidth !== containerWidthRef.current) {
                 containerWidthRef.current = newWidth;
                 hasInitializedWidths.current = false;
