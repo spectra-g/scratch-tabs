@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useRootStore } from '../../stores';
 import { TabletSelector } from '../../tablets';
 import { TabItem } from "./TabItem";
@@ -46,8 +46,13 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
     const [editingTitle, setEditingTitle] = useState('');
     const [contextMenu, setContextMenu] = useState<{ tabId: string; x: number; y: number } | null>(null);
     const [isTabWidthsAdjusting, setIsTabWidthsAdjusting] = useState(false);
+    const [isShrinkMode, setIsShrinkMode] = useState(false);
     const [showTabletSelector, setShowTabletSelector] = useState(false);
     const [tabletSelectorPosition, setTabletSelectorPosition] = useState({x: 0, y: 0});
+    const hasInitializedWidths = useRef(false);
+    const initialWidths = useRef<{ [key: string]: number }>({});
+    const containerWidthRef = useRef<number>(0);
+    const observerRef = useRef<MutationObserver | null>(null);
 
     const [tooltipVisible, setTooltipVisible] = useState(false);
     const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
@@ -106,16 +111,150 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         };
     }, [showTabletSelector]);
 
-    useEffect(() => {
-        updateTabWidths();
-        window.addEventListener('resize', updateTabWidths);
+    // Handle initial tab rendering and width calculations
+    useLayoutEffect(() => {
+        if (!tabsContainerRef.current) {
+            console.log('No container ref yet');
+            return;
+        }
 
-        return () => window.removeEventListener('resize', updateTabWidths);
+        const container = tabsContainerRef.current;
+        
+        // Set up mutation observer to detect when tabs are added
+        if (!observerRef.current) {
+            observerRef.current = new MutationObserver((mutations) => {
+                const hasTabChanges = mutations.some(mutation => 
+                    mutation.addedNodes.length > 0 || 
+                    mutation.removedNodes.length > 0
+                );
+                
+                if (hasTabChanges) {
+                    console.log('Tab changes detected, recalculating widths');
+                    hasInitializedWidths.current = false;
+                    calculateTabWidths();
+                }
+            });
+
+            observerRef.current.observe(container, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        // Initial width calculation
+        calculateTabWidths();
+
+        return () => {
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+                observerRef.current = null;
+            }
+        };
     }, [visibleTabs.length, splitView.splitRatio]);
 
-    useEffect(() => {
+    const calculateTabWidths = () => {
+        if (!tabsContainerRef.current) return;
+
+        const container = tabsContainerRef.current;
+        const containerWidth = container.offsetWidth;
+        console.log('Container width:', containerWidth);
+        containerWidthRef.current = containerWidth;
+
+        // Calculate total natural width needed
+        const tabs = container.getElementsByClassName('tab-item');
+        console.log('Number of tabs found:', tabs.length);
+        
+        if (tabs.length === 0) {
+            console.log('No tabs found yet, skipping calculation');
+            return;
+        }
+
+        let totalNaturalWidth = 0;
+        
+        // Temporarily set all tabs to natural width for measurement
+        Array.from(tabs).forEach((tab: Element) => {
+            const tabElement = tab as HTMLElement;
+            tabElement.style.width = '';
+            tabElement.style.minWidth = '';
+            tabElement.style.maxWidth = '';
+        });
+
+        // Force a reflow to ensure measurements are accurate
+        container.offsetHeight;
+
+        // Measure natural widths
+        Array.from(tabs).forEach((tab: Element) => {
+            const tabElement = tab as HTMLElement;
+            const naturalWidth = tabElement.offsetWidth;
+            console.log('Tab natural width:', naturalWidth, 'for tab:', tabElement.id);
+            initialWidths.current[tabElement.id] = naturalWidth;
+            totalNaturalWidth += naturalWidth;
+        });
+
+        console.log('Total natural width:', totalNaturalWidth);
+
+        // Check if we need to enter shrink mode
+        const needsShrinkMode = totalNaturalWidth > containerWidth;
+        console.log('Needs shrink mode:', needsShrinkMode);
+        
+        if (needsShrinkMode !== isShrinkMode) {
+            console.log('Shrink mode changing from', isShrinkMode, 'to', needsShrinkMode);
+            setIsShrinkMode(needsShrinkMode);
+        }
+
+        if (needsShrinkMode) {
+            const actionButtonsWidth = 0;
+            const availableWidth = containerWidth - actionButtonsWidth;
+            const minTabWidth = 5;
+            let tabWidth = availableWidth / visibleTabs.length;
+            tabWidth = Math.max(tabWidth, minTabWidth);
+            console.log('Setting shrink mode widths:', {
+                availableWidth,
+                tabWidth,
+                minTabWidth
+            });
+
+            Array.from(tabs).forEach((tab: Element) => {
+                const tabElement = tab as HTMLElement;
+                tabElement.style.width = `${tabWidth}px`;
+                tabElement.style.minWidth = `${minTabWidth}px`;
+                tabElement.style.maxWidth = `${tabWidth}px`;
+            });
+        } else {
+            console.log('Resetting to natural widths');
+            // Reset to natural widths
+            Array.from(tabs).forEach((tab: Element) => {
+                const tabElement = tab as HTMLElement;
+                tabElement.style.width = '';
+                tabElement.style.minWidth = '';
+                tabElement.style.maxWidth = '';
+            });
+        }
+
+        hasInitializedWidths.current = true;
         setIsTabWidthsAdjusting(false);
-    }, [tabs.length]);
+    };
+
+    // Handle resize events
+    useEffect(() => {
+        console.log('Resize effect running');
+        const handleResize = () => {
+            if (!tabsContainerRef.current) return;
+            const newWidth = tabsContainerRef.current.offsetWidth;
+            console.log('Resize detected:', {
+                oldWidth: containerWidthRef.current,
+                newWidth
+            });
+            if (newWidth !== containerWidthRef.current) {
+                containerWidthRef.current = newWidth;
+                hasInitializedWidths.current = false;
+                calculateTabWidths();
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         if (editingTabId && inputRef.current) {
@@ -233,39 +372,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         hoveredTabIdRef.current = null;
     };
 
-    const updateTabWidths = () => {
-        setTimeout(() => {
-            if (!newTabButtonRef.current) return;
-            if (!tabsWrapperRef.current) return;
-
-            if (newTabButtonRef.current.getBoundingClientRect().left > tabsWrapperRef.current.getBoundingClientRect().right && !isTabWidthsAdjusting) return;
-            if (!tabsContainerRef.current) return;
-
-            setIsTabWidthsAdjusting(true);
-
-            const container = tabsContainerRef.current;
-            const containerWidth = container.offsetWidth;
-
-            const numTabs = visibleTabs.length;
-
-            const actionButtonsWidth = 0;
-            const availableWidth = containerWidth - actionButtonsWidth;
-
-            const minTabWidth = 5;
-
-            let tabWidth = availableWidth / numTabs;
-
-            tabWidth = Math.max(tabWidth, minTabWidth);
-
-            const tabs = container.getElementsByClassName('tab-item');
-            Array.from(tabs).forEach((tab: Element) => {
-                (tab as HTMLElement).style.width = `${tabWidth}px`;
-                (tab as HTMLElement).style.minWidth = `${minTabWidth}px`;
-                (tab as HTMLElement).style.maxWidth = `${tabWidth}px`;
-            });
-        }, 0);
-    };
-
     const onDragEnd = (result: DropResult) => {
         const { source, destination } = result;
 
@@ -301,8 +407,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
         );
 
         reorderTabs(side, newTabIds);
-
-        updateTabWidths();
 
         clearCommonTooltipState();
     };
