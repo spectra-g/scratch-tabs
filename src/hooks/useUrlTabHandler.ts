@@ -96,29 +96,29 @@ export const useUrlTabHandler = () => {
             if (candidateTab) {
                 const isActiveLeft = candidateTab.id === activeLeftTabId;
                 const isActiveRight = isSplit && candidateTab.id === activeRightTabId;
-                // Determine which side the tab is *likely* focused on based on current state.
-                // This assumes if it's active right, the focus should be right.
-                const likelySide = (isActiveRight) ? 'right' : 'left';
 
-                // Update state only if necessary to match the URL's intent
-                if (likelySide === 'left') {
-                    if (!isActiveLeft) {
+                // Only update state if the tab isn't already active on either side
+                if (!isActiveLeft && !isActiveRight) {
+                    // If we're in split view, check both sides
+                    if (isSplit) {
+                        const leftTab = tabs.find(t => t.id === activeLeftTabId);
+                        const rightTab = tabs.find(t => t.id === activeRightTabId);
+                        
+                        // If we have a tab on the right but not left, use left
+                        if (rightTab && !leftTab) {
+                            setActiveLeftTab(candidateTab.id);
+                            setActiveSide('left');
+                        } else {
+                            // Default to left side if no clear preference
+                            setActiveLeftTab(candidateTab.id);
+                            setActiveSide('left');
+                        }
+                    } else {
+                        // Not in split view, always use left side
                         setActiveLeftTab(candidateTab.id);
-                        stateChangedByUrlSync = true;
-                    }
-                    if (activeSide !== 'left') {
                         setActiveSide('left');
-                        // Changing activeSide usually reflects focus derived from URL,
-                        // might not need to block the next State->URL sync unless activation also happened.
                     }
-                } else { // likelySide === 'right'
-                    if (isSplit && !isActiveRight) {
-                        setActiveRightTab(candidateTab.id);
-                        stateChangedByUrlSync = true;
-                    }
-                    if (activeSide !== 'right') {
-                         setActiveSide('right');
-                    }
+                    stateChangedByUrlSync = true;
                 }
             } else if (urlIdentifierParam) {
                  // No existing tab matches the URL. Create one:
