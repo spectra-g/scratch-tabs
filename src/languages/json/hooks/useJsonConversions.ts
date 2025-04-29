@@ -11,6 +11,7 @@ export const useJsonConversions = (
 ) => {
   const {
     openCodeGenerationModal,
+    openTreeViewModal,
     openCsvModal,
     openConversionModal
   } = useJsonModals();
@@ -37,6 +38,15 @@ export const useJsonConversions = (
       console.error('Failed to convert to Java:', error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
+
+  const handleTreeView = useCallback(() => {
+    try {
+      const content = editor.getValue();
+      openTreeViewModal(content);
+    } catch (error) {
+      console.error('Failed to convert to tree view:', error);
+    }
+  }, [editor, openTreeViewModal]);
 
 const handleToTypeScript = useCallback(() => {
   try {
@@ -141,6 +151,7 @@ const handleToTypeScript = useCallback(() => {
   }, [editor, openConversionModal, addTab]);
 
   return {
+    handleTreeView,
     handleToJava,
     handleToTypeScript,
     handleToPython,

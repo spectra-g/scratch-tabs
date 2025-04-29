@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Tab } from '../types';
 
 interface ModalState {
-  type: 'stringify' | 'pathFinder' | 'pathEvaluator' | 'codeGeneration' | null;
+  type: 'stringify' | 'pathFinder' | 'pathEvaluator' | 'codeGeneration' | 'treeView' | null;
   props?: any;
 }
 
@@ -12,6 +12,7 @@ interface JsonModalsStore {
   openPathFinderModal: (json: any) => void;
   openPathEvaluatorModal: (json: any) => void;
   openCodeGenerationModal: (tabs: { id: string; title: string; content: string; language: string; }[], addTab: (tab: Tab) => void) => void;
+  openTreeViewModal: (json: any) => void;
   closeModal: () => void;
 }
 
@@ -55,6 +56,16 @@ export const useJsonModalsStore = create<JsonModalsStore>((set) => ({
       props: {
         tabs,
         addTab,
+        onClose: () => set({ modalState: { type: null } })
+      }
+    }
+  }),
+
+  openTreeViewModal: (json) => set({
+    modalState: {
+      type: 'treeView',
+      props: {
+        json,
         onClose: () => set({ modalState: { type: null } })
       }
     }

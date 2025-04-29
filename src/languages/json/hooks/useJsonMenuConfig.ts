@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor';
 import {
     FileText, FileCode, Settings2, WrapText, UnfoldVertical,
     SortAsc, Trash2, TextQuote, Search, Sigma, Palette,
-    FileCheck, ListRestart, FileSymlink, FileCog
+    FileCheck, ListRestart, FileSymlink, FileCog, FolderTree
 } from 'lucide-react';
 
 import { useRootStore } from '../../../stores';
@@ -36,7 +36,7 @@ export const useJsonMenuConfig = (
     };
 
     const createTabAction = (actionFn: (editor: monaco.editor.IStandaloneCodeEditor, addTab: (tab: Tab) => void) => void) => {
-        return editor ? () => actionFn(editor, handleAddTab) : undefined;
+        return editor ? () => { actionFn(editor, handleAddTab); onClose(); } : undefined;
     };
 
 
@@ -52,7 +52,7 @@ export const useJsonMenuConfig = (
 
     const {
         handleToJava, handleToTypeScript, handleToPython, handleToGo,
-        handleToCSharp, handleToCsv, handleToYaml, handleToXml
+        handleToCSharp, handleToCsv, handleToYaml, handleToXml, handleTreeView
     } = useJsonConversions(editor, handleAddBackgroundTab); // Pass handleAddTab
 
     const {
@@ -64,6 +64,7 @@ export const useJsonMenuConfig = (
         if (!editor) return []; // Return empty array if editor is not ready
 
         // Wrap actions to include onClose and editor check
+        const treeViewAction = createTabAction(handleTreeView);
         const formatAction = createAction(handleFormat);
         const minifyAction = createAction(handleMinify);
         const sortKeysAction = createAction(handleSortKeys);
@@ -92,6 +93,8 @@ export const useJsonMenuConfig = (
 
 
         return [
+            { id: 'treeView', label: 'Tree view', icon: FolderTree, action: treeViewAction },
+            { id: 'separator0', isSeparator: true, label: 'sep0', icon: Settings2 }, // Icon needed but won't show
             // Section 1: Formatting & Basic Ops
             { id: 'format', label: 'Format', icon: WrapText, action: formatAction },
             { id: 'minify', label: 'Minify', icon: UnfoldVertical, action: minifyAction },
