@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { X, Pin } from 'lucide-react';
 import { Tab } from '../../types';
 import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
+import { ConfirmationDialog } from './ConfirmationDialog';
 
 interface TabItemProps {
     tab: Tab;
@@ -46,6 +47,7 @@ export const TabItem: React.FC<TabItemProps> = ({
     const inputRef = useRef<HTMLInputElement>(null);
     const tabRef = useRef<HTMLDivElement>(null);
     const [currentWidth, setCurrentWidth] = useState(0);
+    const [showConfirmation, setShowConfirmation] = useState(false);
 
     useEffect(() => {
         const element = tabRef.current;
@@ -89,7 +91,20 @@ export const TabItem: React.FC<TabItemProps> = ({
 
     const handleCloseClick = (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (tab.content && tab.content.trim() !== '') {
+            setShowConfirmation(true);
+        } else {
+            onClose(tab.id, e);
+        }
+    };
+
+    const handleConfirmClose = (e: React.MouseEvent) => {
+        setShowConfirmation(false);
         onClose(tab.id, e);
+    };
+
+    const handleCancelClose = () => {
+        setShowConfirmation(false);
     };
 
     const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -105,6 +120,7 @@ export const TabItem: React.FC<TabItemProps> = ({
     const showCloseButton = !tab.isPinned && (isActive || currentWidth > MIN_WIDTH_FOR_X);
 
     return (
+        <>
             <div
                 ref={(el) => {
                     provided.innerRef(el);
@@ -181,5 +197,13 @@ export const TabItem: React.FC<TabItemProps> = ({
                     </>
                 )}
             </div>
-        );
-    };
+
+            <ConfirmationDialog
+                isOpen={showConfirmation}
+                onConfirm={handleConfirmClose}
+                onCancel={handleCancelClose}
+                message="Tab content cannot be recovered once closed. Are you sure you want to close this tab?"
+            />
+        </>
+    );
+};
