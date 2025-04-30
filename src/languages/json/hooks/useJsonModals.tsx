@@ -3,6 +3,7 @@ import { useJsonModalsStore } from '../../../stores/jsonModalsStore';
 import { StringifyModal } from '../components/modals/StringifyModal';
 import { CodeGenerationModal } from '../components/modals/CodeGenerationModal';
 import { JsonTreeViewModalWrapper } from '../components/modals/JsonTreeViewModalWrapper';
+import { SchemaValidationModal } from '../components/modals/SchemaValidationModal';
 
 export const useJsonModals = () => {
   const {
@@ -10,6 +11,7 @@ export const useJsonModals = () => {
     openStringifyModal,
     openCodeGenerationModal,
     openTreeViewModal,
+    openSchemaValidationModal,
     closeModal
   } = useJsonModalsStore();
 
@@ -21,6 +23,8 @@ export const useJsonModals = () => {
         return <CodeGenerationModal {...modalState.props} />;
       case 'treeView':
         return <JsonTreeViewModalWrapper {...modalState.props} />;
+      case 'schemaValidation':
+        return <SchemaValidationModal {...modalState.props} />;
       default:
         return null;
     }
@@ -30,6 +34,7 @@ export const useJsonModals = () => {
     openStringifyModal,
     openCodeGenerationModal,
     openTreeViewModal,
+    openSchemaValidationModal,
     renderModal,
     closeModal
   };

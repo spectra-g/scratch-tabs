@@ -199,7 +199,32 @@ export const useJsonOperations = (
     }
   }, [editor, applyEdit]);
 
+  const handleRemoveComments = useCallback(() => {
+    if (!editor) return;
+    try {
+      const content = editor.getValue();
+      
+      // Remove single line comments
+      const noSingleLineComments = content.replace(/\/\/[^\n]*/g, '');
+      
+      // Remove multi-line comments
+      const noComments = noSingleLineComments.replace(/\/\*[\s\S]*?\*\//g, '');
+      
+      // Remove empty lines that might be left after comment removal
+      const noEmptyLines = noComments.split('\n')
+        .filter(line => line.trim())
+        .join('\n');
 
+      editor.executeEdits('json.removeComments', [{
+        range: editor.getModel()!.getFullModelRange(),
+        text: noEmptyLines,
+        forceMoveMarkers: true
+      }]);
+    } catch (error) {
+      console.error('Failed to remove comments:', error);
+    }
+  }, [editor]);
+  
   // --- Operations that DON'T modify the editor directly ---
   // --- These don't need the applyEdit helper ---
 
@@ -228,6 +253,7 @@ export const useJsonOperations = (
     handleFlatten,
     handleUnflatten,
     handleRemoveEmpty,
+    handleRemoveComments,
     handleStringify
   };
 };

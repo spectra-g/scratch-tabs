@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor';
 import {
     FileText, FileCode, Settings2, WrapText, UnfoldVertical,
     SortAsc, Trash2, TextQuote, Palette,
-    FileCheck, ListRestart, FileSymlink, FileCog, FolderTree
+    FileCheck, ListRestart, FileSymlink, FileCog, FolderTree, MessageSquareOff
 } from 'lucide-react';
 
 import { useRootStore } from '../../../stores';
@@ -42,7 +42,7 @@ export const useJsonMenuConfig = (
 
     const {
         handleFormat, handleMinify, handleSortKeys, handleFlatten,
-        handleUnflatten, handleRemoveEmpty, handleStringify
+        handleUnflatten, handleRemoveEmpty, handleRemoveComments, handleStringify
     } = useJsonOperations(editor, handleAddTab); // Pass handleAddTab for tab creation + close
 
     const {
@@ -70,6 +70,7 @@ export const useJsonMenuConfig = (
         const flattenAction = createAction(handleFlatten);
         const unflattenAction = createAction(handleUnflatten);
         const removeEmptyAction = createAction(handleRemoveEmpty);
+        const removeCommentsAction = createAction(handleRemoveComments);
         const stringifyAction = createAction(handleStringify);
 
         const toCamelCaseAction = createAction(handleToCamelCase);
@@ -99,6 +100,7 @@ export const useJsonMenuConfig = (
             { id: 'flatten', label: 'Flatten JSON', icon: ListRestart, action: flattenAction },
             { id: 'unflatten', label: 'Unflatten JSON', icon: ListRestart, action: unflattenAction, disabled: true }, // Example: disable if needed
             { id: 'removeEmpty', label: 'Remove Null/Empty', icon: Trash2, action: removeEmptyAction },
+            { id: 'removeComments', label: 'Remove Comments', icon: MessageSquareOff, action: removeCommentsAction },
             { id: 'stringify', label: 'Stringify', icon: TextQuote, action: stringifyAction },
             { id: 'separator2', isSeparator: true, label: 'sep1', icon: Settings2 }, // Icon needed but won't show
 
@@ -137,7 +139,7 @@ export const useJsonMenuConfig = (
     }, [
         editor, onClose, handleAddTab, // Include addTab if used directly
         handleFormat, handleMinify, handleSortKeys, handleFlatten, handleUnflatten,
-        handleRemoveEmpty, handleStringify,
+        handleRemoveEmpty, handleRemoveComments, handleStringify,
         handleToCamelCase, handleToSnakeCase, handleToKebabCase,
         handleToJava, handleToTypeScript, handleToPython, handleToGo, handleToCSharp,
         handleToCsv, handleToYaml, handleToXml,
