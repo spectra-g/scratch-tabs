@@ -2,15 +2,13 @@ import { useCallback } from 'react';
 import * as monaco from 'monaco-editor';
 import { Tab } from '../../../types';
 import { useJsonModals } from './useJsonModals';
+import { generateJsonSchema } from '../utils/jsonSchema';
 
 export const useJsonValidation = (
   editor: monaco.editor.IStandaloneCodeEditor,
   addTab: (tab: Tab) => void
 ) => {
-  const {
-    openSchemaValidationModal,
-    openSchemaGenerationModal
-  } = useJsonModals();
+  const { openSchemaValidationModal, openCodeGenerationModal } = useJsonModals();
 
   const handleValidateSchema = useCallback(() => {
     try {
@@ -26,11 +24,20 @@ export const useJsonValidation = (
     try {
       const content = editor.getValue();
       const json = JSON.parse(content);
-      openSchemaGenerationModal(json, addTab);
+      const schema = generateJsonSchema(json);
+      
+      const tab = {
+        id: crypto.randomUUID(),
+        title: 'JSON Schema',
+        content: JSON.stringify(schema, null, 2),
+        language: 'json'
+      };
+
+      openCodeGenerationModal([tab], addTab);
     } catch (error) {
       console.error('Failed to generate schema:', error);
     }
-  }, [editor, openSchemaGenerationModal, addTab]);
+  }, [editor, openCodeGenerationModal, addTab]);
 
   return {
     handleValidateSchema,

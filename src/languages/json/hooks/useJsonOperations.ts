@@ -8,9 +8,7 @@ export const useJsonOperations = (
   addTab: (tab: Tab) => void
 ) => {
   const {
-    openStringifyModal,
-    openPathFinderModal,
-    openPathEvaluatorModal
+    openStringifyModal
   } = useJsonModals();
 
   // Helper function to apply edits while preserving undo stack
@@ -201,7 +199,32 @@ export const useJsonOperations = (
     }
   }, [editor, applyEdit]);
 
+  const handleRemoveComments = useCallback(() => {
+    if (!editor) return;
+    try {
+      const content = editor.getValue();
+      
+      // Remove single line comments
+      const noSingleLineComments = content.replace(/\/\/[^\n]*/g, '');
+      
+      // Remove multi-line comments
+      const noComments = noSingleLineComments.replace(/\/\*[\s\S]*?\*\//g, '');
+      
+      // Remove empty lines that might be left after comment removal
+      const noEmptyLines = noComments.split('\n')
+        .filter(line => line.trim())
+        .join('\n');
 
+      editor.executeEdits('json.removeComments', [{
+        range: editor.getModel()!.getFullModelRange(),
+        text: noEmptyLines,
+        forceMoveMarkers: true
+      }]);
+    } catch (error) {
+      console.error('Failed to remove comments:', error);
+    }
+  }, [editor]);
+  
   // --- Operations that DON'T modify the editor directly ---
   // --- These don't need the applyEdit helper ---
 
@@ -223,30 +246,6 @@ export const useJsonOperations = (
     }
   }, [editor, openStringifyModal, addTab]);
 
-  const handlePathFinder = useCallback(() => {
-    if (!editor) return;
-    try {
-      const content = editor.getValue();
-      const json = JSON.parse(content);
-      openPathFinderModal(json);
-    } catch (error) {
-      console.error('Failed to open path finder (invalid JSON?):', error);
-       // Optionally show user error
-    }
-  }, [editor, openPathFinderModal]);
-
-  const handlePathEvaluator = useCallback(() => {
-     if (!editor) return;
-    try {
-      const content = editor.getValue();
-      const json = JSON.parse(content);
-      openPathEvaluatorModal(json);
-    } catch (error) {
-      console.error('Failed to open path evaluator (invalid JSON?):', error);
-       // Optionally show user error
-    }
-  }, [editor, openPathEvaluatorModal]);
-
   return {
     handleFormat,
     handleMinify,
@@ -254,8 +253,7 @@ export const useJsonOperations = (
     handleFlatten,
     handleUnflatten,
     handleRemoveEmpty,
-    handleStringify,
-    handlePathFinder,
-    handlePathEvaluator
+    handleRemoveComments,
+    handleStringify
   };
 };

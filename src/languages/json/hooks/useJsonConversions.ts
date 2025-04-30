@@ -4,6 +4,13 @@ import { Tab } from '../../../types';
 import { useJsonModals } from './useJsonModals';
 import { generateJavaClasses } from '../utils/javaGenerator';
 import { generateTypeScriptInterfaces } from '../utils/generateTypeScriptInterfaces';
+import { generatePythonClasses } from '../utils/generatePythonClasses';
+import { generateGoStructs } from '../utils/generateGoStructs';
+import { generateCSharpClasses } from '../utils/generateCSharpClasses';
+import { convertToCsv } from '../utils/generateCsv';
+import { convertToYaml } from '../utils/generateYaml';
+import { convertToXml } from '../utils/generateXml';
+import { generateJsonSchema, validateJsonSchema } from '../utils/jsonSchema';
 
 export const useJsonConversions = (
   editor: monaco.editor.IStandaloneCodeEditor,
@@ -11,6 +18,7 @@ export const useJsonConversions = (
 ) => {
   const {
     openCodeGenerationModal,
+    openTreeViewModal,
     openCsvModal,
     openConversionModal
   } = useJsonModals();
@@ -38,48 +46,48 @@ export const useJsonConversions = (
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
-const handleToTypeScript = useCallback(() => {
-  try {
-    const content = editor.getValue();
-    const json = JSON.parse(content);
-
-    // Generate TypeScript interfaces
-    const tsInterfaces = generateTypeScriptInterfaces(json); // Use default "Root" or pass a custom name
-
-    if (tsInterfaces.length === 0) {
-        console.warn("No TypeScript interfaces were generated. Input might be invalid or not an object/array.");
-        // Optionally show a message to the user
-        return;
+  const handleTreeView = useCallback(() => {
+    try {
+      const content = editor.getValue();
+      openTreeViewModal(content);
+    } catch (error) {
+      console.error('Failed to convert to tree view:', error);
     }
+  }, [editor, openTreeViewModal]);
 
-    // Create tabs for each interface/type alias
-    const tabs = tsInterfaces.map(tsInterface => ({
-      id: crypto.randomUUID(),
-      // Use interfaceName for the tab title
-      title: tsInterface.interfaceName,
-      content: tsInterface.code,
-      language: 'typescript', // Set language to typescript
-      languageLocked: true, // Keep consistent with handleToJava
-      cursorPosition: { lineNumber: 1, column: 1 } // Keep consistent
-    }));
+  const handleToTypeScript = useCallback(() => {
+    try {
+      const content = editor.getValue();
+      const json = JSON.parse(content);
 
-    // Open the code generation modal with the TypeScript interfaces
-    // Make sure openCodeGenerationModal can accept the Tab structure expected by addTab
-    openCodeGenerationModal(tabs, addTab);
+      const tsInterfaces = generateTypeScriptInterfaces(json);
+      const tabs = tsInterfaces.map(tsInterface => ({
+        id: crypto.randomUUID(),
+        title: tsInterface.interfaceName,
+        content: tsInterface.code,
+        language: 'typescript'
+      }));
 
-  } catch (error: any) {
-    console.error('Failed to parse JSON or convert to TypeScript:', error);
-    // Optionally show a more specific error to the user
-    // e.g., if (error instanceof SyntaxError) { /* handle JSON parse error * / }
-  }
-}, [editor, openCodeGenerationModal, addTab]);
+      openCodeGenerationModal(tabs, addTab);
+    } catch (error) {
+      console.error('Failed to convert to TypeScript:', error);
+    }
+  }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToPython = useCallback(() => {
     try {
       const content = editor.getValue();
       const json = JSON.parse(content);
-      // Implementation of JSON to Python conversion
-      openCodeGenerationModal('python', json, addTab);
+
+      const pythonClasses = generatePythonClasses(json);
+      const tabs = pythonClasses.map(pythonClass => ({
+        id: crypto.randomUUID(),
+        title: pythonClass.className,
+        content: pythonClass.code,
+        language: 'python'
+      }));
+
+      openCodeGenerationModal(tabs, addTab);
     } catch (error) {
       console.error('Failed to convert to Python:', error);
     }
@@ -89,8 +97,16 @@ const handleToTypeScript = useCallback(() => {
     try {
       const content = editor.getValue();
       const json = JSON.parse(content);
-      // Implementation of JSON to Go conversion
-      openCodeGenerationModal('go', json, addTab);
+
+      const goStructs = generateGoStructs(json);
+      const tabs = goStructs.map(goStruct => ({
+        id: crypto.randomUUID(),
+        title: goStruct.structName,
+        content: goStruct.code,
+        language: 'go'
+      }));
+
+      openCodeGenerationModal(tabs, addTab);
     } catch (error) {
       console.error('Failed to convert to Go:', error);
     }
@@ -100,8 +116,16 @@ const handleToTypeScript = useCallback(() => {
     try {
       const content = editor.getValue();
       const json = JSON.parse(content);
-      // Implementation of JSON to C# conversion
-      openCodeGenerationModal('csharp', json, addTab);
+
+      const csharpClasses = generateCSharpClasses(json);
+      const tabs = csharpClasses.map(csharpClass => ({
+        id: crypto.randomUUID(),
+        title: csharpClass.className,
+        content: csharpClass.code,
+        language: 'csharp'
+      }));
+
+      openCodeGenerationModal(tabs, addTab);
     } catch (error) {
       console.error('Failed to convert to C#:', error);
     }
@@ -111,36 +135,84 @@ const handleToTypeScript = useCallback(() => {
     try {
       const content = editor.getValue();
       const json = JSON.parse(content);
-      // Implementation of JSON to CSV conversion
-      openCsvModal(json, addTab);
+      
+      const result = convertToCsv(json);
+      if ('error' in result) {
+        throw new Error(result.error);
+      }
+
+      const tab = {
+        id: crypto.randomUUID(),
+        title: 'Converted CSV',
+        content: result.csv,
+        language: 'plaintext'
+      };
+
+      openCodeGenerationModal([tab], addTab);
     } catch (error) {
       console.error('Failed to convert to CSV:', error);
     }
-  }, [editor, openCsvModal, addTab]);
+  }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToYaml = useCallback(() => {
     try {
       const content = editor.getValue();
       const json = JSON.parse(content);
-      // Implementation of JSON to YAML conversion
-      openConversionModal('yaml', json, addTab);
+      
+      const yaml = convertToYaml(json);
+      const tab = {
+        id: crypto.randomUUID(),
+        title: 'Converted YAML',
+        content: yaml,
+        language: 'yaml'
+      };
+
+      openCodeGenerationModal([tab], addTab);
     } catch (error) {
       console.error('Failed to convert to YAML:', error);
     }
-  }, [editor, openConversionModal, addTab]);
+  }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToXml = useCallback(() => {
     try {
       const content = editor.getValue();
       const json = JSON.parse(content);
-      // Implementation of JSON to XML conversion
-      openConversionModal('xml', json, addTab);
+      
+      const xml = convertToXml(json);
+      const tab = {
+        id: crypto.randomUUID(),
+        title: 'Converted XML',
+        content: xml,
+        language: 'xml'
+      };
+
+      openCodeGenerationModal([tab], addTab);
     } catch (error) {
       console.error('Failed to convert to XML:', error);
     }
-  }, [editor, openConversionModal, addTab]);
+  }, [editor, openCodeGenerationModal, addTab]);
+
+  const handleValidateSchema = useCallback(() => {
+    try {
+      const content = editor.getValue();
+      const json = JSON.parse(content);
+      const schema = generateJsonSchema(json);
+      
+      const tab = {
+        id: crypto.randomUUID(),
+        title: 'JSON Schema',
+        content: JSON.stringify(schema, null, 2),
+        language: 'json'
+      };
+
+      openCodeGenerationModal([tab], addTab);
+    } catch (error) {
+      console.error('Failed to generate schema:', error);
+    }
+  }, [editor, openCodeGenerationModal, addTab]);
 
   return {
+    handleTreeView,
     handleToJava,
     handleToTypeScript,
     handleToPython,
@@ -148,6 +220,7 @@ const handleToTypeScript = useCallback(() => {
     handleToCSharp,
     handleToCsv,
     handleToYaml,
-    handleToXml
+    handleToXml,
+    handleValidateSchema
   };
 };

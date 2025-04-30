@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import * as monaco from 'monaco-editor';
 import {
     FileText, FileCode, Settings2, WrapText, UnfoldVertical,
-    SortAsc, Trash2, TextQuote, Search, Sigma, Palette,
-    FileCheck, ListRestart, FileSymlink, FileCog
+    SortAsc, Trash2, TextQuote, Palette,
+    FileCheck, ListRestart, FileSymlink, FileCog, FolderTree, MessageSquareOff
 } from 'lucide-react';
 
 import { useRootStore } from '../../../stores';
@@ -36,14 +36,13 @@ export const useJsonMenuConfig = (
     };
 
     const createTabAction = (actionFn: (editor: monaco.editor.IStandaloneCodeEditor, addTab: (tab: Tab) => void) => void) => {
-        return editor ? () => actionFn(editor, handleAddTab) : undefined;
+        return editor ? () => { actionFn(editor, handleAddTab); onClose(); } : undefined;
     };
 
 
     const {
         handleFormat, handleMinify, handleSortKeys, handleFlatten,
-        handleUnflatten, handleRemoveEmpty, handleStringify,
-        handlePathFinder, handlePathEvaluator
+        handleUnflatten, handleRemoveEmpty, handleRemoveComments, handleStringify
     } = useJsonOperations(editor, handleAddTab); // Pass handleAddTab for tab creation + close
 
     const {
@@ -52,7 +51,7 @@ export const useJsonMenuConfig = (
 
     const {
         handleToJava, handleToTypeScript, handleToPython, handleToGo,
-        handleToCSharp, handleToCsv, handleToYaml, handleToXml
+        handleToCSharp, handleToCsv, handleToYaml, handleToXml, handleTreeView
     } = useJsonConversions(editor, handleAddBackgroundTab); // Pass handleAddTab
 
     const {
@@ -64,15 +63,15 @@ export const useJsonMenuConfig = (
         if (!editor) return []; // Return empty array if editor is not ready
 
         // Wrap actions to include onClose and editor check
+        const treeViewAction = createTabAction(handleTreeView);
         const formatAction = createAction(handleFormat);
         const minifyAction = createAction(handleMinify);
         const sortKeysAction = createAction(handleSortKeys);
         const flattenAction = createAction(handleFlatten);
         const unflattenAction = createAction(handleUnflatten);
         const removeEmptyAction = createAction(handleRemoveEmpty);
+        const removeCommentsAction = createAction(handleRemoveComments);
         const stringifyAction = createAction(handleStringify);
-        const pathFinderAction = createTabAction(handlePathFinder); // Needs addTab
-        const pathEvaluatorAction = createTabAction(handlePathEvaluator); // Needs addTab
 
         const toCamelCaseAction = createAction(handleToCamelCase);
         const toSnakeCaseAction = createAction(handleToSnakeCase);
@@ -92,6 +91,8 @@ export const useJsonMenuConfig = (
 
 
         return [
+            { id: 'treeView', label: 'Tree/Path view', icon: FolderTree, action: treeViewAction },
+            { id: 'separator1', isSeparator: true, label: 'sep0', icon: Settings2 }, // Icon needed but won't show
             // Section 1: Formatting & Basic Ops
             { id: 'format', label: 'Format', icon: WrapText, action: formatAction },
             { id: 'minify', label: 'Minify', icon: UnfoldVertical, action: minifyAction },
@@ -99,21 +100,17 @@ export const useJsonMenuConfig = (
             { id: 'flatten', label: 'Flatten JSON', icon: ListRestart, action: flattenAction },
             { id: 'unflatten', label: 'Unflatten JSON', icon: ListRestart, action: unflattenAction, disabled: true }, // Example: disable if needed
             { id: 'removeEmpty', label: 'Remove Null/Empty', icon: Trash2, action: removeEmptyAction },
+            { id: 'removeComments', label: 'Remove Comments', icon: MessageSquareOff, action: removeCommentsAction },
             { id: 'stringify', label: 'Stringify', icon: TextQuote, action: stringifyAction },
-            { id: 'separator1', isSeparator: true, label: 'sep1', icon: Settings2 }, // Icon needed but won't show
+            { id: 'separator2', isSeparator: true, label: 'sep1', icon: Settings2 }, // Icon needed but won't show
 
-            // Section 2: Path Tools
-            { id: 'pathFinder', label: 'Path Finder', icon: Search, action: pathFinderAction },
-            { id: 'pathEvaluator', label: 'Path Evaluator', icon: Sigma, action: pathEvaluatorAction },
-            { id: 'separator2', isSeparator: true, label: 'sep2', icon: Settings2 },
-
-            // Section 3: Key Transformations
+            // Section 2: Key Transformations
             { id: 'toCamel', label: 'Keys to camelCase', icon: Palette, action: toCamelCaseAction },
             { id: 'toSnake', label: 'Keys to snake_case', icon: Palette, action: toSnakeCaseAction },
             { id: 'toKebab', label: 'Keys to kebab-case', icon: Palette, action: toKebabCaseAction },
             { id: 'separator3', isSeparator: true, label: 'sep3', icon: Settings2 },
 
-            // Section 4: Conversions
+            // Section 3: Conversions
             // Potential Submenu Example (Optional) - uncomment and adapt if needed
             // {
             //     id: 'convert', label: 'Convert To...', icon: ArrowRightLeft, submenu: (
@@ -135,14 +132,14 @@ export const useJsonMenuConfig = (
             { id: 'toXml', label: 'JSON to XML', icon: FileCog, action: toXmlAction },
             { id: 'separator4', isSeparator: true, label: 'sep4', icon: Settings2 },
 
-            // Section 5: Schema
+            // Section 4: Schema
             { id: 'validateSchema', label: 'Validate Schema', icon: FileCheck, action: validateSchemaAction },
             { id: 'generateSchema', label: 'Generate Schema', icon: FileSymlink, action: generateSchemaAction },
         ];
     }, [
         editor, onClose, handleAddTab, // Include addTab if used directly
         handleFormat, handleMinify, handleSortKeys, handleFlatten, handleUnflatten,
-        handleRemoveEmpty, handleStringify, handlePathFinder, handlePathEvaluator,
+        handleRemoveEmpty, handleRemoveComments, handleStringify,
         handleToCamelCase, handleToSnakeCase, handleToKebabCase,
         handleToJava, handleToTypeScript, handleToPython, handleToGo, handleToCSharp,
         handleToCsv, handleToYaml, handleToXml,

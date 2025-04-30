@@ -1,17 +1,17 @@
 import React from 'react';
 import { useJsonModalsStore } from '../../../stores/jsonModalsStore';
 import { StringifyModal } from '../components/modals/StringifyModal';
-import { PathFinderModal } from '../components/modals/PathFinderModal';
-import { PathEvaluatorModal } from '../components/modals/PathEvaluatorModal';
 import { CodeGenerationModal } from '../components/modals/CodeGenerationModal';
+import { JsonTreeViewModalWrapper } from '../components/modals/JsonTreeViewModalWrapper';
+import { SchemaValidationModal } from '../components/modals/SchemaValidationModal';
 
 export const useJsonModals = () => {
   const {
     modalState,
     openStringifyModal,
-    openPathFinderModal,
-    openPathEvaluatorModal,
     openCodeGenerationModal,
+    openTreeViewModal,
+    openSchemaValidationModal,
     closeModal
   } = useJsonModalsStore();
 
@@ -19,12 +19,12 @@ export const useJsonModals = () => {
     switch (modalState.type) {
       case 'stringify':
         return <StringifyModal {...modalState.props} />;
-      case 'pathFinder':
-        return <PathFinderModal {...modalState.props} />;
-      case 'pathEvaluator':
-        return <PathEvaluatorModal {...modalState.props} />;
       case 'codeGeneration':
         return <CodeGenerationModal {...modalState.props} />;
+      case 'treeView':
+        return <JsonTreeViewModalWrapper {...modalState.props} />;
+      case 'schemaValidation':
+        return <SchemaValidationModal {...modalState.props} />;
       default:
         return null;
     }
@@ -32,9 +32,9 @@ export const useJsonModals = () => {
 
   return {
     openStringifyModal,
-    openPathFinderModal,
-    openPathEvaluatorModal,
     openCodeGenerationModal,
+    openTreeViewModal,
+    openSchemaValidationModal,
     renderModal,
     closeModal
   };
