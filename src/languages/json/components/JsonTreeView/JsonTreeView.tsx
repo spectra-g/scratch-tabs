@@ -1,18 +1,18 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { ChevronRight, ChevronDown, Copy, Search, ChevronUp } from 'lucide-react';
-import { FixedSizeList as List, ListChildComponentProps } from 'react-window'; // Import specific types
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { ChevronRight, ChevronDown, Copy, Search, ChevronsUp, ChevronsDown, Route } from 'lucide-react';
+import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
+import { useDebounce } from '../../hooks/useDebounce'; 
 
 // --- Interfaces ---
 interface JsonNodeData {
-    key: string | number; // Property name or array index
+    key: string | number;
     value: any;
     type: 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';
     depth: number;
-    path: string; // Unique path like "root.users[1].name"
-    childCount?: number; // Number of children for objects/arrays
+    path: string;
+    childCount?: number;
 }
 
-// Represents a node in the *visible* flat list for rendering
 interface VisibleJsonNode extends JsonNodeData {
     isExpanded: boolean;
     isExpandable: boolean;
@@ -20,14 +20,12 @@ interface VisibleJsonNode extends JsonNodeData {
 
 interface JsonTreeViewProps {
     jsonString: string;
-    onClose: () => void;
 }
+
+type SearchMode = 'keyValue' | 'path';
 
 // --- Helper Functions ---
 
-/**
- * Recursively builds the tree structure from parsed JSON data.
- */
 const buildTree = (
     key: string | number,
     value: any,
@@ -35,29 +33,15 @@ const buildTree = (
     path: string
 ): JsonNodeData => {
     const node: JsonNodeData = {
-        key,
-        value,
-        type: Array.isArray(value) ? 'array' :
-              value === null ? 'null' :
-              typeof value === 'object' ? 'object' :
-              typeof value as 'string' | 'number' | 'boolean', // Type assertion
-        depth,
-        path,
+        key, value, depth, path,
+        type: Array.isArray(value) ? 'array' : value === null ? 'null' : typeof value === 'object' ? 'object' : typeof value as any,
     };
-
     if (node.type === 'object' || node.type === 'array') {
-        const entries = Object.entries(value);
-        node.childCount = entries.length;
-        // Note: We don't recursively build children here initially for performance.
-        // Children are generated on demand when building the visible list.
+        node.childCount = Object.keys(value).length;
     }
-
     return node;
 };
 
-/**
- * Recursively builds a flat list of *visible* nodes based on expansion state.
- */
 const buildVisibleNodes = (
     nodeData: JsonNodeData,
     expandedPaths: Set<string>,
@@ -65,126 +49,232 @@ const buildVisibleNodes = (
 ): void => {
     const isExpandable = nodeData.type === 'object' || nodeData.type === 'array';
     const isExpanded = isExpandable && expandedPaths.has(nodeData.path);
-
-    visibleNodesList.push({
-        ...nodeData,
-        isExpanded,
-        isExpandable,
-    });
+    visibleNodesList.push({ ...nodeData, isExpanded, isExpandable });
 
     if (isExpandable && isExpanded && nodeData.value) {
-        Object.entries(nodeData.value).forEach(([key, value], index) => {
-            const childKey = nodeData.type === 'array' ? index : key;
-            const childPath = `${nodeData.path}.${childKey}`;
-            // Recursively build the child node structure *and* add its visible descendants
-            buildVisibleNodes(
-                buildTree(childKey, value, nodeData.depth + 1, childPath), // Build child data on the fly
-                expandedPaths,
-                visibleNodesList
-            );
+        Object.entries(nodeData.value).forEach(([key, value]) => {
+            const childKey = nodeData.type === 'array' ? parseInt(key, 10) : key;
+            const childPath = nodeData.path ? (nodeData.type === 'array' ? `${nodeData.path}[${childKey}]` : `${nodeData.path}.${childKey}`) : (nodeData.type === 'array' ? `[${childKey}]` : childKey);
+            buildVisibleNodes(buildTree(childKey, value, nodeData.depth + 1, childPath), expandedPaths, visibleNodesList);
         });
     }
 };
 
-/**
- * Recursively collects all expandable node paths from the tree data.
- */
 const getAllExpandablePaths = (nodeData: JsonNodeData, paths: Set<string>): void => {
     if (nodeData.type === 'object' || nodeData.type === 'array') {
         paths.add(nodeData.path);
         if (nodeData.value) {
-            Object.entries(nodeData.value).forEach(([key, value], index) => {
-                const childKey = nodeData.type === 'array' ? index : key;
-                const childPath = `${nodeData.path}.${childKey}`;
-                // Build minimal child data just for path traversal
+            Object.entries(nodeData.value).forEach(([key, value]) => {
+                const childKey = nodeData.type === 'array' ? parseInt(key, 10) : key;
+                const childPath = nodeData.path ? (nodeData.type === 'array' ? `${nodeData.path}[${childKey}]` : `${nodeData.path}.${childKey}`) : (nodeData.type === 'array' ? `[${childKey}]` : childKey);
                 getAllExpandablePaths(buildTree(childKey, value, nodeData.depth + 1, childPath), paths);
             });
         }
     }
 };
 
+// Basic path evaluator
+const evaluateJsonPath = (data: any, path: string): { value: any } | { error: string } => {
+    if (!path.trim()) return { value: data };
+    try {
+        let current: any = data;
+        const parts = path.match(/[^.[\]]+/g) || [];
+        for (const part of parts) {
+            if (current === null || typeof current !== 'object') return { error: `Cannot access property "${part}" on non-object/array value.` };
+            const index = parseInt(part, 10);
+            if (Array.isArray(current) && !isNaN(index)) {
+                if (index >= 0 && index < current.length) current = current[index];
+                else return { error: `Index ${index} out of bounds for path segment "${part}".` };
+            } else if (typeof current === 'object' && part in current) {
+                current = current[part];
+            } else {
+                return { error: `Path segment "${part}" not found or invalid.` };
+            }
+        }
+        return { value: current };
+    } catch (err: any) {
+        return { error: err.message || 'Invalid path or error during evaluation.' };
+    }
+};
+
+// New helper to get ancestor paths
+const getAncestorPaths = (path: string): Set<string> => {
+    const ancestors = new Set<string>(['']); // Include root
+    if (!path) return ancestors;
+
+    // Improved splitting for paths like a.b[0].c
+    const segments = path.match(/[^.[\]]+/g) || [];
+    let currentPath = '';
+    for (let i = 0; i < segments.length; i++) {
+        const part = segments[i];
+        const isArrayIndex = /^\d+$/.test(part);
+        if (i === 0 && !isArrayIndex) {
+            currentPath = part;
+        } else if (isArrayIndex) {
+            currentPath = currentPath ? `${currentPath}[${part}]` : `[${part}]`;
+        } else {
+            currentPath = currentPath ? `${currentPath}.${part}` : part;
+        }
+        // Add ancestor path *before* the final segment
+        if (i < segments.length - 1) {
+             ancestors.add(currentPath);
+        }
+    }
+    return ancestors;
+};
 
 // --- Main Component ---
 
 const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set(['root'])); // Start with root expanded
+    const [searchMode, setSearchMode] = useState<SearchMode>('keyValue');
+    const [inputValue, setInputValue] = useState('');
+    const debouncedInputValue = useDebounce(inputValue, 300); // Debounce input value
+    const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set(['']));
     const [selectedPath, setSelectedPath] = useState<string>('');
-    const [error, setError] = useState<string | null>(null);
-    const listRef = useRef<List>(null); // Ref for react-window List
+    const [parseError, setParseError] = useState<string | null>(null);
+    const [evaluationStatus, setEvaluationStatus] = useState<string | null>(null);
+    const listRef = useRef<List>(null);
+    const [lastValidEvaluatedPath, setLastValidEvaluatedPath] = useState<string | null>(null);
 
-    // 1. Parse JSON and build the initial root node structure (only once per jsonString change)
-    const rootNodeData = useMemo<JsonNodeData | null>(() => {
-        setError(null); // Clear previous errors
-        if (!jsonString) {
-            // Handle empty string input gracefully
-            return buildTree('root', {}, 0, 'root'); // Represent as empty object
-        }
+    // Memoize parsed JSON
+    const parsedJson = useMemo(() => {
+        setParseError(null); // Clear previous parse errors
+        if (!jsonString) return {}; // Treat empty string as empty object
         try {
-            const parsed = JSON.parse(jsonString);
-            return buildTree('root', parsed, 0, 'root');
+            return JSON.parse(jsonString);
         } catch (e: any) {
-            // Try to provide a more specific error message if possible
-            const message = e instanceof Error ? e.message : String(e);
-            setError(`Invalid JSON: ${message}`);
+            setParseError(`Invalid JSON: ${e.message}`);
             return null;
         }
     }, [jsonString]);
 
-    // 2. Build the flat list of *visible* nodes based on rootNodeData and expandedPaths
+    // Memoize root node structure
+    const rootNodeData = useMemo<JsonNodeData | null>(() => {
+        if (parseError || parsedJson === null) return null;
+        try {
+            return buildTree('', parsedJson, 0, '');
+        } catch (e: any) {
+            setParseError(`Error building tree: ${e.message}`);
+            return null;
+        }
+    }, [parsedJson, parseError]);
+
+    // Memoize visible nodes based on expansion
     const visibleNodes = useMemo<VisibleJsonNode[]>(() => {
         if (!rootNodeData) return [];
         const visibleNodesList: VisibleJsonNode[] = [];
         buildVisibleNodes(rootNodeData, expandedPaths, visibleNodesList);
-        return visibleNodesList;
+        return visibleNodesList.slice(1); // Exclude conceptual root
     }, [rootNodeData, expandedPaths]);
 
-    // 3. Filter the visible nodes based on the search term
+    // Memoize filtered nodes based on search term *and* mode
     const filteredNodes = useMemo<VisibleJsonNode[]>(() => {
-        if (!searchTerm.trim()) return visibleNodes;
+        const searchTerm = debouncedInputValue.trim(); // Use debounced value for filtering
 
-        const lowerSearchTerm = searchTerm.toLowerCase();
-        const matchedPaths = new Set<string>();
-        const result: VisibleJsonNode[] = [];
+        if (!searchTerm) {
+            setEvaluationStatus(null); // Clear status on empty input
+            return visibleNodes; // Show all visible nodes if input is empty
+        }
 
-        // First pass: find all nodes that match directly
-        visibleNodes.forEach(node => {
-            const keyMatch = String(node.key).toLowerCase().includes(lowerSearchTerm);
-            // Avoid searching large objects/arrays directly, search primitives/null
-            const valueMatch = (node.type !== 'object' && node.type !== 'array') &&
-                               String(node.value).toLowerCase().includes(lowerSearchTerm);
-
-            if (keyMatch || valueMatch) {
-                // Add the node and all its ancestors to the set of paths to include
-                let currentPath = node.path;
-                while (currentPath) {
-                    matchedPaths.add(currentPath);
-                    if (currentPath === 'root') break;
-                    // Get parent path carefully
-                    const lastDotIndex = currentPath.lastIndexOf('.');
-                    currentPath = lastDotIndex > -1 ? currentPath.substring(0, lastDotIndex) : '';
+        if (searchMode === 'path') {
+            // If a valid path was evaluated, filter to show only ancestors and the target
+            if (lastValidEvaluatedPath === searchTerm) { // Check if current input matches last valid path
+                const ancestors = getAncestorPaths(searchTerm);
+                const pathsToShow = new Set([...ancestors, searchTerm]);
+                return visibleNodes.filter(node => pathsToShow.has(node.path));
+            } else {
+                // If path is invalid or hasn't been successfully evaluated yet, show all
+                return visibleNodes;
+            }
+        } else { // keyValue search mode
+            const lowerSearchTerm = searchTerm.toLowerCase();
+            const matchedPaths = new Set<string>();
+            const result: VisibleJsonNode[] = [];
+            // Find matches and their ancestors
+            visibleNodes.forEach(node => {
+                const keyMatch = String(node.key).toLowerCase().includes(lowerSearchTerm);
+                const valueMatch = (node.type !== 'object' && node.type !== 'array') &&
+                                   String(node.value).toLowerCase().includes(lowerSearchTerm);
+                if (keyMatch || valueMatch) {
+                    let currentPath = node.path;
+                    while (currentPath !== undefined && currentPath !== null) {
+                        matchedPaths.add(currentPath);
+                        if (!currentPath.includes('.') && !currentPath.includes('[')) break;
+                        const lastDot = currentPath.lastIndexOf('.');
+                        const lastBracket = currentPath.lastIndexOf('[');
+                        if (lastDot === -1 && lastBracket === -1) break;
+                        currentPath = currentPath.substring(0, Math.max(lastDot, lastBracket));
+                    }
+                     matchedPaths.add(''); // Include root
                 }
-            }
-        });
+            });
+            // Filter nodes based on matched paths
+            visibleNodes.forEach(node => {
+                if (matchedPaths.has(node.path)) {
+                    result.push(node);
+                }
+            });
+            return result;
+        }
+    }, [visibleNodes, debouncedInputValue, searchMode, lastValidEvaluatedPath]); // Depend on debounced value
 
-        // Second pass: build the result list including only matched nodes and their ancestors
-        visibleNodes.forEach(node => {
-            if (matchedPaths.has(node.path)) {
-                result.push(node);
-            }
-        });
+    // --- Effect for Path Evaluation / Filtering ---
+    useEffect(() => {
+        // This effect runs when the *debounced* input value changes
+        if (searchMode !== 'path') {
+            setLastValidEvaluatedPath(null); // Clear path result if not in path mode
+            return; // Only evaluate in path mode
+        }
 
-        return result;
-    }, [visibleNodes, searchTerm]);
+        const path = debouncedInputValue.trim();
+        if (!path || !parsedJson) {
+            setEvaluationStatus(null);
+            setLastValidEvaluatedPath(null);
+            return;
+        }
+
+        const result = evaluateJsonPath(parsedJson, path);
+        if ('error' in result) {
+            setEvaluationStatus(result.error);
+            setLastValidEvaluatedPath(null); // Clear valid path on error
+        } else {
+            // Path is valid, store it and trigger expansion/scroll
+            setEvaluationStatus(`Path evaluated successfully.`); // Simple success message
+            setLastValidEvaluatedPath(path); // Store the path that worked
+            // Expand necessary nodes (will trigger visibleNodes/filteredNodes recalc)
+            const ancestors = getAncestorPaths(path);
+            setExpandedPaths(prev => new Set([...prev, ...ancestors]));
+            setSelectedPath(path); // Select the evaluated path
+        }
+    }, [debouncedInputValue, searchMode, parsedJson]); // Run when debounced input or mode changes
+
+    // --- Effect for Scrolling after state updates ---
+    useEffect(() => {
+        // Scroll only when a valid path evaluation just happened
+        if (searchMode === 'path' && lastValidEvaluatedPath && listRef.current) {
+            // Find index in the *current* filteredNodes (which should now contain the path)
+            const targetIndex = filteredNodes.findIndex(node => node.path === lastValidEvaluatedPath);
+            if (targetIndex !== -1) {
+                listRef.current.scrollToItem(targetIndex, 'smart');
+                setEvaluationStatus(`Found and scrolled to: ${lastValidEvaluatedPath}`);
+            } else {
+                // This might happen briefly if filtering hasn't caught up, or if the node
+                // truly isn't visible (e.g., nested inside a *collapsed* parent that wasn't expanded)
+                // The expansion logic should handle most cases.
+                 setEvaluationStatus(`Path evaluated, but node not found in current view.`);
+            }
+            // Reset lastValidEvaluatedPath to prevent re-scrolling on unrelated renders
+            setLastValidEvaluatedPath(null);
+        }
+    }, [filteredNodes, searchMode, lastValidEvaluatedPath]); // Run when filteredNodes changes AFTER a valid path was set
+
+    // --- Callbacks ---
 
     const toggleNode = useCallback((path: string) => {
         setExpandedPaths(prev => {
             const next = new Set(prev);
-            if (next.has(path)) {
-                next.delete(path);
-            } else {
-                next.add(path);
-            }
+            if (next.has(path)) next.delete(path);
+            else next.add(path);
             return next;
         });
     }, []);
@@ -192,204 +282,197 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
     const toggleAllNodes = useCallback((expand: boolean) => {
         if (!rootNodeData) return;
         if (expand) {
-            const allPaths = new Set<string>();
+            const allPaths = new Set<string>(['']);
             getAllExpandablePaths(rootNodeData, allPaths);
             setExpandedPaths(allPaths);
         } else {
-            setExpandedPaths(new Set(['root'])); // Keep root expanded when collapsing all
+            setExpandedPaths(new Set(['']));
         }
     }, [rootNodeData]);
 
-    const copyToClipboard = useCallback(async (text: string, type: 'key' | 'value' | 'path') => {
+    const copyToClipboard = useCallback(async (text: string | number | boolean | null | undefined | object, type: 'key' | 'value' | 'path') => {
+        let stringToCopy: string;
+        if (text === null || text === undefined) {
+            stringToCopy = String(text);
+        } else if (typeof text === 'object') {
+            stringToCopy = JSON.stringify(text, null, 2);
+        } else {
+            stringToCopy = String(text);
+        }
         try {
-            await navigator.clipboard.writeText(text);
-            // Optional: Add a brief notification/feedback to the user
+            await navigator.clipboard.writeText(stringToCopy);
         } catch (err) {
             console.error(`Failed to copy ${type}:`, err);
-            // Optional: Show error feedback to the user
+            setEvaluationStatus(`Error copying ${type}`); // Show error in footer
         }
     }, []);
 
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(e.target.value);
+        // Evaluation/filtering is now handled by the useEffect watching debouncedInputValue
+        if (searchMode === 'path') {
+             setEvaluationStatus('Evaluating...'); // Provide feedback while typing/debouncing
+        } else {
+             setEvaluationStatus(null); // Clear status in key/value mode
+        }
+    };
+
+    const handleModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newMode = e.target.value as SearchMode;
+        setSearchMode(newMode);
+        setInputValue(''); // Clear input when changing mode
+        setEvaluationStatus(null);
+        setSelectedPath('');
+        setLastValidEvaluatedPath(null); // Clear evaluated path state
+    };
+
     // --- Rendering ---
 
-    // Render a single row in the virtualized list
     const NodeRenderer = useCallback(({ index, style }: ListChildComponentProps) => {
         const node = filteredNodes[index];
-        // Should not happen with correct filtering, but good practice
         if (!node) return <div style={style}></div>;
-
-        const indent = node.depth * 16; // Reduced indent
+        const indent = (node.depth - 1) * 16;
         const isSelected = selectedPath === node.path;
-
-        // Determine value display string/component
         let valueDisplay: React.ReactNode;
-        let valueStringForCopy: string; // For copying the value
+        let valueStringForCopy: any = node.value; // Use raw value for copy
 
         switch (node.type) {
-            case 'string':
-                valueDisplay = <span className="text-green-400">"{node.value}"</span>;
-                valueStringForCopy = String(node.value); // Copy raw string
-                break;
-            case 'number':
-                valueDisplay = <span className="text-yellow-400">{node.value}</span>;
-                valueStringForCopy = String(node.value);
-                break;
-            case 'boolean':
-                valueDisplay = <span className="text-purple-400">{String(node.value)}</span>;
-                valueStringForCopy = String(node.value);
-                break;
-            case 'null':
-                valueDisplay = <span className="text-gray-500 italic">null</span>;
-                valueStringForCopy = 'null';
-                break;
-            case 'object':
-                valueDisplay = <span className="text-gray-400">{`{...} (${node.childCount ?? 0})`}</span>;
-                valueStringForCopy = JSON.stringify(node.value, null, 2); // Pretty print for copy
-                break;
-            case 'array':
-                valueDisplay = <span className="text-gray-400">{`[...] (${node.childCount ?? 0})`}</span>;
-                valueStringForCopy = JSON.stringify(node.value, null, 2); // Pretty print for copy
-                break;
-            default:
-                valueDisplay = <span className="text-red-500">Unknown Type</span>;
-                valueStringForCopy = '[Unknown Type]';
+            case 'string': valueDisplay = <span className="text-green-400">"{node.value}"</span>; break;
+            case 'number': valueDisplay = <span className="text-yellow-400">{node.value}</span>; break;
+            case 'boolean': valueDisplay = <span className="text-purple-400">{String(node.value)}</span>; break;
+            case 'null': valueDisplay = <span className="text-gray-500 italic">null</span>; break;
+            case 'object': valueDisplay = <span className="text-gray-400">{`{...} (${node.childCount ?? 0})`}</span>; break;
+            case 'array': valueDisplay = <span className="text-gray-400">{`[...] (${node.childCount ?? 0})`}</span>; break;
+            default: valueDisplay = <span className="text-red-500">Unknown</span>;
         }
+        const displayKey = node.key;
 
         return (
             <div
                 style={{ ...style, paddingLeft: `${indent}px` }}
                 className={`flex items-center py-0.5 px-2 group cursor-pointer ${isSelected ? 'bg-blue-900/30' : 'hover:bg-gray-800/60'}`}
                 onClick={() => setSelectedPath(node.path)}
-                role="button" // Accessibility
-                tabIndex={0} // Accessibility
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleNode(node.path); }} // Accessibility
+                role="button" tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleNode(node.path); }}
             >
-                {/* Indentation Spacer */}
                 <div style={{ width: `${indent}px`, flexShrink: 0 }}></div>
-
-                {/* Expand/Collapse Toggle */}
                 <div className="w-5 flex-shrink-0 flex items-center justify-center">
                     {node.isExpandable ? (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); toggleNode(node.path); }}
-                            className="text-gray-500 hover:text-gray-300"
-                            aria-label={node.isExpanded ? 'Collapse' : 'Expand'}
-                        >
+                        <button onClick={(e) => { e.stopPropagation(); toggleNode(node.path); }} className="text-gray-500 hover:text-gray-300" aria-label={node.isExpanded ? 'Collapse' : 'Expand'}>
                             {node.isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                         </button>
                     ) : null}
                 </div>
-
-                {/* Key */}
-                <span className="text-blue-400 mr-1 whitespace-nowrap" title={String(node.key)}>
-                    {node.key}:
+                <span className="text-blue-400 mr-1 whitespace-nowrap" title={String(displayKey)}>
+                    {typeof displayKey === 'string' ? `"${displayKey}"` : displayKey}:
                 </span>
-
-                {/* Value */}
                 <span className="ml-1 truncate" title={typeof node.value === 'string' ? node.value : undefined}>
                     {valueDisplay}
                 </span>
-
-                {/* Actions (visible on hover/selection) */}
                 <div className={`ml-auto flex items-center space-x-1 pl-2 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); copyToClipboard(node.path, 'path'); }}
-                        className="p-0.5 text-gray-500 hover:text-sky-400 hover:bg-gray-700/50 rounded"
-                        title={`Copy Path: ${node.path}`}
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); copyToClipboard(node.path, 'path'); }} className="p-0.5 text-gray-500 hover:text-sky-400 hover:bg-gray-700/50 rounded" title={`Copy Path: ${node.path}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                     </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); copyToClipboard(valueStringForCopy, 'value'); }}
-                        className="p-0.5 text-gray-500 hover:text-green-400 hover:bg-gray-700/50 rounded"
-                        title="Copy Value"
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); copyToClipboard(valueStringForCopy, 'value'); }} className="p-0.5 text-gray-500 hover:text-green-400 hover:bg-gray-700/50 rounded" title="Copy Value">
                         <Copy size={14} />
                     </button>
                 </div>
             </div>
         );
-    // Dependencies for the renderer callback
-    }, [filteredNodes, selectedPath, toggleNode, copyToClipboard]);
+    }, [filteredNodes, selectedPath, toggleNode, copyToClipboard]); // Keep dependencies minimal
 
 
-    // --- Main Return ---
-
-    if (error) {
+    if (parseError) {
         return (
-            // Ensure error message also respects dark theme
             <div className="flex flex-col h-full bg-gray-900 text-gray-200 p-4">
                 <h3 className="text-red-500 font-semibold mb-2">Error Parsing JSON</h3>
-                <pre className="text-red-400 text-sm bg-red-900/20 p-2 rounded overflow-auto">{error}</pre>
-                 {/* Optional: Add a close button here if needed */}
+                <pre className="text-red-400 text-sm bg-red-900/20 p-2 rounded overflow-auto">{parseError}</pre>
             </div>
         );
     }
 
     if (!rootNodeData) {
-         // Should ideally be caught by error state, but provides a fallback
-         return <div className="flex flex-col h-full bg-gray-900 text-gray-400 p-4">Loading or invalid data...</div>;
+         return <div className="flex flex-col h-full bg-gray-900 text-gray-400 p-4 items-center justify-center">Empty or invalid JSON data</div>;
     }
 
     return (
-        // Component Root - Ensure dark theme classes are applied
-        <div className="flex flex-col h-full bg-gray-900 text-gray-200 custom-scrollbar">
-            {/* Header: Search and Controls */}
-            <div className="flex-none flex items-center p-2 border-b border-gray-700/50 gap-2">
-                <div className="flex-1 flex items-center relative">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500" size={16} pointerEvents="none" />
+        <div className="flex flex-col h-full bg-gray-900 text-gray-200 overflow-hidden">
+            {/* Header */}
+            <div className="flex-none flex items-center p-2 border-b border-gray-700/50 gap-2 flex-wrap">
+                {/* Mode Selector */}
+                <div className="flex-shrink-0">
+                     <select
+                        value={searchMode}
+                        onChange={handleModeChange}
+                        className="bg-gray-700/80 border border-gray-600/80 text-gray-200 pl-2 pr-7 py-1 rounded focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50 text-sm appearance-none"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em' }}
+                        aria-label="Search Mode"
+                    >
+                        <option value="keyValue">Search Key/Value</option>
+                        <option value="path">Evaluate Path</option>
+                    </select>
+                </div>
+
+                {/* Combined Input */}
+                <div className="flex-1 min-w-[200px] flex items-center relative">
+                    {searchMode === 'keyValue' ? (
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500" size={16} pointerEvents="none" />
+                    ) : (
+                         <Route className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500" size={16} pointerEvents="none" />
+                    )}
                     <input
                         type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search keys/values..."
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        // onKeyDown removed - using debounce now
+                        placeholder={searchMode === 'keyValue' ? 'Search keys/values...' : 'Evaluate path (e.g., users[0].name)'}
                         className="bg-gray-800/50 border border-gray-700/50 text-gray-200 pl-8 pr-2 py-1 rounded focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50 w-full text-sm"
+                        aria-label={searchMode === 'keyValue' ? 'Search JSON Tree' : 'Evaluate JSON Path'}
                     />
                 </div>
+
+                {/* Expand/Collapse Controls */}
                 <div className="flex items-center space-x-1">
-                    <button
-                        onClick={() => toggleAllNodes(true)}
-                        className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
-                        title="Expand All"
-                    >
-                        <ChevronDown size={16} />
+                    <button onClick={() => toggleAllNodes(true)} className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded" title="Expand All">
+                        <ChevronsDown size={16} />
                     </button>
-                    <button
-                        onClick={() => toggleAllNodes(false)}
-                        className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
-                        title="Collapse All"
-                    >
-                        <ChevronUp size={16} />
+                    <button onClick={() => toggleAllNodes(false)} className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded" title="Collapse All">
+                        <ChevronsUp size={16} />
                     </button>
                 </div>
             </div>
 
             {/* Tree View Area */}
-            <div className="flex-1  bg-gray-900/80"> {/* Apply background here too */}
+            <div className="flex-1 overflow-hidden bg-gray-900/80">
                 <List
                     className="custom-scrollbar"
                     ref={listRef}
-                    // Calculate height dynamically if possible, or use a large fixed height
-                    // Subtract header/footer height from parent container height
-                    // This requires knowing the parent height or using flex-1 and measuring.
-                    // Using a fixed height for now, adjust as needed.
-                    height={500} // Adjust this based on your modal's content area height
+                    height={500} // Adjust as needed
                     itemCount={filteredNodes.length}
-                    itemSize={26} // Adjust based on desired row density
+                    itemSize={26}
                     width="100%"
-                    itemKey={(index) => filteredNodes[index]?.path ?? index} // Use path as key for stability
+                    itemKey={(index) => filteredNodes[index]?.path ?? index}
                 >
                     {NodeRenderer}
                 </List>
             </div>
 
-            {/* Footer: Selected Path */}
-            <div className="flex-none p-1.5 border-t border-gray-700/50 text-gray-400 text-xs bg-gray-800/50 truncate">
-                <span className="font-semibold">Path:</span> {selectedPath || 'none'}
-                {selectedPath && (
+            {/* Footer: Status or Selected Path */}
+            <div className="flex-none p-1.5 border-t border-gray-700/50 text-gray-400 text-xs bg-gray-800/50 truncate flex items-center justify-between min-h-[28px]">
+                {/* Display evaluation status/error OR selected path */}
+                <span className={`truncate ${evaluationStatus && (evaluationStatus.startsWith('Error') || evaluationStatus.startsWith('Path segment') || evaluationStatus.startsWith('Cannot access') || evaluationStatus.includes('not found')) ? 'text-red-400' : evaluationStatus ? 'text-green-400' : ''}`}>
+                    {evaluationStatus || (
+                        <>
+                            <span className="font-semibold">Selected Path:</span> {selectedPath || 'none'}
+                        </>
+                    )}
+                </span>
+                {/* Show copy button only when a path is selected and no error is shown */}
+                {selectedPath && !evaluationStatus && (
                      <button
                         onClick={(e) => { e.stopPropagation(); copyToClipboard(selectedPath, 'path'); }}
-                        className="ml-2 p-0.5 text-gray-500 hover:text-sky-400 hover:bg-gray-700/50 rounded inline-flex align-middle"
+                        className="ml-2 p-0.5 text-gray-500 hover:text-sky-400 hover:bg-gray-700/50 rounded inline-flex align-middle flex-shrink-0"
                         title={`Copy Path: ${selectedPath}`}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
