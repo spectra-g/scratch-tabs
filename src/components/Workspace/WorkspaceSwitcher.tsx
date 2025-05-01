@@ -66,19 +66,14 @@ export const WorkspaceSwitcher: React.FC = () => {
   };
   
   const handleDeleteWorkspace = async (id: string) => {
-    console.log('[WorkspaceSwitcher] Delete workspace requested:', id);
     if (!confirm('Are you sure you want to delete this workspace?')) {
-      console.log('[WorkspaceSwitcher] Delete cancelled by user');
       return;
     }
     
     try {
-      console.log('[WorkspaceSwitcher] Initiating workspace deletion');
       await deleteWorkspace(id);
-      console.log('[WorkspaceSwitcher] Workspace deletion succeeded');
       setShowContextMenu(null);
     } catch (error) {
-      console.error('[WorkspaceSwitcher] Failed to delete workspace:', error);
     }
   };
 

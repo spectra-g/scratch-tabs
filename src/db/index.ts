@@ -243,32 +243,21 @@ export class IndexedDBStorage implements StorageProvider {
   }
 
 async deleteWorkspace(id: string): Promise<void> {
-  console.log('[Storage] Starting workspace deletion:', id);
   await this.withRetry(async () => {
     try {
-      console.log('[Storage] Beginning transaction');
       await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
-        console.log('[Storage] Deleting workspace record');
         await db.workspaces.delete(id);
         
-        console.log('[Storage] Deleting associated tabs');
         const tabsToDelete = await db.tabs.where('workspaceId').equals(id).toArray();
-        console.log('[Storage] Found tabs to delete:', tabsToDelete.length);
         await db.tabs.where('workspaceId').equals(id).delete();
         
-        console.log('[Storage] Deleting associated split view');
         const splitViewsToDelete = await db.splitView.where('workspaceId').equals(id).toArray();
-        console.log('[Storage] Found split views to delete:', splitViewsToDelete.length);
         await db.splitView.where('workspaceId').equals(id).delete();
-        
-        console.log('[Storage] Transaction completed successfully');
       });
     } catch (error) {
-      console.error('[Storage] Transaction failed:', error);
       throw error;
     }
   });
-  console.log('[Storage] Workspace deletion completed');
 }
 
 

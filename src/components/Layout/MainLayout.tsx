@@ -30,9 +30,7 @@ const MainLayout: React.FC = () => {
 
   // Initialize workspace store
   useEffect(() => {
-    console.log('[MainLayout] Initializing workspace store...');
     loadWorkspaces().then(() => {
-      console.log('[MainLayout] Workspace store initialized successfully');
     }).catch(error => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
     });

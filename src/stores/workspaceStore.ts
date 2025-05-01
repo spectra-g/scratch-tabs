@@ -64,11 +64,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     
     deleteWorkspace: async (workspaceId: string) => {
       const { workspaces } = get();
-      console.log('[WorkspaceStore] Starting delete workspace:', { workspaceId, totalWorkspaces: workspaces.length });
-      
+
       try {
-        // Delete the workspace and its data from storage
-        console.log('[WorkspaceStore] Deleting workspace data from storage');
         await storage.deleteWorkspace(workspaceId);
     
         // If this was the last workspace, clear everything
@@ -107,10 +104,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             }
           }
         }
-    
-        console.log('[WorkspaceStore] Workspace deletion completed successfully');
       } catch (error) {
-        console.error("[WorkspaceStore] Failed to delete workspace:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to delete workspace' });
       }
     },
