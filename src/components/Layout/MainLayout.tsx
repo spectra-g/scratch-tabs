@@ -7,6 +7,7 @@ import { DiffModal } from '../DiffModal';
 import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
 import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
 import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 const MainLayout: React.FC = () => {
   const {
@@ -20,10 +21,20 @@ const MainLayout: React.FC = () => {
       tabs: state.tabs,
       splitView: state.splitView,
       setSplitRatio: state.setSplitRatio,
-      activeLeftTabId: state.splitView.activeLeftTabId,
-      activeRightTabId: state.splitView.activeRightTabId,
+      activeLeftTabId: state.splitView?.activeLeftTabId,
+      activeRightTabId: state.splitView?.activeRightTabId,
       saveTabDataById: state.saveTabDataById,
   }));
+
+  const { loadWorkspaces } = useWorkspaceStore();
+
+  // Initialize workspace store
+  useEffect(() => {
+    loadWorkspaces().then(() => {
+    }).catch(error => {
+      console.error('[MainLayout] Failed to initialize workspace store:', error);
+    });
+  }, [loadWorkspaces]);
 
   const [diffModal, setDiffModal] = React.useState<{
     leftTabId: string | null;
@@ -39,8 +50,8 @@ const MainLayout: React.FC = () => {
     rightPaneStyle,
     isDragging,
   } = useSplitViewResizer(
-    splitView.isSplit,
-    splitView.splitRatio,
+    splitView?.isSplit,
+    splitView?.splitRatio,
     setSplitRatio
   );
 
@@ -70,8 +81,6 @@ const MainLayout: React.FC = () => {
   const handleCloseDiffModal = () => {
     setDiffModal(null);
   };
-
-  useUrlTabHandler();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -117,6 +126,8 @@ const MainLayout: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [activeLeftTabId, activeRightTabId, saveTabDataById]);
+
+  useUrlTabHandler();
 
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white">

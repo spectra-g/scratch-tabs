@@ -30,7 +30,6 @@ export const useEditorScrollManager = (
       if (previousTabId && editorRef.current) {
         const scrollTop = editorRef.current.getScrollTop();
         scrollPositions[previousTabId] = scrollTop;
-        // console.log(`ScrollManager: Saved scroll for ${previousTabId}: ${scrollTop}`);
       }
     };
   }, [activeTabId, editorRef]); // Rerun when the active tab or editor instance changes
@@ -39,7 +38,6 @@ export const useEditorScrollManager = (
   const restoreScrollPosition = useCallback((tabId: string) => {
     if (editorRef.current && tabId && scrollPositions.hasOwnProperty(tabId)) {
       const savedPosition = scrollPositions[tabId] ?? 0;
-      // console.log(`ScrollManager: Restoring scroll for ${tabId}: ${savedPosition}`);
 
       // Use requestAnimationFrame to ensure the editor layout is stable before setting scroll
       // This can prevent issues where setScrollTop is called too early.
@@ -52,7 +50,6 @@ export const useEditorScrollManager = (
       requestAnimationFrame(() => {
         editorRef.current?.setScrollTop(0);
       });
-      // console.log(`ScrollManager: No saved scroll for ${tabId}, setting to 0`);
     }
   }, [editorRef]); // Dependency: only the editorRef
 
@@ -66,9 +63,6 @@ export const useEditorScrollManager = (
         cleaned = true;
       }
     });
-    // if (cleaned) {
-    //     console.log("ScrollManager: Cleaned up scroll positions for removed tabs.", scrollPositions);
-    // }
   }, [currentTabIds]); // Rerun when the set of current tab IDs changes
 
   // Return the function needed by the component
