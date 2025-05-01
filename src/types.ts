@@ -8,8 +8,9 @@ export interface Tab {
   tabletState?: string;
   cursorPosition: EditorPosition;
   isPinned?: boolean;
-  dateCreated: number; // Unix timestamp in milliseconds
-  lastModified: number; // Unix timestamp in milliseconds
+  dateCreated: number;
+  lastModified: number;
+  workspaceId: string; // New field
 }
 
 export interface EditorPosition {
@@ -23,10 +24,26 @@ export interface SplitViewState {
   rightTabs: string[];
   activeLeftTabId: string | null;
   activeRightTabId: string | null;
-  activeSide: string | null;
   splitRatio: number;
   leftTabHistory: string[];
   rightTabHistory: string[];
+  activeSide: string | null;
+  workspaceId: string; // New field
+}
+
+export interface WorkspaceLink {
+  id: string;
+  url: string;
+  title?: string;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  notes?: string;
+  links: WorkspaceLink[];
+  createdAt: number;
+  lastAccessed: number;
 }
 
 export type ResizeObserverCallback = (entries: ResizeObserverEntry[], observer: ResizeObserver) => void;

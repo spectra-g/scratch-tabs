@@ -9,6 +9,7 @@ import { StrictModeDroppable } from './StrictModeDroppable';
 import { TabTooltip } from './TabTooltip';
 import { Tab } from '../../types';
 import { languageRegistry } from '../../languages';
+import { WorkspaceSwitcher } from '../Workspace/WorkspaceSwitcher';
 
 interface TabBarProps {
   side?: 'left' | 'right';
@@ -543,25 +544,31 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal }
                     </div>
                 </div>
 
-                <TabActions
-                    side={side}
-                    onShowTabletSelector={() => {
-                        if (tabletButtonRef.current) {
-                            if (showTabletSelector) {
-                                setShowTabletSelector(false);
-                            } else {
-                                const rect = tabletButtonRef.current.getBoundingClientRect();
-                                setTabletSelectorPosition({
-                                    x: rect.left,
-                                    y: rect.bottom + 4
-                                });
-                                setShowTabletSelector(true);
+                <div className="flex items-center">
+                    <TabActions
+                        side={side}
+                        onShowTabletSelector={() => {
+                            if (tabletButtonRef.current) {
+                                if (showTabletSelector) {
+                                    setShowTabletSelector(false);
+                                } else {
+                                    const rect = tabletButtonRef.current.getBoundingClientRect();
+                                    setTabletSelectorPosition({
+                                        x: rect.left,
+                                        y: rect.bottom + 4
+                                    });
+                                    setShowTabletSelector(true);
+                                }
                             }
-                        }
-                    }}
-                    newTabButtonRef={newTabButtonRef}
-                    tabletButtonRef={tabletButtonRef}
-                />
+                        }}
+                        newTabButtonRef={newTabButtonRef}
+                        tabletButtonRef={tabletButtonRef}
+                    />
+                    {/* Only show WorkspaceSwitcher on the right side when split, or on the left when not split */}
+                    {(isRightSide ? splitView.isSplit : !splitView.isSplit) && (
+                        <WorkspaceSwitcher />
+                    )}
+                </div>
             </div>
 
             {showTabletSelector && (
