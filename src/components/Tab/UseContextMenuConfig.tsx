@@ -1,5 +1,7 @@
 import { useRootStore } from "../../stores";
+import { useAIStore } from "../../stores/aiStore";
 import {
+  Brain,
   ChevronLeft, ChevronLeftSquare, ChevronRight, ChevronRightSquare, Copy, Edit3, FileCode, GitCompare,
   Layers, Maximize, Split, XCircle, ClipboardPaste, Pin, Download, History
 } from 'lucide-react';
@@ -11,10 +13,13 @@ export const useContextMenuConfig = (
     tabId: string,
     isRightSide: boolean,
     onClose: (action?: 'compare') => void,
-    handleOpenModal: () => void,
+    handleOpenDownloadAllModal: () => void,
     startEditingTab: (tabId: string) => void
 ): MenuItem[] => {
   const store = useRootStore();
+  const { isReady } = useAIStore();
+  const { isReady: isAiReady, isLoading: isAiLoading } = useAIStore(state => state.ai);
+
   const tab = store.tabs.find(t => t.id === tabId);
 
   // Calculate conditions
@@ -35,6 +40,11 @@ export const useContextMenuConfig = (
   const isPinned = tab?.isPinned || false;
   const canDownload = !!tab && !tab.isTablet;
   const canRename = !!tab;
+  const canSummarize = isAiReady && // Check if ready
+                       !isAiLoading && // Check if not currently loading
+                       !!tab &&
+                       !tab.isTablet &&
+                       tab.content.trim().length > 0;
 
   // Get the history for the current side
   const history = isRightSide ? store.splitView.rightTabHistory : store.splitView.leftTabHistory;
@@ -90,6 +100,10 @@ export const useContextMenuConfig = (
     onClose();
   };
 
+  const handleSummarize = async () => {
+    onClose('summary', tabId);
+  };
+
   const handleCompareFromClipboard = async () => {
     await store.compareFromClipboard(tabId, isRightSide);
     onClose('compare');
@@ -125,10 +139,23 @@ export const useContextMenuConfig = (
   };
 
   const handleDownloadAll = () => {
-    handleOpenModal();
+    handleOpenDownloadAllModal();
   };
 
+  const getSummarizeLabel = () => {
+      if (isAiLoading) return "Initializing AI...";
+      if (!isAiReady) return "AI Not Ready";
+      return "Summarize";
+  }
+
   const menuItems: MenuItem[] = [
+    {
+      id: 'summarize',
+      label: getSummarizeLabel(),
+      icon: Brain,
+      action: handleSummarize,
+      condition: canSummarize
+    },
     {
       id: 'rename',
       label: 'Rename',

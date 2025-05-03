@@ -4,6 +4,7 @@ import { WelcomeScreen } from '../Welcome/WelcomeScreen';
 import { EditorPaneWrapper } from '../Editor/EditorPaneWrapper';
 import { TabBar } from '../Tab/TabBar';
 import { DiffModal } from '../DiffModal';
+import { SummarizeModal } from '../AI/SummarizeModal';
 import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
 import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
 import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
@@ -40,6 +41,11 @@ const MainLayout: React.FC = () => {
     leftTabId: string | null;
     rightTabId: string | null;
     fromHistory?: boolean;
+  } | null>(null);
+
+  const [summarizeModal, setSummarizeModal] = React.useState<{
+    content: string;
+    tabId: string;
   } | null>(null);
 
   // Encapsulate resizing logic within the hook
@@ -80,6 +86,31 @@ const MainLayout: React.FC = () => {
 
   const handleCloseDiffModal = () => {
     setDiffModal(null);
+  };
+
+//   const handleOpenSummarizeModal = (tabId: string) => {
+//       const tab = useRootStore.getState().tabs.find(t => t.id === tabId);
+//       if (tab && tab.content) {
+//           setSummarizeModal({ content: tab.content, tabId: tabId });
+//       } else {
+//           console.warn("Cannot summarize: Tab or content not found for ID", tabId);
+//       }
+//   };
+    const handleOpenSummarizeModal = (tabId: string) => {
+        console.log("[MainLayout] handleOpenSummarizeModal called for tab:", tabId); // Add log
+        // This find should be fast unless 'tabs' is gigantic
+        const tab = useRootStore.getState().tabs.find(t => t.id === tabId);
+        if (tab && tab.content) {
+            console.log("[MainLayout] Found tab content, calling setSummarizeModal");
+            setSummarizeModal({ content: tab.content, tabId: tabId }); // This should trigger re-render quickly
+        } else {
+            console.warn("[MainLayout] Cannot summarize: Tab or content not found for ID", tabId);
+            // Optionally show a user notification here
+        }
+    };
+
+  const handleCloseSummarizeModal = () => {
+      setSummarizeModal(null);
   };
 
   useEffect(() => {
@@ -144,7 +175,11 @@ const MainLayout: React.FC = () => {
               style={leftPaneStyle}
             >
               <div className="w-full flex-shrink-0">
-                <TabBar side="left" onOpenDiffModal={handleOpenDiffModal}/>
+                <TabBar
+                  side="left"
+                  onOpenDiffModal={handleOpenDiffModal}
+                  onOpenSummaryModal={handleOpenSummarizeModal}
+                />
               </div>
               <div className="w-full h-full flex-grow overflow-hidden">
                 <EditorPaneWrapper side="left"/>
@@ -164,7 +199,11 @@ const MainLayout: React.FC = () => {
                   style={rightPaneStyle}
                 >
                   <div className="w-full flex-shrink-0">
-                    <TabBar side="right" onOpenDiffModal={handleOpenDiffModal}/>
+                    <TabBar
+                      side="right"
+                      onOpenDiffModal={handleOpenDiffModal}
+                      onOpenSummaryModal={handleOpenSummarizeModal}
+                    />
                   </div>
                   <div className="w-full h-full flex-grow overflow-hidden">
                     <EditorPaneWrapper side="right"/>
@@ -182,6 +221,14 @@ const MainLayout: React.FC = () => {
           rightTabId={diffModal.rightTabId || ""}
           onClose={handleCloseDiffModal}
         />
+      )}
+      {summarizeModal && (
+          <SummarizeModal
+              content={summarizeModal.content}
+              onClose={handleCloseSummarizeModal}
+              // You might pass tabId if the modal needs it for some reason
+              // tabId={summarizeModal.tabId}
+          />
       )}
     </div>
   );
