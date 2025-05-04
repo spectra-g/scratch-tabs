@@ -21,7 +21,6 @@ function App() {
 
   useEffect(() => {
     // Initialize AI model when the App mounts
-    console.log("[AI Store] Triggering initial model load...");
     initializeAI().catch(err => {
         console.error("Failed to initialize AI on app mount:", err);
         // Optionally show a global error message to the user

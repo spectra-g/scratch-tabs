@@ -10,6 +10,7 @@ import { TabTooltip } from './TabTooltip';
 import { Tab } from '../../types';
 import { languageRegistry } from '../../languages';
 import { WorkspaceSwitcher } from '../Workspace/WorkspaceSwitcher';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 interface TabBarProps {
   side?: 'left' | 'right';
@@ -43,6 +44,8 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
         canAddNewTab,
         reorderTabs,
     } = useRootStore();
+
+    const { activeWorkspaceId } = useWorkspaceStore();
 
     const [editingTabId, setEditingTabId] = useState<string | null>(null);
     const [editingTitle, setEditingTitle] = useState('');
@@ -407,10 +410,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
     };
 
     const handleCreateNewTab = () => {
-        if (!canAddNewTab(isRightSide)) {
-            return;
-        }
-
+        if (!canAddNewTab(isRightSide)) return;
         const newTabId = crypto.randomUUID();
         addTab({
             id: newTabId,
@@ -418,10 +418,10 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
             content: '',
             language: 'plaintext',
             languageLocked: false,
-            cursorPosition: {
-                lineNumber: 1,
-                column: 1
-            }
+            cursorPosition: { lineNumber: 1, column: 1 },
+            workspaceId: activeWorkspaceId,
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
         }, isRightSide);
     };
 
@@ -476,12 +476,11 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
             languageLocked: false,
             isTablet: true,
             tabletState: serializedState,
-            cursorPosition: {
-                lineNumber: 1,
-                column: 1
-            }
+            cursorPosition: { lineNumber: 1, column: 1 },
+            workspaceId: activeWorkspaceId,
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
         }, side === 'right');
-
         setShowTabletSelector(false);
     };
 

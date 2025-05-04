@@ -197,62 +197,90 @@ export const useUrlTabHandler = () => {
 
     // --- Effects ---
 
-    // Handle URL changes (user navigation)
+    // Effect 1: Handles STATE changes, updates URL
     useEffect(() => {
+        if (isProcessingUrlChange.current) {
+            return; // Don't run if the other effect is actively processing a URL change
+        }
+
+        // Debounce state updates slightly to avoid rapid changes
+        if (stateUpdateTimeout.current) clearTimeout(stateUpdateTimeout.current);
+
+        stateUpdateTimeout.current = setTimeout(() => {
+            const currentPath = location.pathname;
+            const targetPath = getTargetPath(); // Calculates path based on current state (active tab or '/')
+
+            if (targetPath !== currentPath) {
+                isUserNavigation.current = false; // Mark as app navigation BEFORE navigating
+                navigate(targetPath, { replace: true });
+                // No need for a timeout to reset isUserNavigation here, the URL effect handles it
+            }
+            stateUpdateTimeout.current = null; // Clear timeout reference
+        }, 150); // Slightly increased debounce
+
+    }, [activeLeftTabId, activeRightTabId, isSplit, activeSide, tabs, leftTabs, rightTabs, activeWorkspaceId, navigate, location.pathname, getTargetPath]); // Added navigate, location.pathname, getTargetPath
+
+
+    // Effect 2: Handles URL changes, updates STATE
+    useEffect(() => {
+        // If it's the initial render, just set the prev ref
         if (initialRender.current) {
             initialRender.current = false;
             prevUrlIdentifierParamRef.current = urlIdentifierParam;
-            isUserNavigation.current = true;
+             // Let state effect handle initial sync if needed
+            return;
         }
-        if (!isUserNavigation.current) return;
-        if (urlIdentifierParam !== prevUrlIdentifierParamRef.current) {
-            isProcessingUrlChange.current = true;
-            if (stateUpdateTimeout.current) clearTimeout(stateUpdateTimeout.current);
-            // 1. Try to find tab (left, then right, only left if not split)
-            const { tab, side } = findTabByUrlIdentifier(urlIdentifierParam);
-            if (tab) {
-                activateTab(tab, side);
-            } else if (urlIdentifierParam) {
-                // 2. Try to find tablet
-                const tablet = findTabletByUrlIdentifier(urlIdentifierParam);
-                if (tablet) {
-                    const newTab = createNewTabFromUrl(urlIdentifierParam);
-                    addTab(newTab, false);
-                    activateTab(newTab, 'left');
-                } else {
-                    // 3. Try to find language
-                    const language = languageRegistry.getById(urlIdentifierParam);
-                    if (language) {
-                        const newTab = createNewTabFromUrl(urlIdentifierParam);
-                        addTab(newTab, false);
-                        activateTab(newTab, 'left');
-                    } else {
-                        // 4. Fallback: create plaintext tab
-                        const newTab = createNewTabFromUrl(urlIdentifierParam);
-                        addTab(newTab, false);
-                        activateTab(newTab, 'left');
-                    }
-                }
-            }
-            prevUrlIdentifierParamRef.current = urlIdentifierParam;
-            setTimeout(() => { isProcessingUrlChange.current = false; }, 100);
-        }
-    }, [urlIdentifierParam, tabs, leftTabs, rightTabs, isSplit, activeLeftTabId, activeRightTabId, activeSide, activeWorkspaceId]);
 
-    // Handle state changes (app navigation)
-    useEffect(() => {
-        if (isProcessingUrlChange.current) return;
-        if (stateUpdateTimeout.current) clearTimeout(stateUpdateTimeout.current);
-        stateUpdateTimeout.current = setTimeout(() => {
-            isUserNavigation.current = false;
-            const currentPath = location.pathname;
-            const targetPath = getTargetPath();
-            if (targetPath !== currentPath) {
-                navigate(targetPath, { replace: true });
+        // If the URL param hasn't actually changed, do nothing
+        if (urlIdentifierParam === prevUrlIdentifierParamRef.current) {
+             return;
+        }
+
+        // --- This is the crucial part ---
+        // If isUserNavigation is false, it means the state effect just caused the navigation.
+        // We should only update the prev ref and reset the flag.
+        if (!isUserNavigation.current) {
+            prevUrlIdentifierParamRef.current = urlIdentifierParam;
+            isUserNavigation.current = true; // Reset for next potential user navigation
+            return; // DO NOT proceed to find/create tab
+        }
+
+        // --- If we reach here, it's a USER navigation to a NEW URL ---
+        isProcessingUrlChange.current = true; // Prevent state effect from interfering
+        if (stateUpdateTimeout.current) {
+             clearTimeout(stateUpdateTimeout.current); // Cancel pending state updates
+             stateUpdateTimeout.current = null;
+        }
+
+        // 1. Try to find existing tab matching the new URL
+        const { tab, side } = findTabByUrlIdentifier(urlIdentifierParam);
+
+        if (tab) {
+            activateTab(tab, side);
+        } else if (urlIdentifierParam) {
+            // Prevent creation if no tabs exist (e.g., after closing last tab and URL is '/')
+            if (tabs.length === 0 && !urlIdentifierParam) {
+//                  console.log('[URL Effect] No tabs exist and URL is root, doing nothing.');
+            } else {
+                // 2. Try to create a new tab (Tablet, Language, or Plaintext)
+                const newTab = createNewTabFromUrl(urlIdentifierParam);
+                // Determine which side to add to (default to left or based on current focus?)
+                const targetSide = isSplit && activeSide === 'right' ? 'right' : 'left';
+                addTab(newTab, targetSide === 'right');
+                activateTab(newTab, targetSide); // Activate the newly created tab
             }
-            setTimeout(() => { isUserNavigation.current = true; }, 100);
-        }, 100);
-    }, [activeLeftTabId, activeRightTabId, isSplit, activeSide, tabs, leftTabs, rightTabs, activeWorkspaceId]);
+        } else {
+             // This handles navigation to '/'
+        }
+
+        prevUrlIdentifierParamRef.current = urlIdentifierParam; // Update prev ref
+        // Use a shorter timeout here just to release the lock
+        setTimeout(() => {
+             isProcessingUrlChange.current = false;
+         }, 50);
+
+    }, [urlIdentifierParam]); // Rerun only when the urlIdentifierParam changes
+
 
     // Cleanup
     useEffect(() => {

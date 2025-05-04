@@ -9,8 +9,6 @@ interface SummarizeModalProps {
 }
 
 export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose }) => {
-  console.log("[SummarizeModal] Rendering.");
-
   const { summarizeText, isAiReady, aiError } = useAIStore(state => ({
       summarizeText: state.summarizeText,
       isAiReady: state.ai.isReady,
@@ -73,8 +71,6 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
   const showSpinner = localIsGenerating;
   const currentError = error || aiError;
   const loadingText = 'Generating summary...';
-
-  console.log("[SummarizeModal] Rendering UI. State:", { showSpinner, currentError, summaryLength: summary?.length });
 
   return (
     <BaseModal title="Summary" onClose={onClose} maxWidthClass="max-w-2xl">

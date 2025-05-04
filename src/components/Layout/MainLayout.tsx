@@ -88,23 +88,12 @@ const MainLayout: React.FC = () => {
     setDiffModal(null);
   };
 
-//   const handleOpenSummarizeModal = (tabId: string) => {
-//       const tab = useRootStore.getState().tabs.find(t => t.id === tabId);
-//       if (tab && tab.content) {
-//           setSummarizeModal({ content: tab.content, tabId: tabId });
-//       } else {
-//           console.warn("Cannot summarize: Tab or content not found for ID", tabId);
-//       }
-//   };
     const handleOpenSummarizeModal = (tabId: string) => {
-        console.log("[MainLayout] handleOpenSummarizeModal called for tab:", tabId); // Add log
         // This find should be fast unless 'tabs' is gigantic
         const tab = useRootStore.getState().tabs.find(t => t.id === tabId);
         if (tab && tab.content) {
-            console.log("[MainLayout] Found tab content, calling setSummarizeModal");
             setSummarizeModal({ content: tab.content, tabId: tabId }); // This should trigger re-render quickly
         } else {
-            console.warn("[MainLayout] Cannot summarize: Tab or content not found for ID", tabId);
             // Optionally show a user notification here
         }
     };
