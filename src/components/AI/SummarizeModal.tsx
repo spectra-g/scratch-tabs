@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BaseModal } from '../../languages/json/components/modals/BaseModal';
 import { useAIStore } from '../../stores/aiStore';
-import { Brain, ClipboardCopy } from 'lucide-react';
 import './SummarizeModal.css';
 
 interface SummarizeModalProps {
@@ -28,7 +27,6 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
 
   const [localSummary, setLocalSummary] = useState<string>('');
   const [localError, setLocalError] = useState<string | null>(null);
-  const [isCopied, setIsCopied] = useState<boolean>(false);
   const isMounted = useRef(true);
   const didInitiateSummarize = useRef(false);
 
@@ -51,7 +49,6 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
     didInitiateSummarize.current = true;
     setLocalError(null); // Clear local error before starting
     setLocalSummary('');
-    console.log('[SummarizeModal] Triggering summarizeText');
     summarizeText(content); // Trigger the worker, don't await
   }, [content, summarizeText, isAiReady, aiError]);
 
@@ -70,7 +67,6 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
     if (!isMounted.current) return;
     // Use the error from the store if it occurred *during* generation
     if (isGenerating === false && storeError && storeError !== aiError) { 
-       console.log('[SummarizeModal] Received error from store:', storeError);
        setLocalError(storeError);
        setLocalSummary('');
     }
@@ -80,58 +76,24 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
      }
   }, [storeError, isGenerating, aiError]);
 
-  // Function to handle copying text to clipboard
-  const handleCopy = async () => {
-    if (!localSummary) return;
-    try {
-      await navigator.clipboard.writeText(localSummary);
-      setIsCopied(true);
-      setTimeout(() => {
-        if (isMounted.current) {
-          setIsCopied(false);
-        }
-      }, 1500); // Reset after 1.5 seconds
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-      // Optionally show an error to the user
-    }
-  };
-
-  const copyButton = localSummary ? (
-    <button
-      onClick={handleCopy}
-      className="p-1.5 rounded-md text-gray-400 hover:text-gray-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-600 transition-colors duration-150 ml-2"
-      aria-label="Copy summary to clipboard"
-      title="Copy summary"
-    >
-      <ClipboardCopy size={16} />
-    </button>
-  ) : null;
-
   // Determine final error state to display
   const currentError = localError;
   const showThinking = isGenerating;
   const thinkingText = 'Thinking...';
 
   return (
-    <BaseModal 
-      title="Summary" 
-      onClose={onClose} 
-      maxWidthClass="max-w-2xl"
-      headerActions={copyButton}
-    >
-      <div className="p-5 md:p-6 min-h-[250px] flex flex-col">
+    <BaseModal title="Summary" onClose={onClose} maxWidthClass="max-w-4xl">
+      <div className="p-2 min-h-[250px] flex flex-col">
         <div className="flex-1 overflow-auto custom-scrollbar bg-gray-900/30 rounded-md p-4 flex items-center justify-center">
           {showThinking && !currentError && (
             <div className="flex items-center justify-center space-x-1 text-blue-400">
-              <Brain className="inline-block w-4 h-4 thinking-brain-pulse" aria-hidden="true" />
-              <div className="text-shimmer">
+              <div className="text-shimmer p-1">
                 <span className="text-sm">{thinkingText}</span>
               </div>
             </div>
           )}
           {currentError && (
-            <div className="text-center text-red-300 p-4 bg-red-900/30 rounded border border-red-500/40">
+            <div className="text-center text-red-300 p-4 bg-red-900/80 rounded border border-red-500/40">
               <p className="font-semibold text-red-200 mb-1">Summarization Error</p>
               <p className="text-sm">{currentError}</p>
             </div>

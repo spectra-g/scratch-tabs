@@ -8,7 +8,7 @@ export class StacktraceLanguageDetector extends BaseLanguageDetector {
     id = 'stacktrace';
     name = 'Stack Trace';
     extensions = ['stacktrace', 'stack'];
-    priority = 4;
+    priority = 10;
 
     /**
      * Get sample content for stacktrace
@@ -52,31 +52,38 @@ ReferenceError: fetch is not defined
         if (content.trim().length < 10) return false;
 
         const stacktracePatterns = [
-            // Error type and message pattern
-            /^(?:(?:Uncaught\s+)?(?:Error|TypeError|ReferenceError|SyntaxError|RangeError):|Error:)/m,
+            // Error type and message pattern (can be at the start of a line)
+            /(?:Uncaught\s+)?(?:Error|TypeError|ReferenceError|SyntaxError|RangeError):|Error:/,
 
-            // Stack frame patterns
-            /^\s+at\s+(?:\w+\s+)?\(?[^)]+\)$/m,
-            /^\s+at\s+(?:\w+\.)*\w+\s+\(.*:\d+:\d+\)$/m,
-            /^\s+at\s+(?:\w+\.)*\w+\s+\[.*\]$/m,
+            // Stack frame patterns (must be at the start of a line, potentially with leading whitespace)
+            /\s+at\s+(?:\w+\s+)?\(?[^)]+\)?/, // e.g., " at Function.handleRequest (...)" or " at (...)"
+            /\s+at\s+(?:\w+\.)*\w+\s+\(.*:\d+:\d+\)/, // e.g., " at Object.method (file:line:col)"
+            /\s+at\s+(?:\w+\.)*\w+\s+\[.*\]/, // e.g., " at Object.method [as _method]"
+            /\s+at\s+async\s+/, // e.g., " at async Function.handleRequest"
 
-            // Async stack frame patterns
-            /^\s+at\s+async\s+/m,
+            // File path patterns in stack frames (can appear anywhere in a line)
+            /\([^()]+:\d+:\d+\)/, // e.g., "(file:line:col)"
+            /\s+\(?(?:file|https?|webpack):\/\/[^)]+:\d+:\d+\)?/, // e.g., "(webpack://...)"
 
-            // File path patterns in stack frames
-            /\([^()]+:\d+:\d+\)/m,
-            /\s+\(?(?:file|https?|webpack):\/\/[^)]+:\d+:\d+\)?/m,
-
-            // Common stack frame components
-            /\b(?:node_modules|src|dist|build)\b/m,
-            /\b(?:index|bundle|main|app)\.[jt]sx?:/m
+            // Common stack frame components (can appear anywhere in a line)
+            /\b(?:node_modules|src|dist|build)\b/,
+            /\b(?:index|bundle|main|app)\.[jt]sx?:/,
+            /\b\d+:\d+\b/ // Simple line:column number pattern
         ];
 
-        // Count how many stacktrace patterns match
+        // Split into non-empty lines
+        const lines = content.split('\n').filter(line => line.trim().length > 0);
+        if (lines.length === 1) {
+            // Single non-empty line: relax matching, count how many patterns match this line
+            const line = lines[0];
+            const matchCount = stacktracePatterns.reduce((count, pattern) =>
+                count + (pattern.test(line) ? 1 : 0), 0);
+            return matchCount >= 2;
+        }
+
+        // Multi-line: use original logic (apply patterns to the whole content)
         const matchCount = stacktracePatterns.reduce((count, pattern) =>
             count + (pattern.test(content) ? 1 : 0), 0);
-
-        // If at least 2 patterns match, consider it a stacktrace
         return matchCount >= 2;
     }
 
@@ -96,8 +103,8 @@ ReferenceError: fetch is not defined
                         [/^(?:Uncaught\s+)?(?:Error|TypeError|ReferenceError|SyntaxError|RangeError):/, 'error'],
                         [/^Error:.*$/, 'error'],
 
-                        // Stack frame components
-                        [/^\s+at\s+/, 'keyword'],
+                        // Stack frame components (ensure these match the start of a line)
+                        [/^\s*at\s+/, 'keyword'], // Added \s* to handle potential leading space variations
                         [/\basync\b/, 'keyword'],
                         [/\b(?:node_modules|src|dist|build)\b/, 'string'],
                         [/\b\w+\.[jt]sx?\b/, 'string'],
@@ -108,9 +115,9 @@ ReferenceError: fetch is not defined
                         // File paths
                         [/(?:file|https?|webpack):\/\/[^)\s]+/, 'string'],
 
-                        // Function names
-                        [/\b(?:\w+\.)*\w+(?=\s+\()/, 'function'],
-                        [/\b(?:\w+\.)*\w+(?=@)/, 'function'],
+                        // Function names (handle cases without file/line info)
+                        [/\b(?:\w+\.)*\w+(?=\s+at\s)/, 'function'], // e.g., "at Function.handleRequest"
+                        [/\b(?:\w+\.)*\w+(?=@)/, 'function'], // e.g., "at Object.method@"
 
                         // Line and column numbers
                         [/\b\d+\b/, 'number'],
@@ -152,27 +159,35 @@ ReferenceError: fetch is not defined
                 const content = model.getValue();
 
                 const formatStackTrace = (stackTrace: string) => {
-                    // First, replace '\n' escape sequences with actual new lines
-                    // Replace all occurrences of ' at ' with a line break and ensure it correctly splits
-                    const formattedTrace = stackTrace.replace(/ at /g, '\n at ');
-
-                    // Now, split the string into an array of frames based on new lines
-                    let stackFrames = formattedTrace.split('\n');
-
-                    // Trim extra spaces from each line and filter out any empty lines
-                    stackFrames = stackFrames.map(frame => frame.trim()).filter(frame => frame.length > 0);
-
-                    // Format each frame with indentation (tab) for lines starting with 'at'
-                    const indentedStackTrace = stackFrames.map((frame, index) => {
-                        // For the first line (error message), don't add indentation
-                        if (index === 0) {
-                            return frame;
+                    // If it's a single line (or all lines are very long), try to split at ' at '
+                    const lines = stackTrace.split('\n');
+                    let processedLines: string[] = [];
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        if (!trimmedLine) {
+                            processedLines.push('');
+                            continue;
                         }
-                        // For subsequent lines (frames), add a tab for indentation
-                        return `\t${frame}`; // Adding a tab character (\t) for indentation
-                    }).join('\n');
-
-                    return indentedStackTrace;
+                        // If the line contains multiple stack frames (single-line stacktrace), split at ' at '
+                        if (/ at /.test(trimmedLine) && !/^\s*at\s+/.test(trimmedLine)) {
+                            // Split at ' at ', but keep the first part as the error message
+                            const parts = trimmedLine.split(/(?= at )/g);
+                            if (parts.length > 1) {
+                                processedLines.push(parts[0].trim());
+                                for (let i = 1; i < parts.length; i++) {
+                                    processedLines.push('\t' + parts[i].trim());
+                                }
+                                continue;
+                            }
+                        }
+                        // If it starts with 'at', indent it
+                        if (/^\s*at\s+/i.test(trimmedLine)) {
+                            processedLines.push(`\t${trimmedLine}`);
+                        } else {
+                            processedLines.push(trimmedLine);
+                        }
+                    }
+                    return processedLines.join('\n');
                 }
 
                 return [{
@@ -181,6 +196,30 @@ ReferenceError: fetch is not defined
                 }];
             }
         });
+    }
+
+    countSpecificPatterns(content: string): number {
+        // Use the same patterns as isMatch
+        const stacktracePatterns = [
+            /(?:Uncaught\s+)?(?:Error|TypeError|ReferenceError|SyntaxError|RangeError):|Error:/,
+            /\s+at\s+(?:\w+\s+)?\(?[^)]+\)?/,
+            /\s+at\s+(?:\w+\.)*\w+\s+\(.*:\d+:\d+\)/,
+            /\s+at\s+(?:\w+\.)*\w+\s+\[.*\]/,
+            /\s+at\s+async\s+/, 
+            /\([^()]+:\d+:\d+\)/,
+            /\s+\(?(?:file|https?|webpack):\/\/[^)]+:\d+:\d+\)?/,
+            /\b(?:node_modules|src|dist|build)\b/,
+            /\b(?:index|bundle|main|app)\.[jt]sx?:/,
+            /\b\d+:\d+\b/
+        ];
+        // Count total matches across all lines
+        let score = 0;
+        for (const line of content.split('\n')) {
+            for (const pattern of stacktracePatterns) {
+                if (pattern.test(line)) score++;
+            }
+        }
+        return score;
     }
 }
 

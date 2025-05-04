@@ -27,9 +27,8 @@ export const BaseModal: React.FC<BaseModalProps> = ({
       <div className={`bg-gray-850 rounded-lg shadow-xl w-full ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-gray-700/60`}>
 
         {/* --- Modal Header --- */}
-        {/* Slightly more padding, subtle gradient possibility, refined close button */}
-        <div className="flex-none flex items-center justify-between p-4 border-b border-gray-700/60 bg-gradient-to-b from-gray-800 to-gray-850"> {/* Subtle gradient */}
-          <h2 className="text-lg font-semibold text-gray-100 tracking-tight">{title}</h2> {/* Slightly tighter tracking */}
+        <div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/60 bg-gradient-to-b from-gray-800 to-gray-850"> {/* Subtle gradient */}
+          <h2 className="text-lg font-medium text-gray-100">{title}</h2>
           <button
             onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/70 rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-850"
@@ -49,14 +48,3 @@ export const BaseModal: React.FC<BaseModalProps> = ({
     </div>
   );
 };
-
-// Add this to your tailwind.config.js (or global CSS) if you don't have gray-850:
-// theme: {
-//   extend: {
-//     colors: {
-//       gray: {
-//         850: '#1f2937', // Example: Between gray-800 and gray-900
-//       }
-//     }
-//   }
-// }
