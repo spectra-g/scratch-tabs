@@ -130,6 +130,7 @@ export interface StorageProvider {
   deleteWorkspace(id: string): Promise<void>;
   getTabsByWorkspace(workspaceId: string): Promise<Tab[]>;
   getSplitViewByWorkspace(workspaceId: string): Promise<SplitViewRecord | null>;
+  deleteSplitViewByWorkspace(workspaceId: string): Promise<void>;
 }
 
 export class IndexedDBStorage implements StorageProvider {
@@ -247,12 +248,13 @@ async deleteWorkspace(id: string): Promise<void> {
     try {
       await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
         await db.workspaces.delete(id);
-        
-        const tabsToDelete = await db.tabs.where('workspaceId').equals(id).toArray();
+
         await db.tabs.where('workspaceId').equals(id).delete();
-        
-        const splitViewsToDelete = await db.splitView.where('workspaceId').equals(id).toArray();
-        await db.splitView.where('workspaceId').equals(id).delete();
+
+        const splitViewsToDelete: SplitViewRecord[] = await db.splitView.where('workspaceId').equals(id).toArray();
+        for (const sv of splitViewsToDelete) {
+          await db.splitView.delete(sv.id);
+        }
       });
     } catch (error) {
       throw error;
@@ -271,6 +273,12 @@ async deleteWorkspace(id: string): Promise<void> {
   async getSplitViewByWorkspace(workspaceId: string): Promise<SplitViewRecord | null> {
     return this.withRetry(async () => {
       return await db.splitView.where('workspaceId').equals(workspaceId).first();
+    });
+  }
+
+  async deleteSplitViewByWorkspace(workspaceId: string): Promise<void> {
+    await this.withRetry(async () => {
+      await db.splitView.where('workspaceId').equals(workspaceId).delete();
     });
   }
 }

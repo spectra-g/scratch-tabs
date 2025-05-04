@@ -12,6 +12,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@types/react-window": "^1.8.8",
+    "@huggingface/transformers": "^3.5.0",
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
     "dexie": "^3.2.6",

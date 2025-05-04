@@ -81,6 +81,7 @@ export const useRootStore = create < RootStore > ((set, get) => {
     const editorStore = useEditorStore.getState();
     const persistenceStore = usePersistenceStore.getState();
     const storage = StorageProviderFactory.getProvider();
+    const { deleteWorkspace, getActiveWorkspace } = useWorkspaceStore.getState();
 
     // Initialize persistence
     persistenceStore.initialize();
@@ -211,7 +212,7 @@ export const useRootStore = create < RootStore > ((set, get) => {
         
           // Create initial split view state if needed
           const splitViewState = useSplitViewStore.getState().splitView;
-          if (!splitViewState.workspaceId) {
+          if (!splitViewState || !splitViewState.workspaceId) {
             const initialSplitView = {
               id: crypto.randomUUID(),
               isSplit: false,
@@ -229,7 +230,7 @@ export const useRootStore = create < RootStore > ((set, get) => {
             storage.saveSplitView(initialSplitView);
             useSplitViewStore.setState({ splitView: initialSplitView });
           }
-        
+
           // Add the tab - this will handle adding it to the correct side's tab array
           addTab(newTab, isRightSide);
         },
@@ -253,6 +254,17 @@ export const useRootStore = create < RootStore > ((set, get) => {
 
             // Delete the tab from persistence
             await storage.deleteTab(id);
+
+            const activeWorkspace = getActiveWorkspace();
+            if (activeWorkspace) {
+                // Check if this was the last tab in the workspace
+                const remainingTabs = useTabsStore.getState().tabs.filter(tab => tab.workspaceId === activeWorkspace.id && tab.id !== id);
+                if (remainingTabs.length === 0) {
+                    // Delete splitView and workspace records
+                    await storage.deleteSplitViewByWorkspace(activeWorkspace.id);
+                    deleteWorkspace(activeWorkspace.id);
+                }
+            }
         },
 
         setActiveTab: (id) => {
@@ -315,23 +327,21 @@ export const useRootStore = create < RootStore > ((set, get) => {
             const { splitView, addTab, setActiveLeftTab, setActiveRightTab } = get();
             const tabsStore = useTabsStore.getState();
             const splitViewStore = useSplitViewStore.getState();
+            const { activeWorkspaceId } = useWorkspaceStore.getState();
 
             let clipboardContent = '';
             try {
                 clipboardContent = await navigator.clipboard.readText();
             } catch (err) {
                 console.error("Failed to read clipboard contents: ", err);
-                // Optionally show a user notification here
-                return; // Stop if clipboard access fails
+                return;
             }
 
-            // Determine target side for the new tab
             const addNewTabToRight = !isRightSide;
-
-            // Create the new tab data
             const language = detectLanguage(clipboardContent);
             const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(clipboardContent);
             const newTabId = crypto.randomUUID();
+            const now = Date.now();
             const newTab: Tab = {
                 id: newTabId,
                 title: "Clipboard Compare",
@@ -342,47 +352,36 @@ export const useRootStore = create < RootStore > ((set, get) => {
                     lineNumber: 0,
                     column: 0
                 },
-                isTablet: false, // Clipboard content is text, not a tablet
+                isTablet: false,
+                dateCreated: now,
+                lastModified: now,
+                workspaceId: activeWorkspaceId || ''
             };
 
             if (!splitView.isSplit) {
-                // --- Handle case: Not currently split ---
-                // 1. Add the new tab to the main store *first*
                 tabsStore.addTab(newTab);
-
-                // 2. Manually set up the split view state
                 const updatedSplitView = {
                     isSplit: true,
-                    leftTabs: [originalTabId], // Original tab goes to the left
-                    rightTabs: [newTabId],     // New clipboard tab goes to the right
+                    leftTabs: [originalTabId],
+                    rightTabs: [newTabId],
                     activeLeftTabId: originalTabId,
                     activeRightTabId: newTabId,
-                    splitRatio: splitView.splitRatio, // Keep existing ratio or default
+                    splitRatio: splitView.splitRatio,
                 };
                 splitViewStore.setSplitView(updatedSplitView);
-
-                // 3. Ensure the global active tab is set (optional, might depend on desired focus)
-                // setActiveTab(originalTabId); // Or newTabId if you want focus on the new one
-
             } else {
-                // --- Handle case: Already split ---
-                // 1. Add the tab using the root store's addTab, specifying the side
-                addTab(newTab, addNewTabToRight); // This should handle adding to the correct list and setting active state
-
-                // 2. Explicitly ensure the new tab is active on its side (addTab might already do this, but being explicit is safer)
+                addTab(newTab, addNewTabToRight);
                 if (addNewTabToRight) {
                     setActiveRightTab(newTabId);
                 } else {
                     setActiveLeftTab(newTabId);
                 }
-                // 3. Ensure the original tab remains active on its side
                 if (isRightSide) {
                     setActiveRightTab(originalTabId);
                 } else {
                     setActiveLeftTab(originalTabId);
                 }
             }
-            // The diff modal opening will be handled by the onClose('compare') in the context menu config
         },
 
         reorderTabs: (side, newOrder) => {
@@ -596,6 +595,7 @@ export const useRootStore = create < RootStore > ((set, get) => {
 
             const rightTabId = duplicateTab(tabId, true);
             splitScreen(tabId, rightTabId);
+            return rightTabId;
         },
 
         setCursorPosition: (tabId, cursorPosition) => {
@@ -626,7 +626,7 @@ export const useRootStore = create < RootStore > ((set, get) => {
             const { tabs, splitView } = get();
 
             // If in split view, check the appropriate side
-            if (splitView.isSplit) {
+            if (splitView?.isSplit) {
                 if (toRightSide) {
                     // Check right side tabs
                     const rightTabIds = splitView.rightTabs;

@@ -1,0 +1,94 @@
+/* Remove character animation styles */
+/*
+.char-anim {
+  display: inline-block;
+  animation: char-pulse 1s ease-in-out infinite alternate !important;
+  color: #60a5fa;
+}
+
+@keyframes char-pulse {
+  0% {
+    color: #60a5fa;
+  }
+  100% {
+    color: white;
+  }
+}
+*/
+
+/* Container for the shimmer effect */
+.shimmer-container {
+  position: relative; /* Needed for absolute positioning of overlay */
+  overflow: hidden; /* Clip the overlay */
+  color: #60a5fa; /* Base color for icon/text */
+  padding: 2px; /* Small padding to prevent clipping */
+}
+
+/* The overlay that creates the shimmer effect */
+.shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.8) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 250% 100%; /* Make gradient wider than container */
+  mix-blend-mode: overlay; /* Blend highlight with elements below */
+  animation: shimmer-overlay-anim 2s linear infinite;
+  pointer-events: none; /* Allow interaction with elements below */
+  z-index: 20; /* Ensure overlay is on top */
+}
+
+/* Keyframes to move the overlay's background */
+@keyframes shimmer-overlay-anim {
+  0% {
+    background-position: -150% 0; /* Start position (gradient off-screen left) */
+  }
+  100% {
+    background-position: 150% 0; /* End position (gradient off-screen right) */
+  }
+}
+
+/* Text shimmer effect */
+.text-shimmer {
+  font-size: 0.875rem; /* text-sm */
+  background: linear-gradient(
+    90deg, /* Left to right gradient */
+    #60a5fa 0%,
+    #60a5fa 40%,
+    #ffffff 50%, /* White highlight */
+    #60a5fa 60%,
+    #60a5fa 100%
+  );
+  background-size: 200% auto; /* Gradient wider than element */
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s linear infinite; /* Apply shimmer animation */
+}
+
+/* Shimmer keyframes - move background from left to right */
+@keyframes shimmer {
+  0% {
+    background-position: 100% center; /* Start highlight off-screen RIGHT */
+  }
+  100% {
+    background-position: -100% center; /* End highlight off-screen LEFT */
+  }
+}
+
+/* Simple pulse animation for the brain icon */
+.thinking-brain-pulse {
+  animation: pulse-opacity 1.5s ease-in-out infinite alternate;
+}
+
+/* Opacity pulse keyframes */
+@keyframes pulse-opacity {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+} 

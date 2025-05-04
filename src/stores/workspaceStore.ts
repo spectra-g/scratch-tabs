@@ -34,26 +34,37 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       try {
         const workspaces = await storage.getWorkspaces();
         
-        // If no workspaces exist, create a default one
+        // If no workspaces exist, create a default one, but check again after a short delay to avoid race with migration
         if (!workspaces || workspaces.length === 0) {
-          const defaultWorkspace: Workspace = {
-            id: crypto.randomUUID(),
-            name: 'Default Workspace',
-            links: [],
-            createdAt: Date.now(),
-            lastAccessed: Date.now()
-          };
-          await storage.saveWorkspace(defaultWorkspace);
-          set({ workspaces: [defaultWorkspace], activeWorkspaceId: defaultWorkspace.id });
-        } else {
-          // Use most recently accessed workspace as active
-          const sortedWorkspaces = [...workspaces].sort((a, b) => b.lastAccessed - a.lastAccessed);
-          set({ workspaces: sortedWorkspaces, activeWorkspaceId: sortedWorkspaces[0]?.id });
-          
-          // Load the active workspace's content
-          if (sortedWorkspaces[0]) {
-            await get().switchWorkspace(sortedWorkspaces[0].id);
+          // Defensive: check again after a short delay to allow migration to finish
+          await new Promise(resolve => setTimeout(resolve, 100));
+          const refreshed = await storage.getWorkspaces();
+          if (!refreshed || refreshed.length === 0) {
+            const defaultWorkspace: Workspace = {
+              id: crypto.randomUUID(),
+              name: 'Default Workspace',
+              links: [],
+              createdAt: Date.now(),
+              lastAccessed: Date.now()
+            };
+            await storage.saveWorkspace(defaultWorkspace);
+            set({ workspaces: [defaultWorkspace], activeWorkspaceId: defaultWorkspace.id });
+          } else {
+            set({ workspaces: refreshed, activeWorkspaceId: refreshed[0]?.id });
+            // Optionally, load the active workspace's content here if needed
+            if (refreshed[0]) {
+              await get().switchWorkspace(refreshed[0].id);
+            }
           }
+          return;
+        }
+        // Use most recently accessed workspace as active
+        const sortedWorkspaces = [...workspaces].sort((a, b) => b.lastAccessed - a.lastAccessed);
+        set({ workspaces: sortedWorkspaces, activeWorkspaceId: sortedWorkspaces[0]?.id });
+        
+        // Load the active workspace's content
+        if (sortedWorkspaces[0]) {
+          await get().switchWorkspace(sortedWorkspaces[0].id);
         }
       } catch (error) {
         set({ error: error instanceof Error ? error.message : 'Failed to load workspaces' });

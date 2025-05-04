@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { Folders, MoreHorizontal, Pencil, Trash2, Plus } from 'lucide-react';
+import { StorageProviderFactory } from '../../db';
 
 export const WorkspaceSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +11,7 @@ export const WorkspaceSwitcher: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [showContextMenu, setShowContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [tabCounts, setTabCounts] = useState<Record<string, number>>({});
   
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -24,6 +26,23 @@ export const WorkspaceSwitcher: React.FC = () => {
     renameWorkspace,
     deleteWorkspace
   } = useWorkspaceStore();
+
+  // Fetch tab counts when dropdown opens
+  useEffect(() => {
+    if (isOpen) {
+      const storage = StorageProviderFactory.getProvider();
+      Promise.all(
+        workspaces.map(async (ws) => {
+          const tabs = await storage.getTabsByWorkspace(ws.id);
+          return { id: ws.id, count: tabs.length };
+        })
+      ).then(results => {
+        const counts: Record<string, number> = {};
+        results.forEach(({ id, count }) => { counts[id] = count; });
+        setTabCounts(counts);
+      });
+    }
+  }, [isOpen, workspaces]);
 
   // Handle clicks outside the dropdown menu and button
   useClickOutside([containerRef, buttonRef], () => {
@@ -116,7 +135,7 @@ export const WorkspaceSwitcher: React.FC = () => {
           ref={containerRef}
           className="fixed w-64 bg-gray-800/95 backdrop-blur border border-gray-700/50 rounded-lg shadow-2xl overflow-hidden"
           style={{ 
-            top: buttonRef.current?.getBoundingClientRect().bottom + 4,
+            top: (buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 4 : 40),
             right: '8px',
             maxHeight: '80vh',
             maxWidth: 'calc(100vw - 16px)',
@@ -159,7 +178,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                 ) : (
                   <>
                     <span className="flex-1 text-left text-sm text-gray-200 truncate">
-                      {workspace.name}
+                      {workspace.name} {typeof tabCounts[workspace.id] === 'number' ? <span className="text-gray-400">({tabCounts[workspace.id]})</span> : null}
                     </span>
                     <button
                       onClick={(e) => {

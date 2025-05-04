@@ -201,7 +201,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
       </div>
       <div className="flex-shrink-0">
         {/* Pass the current editor instance and the current activeTab prop */}
-        <StatusBar editor={editorRef.current} activeTab={activeTab}/>
+        <StatusBar editor={editorRef.current} activeTab={activeTab} side={side}/>
       </div>
     </div>
   );

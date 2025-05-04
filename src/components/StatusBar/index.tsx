@@ -3,15 +3,19 @@ import { getLanguageStatusItem, getLanguageOptionsMenu } from './LanguageStatusI
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import {Tab} from "../../types.ts";
-
+import { Tab } from "../../types.ts";
+import { AIStatusIcon } from '../AI/AIStatusIcon';
+import { useRootStore } from '../../stores';
 
 interface StatusBarProps {
   editor: monaco.editor.IStandaloneCodeEditor | null,
-  activeTab: Tab
+  activeTab: Tab,
+  side: 'left' | 'right'
 }
 
-export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab}) => {
+export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) => {
+  const { splitView } = useRootStore();
+  const showAIIcon = (!splitView.isSplit && side === 'left') || (splitView.isSplit && side === 'right');
 
   // Get the tablet if this is a tablet tab
   let tabletLabel = '';
@@ -23,7 +27,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab}) => {
         tabletLabel = tablet.label;
       }
     } catch (e) {
-      // If there's an error parsing the state, fall back to showing the language
       console.error('Error parsing tablet state:', e);
     }
   }
@@ -52,7 +55,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab}) => {
           </>
         )}
       </div>
-      <Macro editor={editor}/>
+      <div className="flex items-center space-x-2">
+        {showAIIcon && <AIStatusIcon />}
+        <Macro editor={editor}/>
+      </div>
     </div>
   );
 };
