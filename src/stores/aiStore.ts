@@ -7,6 +7,8 @@ interface FileProgress {
   total?: number;
   percent?: number;
   status?: string;
+  completed: boolean;
+  lastUpdateTime: number;
 }
 
 interface AIState {
@@ -31,16 +33,23 @@ function updateProgressState(ai: AIState, p: any): AIState {
   if (!ai.isLoading) return ai;
   let files = { ...ai.files };
   if (p.file && typeof p.loaded === 'number') {
+    const percent = p.total ? Math.round((p.loaded / p.total) * 100) : undefined;
     files[p.file] = {
       file: p.file,
       loaded: p.loaded,
       total: p.total,
-      percent: p.total ? Math.round((p.loaded / p.total) * 100) : undefined,
+      percent: percent,
       status: p.status,
+      completed: percent === 100,
+      lastUpdateTime: Date.now(),
     };
   }
   const newProgress = p.status === 'progress' && typeof p.progress === 'number' ? Math.round(p.progress) : ai.progress;
-  const newStatus = p.status === 'ready' ? 'initializing' : p.status;
+  const currentStatusUpdate = p.status === 'ready' && ai.progressStatus !== 'ready' ? 'initializing' : p.status;
+
+  const allFilesCompleted = Object.values(files).every(f => f.completed);
+  const finalOverallStatus = ai.isReady ? 'ready' : (allFilesCompleted ? 'initializing' : currentStatusUpdate);
+
   return {
     pipelineInstance: ai.pipelineInstance,
     isReady: ai.isReady,
@@ -48,7 +57,7 @@ function updateProgressState(ai: AIState, p: any): AIState {
     error: ai.error,
     isGenerating: ai.isGenerating,
     progress: newProgress,
-    progressStatus: newStatus,
+    progressStatus: finalOverallStatus,
     files,
   };
 }
@@ -77,8 +86,7 @@ export const useAIStore = create<AISlice>((set, get) => ({
     try {
       const pipe = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6', {
         progress_callback: (p: any) => {
-          // @ts-expect-error Zustand/TS union complexity workaround
-          set({ ai: updateProgressState(get().ai, p) });
+          set((state: AISlice) => ({ ai: updateProgressState(state.ai, p) }));
         },
       }) as SummarizationPipeline;
 

@@ -6,6 +6,8 @@ interface FileProgress {
   total?: number;
   percent?: number;
   status?: string;
+  completed: boolean;
+  lastUpdateTime: number;
 }
 
 interface AITooltipProps {
@@ -42,28 +44,27 @@ export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, p
   } else if (status === 'ready') {
     content = <div className="font-semibold text-green-400">AI Ready</div>;
   } else if (status === 'initializing' || status === 'progress' || status === 'downloading') {
-    // Per-file progress bars
-    const fileList = files ? Object.values(files) : [];
+    // Filter files: show only non-completed or recently completed (within 10s)
+    const visibleFiles = files ? Object.values(files).filter(file =>
+        !file.completed || (Date.now() - file.lastUpdateTime < 10000)
+    ) : [];
+
     content = (
       <>
         <div className="font-semibold text-blue-300 capitalize">{status}...</div>
-        {fileList.length > 0 ? (
+        {visibleFiles.length > 0 ? (
           <div className="space-y-2 mt-2">
-            {fileList.map(file => (
-              <div key={file.file} className="">
-                <div className="flex justify-between text-xs text-gray-300 mb-0.5">
-                  <span className="truncate max-w-[120px]" title={file.file}>{file.file.split('/').pop()}</span>
-                  <span>
-                    {file.percent !== undefined ? `${file.percent}%` : ''}
-                    {file.total ? ` (${formatBytes(file.loaded)} / ${formatBytes(file.total)})` : ''}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-1.5 overflow-hidden">
+            {visibleFiles.map(file => (
+              <div key={file.file} className="flex items-center space-x-2">
+                <div className="flex-grow bg-gray-700 rounded-full h-1.5 overflow-hidden">
                   <div
                     className="bg-blue-500 h-1.5 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${file.percent || 0}%` }}
                   ></div>
                 </div>
+                <span className="text-xs text-gray-300 whitespace-nowrap">
+                    {file.percent !== undefined ? `${file.percent}%` : ''}
+                </span>
               </div>
             ))}
           </div>
@@ -86,7 +87,7 @@ export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, p
 
   // Helper to format bytes
   function formatBytes(bytes?: number): string {
-    if (bytes === undefined) return '';
+    if (bytes === undefined || isNaN(bytes)) return '';
     if (bytes === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
