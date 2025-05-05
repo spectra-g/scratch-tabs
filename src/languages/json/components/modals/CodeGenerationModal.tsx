@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BaseModal } from './BaseModal';
 import { Editor } from '@monaco-editor/react';
 import { Tab } from '../../../../types';
-import { Copy, ExternalLink } from 'lucide-react';
+import { Copy, ExternalLink, Check } from 'lucide-react';
 
 interface CodeTab {
   id: string;
@@ -27,7 +27,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
 
     await navigator.clipboard.writeText(tab.content);
     setCopiedTabId(tabId);
-    setTimeout(() => setCopiedTabId(null), 2000);
+    setTimeout(() => setCopiedTabId(null), 1500);
   };
 
   const handleOpenInNewTab = (tab: CodeTab) => {
@@ -36,8 +36,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
       title: tab.title,
       content: tab.content,
       language: tab.language,
-      languageLocked: true,
-      cursorPosition: { lineNumber: 1, column: 1 }
+      languageLocked: true
     });
   };
 
@@ -46,47 +45,49 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
   return (
     <BaseModal title="Generated Code" onClose={onClose}>
       <div className="flex flex-col h-[70vh]">
-        {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-800 p-2 rounded-t-lg">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTabId(tab.id)}
-              className={`
-                px-4 py-2 rounded-md text-sm font-medium transition-colors
-                ${activeTabId === tab.id
-                  ? 'bg-gray-700 text-gray-200'
-                  : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
-                }
-              `}
-            >
-              {tab.title}
-            </button>
-          ))}
+        <div className="flex flex-row justify-between">
+          {/* Tabs */}
+          <div className="flex space-x-1 bg-gray-800 p-2 rounded-t-lg">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTabId(tab.id)}
+                className={`
+                  px-4 py-2 rounded-md text-sm font-medium transition-colors
+                  ${activeTabId === tab.id
+                    ? 'bg-gray-700 text-gray-200'
+                    : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+                  }
+                `}
+              >
+                {tab.title}
+              </button>
+            ))}
+          </div>
+          {activeTab && (
+            <div className="flex items-center justify-end space-x-2 px-4 py-2">
+              <button
+                onClick={() => handleCopyContent(activeTab.id)}
+                className={`p-2 rounded-md transition-colors ${copiedTabId === activeTab.id ? 'text-green-400' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}`}
+                title="Copy to clipboard"
+              >
+                {copiedTabId === activeTab.id ? <Check size={16} /> : <Copy size={16} />}
+              </button>
+              <button
+                onClick={() => handleOpenInNewTab(activeTab)}
+                className="flex items-center space-x-2 px-3 py-1.5 text-sm bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-md transition-colors"
+              >
+                <ExternalLink size={16} />
+                <span>Open in New Tab</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content */}
         <div className="flex-1 bg-gray-800 rounded-b-lg overflow-hidden">
           {activeTab && (
             <div className="h-full flex flex-col">
-              {/* Actions */}
-              <div className="flex items-center justify-end space-x-2 px-4 py-2 border-b border-gray-700">
-                <button
-                  onClick={() => handleCopyContent(activeTab.id)}
-                  className="flex items-center space-x-2 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
-                >
-                  <Copy size={16} />
-                  <span>{copiedTabId === activeTab.id ? 'Copied!' : 'Copy'}</span>
-                </button>
-                <button
-                  onClick={() => handleOpenInNewTab(activeTab)}
-                  className="flex items-center space-x-2 px-3 py-1.5 text-sm bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-md transition-colors"
-                >
-                  <ExternalLink size={16} />
-                  <span>Open in New Tab</span>
-                </button>
-              </div>
-
               {/* Editor */}
               <div className="flex-1">
                 <Editor

@@ -42,7 +42,7 @@ export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, p
         </>
     );
   } else if (status === 'ready') {
-    content = <div className="font-semibold text-green-400">AI Ready</div>;
+    content = <div className="text-center font-semibold text-green-400">AI Ready</div>;
   } else if (status === 'initializing' || status === 'progress' || status === 'downloading') {
     // Filter files: show only non-completed or recently completed (within 10s)
     const visibleFiles = files ? Object.values(files).filter(file =>

@@ -374,9 +374,7 @@ export const ClipboardTablet: Tablet = {
         addTab({
             id: newTabId,
             title: `Clipboard ${new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-            content, language, languageLocked: language !== 'plaintext',
-            dateCreated: Date.now(), lastModified: Date.now(),
-            cursorPosition: { lineNumber: 1, column: 1 }, isTablet: false
+            content, language, languageLocked: language !== 'plaintext'
         }, isRightSide);
     }, [addTab, activeSide, splitView.isSplit]);
 

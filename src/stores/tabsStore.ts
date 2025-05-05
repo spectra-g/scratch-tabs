@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import {EditorPosition, Tab} from '../types';
+import { EditorPosition, Tab } from '../types';
 import { duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
+import { useWorkspaceStore } from './workspaceStore';
 
 interface TabsStore {
   tabs: Tab[];
@@ -19,6 +20,24 @@ interface TabsStore {
   setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
 }
 
+// Helper function to initialize a tab with default values
+const initializeTab = (tab: Tab): Tab => {
+  const now = Date.now();
+  const { activeWorkspaceId } = useWorkspaceStore.getState();
+  
+  return {
+    id: tab.id ?? crypto.randomUUID(),
+    title: tab.title ?? 'New Tab',
+    content: tab.content ?? '',
+    language: tab.language ?? 'plaintext',
+    languageLocked: tab.languageLocked ?? false,
+    cursorPosition: tab.cursorPosition ?? { lineNumber: 1, column: 1 },
+    dateCreated: tab.dateCreated ?? now,
+    lastModified: tab.lastModified ?? now,
+    workspaceId: tab.workspaceId ?? activeWorkspaceId ?? 'default'
+  };
+};
+
 export const useTabsStore = create<TabsStore>((set, get) => ({
   cursorPosition: { lineNumber: 1, column: 1 },
   tabs: [],
@@ -30,34 +49,14 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     ),
   })),
 
-  addTab: (tab) => set((state) => {
-    const now = Date.now();
-    const newTab = {
-      ...tab,
-      languageLocked: tab.languageLocked ?? false,
-      cursorPosition: { lineNumber: 1, column: 1 },
-      dateCreated: tab.dateCreated ?? now,
-      lastModified: tab.lastModified ?? now
-    };
-    return {
-      tabs: [...state.tabs, newTab],
-      activeTabId: tab.id,
-    };
-  }),
+  addTab: (tab) => set((state) => ({
+    tabs: [...state.tabs, initializeTab(tab)],
+    activeTabId: tab.id,
+  })),
 
-  addBackgroundTab: (tab) => set((state) => {
-    const now = Date.now();
-    const newTab = {
-      ...tab,
-      languageLocked: tab.languageLocked ?? false,
-      cursorPosition: { lineNumber: 1, column: 1 },
-      dateCreated: tab.dateCreated ?? now,
-      lastModified: tab.lastModified ?? now
-    };
-    return {
-      tabs: [...state.tabs, newTab],
-    };
-  }),
+  addBackgroundTab: (tab) => set((state) => ({
+    tabs: [...state.tabs, initializeTab(tab)],
+  })),
 
   removeTab: (id) => set((state) => {
     const newTabs = state.tabs.filter((tab) => tab.id !== id);

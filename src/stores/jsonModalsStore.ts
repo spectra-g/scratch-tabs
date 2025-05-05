@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Tab } from '../types';
 
 interface ModalState {
-  type: 'stringify' | 'codeGeneration' | 'treeView' | null;
+  type: 'stringify' | 'codeGeneration' | 'treeView' | 'schemaValidation' | null;
   props?: any;
 }
 
@@ -11,6 +11,7 @@ interface JsonModalsStore {
   openStringifyModal: (stringified: string, addTab: (tab: Tab) => void) => void;
   openCodeGenerationModal: (tabs: { id: string; title: string; content: string; language: string; }[], addTab: (tab: Tab) => void) => void;
   openTreeViewModal: (json: any) => void;
+  openSchemaValidationModal: (json: any) => void;
   closeModal: () => void;
 }
 
@@ -39,15 +40,25 @@ export const useJsonModalsStore = create<JsonModalsStore>((set) => ({
     }
   }),
 
-  openTreeViewModal: (json) => set({
-    modalState: {
-      type: 'treeView',
-      props: {
-        json,
-        onClose: () => set({ modalState: { type: null } })
+    openTreeViewModal: (json) => set({
+      modalState: {
+        type: 'treeView',
+        props: {
+          json,
+          onClose: () => set({ modalState: { type: null } })
+        }
       }
-    }
-  }),
+    }), 
+
+    openSchemaValidationModal: (json: any) => set({
+      modalState: {
+        type: 'schemaValidation',
+        props: {
+          json,
+          onClose: () => set({ modalState: { type: null } })
+        }
+      }
+    }),
 
   closeModal: () => set({ modalState: { type: null } })
 }));
