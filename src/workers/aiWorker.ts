@@ -9,10 +9,8 @@ self.onmessage = async (event) => {
 
     switch (type) {
         case 'init':
-            console.log('[Worker] Received init request');
             try {
                 if (pipelineInstance) {
-                    console.log('[Worker] Already initialized.');
                     self.postMessage({ type: 'init_complete' });
                     return;
                 }
@@ -26,16 +24,13 @@ self.onmessage = async (event) => {
                         },
                     }
                 ) as SummarizationPipeline;
-                console.log('[Worker] Initialization complete.');
                 self.postMessage({ type: 'init_complete' });
             } catch (error) {
-                console.error('[Worker] Initialization failed:', error);
                 self.postMessage({ type: 'init_error', payload: error instanceof Error ? error.message : String(error) });
             }
             break;
 
         case 'summarize':
-            console.log('[Worker] Received summarize request');
             if (!pipelineInstance) {
                 self.postMessage({ type: 'summary_error', payload: 'Pipeline not initialized.' });
                 return;
@@ -50,13 +45,10 @@ self.onmessage = async (event) => {
                  } else if (typeof result === 'string') {
                     summary = result.trim();
                  } else {
-                    console.warn('[Worker] Unexpected summary result format:', result);
                     summary = "Could not extract summary.";
                  }
-                console.log('[Worker] Summarization complete.');
                 self.postMessage({ type: 'summary_result', payload: { summary } });
             } catch (error) {
-                console.error('[Worker] Summarization failed:', error);
                 self.postMessage({ type: 'summary_error', payload: error instanceof Error ? error.message : String(error) });
             }
             break;
@@ -65,5 +57,3 @@ self.onmessage = async (event) => {
             console.warn('[Worker] Received unknown message type:', type);
     }
 };
-
-console.log('[Worker] Worker script loaded.'); 
