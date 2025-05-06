@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Tablet, TabletState } from '../types';
-import { Globe2, Copy, RotateCw, Loader2 } from 'lucide-react';
+import { Globe2, Copy, RotateCw, Loader2, Check } from 'lucide-react';
 
 interface IPDetailsState extends TabletState {
   type: 'ipdetails';
@@ -141,10 +141,10 @@ export const IPDetailsTablet: Tablet = {
                   <div className="text-sm font-medium text-gray-400">IP Address</div>
                   <button
                     onClick={copyIP}
-                    className="flex items-center space-x-2 text-sm text-gray-400 hover:text-gray-300"
+                    className={`p-1 rounded transition-colors ${isCopied ? 'text-green-400' : 'text-gray-400 hover:text-gray-300'}`}
+                    title={isCopied ? 'Copied!' : 'Copy IP to clipboard'}
                   >
-                    <Copy size={14} />
-                    <span>{isCopied ? 'Copied!' : 'Copy'}</span>
+                    {isCopied ? <Check size={16} /> : <Copy size={16} />}
                   </button>
                 </div>
                 <div className="mt-1 text-2xl font-mono text-gray-100">{state.data.ip}</div>

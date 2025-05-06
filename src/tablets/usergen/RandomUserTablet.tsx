@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Editor } from '@monaco-editor/react';
-import { Users, Copy, RotateCw } from 'lucide-react';
+import { Users, Copy, RotateCw, Check, ExternalLink } from 'lucide-react';
+import { useRootStore } from '../../stores';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 interface GenerationResult {
   timestamp: number;
@@ -82,6 +84,10 @@ export const RandomUserTablet: Tablet = {
   render(state: RandomUserState, onChange) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
+    const [openedResultIndex, setOpenedResultIndex] = useState<number | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { addBackgroundTab, splitView } = useRootStore();
+    const { activeWorkspaceId } = useWorkspaceStore();
     const [error, setError] = useState<string | null>(null);
 
     const generateUsers = async () => {
@@ -213,12 +219,36 @@ export const RandomUserTablet: Tablet = {
       }
     };
 
+    const selectedIndex = state.data.selectedResult;
+
+    const handleOpenInNewTab = useCallback((index: number) => {
+      if (index < 0) return;
+      setOpenedResultIndex(index);
+      const paneElem = containerRef.current?.closest('[data-editor-pane-side]');
+      const sideAttr = paneElem?.getAttribute('data-editor-pane-side');
+      const isRightSideLocal = splitView.isSplit && sideAttr === 'right';
+      const result = state.data.results[index];
+      const newTabId = crypto.randomUUID();
+      addBackgroundTab({
+        id: newTabId,
+        title: `Random User ${new Date(result.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`,
+        content: result.content,
+        language: result.format,
+        languageLocked: true,
+        cursorPosition: { lineNumber: 1, column: 1 },
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        workspaceId: activeWorkspaceId || ''
+      }, isRightSideLocal);
+      setTimeout(() => setOpenedResultIndex(null), 1500);
+    }, [state.data.results, addBackgroundTab, splitView.isSplit, activeWorkspaceId]);
+
     const selectedResult = state.data.selectedResult >= 0 
       ? state.data.results[state.data.selectedResult] 
       : null;
 
     return (
-      <div className="h-full bg-gray-900 flex">
+      <div ref={containerRef} className="h-full bg-gray-900 flex">
         {/* Left Panel - History */}
         <div className="w-72 border-r border-gray-700/50 flex flex-col">
           <div className="p-4 border-b border-gray-700/50">
@@ -389,20 +419,24 @@ export const RandomUserTablet: Tablet = {
                 : 'No result selected'
               }
             </div>
-            <button
-              onClick={copyToClipboard}
-              disabled={!selectedResult}
-              className={`
-                flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm
-                ${selectedResult
-                  ? 'hover:bg-gray-800/50 text-gray-300'
-                  : 'text-gray-600 cursor-not-allowed'
-                }
-              `}
-            >
-              <Copy size={16} />
-              <span>{isCopied ? 'Copied!' : 'Copy'}</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={copyToClipboard}
+                disabled={!selectedResult}
+                className={`p-1 rounded transition-colors ${isCopied ? 'text-green-400' : selectedResult ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 cursor-not-allowed'}`}
+                title={isCopied ? 'Copied!' : 'Copy to clipboard'}
+              >
+                {isCopied ? <Check size={16} /> : <Copy size={16} />}
+              </button>
+              <button
+                onClick={() => handleOpenInNewTab(selectedIndex)}
+                disabled={!selectedResult}
+                className={`p-1 rounded transition-colors ${openedResultIndex === selectedIndex ? 'text-green-400' : selectedResult ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 cursor-not-allowed'}`}
+                title={openedResultIndex === selectedIndex ? 'Opened' : 'Open in new tab'}
+              >
+                {openedResultIndex === selectedIndex ? <Check size={16} /> : <ExternalLink size={16} />}
+              </button>
+            </div>
           </div>
           <div className="flex-1">
             <Editor
