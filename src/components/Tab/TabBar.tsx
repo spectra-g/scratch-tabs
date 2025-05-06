@@ -1,16 +1,18 @@
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useRootStore } from '../../stores';
 import { TabletSelector } from '../../tablets';
-import { TabItem } from "./TabItem";
 import { TabContextMenu } from "./TabContextMenu";
 import { TabActions } from './TabActions';
-import { DragDropContext, Draggable, DropResult, DraggableProvided, DroppableProvided } from 'react-beautiful-dnd';
-import { StrictModeDroppable } from './StrictModeDroppable';
 import { TabTooltip } from './TabTooltip';
 import { Tab } from '../../types';
 import { languageRegistry } from '../../languages';
 import { WorkspaceSwitcher } from '../Workspace/WorkspaceSwitcher';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
+import { KeyboardSensor } from '@dnd-kit/core';
+import { SortableTabList } from './SortableTabList';
 
 interface TabBarProps {
   side?: 'left' | 'right';
@@ -22,15 +24,9 @@ interface TooltipContent {
     title: string;
     language?: string;
     lineCount?: number;
+    dateCreated?: number;
+    lastModified?: number;
 }
-
-// Helper function to reorder an array
-const reorder = (list: string[], startIndex: number, endIndex: number): string[] => {
-    const result = Array.from(list);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    return result;
-};
 
 export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, onOpenSummaryModal }) => {
     const {
@@ -76,6 +72,18 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const tabletSelectorTabBarRef = useRef<HTMLDivElement>(null);
 
+    // Setup DnD sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5, // Only activate after dragging 5px to prevent accidental drags
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
     const isRightSide = side === 'right';
     const tabIds = isRightSide ? splitView.rightTabs : splitView.leftTabs;
 
@@ -83,7 +91,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
 
     const activeSideTabId = isRightSide ? splitView.activeRightTabId : splitView.activeLeftTabId;
 
-    const findTab = (tabId: string): Tab => {
+    const findTab = (tabId: string): Tab | undefined => {
         return tabs.find(tab => tab.id === tabId);
     };
 
@@ -356,43 +364,50 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
         hoveredTabIdRef.current = null;
     };
 
-    const onDragEnd = (result: DropResult) => {
-        const { source, destination } = result;
-
-        if (!destination || destination.index === source.index) {
+    // Handle drag end event from dnd-kit
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        
+        if (!over || active.id === over.id) return;
+        
+        // Find the indices of the tabs
+        const oldIndex = tabIds.indexOf(active.id as string);
+        const newIndex = tabIds.indexOf(over.id as string);
+        
+        if (oldIndex === -1 || newIndex === -1) return;
+        
+        // Get the tab being dragged
+        const draggedTab = findTab(active.id as string);
+        
+        // If pinned, don't allow drag
+        if (draggedTab?.isPinned) {
             return;
         }
-
-        const sourceIndex = source.index;
-        const destinationIndex = destination.index;
-        const draggedTab = visibleTabs[sourceIndex];
-
-        if (draggedTab.isPinned) {
-             console.warn("Attempted to drag a pinned tab - this shouldn't happen.");
-             return;
-        }
-
-        const startIndex = Math.min(sourceIndex, destinationIndex);
-        const endIndex = Math.max(sourceIndex, destinationIndex);
-
-        for (let i = startIndex; i <= endIndex; i++) {
-            if (i === sourceIndex) continue;
-
-            const tabAtIndex = visibleTabs[i];
-            if (tabAtIndex && tabAtIndex.isPinned) {
-                return;
+        
+        // Check if we're trying to move past pinned tabs
+        for (let i = Math.min(oldIndex, newIndex); i <= Math.max(oldIndex, newIndex); i++) {
+            const tabAtIndex = findTab(tabIds[i]);
+            if (i === oldIndex) continue;
+            
+            if (tabAtIndex?.isPinned) {
+                return; // Can't move past pinned tabs
             }
         }
-
-        const newTabIds = reorder(
-            tabIds,
-            sourceIndex,
-            destinationIndex
-        );
-
+        
+        // Create the new order and call reorderTabs
+        const newTabIds = arrayMove(tabIds, oldIndex, newIndex);
         reorderTabs(side, newTabIds);
-
+        
         clearCommonTooltipState();
+    };
+
+    // Add a drag start handler that will activate the tab
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        if (active) {
+            const tabId = active.id as string;
+            handleTabClick(tabId);
+        }
     };
 
     const startEditingTab = useCallback((tabId: string) => {
@@ -402,12 +417,12 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
             setEditingTabId(tabId);
             setEditingTitle(tabToEdit.title);
         }
-    }, [tabs, findTab, clearCommonTooltipState, setEditingTabId, setEditingTitle]);
+    }, [findTab, clearCommonTooltipState, setEditingTabId, setEditingTitle]);
 
-    const handleDoubleClick = (tab: { id: string; title: string }, e: React.MouseEvent) => {
+    const handleDoubleClick = (tab: Tab, e: React.MouseEvent<HTMLDivElement>) => {
         clearCommonTooltipState();
         const target = e.target as HTMLElement;
-        if (target.tagName === 'SPAN' && target.textContent === tab.title) {
+        if (target.tagName === 'SPAN' || target.tagName === 'DIV') {
             setEditingTabId(tab.id);
             setEditingTitle(tab.title);
         } else {
@@ -427,7 +442,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
             language: 'plaintext',
             languageLocked: false,
             cursorPosition: { lineNumber: 1, column: 1 },
-            workspaceId: activeWorkspaceId,
+            workspaceId: activeWorkspaceId || 'default',
             dateCreated: Date.now(),
             lastModified: Date.now(),
         }, isRightSide);
@@ -440,7 +455,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
         setEditingTabId(null);
     };
 
-    const handleContextMenu = (e: React.MouseEvent, tabId: string) => {
+    const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>, tabId: string) => {
         clearCommonTooltipState();
         e.preventDefault();
         setContextMenu({tabId, x: e.clientX, y: e.clientY});
@@ -487,11 +502,24 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
             isTablet: true,
             tabletState: serializedState,
             cursorPosition: { lineNumber: 1, column: 1 },
-            workspaceId: activeWorkspaceId,
+            workspaceId: activeWorkspaceId || 'default',
             dateCreated: Date.now(),
             lastModified: Date.now(),
         }, side === 'right');
         setShowTabletSelector(false);
+    };
+
+    // Get lists of pinned and unpinned tabs
+    const pinnedTabs = visibleTabs.filter(tab => tab.isPinned);
+    const unpinnedTabs = visibleTabs.filter(tab => !tab.isPinned);
+
+    const handleTabClose = (tabId: string) => {
+        removeTab(tabId);
+        if (hoveredTabId === tabId) {
+            setTooltipVisible(false);
+            clearTooltipTimers();
+            setHoveredTabId(null);
+        }
     };
 
     return (
@@ -509,50 +537,55 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                     onDoubleClick={handleEmptyAreaDoubleClick}
                 >
                     <div ref={tabsWrapperRef} className="flex">
-                        <DragDropContext onDragEnd={onDragEnd}>
-                            <StrictModeDroppable droppableId={side} direction="horizontal">
-                                {(provided: DroppableProvided) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            className="flex"
-                                        >
-                                            {visibleTabs.map((tab, index) => (
-                                                <Draggable key={tab.id} draggableId={tab.id} index={index} isDragDisabled={tab.isPinned}>
-                                                    {(providedDraggable: DraggableProvided, snapshot) => (
-                                                        <TabItem
-                                                            tab={tab}
-                                                            isActive={activeSideTabId === tab.id}
-                                                            isEditing={editingTabId === tab.id}
-                                                            editingTitle={editingTitle}
-                                                            maxLineCount={maxLineCount}
-                                                            onClick={handleTabClick}
-                                                            onClose={(tabId, e) => {
-                                                                removeTab(tabId);
-                                                                if (hoveredTabId === tabId) {
-                                                                    setTooltipVisible(false);
-                                                                    clearTooltipTimers();
-                                                                    setHoveredTabId(null);
-                                                                }
-                                                            }}
-                                                            onDoubleClick={handleDoubleClick}
-                                                            onContextMenu={(tabId, e) => handleContextMenu(e, tabId)}
-                                                            onEditChange={setEditingTitle}
-                                                            onEditSubmit={handleInputBlur}
-                                                            onEditCancel={() => setEditingTabId(null)}
-                                                            provided={providedDraggable}
-                                                            snapshot={snapshot}
-                                                            onMouseEnterTab={handleTabMouseEnter}
-                                                            onMouseLeaveTab={handleTabMouseLeave}
-                                                        />
-                                                    )}
-                                                </Draggable>
-                                            ))}
-                                            {provided.placeholder}
-                                        </div>
-                                )}
-                            </StrictModeDroppable>
-                        </DragDropContext>
+                        <DndContext 
+                            sensors={sensors}
+                            modifiers={[restrictToHorizontalAxis]}
+                            onDragEnd={handleDragEnd}
+                            onDragStart={handleDragStart}
+                        >
+                            {/* Pinned tabs */}
+                            {pinnedTabs.length > 0 && (
+                                <SortableTabList
+                                    tabs={visibleTabs}
+                                    activeTabId={activeSideTabId}
+                                    tabIds={tabIds}
+                                    editingTabId={editingTabId}
+                                    editingTitle={editingTitle}
+                                    maxLineCount={maxLineCount}
+                                    isPinned={true}
+                                    onTabClick={handleTabClick}
+                                    onTabClose={handleTabClose}
+                                    onTabDoubleClick={handleDoubleClick}
+                                    onTabContextMenu={handleContextMenu}
+                                    onEditChange={setEditingTitle}
+                                    onEditSubmit={handleInputBlur}
+                                    onEditCancel={() => setEditingTabId(null)}
+                                    onMouseEnterTab={handleTabMouseEnter}
+                                    onMouseLeaveTab={handleTabMouseLeave}
+                                />
+                            )}
+                            
+                            {/* Unpinned tabs */}
+                            {unpinnedTabs.length > 0 && (
+                                <SortableTabList
+                                    tabs={visibleTabs}
+                                    activeTabId={activeSideTabId}
+                                    tabIds={tabIds}
+                                    editingTabId={editingTabId}
+                                    editingTitle={editingTitle}
+                                    maxLineCount={maxLineCount}
+                                    onTabClick={handleTabClick}
+                                    onTabClose={handleTabClose}
+                                    onTabDoubleClick={handleDoubleClick}
+                                    onTabContextMenu={handleContextMenu}
+                                    onEditChange={setEditingTitle}
+                                    onEditSubmit={handleInputBlur}
+                                    onEditCancel={() => setEditingTabId(null)}
+                                    onMouseEnterTab={handleTabMouseEnter}
+                                    onMouseLeaveTab={handleTabMouseLeave}
+                                />
+                            )}
+                        </DndContext>
                     </div>
                 </div>
 
