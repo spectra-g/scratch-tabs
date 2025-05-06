@@ -7,7 +7,7 @@ import { DownloadModal } from './DownloadModal';
 interface TabContextMenuProps {
     tabId: string;
     position: { x: number; y: number };
-    onClose: (action?: 'compare') => void;
+    onClose: (action?: 'compare' | 'compareSides' | 'summary' | 'compareClipboard', tabId?: string, side?: 'left' | 'right') => void;
     isRightSide: boolean;
     startEditingTab: (tabId: string) => void;
 }

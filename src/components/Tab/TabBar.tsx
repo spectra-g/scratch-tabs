@@ -14,7 +14,7 @@ import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 interface TabBarProps {
   side?: 'left' | 'right';
-  onOpenDiffModal: (fromHistory?: boolean) => void;
+  onOpenDiffModal: (fromHistory?: boolean, explicitSide?: 'left' | 'right', tabId?: string) => void;
   onOpenSummaryModal: (tabId: string) => void;
 }
 
@@ -438,11 +438,13 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
         setContextMenu({tabId, x: e.clientX, y: e.clientY});
     };
 
-    const handleContextMenuClose = (action?: 'compare', tabId?: string) => {
+    const handleContextMenuClose = (action?: 'compare' | 'compareSides' | 'summary' | 'compareClipboard', tabId?: string, explicitSide?: 'left' | 'right') => {
         if (action === 'compareSides') {
-            onOpenDiffModal(false);
+            onOpenDiffModal(false, undefined, tabId);
         } else if (action === 'compare') {
-            onOpenDiffModal(true);
+            onOpenDiffModal(true, explicitSide || side, tabId);
+        } else if (action === 'compareClipboard') {
+            onOpenDiffModal(false, explicitSide || side, tabId);
         } else if (action === 'summary' && tabId) {
             onOpenSummaryModal(tabId);
         }
