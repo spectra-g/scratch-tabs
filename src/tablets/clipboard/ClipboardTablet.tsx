@@ -233,8 +233,7 @@ export const ClipboardTablet: Tablet = {
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
     const [openedItemId, setOpenedItemId] = useState<string | null>(null);
 
-    const { addTab, splitView } = useRootStore();
-    const { activeSide } = useRootStore(s => s.splitView);
+    const { addBackgroundTab, splitView } = useRootStore();
     const { activeWorkspaceId } = useWorkspaceStore();
 
     // Ref to access the latest state within interval callbacks without causing dependency loops
@@ -373,13 +372,19 @@ export const ClipboardTablet: Tablet = {
       updateItems(Array.from(seen.values()).sort((a, b) => b.timestamp - a.timestamp));
     }, [state.data.items, updateItems]);
 
+    // Ref to determine which editor pane (left/right) this tablet is in
+    const containerRef = useRef<HTMLDivElement>(null);
+
     const handleOpenInNewTab = useCallback((content: string, timestamp: number, id: string) => {
       setOpenedItemId(id);
+      // Determine pane side via ancestor data attribute
+      const paneElem = containerRef.current?.closest('[data-editor-pane-side]');
+      const sideAttr = paneElem?.getAttribute('data-editor-pane-side');
+      const isRightSideLocal = splitView.isSplit && sideAttr === 'right';
 
       const newTabId = crypto.randomUUID();
       const language = detectLanguage(content);
-      const isRightSide = activeSide === 'right' && splitView.isSplit;
-      addTab({
+      addBackgroundTab({
         id: newTabId,
         title: `Clipboard ${new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
         content,
@@ -389,15 +394,15 @@ export const ClipboardTablet: Tablet = {
         dateCreated: Date.now(),
         lastModified: Date.now(),
         workspaceId: activeWorkspaceId || ''
-      }, isRightSide);
+      }, isRightSideLocal);
 
       setTimeout(() => setOpenedItemId(null), 1500);
-    }, [addTab, activeSide, splitView.isSplit, activeWorkspaceId]);
+    }, [addBackgroundTab, splitView.isSplit, activeWorkspaceId]);
 
 
     // --- Render ---
     return (
-      <div className="h-full bg-gray-900 flex flex-col text-sm">
+      <div ref={containerRef} className="h-full bg-gray-900 flex flex-col text-sm">
         {/* Header */}
         <div className="flex-none p-4 md:p-6 border-b border-gray-700/50">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
