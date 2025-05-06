@@ -34,6 +34,8 @@ const initializeTab = (tab: Tab): Tab => {
     cursorPosition: tab.cursorPosition ?? { lineNumber: 1, column: 1 },
     dateCreated: tab.dateCreated ?? now,
     lastModified: tab.lastModified ?? now,
+    isTablet: tab.isTablet ?? false,
+    tabletState: tab.tabletState ?? '',
     workspaceId: tab.workspaceId ?? activeWorkspaceId ?? 'default'
   };
 };

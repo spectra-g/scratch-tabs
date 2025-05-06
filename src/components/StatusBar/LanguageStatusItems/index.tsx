@@ -14,7 +14,7 @@ export const getLanguageOptionsMenu = (language: string, editor: monaco.editor.I
   // First check if the language detector provides an options menu
   const detector = languageRegistry.getById(language);
   if (detector?.getOptionsMenu && editor) {
-    const OptionsMenu = detector.getOptionsMenu();
-    return () => <OptionsMenu editor={editor} />;
+    return detector.getOptionsMenu();
   }
+  return null;
 };

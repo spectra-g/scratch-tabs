@@ -14,10 +14,7 @@ export const StringifyModal: React.FC<StringifyModalProps> = ({ content, onClose
     addTab({
       id: crypto.randomUUID(),
       title: 'Stringified JSON',
-      content,
-      language: 'plaintext',
-      languageLocked: true,
-      cursorPosition: { lineNumber: 1, column: 1 }
+      content
     });
     onClose();
   };

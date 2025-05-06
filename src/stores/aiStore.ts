@@ -98,14 +98,12 @@ export const useAIStore = create<AISlice>((set, get) => ({
         const currentState = get().ai;
 
         if (currentState.isReady || currentState.isLoading || workerInstance) {
-            console.log('[AI Store] Initialization already complete, in progress, or worker exists.');
             return;
         }
 
         set(state => ({ ai: { ...state.ai, isLoading: true, error: null, progress: 0, progressStatus: 'initializing', files: {}, summaryResult: null } }));
 
         try {
-            console.log('[AI Store] Creating AI Worker...');
             workerInstance = new Worker(new URL('../workers/aiWorker.ts', import.meta.url), {
                 type: 'module'
             });
@@ -113,7 +111,6 @@ export const useAIStore = create<AISlice>((set, get) => ({
 
             workerInstance.onmessage = (event) => {
                 const { type, payload } = event.data;
-                console.log('[AI Store] Received message from worker:', type, payload);
 
                 switch (type) {
                     case 'progress':
@@ -148,7 +145,6 @@ export const useAIStore = create<AISlice>((set, get) => ({
             };
 
             // Send init message to worker
-            console.log('[AI Store] Sending init message to worker');
             workerInstance.postMessage({ type: 'init' });
 
         } catch (error) {
@@ -172,18 +168,15 @@ export const useAIStore = create<AISlice>((set, get) => ({
              return;
         }
         if (isGenerating) {
-            console.warn('[AI Store] Summarization already in progress.');
             return; // Prevent multiple requests
         }
 
-        console.log('[AI Store] Sending summarize message to worker');
         set(state => ({ ai: { ...state.ai, isGenerating: true, error: null, summaryResult: null } })); // Reset summary/error
         worker.postMessage({ type: 'summarize', payload: { text } });
         // Result will be handled by onmessage listener
     },
 
     terminateWorker: () => {
-        console.log('[AI Store] Terminating worker...');
         if (workerInstance) {
             workerInstance.terminate();
             workerInstance = null;
