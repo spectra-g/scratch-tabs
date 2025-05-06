@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Tablet, TabletState } from '../types';
-import { Mail, RefreshCw, X, Loader2 } from 'lucide-react';
+import { Mail, RefreshCw, X, Loader2, Copy, Check } from 'lucide-react';
 
 interface Email {
   id: string;
@@ -26,19 +26,53 @@ interface EmailModalProps {
 }
 
 const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
+  // State for copy-from feedback
+  const [copiedFrom, setCopiedFrom] = useState(false);
+  const handleCopyFrom = async () => {
+    await navigator.clipboard.writeText(email.from);
+    setCopiedFrom(true);
+    setTimeout(() => setCopiedFrom(false), 1500);
+  };
+
+  // State for copy-body feedback
+  const [copiedBody, setCopiedBody] = useState(false);
+  const handleCopyBody = async () => {
+    await navigator.clipboard.writeText(email.body || '');
+    setCopiedBody(true);
+    setTimeout(() => setCopiedBody(false), 1500);
+  };
+
   return (
     <div className="fixed inset-8 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
       <div className="flex items-center justify-between bg-gray-700 px-4 py-3 border-b border-gray-600">
         <div>
           <h3 className="text-gray-200 font-medium">{email.subject}</h3>
-          <p className="text-sm text-gray-400">From: {email.from}</p>
+          <div className="flex items-center space-x-2">
+            <p className="text-sm text-gray-400">From: {email.from}</p>
+            <button
+              onClick={handleCopyFrom}
+              className={`p-1 rounded transition-colors ${copiedFrom ? 'text-green-400' : 'text-gray-400 hover:text-gray-300'}`}
+              title={copiedFrom ? 'Copied!' : 'Copy sender address'}
+            >
+              {copiedFrom ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+          </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-200 transition-colors"
-        >
-          <X size={20} />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleCopyBody}
+            className={`p-1 rounded transition-colors ${copiedBody ? 'text-green-400' : 'text-gray-400 hover:text-gray-200'}`}
+            title={copiedBody ? 'Copied!' : 'Copy email body'}
+          >
+            {copiedBody ? <Check size={16} /> : <Copy size={16} />}
+          </button>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
       <div className="flex-1 p-6 overflow-auto custom-scrollbar">
         <div

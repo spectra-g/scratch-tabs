@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tablet, TabletState } from '../types';
-import { Clipboard, Copy, ClipboardPaste, XCircle, RefreshCw, ExternalLink, Pin, PinOff, Pencil } from 'lucide-react';
+import { Clipboard, Copy, ClipboardPaste, XCircle, RefreshCw, ExternalLink, Pin, PinOff, Pencil, Check } from 'lucide-react';
 import { detectLanguage } from '../../languages';
 import { useRootStore } from '../../stores';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 // --- Constants ---
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -229,9 +230,11 @@ export const ClipboardTablet: Tablet = {
   render(state: ClipboardTabletState, onChange) {
     const [hasDuplicates, setHasDuplicates] = useState(false);
     const [countdownTooltips, setCountdownTooltips] = useState<Record<string, string>>({});
+    const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
+    const [openedItemId, setOpenedItemId] = useState<string | null>(null);
 
-    const { addTab, splitView } = useRootStore();
-    const { activeSide } = useRootStore(s => s.splitView);
+    const { addBackgroundTab, splitView } = useRootStore();
+    const { activeWorkspaceId } = useWorkspaceStore();
 
     // Ref to access the latest state within interval callbacks without causing dependency loops
     const latestStateRef = useRef(state);
@@ -330,8 +333,10 @@ export const ClipboardTablet: Tablet = {
       onChange({ ...state, data: { ...state.data, items: [newItem, ...state.data.items], editContent: '' } });
     }, [state, onChange]);
 
-    const handleCopyItem = useCallback((content: string) => {
+    const handleCopyItem = useCallback((content: string, id: string) => {
       navigator.clipboard.writeText(content);
+      setCopiedItemId(id);
+      setTimeout(() => setCopiedItemId(null), 1500);
     }, []);
 
     const handleDeleteItem = useCallback((id: string) => {
@@ -367,23 +372,37 @@ export const ClipboardTablet: Tablet = {
       updateItems(Array.from(seen.values()).sort((a, b) => b.timestamp - a.timestamp));
     }, [state.data.items, updateItems]);
 
-    const handleOpenInNewTab = useCallback((content: string, timestamp: number) => {
-        const newTabId = crypto.randomUUID();
-        const language = detectLanguage(content);
-        const isRightSide = activeSide === 'right' && splitView.isSplit;
-        addTab({
-            id: newTabId,
-            title: `Clipboard ${new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-            content, language, languageLocked: language !== 'plaintext',
-            dateCreated: Date.now(), lastModified: Date.now(),
-            cursorPosition: { lineNumber: 1, column: 1 }, isTablet: false
-        }, isRightSide);
-    }, [addTab, activeSide, splitView.isSplit]);
+    // Ref to determine which editor pane (left/right) this tablet is in
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const handleOpenInNewTab = useCallback((content: string, timestamp: number, id: string) => {
+      setOpenedItemId(id);
+      // Determine pane side via ancestor data attribute
+      const paneElem = containerRef.current?.closest('[data-editor-pane-side]');
+      const sideAttr = paneElem?.getAttribute('data-editor-pane-side');
+      const isRightSideLocal = splitView.isSplit && sideAttr === 'right';
+
+      const newTabId = crypto.randomUUID();
+      const language = detectLanguage(content);
+      addBackgroundTab({
+        id: newTabId,
+        title: `Clipboard ${new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        content,
+        language,
+        languageLocked: language !== 'plaintext',
+        cursorPosition: { lineNumber: 1, column: 1 },
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        workspaceId: activeWorkspaceId || ''
+      }, isRightSideLocal);
+
+      setTimeout(() => setOpenedItemId(null), 1500);
+    }, [addBackgroundTab, splitView.isSplit, activeWorkspaceId]);
 
 
     // --- Render ---
     return (
-      <div className="h-full bg-gray-900 flex flex-col text-sm">
+      <div ref={containerRef} className="h-full bg-gray-900 flex flex-col text-sm">
         {/* Header */}
         <div className="flex-none p-4 md:p-6 border-b border-gray-700/50">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
@@ -476,18 +495,18 @@ export const ClipboardTablet: Tablet = {
                                 {item.isPinned ? <PinOff size={16} /> : <Pin size={16} />}
                             </button>
                            <button
-                                onClick={() => handleOpenInNewTab(item.content, item.timestamp)}
-                                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
-                                title="Open in new tab"
-                           >
-                                <ExternalLink size={16} />
-                           </button>
-                           <button
-                                onClick={() => handleCopyItem(item.content)}
-                                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                                onClick={() => handleCopyItem(item.content, item.id)}
+                                className={`p-1 rounded transition-colors ${copiedItemId === item.id ? 'text-green-400' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}`}
                                 title="Copy to clipboard"
                            >
-                                <Copy size={16} />
+                                {copiedItemId === item.id ? <Check size={16} /> : <Copy size={16} />}
+                           </button>
+                           <button
+                                onClick={() => handleOpenInNewTab(item.content, item.timestamp, item.id)}
+                                className={`p-1 rounded transition-colors ${openedItemId === item.id ? 'text-green-400' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}`}
+                                title="Open in new tab"
+                           >
+                                {openedItemId === item.id ? <Check size={16} /> : <ExternalLink size={16} />}
                            </button>
                            <button
                                 onClick={() => handleDeleteItem(item.id)}

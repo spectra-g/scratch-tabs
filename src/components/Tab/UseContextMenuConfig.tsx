@@ -12,9 +12,9 @@ import { MenuItem } from './types';
 export const useContextMenuConfig = (
     tabId: string,
     isRightSide: boolean,
-    onClose: (action?: 'compare') => void,
-    handleOpenDownloadAllModal: () => void,
-    startEditingTab: (tabId: string) => void
+    onClose: (action?: 'compare' | 'compareSides' | 'summary' | 'compareClipboard', tabId?: string, explicitSide?: 'left' | 'right') => void,
+    handleOpenDownloadAllModal?: () => void,
+    startEditingTab?: (tabId: string) => void
 ): MenuItem[] => {
   const store = useRootStore();
   const { isReady } = useAIStore();
@@ -105,19 +105,25 @@ export const useContextMenuConfig = (
   };
 
   const handleCompareFromClipboard = async () => {
-    await store.compareFromClipboard(tabId, isRightSide);
-    onClose('compare');
+    try {
+      await store.compareFromClipboard(tabId, isRightSide);
+      // We use a different action type than 'compare' to avoid triggering history comparison
+      onClose('compareClipboard', tabId);
+    } catch (error) {
+      console.error('[Error] Failed to compare from clipboard:', error);
+      onClose();
+    }
   };
 
   const handleCompareWithPrevious = () => {
     if (!canCompareWithPrevious || !history || history.length < 2) return;
-
-    // Get the previous tab ID from history (index 1 since current tab is at index 0)
-    const previousTabId = history[1];
+    
+    // Get the previous tab ID from history
+    const previousTabId = history[1]; // Index 1 is the previous tab
     if (!previousTabId) return;
-
-    // Open diff modal with current and previous tabs
-    onClose('compare');
+    
+    // Pass the explicit tab ID and side to ensure we use the right-clicked tab
+    onClose('compare', tabId, isRightSide ? 'right' : 'left');
   };
 
   const handleDownload = () => {
@@ -187,7 +193,7 @@ export const useContextMenuConfig = (
       id: 'compare',
       label: 'Compare with other side',
       icon: GitCompare,
-      action: () => onClose('compareSides'),
+      action: () => onClose('compareSides', tabId),
       condition: canCompare
     },
     {

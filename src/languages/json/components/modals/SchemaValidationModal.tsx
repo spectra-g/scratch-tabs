@@ -29,48 +29,53 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({ js
   return (
     <BaseModal title="JSON Schema Validation" onClose={onClose}>
       <div className="space-y-4">
-        {/* Schema Editor */}
-        <div>
-          <h3 className="text-sm font-medium text-gray-300 mb-2">Schema</h3>
-          <div className="h-64 border border-gray-700/50 rounded-lg overflow-hidden">
-            <Editor
-              height="100%"
-              language="json"
-              value={schema}
-              onChange={(value) => setSchema(value || '')}
-              theme="vs-dark"
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                wordWrap: 'on'
-              }}
-            />
+        <div className="flex flex-row p-2 space-x-4">
+          <div className="flex-1">
+            {/* Schema Editor */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Schema</h3>
+              <div className="h-64 border border-gray-700/50 rounded-lg overflow-hidden">
+                <Editor
+                  height="100%"
+                  language="json"
+                  value={schema}
+                  onChange={(value) => setSchema(value || '')}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    wordWrap: 'on'
+                  }}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* JSON Preview */}
-        <div>
-          <h3 className="text-sm font-medium text-gray-300 mb-2">JSON Data</h3>
-          <div className="h-64 border border-gray-700/50 rounded-lg overflow-hidden">
-            <Editor
-              height="100%"
-              language="json"
-              value={JSON.stringify(json, null, 2)}
-              theme="vs-dark"
-              options={{
-                readOnly: true,
-                minimap: { enabled: false },
-                fontSize: 14,
-                wordWrap: 'on'
-              }}
-            />
+          <div className="flex-1">
+            {/* JSON Preview */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">JSON Data</h3>
+              <div className="h-64 border border-gray-700/50 rounded-lg overflow-hidden">
+                <Editor
+                  height="100%"
+                  language="json"
+                  value={JSON.stringify(json, null, 2)}
+                  theme="vs-dark"
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    wordWrap: 'on'
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Validation Results */}
         {validationResult && (
-          <div className={`p-4 rounded-lg ${validationResult.valid ? 'bg-green-900/20' : 'bg-red-900/20'}`}>
-            <div className="flex items-center mb-2">
+          <div className={`p-2 rounded-lg ${validationResult.valid ? 'bg-green-900/20' : 'bg-red-900/20'}`}>
+            <div className="flex items-center m-2">
               {validationResult.valid ? (
                 <CheckCircle2 className="text-green-400 mr-2" size={20} />
               ) : (
@@ -91,7 +96,7 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({ js
         )}
 
         {/* Actions */}
-        <div className="flex justify-end space-x-3">
+        <div className="flex justify-end space-x-2 p-2">
           <button
             onClick={handleValidate}
             className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"

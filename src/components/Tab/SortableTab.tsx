@@ -1,24 +1,23 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Pin } from 'lucide-react';
 import { Tab } from '../../types';
-import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { ConfirmationDialog } from './ConfirmationDialog';
 
-interface TabItemProps {
+interface SortableTabProps {
     tab: Tab;
     isActive: boolean;
     isEditing: boolean;
     editingTitle: string;
     maxLineCount: number;
-    onClick: (tabId: string) => void;
-    onClose: (tabId: string, e: React.MouseEvent) => void;
-    onDoubleClick: (tab: Tab, e: React.MouseEvent) => void;
-    onContextMenu: (tabId: string, e: React.MouseEvent) => void;
+    onClick: () => void;
+    onClose: (e: React.MouseEvent<HTMLButtonElement>) => void;
+    onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+    onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => void;
     onEditChange: (value: string) => void;
     onEditSubmit: () => void;
     onEditCancel: () => void;
-    provided: DraggableProvided;
-    snapshot: DraggableStateSnapshot;
     onMouseEnterTab: (tab: Tab, element: HTMLElement) => void;
     onMouseLeaveTab: (tabId: string) => void;
 }
@@ -26,7 +25,7 @@ interface TabItemProps {
 const MIN_WIDTH_FOR_X = 45; // pixels
 const EDITING_INPUT_MIN_WIDTH = '150px';
 
-export const TabItem: React.FC<TabItemProps> = ({
+export const SortableTab: React.FC<SortableTabProps> = ({
     tab,
     isActive,
     isEditing,
@@ -39,39 +38,58 @@ export const TabItem: React.FC<TabItemProps> = ({
     onEditChange,
     onEditSubmit,
     onEditCancel,
-    provided,
-    snapshot,
     onMouseEnterTab,
     onMouseLeaveTab,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    const tabRef = useRef<HTMLDivElement>(null);
+    const [tabElement, setTabElement] = useState<HTMLDivElement | null>(null);
     const [currentWidth, setCurrentWidth] = useState(0);
     const [showConfirmation, setShowConfirmation] = useState(false);
 
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: tab.id,
+        disabled: tab.isPinned,
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        cursor: tab.isPinned ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+        minHeight: '1.5rem',
+        overflow: isEditing ? 'visible' : 'hidden',
+    };
+
+    // Set up both refs - the sortable ref and our local one for measurements
+    const setRefs = useCallback((node: HTMLDivElement | null) => {
+        setNodeRef(node);
+        setTabElement(node);
+    }, [setNodeRef]);
+
     useEffect(() => {
-        const element = tabRef.current;
-        if (!element) return;
+        if (!tabElement) return;
 
         const resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
-                // Using offsetWidth which includes padding and borders
-                // Use entry.contentRect.width if you only want content area
-                setCurrentWidth(entry.target.offsetWidth);
+                if (entry.target instanceof HTMLElement) {
+                    setCurrentWidth(entry.target.offsetWidth);
+                }
             }
         });
 
-        resizeObserver.observe(element);
+        resizeObserver.observe(tabElement);
 
         return () => {
-            // Check if element still exists before unobserving
-            // This guards against potential errors during fast unmounts
-            if (element) {
-                resizeObserver.unobserve(element);
-            }
+            resizeObserver.unobserve(tabElement);
             resizeObserver.disconnect();
         };
-    }, []); // Empty dependency array ensures this runs once on mount
+    }, [tabElement]); // Dependency on tabElement instead of empty array
 
     useEffect(() => {
         if (isEditing && inputRef.current) {
@@ -89,27 +107,29 @@ export const TabItem: React.FC<TabItemProps> = ({
         else if (e.key === 'Escape') onEditCancel();
     };
 
-    const handleCloseClick = (e: React.MouseEvent) => {
+    const handleCloseClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         if (tab.content && tab.content.trim() !== '') {
             setShowConfirmation(true);
         } else {
-            onClose(tab.id, e);
+            onClose(e);
         }
     };
 
-    const handleConfirmClose = (e: React.MouseEvent) => {
+    const handleConfirmClose = () => {
         setShowConfirmation(false);
-        onClose(tab.id, e);
+        // Create a synthetic event for close
+        const syntheticEvent = new MouseEvent('click') as unknown as React.MouseEvent<HTMLButtonElement>;
+        onClose(syntheticEvent);
     };
 
     const handleCancelClose = () => {
         setShowConfirmation(false);
     };
 
-    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!isEditing && tabRef.current) {
-            onMouseEnterTab(tab, tabRef.current);
+    const handleMouseEnter = () => {
+        if (!isEditing && tabElement) {
+            onMouseEnterTab(tab, tabElement);
         }
     };
 
@@ -119,30 +139,33 @@ export const TabItem: React.FC<TabItemProps> = ({
 
     const showCloseButton = !tab.isPinned && (isActive || currentWidth > MIN_WIDTH_FOR_X);
 
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        // If we're editing or it's a right-click, don't activate
+        if (isEditing || e.button !== 0) return;
+        
+        // Immediately activate the tab on mousedown
+        onClick();
+        
+        // Don't stop propagation, so the drag can still happen
+    };
+
     return (
         <>
             <div
-                ref={(el) => {
-                    provided.innerRef(el);
-                    tabRef.current = el;
-                }}
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
+                ref={setRefs}
                 className={`tab-item relative flex items-center flex-shrink-0 px-1 py-1 cursor-pointer border-r border-gray-700 text-xs ${
                     isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
-                } ${snapshot.isDragging && !tab.isPinned ? 'bg-blue-500 text-white' : ''}`}
-                style={{
-                    ...provided.draggableProps.style,
-                    cursor: tab.isPinned ? 'default' : (snapshot.isDragging ? 'grabbing' : 'grab'),
-                    minHeight: '1.5rem',
-                    overflow: isEditing ? 'visible' : 'hidden',
-                }}
-                onClick={() => !isEditing && onClick(tab.id)}
-                onContextMenu={(e) => !isEditing && onContextMenu(tab.id, e)}
-                onDoubleClick={(e) => !isEditing && onDoubleClick(tab, e)}
+                } ${isDragging && !tab.isPinned ? 'bg-blue-500 text-white' : ''}`}
+                style={style}
+                onClick={() => !isEditing && onClick()}
+                onMouseDown={handleMouseDown}
+                onContextMenu={(e) => !isEditing && onContextMenu(e)}
+                onDoubleClick={(e) => !isEditing && onDoubleClick(e)}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 title=""
+                {...attributes}
+                {...listeners}
             >
                 {!tab.isTablet && lineCount > 0 && !isEditing && (
                     <div
@@ -206,4 +229,4 @@ export const TabItem: React.FC<TabItemProps> = ({
             />
         </>
     );
-};
+}; 

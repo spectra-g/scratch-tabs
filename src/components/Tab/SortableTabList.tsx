@@ -1,0 +1,82 @@
+import React from 'react';
+import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableTab } from './SortableTab';
+import { Tab } from '../../types';
+
+interface SortableTabListProps {
+  tabs: Tab[];
+  activeTabId: string | null;
+  tabIds: string[];
+  editingTabId: string | null;
+  editingTitle: string;
+  maxLineCount: number;
+  isPinned?: boolean;
+  onTabClick: (tabId: string) => void;
+  onTabClose: (tabId: string) => void;
+  onTabDoubleClick: (tab: Tab, e: React.MouseEvent<HTMLDivElement>) => void;
+  onTabContextMenu: (e: React.MouseEvent<HTMLDivElement>, tabId: string) => void;
+  onEditChange: (value: string) => void;
+  onEditSubmit: () => void;
+  onEditCancel: () => void;
+  onMouseEnterTab: (tab: Tab, element: HTMLElement) => void;
+  onMouseLeaveTab: (tabId: string) => void;
+}
+
+export const SortableTabList: React.FC<SortableTabListProps> = ({
+  tabs,
+  activeTabId,
+  tabIds,
+  editingTabId,
+  editingTitle,
+  maxLineCount,
+  isPinned = false,
+  onTabClick,
+  onTabClose,
+  onTabDoubleClick,
+  onTabContextMenu,
+  onEditChange,
+  onEditSubmit,
+  onEditCancel,
+  onMouseEnterTab,
+  onMouseLeaveTab
+}) => {
+  // Only tabs that match the pinned state are shown
+  const filteredTabs = tabs.filter(tab => !!tab.isPinned === isPinned);
+  const filteredIds = tabIds.filter(id => {
+    const tab = tabs.find(t => t.id === id);
+    return tab && !!tab.isPinned === isPinned;
+  });
+
+  return (
+    <SortableContext 
+      items={filteredIds} 
+      strategy={horizontalListSortingStrategy}
+    >
+      <div className="flex">
+        {filteredTabs.map((tab) => (
+          <SortableTab
+            key={tab.id}
+            tab={tab}
+            isActive={activeTabId === tab.id}
+            isEditing={editingTabId === tab.id}
+            editingTitle={editingTitle}
+            maxLineCount={maxLineCount}
+            onClick={() => onTabClick(tab.id)}
+            onClose={(e) => {
+              if (tab.id) {
+                onTabClose(tab.id);
+              }
+            }}
+            onDoubleClick={(e) => onTabDoubleClick(tab, e)}
+            onContextMenu={(e) => onTabContextMenu(e, tab.id)}
+            onEditChange={onEditChange}
+            onEditSubmit={onEditSubmit}
+            onEditCancel={onEditCancel}
+            onMouseEnterTab={onMouseEnterTab}
+            onMouseLeaveTab={onMouseLeaveTab}
+          />
+        ))}
+      </div>
+    </SortableContext>
+  );
+}; 
