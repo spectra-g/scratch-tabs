@@ -150,7 +150,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                 observerRef.current = null;
             }
         };
-    }, [visibleTabs.length, splitView.splitRatio]);
+    }, [visibleTabs.length, splitView.splitRatio, tabIds.join('-')]);
 
     const calculateTabWidths = () => {
         if (!tabsContainerRef.current) return;
@@ -215,6 +215,14 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
 
         hasInitializedWidths.current = true;
     };
+
+    // Ensure widths are recalculated on any tab property changes
+    useEffect(() => {
+        // Reset initialization flag to force recalculation 
+        // (e.g., when a tab is pinned or unpinned)
+        hasInitializedWidths.current = false;
+        calculateTabWidths();
+    }, [visibleTabs.map(tab => tab.isPinned).join('-')]);
 
     // Handle resize events
     useEffect(() => {
