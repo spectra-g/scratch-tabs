@@ -211,11 +211,11 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
           )}
         </div>
 
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-end p-2">
           <button
             onClick={downloadFiles}
             disabled={selectedTabs.size === 0 || isDownloading}
-            className="flex items-center space-x-2 px-4 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 px-4 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-md text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={16} />
             <span>
