@@ -19,6 +19,8 @@ import './ruby';
 import './rust';
 import './go';
 import './php';
+import './css';
+import './xml';
 
 // Export the registry for use in the application
 export { languageRegistry };
@@ -48,6 +50,8 @@ export { registerRubyProvider } from './ruby';
 export { registerRustProvider } from './rust';
 export { registerGoProvider } from './go';
 export { registerPhpProvider } from './php';
+export { registerCssProvider } from './css';
+export { registerXmlProvider } from './xml';
 
 /**
  * Initialize all language providers with Monaco
