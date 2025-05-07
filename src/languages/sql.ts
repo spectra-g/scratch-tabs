@@ -76,23 +76,24 @@ ORDER BY post_count DESC;`;
     // Normalize content for better detection
     const normalizedContent = content.toLowerCase().trim();
     
-    // Check for common SQL keywords and patterns
+    // Use grouped SQL keyword patterns for detection
     const sqlPatterns = [
-      /\b(select|from|where|join|inner join|left join|right join|full join|group by|order by|having)\b/i,
-      /\b(insert into|values|update|set|delete from)\b/i,
-      /\b(create|alter|drop)\s+(table|view|index|procedure|function|trigger|database)\b/i,
-      /\b(primary key|foreign key|references|constraint|unique|not null|auto_increment)\b/i,
-      /\b(int|varchar|char|text|date|datetime|timestamp|boolean|decimal|float|double)\b/i,
-      /\b(count|sum|avg|min|max)\s*\(/i,
-      /\b(and|or|not|in|between|like|is null|is not null)\b/i
+      /\bselect\b[\s\S]*\bfrom\b/i,
+      /\binsert\s+into\b/i,
+      /\bupdate\b[\s\S]*\bset\b/i,
+      /\bdelete\s+from\b/i,
+      /\bcreate\s+(table|view|index|procedure|function|trigger|database)\b/i,
+      /\balter\s+(table|view|index|procedure|function|trigger|database)\b/i,
+      /\bdrop\s+(table|view|index|procedure|function|trigger|database)\b/i,
+      /\bjoin\b[\s\S]*\bon\b/i
     ];
     
     // Count how many SQL patterns match
     const matchCount = sqlPatterns.reduce((count, pattern) => 
       count + (pattern.test(normalizedContent) ? 1 : 0), 0);
     
-    // If at least 3 patterns match, consider it SQL
-    return matchCount >= 3;
+    // If at least one grouped pattern matches, consider it SQL
+    return matchCount >= 1;
   }
   
   /**

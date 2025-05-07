@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useClickOutside } from '../../hooks/useClickOutside';
-import { Folders, MoreHorizontal, Pencil, Trash2, Plus } from 'lucide-react';
+import { Folders, MoreHorizontal, Pencil, Trash2, Plus, Upload, Download } from 'lucide-react';
 import { StorageProviderFactory } from '../../db';
+import { ExportWorkspacesModal } from './ExportWorkspacesModal'; // Adjust path if needed
+import { ImportWorkspacesModal } from './ImportWorkspacesModal'; // Adjust path if needed
 
 export const WorkspaceSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +14,9 @@ export const WorkspaceSwitcher: React.FC = () => {
   const [editingName, setEditingName] = useState('');
   const [showContextMenu, setShowContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [tabCounts, setTabCounts] = useState<Record<string, number>>({});
-  
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
@@ -233,6 +237,22 @@ export const WorkspaceSwitcher: React.FC = () => {
               </button>
             )}
           </div>
+          <div className="px-1 py-1 border-t border-gray-700/50"> {/* Section for Import/Export */}
+            <button
+              onClick={() => { setIsExportModalOpen(true); setIsOpen(false); }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
+            >
+              <Download size={14} />
+              <span>Export Workspaces...</span>
+            </button>
+            <button
+              onClick={() => { setIsImportModalOpen(true); setIsOpen(false); }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
+            >
+              <Upload size={14} />
+              <span>Import Workspaces...</span>
+            </button>
+          </div>
         </div>
       )}
       
@@ -271,6 +291,14 @@ export const WorkspaceSwitcher: React.FC = () => {
           </button>
         </div>
       )}
+      <ExportWorkspacesModal 
+        isOpen={isExportModalOpen} 
+        onClose={() => setIsExportModalOpen(false)} 
+      />
+      <ImportWorkspacesModal 
+        isOpen={isImportModalOpen} 
+        onClose={() => setIsImportModalOpen(false)} 
+      />
     </div>
   );
 };

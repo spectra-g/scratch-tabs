@@ -62,6 +62,9 @@ export class JavaLanguageDetector extends BaseLanguageDetector {
         // Skip if content is too short
         if (content.trim().length < 10) return false;
 
+        // Exclude non-Java code: require at least one semicolon or brace
+        if (!/[;{}]/.test(content)) return false;
+
         // First check for definitive Java patterns
         const definitivePatterns = [
             /\bpublic\s+class\s+\w+/i,                    // Public class declaration
@@ -99,8 +102,8 @@ export class JavaLanguageDetector extends BaseLanguageDetector {
         const matchCount = javaPatterns.reduce((count, pattern) =>
             count + (pattern.test(content) ? 1 : 0), 0);
 
-        // If at least 3 patterns match, consider it Java
-        return matchCount >= 3;
+        // If at least 4 patterns match, consider it Java (increased threshold to reduce false positives)
+        return matchCount >= 4;
     }
 
     /**
