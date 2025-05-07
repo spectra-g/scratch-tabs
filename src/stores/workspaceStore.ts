@@ -9,7 +9,7 @@ interface WorkspaceStore {
   error: string | null;
   
   // Actions
-  loadWorkspaces: () => Promise<void>;
+  loadWorkspaces: (options?: { preventAutoSwitch?: boolean }) => Promise<void>;
   createWorkspace: (name: string) => Promise<string>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
   renameWorkspace: (workspaceId: string, newName: string) => Promise<void>;
@@ -29,14 +29,12 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     isLoading: false,
     error: null,
     
-    loadWorkspaces: async () => {
+    loadWorkspaces: async (options?: { preventAutoSwitch?: boolean }) => {
       set({ isLoading: true, error: null });
       try {
         const workspaces = await storage.getWorkspaces();
         
-        // If no workspaces exist, create a default one, but check again after a short delay to avoid race with migration
         if (!workspaces || workspaces.length === 0) {
-          // Defensive: check again after a short delay to allow migration to finish
           await new Promise(resolve => setTimeout(resolve, 100));
           const refreshed = await storage.getWorkspaces();
           if (!refreshed || refreshed.length === 0) {
@@ -49,22 +47,30 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             };
             await storage.saveWorkspace(defaultWorkspace);
             set({ workspaces: [defaultWorkspace], activeWorkspaceId: defaultWorkspace.id });
+             // If we created a default, we might want to "switch" to it to load its (empty) tabs/splitView.
+             // However, respect preventAutoSwitch if this is the first load after an import.
+            if (!options?.preventAutoSwitch) {
+                await get().switchWorkspace(defaultWorkspace.id);
+            }
           } else {
             set({ workspaces: refreshed, activeWorkspaceId: refreshed[0]?.id });
-            // Optionally, load the active workspace's content here if needed
-            if (refreshed[0]) {
+            if (refreshed[0] && !options?.preventAutoSwitch) {
               await get().switchWorkspace(refreshed[0].id);
             }
           }
           return;
         }
-        // Use most recently accessed workspace as active
-        const sortedWorkspaces = [...workspaces].sort((a, b) => b.lastAccessed - a.lastAccessed);
-        set({ workspaces: sortedWorkspaces, activeWorkspaceId: sortedWorkspaces[0]?.id });
         
-        // Load the active workspace's content
-        if (sortedWorkspaces[0]) {
-          await get().switchWorkspace(sortedWorkspaces[0].id);
+        const sortedWorkspaces = [...workspaces].sort((a, b) => b.lastAccessed - a.lastAccessed);
+        const currentActiveId = get().activeWorkspaceId;
+        const newActiveId = sortedWorkspaces[0]?.id || null;
+
+        set({ workspaces: sortedWorkspaces, activeWorkspaceId: newActiveId });
+        
+        // Only switch if the active workspace ID actually changes or needs to be set,
+        // AND auto-switch is not prevented.
+        if (newActiveId && (newActiveId !== currentActiveId || !currentActiveId) && !options?.preventAutoSwitch) {
+          await get().switchWorkspace(newActiveId);
         }
       } catch (error) {
         set({ error: error instanceof Error ? error.message : 'Failed to load workspaces' });

@@ -31,65 +31,34 @@ export class CsvLanguageDetector extends BaseLanguageDetector {
    * Check if content matches CSV patterns
    */
   isMatch(content: string): boolean {
-    // Skip if content looks like JavaScript/code
-    if (
-      content.includes('import') || 
-      content.includes('export') || 
-      content.includes('function') ||
-      content.includes('class') ||
-      content.includes('const ') ||
-      content.includes('let ') ||
-      content.includes('var ')
-    ) {
-      return false;
-    }
-    
-    // Split into lines and check if we have at least one line
-    const lines = content.trim().split('\n');
-    if (lines.length === 0) return false;
-    
-    // Determine the most likely delimiter
-    const firstLine = lines[0];
-    let delimiter = ',';
-    let delimiterCount = (firstLine.match(/,/g) || []).length;
-    
-    const semicolonCount = (firstLine.match(/;/g) || []).length;
-    if (semicolonCount > delimiterCount) {
-      delimiter = ';';
-      delimiterCount = semicolonCount;
-    }
-    
-    const tabCount = (firstLine.match(/\t/g) || []).length;
-    if (tabCount > delimiterCount) {
-      delimiter = '\t';
-      delimiterCount = tabCount;
-    }
-    
-    // If no delimiters found, it's not a CSV
-    if (delimiterCount === 0) return false;
-    
-    // Check if all lines have approximately the same number of delimiters
-    // (allowing for empty lines and some variation)
-    const expectedFields = delimiterCount + 1;
-    
-    // Check at least the first 5 lines (or all if fewer)
-    const linesToCheck = Math.min(5, lines.length);
-    let validLines = 0;
-    
-    for (let i = 0; i < linesToCheck; i++) {
-      const line = lines[i].trim();
-      if (!line) continue; // Skip empty lines
-      
-      const fieldCount = (line.match(new RegExp(delimiter, 'g')) || []).length + 1;
-      
-      // Allow for some variation in field count (±1)
-      if (Math.abs(fieldCount - expectedFields) <= 1) {
-        validLines++;
+    // Reject code snippets
+    if (/\b(import|export|function|class|const |let |var )\b/.test(content)) return false;
+    // Reject if any comment markers
+    if (/\/\//.test(content) || /\/\*/.test(content)) return false;
+    // Get non-empty trimmed lines
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    // Need at least two lines to compare
+    if (lines.length < 2) return false;
+    const linesToCheck = lines.slice(0, 5);
+    // Try common delimiters
+    const delimiters = [',', ';', '\t'];
+    for (const delim of delimiters) {
+      // For each line, count delimiters and non-empty fields
+      const stats = linesToCheck.map(line => {
+        const parts = line.split(delim);
+        const delimCount = parts.length - 1;
+        const nonEmptyFields = parts.filter(p => p.trim().length > 0).length;
+        return { delimCount, nonEmptyFields };
+      });
+      const first = stats[0];
+      // First line must have at least 2 delimiters and 3 non-empty fields
+      if (first.delimCount < 2 || first.nonEmptyFields < 3) continue;
+      // All lines must satisfy these thresholds
+      if (stats.every(s => s.delimCount === first.delimCount && s.nonEmptyFields >= 3)) {
+        return true;
       }
     }
-    
-    // If most of the checked lines match our CSV pattern, consider it a CSV
-    return validLines >= Math.ceil(linesToCheck * 0.6);
+    return false;
   }
 
   /**

@@ -19,6 +19,7 @@ export interface EditorPosition {
 }
 
 export interface SplitViewState {
+  id: string;
   isSplit: boolean;
   leftTabs: string[];
   rightTabs: string[];
