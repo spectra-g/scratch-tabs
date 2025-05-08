@@ -89,7 +89,7 @@ export const Hashing: React.FC<Props> = ({ searchQuery }) => {
         }
       });
       setHashes(newHashes);
-    }, 150); // Adjust debounce delay as needed (e.g., 150ms)
+    }, 150);
 
     // Cleanup function to clear timeout if input changes again quickly
     return () => {

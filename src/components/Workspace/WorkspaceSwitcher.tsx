@@ -3,8 +3,8 @@ import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { Folders, MoreHorizontal, Pencil, Trash2, Plus, Upload, Download } from 'lucide-react';
 import { StorageProviderFactory } from '../../db';
-import { ExportWorkspacesModal } from './ExportWorkspacesModal'; // Adjust path if needed
-import { ImportWorkspacesModal } from './ImportWorkspacesModal'; // Adjust path if needed
+import { ExportWorkspacesModal } from './ExportWorkspacesModal';
+import { ImportWorkspacesModal } from './ImportWorkspacesModal';
 
 export const WorkspaceSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

@@ -448,7 +448,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
                 <List
                     className="custom-scrollbar"
                     ref={listRef}
-                    height={500} // Adjust as needed
+                    height={500}
                     itemCount={filteredNodes.length}
                     itemSize={26}
                     width="100%"

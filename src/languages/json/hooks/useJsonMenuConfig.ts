@@ -11,7 +11,7 @@ import { useJsonOperations } from './useJsonOperations';
 import { useJsonConversions } from './useJsonConversions';
 import { useJsonTransformations } from './useJsonTransformations';
 import { useJsonValidation } from './useJsonValidation';
-import { MenuItem } from '../../../components/ContextMenu/types'; // Adjust path as needed
+import { MenuItem } from '../../../components/ContextMenu/types';
 import { Tab } from '../../../types';
 
 export const useJsonMenuConfig = (
