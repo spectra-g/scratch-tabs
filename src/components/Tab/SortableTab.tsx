@@ -105,6 +105,9 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') onEditSubmit();
         else if (e.key === 'Escape') onEditCancel();
+        
+        // Prevent event propagation for all keys to ensure spaces work
+        e.stopPropagation();
     };
 
     const handleCloseClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -195,6 +198,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                         className="absolute top-0 left-0 h-full bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none text-xs z-10 border border-blue-500 shadow-lg"
                         style={{
                             minWidth: EDITING_INPUT_MIN_WIDTH,
+                            width: `${Math.max(150, (editingTitle.length + 5) * 8)}px`, // Dynamic width based on content
+                            maxWidth: '80%', // Prevent excessive width
                             boxSizing: 'border-box',
                         }}
                         aria-label="Edit tab title"

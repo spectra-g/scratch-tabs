@@ -24,8 +24,8 @@ interface TooltipContent {
     title: string;
     language?: string;
     lineCount?: number;
-    dateCreated?: number;
-    lastModified?: number;
+    dateCreated: number;
+    lastModified: number;
 }
 
 export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, onOpenSummaryModal }) => {
@@ -287,15 +287,17 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
         };
 
         const content: TooltipContent = {
-            title: tab.title
+            title: tab.title,
+            dateCreated: tab.dateCreated || Date.now(),
+            lastModified: tab.lastModified || Date.now()
         };
 
         if (!tab.isTablet) {
             content.lineCount = getTabLineCount(tab.content);
             try {
                 const detector = languageRegistry.getById(tab.language);
-                if (detector && typeof detector.getName === 'function') {
-                    content.language = detector.getName();
+                if (detector) {
+                    content.language = detector.id === tab.language ? detector.id : tab.language || 'Unknown';
                 } else {
                     content.language = tab.language || 'Unknown';
                 }
@@ -303,8 +305,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                 content.language = tab.language || 'Error';
             }
         }
-        content.dateCreated = tab.dateCreated;
-        content.lastModified = tab.lastModified;
 
         setTooltipPosition(position);
         setTooltipContent(content);
@@ -450,7 +450,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
 
     const handleInputBlur = () => {
         if (editingTabId && editingTitle.trim()) {
-            updateTabTitle(editingTabId, editingTitle.trim());
+            updateTabTitle(editingTabId, editingTitle);
         }
         setEditingTabId(null);
     };
