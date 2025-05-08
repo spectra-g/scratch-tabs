@@ -55,11 +55,19 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
   // Effect to react to store changes (summary result or error)
   useEffect(() => {
     if (!isMounted.current) return;
-
     if (summaryResult) {
-      console.log('[SummarizeModal] Received summary result from store:', summaryResult);
-      setLocalSummary(summaryResult.replace(/^['"]|['"]$/g, ''));
+      const fullText = summaryResult.replace(/^['\"]|['\"]$/g, '');
+      let idx = 0;
+      setLocalSummary('');
       setLocalError(null);
+      const interval = setInterval(() => {
+        setLocalSummary(prev => prev + fullText[idx]);
+        idx++;
+        if (idx >= fullText.length) {
+          clearInterval(interval);
+        }
+      }, 30);
+      return () => clearInterval(interval);
     }
   }, [summaryResult]);
 

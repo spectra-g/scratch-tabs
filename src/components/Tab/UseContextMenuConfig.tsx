@@ -17,7 +17,6 @@ export const useContextMenuConfig = (
     startEditingTab?: (tabId: string) => void
 ): MenuItem[] => {
   const store = useRootStore();
-  const { isReady } = useAIStore();
   const { isReady: isAiReady, isLoading: isAiLoading } = useAIStore(state => state.ai);
 
   const tab = store.tabs.find(t => t.id === tabId);
