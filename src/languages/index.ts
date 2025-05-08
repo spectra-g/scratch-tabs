@@ -2,66 +2,40 @@ import { loader } from '@monaco-editor/react';
 import { languageRegistry } from './registry';
 import { LanguageDetector } from './types';
 
-// Import all language detectors
-import './json';
-import './yaml';
-import './markdown';
-import './csv';
-import './bash';
-import './sql';
-import './html';
-import './javascript';
-import './java';
-import './stacktrace';
-import './curl';
-import './python';
-import './ruby';
-import './rust';
-import './go';
-import './php';
-import './css';
-import './xml';
+import.meta.glob('./!(index|types|registry|baseDetector)*.ts', { eager: true });
 
 // Export the registry for use in the application
 export { languageRegistry };
 
-// Export a function to register all language providers with Monaco
 export const registerAllLanguageProviders = (monaco: any) => {
-  // Get all registered detectors and register their providers
   languageRegistry.getAll().forEach((detector: LanguageDetector) => {
-    detector.registerProvider(monaco);
+    try {
+        // Ensure registerProvider exists before calling
+        if (typeof detector.registerProvider === 'function') {
+            detector.registerProvider(monaco);
+        } else {
+             console.warn(`Detector "${detector.id}" is missing registerProvider method.`);
+        }
+    } catch (error) {
+        console.error(`Error registering provider for language "${detector.id}":`, error);
+    }
   });
 };
-
-// Export individual language registration functions for backward compatibility
-export { registerJsonProvider } from './json';
-export { registerYamlProvider } from './yaml';
-export { registerMarkdownProvider } from './markdown';
-export { registerCsvProvider } from './csv';
-export { registerBashProvider } from './bash';
-export { registerSqlProvider } from './sql';
-export { registerHtmlProvider } from './html';
-export { registerJavaScriptProvider, registerTypeScriptProvider } from './javascript';
-export { registerJavaProvider } from './java';
-export { registerStacktraceProvider } from './stacktrace';
-export { registerCurlProvider } from './curl';
-export { registerPythonProvider } from './python';
-export { registerRubyProvider } from './ruby';
-export { registerRustProvider } from './rust';
-export { registerGoProvider } from './go';
-export { registerPhpProvider } from './php';
-export { registerCssProvider } from './css';
-export { registerXmlProvider } from './xml';
 
 /**
  * Initialize all language providers with Monaco
  */
 export const initializeLanguageProviders = () => {
-  loader.init().then((monaco) => {
-    // Register all language providers using the registry
-    registerAllLanguageProviders(monaco);
-  });
+  // Ensure Monaco loader promise is handled correctly
+  loader.init()
+    .then((monaco) => {
+      registerAllLanguageProviders(monaco);
+    })
+    .catch(error => {
+      console.error("Monaco Loader failed to initialize:", error);
+    });
 };
+
 
 /**
  * Detect the language of content
