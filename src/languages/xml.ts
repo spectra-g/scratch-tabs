@@ -116,27 +116,13 @@ export class XmlLanguageDetector extends BaseLanguageDetector {
                     return [];
                 }
             }
-
-            // Rest of the XmlLanguageDetector class...
-
-            // Rest of the XmlLanguageDetector class...
-
-            // Rest of the XmlLanguageDetector class remains the same...
-            // registerProvider, constructor, isMatch, sampleContent, etc.
-
-            // Rest of the XmlLanguageDetector class remains the same...
-            // registerProvider, constructor, isMatch, sampleContent, etc.
         });
     }
-
-    // No need for countSpecificPatterns for XML detection usually
 }
 
-// --- Registration ---
 const xmlDetector = new XmlLanguageDetector();
 languageRegistry.register(xmlDetector);
 
-// Optional: Export for explicit registration if needed elsewhere
 export const registerXmlProvider = (monaco: any) => {
     xmlDetector.registerProvider(monaco);
 };
