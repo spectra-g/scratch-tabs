@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useRootStore } from '../../stores';
+import { useSearchStore } from '../../stores/searchStore';
 import { WelcomeScreen } from '../Welcome/WelcomeScreen';
 import { EditorPaneWrapper } from '../Editor/EditorPaneWrapper';
 import { TabBar } from '../Tab/TabBar';
@@ -9,6 +10,7 @@ import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
 import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
 import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { SearchModal } from '../Search/SearchModal';
 
 const MainLayout: React.FC = () => {
   const {
@@ -60,6 +62,8 @@ const MainLayout: React.FC = () => {
     splitView?.splitRatio,
     setSplitRatio
   );
+
+  const { isOpen: isSearchOpen, toggleSearch } = useSearchStore();
 
   const handleOpenDiffModal = (fromHistory?: boolean, explicitSide?: 'left' | 'right', explicitTabId?: string) => {
     const currentSplitView = useRootStore.getState().splitView;
@@ -142,6 +146,14 @@ const MainLayout: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+
+      // --- Search Shortcut ---
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'F') {
+        event.preventDefault();
+        const selectedText = window.getSelection()?.toString() || '';
+        toggleSearch(selectedText); // Pass selected text to pre-populate
+      }
+
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
         event.preventDefault();
 
@@ -183,7 +195,7 @@ const MainLayout: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeLeftTabId, activeRightTabId, saveTabDataById]);
+  }, [toggleSearch, activeLeftTabId, activeRightTabId, saveTabDataById]);
 
   useUrlTabHandler();
 
@@ -257,6 +269,7 @@ const MainLayout: React.FC = () => {
               // tabId={summarizeModal.tabId}
           />
       )}
+      {isSearchOpen && <SearchModal />}
     </div>
   );
 };

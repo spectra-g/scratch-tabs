@@ -28,7 +28,7 @@ function sanitizeFilename(name: string): string {
     return 'untitled';
   }
   // Limit filename length (optional, but good practice)
-  const maxLength = 200; // Adjust as needed
+  const maxLength = 200;
   return trimmed.substring(0, maxLength);
 }
 // --- End Helper Function ---

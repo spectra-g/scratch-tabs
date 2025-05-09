@@ -25,7 +25,7 @@ export class YamlLanguageDetector extends BaseLanguageDetector {
   id = 'yaml';
   name = 'YAML';
   extensions = ['yaml', 'yml'];
-  priority = 4; // Adjust priority as needed
+  priority = 4;
 
   // --- YAML Line Pattern Regexes ---
   // More specific regexes for line classification

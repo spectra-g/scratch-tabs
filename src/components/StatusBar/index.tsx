@@ -6,6 +6,8 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Tab } from "../../types.ts";
 import { AIStatusIcon } from '../AI/AIStatusIcon';
 import { useRootStore } from '../../stores';
+import { Search } from 'lucide-react';
+import { useSearchStore } from '../../stores/searchStore';
 
 interface StatusBarProps {
   editor: monaco.editor.IStandaloneCodeEditor | null,
@@ -15,6 +17,8 @@ interface StatusBarProps {
 
 export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) => {
   const { splitView } = useRootStore();
+  const { toggleSearch } = useSearchStore();
+
   const showAIIcon = (!splitView.isSplit && side === 'left') || (splitView.isSplit && side === 'right');
 
   // Get the tablet if this is a tablet tab
@@ -56,6 +60,15 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
         )}
       </div>
       <div className="flex items-center space-x-2">
+        {showAIIcon &&
+            <button
+                onClick={() => toggleSearch()} // Open search with no initial query
+                className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+                title="Find in Files (Ctrl+Shift+F)"
+            >
+                <Search size={14} />
+            </button> }
+
         {showAIIcon && <AIStatusIcon />}
         <Macro editor={editor}/>
       </div>

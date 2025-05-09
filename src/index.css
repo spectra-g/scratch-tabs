@@ -10,3 +10,17 @@
        */
     }
 }
+@layer components {
+  .search-highlight-line {
+    @apply bg-blue-900 bg-opacity-20; /* Example Tailwind class */
+     /* Or use direct CSS: background-color: rgba(30, 64, 175, 0.2); */
+  }
+  .search-highlight-match {
+     @apply bg-yellow-500 bg-opacity-40 rounded-sm; /* Example Tailwind class */
+     /* Or use direct CSS: background-color: rgba(234, 179, 8, 0.4); border-radius: 2px; */
+  }
+   /* Optional: Style for inline decorations if needed */
+  .search-match-inline-decoration {
+     /* Add styles like text-decoration: underline; */
+  }
+}
