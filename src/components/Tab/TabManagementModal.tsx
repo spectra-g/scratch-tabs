@@ -7,7 +7,7 @@ import {
   Search, X, Folder, FolderPlus, Edit, Trash2, Pin, PinOff, Copy, 
   Merge, Filter, ArrowDownAZ, ArrowUpZA, Clock, FileCode, 
   CheckSquare, Square, ChevronRight, ChevronDown, AlertTriangle,
-  Layers, MoveRight, Maximize, Minimize
+  Layers, MoveRight
 } from 'lucide-react';
 import { languageRegistry } from '../../languages';
 
@@ -258,7 +258,7 @@ const WorkspaceItem: React.FC<WorkspaceItemProps> = ({
 };
 
 export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, onClose }) => {
-  const { tabs, removeTab, updateTabTitle, toggleTabPin, duplicateTab, moveTabToLeft, moveTabToRight } = useRootStore();
+  const { tabs, removeTab, updateTabTitle, toggleTabPin, duplicateTab } = useRootStore();
   const { 
     workspaces, 
     activeWorkspaceId, 
@@ -695,20 +695,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     });
   };
 
-  const handleMoveToSide = (side: 'left' | 'right') => {
-    if (selectedTabIds.size === 0) return;
-    
-    selectedTabIds.forEach(id => {
-      if (side === 'left') {
-        moveTabToLeft(id);
-      } else {
-        moveTabToRight(id);
-      }
-    });
-    
-    setSelectedTabIds(new Set());
-  };
-
   // Render tab tooltip content
   const renderTabTooltip = (tab: Tab) => {
     if (tab.isTablet) {
@@ -739,6 +725,11 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       </div>
     );
   };
+
+  // Reset selected tabs when switching workspaces
+  useEffect(() => {
+    setSelectedTabIds(new Set());
+  }, [activeWorkspaceId]);
 
   if (!isOpen) return null;
 
@@ -947,7 +938,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
               </div>
               
               {/* Bulk actions */}
-              {selectedTabIds.size > 0 && (
+              {selectedTabIds.size > 0 && activeWorkspaceId === workspacesWithCounts.find(w => w.id === activeWorkspaceId)?.id && (
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={handleTogglePinTabs}
@@ -1084,25 +1075,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                         </div>
                       </div>
                     )}
-                  </div>
-                  
-                  <div className="flex items-center space-x-1">
-                    <button
-                      onClick={() => handleMoveToSide('left')}
-                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                      title="Move to left side"
-                    >
-                      <Maximize size={14} className="text-gray-400 rotate-90" />
-                      <span>Left</span>
-                    </button>
-                    <button
-                      onClick={() => handleMoveToSide('right')}
-                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                      title="Move to right side"
-                    >
-                      <Minimize size={14} className="text-gray-400 rotate-90" />
-                      <span>Right</span>
-                    </button>
                   </div>
                   
                   <button
