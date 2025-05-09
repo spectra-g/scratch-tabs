@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { StorageProviderFactory } from '../../db';
 import { BaseModal } from '../../languages/json/components/modals/BaseModal';
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
@@ -66,9 +67,12 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 interface TabItemProps {
   tab: Tab;
   isSelected: boolean;
+  isEditing: boolean;
   onSelect: (tabId: string, multiSelect: boolean) => void;
   onDoubleClick: (tabId: string) => void;
-  onRename: (tabId: string) => void;
+  onStartEdit: (tabId: string) => void;
+  onSaveTitle: (tabId: string, newTitle: string) => void;
+  onCancelEdit: (tabId: string) => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   hasChildren?: boolean;
@@ -78,14 +82,57 @@ interface TabItemProps {
 const TabItem: React.FC<TabItemProps> = ({
   tab,
   isSelected,
+  isEditing,
   onSelect,
   onDoubleClick,
-  onRename,
+  onStartEdit,
+  onSaveTitle,
+  onCancelEdit,
   isExpanded,
   onToggleExpand,
   hasChildren,
   depth = 0
 }) => {
+  const [editingTitle, setEditingTitle] = useState(tab.title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update local editing title if tab prop changes (e.g., external update)
+  useEffect(() => {
+    if (!isEditing) { // Only update if not currently being edited by the user
+        setEditingTitle(tab.title);
+    }
+  }, [tab.title, isEditing]);
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditingTitle(e.target.value);
+  };
+
+  const handleSave = () => {
+    const trimmedTitle = editingTitle.trim();
+    if (trimmedTitle && trimmedTitle !== tab.title) {
+      onSaveTitle(tab.id, trimmedTitle);
+    } else {
+      onCancelEdit(tab.id); // Cancel if title is empty or unchanged
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      setEditingTitle(tab.title); // Reset to original before canceling
+      onCancelEdit(tab.id);
+    }
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     onSelect(tab.id, e.ctrlKey || e.metaKey);
   };
@@ -114,37 +161,71 @@ const TabItem: React.FC<TabItemProps> = ({
     }
   };
 
+  const getTooltipText = () => {
+    if (tab.isTablet) {
+      return `${tab.title}\nType: Tablet\nLast Modified: ${new Date(tab.lastModified).toLocaleString()}`;
+    }
+    const firstLines = tab.content.split('\n').slice(0, 5).join('\n'); // Show first 5 lines for brevity
+    const moreLinesIndicator = tab.content.split('\n').length > 5 ? "\n..." : "";
+    return `${tab.title}\nType: ${getLanguageLabel()}\nLast Modified: ${new Date(tab.lastModified).toLocaleString()}\n\n${firstLines}${moreLinesIndicator}`;
+  };
+
   const indentPadding = depth * 16;
 
   return (
     <div 
-      className={`flex items-center px-3 py-2 cursor-pointer ${isSelected ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'}`}
-      onClick={handleClick}
-      onDoubleClick={handleDoubleClick}
+      className={`group flex items-center px-3 py-1.5 cursor-pointer ${isSelected ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'}`}
+      onClick={(e) => { if (!isEditing) onSelect(tab.id, e.ctrlKey || e.metaKey); }}
+      onDoubleClick={() => { if (!isEditing) onDoubleClick(tab.id); }}
+      title={getTooltipText()}
     >
       <div style={{ paddingLeft: `${indentPadding}px` }} className="flex items-center flex-1 min-w-0">
         {hasChildren && (
           <button 
             onClick={(e) => { e.stopPropagation(); onToggleExpand?.(); }}
-            className="mr-1 text-gray-400 hover:text-gray-200"
+            className="mr-1 text-gray-400 hover:text-gray-200 flex-shrink-0"
           >
             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </button>
         )}
         
-        {!hasChildren && depth > 0 && <div className="w-5"></div>}
+        {!hasChildren && depth > 0 && <div className="w-5 flex-shrink-0"></div>}
+        
+        {tab.isPinned && <Pin size={12} className="text-yellow-400 mr-1.5 flex-shrink-0" />}
         
         <div className="flex-1 truncate mr-2">
-          <span className={`${isSelected ? 'text-blue-300' : 'text-gray-200'}`}>
-            {tab.title || 'Untitled'}
-          </span>
+          {isEditing ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={editingTitle}
+              onChange={handleTitleChange}
+              onKeyDown={handleKeyDown}
+              onBlur={handleSave} // Save on blur
+              onClick={(e) => e.stopPropagation()} // Prevent row click when editing
+              className="w-full bg-gray-700 border border-blue-500 rounded px-1 py-0.5 text-sm text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          ) : (
+            <span className={`text-sm ${isSelected ? 'text-blue-300' : 'text-gray-100'}`}>
+              {tab.title || 'Untitled'}
+            </span>
+          )}
         </div>
         
-        <div className="flex items-center space-x-2 flex-shrink-0">
-          <span className={`text-xs px-2 py-0.5 rounded ${getLanguageColor()}`}>
+        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+            {!isEditing && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); onStartEdit(tab.id); }}
+                    className="p-0.5 text-gray-400 hover:text-blue-300 hover:bg-gray-600/50 rounded"
+                    title="Rename Tab"
+                >
+                    <Edit size={12} />
+                </button>
+            )}
+        </div>
+
+        <div className={`text-xs px-2 py-0.5 rounded ${getLanguageColor()} ml-2 flex-shrink-0`}>
             {getLanguageLabel()}
-          </span>
-          {tab.isPinned && <Pin size={14} className="text-yellow-400" />}
         </div>
       </div>
     </div>
@@ -157,7 +238,11 @@ interface TabGroupProps {
   selectedTabIds: Set<string>;
   onSelectTab: (tabId: string, multiSelect: boolean) => void;
   onDoubleClickTab: (tabId: string) => void;
-  onRenameTab: (tabId: string) => void;
+  onRenameTab: (tabId: string, currentTitle: string) => void;
+  editingTabId: string | null;
+  onStartEditTab: (tabId: string) => void;
+  onSaveTabTitle: (tabId: string, newTitle: string) => void;
+  onCancelEditTab: (tabId: string) => void;
 }
 
 const TabGroup: React.FC<TabGroupProps> = ({
@@ -166,41 +251,49 @@ const TabGroup: React.FC<TabGroupProps> = ({
   selectedTabIds,
   onSelectTab,
   onDoubleClickTab,
-  onRenameTab
+  onRenameTab,
+  editingTabId,
+  onStartEditTab,
+  onSaveTabTitle,
+  onCancelEditTab
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <div className="mb-2">
-      <div 
-        className="flex items-center px-3 py-2 bg-gray-700/50 cursor-pointer"
+    <div className="mb-1">
+      <div
+        className="flex items-center px-3 py-1.5 bg-gray-700/50 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="mr-1 text-gray-400">
           {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </div>
-        <span className="text-gray-200 font-medium">{title}</span>
+        <span className="text-gray-100 font-medium text-sm">{title}</span>
         <span className="ml-2 text-xs text-gray-400">({tabs.length})</span>
       </div>
-      
+
       {isExpanded && (
         <div>
           {tabs.map(tab => (
-            <TabItem
-              key={tab.id}
-              tab={tab}
-              isSelected={selectedTabIds.has(tab.id)}
-              onSelect={onSelectTab}
-              onDoubleClick={onDoubleClickTab}
-              onRename={onRenameTab}
-              depth={1}
-            />
-          ))}
+               <TabItem
+                 key={tab.id}
+                 tab={tab}
+                 isSelected={selectedTabIds.has(tab.id)}
+                 isEditing={editingTabId === tab.id}
+                 onSelect={onSelectTab}
+                 onDoubleClick={onDoubleClickTab}
+                 onStartEdit={onStartEditTab}
+                 onSaveTitle={onSaveTabTitle}
+                 onCancelEdit={onCancelEditTab}
+                 depth={1}
+               />
+           ))}
         </div>
       )}
     </div>
   );
 };
+
 
 interface WorkspaceItemProps {
   workspace: {
@@ -223,15 +316,15 @@ const WorkspaceItem: React.FC<WorkspaceItemProps> = ({
 }) => {
   return (
     <div 
-      className={`flex items-center justify-between px-3 py-2 cursor-pointer ${isActive ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'}`}
+      className={`flex items-center justify-between px-3 py-1.5 cursor-pointer ${isActive ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'}`} // Reduced py padding
       onClick={onSelect}
     >
       <div className="flex items-center">
         <Folder size={16} className={`mr-2 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
-        <span className={`${isActive ? 'text-blue-300' : 'text-gray-200'}`}>
+        <span className={`text-sm ${isActive ? 'text-blue-300' : 'text-gray-100'}`}>
           {workspace.name}
         </span>
-        <span className="ml-2 text-xs text-gray-400">({workspace.tabCount})</span>
+        <span className="ml-2 text-xs text-gray-400">({workspace.tabCount === -1 ? '...' : workspace.tabCount})</span>
       </div>
       
       <div className="flex items-center space-x-1">
@@ -255,15 +348,22 @@ const WorkspaceItem: React.FC<WorkspaceItemProps> = ({
 };
 
 export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, onClose }) => {
-  const { tabs, removeTab, updateTabTitle, toggleTabPin, duplicateTab, saveTabs } = useRootStore();
-  const { 
-    workspaces, 
-    activeWorkspaceId, 
-    switchWorkspace, 
-    createWorkspace, 
-    renameWorkspace, 
-    deleteWorkspace 
+  const { removeTab, updateTabTitle, toggleTabPin, duplicateTab, updateTabTitle: updateTabTitleInStore } = useRootStore();
+  const {
+    workspaces,
+    activeWorkspaceId,
+    switchWorkspace,
+    createWorkspace,
+    renameWorkspace,
+    deleteWorkspace
   } = useWorkspaceStore();
+  const activeWorkspaceTabs = useRootStore(state =>
+    state.tabs.filter(tab => tab.workspaceId === activeWorkspaceId)
+  );
+  const storage = StorageProviderFactory.getProvider();
+  const [allApplicationTabs, setAllApplicationTabs] = useState<Tab[]>([]);
+  const [isLoadingAllTabs, setIsLoadingAllTabs] = useState(false);
+  const [editingTabIdForModal, setEditingTabIdForModal] = useState<string | null>(null);
 
   // Local state
   const [selectedTabIds, setSelectedTabIds] = useState<Set<string>>(new Set());
@@ -278,9 +378,13 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const [targetWorkspaceId, setTargetWorkspaceId] = useState<string | null>(null);
   const [showMergeOptions, setShowMergeOptions] = useState(false);
   const [mergeDelimiter, setMergeDelimiter] = useState('\n\n');
-  const [showDuplicateOptions, setShowDuplicateOptions] = useState(false);
-  const [duplicateNamePattern, setDuplicateNamePattern] = useState('');
-  
+  const [showRenameOptions, setShowRenameOptions] = useState(false);
+  const [renameBasePattern, setRenameBasePattern] = useState('');
+  const [renameSuffixPattern, setRenameSuffixPattern] = useState(' {d}');
+  const modalContentRef = useRef<HTMLDivElement>(null);
+  const [isInternalActionInProgress, setIsInternalActionInProgress] = useState(false);
+  const { switchWorkspace: switchWorkspaceFromStore } = useWorkspaceStore();
+
   // Confirmation dialogs
   const [confirmationDialog, setConfirmationDialog] = useState<{
     isOpen: boolean;
@@ -312,7 +416,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   // Get available languages from tabs
   const availableLanguages = useMemo(() => {
     const languages = new Set<string>();
-    tabs.forEach(tab => {
+    activeWorkspaceTabs.forEach(tab => {
       if (tab.isTablet) {
         languages.add('tablet');
       } else {
@@ -320,51 +424,58 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       }
     });
     return Array.from(languages).sort();
-  }, [tabs]);
+  }, [activeWorkspaceTabs]);
 
-  // Get workspace tab counts
+  // --- Fetch ALL tabs when modal opens or workspaces change ---
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoadingAllTabs(true);
+      storage.getTabs()
+        .then(fetchedTabs => {
+          setAllApplicationTabs(fetchedTabs);
+        })
+        .catch(err => {
+          console.error("Failed to fetch all tabs for management modal:", err);
+          // Handle error appropriately, maybe set an error state
+        })
+        .finally(() => {
+          setIsLoadingAllTabs(false);
+        });
+    }
+  }, [isOpen, storage]); // Re-fetch if storage instance could change (unlikely)
+
+  // Get workspace tab counts using allApplicationTabs
   const workspacesWithCounts = useMemo(() => {
-    console.log("Computing workspacesWithCounts");
-    const result = workspaces.map(workspace => {
-      const tabCount = tabs.filter(tab => tab.workspaceId === workspace.id).length;
-      console.log(`Workspace ${workspace.name} (${workspace.id}) has ${tabCount} tabs`);
-      return { ...workspace, tabCount };
+    // If still loading all tabs, you might show a loading state or previous counts
+    if (isLoadingAllTabs) {
+        return workspaces.map(ws => ({...ws, tabCount: 0, isLoadingCount: true})); // Indicate loading
+    }
+    return workspaces.map(workspace => {
+      const tabCount = allApplicationTabs.filter(tab => tab.workspaceId === workspace.id).length;
+      return { ...workspace, tabCount, isLoadingCount: false };
     });
-    console.log("Computed workspaces with counts:", result);
-    return result;
-  }, [workspaces, tabs]);
+  }, [workspaces, allApplicationTabs, isLoadingAllTabs]);
 
-  // Filter and sort tabs
+  // Filter and sort tabs (uses activeWorkspaceTabs from rootStore for display)
   const filteredTabs = useMemo(() => {
-    console.log("Computing filteredTabs");
-    console.log("Current activeWorkspaceId:", activeWorkspaceId);
-    console.log("Current languageFilter:", languageFilter);
-    
-    let result = [...tabs];
-    
-    // Filter by workspace
-    result = result.filter(tab => tab.workspaceId === activeWorkspaceId);
-    console.log(`After workspace filter: ${result.length} tabs`);
-    
+    let result = [...activeWorkspaceTabs]; // Start with tabs from the currently active workspace
+
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(tab => 
+      result = result.filter(tab =>
         tab.title.toLowerCase().includes(query)
       );
-      console.log(`After search query filter: ${result.length} tabs`);
     }
-    
+
     // Filter by language
     if (languageFilter.length > 0) {
-      console.log("Applying language filter:", languageFilter);
       result = result.filter(tab => {
         if (tab.isTablet && languageFilter.includes('tablet')) {
           return true;
         }
         return languageFilter.includes(tab.language);
       });
-      console.log(`After language filter: ${result.length} tabs`);
     }
     
     // Sort tabs
@@ -397,7 +508,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     }
     
     return result;
-  }, [tabs, activeWorkspaceId, searchQuery, languageFilter, sortOption]);
+  }, [activeWorkspaceTabs, activeWorkspaceId, searchQuery, languageFilter, sortOption]);
 
   // Group tabs based on grouping option
   const groupedTabs = useMemo(() => {
@@ -433,11 +544,10 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   // Check if there are any duplicate tabs
   const duplicateTabs = useMemo(() => {
     const contentMap = new Map<string, Tab[]>();
-    
-    // Only consider tabs in the current workspace
-    const workspaceTabs = tabs.filter(tab => tab.workspaceId === activeWorkspaceId);
-    
-    workspaceTabs.forEach(tab => {
+    // Use activeWorkspaceTabs for finding duplicates *within the current view*
+    const currentViewTabs = activeWorkspaceTabs.filter(tab => tab.workspaceId === activeWorkspaceId);
+
+    currentViewTabs.forEach(tab => {
       if (!tab.isTablet) {
         const content = tab.content.trim();
         if (content) {
@@ -460,7 +570,57 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     });
     
     return duplicates;
-  }, [tabs, activeWorkspaceId]);
+  }, [activeWorkspaceTabs, activeWorkspaceId]);
+
+  const handleStartEditingTab = (tabId: string) => {
+    setEditingTabIdForModal(tabId);
+  };
+
+  const handleSaveTabTitle = (tabId: string, newTitle: string) => {
+    updateTabTitleInStore(tabId, newTitle);
+    setEditingTabIdForModal(null);
+  };
+
+  const handleCancelEditingTab = () => {
+    setEditingTabIdForModal(null);
+  };
+
+  // Custom useClickOutside hook that respects the internal action flag
+    const useModalClickOutside = (
+      ref: React.RefObject<HTMLElement>,
+      modalOpenFlag: boolean, // Pass the modal's isOpen state
+      internalActionFlag: boolean, // Pass the isInternalActionInProgress state
+      handler: (event: MouseEvent | TouchEvent) => void
+    ) => {
+      useEffect(() => {
+        if (!modalOpenFlag) return; // Only attach listener if modal is open
+
+        const listener = (event: MouseEvent | TouchEvent) => {
+          if (internalActionFlag) { // If an internal action is marked, ignore this click
+            return;
+          }
+          if (!ref.current || ref.current.contains(event.target as Node)) {
+            return; // Click was inside the ref
+          }
+          handler(event); // Click was outside
+        };
+
+        document.addEventListener("mousedown", listener);
+        document.addEventListener("touchstart", listener);
+        return () => {
+          document.removeEventListener("mousedown", listener);
+          document.removeEventListener("touchstart", listener);
+        };
+        // Re-attach if modalOpenFlag, internalActionFlag, ref, or handler changes
+      }, [ref, modalOpenFlag, internalActionFlag, handler]);
+    };
+
+  // Apply the custom click outside hook
+  useModalClickOutside(modalContentRef, isOpen, isInternalActionInProgress, () => {
+    if (!confirmationDialog.isOpen) { // Only close if no confirmation is active
+        onClose();
+    }
+  });
 
   // Handlers
   const handleSelectTab = (tabId: string, multiSelect: boolean) => {
@@ -495,7 +655,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
 
   const handleDoubleClickTab = (tabId: string) => {
     // Open the tab and close the modal
-    const tab = tabs.find(t => t.id === tabId);
+    const tab = activeWorkspaceTabs.find(t => t.id === tabId);
     if (tab) {
       // Determine which side to activate
       const { splitView, setActiveLeftTab, setActiveRightTab } = useRootStore.getState();
@@ -513,13 +673,10 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     }
   };
 
-  const handleRenameTab = (tabId: string) => {
-    const tab = tabs.find(t => t.id === tabId);
-    if (tab) {
-      const newTitle = prompt('Enter new tab title:', tab.title);
-      if (newTitle !== null && newTitle.trim() !== '') {
-        updateTabTitle(tabId, newTitle.trim());
-      }
+  const handleRenameTab = (tabId: string, currentTitle: string) => {
+    const newTitle = prompt('Enter new tab title:', currentTitle);
+    if (newTitle !== null && newTitle.trim() !== '' && newTitle.trim() !== currentTitle) {
+        updateTabTitleInStore(tabId, newTitle.trim());
     }
   };
 
@@ -543,53 +700,72 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     });
   };
 
-  const handleTogglePinTabs = () => {
+  const handleTogglePinSelectedTabs = () => { // Renamed for clarity
     if (selectedTabIds.size === 0) return;
     
-    // Check if any selected tab is not pinned
-    const selectedTabs = tabs.filter(tab => selectedTabIds.has(tab.id));
-    const hasUnpinnedTab = selectedTabs.some(tab => !tab.isPinned);
-    
-    // Pin all if any are unpinned, otherwise unpin all
+    // Determine if we are pinning or unpinning based on the first selected tab's current state
+    // This helps if multiple tabs with mixed pinned states are selected.
+    // A more sophisticated approach might allow pinning all or unpinning all regardless.
+    let actionIsPin = false;
+    const firstSelectedTabId = Array.from(selectedTabIds)[0];
+    const firstTab = activeWorkspaceTabs.find(t => t.id === firstSelectedTabId);
+    if (firstTab) {
+        actionIsPin = !firstTab.isPinned;
+    }
+
     selectedTabIds.forEach(id => {
-      const tab = tabs.find(t => t.id === id);
-      if (tab && (hasUnpinnedTab ? !tab.isPinned : tab.isPinned)) {
-        toggleTabPin(id);
-      }
+        // Only toggle if the action aligns or if it's a single selection
+        const tab = activeWorkspaceTabs.find(t => t.id === id);
+        if (tab) {
+            if (selectedTabIds.size === 1 || (actionIsPin && !tab.isPinned) || (!actionIsPin && tab.isPinned)) {
+                 toggleTabPin(id);
+            }
+        }
     });
+    // The rootStore's subscription should cause activeWorkspaceTabs to update,
+    // which in turn should re-trigger useMemo for filteredTabs/groupedTabs.
   };
 
   const handleDuplicateTabs = () => {
     if (selectedTabIds.size === 0) return;
     
-    if (duplicateNamePattern) {
-      // Bulk rename with pattern
-      const selectedTabs = tabs.filter(tab => selectedTabIds.has(tab.id));
-      
-      selectedTabs.forEach((tab, index) => {
-        const newTabId = duplicateTab(tab.id, false);
-        const newTitle = duplicateNamePattern.replace('{index}', (index + 1).toString())
-                                            .replace('{title}', tab.title);
-        updateTabTitle(newTabId, newTitle);
-      });
-      
-      setDuplicateNamePattern('');
-      setShowDuplicateOptions(false);
-    } else {
-      // Simple duplication
-      selectedTabIds.forEach(id => {
-        duplicateTab(id, false);
-      });
-    }
+    // Simply duplicate all selected tabs with "(copy)" suffix
+    const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
+    
+    selectedTabs.forEach(tab => {
+      const newTabId = duplicateTab(tab.id, false);
+      const newTitle = `${tab.title} (copy)`;
+      updateTabTitle(newTabId, newTitle);
+    });
     
     // Clear selection after duplication
+    setSelectedTabIds(new Set());
+  };
+
+  const handleBulkRename = () => {
+    if (selectedTabIds.size === 0 || !renameBasePattern.trim()) return;
+    
+    const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
+    
+    selectedTabs.forEach((tab, index) => {
+      // Replace {d} in the suffix with the tab's index+1
+      const suffix = renameSuffixPattern.replace('{d}', (index + 1).toString());
+      const newTitle = renameBasePattern.trim() + suffix;
+      updateTabTitle(tab.id, newTitle);
+    });
+    
+    setShowRenameOptions(false);
+    setRenameBasePattern('');
+    // Keep the suffix pattern for next time
+    
+    // Clear selection after renaming
     setSelectedTabIds(new Set());
   };
 
   const handleMergeTabs = () => {
     if (selectedTabIds.size < 2) return;
     
-    const selectedTabs = tabs.filter(tab => selectedTabIds.has(tab.id));
+    const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
     
     // Check if all selected tabs are text-based (not tablets)
     const allTextBased = selectedTabs.every(tab => !tab.isTablet);
@@ -611,9 +787,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     } else if (mergeDelimiter === '\\n---\\n') {
       processedDelimiter = '\n---\n';
     }
-    
-    console.log("Using delimiter:", processedDelimiter);
-    
+
     // Merge content with the specified delimiter
     const mergedContent = sortedTabs.map(tab => tab.content).join(processedDelimiter);
     
@@ -641,22 +815,47 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setSelectedTabIds(new Set());
   };
 
-  const handleMoveToWorkspace = () => {
+  const handleMoveToWorkspace = async () => { // Make it async
     if (selectedTabIds.size === 0 || !targetWorkspaceId) return;
-    
-    // Update workspaceId for all selected tabs
-    const updatedTabs = tabs.map(tab => {
-      if (selectedTabIds.has(tab.id)) {
-        return { ...tab, workspaceId: targetWorkspaceId };
-      }
-      return tab;
+
+    const tabsToMove = Array.from(selectedTabIds);
+
+    // Create a list of updated tab objects
+    const updatedTabObjects: Tab[] = [];
+    allApplicationTabs.forEach(appTab => {
+        if (tabsToMove.includes(appTab.id)) {
+            updatedTabObjects.push({ ...appTab, workspaceId: targetWorkspaceId, lastModified: Date.now() });
+        } else {
+            // Potentially include other tabs if saveTabs expects the full list
+            // For now, let's assume storage.saveTabs can handle partial updates or individual saves
+        }
     });
-    
-    // Update tabs in store
-    saveTabs(updatedTabs);
-    
-    setTargetWorkspaceId(null);
-    setSelectedTabIds(new Set());
+
+    try {
+        // Persist changes for each moved tab individually for safety
+        for (const tabId of tabsToMove) {
+            const tabToUpdate = allApplicationTabs.find(t => t.id === tabId);
+            if (tabToUpdate) {
+                await storage.saveTab({ ...tabToUpdate, workspaceId: targetWorkspaceId, lastModified: Date.now() });
+            }
+        }
+
+        // Refresh the list of all tabs in this modal
+        const refreshedAllTabs = await storage.getTabs();
+        setAllApplicationTabs(refreshedAllTabs);
+
+        // Trigger a reload of the active workspace's tabs in the main UI
+        // This is important if the currently active workspace was affected
+        if (activeWorkspaceId) {
+            await switchWorkspace(activeWorkspaceId); // This should re-fetch and update rootStore
+        }
+
+        setTargetWorkspaceId(null);
+        setSelectedTabIds(new Set());
+    } catch (error) {
+        console.error("Failed to move tabs:", error);
+        // Handle error (e.g., show notification)
+    }
   };
 
   const handleCreateWorkspace = () => {
@@ -756,16 +955,53 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setSelectedTabIds(new Set());
   }, [activeWorkspaceId]);
 
-  if (!isOpen) return null;
+  const handleSwitchWorkspaceAndKeepModal = async (workspaceId: string) => {
+    if (workspaceId === activeWorkspaceId) { // Use activeWorkspaceId from workspaceStore
+        return;
+    }
+
+    // Set the flag before any async operations
+    setIsInternalActionInProgress(true);
+    
+    try {
+      await switchWorkspaceFromStore(workspaceId);
+      setSelectedTabIds(new Set());
+    } catch (error) {
+      console.error("Error switching workspace from modal:", error);
+    } finally {
+      // Use requestAnimationFrame to ensure this runs after the current event cycle completes
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          setIsInternalActionInProgress(false);
+        }, 100); // Add a small delay to ensure event bubbling is complete
+      });
+    }
+  };
+
+  // The BaseModal's onClose should be simple
+  const handleBaseModalClose = () => {
+      if (!isInternalActionInProgress) { // Only close if no internal action is flagged
+          onClose();
+      }
+  };
+
+  if (!isOpen && !isInternalActionInProgress) return null; // Keep modal structure if internal action is happening
+  if (!isOpen && isInternalActionInProgress) {
+      // If modal was supposed to close but an internal action is flagged,
+      // it might mean the onClose was called prematurely. Log this.
+      console.warn("TabManagementModal: onClose was called while internal action was in progress. Investigate.");
+      // Potentially force close after a delay if the flag isn't reset:
+      // setTimeout(() => { if (isInternalActionInProgress) onClose(); }, 200);
+  }
 
   return (
     <BaseModal 
       title="Tab Management" 
-      onClose={onClose}
+      onClose={handleBaseModalClose}
       maxWidthClass="max-w-6xl"
       maxHeightClass="max-h-[90vh]"
     >
-      <div className="flex h-[70vh]">
+      <div ref={modalContentRef} className="flex h-[70vh]">
         {/* Left sidebar - Workspaces */}
         <div className="w-64 border-r border-gray-700/50 flex flex-col">
           <div className="p-3 border-b border-gray-700/50">
@@ -844,9 +1080,13 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
             {workspacesWithCounts.map(workspace => (
               <WorkspaceItem
                 key={workspace.id}
-                workspace={workspace}
+                workspace={{
+                    id: workspace.id,
+                    name: workspace.name,
+                    tabCount: workspace.tabCount === undefined || workspace.isLoadingCount ? -1 : workspace.tabCount
+                }}
                 isActive={workspace.id === activeWorkspaceId}
-                onSelect={() => switchWorkspace(workspace.id)}
+                onSelect={() => handleSwitchWorkspaceAndKeepModal(workspace.id)}
                 onRename={() => {
                   setEditingWorkspaceId(workspace.id);
                   setEditingWorkspaceName(workspace.name);
@@ -877,15 +1117,11 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
               {/* Language filter */}
               <div className="relative">
                 <select
-                  value=""
+                  value={languageFilter[0] || ''}
                   onChange={(e) => {
-                    console.log("Language filter changed:", e.target.value);
+                    const selectedLang = e.target.value;
                     // If "All Languages" is selected (empty value), set to empty array
-                    if (!e.target.value) {
-                      setLanguageFilter([]);
-                    } else {
-                      setLanguageFilter([e.target.value]);
-                    }
+                   setLanguageFilter(selectedLang ? [selectedLang] : []);
                   }}
                   className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
                 >
@@ -967,57 +1203,80 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
               </div>
               
               {/* Bulk actions */}
-              {selectedTabIds.size > 0 && tabs.some(tab => selectedTabIds.has(tab.id) && tab.workspaceId === activeWorkspaceId) && (
+              {selectedTabIds.size > 0 && activeWorkspaceTabs.some(tab => selectedTabIds.has(tab.id) && tab.workspaceId === activeWorkspaceId) && (
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={handleTogglePinTabs}
+                    onClick={handleTogglePinSelectedTabs}
                     className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                    title="Toggle pin status"
+                    title="Toggle pin status for selected"
                   >
                     <Pin size={14} className="text-gray-400" />
                     <span>Toggle Pin</span>
                   </button>
                   
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowDuplicateOptions(!showDuplicateOptions)}
-                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                      title="Duplicate selected tabs"
-                    >
-                      <Copy size={14} className="text-gray-400" />
-                      <span>Duplicate</span>
-                    </button>
-                    
-                    {showDuplicateOptions && (
-                      <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
-                        <div className="text-xs text-gray-300 mb-2">Naming Pattern (optional)</div>
-                        <input
-                          type="text"
-                          value={duplicateNamePattern}
-                          onChange={(e) => setDuplicateNamePattern(e.target.value)}
-                          placeholder="e.g. Copy of {title} {index}"
-                          className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
-                        />
-                        <div className="text-xs text-gray-500 mb-3">
-                          Use {'{title}'} for original title and {'{index}'} for numbering
+                  <button
+                    onClick={handleDuplicateTabs}
+                    className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+                    title="Duplicate selected tabs with (copy) suffix"
+                  >
+                    <Copy size={14} className="text-gray-400" />
+                    <span>Duplicate</span>
+                  </button>
+                  
+                  {selectedTabIds.size >= 2 && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowRenameOptions(!showRenameOptions)}
+                        className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+                        title="Rename selected tabs with pattern"
+                      >
+                        <Edit size={14} className="text-gray-400" />
+                        <span>Rename</span>
+                      </button>
+                      
+                      {showRenameOptions && (
+                        <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
+                          <div className="text-xs text-gray-300 mb-2">Base Name</div>
+                          <input
+                            type="text"
+                            value={renameBasePattern}
+                            onChange={(e) => setRenameBasePattern(e.target.value)}
+                            placeholder="e.g. My Tab"
+                            className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+                          />
+                          
+                          <div className="text-xs text-gray-300 mb-2">Suffix Pattern</div>
+                          <input
+                            type="text"
+                            value={renameSuffixPattern}
+                            onChange={(e) => setRenameSuffixPattern(e.target.value)}
+                            placeholder=" {d}"
+                            className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+                          />
+                          
+                          <div className="text-xs text-gray-500 mb-3">
+                            The {'{d}'} placeholder will be replaced with the tab number
+                          </div>
+                          
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => setShowRenameOptions(false)}
+                              className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleBulkRename}
+                              disabled={!renameBasePattern.trim()}
+                              className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
+                            >
+                              Rename
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => setShowDuplicateOptions(false)}
-                            className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={handleDuplicateTabs}
-                            className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
-                          >
-                            Duplicate
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                   
                   {selectedTabIds.size >= 2 && (
                     <div className="relative">
@@ -1153,6 +1412,10 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                     onSelectTab={handleSelectTab}
                     onDoubleClickTab={handleDoubleClickTab}
                     onRenameTab={handleRenameTab}
+                    editingTabId={editingTabIdForModal}
+                    onStartEditTab={handleStartEditingTab}
+                    onSaveTabTitle={handleSaveTabTitle}
+                    onCancelEditTab={handleCancelEditingTab}
                   />
                 ))}
               </div>
