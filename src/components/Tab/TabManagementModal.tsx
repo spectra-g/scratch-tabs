@@ -16,9 +16,6 @@ interface TabManagementModalProps {
   onClose: () => void;
 }
 
-type SortOption = 'title-asc' | 'title-desc' | 'created-asc' | 'created-desc' | 'modified-asc' | 'modified-desc' | 'language';
-type GroupOption = 'none' | 'language' | 'workspace';
-
 interface ConfirmationDialogProps {
   isOpen: boolean;
   title: string;
@@ -327,18 +324,27 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
 
   // Get workspace tab counts
   const workspacesWithCounts = useMemo(() => {
-    return workspaces.map(workspace => {
+    console.log("Computing workspacesWithCounts");
+    const result = workspaces.map(workspace => {
       const tabCount = tabs.filter(tab => tab.workspaceId === workspace.id).length;
+      console.log(`Workspace ${workspace.name} (${workspace.id}) has ${tabCount} tabs`);
       return { ...workspace, tabCount };
     });
+    console.log("Computed workspaces with counts:", result);
+    return result;
   }, [workspaces, tabs]);
 
   // Filter and sort tabs
   const filteredTabs = useMemo(() => {
+    console.log("Computing filteredTabs");
+    console.log("Current activeWorkspaceId:", activeWorkspaceId);
+    console.log("Current languageFilter:", languageFilter);
+    
     let result = [...tabs];
     
     // Filter by workspace
     result = result.filter(tab => tab.workspaceId === activeWorkspaceId);
+    console.log(`After workspace filter: ${result.length} tabs`);
     
     // Filter by search query
     if (searchQuery) {
@@ -346,16 +352,19 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       result = result.filter(tab => 
         tab.title.toLowerCase().includes(query)
       );
+      console.log(`After search query filter: ${result.length} tabs`);
     }
     
     // Filter by language
     if (languageFilter.length > 0) {
+      console.log("Applying language filter:", languageFilter);
       result = result.filter(tab => {
         if (tab.isTablet && languageFilter.includes('tablet')) {
           return true;
         }
         return languageFilter.includes(tab.language);
       });
+      console.log(`After language filter: ${result.length} tabs`);
     }
     
     // Sort tabs
@@ -602,6 +611,8 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     } else if (mergeDelimiter === '\\n---\\n') {
       processedDelimiter = '\n---\n';
     }
+    
+    console.log("Using delimiter:", processedDelimiter);
     
     // Merge content with the specified delimiter
     const mergedContent = sortedTabs.map(tab => tab.content).join(processedDelimiter);
@@ -868,6 +879,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                 <select
                   value={languageFilter}
                   onChange={(e) => {
+                    console.log("Language filter changed:", e.target.value);
                     const options = Array.from(e.target.selectedOptions, option => option.value);
                     setLanguageFilter(options);
                   }}
@@ -1159,3 +1171,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     </BaseModal>
   );
 };
+
+type SortOption = 'title-asc' | 'title-desc' | 'created-asc' | 'created-desc' | 'modified-asc' | 'modified-desc' | 'language';
+type GroupOption = 'none' | 'language' | 'workspace';
