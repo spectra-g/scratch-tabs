@@ -1,26 +1,6 @@
 import { Tab } from '../types';
 import { SearchOptions, SearchResult } from '../stores/searchStore';
 
-const CONTEXT_LINES = 2; // Number of lines before and after the match
-
-/**
- * Extracts context lines around a specific line number.
- */
-function extractContext(
-    lines: string[],
-    matchLineIndex: number,
-    contextSize: number = CONTEXT_LINES
-): { number: number; text: string }[] {
-    const context: { number: number; text: string }[] = [];
-    const start = Math.max(0, matchLineIndex - contextSize);
-    const end = Math.min(lines.length, matchLineIndex + contextSize + 1);
-
-    for (let i = start; i < end; i++) {
-        context.push({ number: i + 1, text: lines[i] }); // Line numbers are 1-based
-    }
-    return context;
-}
-
 /**
  * Core search function. Iterates through tabs and their content.
  */
@@ -63,6 +43,7 @@ export function searchTabs(
                         lineText: line,
                         matchIndex: match.index,
                         matchLength: match[0].length,
+                        tabContent: tab.content
                     });
                     // Prevent infinite loops with zero-width matches
                     if (match.index === queryRegex.lastIndex) {
@@ -82,7 +63,8 @@ export function searchTabs(
                         lineNumber: i + 1,
                         lineText: line,
                         matchIndex: matchIndex,
-                        matchLength: queryLower.length, // Use original query length for case-insensitive match display
+                        matchLength: queryLower.length,
+                        tabContent: tab.content
                     });
                     startIndex = matchIndex + 1; // Move past the current match
                 }

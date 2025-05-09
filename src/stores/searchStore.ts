@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Tab } from '../types';
 
 export interface SearchResult {
     tabId: string;
@@ -11,6 +10,7 @@ export interface SearchResult {
     lineText: string;    // The full line where the match occurred
     matchIndex: number;  // Start index of the match within the lineText
     matchLength: number; // Length of the match
+    tabContent: string;
 }
 
 export interface SearchOptions {

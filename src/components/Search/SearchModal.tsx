@@ -1,34 +1,37 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import debounce from 'lodash.debounce';
-import { Search, X, CaseSensitive, CaseLower, WholeWord, BookType, ListFilter, History, Trash2, ChevronDown, Loader2 } from 'lucide-react';
+import { Search, CaseSensitive, WholeWord, ListFilter, History, Trash2, ChevronDown, Loader2 } from 'lucide-react';
 
+import { StorageProviderFactory } from '../../db';
 import { BaseModal } from '../../languages/json/components/modals/BaseModal';
 import { useSearchStore, SearchScope, SearchOptions, SearchResult } from '../../stores/searchStore';
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { searchTabs, highlightMatchesInText } from '../../services/searchService';
 import { languageRegistry } from '../../languages';
-import { SearchPreviewPane } from './SearchPreviewPane'; // Create this component
+import { SearchPreviewPane } from './SearchPreviewPane';
+import { Tab } from '../../types';
 
 const DEBOUNCE_DELAY = 300;
 
-// --- SearchResultItem Component (Internal or Separate File) ---
 interface SearchResultItemProps {
     result: SearchResult;
     isSelected: boolean;
     onSelect: () => void;
-    searchQuery: string; // Pass query for highlighting
-    searchOptions: SearchOptions; // Pass options for highlighting
-    itemRef: React.RefObject<HTMLDivElement>; // Ref for scrolling
+    onDoubleClick: (result: SearchResult) => void;
+    searchQuery: string;
+    searchOptions: SearchOptions;
+    itemRef: React.RefObject<HTMLDivElement>;
 }
 
 const SearchResultItem: React.FC<SearchResultItemProps> = React.memo(({
     result,
     isSelected,
     onSelect,
+    onDoubleClick,
     searchQuery,
     searchOptions,
-    itemRef // Receive the ref
+    itemRef
 }) => {
     const highlightedLine = useMemo(() => {
         // Highlight only the matching part within the lineText
@@ -44,10 +47,10 @@ const SearchResultItem: React.FC<SearchResultItemProps> = React.memo(({
 
     return (
         <div
-            ref={itemRef} // Attach the ref here
-            // Removed style prop application
+            ref={itemRef}
             className={`border-b border-gray-700/50 cursor-pointer p-2 ${isSelected ? 'bg-blue-900/20' : 'hover:bg-gray-700/30'}`}
             onClick={onSelect}
+            onDoubleClick={() => onDoubleClick(result)}
             role="button"
             tabIndex={0}
             aria-selected={isSelected}
@@ -79,29 +82,21 @@ export const SearchModal: React.FC = () => {
         isOpen, closeSearch, query, setQuery, results, selectedResultIndex, setSelectedResultIndex,
         scope, setScope, options, setOptions, titleFilter, setTitleFilter, languageFilter,
         setLanguageFilter, searchHistory, addSearchToHistory, clearHistory, isLoading, statusMessage,
-        error, setLoading, setError, setResults, setStatusMessage, clearResults
+        error, setLoading, setError, setResults, setStatusMessage
     } = useSearchStore();
 
-    const { tabs } = useRootStore();
-    const { activeWorkspaceId, workspaces } = useWorkspaceStore();
+    const { tabs: allTabsInCurrentWorkspace, setActiveLeftTab, setActiveRightTab, setActiveSide } = useRootStore();
+    const { switchWorkspace, activeWorkspaceId: currentActiveWsId } = useWorkspaceStore();
+
+    const storage = StorageProviderFactory.getProvider();
 
     const [showHistory, setShowHistory] = useState(false);
     const [showLangFilter, setShowLangFilter] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const historyRef = useRef<HTMLDivElement>(null);
     const langFilterRef = useRef<HTMLDivElement>(null);
-    const resultsListContainerRef = useRef<HTMLDivElement>(null); // Ref for the div that WILL contain the list
     const resultsContainerRef = useRef<HTMLDivElement>(null); // Ref for the scrollable container
     const selectedItemRef = useRef<HTMLDivElement>(null); // Ref for the selected item
-
-    // --- Fetching Tabs Based on Scope ---
-    const getTabsToSearch = useCallback(() => {
-        if (scope === 'activeWorkspace') {
-            return tabs.filter(tab => tab.workspaceId === activeWorkspaceId);
-        } else {
-            return tabs; // All workspaces
-        }
-    }, [tabs, scope, activeWorkspaceId]);
 
     // --- Glob Pattern Matching ---
     const matchesTitleFilter = useCallback((tabTitle: string) => {
@@ -121,10 +116,7 @@ export const SearchModal: React.FC = () => {
         }
     }, [titleFilter, setError]);
 
-    // --- Run Search Logic ---
-    const runSearch = useCallback(debounce(() => {
-        // Get the latest state values directly inside the debounced function
-        // This avoids stale closure issues with state variables in the dependency array
+    const runSearch = useCallback(debounce(async () => {
         const currentQuery = useSearchStore.getState().query;
         const currentOptions = useSearchStore.getState().options;
         const currentScope = useSearchStore.getState().scope;
@@ -141,51 +133,42 @@ export const SearchModal: React.FC = () => {
         setLoading(true);
         setStatusMessage('Searching...');
         setError(null);
-        setSelectedResultIndex(null); // Deselect result while searching
-
-        // Add to history only when search is run
-        // Note: Accessing addSearchToHistory directly might still use stale state
-        // It's safer to get the action from the store instance if needed inside debounce,
-        // but for history, adding it here based on currentQuery is usually okay.
+        setSelectedResultIndex(null);
         addSearchToHistory(currentQuery);
 
-        // Use setTimeout to allow UI to update loading state *before* blocking calculation
-        setTimeout(() => {
+        // Use setTimeout to allow UI to update loading state
+        setTimeout(async () => {
             try {
-                let tabsForScope: Tab[];
+                let tabsToSearch: Tab[];
+
                 if (currentScope === 'activeWorkspace') {
-                    // Need to get current tabs and activeWorkspaceId here
-                    const allTabs = useRootStore.getState().tabs;
-                    const currentActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
-                    tabsForScope = allTabs.filter(tab => tab.workspaceId === currentActiveWorkspaceId);
-                } else {
-                    tabsForScope = useRootStore.getState().tabs;
+                    // Use 'allTabsInCurrentWorkspace' which IS defined in this component's scope
+                    // And 'currentActiveWsId' which is also defined here
+                    tabsToSearch = allTabsInCurrentWorkspace.filter(tab => tab.workspaceId === currentActiveWsId);
+                } else { // 'allWorkspaces'
+                    tabsToSearch = await storage.getTabs();
                 }
 
+                let filteredTabs = tabsToSearch;
 
-                let filteredTabs = tabsForScope;
-
-                // Apply title filter
-                if (currentTitleFilter) {
-                    // Re-evaluate matchesTitleFilter here or ensure it doesn't rely on stale state
+                if (currentTitleFilter) { // Now using titleFilter from the store via getState
                     filteredTabs = filteredTabs.filter(tab => matchesTitleFilter(tab.title));
                 }
 
-                // Apply language filter
-                if (currentLanguageFilter.length > 0) {
+                if (currentLanguageFilter.length > 0) { // Now using languageFilter from store
                     const langSet = new Set(currentLanguageFilter);
                     filteredTabs = filteredTabs.filter(tab => langSet.has(tab.language));
                 }
 
                 const foundResults = searchTabs(currentQuery, currentOptions, filteredTabs);
-                setResults(foundResults); // Update results in the store
+                setResults(foundResults); // from useSearchStore
 
                 if (foundResults.length === 0) {
                     setStatusMessage('No results found.');
                 } else {
                     const uniqueTabs = new Set(foundResults.map(r => r.tabId));
-                    setStatusMessage(`${foundResults.length} match${foundResults.length === 1 ? '' : 'es'} in ${uniqueTabs.size} tab${uniqueTabs.size === 1 ? '' : 's'}`);
-                    setSelectedResultIndex(0); // Select first result after search
+                    setStatusMessage(`${foundResults.length} match${foundResults.length === 1 ? '' : 'es'} in ${uniqueTabs.size} file${uniqueTabs.size === 1 ? '' : 's'}`);
+                    setSelectedResultIndex(0); // from useSearchStore
                 }
             } catch (e) {
                 console.error("Search error:", e);
@@ -195,29 +178,27 @@ export const SearchModal: React.FC = () => {
             } finally {
                 setLoading(false);
             }
-        }, 50); // Short delay (50ms) just to let loading state render
+        }, 50);
 
-    }, DEBOUNCE_DELAY), // This is the correct place for the debounce delay
-        // Dependencies for useCallback:
-        // We need to include functions from the store that are used *outside* the debounce
-        // The functions inside debounce should ideally get fresh state using .getState()
-        // to avoid stale closures or overly complex dependency arrays.
-        [
+    }, DEBOUNCE_DELAY),
+        [ // Dependencies for useCallback
+            // Store setters are stable
             setStatusMessage, setResults, setLoading, setError, setSelectedResultIndex,
-            addSearchToHistory, matchesTitleFilter // Include helpers used outside debounce if they rely on state/props
-            // Note: Removed state variables like query, options, etc. from deps
-            // as we get fresh state inside the debounced function using getState()
+            addSearchToHistory,
+            // Utility function (assuming its identity is stable or properly memoized)
+            matchesTitleFilter,
+            // Variables from outer scope that are used to fetch initial data for the search
+            allTabsInCurrentWorkspace, // Renamed from currentWorkspaceTabs for clarity
+            currentActiveWsId,         // Renamed from activeWorkspaceId
+            storage
         ]
     );
-
-    // --- Trigger Search on Relevant Changes ---
     useEffect(() => {
         if (isOpen) {
             runSearch();
         }
-        // Cleanup debounce timer on unmount or when dependencies change
         return () => runSearch.cancel();
-    }, [isOpen, query, options, scope, titleFilter, languageFilter, runSearch]);
+    }, [isOpen, query, options, scope, titleFilter, languageFilter, runSearch]); // 'query', 'options', etc. come from useSearchStore
 
     // --- Focus Input on Open ---
     useEffect(() => {
@@ -248,6 +229,65 @@ export const SearchModal: React.FC = () => {
     useClickOutside(historyRef, () => setShowHistory(false));
     useClickOutside(langFilterRef, () => setShowLangFilter(false));
 
+    const handleResultNavigation = async (result: SearchResult) => {
+        closeSearch();
+
+        // 1. Check if we need to switch workspaces
+        if (result.workspaceId !== currentActiveWsId) {
+            try {
+                await switchWorkspace(result.workspaceId);
+                // After workspace switch, the tab data (and active tabs) will be reloaded by workspaceStore.
+                // We might need a slight delay or a way to ensure the target tab is "known"
+                // before trying to activate it. For simplicity, let's assume switchWorkspace
+                // updates the rootStore's tabs and splitView sufficiently.
+                // A more robust way might involve waiting for an event or a specific state change.
+                await new Promise(resolve => setTimeout(resolve, 150)); // Small delay for state to settle
+            } catch (error) {
+                console.error("Failed to switch workspace:", error);
+                setError("Could not switch to the tab's workspace."); // Show error in search store if needed
+                return;
+            }
+        }
+
+        // At this point, the correct workspace should be active,
+        // and its tabs/splitView loaded into useRootStore.
+        const updatedRootState = useRootStore.getState();
+        const targetTabSide = updatedRootState.splitView.leftTabs.includes(result.tabId) ? 'left'
+                            : updatedRootState.splitView.rightTabs.includes(result.tabId) ? 'right'
+                            : null;
+
+        if (targetTabSide === 'left') {
+            setActiveLeftTab(result.tabId);
+            setActiveSide('left');
+        } else if (targetTabSide === 'right') {
+            setActiveRightTab(result.tabId);
+            setActiveSide('right');
+        } else {
+            // Tab not found in either side of the current splitView after potential workspace switch.
+            // This might happen if the tab was closed or if there's a state sync issue.
+            // As a fallback, try to activate it on the left if it exists at all.
+            const allCurrentTabs = updatedRootState.tabs;
+            if (allCurrentTabs.find(t => t.id === result.tabId)) {
+                setActiveLeftTab(result.tabId); // Default to left
+                setActiveSide('left');
+                // If the tab wasn't in splitView.leftTabs initially, make sure it gets added
+                if (!updatedRootState.splitView.leftTabs.includes(result.tabId)) {
+                     // This part might need more sophisticated logic in splitViewStore to ensure
+                     // the tab list is correctly updated if it wasn't part of the initial load.
+                     // For now, activating it should bring it into focus.
+                     console.warn(`Tab ${result.tabId} activated but was not in expected splitView side.`);
+                }
+            } else {
+                setError(`Tab "${result.tabTitle}" could not be found or activated.`);
+                console.error(`Tab ${result.tabId} not found after workspace switch or in current workspace.`);
+            }
+        }
+
+        // TODO (Advanced): Scroll to line in editor
+        // This would require communication with the EditorInstance, e.g., via an event
+        // or by storing a "scrollToLine" request in the tab's state.
+        // For now, just activating the tab is the main goal.
+    };
 
     // --- Event Handlers ---
     const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -267,11 +307,11 @@ export const SearchModal: React.FC = () => {
             e.preventDefault();
             newIndex = Math.max(newIndex - 1, 0);
         } else if (e.key === 'Enter') {
+            e.preventDefault();
              if (selectedResultIndex !== null && results[selectedResultIndex]) {
-                 // TODO: Implement navigation to the selected tab/line
-                 // handleResultNavigation(results[selectedResultIndex]);
+                 handleResultNavigation(results[selectedResultIndex]);
                  console.log("Navigate to:", results[selectedResultIndex]);
-                 closeSearch(); // Close modal on Enter for now
+//                  closeSearch(); // Close modal on Enter for now
              }
         } else {
             return; // Ignore other keys
@@ -296,8 +336,14 @@ export const SearchModal: React.FC = () => {
     };
 
     const languages = useMemo(() => languageRegistry.getAll().sort((a, b) => a.name.localeCompare(b.name)), []);
-    const selectedResult = (selectedResultIndex !== null && results[selectedResultIndex]) ? results[selectedResultIndex] : null;
-    const selectedTab = selectedResult ? tabs.find(t => t.id === selectedResult.tabId) : null;
+    const currentResults = useSearchStore(state => state.results);
+    const currentSelectedResultIndex = useSearchStore(state => state.selectedResultIndex);
+    const selectedResult = (currentSelectedResultIndex !== null && currentResults[currentSelectedResultIndex])
+        ? currentResults[currentSelectedResultIndex]
+        : null;
+    const selectedTabForModalContext = selectedResult
+        ? allTabsInCurrentWorkspace.find(t => t.id === selectedResult.tabId)
+        : null;
 
     if (!isOpen) return null;
 
@@ -449,10 +495,11 @@ export const SearchModal: React.FC = () => {
                                 {results.map((result, index) => (
                                     <SearchResultItem
                                         key={`${result.tabId}-${result.lineNumber}-${result.matchIndex}`} // Unique key
-                                        itemRef={index === selectedResultIndex ? selectedItemRef : React.createRef()} // Pass ref conditionally
+                                        itemRef={index === currentSelectedResultIndex ? selectedItemRef : React.createRef()} // Pass ref conditionally
                                         result={result}
-                                        isSelected={index === selectedResultIndex}
+                                        isSelected={index === currentSelectedResultIndex}
                                         onSelect={() => setSelectedResultIndex(index)}
+                                        onDoubleClick={handleResultNavigation}
                                         searchQuery={query}
                                         searchOptions={options}
                                     />
@@ -468,7 +515,7 @@ export const SearchModal: React.FC = () => {
                     {/* Preview Pane */}
                     <div className="w-1/2">
                         <SearchPreviewPane
-                            tab={selectedTab}
+                            tab={selectedTabForModalContext}
                             selectedResult={selectedResult}
                         />
                     </div>
