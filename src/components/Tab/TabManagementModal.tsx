@@ -42,7 +42,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60]">
       <div className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 border border-gray-700">
-        <h3 className="text-lg font-medium text-gray-100 mb-2">{title}</h3>
+        <h3 className="font-semibold text-red-300 mb-1 flex items-center"><AlertTriangle size={18} className="mr-2" />{title}</h3>
         <p className="text-gray-300 mb-6">{message}</p>
         <div className="flex justify-end space-x-3">
           <button
@@ -877,11 +877,15 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
               {/* Language filter */}
               <div className="relative">
                 <select
-                  value={languageFilter}
+                  value=""
                   onChange={(e) => {
                     console.log("Language filter changed:", e.target.value);
-                    const options = Array.from(e.target.selectedOptions, option => option.value);
-                    setLanguageFilter(options);
+                    // If "All Languages" is selected (empty value), set to empty array
+                    if (!e.target.value) {
+                      setLanguageFilter([]);
+                    } else {
+                      setLanguageFilter([e.target.value]);
+                    }
                   }}
                   className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
                 >
