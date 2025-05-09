@@ -32,6 +32,7 @@ interface RootStore {
     updateTabTitle: (id: string, title: string) => void;
     updateTabState: (id: string, updates: Partial<Tab>) => void;
     toggleTabPin: (id: string) => void;
+    saveTabs: (tabs: Tab[]) => void;
 
     // Editor state
     previewMode: boolean;
@@ -53,7 +54,7 @@ interface RootStore {
     moveTabToLeft: (tabId: string) => void;
     setActiveLeftTab: (id: string) => void;
     setActiveRightTab: (id: string) => void;
-    setActiveSide: (string: string) => void;
+    setActiveSide: (side: string) => void;
     setSplitRatio: (ratio: number) => void;
 
     // Bulk tab operations
@@ -297,6 +298,11 @@ export const useRootStore = create < RootStore > ((set, get) => {
 
         updateTabState: (id, updates) => {
             useTabsStore.getState().updateTabState(id, updates);
+        },
+
+        saveTabs: (tabs) => {
+            useTabsStore.setState({ tabs });
+            storage.saveTabs(tabs);
         },
 
         // Editor state functions
