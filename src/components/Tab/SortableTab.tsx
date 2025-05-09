@@ -178,7 +178,11 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                     />
                 )}
 
-                <div className={`flex-1 min-w-0 flex items-center ${showCloseButton || tab.isPinned ? 'mr-1' : ''}`}>
+                {tab.isPinned && (
+                    <Pin size={12} className="flex-shrink-0 text-blue-400 mr-1" />
+                )}
+
+                <div className={`flex-1 min-w-0 flex items-center ${showCloseButton ? 'mr-1' : ''}`}>
                     {!isEditing && (
                          <div className="truncate" aria-label={`Tab title: ${tab.title}`}>
                            {tab.title}
@@ -208,19 +212,15 @@ export const SortableTab: React.FC<SortableTabProps> = ({
 
                 {!isEditing && (
                     <>
-                        {tab.isPinned ? (
-                            <Pin size={12} className="flex-shrink-0 ml-auto text-blue-400" />
-                        ) : (
-                            showCloseButton && (
-                                <button
-                                    className="flex-shrink-0 hover:bg-gray-600 rounded p-0.5 ml-auto"
-                                    onClick={handleCloseClick}
-                                    aria-label={`Close tab ${tab.title}`}
-                                    title={`Close tab ${tab.title}`}
-                                >
-                                    <X size={12} />
-                                </button>
-                            )
+                        {!tab.isPinned && showCloseButton && (
+                            <button
+                                className="flex-shrink-0 hover:bg-gray-600 rounded p-0.5 ml-auto"
+                                onClick={handleCloseClick}
+                                aria-label={`Close tab ${tab.title}`}
+                                title={`Close tab ${tab.title}`}
+                            >
+                                <X size={12} />
+                            </button>
                         )}
                     </>
                 )}

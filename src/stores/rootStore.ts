@@ -32,6 +32,7 @@ interface RootStore {
     updateTabTitle: (id: string, title: string) => void;
     updateTabState: (id: string, updates: Partial<Tab>) => void;
     toggleTabPin: (id: string) => void;
+    saveTabs: (tabs: Tab[]) => void;
 
     // Editor state
     previewMode: boolean;
@@ -53,7 +54,7 @@ interface RootStore {
     moveTabToLeft: (tabId: string) => void;
     setActiveLeftTab: (id: string) => void;
     setActiveRightTab: (id: string) => void;
-    setActiveSide: (string: string) => void;
+    setActiveSide: (side: string) => void;
     setSplitRatio: (ratio: number) => void;
 
     // Bulk tab operations
@@ -297,6 +298,49 @@ export const useRootStore = create < RootStore > ((set, get) => {
 
         updateTabState: (id, updates) => {
             useTabsStore.getState().updateTabState(id, updates);
+        },
+
+        toggleTabPin: (id: string) => {
+            const { tabs, splitView } = get();
+            const tab = findTabById(tabs, id);
+            if (!tab) return;
+
+            // Toggle the pin state
+            const isPinned = !tab.isPinned;
+
+            // Update the tab
+            useTabsStore.getState().updateTabState(id, { isPinned });
+
+            // If pinning, move to start of list after other pinned tabs
+            if (isPinned) {
+                const side = splitView.leftTabs.includes(id) ? 'left' : 'right';
+                const currentList = side === 'left' ? splitView.leftTabs : splitView.rightTabs;
+
+                // Find the last pinned tab index
+                const lastPinnedIndex = currentList.findIndex(tabId => {
+                    const tab = findTabById(tabs, tabId);
+                    return !tab?.isPinned;
+                });
+
+                // Remove the tab from its current position
+                const newList = currentList.filter(tabId => tabId !== id);
+
+                // Insert after the last pinned tab (or at start if no pinned tabs)
+                const insertIndex = lastPinnedIndex === -1 ? 0 : lastPinnedIndex;
+                newList.splice(insertIndex, 0, id);
+
+                // Update the split view
+                if (side === 'left') {
+                    useSplitViewStore.getState().setSplitView({ leftTabs: newList });
+                } else {
+                    useSplitViewStore.getState().setSplitView({ rightTabs: newList });
+                }
+            }
+        },
+
+        saveTabs: (tabs) => {
+            useTabsStore.setState({ tabs });
+            storage.saveTabs(tabs);
         },
 
         // Editor state functions
