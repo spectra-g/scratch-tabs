@@ -258,7 +258,7 @@ const WorkspaceItem: React.FC<WorkspaceItemProps> = ({
 };
 
 export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, onClose }) => {
-  const { tabs, removeTab, updateTabTitle, toggleTabPin, duplicateTab } = useRootStore();
+  const { tabs, removeTab, updateTabTitle, toggleTabPin, duplicateTab, saveTabs } = useRootStore();
   const { 
     workspaces, 
     activeWorkspaceId, 
@@ -593,8 +593,18 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     // Sort tabs by title before merging
     const sortedTabs = [...selectedTabs].sort((a, b) => a.title.localeCompare(b.title));
     
+    // Process the delimiter to handle escape sequences
+    let processedDelimiter = mergeDelimiter;
+    if (mergeDelimiter === '\\n\\n') {
+      processedDelimiter = '\n\n';
+    } else if (mergeDelimiter === '\\n') {
+      processedDelimiter = '\n';
+    } else if (mergeDelimiter === '\\n---\\n') {
+      processedDelimiter = '\n---\n';
+    }
+    
     // Merge content with the specified delimiter
-    const mergedContent = sortedTabs.map(tab => tab.content).join(mergeDelimiter);
+    const mergedContent = sortedTabs.map(tab => tab.content).join(processedDelimiter);
     
     // Create a new tab with the merged content
     const { addTab } = useRootStore.getState();
@@ -609,6 +619,11 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       dateCreated: Date.now(),
       lastModified: Date.now(),
       workspaceId: activeWorkspaceId || ''
+    });
+    
+    // Delete the original tabs
+    selectedTabIds.forEach(id => {
+      removeTab(id);
     });
     
     setShowMergeOptions(false);
@@ -627,7 +642,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     });
     
     // Update tabs in store
-    const { saveTabs } = useRootStore.getState();
     saveTabs(updatedTabs);
     
     setTargetWorkspaceId(null);
@@ -852,7 +866,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
               {/* Language filter */}
               <div className="relative">
                 <select
-                  multiple
                   value={languageFilter}
                   onChange={(e) => {
                     const options = Array.from(e.target.selectedOptions, option => option.value);
@@ -938,7 +951,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
               </div>
               
               {/* Bulk actions */}
-              {selectedTabIds.size > 0 && activeWorkspaceId === workspacesWithCounts.find(w => w.id === activeWorkspaceId)?.id && (
+              {selectedTabIds.size > 0 && tabs.some(tab => selectedTabIds.has(tab.id) && tab.workspaceId === activeWorkspaceId) && (
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={handleTogglePinTabs}
