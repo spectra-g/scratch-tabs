@@ -33,6 +33,7 @@ interface RootStore {
     updateTabState: (id: string, updates: Partial<Tab>) => void;
     toggleTabPin: (id: string) => void;
     saveTabs: (tabs: Tab[]) => void;
+    updateTabOrder: (leftTabs: string[], rightTabs: string[]) => void;
 
     // Editor state
     previewMode: boolean;
@@ -440,6 +441,29 @@ export const useRootStore = create < RootStore > ((set, get) => {
             }
         },
 
+        updateTabOrder: (leftTabs, rightTabs) => {
+            const { splitView } = useSplitViewStore.getState();
+            const { tabs } = useTabsStore.getState();
+            
+            // Create new tab history arrays that match the new order
+            const leftTabHistory = leftTabs.filter(id => tabs.some(tab => tab.id === id));
+            const rightTabHistory = rightTabs.filter(id => tabs.some(tab => tab.id === id));
+            
+            // Update split view with new order and history
+            useSplitViewStore.getState().setSplitView({
+                ...splitView,
+                leftTabs,
+                rightTabs,
+                leftTabHistory,
+                rightTabHistory,
+                activeLeftTabId: splitView.activeLeftTabId,
+                activeRightTabId: splitView.activeRightTabId,
+                activeSide: splitView.activeSide,
+                isSplit: splitView.isSplit,
+                splitRatio: splitView.splitRatio
+            });
+        },
+
         unsplitScreen: (fromRight) => {
             useSplitViewStore.getState().unsplitScreen(fromRight);
 
@@ -504,44 +528,6 @@ export const useRootStore = create < RootStore > ((set, get) => {
             for (const id of tabsToClose) {
                 useTabsStore.getState().removeTab(id);
                 await storage.deleteTab(id);
-            }
-        },
-
-        toggleTabPin: (id: string) => {
-            const { tabs, splitView } = get();
-            const tab = findTabById(tabs, id);
-            if (!tab) return;
-
-            // Toggle the pin state
-            const isPinned = !tab.isPinned;
-
-            // Update the tab
-            useTabsStore.getState().updateTabState(id, { isPinned });
-
-            // If pinning, move to start of list after other pinned tabs
-            if (isPinned) {
-                const side = splitView.leftTabs.includes(id) ? 'left' : 'right';
-                const currentList = side === 'left' ? splitView.leftTabs : splitView.rightTabs;
-
-                // Find the last pinned tab index
-                const lastPinnedIndex = currentList.findIndex(tabId => {
-                    const tab = findTabById(tabs, tabId);
-                    return !tab?.isPinned;
-                });
-
-                // Remove the tab from its current position
-                const newList = currentList.filter(tabId => tabId !== id);
-
-                // Insert after the last pinned tab (or at start if no pinned tabs)
-                const insertIndex = lastPinnedIndex === -1 ? 0 : lastPinnedIndex;
-                newList.splice(insertIndex, 0, id);
-
-                // Update the split view
-                if (side === 'left') {
-                    useSplitViewStore.getState().setSplitView({ leftTabs: newList });
-                } else {
-                    useSplitViewStore.getState().setSplitView({ rightTabs: newList });
-                }
             }
         },
 

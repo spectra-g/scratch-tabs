@@ -5,12 +5,12 @@ import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { Tab } from '../../types';
 import { 
-  Search, X, Folder, FolderPlus, Edit, Trash2, Pin, PinOff, Copy, 
-  Merge, Filter, ArrowDownAZ, ArrowUpZA, Clock, FileCode, 
-  CheckSquare, Square, ChevronRight, ChevronDown, AlertTriangle,
-  Layers, MoveRight
+  Search, X, Folder, FolderPlus, Edit, Trash2, Pin, 
+  Merge, Filter, ArrowDownAZ, ArrowUpZA, AlertTriangle,
+  Layers, MoveRight, ChevronRight, ChevronDown, Copy
 } from 'lucide-react';
 import { languageRegistry } from '../../languages';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 
 interface TabManagementModalProps {
   isOpen: boolean;
@@ -133,14 +133,6 @@ const TabItem: React.FC<TabItemProps> = ({
     }
   };
 
-  const handleClick = (e: React.MouseEvent) => {
-    onSelect(tab.id, e.ctrlKey || e.metaKey);
-  };
-
-  const handleDoubleClick = () => {
-    onDoubleClick(tab.id);
-  };
-
   const getLanguageLabel = () => {
     if (tab.isTablet) return 'Tablet';
     const language = languageRegistry.getById(tab.language);
@@ -238,7 +230,6 @@ interface TabGroupProps {
   selectedTabIds: Set<string>;
   onSelectTab: (tabId: string, multiSelect: boolean) => void;
   onDoubleClickTab: (tabId: string) => void;
-  onRenameTab: (tabId: string, currentTitle: string) => void;
   editingTabId: string | null;
   onStartEditTab: (tabId: string) => void;
   onSaveTabTitle: (tabId: string, newTitle: string) => void;
@@ -251,7 +242,6 @@ const TabGroup: React.FC<TabGroupProps> = ({
   selectedTabIds,
   onSelectTab,
   onDoubleClickTab,
-  onRenameTab,
   editingTabId,
   onStartEditTab,
   onSaveTabTitle,
@@ -369,8 +359,8 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const [selectedTabIds, setSelectedTabIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [languageFilter, setLanguageFilter] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState<SortOption>('title-asc');
-  const [groupOption, setGroupOption] = useState<GroupOption>('language');
+  const [sortOption, setSortOption] = useState<SortOption>('current');
+  const [groupOption, setGroupOption] = useState<GroupOption>('none');
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(null);
@@ -384,6 +374,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const modalContentRef = useRef<HTMLDivElement>(null);
   const [isInternalActionInProgress, setIsInternalActionInProgress] = useState(false);
   const { switchWorkspace: switchWorkspaceFromStore } = useWorkspaceStore();
+  const { setActiveLeftTab, setActiveRightTab } = useSplitViewStore.getState();
 
   // Confirmation dialogs
   const [confirmationDialog, setConfirmationDialog] = useState<{
@@ -480,6 +471,26 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     
     // Sort tabs
     switch (sortOption) {
+      case 'current':
+        // Get the current order from the root store
+        const { splitView } = useRootStore.getState();
+        const currentOrder = [...splitView.leftTabs, ...splitView.rightTabs];
+        
+        // Create a map of tab positions for quick lookup
+        const positionMap = new Map(currentOrder.map((id, index) => [id, index]));
+        
+        // Sort based on current positions, keeping pinned tabs at the front
+        result.sort((a, b) => {
+          // Keep pinned tabs at the front
+          if (a.isPinned && !b.isPinned) return -1;
+          if (!a.isPinned && b.isPinned) return 1;
+          
+          // For non-pinned tabs, sort by their current position
+          const posA = positionMap.get(a.id) ?? Number.MAX_SAFE_INTEGER;
+          const posB = positionMap.get(b.id) ?? Number.MAX_SAFE_INTEGER;
+          return posA - posB;
+        });
+        break;
       case 'title-asc':
         result.sort((a, b) => a.title.localeCompare(b.title));
         break;
@@ -585,6 +596,77 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setEditingTabIdForModal(null);
   };
 
+  const handleApplyCurrentOrder = () => {
+    const { splitView, updateTabOrder } = useRootStore.getState();
+    
+    // Create map to track which side each tab belongs to
+    const leftTabSet = new Set(splitView.leftTabs);
+    
+    // Initialize arrays for the new order
+    const pinnedOnLeft: string[] = [];
+    const unpinnedOnLeft: string[] = [];
+    const pinnedOnRight: string[] = [];
+    const unpinnedOnRight: string[] = [];
+    
+    // Use filteredTabs as the source of truth for the new order
+    filteredTabs.forEach(tab => {
+      const isPinned = tab.isPinned;
+      const isLeftSide = leftTabSet.has(tab.id);
+      
+      if (isLeftSide) {
+        if (isPinned) {
+          pinnedOnLeft.push(tab.id);
+        } else {
+          unpinnedOnLeft.push(tab.id);
+        }
+      } else {
+        if (isPinned) {
+          pinnedOnRight.push(tab.id);
+        } else {
+          unpinnedOnRight.push(tab.id);
+        }
+      }
+    });
+    
+    // Combine the tabs in the correct order
+    const newLeftTabs = [...pinnedOnLeft, ...unpinnedOnLeft];
+    const newRightTabs = [...pinnedOnRight, ...unpinnedOnRight];
+    
+    // Ensure active tabs are still in their respective sides
+    const activeLeftTabId = splitView.activeLeftTabId && newLeftTabs.includes(splitView.activeLeftTabId) 
+      ? splitView.activeLeftTabId 
+      : newLeftTabs[0] || null;
+    
+    const activeRightTabId = splitView.activeRightTabId && newRightTabs.includes(splitView.activeRightTabId)
+      ? splitView.activeRightTabId
+      : newRightTabs[0] || null;
+    
+    // Update the tab order while preserving the split view
+    updateTabOrder(
+      newLeftTabs,
+      newRightTabs
+    );
+
+    // Set active tabs based on the new order
+    if (activeLeftTabId && newLeftTabs.includes(activeLeftTabId)) {
+      setActiveLeftTab(activeLeftTabId);
+    } else if (newLeftTabs.length > 0) {
+      setActiveLeftTab(newLeftTabs[0]);
+    }
+
+    if (activeRightTabId && newRightTabs.includes(activeRightTabId)) {
+      setActiveRightTab(activeRightTabId);
+    } else if (newRightTabs.length > 0) {
+      setActiveRightTab(newRightTabs[0]);
+    }
+
+    // Preserve the active side
+    const { splitView: currentSplitView } = useSplitViewStore.getState();
+    if (currentSplitView.activeSide) {
+      useSplitViewStore.getState().setActiveSide(currentSplitView.activeSide);
+    }
+  };
+
   // Custom useClickOutside hook that respects the internal action flag
     const useModalClickOutside = (
       ref: React.RefObject<HTMLElement>,
@@ -670,13 +752,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       }
       
       onClose();
-    }
-  };
-
-  const handleRenameTab = (tabId: string, currentTitle: string) => {
-    const newTitle = prompt('Enter new tab title:', currentTitle);
-    if (newTitle !== null && newTitle.trim() !== '' && newTitle.trim() !== currentTitle) {
-        updateTabTitleInStore(tabId, newTitle.trim());
     }
   };
 
@@ -919,37 +994,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     });
   };
 
-  // Render tab tooltip content
-  const renderTabTooltip = (tab: Tab) => {
-    if (tab.isTablet) {
-      return (
-        <div className="p-2">
-          <div className="font-medium">{tab.title}</div>
-          <div className="text-xs text-gray-400 mt-1">Tablet</div>
-        </div>
-      );
-    }
-    
-    // Get first 10 lines of content
-    const lines = tab.content.split('\n').slice(0, 10);
-    const hasMoreLines = tab.content.split('\n').length > 10;
-    
-    return (
-      <div className="p-2">
-        <div className="font-medium">{tab.title}</div>
-        <div className="text-xs text-gray-400 mt-1">
-          Last modified: {new Date(tab.lastModified).toLocaleString()}
-        </div>
-        <div className="mt-2 font-mono text-xs border-t border-gray-700 pt-2">
-          {lines.map((line, i) => (
-            <div key={i} className="truncate">{line}</div>
-          ))}
-          {hasMoreLines && <div className="text-gray-500">...</div>}
-        </div>
-      </div>
-    );
-  };
-
   // Reset selected tabs when switching workspaces
   useEffect(() => {
     setSelectedTabIds(new Set());
@@ -1142,6 +1186,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                   onChange={(e) => setSortOption(e.target.value as SortOption)}
                   className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
                 >
+                  <option value="current">Current</option>
                   <option value="title-asc">Title A-Z</option>
                   <option value="title-desc">Title Z-A</option>
                   <option value="created-desc">Newest First</option>
@@ -1166,7 +1211,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                 >
                   <option value="none">No Grouping</option>
                   <option value="language">Group by Language</option>
-                  <option value="workspace">Group by Workspace</option>
                 </select>
                 <Layers size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
               </div>
@@ -1193,12 +1237,22 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                 )}
                 
                 {selectedTabIds.size === 0 && filteredTabs.length > 0 && (
-                  <button
-                    onClick={handleSelectAll}
-                    className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
-                  >
-                    Select All
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handleSelectAll}
+                      className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
+                    >
+                      Select All
+                    </button>
+                    {sortOption !== 'current' && (
+                      <button
+                        onClick={handleApplyCurrentOrder}
+                        className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
+                      >
+                        Apply Current Order
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
               
@@ -1411,7 +1465,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                     selectedTabIds={selectedTabIds}
                     onSelectTab={handleSelectTab}
                     onDoubleClickTab={handleDoubleClickTab}
-                    onRenameTab={handleRenameTab}
                     editingTabId={editingTabIdForModal}
                     onStartEditTab={handleStartEditingTab}
                     onSaveTabTitle={handleSaveTabTitle}
@@ -1439,5 +1492,5 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   );
 };
 
-type SortOption = 'title-asc' | 'title-desc' | 'created-asc' | 'created-desc' | 'modified-asc' | 'modified-desc' | 'language';
-type GroupOption = 'none' | 'language' | 'workspace';
+type SortOption = 'current' | 'title-asc' | 'title-desc' | 'created-asc' | 'created-desc' | 'modified-asc' | 'modified-desc' | 'language';
+type GroupOption = 'none' | 'language';
