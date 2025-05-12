@@ -692,6 +692,22 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     return duplicates;
   }, [activeWorkspaceTabs, activeWorkspaceId]);
 
+  // Check if there are any empty tabs
+  const emptyTabs = useMemo(() => {
+    // Use activeWorkspaceTabs for finding empty tabs *within the current view*
+    const currentViewTabs = activeWorkspaceTabs.filter(tab => tab.workspaceId === activeWorkspaceId);
+    
+    // Find tabs with empty content
+    return currentViewTabs.filter(tab => {
+      // For regular tabs, check if content is empty
+      if (!tab.isTablet) {
+        return tab.content.trim() === '';
+      }
+      // For tablets, consider them non-empty as they might have state
+      return false;
+    });
+  }, [activeWorkspaceTabs, activeWorkspaceId]);
+
   const handleStartEditingTab = (tabId: string) => {
     setEditingTabIdForModal(tabId);
   };
@@ -1147,6 +1163,15 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       }
     });
   };
+  
+  const handleRemoveEmptyTabs = () => {
+    if (emptyTabs.length === 0) return;
+    
+    // Directly remove all empty tabs without confirmation
+    emptyTabs.forEach(tab => {
+      removeTab(tab.id);
+    });
+  };
 
   // Reset selected tabs when switching workspaces
   useEffect(() => {
@@ -1583,6 +1608,23 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                     className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30 transition-colors"
                   >
                     Remove Duplicates
+                  </button>
+                </div>
+              )}
+              
+              {emptyTabs.length > 1 && (
+                <div className="m-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md flex items-center justify-between">
+                  <div className="flex items-center">
+                    <AlertTriangle size={16} className="text-blue-500 mr-2" />
+                    <span className="text-sm text-blue-200">
+                      Found {emptyTabs.length} empty tabs
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleRemoveEmptyTabs}
+                    className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
+                  >
+                    Remove All
                   </button>
                 </div>
               )}
