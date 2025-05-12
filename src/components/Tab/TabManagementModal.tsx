@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { StorageProviderFactory } from '../../db';
 import { BaseModal } from '../../languages/json/components/modals/BaseModal';
 import { useRootStore } from '../../stores';
@@ -7,10 +7,49 @@ import { Tab } from '../../types';
 import { 
   Search, X, Folder, FolderPlus, Edit, Trash2, Pin, 
   Merge, Filter, ArrowDownAZ, ArrowUpZA, AlertTriangle,
-  Layers, MoveRight, ChevronRight, ChevronDown, Copy
+  Layers, ChevronRight, ChevronDown, Copy
 } from 'lucide-react';
 import { languageRegistry } from '../../languages';
 import { useSplitViewStore } from '../../stores/splitViewStore';
+import { 
+  DndContext, 
+  DragEndEvent, 
+  DragStartEvent, 
+  PointerSensor, 
+  useSensor, 
+  useSensors,
+  DragOverlay,
+  useDraggable,
+  useDroppable
+} from '@dnd-kit/core';
+
+// Helper function to format relative time
+const getRelativeTimeString = (timestamp: number): string => {
+  const now = Date.now();
+  const diffInSeconds = Math.floor((now - timestamp) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return 'Just now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  } else if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  } else if (diffInSeconds < 2592000) {
+    const weeks = Math.floor(diffInSeconds / 604800);
+    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+  } else if (diffInSeconds < 31536000) {
+    const months = Math.floor(diffInSeconds / 2592000);
+    return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+  } else {
+    const years = Math.floor(diffInSeconds / 31536000);
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+  }
+};
 
 interface TabManagementModalProps {
   isOpen: boolean;
@@ -64,7 +103,83 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   );
 };
 
-interface TabItemProps {
+interface TabGroupProps {
+  title: string;
+  tabs: Tab[];
+  selectedTabIds: Set<string>;
+  onSelectTab: (tabId: string, multiSelect: boolean) => void;
+  onDoubleClickTab: (tabId: string) => void;
+  // onRenameTab: (tabId: string, currentTitle: string) => void; // Replaced by internal edit handling
+  editingTabId: string | null;
+  onStartEditTab: (tabId: string) => void;
+  onSaveTabTitle: (tabId: string, newTitle: string) => void;
+  onCancelEditTab: (tabId: string) => void;
+  groupWorkspaceId: string; // Pass the workspace ID for this group
+}
+
+const TabGroup: React.FC<TabGroupProps> = ({
+  title,
+  tabs,
+  selectedTabIds,
+  onSelectTab,
+  onDoubleClickTab,
+  editingTabId,
+  onStartEditTab,
+  onSaveTabTitle,
+  onCancelEditTab,
+  groupWorkspaceId,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const { setNodeRef: setDroppableNodeRefForGroup, isOver: isGroupDropTargetOver } = useDroppable({
+    id: `group-${groupWorkspaceId}-${title}`, // Ensure unique ID per workspace
+    data: {
+      type: 'group',
+      groupName: title,
+      groupWorkspaceId: groupWorkspaceId,
+    }
+  });
+
+  return (
+    <div className="border-b border-gray-700/50 last:border-b-0">
+      <div
+        className="flex items-center px-3 py-2 bg-gray-800/50 cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <button className="mr-2 text-gray-400 hover:text-gray-200">
+          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        </button>
+        <span className="text-sm font-medium text-gray-300">{title}</span>
+        <span className="ml-2 text-xs text-gray-400">({tabs.length})</span>
+      </div>
+
+      {isExpanded && (
+        <div ref={setDroppableNodeRefForGroup} className={`${isGroupDropTargetOver ? 'bg-blue-500/10 ring-1 ring-blue-400 rounded' : ''} py-1`}>
+          {tabs.map(tab => (
+            <DraggableTabItem
+              key={tab.id}
+              tab={tab}
+              isSelected={selectedTabIds.has(tab.id)}
+              isEditing={editingTabId === tab.id}
+              onSelect={onSelectTab}
+              onDoubleClick={onDoubleClickTab}
+              onStartEdit={onStartEditTab}
+              onSaveTitle={onSaveTabTitle}
+              onCancelEdit={onCancelEditTab}
+              depth={1}
+            />
+          ))}
+           {tabs.length === 0 && (
+             <div className="h-8 flex items-center justify-center text-xs text-gray-500 italic">
+                Drop tabs here
+             </div>
+           )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface DraggableTabItemProps {
   tab: Tab;
   isSelected: boolean;
   isEditing: boolean;
@@ -77,9 +192,10 @@ interface TabItemProps {
   onToggleExpand?: () => void;
   hasChildren?: boolean;
   depth?: number;
+  isDraggingOverlay?: boolean;
 }
 
-const TabItem: React.FC<TabItemProps> = ({
+const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
   tab,
   isSelected,
   isEditing,
@@ -91,53 +207,63 @@ const TabItem: React.FC<TabItemProps> = ({
   isExpanded,
   onToggleExpand,
   hasChildren,
-  depth = 0
+  depth = 0,
+  isDraggingOverlay = false, // Default to false
 }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: tab.id,
+    disabled: tab.isPinned,
+    data: {
+      type: 'tab',
+      tab,
+    }
+  });
+
+  const { setNodeRef: setDroppableNodeRef, isOver: isDropTargetOver } = useDroppable({
+    id: tab.id,
+    data: {
+      type: 'tab',
+      tab: tab,
+      workspaceId: tab.workspaceId, // Add workspaceId for context
+    }
+  });
+
+  const combinedNodeRef = useCallback((node: HTMLDivElement | null) => {
+    setDraggableNodeRef(node);
+    setDroppableNodeRef(node);
+  }, [setDraggableNodeRef, setDroppableNodeRef]);
+
+  const style = transform && !isDraggingOverlay ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: isDragging ? 1000 : 'auto',
+    opacity: isDragging ? 0 : 1,
+  } : {
+    opacity: isDragging && !isDraggingOverlay ? 0 : 1,
+  };
+
   const [editingTitle, setEditingTitle] = useState(tab.title);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Update local editing title if tab prop changes (e.g., external update)
-  useEffect(() => {
-    if (!isEditing) { // Only update if not currently being edited by the user
-        setEditingTitle(tab.title);
-    }
-  }, [tab.title, isEditing]);
+  useEffect(() => { if (!isEditing) { setEditingTitle(tab.title); } }, [tab.title, isEditing]);
+  useEffect(() => { if (isEditing && inputRef.current) { inputRef.current.focus(); inputRef.current.select(); } }, [isEditing]);
 
-  // Focus input when editing starts
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditingTitle(e.target.value);
-  };
-
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => setEditingTitle(e.target.value);
   const handleSave = () => {
     const trimmedTitle = editingTitle.trim();
-    if (trimmedTitle && trimmedTitle !== tab.title) {
-      onSaveTitle(tab.id, trimmedTitle);
-    } else {
-      onCancelEdit(tab.id); // Cancel if title is empty or unchanged
-    }
+    if (trimmedTitle && trimmedTitle !== tab.title) onSaveTitle(tab.id, trimmedTitle);
+    else onCancelEdit(tab.id);
   };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSave();
-    } else if (e.key === 'Escape') {
-      setEditingTitle(tab.title); // Reset to original before canceling
-      onCancelEdit(tab.id);
-    }
+    if (e.key === 'Enter') handleSave();
+    else if (e.key === 'Escape') { setEditingTitle(tab.title); onCancelEdit(tab.id); }
   };
-
-  const getLanguageLabel = () => {
-    if (tab.isTablet) return 'Tablet';
-    const language = languageRegistry.getById(tab.language);
-    return language?.name || tab.language;
-  };
+  const getLanguageLabel = () => tab.isTablet ? 'Tablet' : (languageRegistry.getById(tab.language)?.name || tab.language);
 
   const getLanguageColor = () => {
     if (tab.isTablet) return 'bg-purple-500/20 text-purple-300';
@@ -165,151 +291,122 @@ const TabItem: React.FC<TabItemProps> = ({
   const indentPadding = depth * 16;
 
   return (
-    <div 
-      className={`group flex items-center px-3 py-1.5 cursor-pointer ${isSelected ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'}`}
+    <div
+      ref={combinedNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`group flex items-center px-3 py-1.5 cursor-pointer
+                  ${isSelected ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'}
+                  ${isDropTargetOver && !isDragging ? 'ring-1 ring-inset ring-blue-400 bg-blue-500/5' : ''}
+                  ${isDragging && !isDraggingOverlay ? 'opacity-50' : ''}
+                  ${isDraggingOverlay ? 'bg-gray-700 shadow-xl !opacity-100' : ''} {/* Ensure overlay item is opaque */}
+                `}
       onClick={(e) => { if (!isEditing) onSelect(tab.id, e.ctrlKey || e.metaKey); }}
       onDoubleClick={() => { if (!isEditing) onDoubleClick(tab.id); }}
       title={getTooltipText()}
     >
       <div style={{ paddingLeft: `${indentPadding}px` }} className="flex items-center flex-1 min-w-0">
         {hasChildren && (
-          <button 
-            onClick={(e) => { e.stopPropagation(); onToggleExpand?.(); }}
-            className="mr-1 text-gray-400 hover:text-gray-200 flex-shrink-0"
-          >
+          <button onClick={(e) => { e.stopPropagation(); onToggleExpand?.(); }} className="mr-1 text-gray-400 hover:text-gray-200 flex-shrink-0">
             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </button>
         )}
-        
         {!hasChildren && depth > 0 && <div className="w-5 flex-shrink-0"></div>}
-        
         {tab.isPinned && <Pin size={12} className="text-yellow-400 mr-1.5 flex-shrink-0" />}
-        
         <div className="flex-1 truncate mr-2">
           {isEditing ? (
             <input
-              ref={inputRef}
-              type="text"
-              value={editingTitle}
-              onChange={handleTitleChange}
-              onKeyDown={handleKeyDown}
-              onBlur={handleSave} // Save on blur
-              onClick={(e) => e.stopPropagation()} // Prevent row click when editing
+              ref={inputRef} type="text" value={editingTitle} onChange={handleTitleChange}
+              onKeyDown={handleKeyDown} onBlur={handleSave} onClick={(e) => e.stopPropagation()}
               className="w-full bg-gray-700 border border-blue-500 rounded px-1 py-0.5 text-sm text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           ) : (
-            <span className={`text-sm ${isSelected ? 'text-blue-300' : 'text-gray-100'}`}>
-              {tab.title || 'Untitled'}
-            </span>
+            <span className={`text-sm ${isSelected ? 'text-blue-300' : 'text-gray-100'}`}>{tab.title || 'Untitled'}</span>
           )}
         </div>
-        
         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
             {!isEditing && (
-                <button
-                    onClick={(e) => { e.stopPropagation(); onStartEdit(tab.id); }}
-                    className="p-0.5 text-gray-400 hover:text-blue-300 hover:bg-gray-600/50 rounded"
-                    title="Rename Tab"
-                >
+                <button onClick={(e) => { e.stopPropagation(); onStartEdit(tab.id); }} className="p-0.5 text-gray-400 hover:text-blue-300 hover:bg-gray-600/50 rounded" title="Rename Tab">
                     <Edit size={12} />
                 </button>
             )}
         </div>
-
         <div className={`text-xs px-2 py-0.5 rounded ${getLanguageColor()} ml-2 flex-shrink-0`}>
             {getLanguageLabel()}
         </div>
+        
+        {/* Add a container for the timestamp and split view indicator */}
+        <div className="flex items-center ml-2 text-xs text-gray-500 flex-shrink-0">
+          {/* Last modified timestamp */}
+          <span className="mr-2">
+            {getRelativeTimeString(tab.lastModified)}
+          </span>
+          
+          {/* Split view position indicator */}
+          {useSplitViewStore.getState().splitView.isSplit && (
+            <span className={`px-1.5 py-0.5 rounded ${
+              useSplitViewStore.getState().splitView.leftTabs.includes(tab.id) 
+                ? 'bg-blue-900/30 text-blue-300' 
+                : 'bg-purple-900/30 text-purple-300'
+            }`}>
+              {useSplitViewStore.getState().splitView.leftTabs.includes(tab.id) ? 'Left' : 'Right'}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-interface TabGroupProps {
-  title: string;
-  tabs: Tab[];
-  selectedTabIds: Set<string>;
-  onSelectTab: (tabId: string, multiSelect: boolean) => void;
-  onDoubleClickTab: (tabId: string) => void;
-  editingTabId: string | null;
-  onStartEditTab: (tabId: string) => void;
-  onSaveTabTitle: (tabId: string, newTitle: string) => void;
-  onCancelEditTab: (tabId: string) => void;
+interface Workspace {
+  id: string;
+  name: string;
+  tabCount: number;
 }
 
-const TabGroup: React.FC<TabGroupProps> = ({
-  title,
-  tabs,
-  selectedTabIds,
-  onSelectTab,
-  onDoubleClickTab,
-  editingTabId,
-  onStartEditTab,
-  onSaveTabTitle,
-  onCancelEditTab
-}) => {
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  return (
-    <div className="mb-1">
-      <div
-        className="flex items-center px-3 py-1.5 bg-gray-700/50 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="mr-1 text-gray-400">
-          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-        </div>
-        <span className="text-gray-100 font-medium text-sm">{title}</span>
-        <span className="ml-2 text-xs text-gray-400">({tabs.length})</span>
-      </div>
-
-      {isExpanded && (
-        <div>
-          {tabs.map(tab => (
-               <TabItem
-                 key={tab.id}
-                 tab={tab}
-                 isSelected={selectedTabIds.has(tab.id)}
-                 isEditing={editingTabId === tab.id}
-                 onSelect={onSelectTab}
-                 onDoubleClick={onDoubleClickTab}
-                 onStartEdit={onStartEditTab}
-                 onSaveTitle={onSaveTabTitle}
-                 onCancelEdit={onCancelEditTab}
-                 depth={1}
-               />
-           ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-
-interface WorkspaceItemProps {
-  workspace: {
-    id: string;
-    name: string;
-    tabCount: number;
-  };
+interface DroppableWorkspaceItemProps {
+  workspace: Workspace;
   isActive: boolean;
   onSelect: () => void;
   onRename: () => void;
   onDelete: () => void;
+  activeWorkspaceId: string | null;
 }
 
-const WorkspaceItem: React.FC<WorkspaceItemProps> = ({
+const DroppableWorkspaceItem: React.FC<DroppableWorkspaceItemProps> = ({
   workspace,
   isActive,
   onSelect,
   onRename,
-  onDelete
+  onDelete,
+  activeWorkspaceId
 }) => {
+  const droppableId = `workspace-${workspace.id}`;
+  
+  const { setNodeRef, isOver } = useDroppable({
+    id: droppableId,
+    data: { 
+      type: 'workspace', 
+      workspaceId: workspace.id,
+      isActiveWorkspace: workspace.id === activeWorkspaceId 
+    }
+  });
+
   return (
     <div 
-      className={`flex items-center justify-between px-3 py-1.5 cursor-pointer ${isActive ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'}`} // Reduced py padding
+      ref={setNodeRef}
+      data-workspace-id={workspace.id}
+      className={`relative flex items-center justify-between px-3 py-1.5 cursor-pointer 
+        ${isActive ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'} 
+        ${isOver ? 'bg-green-500/40 ring-2 ring-inset ring-green-500' : ''}`}
       onClick={onSelect}
+      style={{ 
+        transition: 'background-color 0.2s, box-shadow 0.2s',
+        position: 'relative'
+      }}
     >
-      <div className="flex items-center">
+      <div className="flex items-center relative z-10">
         <Folder size={16} className={`mr-2 ${isActive ? 'text-blue-400' : 'text-gray-400'}`} />
         <span className={`text-sm ${isActive ? 'text-blue-300' : 'text-gray-100'}`}>
           {workspace.name}
@@ -317,7 +414,7 @@ const WorkspaceItem: React.FC<WorkspaceItemProps> = ({
         <span className="ml-2 text-xs text-gray-400">({workspace.tabCount === -1 ? '...' : workspace.tabCount})</span>
       </div>
       
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-1 relative z-10">
         <button
           onClick={(e) => { e.stopPropagation(); onRename(); }}
           className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded"
@@ -365,7 +462,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(null);
   const [editingWorkspaceName, setEditingWorkspaceName] = useState('');
-  const [targetWorkspaceId, setTargetWorkspaceId] = useState<string | null>(null);
   const [showMergeOptions, setShowMergeOptions] = useState(false);
   const [mergeDelimiter, setMergeDelimiter] = useState('\n\n');
   const [showRenameOptions, setShowRenameOptions] = useState(false);
@@ -375,6 +471,9 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const [isInternalActionInProgress, setIsInternalActionInProgress] = useState(false);
   const { switchWorkspace: switchWorkspaceFromStore } = useWorkspaceStore();
   const { setActiveLeftTab, setActiveRightTab } = useSplitViewStore.getState();
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [draggedTabIds, setDraggedTabIds] = useState<Set<string>>(new Set());
+  const [activeDragItemData, setActiveDragItemData] = useState<Tab | null>(null); // For DragOverlay content
 
   // Confirmation dialogs
   const [confirmationDialog, setConfirmationDialog] = useState<{
@@ -394,6 +493,15 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     onConfirm: () => {},
     isDestructive: false
   });
+
+  // Setup DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -473,7 +581,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     switch (sortOption) {
       case 'current':
         // Get the current order from the root store
-        const { splitView } = useRootStore.getState();
+        const { splitView } = useSplitViewStore.getState();
         const currentOrder = [...splitView.leftTabs, ...splitView.rightTabs];
         
         // Create a map of tab positions for quick lookup
@@ -596,75 +704,70 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setEditingTabIdForModal(null);
   };
 
-  const handleApplyCurrentOrder = () => {
-    const { splitView, updateTabOrder } = useRootStore.getState();
+  const handleApplyCurrentOrder = (eventOrTabs: React.MouseEvent<HTMLButtonElement> | Tab[]) => {
+    // If it's a mouse event, use the current filtered tabs
+    const newOrder = Array.isArray(eventOrTabs) ? eventOrTabs : filteredTabs;
     
-    // Create map to track which side each tab belongs to
+    // Get the current split view state
+    const { splitView } = useSplitViewStore.getState();
+    const { updateTabOrder } = useRootStore.getState();
+    const { setActiveSide } = useSplitViewStore.getState();
+    
+    // Create sets to track which tabs belong to which side
     const leftTabSet = new Set(splitView.leftTabs);
     
-    // Initialize arrays for the new order
-    const pinnedOnLeft: string[] = [];
-    const unpinnedOnLeft: string[] = [];
-    const pinnedOnRight: string[] = [];
-    const unpinnedOnRight: string[] = [];
+    // Initialize arrays for pinned and unpinned tabs on each side
+    const leftPinnedTabs: string[] = [];
+    const leftUnpinnedTabs: string[] = [];
+    const rightPinnedTabs: string[] = [];
+    const rightUnpinnedTabs: string[] = [];
     
-    // Use filteredTabs as the source of truth for the new order
-    filteredTabs.forEach(tab => {
-      const isPinned = tab.isPinned;
-      const isLeftSide = leftTabSet.has(tab.id);
-      
-      if (isLeftSide) {
-        if (isPinned) {
-          pinnedOnLeft.push(tab.id);
+    // Distribute tabs based on their original side and pinned status
+    newOrder.forEach(tab => {
+      if (leftTabSet.has(tab.id)) {
+        if (tab.isPinned) {
+          leftPinnedTabs.push(tab.id);
         } else {
-          unpinnedOnLeft.push(tab.id);
+          leftUnpinnedTabs.push(tab.id);
         }
       } else {
-        if (isPinned) {
-          pinnedOnRight.push(tab.id);
+        if (tab.isPinned) {
+          rightPinnedTabs.push(tab.id);
         } else {
-          unpinnedOnRight.push(tab.id);
+          rightUnpinnedTabs.push(tab.id);
         }
       }
     });
     
-    // Combine the tabs in the correct order
-    const newLeftTabs = [...pinnedOnLeft, ...unpinnedOnLeft];
-    const newRightTabs = [...pinnedOnRight, ...unpinnedOnRight];
-    
-    // Ensure active tabs are still in their respective sides
-    const activeLeftTabId = splitView.activeLeftTabId && newLeftTabs.includes(splitView.activeLeftTabId) 
-      ? splitView.activeLeftTabId 
-      : newLeftTabs[0] || null;
-    
-    const activeRightTabId = splitView.activeRightTabId && newRightTabs.includes(splitView.activeRightTabId)
-      ? splitView.activeRightTabId
-      : newRightTabs[0] || null;
+    // Combine pinned and unpinned tabs for each side
+    const newLeftTabs = [...leftPinnedTabs, ...leftUnpinnedTabs];
+    const newRightTabs = [...rightPinnedTabs, ...rightUnpinnedTabs];
     
     // Update the tab order while preserving the split view
-    updateTabOrder(
-      newLeftTabs,
-      newRightTabs
-    );
-
-    // Set active tabs based on the new order
-    if (activeLeftTabId && newLeftTabs.includes(activeLeftTabId)) {
-      setActiveLeftTab(activeLeftTabId);
+    updateTabOrder(newLeftTabs, newRightTabs);
+    
+    // Set active tabs if they exist in the new arrays
+    const activeLeftTab = newLeftTabs.find(id => id === splitView.activeLeftTabId);
+    const activeRightTab = newRightTabs.find(id => id === splitView.activeRightTabId);
+    
+    if (activeLeftTab) {
+      setActiveLeftTab(activeLeftTab);
     } else if (newLeftTabs.length > 0) {
       setActiveLeftTab(newLeftTabs[0]);
     }
-
-    if (activeRightTabId && newRightTabs.includes(activeRightTabId)) {
-      setActiveRightTab(activeRightTabId);
+    
+    if (activeRightTab) {
+      setActiveRightTab(activeRightTab);
     } else if (newRightTabs.length > 0) {
       setActiveRightTab(newRightTabs[0]);
     }
-
+    
     // Preserve the active side
-    const { splitView: currentSplitView } = useSplitViewStore.getState();
-    if (currentSplitView.activeSide) {
-      useSplitViewStore.getState().setActiveSide(currentSplitView.activeSide);
+    if (splitView.activeSide) {
+      setActiveSide(splitView.activeSide);
     }
+    // Set sort option to 'current' after applying
+    setSortOption('current');
   };
 
   // Custom useClickOutside hook that respects the internal action flag
@@ -890,46 +993,62 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setSelectedTabIds(new Set());
   };
 
-  const handleMoveToWorkspace = async () => { // Make it async
-    if (selectedTabIds.size === 0 || !targetWorkspaceId) return;
-
-    const tabsToMove = Array.from(selectedTabIds);
-
-    // Create a list of updated tab objects
-    const updatedTabObjects: Tab[] = [];
-    allApplicationTabs.forEach(appTab => {
-        if (tabsToMove.includes(appTab.id)) {
-            updatedTabObjects.push({ ...appTab, workspaceId: targetWorkspaceId, lastModified: Date.now() });
-        } else {
-            // Potentially include other tabs if saveTabs expects the full list
-            // For now, let's assume storage.saveTabs can handle partial updates or individual saves
-        }
-    });
+  // Add this function before the handleMoveToWorkspace function
+  const handleMoveToWorkspaceWithId = async (targetWorkspaceId: string, draggedIds: string[]) => {
+    if (draggedIds.length === 0 || !targetWorkspaceId) {
+      return;
+    }
 
     try {
-        // Persist changes for each moved tab individually for safety
-        for (const tabId of tabsToMove) {
-            const tabToUpdate = allApplicationTabs.find(t => t.id === tabId);
-            if (tabToUpdate) {
-                await storage.saveTab({ ...tabToUpdate, workspaceId: targetWorkspaceId, lastModified: Date.now() });
-            }
+      setIsInternalActionInProgress(true);
+      const { splitView } = useSplitViewStore.getState();
+      const { updateTabOrder } = useRootStore.getState();
+
+      // Remove tabs from current workspace's split view
+      const newLeftTabs = splitView.leftTabs.filter(id => !draggedIds.includes(id));
+      const newRightTabs = splitView.rightTabs.filter(id => !draggedIds.includes(id));
+
+      updateTabOrder(newLeftTabs, newRightTabs);
+
+      // Get target workspace's split view
+      const targetSplitView = await storage.getSplitViewByWorkspace(targetWorkspaceId);
+
+      // Add tabs to target workspace's split view (all to left side as requested)
+      const updatedTargetSplitView = {
+        id: targetSplitView?.id || crypto.randomUUID(),
+        isSplit: targetSplitView?.isSplit || false,
+        leftTabs: [...(targetSplitView?.leftTabs || []), ...draggedIds],
+        rightTabs: targetSplitView?.rightTabs || [],
+        activeLeftTabId: targetSplitView?.activeLeftTabId || null,
+        activeRightTabId: targetSplitView?.activeRightTabId || null,
+        activeSide: targetSplitView?.activeSide || 'left',
+        splitRatio: targetSplitView?.splitRatio || 0.5,
+        workspaceId: targetWorkspaceId,
+        lastModified: Date.now()
+      };
+
+      await storage.saveSplitView(updatedTargetSplitView);
+
+      // Persist changes for each moved tab individually for safety
+      for (const tabId of draggedIds) {
+        const tabToUpdate = allApplicationTabs.find(t => t.id === tabId);
+        if (tabToUpdate) {
+          await storage.saveTab({ ...tabToUpdate, workspaceId: targetWorkspaceId, lastModified: Date.now() });
         }
+      }
 
-        // Refresh the list of all tabs in this modal
-        const refreshedAllTabs = await storage.getTabs();
-        setAllApplicationTabs(refreshedAllTabs);
+      // Refresh the list of all tabs in this modal
+      const refreshedAllTabs = await storage.getTabs();
+      setAllApplicationTabs(refreshedAllTabs);
 
-        // Trigger a reload of the active workspace's tabs in the main UI
-        // This is important if the currently active workspace was affected
-        if (activeWorkspaceId) {
-            await switchWorkspace(activeWorkspaceId); // This should re-fetch and update rootStore
-        }
-
-        setTargetWorkspaceId(null);
-        setSelectedTabIds(new Set());
+      // Trigger a reload of the active workspace's tabs in the main UI
+      if (activeWorkspaceId) {
+        await switchWorkspace(activeWorkspaceId);
+      }
     } catch (error) {
-        console.error("Failed to move tabs:", error);
-        // Handle error (e.g., show notification)
+      console.error('[MoveToWorkspace] Failed to move tabs:', error);
+    } finally {
+      setIsInternalActionInProgress(false);
     }
   };
 
@@ -1029,6 +1148,70 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const tabId = active.id as string;
+    const draggedTab = allApplicationTabs.find(t => t.id === tabId);
+    
+    setActiveDragId(tabId);
+    setActiveDragItemData(draggedTab || null);
+    
+    const newDraggedIds = selectedTabIds.has(tabId) ? selectedTabIds : new Set([tabId]);
+    setDraggedTabIds(newDraggedIds);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { over } = event;
+    setActiveDragId(null);
+
+    if (!over) {
+      setDraggedTabIds(new Set());
+      return;
+    }
+
+    const overId = over.id as string;
+    const overData = over.data.current;
+    const overDataType = overData?.type as string | undefined;
+    const draggedTabIdsToMove = Array.from(draggedTabIds);
+
+    if (overDataType === 'workspace' && overData?.workspaceId) {
+      const targetWorkspaceId = overData.workspaceId as string;
+      if (targetWorkspaceId && targetWorkspaceId !== activeWorkspaceId) {
+        handleMoveToWorkspaceWithId(targetWorkspaceId, draggedTabIdsToMove);
+      } else if (targetWorkspaceId === activeWorkspaceId) {
+        // Dropped on current workspace item - move to end of current list
+        const itemsToMove = filteredTabs.filter(tab => draggedTabIdsToMove.includes(tab.id));
+        const otherItemsInCurrentWorkspace = filteredTabs.filter(tab => !draggedTabIdsToMove.includes(tab.id));
+        const finalNewOrderInCurrentWorkspace = [...otherItemsInCurrentWorkspace, ...itemsToMove];
+        handleApplyCurrentOrder(finalNewOrderInCurrentWorkspace);
+      }
+    } else if (overDataType === 'tab' || overDataType === 'group') {
+      const targetItemWorkspaceId = overDataType === 'tab' ? overData?.tab?.workspaceId : overData?.groupWorkspaceId;
+      if (targetItemWorkspaceId === activeWorkspaceId) {
+        // Reordering within the current workspace
+        const itemsToMove = filteredTabs.filter(tab => draggedTabIdsToMove.includes(tab.id));
+        const currentWorkspaceFilteredTabs = filteredTabs.filter(t => t.workspaceId === activeWorkspaceId);
+        const otherItemsInCurrentWorkspace = currentWorkspaceFilteredTabs.filter(tab => !draggedTabIdsToMove.includes(tab.id));
+
+        let finalNewOrderInCurrentWorkspace: Tab[];
+        const targetIndexInOthers = otherItemsInCurrentWorkspace.findIndex(tab => tab.id === overId);
+
+        if (targetIndexInOthers !== -1) { // Dropped on a specific tab
+          finalNewOrderInCurrentWorkspace = [
+            ...otherItemsInCurrentWorkspace.slice(0, targetIndexInOthers),
+            ...itemsToMove,
+            ...otherItemsInCurrentWorkspace.slice(targetIndexInOthers)
+          ];
+        } else { // Dropped on a group area or end of list
+          finalNewOrderInCurrentWorkspace = [...otherItemsInCurrentWorkspace, ...itemsToMove];
+        }
+        handleApplyCurrentOrder(finalNewOrderInCurrentWorkspace);
+      }
+    }
+    
+    setDraggedTabIds(new Set());
+  };
+
   if (!isOpen && !isInternalActionInProgress) return null; // Keep modal structure if internal action is happening
   if (!isOpen && isInternalActionInProgress) {
       // If modal was supposed to close but an internal action is flagged,
@@ -1039,443 +1222,416 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   }
 
   return (
-    <BaseModal 
-      title="Tab Management" 
-      onClose={handleBaseModalClose}
-      maxWidthClass="max-w-6xl"
-      maxHeightClass="max-h-[90vh]"
-    >
-      <div ref={modalContentRef} className="flex h-[70vh]">
-        {/* Left sidebar - Workspaces */}
-        <div className="w-64 border-r border-gray-700/50 flex flex-col">
-          <div className="p-3 border-b border-gray-700/50">
-            <h3 className="text-sm font-medium text-gray-300 mb-2">Workspaces</h3>
-            
-            {/* Create workspace button */}
-            <button
-              onClick={() => setIsCreatingWorkspace(true)}
-              className="w-full flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
-            >
-              <FolderPlus size={14} />
-              <span>New Workspace</span>
-            </button>
-            
-            {/* Create workspace form */}
-            {isCreatingWorkspace && (
-              <div className="mt-3 p-3 bg-gray-800/50 rounded-md">
-                <input
-                  type="text"
-                  value={newWorkspaceName}
-                  onChange={(e) => setNewWorkspaceName(e.target.value)}
-                  placeholder="Workspace name"
-                  className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
-                  autoFocus
-                />
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => setIsCreatingWorkspace(false)}
-                    className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCreateWorkspace}
-                    disabled={!newWorkspaceName.trim()}
-                    className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
-                  >
-                    Create
-                  </button>
+    <BaseModal title="Tab Management" onClose={handleBaseModalClose} maxWidthClass="max-w-6xl" maxHeightClass="max-h-[90vh]">
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        // Consider adding collisionDetection strategy if needed:
+        // collisionDetection={closestCenter}
+      >
+        <div ref={modalContentRef} className="flex h-[70vh]">
+           {/* Left sidebar - Workspaces */}
+           <div className="w-64 border-r border-gray-700/50 flex flex-col">
+            <div className="p-3 border-b border-gray-700/50"> {/* Header for workspace section */}
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Workspaces</h3>
+              
+              {/* Create workspace button */}
+              <button
+                onClick={() => setIsCreatingWorkspace(true)}
+                className="w-full flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
+              >
+                <FolderPlus size={14} />
+                <span>New Workspace</span>
+              </button>
+              
+              {/* Create workspace form */}
+              {isCreatingWorkspace && (
+                <div className="mt-3 p-3 bg-gray-800/50 rounded-md">
+                  <input
+                    type="text"
+                    value={newWorkspaceName}
+                    onChange={(e) => setNewWorkspaceName(e.target.value)}
+                    placeholder="Workspace name"
+                    className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+                    autoFocus
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => setIsCreatingWorkspace(false)}
+                      className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreateWorkspace}
+                      disabled={!newWorkspaceName.trim()}
+                      className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
+                    >
+                      Create
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {/* Edit workspace form */}
-            {editingWorkspaceId && (
-              <div className="mt-3 p-3 bg-gray-800/50 rounded-md">
-                <input
-                  type="text"
-                  value={editingWorkspaceName}
-                  onChange={(e) => setEditingWorkspaceName(e.target.value)}
-                  placeholder="Workspace name"
-                  className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
-                  autoFocus
-                />
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => { setEditingWorkspaceId(null); setEditingWorkspaceName(''); }}
-                    className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleRenameWorkspace}
-                    disabled={!editingWorkspaceName.trim()}
-                    className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
-                  >
-                    Rename
-                  </button>
+              )}
+              
+              {/* Edit workspace form */}
+              {editingWorkspaceId && (
+                <div className="mt-3 p-3 bg-gray-800/50 rounded-md">
+                  <input
+                    type="text"
+                    value={editingWorkspaceName}
+                    onChange={(e) => setEditingWorkspaceName(e.target.value)}
+                    placeholder="Workspace name"
+                    className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+                    autoFocus
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => { setEditingWorkspaceId(null); setEditingWorkspaceName(''); }}
+                      className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleRenameWorkspace}
+                      disabled={!editingWorkspaceName.trim()}
+                      className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
+                    >
+                      Rename
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Workspace list */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {workspacesWithCounts.map(workspace => (
-              <WorkspaceItem
-                key={workspace.id}
-                workspace={{
-                    id: workspace.id,
-                    name: workspace.name,
-                    tabCount: workspace.tabCount === undefined || workspace.isLoadingCount ? -1 : workspace.tabCount
-                }}
-                isActive={workspace.id === activeWorkspaceId}
-                onSelect={() => handleSwitchWorkspaceAndKeepModal(workspace.id)}
-                onRename={() => {
-                  setEditingWorkspaceId(workspace.id);
+              )}
+            </div>
+            
+            {/* Workspace list */}
+            <WorkspaceSidebar
+              workspaces={workspacesWithCounts}
+              activeWorkspaceId={activeWorkspaceId}
+              onSelect={handleSwitchWorkspaceAndKeepModal}
+              onRename={(id) => {
+                setEditingWorkspaceId(id);
+                const workspace = workspaces.find(w => w.id === id);
+                if (workspace) {
                   setEditingWorkspaceName(workspace.name);
-                }}
-                onDelete={() => handleDeleteWorkspace(workspace.id)}
-              />
-            ))}
+                }
+              }}
+              onDelete={handleDeleteWorkspace}
+            />
           </div>
-        </div>
-        
-        {/* Main content - Tabs */}
-        <div className="flex-1 flex flex-col">
-          {/* Toolbar */}
-          <div className="p-3 border-b border-gray-700/50">
-            <div className="flex flex-wrap gap-3">
-              {/* Search */}
-              <div className="relative flex-grow max-w-md">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search tabs..."
-                  className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-9 pr-3 py-1.5 text-sm text-gray-200"
-                />
-                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+
+          
+          {/* Main content - Tabs */}
+          <div className="flex-1 flex flex-col">
+            {/* Toolbar */}
+            <div className="p-3 border-b border-gray-700/50">
+              <div className="flex flex-wrap gap-3">
+                {/* Search */}
+                <div className="relative flex-grow max-w-md">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search tabs..."
+                    className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-9 pr-3 py-1.5 text-sm text-gray-200"
+                  />
+                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                </div>
+                
+                {/* Language filter */}
+                <div className="relative">
+                  <select
+                    value={languageFilter[0] || ''}
+                    onChange={(e) => {
+                      const selectedLang = e.target.value;
+                      // If "All Languages" is selected (empty value), set to empty array
+                     setLanguageFilter(selectedLang ? [selectedLang] : []);
+                    }}
+                    className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
+                  >
+                    <option value="">All Languages</option>
+                    {availableLanguages.map(lang => (
+                      <option key={lang} value={lang}>
+                        {lang === 'tablet' ? 'Tablets' : (languageRegistry.getById(lang)?.name || lang)}
+                      </option>
+                    ))}
+                  </select>
+                  <Filter size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+                </div>
+                
+                {/* Sort options */}
+                <div className="relative">
+                  <select
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value as SortOption)}
+                    className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
+                  >
+                    <option value="current">Current</option>
+                    <option value="title-asc">Title A-Z</option>
+                    <option value="title-desc">Title Z-A</option>
+                    <option value="created-asc">Newest First</option>
+                    <option value="created-desc">Oldest First</option>
+                    <option value="modified-asc">Recently Modified</option>
+                    <option value="modified-desc">Least Recently Modified</option>
+                    <option value="language">Language</option>
+                  </select>
+                  {sortOption.includes('asc') ? (
+                    <ArrowDownAZ size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+                  ) : (
+                    <ArrowUpZA size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+                  )}
+                </div>
+                
+                {/* Group options */}
+                <div className="relative">
+                  <select
+                    value={groupOption}
+                    onChange={(e) => setGroupOption(e.target.value as GroupOption)}
+                    className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
+                  >
+                    <option value="none">No Grouping</option>
+                    <option value="language">Group by Language</option>
+                  </select>
+                  <Layers size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+                </div>
               </div>
               
-              {/* Language filter */}
-              <div className="relative">
-                <select
-                  value={languageFilter[0] || ''}
-                  onChange={(e) => {
-                    const selectedLang = e.target.value;
-                    // If "All Languages" is selected (empty value), set to empty array
-                   setLanguageFilter(selectedLang ? [selectedLang] : []);
-                  }}
-                  className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
-                >
-                  <option value="">All Languages</option>
-                  {availableLanguages.map(lang => (
-                    <option key={lang} value={lang}>
-                      {lang === 'tablet' ? 'Tablets' : (languageRegistry.getById(lang)?.name || lang)}
-                    </option>
-                  ))}
-                </select>
-                <Filter size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
-              </div>
-              
-              {/* Sort options */}
-              <div className="relative">
-                <select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value as SortOption)}
-                  className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
-                >
-                  <option value="current">Current</option>
-                  <option value="title-asc">Title A-Z</option>
-                  <option value="title-desc">Title Z-A</option>
-                  <option value="created-desc">Newest First</option>
-                  <option value="created-asc">Oldest First</option>
-                  <option value="modified-desc">Recently Modified</option>
-                  <option value="modified-asc">Least Recently Modified</option>
-                  <option value="language">Language</option>
-                </select>
-                {sortOption.includes('asc') ? (
-                  <ArrowDownAZ size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
-                ) : (
-                  <ArrowUpZA size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+              {/* Selection info and actions */}
+              <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center space-x-3">
+                  <div className="text-sm text-gray-400">
+                    {selectedTabIds.size > 0 
+                      ? `${selectedTabIds.size} tab(s) selected` 
+                      : `${filteredTabs.length} tab(s) found`}
+                  </div>
+                  
+                  {selectedTabIds.size > 0 && (
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={handleDeselectAll}
+                        className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                  )}
+                  
+                  {selectedTabIds.size === 0 && filteredTabs.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={handleSelectAll}
+                        className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
+                      >
+                        Select All
+                      </button>
+                      {sortOption !== 'current' && (
+                        <button
+                          onClick={handleApplyCurrentOrder}
+                          className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
+                        >
+                          Apply Current Order
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Bulk actions */}
+                {selectedTabIds.size > 0 && activeWorkspaceTabs.some(tab => selectedTabIds.has(tab.id) && tab.workspaceId === activeWorkspaceId) && (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handleTogglePinSelectedTabs}
+                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+                      title="Toggle pin status for selected"
+                    >
+                      <Pin size={14} className="text-gray-400" />
+                      <span>Toggle Pin</span>
+                    </button>
+                    
+                    <button
+                      onClick={handleDuplicateTabs}
+                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+                      title="Duplicate selected tabs with (copy) suffix"
+                    >
+                      <Copy size={14} className="text-gray-400" />
+                      <span>Duplicate</span>
+                    </button>
+                    
+                    {selectedTabIds.size >= 2 && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowRenameOptions(!showRenameOptions)}
+                          className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+                          title="Rename selected tabs with pattern"
+                        >
+                          <Edit size={14} className="text-gray-400" />
+                          <span>Rename</span>
+                        </button>
+                        
+                        {showRenameOptions && (
+                          <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
+                            <div className="text-xs text-gray-300 mb-2">Base Name</div>
+                            <input
+                              type="text"
+                              value={renameBasePattern}
+                              onChange={(e) => setRenameBasePattern(e.target.value)}
+                              placeholder="e.g. My Tab"
+                              className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+                            />
+                            
+                            <div className="text-xs text-gray-300 mb-2">Suffix Pattern</div>
+                            <input
+                              type="text"
+                              value={renameSuffixPattern}
+                              onChange={(e) => setRenameSuffixPattern(e.target.value)}
+                              placeholder=" {d}"
+                              className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+                            />
+                            
+                            <div className="text-xs text-gray-500 mb-3">
+                              The {'{d}'} placeholder will be replaced with the tab number
+                            </div>
+                            
+                            <div className="flex justify-end space-x-2">
+                              <button
+                                onClick={() => setShowRenameOptions(false)}
+                                className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleBulkRename}
+                                disabled={!renameBasePattern.trim()}
+                                className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
+                              >
+                                Rename
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {selectedTabIds.size >= 2 && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowMergeOptions(!showMergeOptions)}
+                          className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+                          title="Merge selected tabs"
+                        >
+                          <Merge size={14} className="text-gray-400" />
+                          <span>Merge</span>
+                        </button>
+                        
+                        {showMergeOptions && (
+                          <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
+                            <div className="text-xs text-gray-300 mb-2">Delimiter Between Contents</div>
+                            <select
+                              value={mergeDelimiter}
+                              onChange={(e) => setMergeDelimiter(e.target.value)}
+                              className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-3"
+                            >
+                              <option value="\n\n">Double Line Break</option>
+                              <option value="\n">Single Line Break</option>
+                              <option value="\n---\n">Markdown Separator</option>
+                              <option value="">No Separator</option>
+                            </select>
+                            <div className="flex justify-end space-x-2">
+                              <button
+                                onClick={() => setShowMergeOptions(false)}
+                                className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleMergeTabs}
+                                className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
+                              >
+                                Merge Tabs
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <button
+                      onClick={handleCloseTabs}
+                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-md hover:bg-red-500/30 transition-colors"
+                      title="Close selected tabs"
+                    >
+                      <X size={14} />
+                      <span>Close</span>
+                    </button>
+                  </div>
                 )}
-              </div>
-              
-              {/* Group options */}
-              <div className="relative">
-                <select
-                  value={groupOption}
-                  onChange={(e) => setGroupOption(e.target.value as GroupOption)}
-                  className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
-                >
-                  <option value="none">No Grouping</option>
-                  <option value="language">Group by Language</option>
-                </select>
-                <Layers size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
               </div>
             </div>
             
-            {/* Selection info and actions */}
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center space-x-3">
-                <div className="text-sm text-gray-400">
-                  {selectedTabIds.size > 0 
-                    ? `${selectedTabIds.size} tab(s) selected` 
-                    : `${filteredTabs.length} tab(s) found`}
+            {/* Tab list */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {Object.entries(duplicateTabs).length > 0 && (
+                <div className="m-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md flex items-center justify-between">
+                  <div className="flex items-center">
+                    <AlertTriangle size={16} className="text-yellow-500 mr-2" />
+                    <span className="text-sm text-yellow-200">
+                      Found {Object.entries(duplicateTabs).length} groups of duplicate tabs
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleRemoveDuplicates}
+                    className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30 transition-colors"
+                  >
+                    Remove Duplicates
+                  </button>
                 </div>
-                
-                {selectedTabIds.size > 0 && (
-                  <div className="flex items-center space-x-1">
-                    <button
-                      onClick={handleDeselectAll}
-                      className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
-                    >
-                      Deselect All
-                    </button>
-                  </div>
-                )}
-                
-                {selectedTabIds.size === 0 && filteredTabs.length > 0 && (
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={handleSelectAll}
-                      className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
-                    >
-                      Select All
-                    </button>
-                    {sortOption !== 'current' && (
-                      <button
-                        onClick={handleApplyCurrentOrder}
-                        className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
-                      >
-                        Apply Current Order
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+              )}
               
-              {/* Bulk actions */}
-              {selectedTabIds.size > 0 && activeWorkspaceTabs.some(tab => selectedTabIds.has(tab.id) && tab.workspaceId === activeWorkspaceId) && (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleTogglePinSelectedTabs}
-                    className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                    title="Toggle pin status for selected"
-                  >
-                    <Pin size={14} className="text-gray-400" />
-                    <span>Toggle Pin</span>
-                  </button>
-                  
-                  <button
-                    onClick={handleDuplicateTabs}
-                    className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                    title="Duplicate selected tabs with (copy) suffix"
-                  >
-                    <Copy size={14} className="text-gray-400" />
-                    <span>Duplicate</span>
-                  </button>
-                  
-                  {selectedTabIds.size >= 2 && (
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowRenameOptions(!showRenameOptions)}
-                        className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                        title="Rename selected tabs with pattern"
-                      >
-                        <Edit size={14} className="text-gray-400" />
-                        <span>Rename</span>
-                      </button>
-                      
-                      {showRenameOptions && (
-                        <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
-                          <div className="text-xs text-gray-300 mb-2">Base Name</div>
-                          <input
-                            type="text"
-                            value={renameBasePattern}
-                            onChange={(e) => setRenameBasePattern(e.target.value)}
-                            placeholder="e.g. My Tab"
-                            className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
-                          />
-                          
-                          <div className="text-xs text-gray-300 mb-2">Suffix Pattern</div>
-                          <input
-                            type="text"
-                            value={renameSuffixPattern}
-                            onChange={(e) => setRenameSuffixPattern(e.target.value)}
-                            placeholder=" {d}"
-                            className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
-                          />
-                          
-                          <div className="text-xs text-gray-500 mb-3">
-                            The {'{d}'} placeholder will be replaced with the tab number
-                          </div>
-                          
-                          <div className="flex justify-end space-x-2">
-                            <button
-                              onClick={() => setShowRenameOptions(false)}
-                              className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleBulkRename}
-                              disabled={!renameBasePattern.trim()}
-                              className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
-                            >
-                              Rename
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {selectedTabIds.size >= 2 && (
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowMergeOptions(!showMergeOptions)}
-                        className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                        title="Merge selected tabs"
-                      >
-                        <Merge size={14} className="text-gray-400" />
-                        <span>Merge</span>
-                      </button>
-                      
-                      {showMergeOptions && (
-                        <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
-                          <div className="text-xs text-gray-300 mb-2">Delimiter Between Contents</div>
-                          <select
-                            value={mergeDelimiter}
-                            onChange={(e) => setMergeDelimiter(e.target.value)}
-                            className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-3"
-                          >
-                            <option value="\n\n">Double Line Break</option>
-                            <option value="\n">Single Line Break</option>
-                            <option value="\n---\n">Markdown Separator</option>
-                            <option value="">No Separator</option>
-                          </select>
-                          <div className="flex justify-end space-x-2">
-                            <button
-                              onClick={() => setShowMergeOptions(false)}
-                              className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleMergeTabs}
-                              className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
-                            >
-                              Merge Tabs
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="relative">
-                    <button
-                      onClick={() => setTargetWorkspaceId(null)}
-                      className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
-                      title="Move to workspace"
-                    >
-                      <MoveRight size={14} className="text-gray-400" />
-                      <span>Move To</span>
-                    </button>
-                    
-                    {targetWorkspaceId !== null && (
-                      <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
-                        <div className="text-xs text-gray-300 mb-2">Select Target Workspace</div>
-                        <select
-                          value={targetWorkspaceId}
-                          onChange={(e) => setTargetWorkspaceId(e.target.value)}
-                          className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-3"
-                        >
-                          <option value="">Select Workspace</option>
-                          {workspaces.filter(w => w.id !== activeWorkspaceId).map(workspace => (
-                            <option key={workspace.id} value={workspace.id}>
-                              {workspace.name}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => setTargetWorkspaceId(null)}
-                            className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={handleMoveToWorkspace}
-                            disabled={!targetWorkspaceId}
-                            className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
-                          >
-                            Move Tabs
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <button
-                    onClick={handleCloseTabs}
-                    className="flex items-center space-x-1 px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-md hover:bg-red-500/30 transition-colors"
-                    title="Close selected tabs"
-                  >
-                    <X size={14} />
-                    <span>Close</span>
-                  </button>
+              {filteredTabs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <p>No tabs found matching your criteria</p>
+                </div>
+              ) : (
+                <div>
+                  {Object.entries(groupedTabs).map(([groupName, groupTabs]) => (
+                    <TabGroup
+                      key={`${activeWorkspaceId}-${groupName}`} // Ensure key is unique if groupName can repeat across workspaces
+                      title={groupName}
+                      tabs={groupTabs}
+                      selectedTabIds={selectedTabIds}
+                      onSelectTab={handleSelectTab}
+                      onDoubleClickTab={handleDoubleClickTab}
+                      editingTabId={editingTabIdForModal}
+                      onStartEditTab={handleStartEditingTab}
+                      onSaveTabTitle={handleSaveTabTitle}
+                      onCancelEditTab={handleCancelEditingTab}
+                      groupWorkspaceId={activeWorkspaceId!}
+                    />
+                  ))}
                 </div>
               )}
             </div>
           </div>
-          
-          {/* Tab list */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {Object.entries(duplicateTabs).length > 0 && (
-              <div className="m-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md flex items-center justify-between">
-                <div className="flex items-center">
-                  <AlertTriangle size={16} className="text-yellow-500 mr-2" />
-                  <span className="text-sm text-yellow-200">
-                    Found {Object.entries(duplicateTabs).length} groups of duplicate tabs
-                  </span>
-                </div>
-                <button
-                  onClick={handleRemoveDuplicates}
-                  className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30 transition-colors"
-                >
-                  Remove Duplicates
-                </button>
-              </div>
-            )}
-            
-            {filteredTabs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                <p>No tabs found matching your criteria</p>
-              </div>
-            ) : (
-              <div>
-                {Object.entries(groupedTabs).map(([groupName, groupTabs]) => (
-                  <TabGroup
-                    key={groupName}
-                    title={groupName}
-                    tabs={groupTabs}
-                    selectedTabIds={selectedTabIds}
-                    onSelectTab={handleSelectTab}
-                    onDoubleClickTab={handleDoubleClickTab}
-                    editingTabId={editingTabIdForModal}
-                    onStartEditTab={handleStartEditingTab}
-                    onSaveTabTitle={handleSaveTabTitle}
-                    onCancelEditTab={handleCancelEditingTab}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
         </div>
-      </div>
+
+        <DragOverlay dropAnimation={null}>
+          {activeDragId && activeDragItemData && (
+            <div className="pointer-events-none">
+              {draggedTabIds.size === 1 ? (
+                // Compact representation for single tab
+                <div className="bg-gray-800 text-gray-200 text-xs px-3 py-1.5 rounded-md shadow-lg border border-gray-700 inline-block">
+                  {activeDragItemData.title}
+                </div>
+              ) : (
+                // Compact representation for multiple tabs
+                <div className="bg-gray-800 text-gray-200 text-xs px-3 py-1.5 rounded-md shadow-lg border border-gray-700 inline-block">
+                  {draggedTabIds.size} tabs
+                </div>
+              )}
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
       
       {/* Confirmation dialog */}
       <ConfirmationDialog
@@ -1494,3 +1650,35 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
 
 type SortOption = 'current' | 'title-asc' | 'title-desc' | 'created-asc' | 'created-desc' | 'modified-asc' | 'modified-desc' | 'language';
 type GroupOption = 'none' | 'language';
+
+interface WorkspaceSidebarProps {
+  workspaces: Array<Workspace & { tabCount: number; isLoadingCount?: boolean }>;
+  activeWorkspaceId: string | null;
+  onSelect: (id: string) => void;
+  onRename: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
+  workspaces, 
+  activeWorkspaceId, 
+  onSelect, 
+  onRename, 
+  onDelete
+}) => {
+  return (
+    <div className="flex-1 overflow-y-auto custom-scrollbar">
+      {workspaces.map(workspace => (
+        <DroppableWorkspaceItem
+          key={workspace.id}
+          workspace={workspace}
+          isActive={workspace.id === activeWorkspaceId}
+          activeWorkspaceId={activeWorkspaceId}
+          onSelect={() => onSelect(workspace.id)}
+          onRename={() => onRename(workspace.id)}
+          onDelete={() => onDelete(workspace.id)}
+        />
+      ))}
+    </div>
+  );
+};
