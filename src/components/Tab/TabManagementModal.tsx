@@ -3,16 +3,17 @@ import { StorageProviderFactory } from '../../db';
 import { BaseModal } from '../../languages/json/components/modals/BaseModal';
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
-import { Tab } from '../../types';
+import { useTabsStore } from '../../stores/tabsStore';
+import { getPreviousActiveTab, updateTabHistory, removeTabFromHistory } from '../../utils'; 
+import { Tab, SplitViewState } from '../../types'; // Import types
 import { 
   Search, X, Folder, FolderPlus, Edit, Trash2, Pin, 
   Merge, Filter, ArrowDownAZ, ArrowUpZA, AlertTriangle,
   Layers, ChevronRight, ChevronDown, Copy
 } from 'lucide-react';
 import { languageRegistry } from '../../languages';
-import { useSplitViewStore } from '../../stores/splitViewStore';
-import { 
-  DndContext, 
+import { useSplitViewStore } from '../../stores/splitViewStore'; 
+import { DndContext, 
   DragEndEvent, 
   DragStartEvent, 
   PointerSensor, 
@@ -1044,62 +1045,121 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setSelectedTabIds(new Set());
   };
 
-  // Add this function before the handleMoveToWorkspace function
   const handleMoveToWorkspaceWithId = async (targetWorkspaceId: string, draggedIds: string[]) => {
     if (draggedIds.length === 0 || !targetWorkspaceId) {
       return;
     }
 
+    const sourceWorkspaceIdForOperation = activeWorkspaceId; // The workspace ID active IN THE MODAL when drag started
+
     try {
       setTabManagementActionInProgress(true);
-      const { splitView } = useSplitViewStore.getState();
-      const { updateTabOrder } = useRootStore.getState();
 
-      // Remove tabs from current workspace's split view
-      const newLeftTabs = splitView.leftTabs.filter(id => !draggedIds.includes(id));
-      const newRightTabs = splitView.rightTabs.filter(id => !draggedIds.includes(id));
+      // 1. Update Tab Records in DB: Change workspaceId for each dragged tab
+      const updateTabPromises = draggedIds.map(async (tabId) => {
+        const tabToMove = allApplicationTabs.find(t => t.id === tabId);
+        if (tabToMove) {
+          const updatedTab: Tab = { ...tabToMove, workspaceId: targetWorkspaceId, lastModified: Date.now() };
+          await storage.saveTab(updatedTab);
+        }
+      });
+      await Promise.all(updateTabPromises);
 
-      updateTabOrder(newLeftTabs, newRightTabs);
+      // 2. Update Source Workspace's SplitView (if different from target)
+      if (sourceWorkspaceIdForOperation && sourceWorkspaceIdForOperation !== targetWorkspaceId) {
+        let sourceSplitView = await storage.getSplitViewByWorkspace(sourceWorkspaceIdForOperation);
+        if (sourceSplitView) {
+          const newSourceSplitView: SplitViewState = { ...sourceSplitView }; // Work on a copy
 
-      // Get target workspace's split view
-      const targetSplitView = await storage.getSplitViewByWorkspace(targetWorkspaceId);
+          // Filter out moved tabs
+          newSourceSplitView.leftTabs = (newSourceSplitView.leftTabs || []).filter(id => !draggedIds.includes(id));
+          newSourceSplitView.rightTabs = (newSourceSplitView.rightTabs || []).filter(id => !draggedIds.includes(id));
+          newSourceSplitView.leftTabHistory = (newSourceSplitView.leftTabHistory || []).filter(id => !draggedIds.includes(id));
+          newSourceSplitView.rightTabHistory = (newSourceSplitView.rightTabHistory || []).filter(id => !draggedIds.includes(id));
 
-      // Add tabs to target workspace's split view (all to left side as requested)
-      const updatedTargetSplitView = {
-        id: targetSplitView?.id || crypto.randomUUID(),
-        isSplit: targetSplitView?.isSplit || false,
-        leftTabs: [...(targetSplitView?.leftTabs || []), ...draggedIds],
-        rightTabs: targetSplitView?.rightTabs || [],
-        activeLeftTabId: targetSplitView?.activeLeftTabId || null,
-        activeRightTabId: targetSplitView?.activeRightTabId || null,
-        activeSide: targetSplitView?.activeSide || 'left',
-        splitRatio: targetSplitView?.splitRatio || 0.5,
-        workspaceId: targetWorkspaceId,
-        lastModified: Date.now()
-      };
+          // Update active tabs if necessary
+          if (draggedIds.includes(newSourceSplitView.activeLeftTabId || '')) {
+            newSourceSplitView.activeLeftTabId = getPreviousActiveTab(newSourceSplitView.leftTabHistory, newSourceSplitView.leftTabs);
+          }
+          if (draggedIds.includes(newSourceSplitView.activeRightTabId || '')) {
+            newSourceSplitView.activeRightTabId = getPreviousActiveTab(newSourceSplitView.rightTabHistory, newSourceSplitView.rightTabs);
+          }
 
-      await storage.saveSplitView(updatedTargetSplitView);
-
-      // Persist changes for each moved tab individually for safety
-      for (const tabId of draggedIds) {
-        const tabToUpdate = allApplicationTabs.find(t => t.id === tabId);
-        if (tabToUpdate) {
-          await storage.saveTab({ ...tabToUpdate, workspaceId: targetWorkspaceId, lastModified: Date.now() });
+          // Handle unsplitting if one side becomes empty
+          if (newSourceSplitView.isSplit) {
+            if (newSourceSplitView.leftTabs.length === 0 && newSourceSplitView.rightTabs.length > 0) { // Left empty
+              newSourceSplitView.isSplit = false;
+              newSourceSplitView.leftTabs = [...newSourceSplitView.rightTabs];
+              newSourceSplitView.leftTabHistory = [...newSourceSplitView.rightTabHistory];
+              newSourceSplitView.activeLeftTabId = newSourceSplitView.activeRightTabId || newSourceSplitView.leftTabs[0] || null;
+              newSourceSplitView.rightTabs = []; newSourceSplitView.rightTabHistory = []; newSourceSplitView.activeRightTabId = null;
+              newSourceSplitView.activeSide = 'left';
+            } else if (newSourceSplitView.rightTabs.length === 0 && newSourceSplitView.leftTabs.length > 0) { // Right empty
+              newSourceSplitView.isSplit = false;
+              newSourceSplitView.activeRightTabId = null; newSourceSplitView.rightTabHistory = [];
+              newSourceSplitView.activeSide = 'left'; // Maintain focus on left
+            } else if (newSourceSplitView.leftTabs.length === 0 && newSourceSplitView.rightTabs.length === 0) { // Both empty
+              newSourceSplitView.isSplit = false;
+              newSourceSplitView.activeLeftTabId = null; newSourceSplitView.activeRightTabId = null;
+              newSourceSplitView.activeSide = 'left';
+            }
+          } else if (newSourceSplitView.leftTabs.length === 0) { // Not split and left is empty
+            newSourceSplitView.activeLeftTabId = null;
+          }
+          newSourceSplitView.lastModified = Date.now();
+          await storage.saveSplitView(newSourceSplitView);
         }
       }
 
-      // Refresh the list of all tabs in this modal
-      const refreshedAllTabs = await storage.getTabs();
+      // 3. Update Target Workspace's SplitView
+      let targetSplitViewRecord = await storage.getSplitViewByWorkspace(targetWorkspaceId);
+      if (!targetSplitViewRecord) {
+        targetSplitViewRecord = useSplitViewStore.getState().createDefaultSplitViewState(targetWorkspaceId);
+      }
+      const newTargetSplitView: SplitViewState = { ...targetSplitViewRecord }; // Work on a copy
+
+      // Add dragged tabs to the left side of the target workspace
+      const updatedTargetLeftTabs = [...new Set([...(newTargetSplitView.leftTabs || []), ...draggedIds])];
+      newTargetSplitView.leftTabs = updatedTargetLeftTabs;
+
+      // Update history and active tab for target
+      const firstMovedTabId = draggedIds[0]; // Consider making the first moved tab active
+      if (!newTargetSplitView.activeLeftTabId || !updatedTargetLeftTabs.includes(newTargetSplitView.activeLeftTabId)) {
+        newTargetSplitView.activeLeftTabId = updatedTargetLeftTabs.find(id => draggedIds.includes(id)) || updatedTargetLeftTabs[0] || null;
+      }
+      newTargetSplitView.leftTabHistory = updateTabHistory(newTargetSplitView.leftTabHistory || [], newTargetSplitView.activeLeftTabId);
+
+      if(!newTargetSplitView.activeSide) newTargetSplitView.activeSide = 'left';
+      newTargetSplitView.lastModified = Date.now();
+      await storage.saveSplitView(newTargetSplitView);
+
+      // 4. Refresh UI State
+      const refreshedAllTabs = await storage.getTabs(); // Get all tabs again for the modal
       setAllApplicationTabs(refreshedAllTabs);
 
-      // Trigger a reload of the active workspace's tabs in the main UI
-      if (activeWorkspaceId) {
-        await switchWorkspace(activeWorkspaceId);
+      // If the *currently active workspace in the main UI* was affected, update its stores
+      const mainUIActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+
+      if (mainUIActiveWorkspaceId === sourceWorkspaceIdForOperation && sourceWorkspaceIdForOperation !== targetWorkspaceId) {
+        const updatedSourceTabsForUI = await storage.getTabsByWorkspace(sourceWorkspaceIdForOperation);
+        const updatedSourceSplitViewForUI = await storage.getSplitViewByWorkspace(sourceWorkspaceIdForOperation);
+        useTabsStore.setState({ tabs: updatedSourceTabsForUI });
+        if (updatedSourceSplitViewForUI) useSplitViewStore.setState({ splitView: updatedSourceSplitViewForUI });
+      } else if (mainUIActiveWorkspaceId === targetWorkspaceId) {
+        const updatedTargetTabsForUI = await storage.getTabsByWorkspace(targetWorkspaceId);
+        const updatedTargetSplitViewForUI = await storage.getSplitViewByWorkspace(targetWorkspaceId);
+        useTabsStore.setState({ tabs: updatedTargetTabsForUI });
+        if (updatedTargetSplitViewForUI) useSplitViewStore.setState({ splitView: updatedTargetSplitViewForUI });
       }
+
+      // Refresh workspace list in the modal (tab counts might have changed)
+      await useWorkspaceStore.getState().loadWorkspaces({ preventAutoSwitch: true });
+
     } catch (error) {
-      console.error('[MoveToWorkspace] Failed to move tabs:', error);
+      console.error('[MoveToWorkspaceWithId] Failed to move tabs:', error);
     } finally {
       setTabManagementActionInProgress(false);
+      setDraggedTabIds(new Set());
     }
   };
 

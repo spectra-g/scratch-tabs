@@ -10,6 +10,7 @@ import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
 import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
 import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { usePersistenceStore } from '../../stores/persistenceStore';
 import { SearchModal } from '../Search/SearchModal';
 
 const MainLayout: React.FC = () => {
@@ -30,6 +31,7 @@ const MainLayout: React.FC = () => {
   }));
 
   const { loadWorkspaces } = useWorkspaceStore();
+  const { saveState } = usePersistenceStore(); // Get saveState function
 
   // Initialize workspace store
   useEffect(() => {
@@ -38,6 +40,17 @@ const MainLayout: React.FC = () => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
     });
   }, [loadWorkspaces]);
+
+     useEffect(() => {
+       const saveInterval = setInterval(() => {
+         saveState(); // Call saveState periodically
+       }, 10000); // e.g., every 10 seconds
+
+       return () => {
+         clearInterval(saveInterval); // Cleanup interval on unmount
+       };
+     }, [saveState]); // Depend on saveState
+
 
   const [diffModal, setDiffModal] = React.useState<{
     leftTabId: string | null;
@@ -156,6 +169,7 @@ const MainLayout: React.FC = () => {
 
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
         event.preventDefault();
+        saveState(); // Call the centralized save function
 
         const editorTextAreas = document.querySelectorAll<HTMLElement>('.monaco-editor textarea');
         let focusedEditorSide: 'left' | 'right' | null = null;
