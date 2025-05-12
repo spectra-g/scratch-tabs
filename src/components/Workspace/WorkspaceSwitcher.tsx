@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useModalStore } from '../../stores/modalStore';
 import { useClickOutside } from '../../hooks/useClickOutside';
-import { Folders, MoreHorizontal, Pencil, Trash2, Plus, Upload, Download } from 'lucide-react';
+import { Folders, MoreHorizontal, Pencil, Trash2, Plus, Upload, Download, ListTodo } from 'lucide-react';
 import { StorageProviderFactory } from '../../db';
 import { ExportWorkspacesModal } from './ExportWorkspacesModal';
 import { ImportWorkspacesModal } from './ImportWorkspacesModal';
+import { TabManagementModal } from '../Tab/TabManagementModal';
 
 export const WorkspaceSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +18,13 @@ export const WorkspaceSwitcher: React.FC = () => {
   const [tabCounts, setTabCounts] = useState<Record<string, number>>({});
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  
+  // Use modal store instead of local state
+  const { 
+    isTabManagementModalOpen, 
+    openTabManagementModal, 
+    closeTabManagementModal 
+  } = useModalStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -69,7 +78,7 @@ export const WorkspaceSwitcher: React.FC = () => {
   const handleCreateWorkspace = async () => {
     if (!newWorkspaceName.trim()) return;
     try {
-      const newId = await createWorkspace(newWorkspaceName.trim());
+      await createWorkspace(newWorkspaceName.trim());
       setNewWorkspaceName('');
       setIsCreating(false);
     } catch (error) {
@@ -239,6 +248,16 @@ export const WorkspaceSwitcher: React.FC = () => {
           </div>
           <div className="px-1 py-1 border-t border-gray-700/50"> {/* Section for Import/Export */}
             <button
+              onClick={() => { 
+                openTabManagementModal(); 
+                setIsOpen(false); 
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
+            >
+              <ListTodo size={14} />
+              <span>Manage Tabs...</span>
+            </button>
+            <button
               onClick={() => { setIsExportModalOpen(true); setIsOpen(false); }}
               className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
             >
@@ -298,6 +317,10 @@ export const WorkspaceSwitcher: React.FC = () => {
       <ImportWorkspacesModal 
         isOpen={isImportModalOpen} 
         onClose={() => setIsImportModalOpen(false)} 
+      />
+      <TabManagementModal
+        isOpen={isTabManagementModalOpen}
+        onClose={() => closeTabManagementModal()}
       />
     </div>
   );

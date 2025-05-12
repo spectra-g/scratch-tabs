@@ -425,7 +425,7 @@ export const SearchModal: React.FC = () => {
                                 type="text"
                                 value={titleFilter}
                                 onChange={(e) => setTitleFilter(e.target.value)}
-                                placeholder="e.g. *Todo*, *.tsx"
+                                placeholder="e.g. My Tab, *Todo*"
                                 className="flex-grow bg-gray-800/50 border border-gray-600/80 rounded px-2 py-0.5 text-xs text-gray-200 focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50"
                             />
                         </div>

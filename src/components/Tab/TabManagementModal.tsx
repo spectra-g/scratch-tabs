@@ -22,6 +22,7 @@ import {
   useDraggable,
   useDroppable
 } from '@dnd-kit/core';
+import { useModalStore } from '../../stores/modalStore';
 
 // Helper function to format relative time
 const getRelativeTimeString = (timestamp: number): string => {
@@ -368,7 +369,7 @@ interface Workspace {
 interface DroppableWorkspaceItemProps {
   workspace: Workspace;
   isActive: boolean;
-  onSelect: () => void;
+  onSelect: (id: string, event: React.MouseEvent) => void;
   onRename: () => void;
   onDelete: () => void;
   activeWorkspaceId: string | null;
@@ -400,8 +401,8 @@ const DroppableWorkspaceItem: React.FC<DroppableWorkspaceItemProps> = ({
       className={`relative flex items-center justify-between px-3 py-1.5 cursor-pointer 
         ${isActive ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'} 
         ${isOver ? 'bg-green-500/40 ring-2 ring-inset ring-green-500' : ''}`}
-      onClick={onSelect}
-      style={{ 
+        onClick={(e) => onSelect(workspace.id, e)} 
+        style={{ 
         transition: 'background-color 0.2s, box-shadow 0.2s',
         position: 'relative'
       }}
@@ -468,12 +469,12 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const [renameBasePattern, setRenameBasePattern] = useState('');
   const [renameSuffixPattern, setRenameSuffixPattern] = useState(' {d}');
   const modalContentRef = useRef<HTMLDivElement>(null);
-  const [isInternalActionInProgress, setIsInternalActionInProgress] = useState(false);
   const { switchWorkspace: switchWorkspaceFromStore } = useWorkspaceStore();
   const { setActiveLeftTab, setActiveRightTab } = useSplitViewStore.getState();
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [draggedTabIds, setDraggedTabIds] = useState<Set<string>>(new Set());
   const [activeDragItemData, setActiveDragItemData] = useState<Tab | null>(null); // For DragOverlay content
+  const { setTabManagementActionInProgress, isTabManagementActionInProgress } = useModalStore();
 
   // Confirmation dialogs
   const [confirmationDialog, setConfirmationDialog] = useState<{
@@ -770,38 +771,72 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setSortOption('current');
   };
 
-  // Custom useClickOutside hook that respects the internal action flag
-    const useModalClickOutside = (
-      ref: React.RefObject<HTMLElement>,
-      modalOpenFlag: boolean, // Pass the modal's isOpen state
-      internalActionFlag: boolean, // Pass the isInternalActionInProgress state
-      handler: (event: MouseEvent | TouchEvent) => void
-    ) => {
-      useEffect(() => {
-        if (!modalOpenFlag) return; // Only attach listener if modal is open
+  // Replace the handleSwitchWorkspaceAndKeepModal function (around line 1121) with this new implementation
+  const handleSwitchWorkspaceAndKeepModal = async (workspaceId: string, event: React.MouseEvent) => { 
+    event.stopPropagation(); // <-- Stop the event from bubbling up!
 
-        const listener = (event: MouseEvent | TouchEvent) => {
-          if (internalActionFlag) { // If an internal action is marked, ignore this click
-            return;
-          }
-          if (!ref.current || ref.current.contains(event.target as Node)) {
-            return; // Click was inside the ref
-          }
-          handler(event); // Click was outside
-        };
+    if (workspaceId === activeWorkspaceId) { // Use activeWorkspaceId from workspaceStore
+        return;
+    }
 
-        document.addEventListener("mousedown", listener);
-        document.addEventListener("touchstart", listener);
-        return () => {
-          document.removeEventListener("mousedown", listener);
-          document.removeEventListener("touchstart", listener);
-        };
-        // Re-attach if modalOpenFlag, internalActionFlag, ref, or handler changes
-      }, [ref, modalOpenFlag, internalActionFlag, handler]);
-    };
+    // Set the flag before any async operations
+    setTabManagementActionInProgress(true);
 
+    try {
+      await switchWorkspaceFromStore(workspaceId);
+      setSelectedTabIds(new Set());
+    } catch (error) {
+      console.error("Error switching workspace from modal:", error);
+    } finally {
+      setTimeout(() => {
+          setTabManagementActionInProgress(false);
+      }, 150);
+    }
+  };
+
+  // Replace the handleBaseModalClose function (around line 1167) with this new implementation
+  const handleBaseModalClose = () => {
+    // Use the modal store to check if an action is in progress
+    if (!isTabManagementActionInProgress) { // Only close if no internal action is flagged
+        onClose(); // This calls the function from WorkspaceSwitcher
+    }
+  };
+
+  // Update the useModalClickOutside hook implementation to properly access the store
+  const useModalClickOutside = (
+    ref: React.RefObject<HTMLElement>,
+    modalOpenFlag: boolean, // Pass the modal's isOpen state
+    handler: (event: MouseEvent | TouchEvent) => void
+  ) => {
+    useEffect(() => {
+      if (!modalOpenFlag) return; // Only attach listener if modal is open
+
+      const listener = (event: MouseEvent | TouchEvent) => {
+        // Get the current action progress flag from the store
+        const isActionInProgress = useModalStore.getState().isTabManagementActionInProgress;
+        
+        if (isActionInProgress) { // If an internal action is marked, ignore this click
+          return;
+        }
+        if (!ref.current || ref.current.contains(event.target as Node)) {
+          return; // Click was inside the ref or ref missing
+        }
+        handler(event); // Click was outside
+      };
+
+      document.addEventListener("mousedown", listener);
+      document.addEventListener("touchstart", listener);
+      return () => {
+        document.removeEventListener("mousedown", listener);
+        document.removeEventListener("touchstart", listener);
+      };
+      // Re-attach if modalOpenFlag or handler changes
+    }, [ref, modalOpenFlag, handler]);
+  };
+  
+  // And also update the call to useModalClickOutside (around line 917)
   // Apply the custom click outside hook
-  useModalClickOutside(modalContentRef, isOpen, isInternalActionInProgress, () => {
+  useModalClickOutside(modalContentRef, isOpen, () => {
     if (!confirmationDialog.isOpen) { // Only close if no confirmation is active
         onClose();
     }
@@ -1000,7 +1035,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     }
 
     try {
-      setIsInternalActionInProgress(true);
+      setTabManagementActionInProgress(true);
       const { splitView } = useSplitViewStore.getState();
       const { updateTabOrder } = useRootStore.getState();
 
@@ -1048,7 +1083,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     } catch (error) {
       console.error('[MoveToWorkspace] Failed to move tabs:', error);
     } finally {
-      setIsInternalActionInProgress(false);
+      setTabManagementActionInProgress(false);
     }
   };
 
@@ -1118,36 +1153,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setSelectedTabIds(new Set());
   }, [activeWorkspaceId]);
 
-  const handleSwitchWorkspaceAndKeepModal = async (workspaceId: string) => {
-    if (workspaceId === activeWorkspaceId) { // Use activeWorkspaceId from workspaceStore
-        return;
-    }
-
-    // Set the flag before any async operations
-    setIsInternalActionInProgress(true);
-    
-    try {
-      await switchWorkspaceFromStore(workspaceId);
-      setSelectedTabIds(new Set());
-    } catch (error) {
-      console.error("Error switching workspace from modal:", error);
-    } finally {
-      // Use requestAnimationFrame to ensure this runs after the current event cycle completes
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          setIsInternalActionInProgress(false);
-        }, 100); // Add a small delay to ensure event bubbling is complete
-      });
-    }
-  };
-
-  // The BaseModal's onClose should be simple
-  const handleBaseModalClose = () => {
-      if (!isInternalActionInProgress) { // Only close if no internal action is flagged
-          onClose();
-      }
-  };
-
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const tabId = active.id as string;
@@ -1212,13 +1217,8 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     setDraggedTabIds(new Set());
   };
 
-  if (!isOpen && !isInternalActionInProgress) return null; // Keep modal structure if internal action is happening
-  if (!isOpen && isInternalActionInProgress) {
-      // If modal was supposed to close but an internal action is flagged,
-      // it might mean the onClose was called prematurely. Log this.
-      console.warn("TabManagementModal: onClose was called while internal action was in progress. Investigate.");
-      // Potentially force close after a delay if the flag isn't reset:
-      // setTimeout(() => { if (isInternalActionInProgress) onClose(); }, 200);
+  if (!isOpen) {
+    return null;
   }
 
   return (
@@ -1654,7 +1654,7 @@ type GroupOption = 'none' | 'language';
 interface WorkspaceSidebarProps {
   workspaces: Array<Workspace & { tabCount: number; isLoadingCount?: boolean }>;
   activeWorkspaceId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, event: React.MouseEvent) => void; 
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
 }
@@ -1674,7 +1674,7 @@ const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
           workspace={workspace}
           isActive={workspace.id === activeWorkspaceId}
           activeWorkspaceId={activeWorkspaceId}
-          onSelect={() => onSelect(workspace.id)}
+          onSelect={(id, e) => onSelect(id, e)}
           onRename={() => onRename(workspace.id)}
           onDelete={() => onDelete(workspace.id)}
         />

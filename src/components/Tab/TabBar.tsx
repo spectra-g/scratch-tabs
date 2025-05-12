@@ -13,8 +13,6 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { KeyboardSensor } from '@dnd-kit/core';
 import { SortableTabList } from './SortableTabList';
-import { TabManagementModal } from './TabManagementModal';
-import { Folder } from 'lucide-react';
 
 interface TabBarProps {
   side?: 'left' | 'right';
@@ -65,8 +63,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
     const hideTooltipTimerRef = useRef<NodeJS.Timeout | null>(null);
     const hoveredTabIdRef = useRef<string | null>(null);
     const [tooltipContent, setTooltipContent] = useState<TooltipContent | null>(null);
-
-    const [isTabManagementModalOpen, setIsTabManagementModalOpen] = useState(false);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const tabBarRef = useRef<HTMLDivElement>(null);
@@ -526,10 +522,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
         }
     };
 
-    const handleOpenTabManagementModal = () => {
-        setIsTabManagementModalOpen(true);
-    };
-
     return (
         <>
             <div
@@ -598,13 +590,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                 </div>
 
                 <div className="flex items-center">
-                    <button
-                        onClick={handleOpenTabManagementModal}
-                        className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
-                        title="Manage Tabs"
-                    >
-                        <Folder size={16}/>
-                    </button>
                     <TabActions
                         side={side}
                         onShowTabletSelector={() => {
@@ -665,13 +650,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                 content={tooltipContent}
                 position={tooltipPosition}
             />
-
-            {isTabManagementModalOpen && (
-                <TabManagementModal
-                    isOpen={isTabManagementModalOpen}
-                    onClose={() => setIsTabManagementModalOpen(false)}
-                />
-            )}
         </>
     );
 };
