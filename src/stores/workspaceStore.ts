@@ -136,8 +136,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     },
 
     switchWorkspace: async (workspaceId: string) => {
-      console.log(`[WorkspaceStore] ENTRY POINT: switchWorkspace(${workspaceId}) called!`);
-
       const { workspaces, activeWorkspaceId: currentActiveWsId, isLoading } = get();
 
       if (workspaceId === currentActiveWsId || isLoading) {
