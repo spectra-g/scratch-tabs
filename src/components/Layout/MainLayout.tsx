@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRootStore } from '../../stores';
 import { useSearchStore } from '../../stores/searchStore';
 import { WelcomeScreen } from '../Welcome/WelcomeScreen';
@@ -10,6 +10,7 @@ import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
 import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
 import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { usePersistenceStore } from '../../stores/persistenceStore';
 import { SearchModal } from '../Search/SearchModal';
 
 const MainLayout: React.FC = () => {
@@ -30,14 +31,29 @@ const MainLayout: React.FC = () => {
   }));
 
   const { loadWorkspaces } = useWorkspaceStore();
+  const { saveState } = usePersistenceStore(); // Get saveState function
+  const [isAppInitialized, setIsAppInitialized] = useState(false);
 
   // Initialize workspace store
   useEffect(() => {
     loadWorkspaces().then(() => {
+      setIsAppInitialized(true);
     }).catch(error => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
+      setIsAppInitialized(true); // Still mark as initialized to allow rendering (even if error state)
     });
   }, [loadWorkspaces]);
+
+     useEffect(() => {
+       const saveInterval = setInterval(() => {
+         saveState(); // Call saveState periodically
+       }, 10000); // e.g., every 10 seconds
+
+       return () => {
+         clearInterval(saveInterval); // Cleanup interval on unmount
+       };
+     }, [saveState]); // Depend on saveState
+
 
   const [diffModal, setDiffModal] = React.useState<{
     leftTabId: string | null;
@@ -156,6 +172,7 @@ const MainLayout: React.FC = () => {
 
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
         event.preventDefault();
+        saveState(); // Call the centralized save function
 
         const editorTextAreas = document.querySelectorAll<HTMLElement>('.monaco-editor textarea');
         let focusedEditorSide: 'left' | 'right' | null = null;
@@ -195,9 +212,18 @@ const MainLayout: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [toggleSearch, activeLeftTabId, activeRightTabId, saveTabDataById]);
+  }, [toggleSearch, activeLeftTabId, activeRightTabId, saveTabDataById, saveState]);
 
   useUrlTabHandler();
+
+  if (!isAppInitialized) {
+    return (
+      <div className="app-loading-container">
+        <div className="app-loading-spinner"></div>
+        <p>Loading tabs...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white">

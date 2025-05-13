@@ -3,733 +3,396 @@ import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { useEditorStore } from './editorStore';
 import { useWorkspaceStore } from './workspaceStore';
-import { usePersistenceStore } from './persistenceStore';
 import { EditorPosition, Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
 
 import {
-    findTabById,
-    isTabEmpty,
-    countEmptyTabs,
-    groupTabsByLanguage
+  isTabEmpty,
+  countEmptyTabs,
+  groupTabsByLanguage
 } from '../utils';
 import { detectLanguage, isAmbiguousLanguage } from "../languages";
 import { StorageProviderFactory } from '../db';
 
-// Define the combined store interface
 interface RootStore {
-    // Tab management
-    tabs: Tab[];
-    activeTabId: string | null;
-    addTab: (tab: Tab, toRightSide?: boolean) => void;
-    addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
-    handleNewTab: (isRightSide: boolean, content?: string) => void;
-    handleNewTabFromPaste: (isRightSide: boolean) => void;
-    removeTab: (id: string) => void;
-    setActiveTab: (id: string) => void;
-    updateTabContent: (id: string, content: string) => void;
-    updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
-    updateTabTitle: (id: string, title: string) => void;
-    updateTabState: (id: string, updates: Partial<Tab>) => void;
-    toggleTabPin: (id: string) => void;
-    saveTabs: (tabs: Tab[]) => void;
+  tabs: Tab[];
+  activeTabId: string | null;
+  addTab: (tab: Tab, toRightSide?: boolean) => void;
+  addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
+  handleNewTab: (isRightSide: boolean, content?: string) => void;
+  handleNewTabFromPaste: (isRightSide: boolean) => void;
+  removeTab: (id: string) => void;
+  setActiveTab: (id: string) => void;
+  updateTabContent: (id: string, content: string) => void;
+  updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
+  updateTabTitle: (id: string, title: string) => void;
+  updateTabState: (id: string, updates: Partial<Tab>) => void;
+  toggleTabPin: (id: string) => void;
+  updateTabOrder: (leftTabs: string[], rightTabs: string[]) => void;
 
-    // Editor state
-    previewMode: boolean;
-    togglePreviewMode: () => void;
+  // Editor state
+  previewMode: boolean;
+  togglePreviewMode: () => void;
 
-    // Split view
-    splitView: {
-        isSplit: boolean;
-        leftTabs: string[];
-        rightTabs: string[];
-        activeLeftTabId: string | null;
-        activeRightTabId: string | null;
-        splitRatio: number;
-        activeSide: string | null;
-    };
-    splitScreen: (leftTabId: string, rightTabId?: string) => void;
-    unsplitScreen: (fromRight: boolean) => void;
-    moveTabToRight: (tabId: string) => void;
-    moveTabToLeft: (tabId: string) => void;
-    setActiveLeftTab: (id: string) => void;
-    setActiveRightTab: (id: string) => void;
-    setActiveSide: (side: string) => void;
-    setSplitRatio: (ratio: number) => void;
+  // Split view
+  splitView: {
+    isSplit: boolean;
+    leftTabs: string[];
+    rightTabs: string[];
+    activeLeftTabId: string | null;
+    activeRightTabId: string | null;
+    splitRatio: number;
+    activeSide: string | null;
+  };
+  splitScreen: (leftTabId: string, rightTabId?: string) => void;
+  unsplitScreen: (fromRight: boolean) => void;
+  moveTabToRight: (tabId: string) => void;
+  moveTabToLeft: (tabId: string) => void;
+  setActiveLeftTab: (id: string) => void;
+  setActiveRightTab: (id: string) => void;
+  setActiveSide: (side: string) => void;
+  setSplitRatio: (ratio: number) => void;
 
-    // Bulk tab operations
-    closeTabsToLeft: (tabId: string, isRightSide: boolean) => void;
-    closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
-    closeAllExcept: (tabId: string, isRightSide: boolean) => void;
-    duplicateTab: (tabId: string, isRightSide: boolean) => string;
-    duplicateAndSplitTab: (tabId: string) => string;
-    setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
-    groupTabsByType: (isRightSide: boolean) => void;
+  // Bulk tab operations
+  closeTabsToLeft: (tabId: string, isRightSide: boolean) => void;
+  closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
+  closeAllExcept: (tabId: string, isRightSide: boolean) => void;
+  duplicateTab: (tabId: string, isRightSide: boolean) => string;
+  duplicateAndSplitTab: (tabId: string) => string;
+  setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
+  groupTabsByType: (isRightSide: boolean) => void;
 
-    // Tab limit checks
-    canAddNewTab: (toRightSide?: boolean) => boolean;
+  // Tab limit checks
+  canAddNewTab: (toRightSide?: boolean) => boolean;
 
-    compareFromClipboard: (originalTabId: string, isRightSide: boolean) => Promise<void>;
-    reorderTabs: (side: 'left' | 'right', newOrder: string[]) => void;
-    focusedEditorSide: 'left' | 'right' | null;
-    saveTabDataById: (tabId: string) => void;
+  compareFromClipboard: (originalTabId: string, isRightSide: boolean) => Promise<void>;
+  reorderTabs: (side: 'left' | 'right', newOrder: string[]) => void;
+  focusedEditorSide: 'left' | 'right' | null;
+  saveTabDataById: (tabId: string) => void;
 }
 
-export const useRootStore = create < RootStore > ((set, get) => {
-    // Get the individual stores
-    const tabsStore = useTabsStore.getState();
-    const splitViewStore = useSplitViewStore.getState();
-    const editorStore = useEditorStore.getState();
-    const persistenceStore = usePersistenceStore.getState();
-    const storage = StorageProviderFactory.getProvider();
-    const { deleteWorkspace, getActiveWorkspace } = useWorkspaceStore.getState();
+export const useRootStore = create<RootStore>((set, get) => {
+  const splitViewStore = useSplitViewStore.getState();
+  const editorStore = useEditorStore.getState();
+  const storage = StorageProviderFactory.getProvider();
 
-    // Initialize persistence
-    persistenceStore.initialize();
+  useTabsStore.subscribe((state) => {
+    set({ tabs: state.tabs });
+  });
 
-    // Set up auto-save interval
-    setInterval(() => {
-        persistenceStore.saveState();
-    }, 10000); // Save every 10 seconds
-
-    // Set up event listeners for persistence
-    window.addEventListener('loadPersistedTabs', ((event: CustomEvent) => {
-        useTabsStore.setState({ tabs: event.detail });
-    }) as EventListener);
-
-    window.addEventListener('loadPersistedSplitView', ((event: CustomEvent) => {
-        useSplitViewStore.setState({ splitView: event.detail });
-    }) as EventListener);
-
-    window.addEventListener('requestSaveState', ((event: CustomEvent) => {
-        const tabs = useTabsStore.getState().tabs;
-        const splitView = useSplitViewStore.getState().splitView;
-        event.detail.callback(tabs, splitView);
-    }) as EventListener);
-
-    // Set up subscriptions to keep the root store in sync with individual stores
-    useTabsStore.subscribe((state) => {
-        set({
-            tabs: state.tabs,
-            activeTabId: state.activeTabId,
-        });
+  useSplitViewStore.subscribe((state) => {
+    if (!state.splitView) return;
+    const activeTabId = state.splitView.activeSide === 'right'
+      ? state.splitView.activeRightTabId
+      : state.splitView.activeLeftTabId;
+    set({
+      splitView: state.splitView,
+      activeTabId: activeTabId,
     });
+  });
 
-    useSplitViewStore.subscribe((state) => {
-        set({
-            splitView: state.splitView,
-        });
+  useEditorStore.subscribe((state) => {
+    set({
+      previewMode: state.previewMode,
     });
+  });
 
-    useEditorStore.subscribe((state) => {
-        set({
-            previewMode: state.previewMode,
-        });
-    });
+  return {
+    // Initial state (will be quickly overwritten by loadWorkspaces)
+    tabs: [],
+    activeTabId: null,
+    previewMode: editorStore.previewMode,
+    splitView: splitViewStore.splitView,
+    focusedEditorSide: null,
 
-    return {
-        // Initial state from individual stores
-        tabs: tabsStore.tabs,
-        activeTabId: tabsStore.activeTabId,
-        previewMode: editorStore.previewMode,
-        splitView: splitViewStore.splitView,
+    // Tab management functions
+    addTab: (tab, toRightSide = false) => {
+      useTabsStore.getState().addTab(tab);
+      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
+      // Ensure active tab is set correctly after adding
+      const { setActiveLeftTab, setActiveRightTab } = useSplitViewStore.getState();
+      if (toRightSide) {
+        setActiveRightTab(tab.id);
+      } else {
+        setActiveLeftTab(tab.id);
+      }
+    },
+    addBackgroundTab: (tab, toRightSide = false) => {
+      useTabsStore.getState().addBackgroundTab(tab);
+      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
+    },
 
-        // Tab management functions
-        addTab: (tab, toRightSide = false) => {
-            // Add the tab to the tabs store
-            useTabsStore.getState().addTab(tab);
+    handleNewTab: async (isRightSide: boolean, content?: string) => {
+      const { canAddNewTab, addTab } = get();
 
-            // Add the tab to the appropriate side in split view
-            useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
-        },
+      if (!canAddNewTab(isRightSide)) {
+        return;
+      }
 
-        addBackgroundTab: (tab, toRightSide = false) => {
-            const { activeTabId } = get();
+      const ensuredWorkspaceId = await useWorkspaceStore.getState().ensureWorkspace();
+      if (!ensuredWorkspaceId) {
+        console.error("[handleNewTab] Failed to ensure an active workspace. Cannot create tab.");
+        return;
+      }
 
-            // Add the tab to the tabs store
-            useTabsStore.getState().addBackgroundTab(tab);
+      const currentTabsCount = useTabsStore.getState().tabs.filter(t => t.workspaceId === ensuredWorkspaceId).length;
 
-            // Add the tab to the appropriate side in split view
-            useSplitViewStore.getState().addTabToSide(tab.id, toRightSide, activeTabId ?? undefined);
-        },
+      const language = content ? detectLanguage(content) : 'plaintext';
+      const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
+      const newTabId = crypto.randomUUID();
 
-        handleNewTab: (isRightSide: boolean, content?: string) => {
-          const { tabs, canAddNewTab, addTab } = get();
-          const { workspaces, activeWorkspaceId } = useWorkspaceStore.getState();
-        
-          // Check if we can add a new tab
-          if (!canAddNewTab(isRightSide)) {
-            return;
+      const newTab: Tab = {
+        id: newTabId,
+        title: `new ${currentTabsCount + 1}`,
+        content: content || '',
+        language,
+        languageLocked: shouldLock,
+        workspaceId: ensuredWorkspaceId,
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 }
+      };
+      addTab(newTab, isRightSide);
+    },
+
+    handleNewTabFromPaste: (isRightSide: boolean) => {
+      navigator.clipboard.readText().then(content => {
+        get().handleNewTab(isRightSide, content);
+      }).catch(err => console.error("Paste failed:", err));
+    },
+
+    removeTab: (id: string) => {
+      const { tabs } = get();
+      const tabToRemove = tabs.find(t => t.id === id);
+      if (!tabToRemove) return;
+
+      // 1. Remove from splitViewStore
+      useSplitViewStore.getState().removeTabFromSide(id);
+      // 2. Remove from tabsStore
+      useTabsStore.getState().removeTab(id);
+      // 3. Remove from DB
+      storage.deleteTab(id).catch(err => console.error("Failed to delete tab from DB:", err));
+
+      // 4. Check if workspace needs deletion (moved this logic from rootStore for clarity)
+      const checkAndDeleteWorkspace = async () => {
+        const currentTabs = useTabsStore.getState().tabs;
+        const currentActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+        if (currentActiveWorkspaceId === tabToRemove.workspaceId) {
+          const remainingTabsInWorkspace = currentTabs.filter(tab => tab.workspaceId === currentActiveWorkspaceId);
+          if (remainingTabsInWorkspace.length === 0) {
+            await useWorkspaceStore.getState().deleteWorkspace(currentActiveWorkspaceId);
           }
-        
-          // Get the current active workspace ID or create default if needed
-          let targetWorkspaceId = activeWorkspaceId;
-        
-          // Create default workspace if there are no workspaces OR no active workspace
-          if (!targetWorkspaceId || workspaces.length === 0) {
-            // Check if we already have a default workspace
-            const defaultWorkspace = workspaces.find(w => w.name === 'Default Workspace');
-        
-            if (defaultWorkspace) {
-              targetWorkspaceId = defaultWorkspace.id;
-              // Update active workspace
-              useWorkspaceStore.setState({ activeWorkspaceId: defaultWorkspace.id });
-            } else {
-              // Create new default workspace
-              const newDefaultWorkspace = {
-                id: crypto.randomUUID(),
-                name: 'Default Workspace',
-                links: [],
-                createdAt: Date.now(),
-                lastAccessed: Date.now()
-              };
-        
-              // Save the workspace and update the store
-              storage.saveWorkspace(newDefaultWorkspace);
-              useWorkspaceStore.setState({
-                workspaces: [...workspaces, newDefaultWorkspace],
-                activeWorkspaceId: newDefaultWorkspace.id
-              });
-              targetWorkspaceId = newDefaultWorkspace.id;
-            }
+        }
+      };
+      checkAndDeleteWorkspace();
+    },
+    setActiveTab: (id: string) => {
+      const { splitView } = get();
+      if (splitView.leftTabs.includes(id)) {
+        useSplitViewStore.getState().setActiveLeftTab(id);
+      } else if (splitView.rightTabs.includes(id)) {
+        useSplitViewStore.getState().setActiveRightTab(id);
+      } else {
+        useSplitViewStore.getState().setActiveLeftTab(id);
+      }
+    },
+    updateTabContent: (id, content) => useTabsStore.getState().updateTabContent(id, content),
+    updateTabLanguage: (id, language, lock = true) => useTabsStore.getState().updateTabLanguage(id, language, lock),
+    updateTabTitle: (id, title) => useTabsStore.getState().updateTabTitle(id, title),
+    updateTabState: (id, updates) => useTabsStore.getState().updateTabState(id, updates),
+    toggleTabPin: (id) => { // Keep complex logic here or move to utils
+      const { tabs, splitView } = get();
+      const tab = tabs.find(t => t.id === id);
+      if (!tab) return;
+      const isPinned = !tab.isPinned;
+      useTabsStore.getState().updateTabState(id, { isPinned });
+
+      if (isPinned) {
+        const side = splitView.leftTabs.includes(id) ? 'left' : 'right';
+        let currentList = side === 'left' ? [...splitView.leftTabs] : [...splitView.rightTabs];
+        let allCurrentTabs = useTabsStore.getState().tabs; // Get latest tabs state
+
+        // Find the index of the first unpinned tab
+        let firstUnpinnedIndex = -1;
+        for (let i = 0; i < currentList.length; i++) {
+          const currentTab = allCurrentTabs.find(t => t.id === currentList[i]);
+          if (currentTab && !currentTab.isPinned && currentList[i] !== id) { // Exclude the tab being pinned
+            firstUnpinnedIndex = i;
+            break;
           }
-        
-          // Detect language if content is provided
-          const language = content ? detectLanguage(content) : 'plaintext';
-          const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
-        
-          // Create the new tab
-          const newTab = {
-            id: crypto.randomUUID(),
-            title: `new ${tabs.length + 1}`,
-            content: content || '',
-            language,
-            languageLocked: shouldLock,
-            workspaceId: targetWorkspaceId,
-            dateCreated: Date.now(),
-            lastModified: Date.now(),
-            cursorPosition: { lineNumber: 1, column: 1 }
-          };
-        
-          // Create initial split view state if needed
-          const splitViewState = useSplitViewStore.getState().splitView;
-          if (!splitViewState || !splitViewState.workspaceId) {
-            const initialSplitView = {
-              id: crypto.randomUUID(),
-              isSplit: false,
-              leftTabs: [], // Remove newTab.id from here since addTab will handle it
-              rightTabs: [],
-              activeLeftTabId: null,
-              activeRightTabId: null,
-              activeSide: 'left',
-              splitRatio: 0.5,
-              leftTabHistory: [],
-              rightTabHistory: [],
-              workspaceId: targetWorkspaceId,
-              lastModified: Date.now()
-            };
-            storage.saveSplitView(initialSplitView);
-            useSplitViewStore.setState({ splitView: initialSplitView });
-          }
-
-          // Add the tab - this will handle adding it to the correct side's tab array
-          addTab(newTab, isRightSide);
-        },
-
-        handleNewTabFromPaste: (isRightSide: boolean) => {
-            const { handleNewTab } = get();
-
-            async function paste() {
-                return await navigator.clipboard.readText();
-            }
-
-            paste().then(content => handleNewTab(isRightSide, content));
-        },
-
-        removeTab: async (id) => {
-            // Remove the tab from the split view
-            useSplitViewStore.getState().removeTabFromSide(id);
-
-            // Remove the tab from the tabs store
-            useTabsStore.getState().removeTab(id);
-
-            // Delete the tab from persistence
-            await storage.deleteTab(id);
-
-            const activeWorkspace = getActiveWorkspace();
-            if (activeWorkspace) {
-                // Check if this was the last tab in the workspace
-                const remainingTabs = useTabsStore.getState().tabs.filter(tab => tab.workspaceId === activeWorkspace.id && tab.id !== id);
-                if (remainingTabs.length === 0) {
-                    // Delete splitView and workspace records
-                    await storage.deleteSplitViewByWorkspace(activeWorkspace.id);
-                    deleteWorkspace(activeWorkspace.id);
-                }
-            }
-        },
-
-        setActiveTab: (id) => {
-            const { splitView } = get();
-
-            // Set the active tab in the tabs store
-            useTabsStore.getState().setActiveTab(id);
-
-            // Set the active tab in the appropriate side of the split view
-            if (splitView.isSplit) {
-                if (splitView.leftTabs.includes(id)) {
-                    useSplitViewStore.getState().setActiveLeftTab(id);
-                } else if (splitView.rightTabs.includes(id)) {
-                    useSplitViewStore.getState().setActiveRightTab(id);
-                }
-            }
-        },
-
-        updateTabContent: (id, content) => {
-            useTabsStore.getState().updateTabContent(id, content);
-        },
-
-        updateTabLanguage: (id, language, lock = true) => {
-            useTabsStore.getState().updateTabLanguage(id, language, lock);
-        },
-
-        updateTabTitle: (id, title) => {
-            useTabsStore.getState().updateTabTitle(id, title);
-        },
-
-        updateTabState: (id, updates) => {
-            useTabsStore.getState().updateTabState(id, updates);
-        },
-
-        toggleTabPin: (id: string) => {
-            const { tabs, splitView } = get();
-            const tab = findTabById(tabs, id);
-            if (!tab) return;
-
-            // Toggle the pin state
-            const isPinned = !tab.isPinned;
-
-            // Update the tab
-            useTabsStore.getState().updateTabState(id, { isPinned });
-
-            // If pinning, move to start of list after other pinned tabs
-            if (isPinned) {
-                const side = splitView.leftTabs.includes(id) ? 'left' : 'right';
-                const currentList = side === 'left' ? splitView.leftTabs : splitView.rightTabs;
-
-                // Find the last pinned tab index
-                const lastPinnedIndex = currentList.findIndex(tabId => {
-                    const tab = findTabById(tabs, tabId);
-                    return !tab?.isPinned;
-                });
-
-                // Remove the tab from its current position
-                const newList = currentList.filter(tabId => tabId !== id);
-
-                // Insert after the last pinned tab (or at start if no pinned tabs)
-                const insertIndex = lastPinnedIndex === -1 ? 0 : lastPinnedIndex;
-                newList.splice(insertIndex, 0, id);
-
-                // Update the split view
-                if (side === 'left') {
-                    useSplitViewStore.getState().setSplitView({ leftTabs: newList });
-                } else {
-                    useSplitViewStore.getState().setSplitView({ rightTabs: newList });
-                }
-            }
-        },
-
-        saveTabs: (tabs) => {
-            useTabsStore.setState({ tabs });
-            storage.saveTabs(tabs);
-        },
-
-        // Editor state functions
-        togglePreviewMode: () => {
-            useEditorStore.getState().togglePreviewMode();
-        },
-
-        // Split view functions
-        splitScreen: (leftTabId, rightTabId) => {
-            const { tabs } = get();
-
-            const removeTab = (tabId: string) => {
-                return tabs
-                    .filter(tab => tab.id !== tabId)
-                    .map(tab => tab.id);
-            }
-
-            if (rightTabId) {
-                // If a right tab is specified, use it directly
-                useSplitViewStore.getState().splitScreen(removeTab(rightTabId), rightTabId);
-            } else {
-                // Get all tabs except the one being moved to the right
-                useSplitViewStore.getState().splitScreen(removeTab(leftTabId), leftTabId);
-            }
-        },
-
-        compareFromClipboard: async (originalTabId, isRightSide) => {
-            const { splitView, addTab, setActiveLeftTab, setActiveRightTab } = get();
-            const tabsStore = useTabsStore.getState();
-            const splitViewStore = useSplitViewStore.getState();
-            const { activeWorkspaceId } = useWorkspaceStore.getState();
-
-            let clipboardContent = '';
-            try {
-                clipboardContent = await navigator.clipboard.readText();
-            } catch (err) {
-                console.error("Failed to read clipboard contents: ", err);
-                return;
-            }
-
-            const addNewTabToRight = !isRightSide;
-            const language = detectLanguage(clipboardContent);
-            const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(clipboardContent);
-            const newTabId = crypto.randomUUID();
-            const now = Date.now();
-            const newTab: Tab = {
-                id: newTabId,
-                title: "Clipboard Compare",
-                content: clipboardContent,
-                language,
-                languageLocked: shouldLock,
-                cursorPosition: {
-                    lineNumber: 0,
-                    column: 0
-                },
-                isTablet: false,
-                dateCreated: now,
-                lastModified: now,
-                workspaceId: activeWorkspaceId || ''
-            };
-
-            if (!splitView.isSplit) {
-                tabsStore.addTab(newTab);
-                const updatedSplitView = {
-                    isSplit: true,
-                    leftTabs: [originalTabId],
-                    rightTabs: [newTabId],
-                    activeLeftTabId: originalTabId,
-                    activeRightTabId: newTabId,
-                    splitRatio: splitView.splitRatio,
-                };
-                splitViewStore.setSplitView(updatedSplitView);
-            } else {
-                addTab(newTab, addNewTabToRight);
-                if (addNewTabToRight) {
-                    setActiveRightTab(newTabId);
-                } else {
-                    setActiveLeftTab(newTabId);
-                }
-                if (isRightSide) {
-                    setActiveRightTab(originalTabId);
-                } else {
-                    setActiveLeftTab(originalTabId);
-                }
-            }
-        },
-
-        reorderTabs: (side, newOrder) => {
-            if (side === 'left') {
-                useSplitViewStore.getState().setSplitView({
-                    leftTabs: newOrder
-                });
-            } else {
-                useSplitViewStore.getState().setSplitView({
-                    rightTabs: newOrder
-                });
-            }
-        },
-
-        unsplitScreen: (fromRight) => {
-            useSplitViewStore.getState().unsplitScreen(fromRight);
-
-            // Set the active tab based on which side was active
-            const { splitView } = useSplitViewStore.getState();
-            if (fromRight) {
-                useTabsStore.getState().setActiveTab(splitView.activeLeftTabId || '');
-            } else {
-                useTabsStore.getState().setActiveTab(splitView.activeRightTabId || '');
-            }
-        },
-
-        moveTabToRight: (tabId) => {
-            useSplitViewStore.getState().moveTabToRight(tabId);
-            useTabsStore.getState().setActiveTab(tabId);
-        },
-
-        moveTabToLeft: (tabId) => {
-            useSplitViewStore.getState().moveTabToLeft(tabId);
-            useTabsStore.getState().setActiveTab(tabId);
-        },
-
-        setActiveLeftTab: (id) => {
-            useSplitViewStore.getState().setActiveLeftTab(id);
-            useTabsStore.getState().setActiveTab(id);
-            set({
-                focusedEditorSide: 'left'
-            });
-        },
-
-        setActiveRightTab: (id) => {
-            useSplitViewStore.getState().setActiveRightTab(id);
-            useTabsStore.getState().setActiveTab(id);
-            set({
-                focusedEditorSide: 'right'
-            });
-        },
-
-        setActiveSide: (side) => {
-            useSplitViewStore.getState().setActiveSide(side);
-        },
-
-        setSplitRatio: (ratio) => {
-            useSplitViewStore.getState().setSplitRatio(ratio);
-        },
-
-        // Bulk tab operations
-        closeTabsToLeft: async (tabId, isRightSide) => {
-            const { splitView } = get();
-            const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
-            const tabIndex = currentTabList.indexOf(tabId);
-
-            if (tabIndex <= 0) return; // No tabs to the left
-
-            // Get the tabs to close
-            const tabsToClose = currentTabList.slice(0, tabIndex);
-
-            // Close the tabs in the split view
-            useSplitViewStore.getState().closeTabsToLeft(tabId, isRightSide);
-
-            // Remove the tabs from the tabs store and persistence
-            for (const id of tabsToClose) {
-                useTabsStore.getState().removeTab(id);
-                await storage.deleteTab(id);
-            }
-        },
-
-        toggleTabPin: (id: string) => {
-            const { tabs, splitView } = get();
-            const tab = findTabById(tabs, id);
-            if (!tab) return;
-
-            // Toggle the pin state
-            const isPinned = !tab.isPinned;
-
-            // Update the tab
-            useTabsStore.getState().updateTabState(id, { isPinned });
-
-            // If pinning, move to start of list after other pinned tabs
-            if (isPinned) {
-                const side = splitView.leftTabs.includes(id) ? 'left' : 'right';
-                const currentList = side === 'left' ? splitView.leftTabs : splitView.rightTabs;
-
-                // Find the last pinned tab index
-                const lastPinnedIndex = currentList.findIndex(tabId => {
-                    const tab = findTabById(tabs, tabId);
-                    return !tab?.isPinned;
-                });
-
-                // Remove the tab from its current position
-                const newList = currentList.filter(tabId => tabId !== id);
-
-                // Insert after the last pinned tab (or at start if no pinned tabs)
-                const insertIndex = lastPinnedIndex === -1 ? 0 : lastPinnedIndex;
-                newList.splice(insertIndex, 0, id);
-
-                // Update the split view
-                if (side === 'left') {
-                    useSplitViewStore.getState().setSplitView({ leftTabs: newList });
-                } else {
-                    useSplitViewStore.getState().setSplitView({ rightTabs: newList });
-                }
-            }
-        },
-
-        closeTabsToRight: async (tabId, isRightSide) => {
-            const { splitView } = get();
-            const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
-            const tabIndex = currentTabList.indexOf(tabId);
-
-            if (tabIndex === -1 || tabIndex === currentTabList.length - 1) return; // No tabs to the right
-
-            // Get the tabs to close
-            const tabsToClose = currentTabList.slice(tabIndex + 1);
-
-            // Close the tabs in the split view
-            useSplitViewStore.getState().closeTabsToRight(tabId, isRightSide);
-
-            // Remove the tabs from the tabs store and persistence
-            for (const id of tabsToClose) {
-                useTabsStore.getState().removeTab(id);
-                await storage.deleteTab(id);
-            }
-
-            // Set the active tab
-            if (isRightSide) {
-                useSplitViewStore.getState().setActiveRightTab(tabId);
-            } else {
-                useSplitViewStore.getState().setActiveLeftTab(tabId);
-            }
-            useTabsStore.getState().setActiveTab(tabId);
-        },
-
-        closeAllExcept: async (tabId, isRightSide) => {
-            const { splitView } = get();
-            const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
-
-            if (currentTabList.length <= 1) return; // Only one tab, nothing to close
-
-            // Get the tabs to close
-            const tabsToClose = currentTabList.filter(id => id !== tabId);
-
-            // Close the tabs in the split view
-            useSplitViewStore.getState().closeAllExcept(tabId, isRightSide);
-
-            // Remove the tabs from the tabs store and persistence
-            for (const id of tabsToClose) {
-                useTabsStore.getState().removeTab(id);
-                await storage.deleteTab(id);
-            }
-
-            // Set the active tab
-            if (isRightSide) {
-                useSplitViewStore.getState().setActiveRightTab(tabId);
-            } else {
-                useSplitViewStore.getState().setActiveLeftTab(tabId);
-            }
-            useTabsStore.getState().setActiveTab(tabId);
-        },
-
-        duplicateTab: (tabId, isRightSide) => {
-            // Duplicate the tab in the tabs store
-            const newTabId = useTabsStore.getState().duplicateTab(tabId);
-
-            if (!newTabId) return '';
-
-            // Add the new tab to the appropriate side in split view
-            const { splitView } = get();
-            const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
-            const tabIndex = currentTabList.indexOf(tabId);
-
-            // Insert the new tab after the current tab
-            const newTabList = [...currentTabList];
-            newTabList.splice(tabIndex + 1, 0, newTabId);
-
-            // Update the split view
-            if (isRightSide) {
-                useSplitViewStore.getState().setSplitView({
-                    rightTabs: newTabList,
-                    activeRightTabId: newTabId,
-                });
-            } else {
-                useSplitViewStore.getState().setSplitView({
-                    leftTabs: newTabList,
-                    activeLeftTabId: newTabId,
-                });
-            }
-
-            // Set the active tab
-            useTabsStore.getState().setActiveTab(newTabId);
-
-            return newTabId;
-        },
-
-        duplicateAndSplitTab: (tabId) => {
-            const { duplicateTab, splitScreen } = get();
-
-            const rightTabId = duplicateTab(tabId, true);
-            splitScreen(tabId, rightTabId);
-            return rightTabId;
-        },
-
-        setCursorPosition: (tabId, cursorPosition) => {
-            useTabsStore.getState().setCursorPosition(tabId, cursorPosition);
-        },
-
-        groupTabsByType: (isRightSide) => {
-            const { tabs, splitView } = get();
-            const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
-
-            // Use the utility function to group tabs by language
-            const groupedTabs = groupTabsByLanguage(tabs, currentTabList);
-
-            // Update the split view
-            if (isRightSide) {
-                useSplitViewStore.getState().setSplitView({
-                    rightTabs: groupedTabs,
-                });
-            } else {
-                useSplitViewStore.getState().setSplitView({
-                    leftTabs: groupedTabs,
-                });
-            }
-        },
-
-        // Tab limit checks
-        canAddNewTab: (toRightSide = false) => {
-            const { tabs, splitView } = get();
-
-            // If in split view, check the appropriate side
-            if (splitView?.isSplit) {
-                if (toRightSide) {
-                    // Check right side tabs
-                    const rightTabIds = splitView.rightTabs;
-                    const emptyRightTabs = rightTabIds.filter(id => {
-                        const tab = findTabById(tabs, id);
-                        return tab && isTabEmpty(tab);
-                    });
-
-                    return emptyRightTabs.length < 3;
-                } else {
-                    // Check left side tabs
-                    const leftTabIds = splitView.leftTabs;
-                    const emptyLeftTabs = leftTabIds.filter(id => {
-                        const tab = findTabById(tabs, id);
-                        return tab && isTabEmpty(tab);
-                    });
-
-                    return emptyLeftTabs.length < 3;
-                }
-            } else {
-                // Not in split view, check all tabs
-                return countEmptyTabs(tabs) < 3;
-            }
-        },
-
-        focusedEditorSide: null,
-        saveTabDataById: (tabId: string) => {
-            const { tabs } = get();
-
-            if (!tabId) {
-                return;
-            }
-
-            const tabToSave = tabs.find(tab => tab.id === tabId);
-
-            if (!tabToSave) {
-                return;
-            }
-
-            if (tabToSave.isTablet) {
-                return;
-            }
-
-            try {
-                const currentContent = tabToSave.content;
-                const detector = languageRegistry.getById(tabToSave.language);
-                const extension = detector?.getFileExtension() || 'txt';
-                const blob = new Blob([currentContent], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${tabToSave.title}.${extension}`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                console.error(`[Store Save] Error during save for Tab ID ${tabToSave.id}:`, error);
-            }
-        },
-    };
+        }
+
+        currentList = currentList.filter(tabId => tabId !== id); // Remove the tab
+
+        // Insert at the beginning of unpinned tabs, or end if all are pinned
+        const insertIndex = firstUnpinnedIndex === -1 ? currentList.length : firstUnpinnedIndex;
+        currentList.splice(insertIndex, 0, id);
+
+        if (side === 'left') {
+          useSplitViewStore.getState().setSplitView({ leftTabs: currentList });
+        } else {
+          useSplitViewStore.getState().setSplitView({ rightTabs: currentList });
+        }
+      } else {
+        // Unpinning - order might be handled differently or just keep its place
+        // For simplicity, keep its current relative order among unpinned tabs
+        // Or potentially move it based on lastModified/dateCreated if desired
+      }
+    },
+    // saveTabs: (tabs) => useTabsStore.getState().saveTabs(tabs), // Likely less needed with auto-save
+    updateTabOrder: (leftTabs, rightTabs) => useSplitViewStore.getState().updateTabOrder(leftTabs, rightTabs),
+
+    // Editor state
+    togglePreviewMode: () => useEditorStore.getState().togglePreviewMode(),
+
+    // Split view
+    splitScreen: (leftTabId, rightTabId) => {
+      const { tabs } = useTabsStore.getState(); // Get current tabs
+      const allTabIds = tabs.map(t => t.id);
+      let targetLeftIds = allTabIds.filter(id => id !== rightTabId); // Default: all except the one moving right
+      let targetRightId = rightTabId;
+
+      if (!rightTabId) { // If only leftTabId provided, it moves right
+        targetLeftIds = allTabIds.filter(id => id !== leftTabId);
+        targetRightId = leftTabId;
+      }
+      if (!targetRightId) { // Need at least one tab on the right
+        console.error("Split screen requires a tab ID for the right side.");
+        return;
+      }
+
+      useSplitViewStore.getState().splitScreen(targetLeftIds, targetRightId);
+    },
+    unsplitScreen: (fromRight) => useSplitViewStore.getState().unsplitScreen(fromRight),
+    moveTabToRight: (tabId) => useSplitViewStore.getState().moveTabToRight(tabId),
+    moveTabToLeft: (tabId) => useSplitViewStore.getState().moveTabToLeft(tabId),
+    setActiveLeftTab: (id) => useSplitViewStore.getState().setActiveLeftTab(id),
+    setActiveRightTab: (id) => useSplitViewStore.getState().setActiveRightTab(id),
+    setActiveSide: (side) => useSplitViewStore.getState().setActiveSide(side),
+    setSplitRatio: (ratio) => useSplitViewStore.getState().setSplitRatio(ratio),
+
+    // Bulk tab operations (delegate to splitViewStore)
+    closeTabsToLeft: (tabId, isRightSide) => {
+      const tabsToClose = useSplitViewStore.getState().getTabsToLeft(tabId, isRightSide); // Helper needed in splitViewStore
+      useSplitViewStore.getState().closeTabsToLeft(tabId, isRightSide);
+      tabsToClose.forEach(id => get().removeTab(id)); // Call rootStore removeTab for full cleanup
+    },
+    closeTabsToRight: (tabId, isRightSide) => {
+      const tabsToClose = useSplitViewStore.getState().getTabsToRight(tabId, isRightSide); // Helper needed in splitViewStore
+      useSplitViewStore.getState().closeTabsToRight(tabId, isRightSide);
+      tabsToClose.forEach(id => get().removeTab(id));
+    },
+    closeAllExcept: (tabId, isRightSide) => {
+      const tabsToClose = useSplitViewStore.getState().getAllExcept(tabId, isRightSide); // Helper needed in splitViewStore
+      useSplitViewStore.getState().closeAllExcept(tabId, isRightSide);
+      tabsToClose.forEach(id => get().removeTab(id));
+    },
+    duplicateTab: (tabId, isRightSide = false) => { // Default to left if side not specified
+      const newTabId = useTabsStore.getState().duplicateTab(tabId);
+      if (!newTabId) return '';
+      useSplitViewStore.getState().addTabToSide(newTabId, isRightSide, tabId); // Add next to original
+      // Activate the new tab
+      const { setActiveLeftTab, setActiveRightTab } = useSplitViewStore.getState();
+      if (isRightSide) {
+        setActiveRightTab(newTabId);
+      } else {
+        setActiveLeftTab(newTabId);
+      }
+      return newTabId;
+    },
+    duplicateAndSplitTab: (tabId) => {
+      const newTabId = get().duplicateTab(tabId, true); // Duplicate to right side
+      if (!newTabId) return '';
+      get().splitScreen(tabId, newTabId); // Split with original on left, new on right
+      return newTabId;
+    },
+    setCursorPosition: (tabId, cursorPosition) => useTabsStore.getState().setCursorPosition(tabId, cursorPosition),
+    groupTabsByType: (isRightSide) => { // Logic might move to splitViewStore
+      const { tabs } = useTabsStore.getState();
+      const { splitView, setSplitView } = useSplitViewStore.getState();
+      const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
+      const groupedTabs = groupTabsByLanguage(tabs, currentTabList); // Use util
+
+      if (isRightSide) {
+        setSplitView({ rightTabs: groupedTabs });
+      } else {
+        setSplitView({ leftTabs: groupedTabs });
+      }
+    },
+
+    // Tab limit checks (delegate)
+    canAddNewTab: (toRightSide = false) => {
+      const { tabs } = useTabsStore.getState();
+      const { splitView } = useSplitViewStore.getState();
+      if (!splitView) {
+        return true;
+      }
+      else if (splitView.isSplit) {
+        const targetList = toRightSide ? splitView.rightTabs : splitView.leftTabs;
+        return targetList.filter(id => isTabEmpty(tabs.find(t => t.id === id))).length < 3;
+      } else {
+        return countEmptyTabs(tabs) < 3;
+      }
+    },
+
+    compareFromClipboard: async (originalTabId, isRightSide) => {
+      // Keep existing logic, but ensure it uses rootStore's addTab and activation
+      const { splitView, addTab, setActiveLeftTab, setActiveRightTab, splitScreen } = get();
+      const { activeWorkspaceId } = useWorkspaceStore.getState();
+
+      let clipboardContent = '';
+      try {
+        clipboardContent = await navigator.clipboard.readText();
+      } catch (err) { console.error("Paste failed:", err); return; }
+
+      const addNewTabToRight = !isRightSide;
+      const language = detectLanguage(clipboardContent);
+      const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(clipboardContent);
+      const newTabId = crypto.randomUUID();
+      const now = Date.now();
+      const newTab: Tab = {
+        id: newTabId, title: "Clipboard Compare", content: clipboardContent, language,
+        languageLocked: shouldLock, cursorPosition: { lineNumber: 1, column: 1 },
+        isTablet: false, dateCreated: now, lastModified: now, workspaceId: activeWorkspaceId || ''
+      };
+
+      if (!splitView.isSplit) {
+        // Add the new tab first (addTab handles splitView update internally now)
+        addTab(newTab, true); // Add to right side initially
+        // Now explicitly set up the split using the correct function
+        splitScreen(originalTabId, newTabId); // This sets up the split view state correctly
+      } else {
+        addTab(newTab, addNewTabToRight); // Adds and activates
+        // Ensure original tab is also active on its side
+        if (isRightSide) {
+          setActiveRightTab(originalTabId);
+        } else {
+          setActiveLeftTab(originalTabId);
+        }
+      }
+    },
+
+    reorderTabs: (side, newOrder) => useSplitViewStore.getState().reorderTabs(side, newOrder),
+
+    // Save specific tab
+    saveTabDataById: (tabId: string) => { // Keep existing logic
+      const { tabs } = useTabsStore.getState();
+      if (!tabId) return;
+      const tabToSave = tabs.find(tab => tab.id === tabId);
+      if (!tabToSave || tabToSave.isTablet) return;
+      try {
+        const detector = languageRegistry.getById(tabToSave.language);
+        const extension = detector?.getFileExtension() || 'txt';
+        const blob = new Blob([tabToSave.content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${tabToSave.title}.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) { console.error(`Save error Tab ID ${tabId}:`, error); }
+    },
+  };
 });
