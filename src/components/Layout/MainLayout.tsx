@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRootStore } from '../../stores';
 import { useSearchStore } from '../../stores/searchStore';
 import { WelcomeScreen } from '../Welcome/WelcomeScreen';
@@ -32,12 +32,15 @@ const MainLayout: React.FC = () => {
 
   const { loadWorkspaces } = useWorkspaceStore();
   const { saveState } = usePersistenceStore(); // Get saveState function
+  const [isAppInitialized, setIsAppInitialized] = useState(false);
 
   // Initialize workspace store
   useEffect(() => {
     loadWorkspaces().then(() => {
+      setIsAppInitialized(true);
     }).catch(error => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
+      setIsAppInitialized(true); // Still mark as initialized to allow rendering (even if error state)
     });
   }, [loadWorkspaces]);
 
@@ -209,9 +212,18 @@ const MainLayout: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [toggleSearch, activeLeftTabId, activeRightTabId, saveTabDataById]);
+  }, [toggleSearch, activeLeftTabId, activeRightTabId, saveTabDataById, saveState]);
 
   useUrlTabHandler();
+
+  if (!isAppInitialized) {
+    return (
+      <div className="app-loading-container">
+        <div className="app-loading-spinner"></div>
+        <p>Loading tabs...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white">
