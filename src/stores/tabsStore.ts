@@ -6,7 +6,7 @@ import { useWorkspaceStore } from './workspaceStore';
 interface TabsStore {
   tabs: Tab[];
   activeTabId: string | null;
-  
+
   // Tab management
   addTab: (tab: Tab) => void;
   addBackgroundTab: (tab: Tab) => void;
@@ -16,15 +16,16 @@ interface TabsStore {
   updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
   updateTabTitle: (id: string, title: string) => void;
   updateTabState: (id: string, updates: Partial<Tab>) => void;
-  duplicateTab: (tabId: string) => string; // Returns the new tab ID
+  duplicateTab: (tabId: string) => string;
   setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
+  removeTabsByWorkspace: (workspaceId: string) => void;
 }
 
 // Helper function to initialize a tab with default values
 const initializeTab = (tab: Tab): Tab => {
   const now = Date.now();
   const { activeWorkspaceId } = useWorkspaceStore.getState();
-  
+
   return {
     id: tab.id ?? crypto.randomUUID(),
     title: tab.title ?? 'New Tab',
@@ -47,7 +48,7 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
 
   setCursorPosition: (tabId, cursorPosition) => set((state) => ({
     tabs: state.tabs.map((tab) =>
-        tab.id === tabId ? { ...tab, cursorPosition } : tab
+      tab.id === tabId ? { ...tab, cursorPosition } : tab
     ),
   })),
 
@@ -113,12 +114,16 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       dateCreated: now,
       lastModified: now
     };
-    
+
     set((state) => ({
       tabs: [...state.tabs, newTab],
       activeTabId: newTab.id,
     }));
-    
+
     return newTab.id;
   },
+
+  removeTabsByWorkspace: (workspaceId) => set(state => ({
+    tabs: state.tabs.filter(tab => tab.workspaceId !== workspaceId)
+  })),
 }));

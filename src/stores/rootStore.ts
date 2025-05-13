@@ -3,7 +3,6 @@ import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { useEditorStore } from './editorStore';
 import { useWorkspaceStore } from './workspaceStore';
-// import { usePersistenceStore } from './persistenceStore'; // Keep if needed for saveState
 import { EditorPosition, Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
 
@@ -15,9 +14,7 @@ import {
 import { detectLanguage, isAmbiguousLanguage } from "../languages";
 import { StorageProviderFactory } from '../db';
 
-// Define the combined store interface
 interface RootStore {
-  // Tab management
   tabs: Tab[];
   activeTabId: string | null;
   addTab: (tab: Tab, toRightSide?: boolean) => void;
@@ -31,7 +28,6 @@ interface RootStore {
   updateTabTitle: (id: string, title: string) => void;
   updateTabState: (id: string, updates: Partial<Tab>) => void;
   toggleTabPin: (id: string) => void;
-  // saveTabs: (tabs: Tab[]) => void;
   updateTabOrder: (leftTabs: string[], rightTabs: string[]) => void;
 
   // Editor state
@@ -76,47 +72,16 @@ interface RootStore {
 }
 
 export const useRootStore = create<RootStore>((set, get) => {
-  // Get the individual stores
   const splitViewStore = useSplitViewStore.getState();
   const editorStore = useEditorStore.getState();
-  // const persistenceStore = usePersistenceStore.getState(); // Keep if using saveState from here
   const storage = StorageProviderFactory.getProvider();
-  // const { deleteWorkspace, getActiveWorkspace } = useWorkspaceStore.getState(); // Already available via get()
 
-  // --- REMOVE Persistence Initialization Call ---
-  // persistenceStore.initialize(); // REMOVE THIS LINE
-
-  // --- Set up auto-save interval ---
-  // This can stay, but ensure saveState works correctly (see step 5)
-  // setInterval(() => {
-  //   usePersistenceStore.getState().saveState(); // Check if saveState needs refinement
-  // }, 10000); // Save every 10 seconds
-
-  // --- REMOVE Event Listeners ---
-  // window.removeEventListener('loadPersistedTabs', ...); // REMOVE
-  // window.removeEventListener('loadPersistedSplitView', ...); // REMOVE
-  // window.removeEventListener('requestSaveState', ...); // REMOVE (if saveState is handled differently)
-  // Set up event listeners for persistence
-  //     window.addEventListener('loadPersistedTabs', ((event: CustomEvent) => {
-  //         useTabsStore.setState({ tabs: event.detail });
-  //     }) as EventListener);
-  //
-  //     window.addEventListener('loadPersistedSplitView', ((event: CustomEvent) => {
-  //         useSplitViewStore.setState({ splitView: event.detail });
-  //     }) as EventListener);
-  //
-  //     window.addEventListener('requestSaveState', ((event: CustomEvent) => {
-  //         const tabs = useTabsStore.getState().tabs;
-  //         const splitView = useSplitViewStore.getState().splitView;
-  //         event.detail.callback(tabs, splitView);
-  //     }) as EventListener);
-
-  // Set up subscriptions to keep the root store in sync with individual stores
   useTabsStore.subscribe((state) => {
     set({ tabs: state.tabs });
   });
 
   useSplitViewStore.subscribe((state) => {
+    if (!state.splitView) return;
     const activeTabId = state.splitView.activeSide === 'right'
       ? state.splitView.activeRightTabId
       : state.splitView.activeLeftTabId;
@@ -154,7 +119,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
     addBackgroundTab: (tab, toRightSide = false) => {
       useTabsStore.getState().addBackgroundTab(tab);
-      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide); // Don't activate
+      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
     },
 
     handleNewTab: async (isRightSide: boolean, content?: string) => {
@@ -164,16 +129,13 @@ export const useRootStore = create<RootStore>((set, get) => {
         return;
       }
 
-      // Ensure a workspace exists and get its ID
       const ensuredWorkspaceId = await useWorkspaceStore.getState().ensureWorkspace();
       if (!ensuredWorkspaceId) {
-          console.error("[handleNewTab] Failed to ensure an active workspace. Cannot create tab.");
-          return;
+        console.error("[handleNewTab] Failed to ensure an active workspace. Cannot create tab.");
+        return;
       }
 
-      // Get the latest count of tabs from tabsStore *after* workspace ensures, as it might have loaded tabs
       const currentTabsCount = useTabsStore.getState().tabs.filter(t => t.workspaceId === ensuredWorkspaceId).length;
-
 
       const language = content ? detectLanguage(content) : 'plaintext';
       const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
@@ -185,12 +147,12 @@ export const useRootStore = create<RootStore>((set, get) => {
         content: content || '',
         language,
         languageLocked: shouldLock,
-        workspaceId: ensuredWorkspaceId, // Use the ensured active workspace ID
+        workspaceId: ensuredWorkspaceId,
         dateCreated: Date.now(),
         lastModified: Date.now(),
         cursorPosition: { lineNumber: 1, column: 1 }
       };
-      addTab(newTab, isRightSide); // This already handles tabsStore and splitViewStore updates
+      addTab(newTab, isRightSide);
     },
 
     handleNewTabFromPaste: (isRightSide: boolean) => {
@@ -218,21 +180,19 @@ export const useRootStore = create<RootStore>((set, get) => {
         if (currentActiveWorkspaceId === tabToRemove.workspaceId) {
           const remainingTabsInWorkspace = currentTabs.filter(tab => tab.workspaceId === currentActiveWorkspaceId);
           if (remainingTabsInWorkspace.length === 0) {
-            console.log(`Deleting workspace ${currentActiveWorkspaceId} as it's now empty.`);
             await useWorkspaceStore.getState().deleteWorkspace(currentActiveWorkspaceId);
           }
         }
       };
       checkAndDeleteWorkspace();
     },
-    setActiveTab: (id: string) => { // This might be less used now, activation happens via setActiveLeft/RightTab
+    setActiveTab: (id: string) => {
       const { splitView } = get();
       if (splitView.leftTabs.includes(id)) {
         useSplitViewStore.getState().setActiveLeftTab(id);
       } else if (splitView.rightTabs.includes(id)) {
         useSplitViewStore.getState().setActiveRightTab(id);
       } else {
-        // If tab not found in current split view (e.g., after unsplit), default to left
         useSplitViewStore.getState().setActiveLeftTab(id);
       }
     },
@@ -364,7 +324,10 @@ export const useRootStore = create<RootStore>((set, get) => {
     canAddNewTab: (toRightSide = false) => {
       const { tabs } = useTabsStore.getState();
       const { splitView } = useSplitViewStore.getState();
-      if (splitView.isSplit) {
+      if (!splitView) {
+        return true;
+      }
+      else if (splitView.isSplit) {
         const targetList = toRightSide ? splitView.rightTabs : splitView.leftTabs;
         return targetList.filter(id => isTabEmpty(tabs.find(t => t.id === id))).length < 3;
       } else {

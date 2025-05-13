@@ -10,12 +10,25 @@ export interface Tab {
   isPinned?: boolean;
   dateCreated: number;
   lastModified: number;
-  workspaceId: string; // New field
+  workspaceId: string;
 }
 
 export interface EditorPosition {
   lineNumber: number;
   column: number;
+}
+
+export interface SplitViewRecord {
+  id: string;
+  isSplit: boolean;
+  leftTabs: string[];
+  rightTabs: string[];
+  activeLeftTabId: string | null;
+  activeRightTabId: string | null;
+  activeSide: 'left' | 'right' | null;
+  splitRatio: number;
+  workspaceId: string;
+  lastModified: number;
 }
 
 export interface SplitViewState {
@@ -25,11 +38,11 @@ export interface SplitViewState {
   rightTabs: string[];
   activeLeftTabId: string | null;
   activeRightTabId: string | null;
+  activeSide: 'left' | 'right' | null;
   splitRatio: number;
   leftTabHistory: string[];
   rightTabHistory: string[];
-  activeSide: string | null;
-  workspaceId: string; // New field
+  workspaceId: string;
 }
 
 export interface WorkspaceLink {

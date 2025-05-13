@@ -1,23 +1,23 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { StorageProviderFactory } from '../../db';
 import { BaseModal } from '../../languages/json/components/modals/BaseModal';
-import { useRootStore } from '../../stores';
+import { useRootStore, useCacheStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useTabsStore } from '../../stores/tabsStore';
-import { getPreviousActiveTab, updateTabHistory, removeTabFromHistory } from '../../utils'; 
-import { Tab, SplitViewState } from '../../types'; // Import types
-import { 
-  Search, X, Folder, FolderPlus, Edit, Trash2, Pin, 
+import { Tab, SplitViewState } from '../../types';
+import {
+  Search, X, Folder, FolderPlus, Edit, Trash2, Pin,
   Merge, Filter, ArrowDownAZ, ArrowUpZA, AlertTriangle,
   Layers, ChevronRight, ChevronDown, Copy
 } from 'lucide-react';
 import { languageRegistry } from '../../languages';
-import { useSplitViewStore } from '../../stores/splitViewStore'; 
-import { DndContext, 
-  DragEndEvent, 
-  DragStartEvent, 
-  PointerSensor, 
-  useSensor, 
+import { useSplitViewStore } from '../../stores/splitViewStore';
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
   useSensors,
   DragOverlay,
   useDraggable,
@@ -29,7 +29,7 @@ import { useModalStore } from '../../stores/modalStore';
 const getRelativeTimeString = (timestamp: number): string => {
   const now = Date.now();
   const diffInSeconds = Math.floor((now - timestamp) / 1000);
-  
+
   if (diffInSeconds < 60) {
     return 'Just now';
   } else if (diffInSeconds < 3600) {
@@ -111,7 +111,6 @@ interface TabGroupProps {
   selectedTabIds: Set<string>;
   onSelectTab: (tabId: string, multiSelect: boolean) => void;
   onDoubleClickTab: (tabId: string) => void;
-  // onRenameTab: (tabId: string, currentTitle: string) => void; // Replaced by internal edit handling
   editingTabId: string | null;
   onStartEditTab: (tabId: string) => void;
   onSaveTabTitle: (tabId: string, newTitle: string) => void;
@@ -170,11 +169,11 @@ const TabGroup: React.FC<TabGroupProps> = ({
               depth={1}
             />
           ))}
-           {tabs.length === 0 && (
-             <div className="h-8 flex items-center justify-center text-xs text-gray-500 italic">
-                Drop tabs here
-             </div>
-           )}
+          {tabs.length === 0 && (
+            <div className="h-8 flex items-center justify-center text-xs text-gray-500 italic">
+              Drop tabs here
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -212,6 +211,11 @@ const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
   depth = 0,
   isDraggingOverlay = false, // Default to false
 }) => {
+  // Count tabs in the same workspace to determine if this is the only tab
+  const allApplicationTabs = useRootStore(state => state.tabs);
+  const tabsInSameWorkspace = allApplicationTabs.filter(t => t.workspaceId === tab.workspaceId);
+  const isOnlyTabInWorkspace = tabsInSameWorkspace.length === 1;
+
   const {
     attributes,
     listeners,
@@ -220,10 +224,11 @@ const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
     isDragging,
   } = useDraggable({
     id: tab.id,
-    disabled: tab.isPinned,
+    disabled: tab.isPinned || isOnlyTabInWorkspace, // Disable dragging if it's the only tab in workspace
     data: {
       type: 'tab',
       tab,
+      isOnlyTabInWorkspace,
     }
   });
 
@@ -269,8 +274,8 @@ const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
 
   const getLanguageColor = () => {
     if (tab.isTablet) return 'bg-purple-500/20 text-purple-300';
-    
-    switch(tab.language) {
+
+    switch (tab.language) {
       case 'javascript': return 'bg-yellow-500/20 text-yellow-300';
       case 'typescript': return 'bg-blue-500/20 text-blue-300';
       case 'json': return 'bg-green-500/20 text-green-300';
@@ -328,30 +333,29 @@ const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
           )}
         </div>
         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-            {!isEditing && (
-                <button onClick={(e) => { e.stopPropagation(); onStartEdit(tab.id); }} className="p-0.5 text-gray-400 hover:text-blue-300 hover:bg-gray-600/50 rounded" title="Rename Tab">
-                    <Edit size={12} />
-                </button>
-            )}
+          {!isEditing && (
+            <button onClick={(e) => { e.stopPropagation(); onStartEdit(tab.id); }} className="p-0.5 text-gray-400 hover:text-blue-300 hover:bg-gray-600/50 rounded" title="Rename Tab">
+              <Edit size={12} />
+            </button>
+          )}
         </div>
         <div className={`text-xs px-2 py-0.5 rounded ${getLanguageColor()} ml-2 flex-shrink-0`}>
-            {getLanguageLabel()}
+          {getLanguageLabel()}
         </div>
-        
+
         {/* Add a container for the timestamp and split view indicator */}
         <div className="flex items-center ml-2 text-xs text-gray-500 flex-shrink-0">
           {/* Last modified timestamp */}
           <span className="mr-2">
             {getRelativeTimeString(tab.lastModified)}
           </span>
-          
+
           {/* Split view position indicator */}
           {useSplitViewStore.getState().splitView.isSplit && (
-            <span className={`px-1.5 py-0.5 rounded ${
-              useSplitViewStore.getState().splitView.leftTabs.includes(tab.id) 
-                ? 'bg-blue-900/30 text-blue-300' 
-                : 'bg-purple-900/30 text-purple-300'
-            }`}>
+            <span className={`px-1.5 py-0.5 rounded ${useSplitViewStore.getState().splitView.leftTabs.includes(tab.id)
+              ? 'bg-blue-900/30 text-blue-300'
+              : 'bg-purple-900/30 text-purple-300'
+              }`}>
               {useSplitViewStore.getState().splitView.leftTabs.includes(tab.id) ? 'Left' : 'Right'}
             </span>
           )}
@@ -385,25 +389,25 @@ const DroppableWorkspaceItem: React.FC<DroppableWorkspaceItemProps> = ({
   activeWorkspaceId
 }) => {
   const droppableId = `workspace-${workspace.id}`;
-  
+
   const { setNodeRef, isOver } = useDroppable({
     id: droppableId,
-    data: { 
-      type: 'workspace', 
+    data: {
+      type: 'workspace',
       workspaceId: workspace.id,
-      isActiveWorkspace: workspace.id === activeWorkspaceId 
+      isActiveWorkspace: workspace.id === activeWorkspaceId
     }
   });
 
   return (
-    <div 
+    <div
       ref={setNodeRef}
       data-workspace-id={workspace.id}
       className={`relative flex items-center justify-between px-3 py-1.5 cursor-pointer 
         ${isActive ? 'bg-blue-500/20' : 'hover:bg-gray-700/50'} 
         ${isOver ? 'bg-green-500/40 ring-2 ring-inset ring-green-500' : ''}`}
-        onClick={(e) => onSelect(workspace.id, e)} 
-        style={{ 
+      onClick={(e) => onSelect(workspace.id, e)}
+      style={{
         transition: 'background-color 0.2s, box-shadow 0.2s',
         position: 'relative'
       }}
@@ -415,7 +419,7 @@ const DroppableWorkspaceItem: React.FC<DroppableWorkspaceItemProps> = ({
         </span>
         <span className="ml-2 text-xs text-gray-400">({workspace.tabCount === -1 ? '...' : workspace.tabCount})</span>
       </div>
-      
+
       <div className="flex items-center space-x-1 relative z-10">
         <button
           onClick={(e) => { e.stopPropagation(); onRename(); }}
@@ -441,7 +445,6 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const {
     workspaces,
     activeWorkspaceId,
-    switchWorkspace,
     createWorkspace,
     renameWorkspace,
     deleteWorkspace
@@ -476,6 +479,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const [draggedTabIds, setDraggedTabIds] = useState<Set<string>>(new Set());
   const [activeDragItemData, setActiveDragItemData] = useState<Tab | null>(null); // For DragOverlay content
   const { setTabManagementActionInProgress, isTabManagementActionInProgress } = useModalStore();
+  const { cacheSplitViewForWorkspace } = useCacheStore();
 
   // Confirmation dialogs
   const [confirmationDialog, setConfirmationDialog] = useState<{
@@ -492,7 +496,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     message: '',
     confirmText: 'Confirm',
     cancelText: 'Cancel',
-    onConfirm: () => {},
+    onConfirm: () => { },
     isDestructive: false
   });
 
@@ -549,7 +553,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const workspacesWithCounts = useMemo(() => {
     // If still loading all tabs, you might show a loading state or previous counts
     if (isLoadingAllTabs) {
-        return workspaces.map(ws => ({...ws, tabCount: 0, isLoadingCount: true})); // Indicate loading
+      return workspaces.map(ws => ({ ...ws, tabCount: 0, isLoadingCount: true })); // Indicate loading
     }
     return workspaces.map(workspace => {
       const tabCount = allApplicationTabs.filter(tab => tab.workspaceId === workspace.id).length;
@@ -578,23 +582,23 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         return languageFilter.includes(tab.language);
       });
     }
-    
+
     // Sort tabs
     switch (sortOption) {
       case 'current':
         // Get the current order from the root store
         const { splitView } = useSplitViewStore.getState();
         const currentOrder = [...splitView.leftTabs, ...splitView.rightTabs];
-        
+
         // Create a map of tab positions for quick lookup
         const positionMap = new Map(currentOrder.map((id, index) => [id, index]));
-        
+
         // Sort based on current positions, keeping pinned tabs at the front
         result.sort((a, b) => {
           // Keep pinned tabs at the front
           if (a.isPinned && !b.isPinned) return -1;
           if (!a.isPinned && b.isPinned) return 1;
-          
+
           // For non-pinned tabs, sort by their current position
           const posA = positionMap.get(a.id) ?? Number.MAX_SAFE_INTEGER;
           const posB = positionMap.get(b.id) ?? Number.MAX_SAFE_INTEGER;
@@ -627,7 +631,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         });
         break;
     }
-    
+
     return result;
   }, [activeWorkspaceTabs, activeWorkspaceId, searchQuery, languageFilter, sortOption]);
 
@@ -636,9 +640,9 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     if (groupOption === 'none') {
       return { 'All Tabs': filteredTabs };
     }
-    
+
     const groups: Record<string, Tab[]> = {};
-    
+
     if (groupOption === 'language') {
       filteredTabs.forEach(tab => {
         const key = tab.isTablet ? 'Tablets' : (languageRegistry.getById(tab.language)?.name || tab.language);
@@ -649,7 +653,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       });
     } else if (groupOption === 'workspace') {
       const workspaceMap = new Map(workspaces.map(w => [w.id, w.name]));
-      
+
       filteredTabs.forEach(tab => {
         const key = workspaceMap.get(tab.workspaceId) || 'Unknown Workspace';
         if (!groups[key]) {
@@ -658,7 +662,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         groups[key].push(tab);
       });
     }
-    
+
     return groups;
   }, [filteredTabs, groupOption, workspaces]);
 
@@ -679,7 +683,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         }
       }
     });
-    
+
     // Filter to only include content with multiple tabs
     const duplicates: Record<string, Tab[]> = {};
     contentMap.forEach((tabsWithContent, content) => {
@@ -689,7 +693,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         duplicates[key] = tabsWithContent;
       }
     });
-    
+
     return duplicates;
   }, [activeWorkspaceTabs, activeWorkspaceId]);
 
@@ -697,7 +701,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const emptyTabs = useMemo(() => {
     // Use activeWorkspaceTabs for finding empty tabs *within the current view*
     const currentViewTabs = activeWorkspaceTabs.filter(tab => tab.workspaceId === activeWorkspaceId);
-    
+
     // Find tabs with empty content
     return currentViewTabs.filter(tab => {
       // For regular tabs, check if content is empty
@@ -725,21 +729,21 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const handleApplyCurrentOrder = (eventOrTabs: React.MouseEvent<HTMLButtonElement> | Tab[]) => {
     // If it's a mouse event, use the current filtered tabs
     const newOrder = Array.isArray(eventOrTabs) ? eventOrTabs : filteredTabs;
-    
+
     // Get the current split view state
     const { splitView } = useSplitViewStore.getState();
     const { updateTabOrder } = useRootStore.getState();
     const { setActiveSide } = useSplitViewStore.getState();
-    
+
     // Create sets to track which tabs belong to which side
     const leftTabSet = new Set(splitView.leftTabs);
-    
+
     // Initialize arrays for pinned and unpinned tabs on each side
     const leftPinnedTabs: string[] = [];
     const leftUnpinnedTabs: string[] = [];
     const rightPinnedTabs: string[] = [];
     const rightUnpinnedTabs: string[] = [];
-    
+
     // Distribute tabs based on their original side and pinned status
     newOrder.forEach(tab => {
       if (leftTabSet.has(tab.id)) {
@@ -756,30 +760,30 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         }
       }
     });
-    
+
     // Combine pinned and unpinned tabs for each side
     const newLeftTabs = [...leftPinnedTabs, ...leftUnpinnedTabs];
     const newRightTabs = [...rightPinnedTabs, ...rightUnpinnedTabs];
-    
+
     // Update the tab order while preserving the split view
     updateTabOrder(newLeftTabs, newRightTabs);
-    
+
     // Set active tabs if they exist in the new arrays
     const activeLeftTab = newLeftTabs.find(id => id === splitView.activeLeftTabId);
     const activeRightTab = newRightTabs.find(id => id === splitView.activeRightTabId);
-    
+
     if (activeLeftTab) {
       setActiveLeftTab(activeLeftTab);
     } else if (newLeftTabs.length > 0) {
       setActiveLeftTab(newLeftTabs[0]);
     }
-    
+
     if (activeRightTab) {
       setActiveRightTab(activeRightTab);
     } else if (newRightTabs.length > 0) {
       setActiveRightTab(newRightTabs[0]);
     }
-    
+
     // Preserve the active side
     if (splitView.activeSide) {
       setActiveSide(splitView.activeSide);
@@ -789,11 +793,11 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   };
 
   // Replace the handleSwitchWorkspaceAndKeepModal function (around line 1121) with this new implementation
-  const handleSwitchWorkspaceAndKeepModal = async (workspaceId: string, event: React.MouseEvent) => { 
+  const handleSwitchWorkspaceAndKeepModal = async (workspaceId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // <-- Stop the event from bubbling up!
 
     if (workspaceId === activeWorkspaceId) { // Use activeWorkspaceId from workspaceStore
-        return;
+      return;
     }
 
     // Set the flag before any async operations
@@ -806,7 +810,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       console.error("Error switching workspace from modal:", error);
     } finally {
       setTimeout(() => {
-          setTabManagementActionInProgress(false);
+        setTabManagementActionInProgress(false);
       }, 150);
     }
   };
@@ -815,7 +819,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const handleBaseModalClose = () => {
     // Use the modal store to check if an action is in progress
     if (!isTabManagementActionInProgress) { // Only close if no internal action is flagged
-        onClose(); // This calls the function from WorkspaceSwitcher
+      onClose(); // This calls the function from WorkspaceSwitcher
     }
   };
 
@@ -831,7 +835,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       const listener = (event: MouseEvent | TouchEvent) => {
         // Get the current action progress flag from the store
         const isActionInProgress = useModalStore.getState().isTabManagementActionInProgress;
-        
+
         if (isActionInProgress) { // If an internal action is marked, ignore this click
           return;
         }
@@ -850,12 +854,12 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       // Re-attach if modalOpenFlag or handler changes
     }, [ref, modalOpenFlag, handler]);
   };
-  
+
   // And also update the call to useModalClickOutside (around line 917)
   // Apply the custom click outside hook
   useModalClickOutside(modalContentRef, isOpen, () => {
     if (!confirmationDialog.isOpen) { // Only close if no confirmation is active
-        onClose();
+      onClose();
     }
   });
 
@@ -863,7 +867,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const handleSelectTab = (tabId: string, multiSelect: boolean) => {
     setSelectedTabIds(prev => {
       const newSelection = new Set(prev);
-      
+
       if (multiSelect) {
         // Toggle selection
         if (newSelection.has(tabId)) {
@@ -876,7 +880,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         newSelection.clear();
         newSelection.add(tabId);
       }
-      
+
       return newSelection;
     });
   };
@@ -896,7 +900,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     if (tab) {
       // Determine which side to activate
       const { splitView, setActiveLeftTab, setActiveRightTab } = useRootStore.getState();
-      
+
       if (splitView.leftTabs.includes(tabId)) {
         setActiveLeftTab(tabId);
       } else if (splitView.rightTabs.includes(tabId)) {
@@ -905,14 +909,14 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         // Default to left side if not found in either
         setActiveLeftTab(tabId);
       }
-      
+
       onClose();
     }
   };
 
   const handleCloseTabs = () => {
     if (selectedTabIds.size === 0) return;
-    
+
     setConfirmationDialog({
       isOpen: true,
       title: 'Close Tabs',
@@ -932,7 +936,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
 
   const handleTogglePinSelectedTabs = () => { // Renamed for clarity
     if (selectedTabIds.size === 0) return;
-    
+
     // Determine if we are pinning or unpinning based on the first selected tab's current state
     // This helps if multiple tabs with mixed pinned states are selected.
     // A more sophisticated approach might allow pinning all or unpinning all regardless.
@@ -940,17 +944,17 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     const firstSelectedTabId = Array.from(selectedTabIds)[0];
     const firstTab = activeWorkspaceTabs.find(t => t.id === firstSelectedTabId);
     if (firstTab) {
-        actionIsPin = !firstTab.isPinned;
+      actionIsPin = !firstTab.isPinned;
     }
 
     selectedTabIds.forEach(id => {
-        // Only toggle if the action aligns or if it's a single selection
-        const tab = activeWorkspaceTabs.find(t => t.id === id);
-        if (tab) {
-            if (selectedTabIds.size === 1 || (actionIsPin && !tab.isPinned) || (!actionIsPin && tab.isPinned)) {
-                 toggleTabPin(id);
-            }
+      // Only toggle if the action aligns or if it's a single selection
+      const tab = activeWorkspaceTabs.find(t => t.id === id);
+      if (tab) {
+        if (selectedTabIds.size === 1 || (actionIsPin && !tab.isPinned) || (!actionIsPin && tab.isPinned)) {
+          toggleTabPin(id);
         }
+      }
     });
     // The rootStore's subscription should cause activeWorkspaceTabs to update,
     // which in turn should re-trigger useMemo for filteredTabs/groupedTabs.
@@ -958,56 +962,56 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
 
   const handleDuplicateTabs = () => {
     if (selectedTabIds.size === 0) return;
-    
+
     // Simply duplicate all selected tabs with "(copy)" suffix
     const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
-    
+
     selectedTabs.forEach(tab => {
       const newTabId = duplicateTab(tab.id, false);
       const newTitle = `${tab.title} (copy)`;
       updateTabTitle(newTabId, newTitle);
     });
-    
+
     // Clear selection after duplication
     setSelectedTabIds(new Set());
   };
 
   const handleBulkRename = () => {
     if (selectedTabIds.size === 0 || !renameBasePattern.trim()) return;
-    
+
     const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
-    
+
     selectedTabs.forEach((tab, index) => {
       // Replace {d} in the suffix with the tab's index+1
       const suffix = renameSuffixPattern.replace('{d}', (index + 1).toString());
       const newTitle = renameBasePattern.trim() + suffix;
       updateTabTitle(tab.id, newTitle);
     });
-    
+
     setShowRenameOptions(false);
     setRenameBasePattern('');
     // Keep the suffix pattern for next time
-    
+
     // Clear selection after renaming
     setSelectedTabIds(new Set());
   };
 
   const handleMergeTabs = () => {
     if (selectedTabIds.size < 2) return;
-    
+
     const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
-    
+
     // Check if all selected tabs are text-based (not tablets)
     const allTextBased = selectedTabs.every(tab => !tab.isTablet);
-    
+
     if (!allTextBased) {
       alert('Only text-based tabs can be merged. Please deselect any tablet tabs.');
       return;
     }
-    
+
     // Sort tabs by title before merging
     const sortedTabs = [...selectedTabs].sort((a, b) => a.title.localeCompare(b.title));
-    
+
     // Process the delimiter to handle escape sequences
     let processedDelimiter = mergeDelimiter;
     if (mergeDelimiter === '\\n\\n') {
@@ -1020,10 +1024,10 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
 
     // Merge content with the specified delimiter
     const mergedContent = sortedTabs.map(tab => tab.content).join(processedDelimiter);
-    
+
     // Create a new tab with the merged content
     const { addTab } = useRootStore.getState();
-    
+
     addTab({
       id: crypto.randomUUID(),
       title: 'Merged Tabs',
@@ -1035,125 +1039,168 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
       lastModified: Date.now(),
       workspaceId: activeWorkspaceId || ''
     });
-    
+
     // Delete the original tabs
     selectedTabIds.forEach(id => {
       removeTab(id);
     });
-    
+
     setShowMergeOptions(false);
     setSelectedTabIds(new Set());
   };
 
+  // Re-integrate the UI state refresh logic at the end of handleMoveToWorkspaceWithId
   const handleMoveToWorkspaceWithId = async (targetWorkspaceId: string, draggedIds: string[]) => {
     if (draggedIds.length === 0 || !targetWorkspaceId) {
       return;
     }
 
-    const sourceWorkspaceIdForOperation = activeWorkspaceId; // The workspace ID active IN THE MODAL when drag started
+    // Store source workspace ID for the operation
+    const sourceWorkspaceIdForOperation = activeWorkspaceId;
+
+    // Calculate which tabs to actually move, ensuring we don't empty any workspace
+    let tabsToMove = [...draggedIds]; // Create a mutable copy
+
+    if (sourceWorkspaceIdForOperation && sourceWorkspaceIdForOperation !== targetWorkspaceId) {
+      const sourceWorkspaceTabs = allApplicationTabs.filter(tab => tab.workspaceId === sourceWorkspaceIdForOperation);
+      const sourceTabIds = sourceWorkspaceTabs.map(tab => tab.id);
+
+      // Count how many source workspace tabs are in the draggedIds
+      const selectedSourceTabs = draggedIds.filter(id => sourceTabIds.includes(id));
+
+      // If we're trying to move all tabs from the source workspace, keep one behind
+      if (selectedSourceTabs.length === sourceTabIds.length && sourceTabIds.length > 1) {
+        // Remove the last tab from the list of tabs to move
+        const tabToKeep = sourceTabIds[sourceTabIds.length - 1];
+        tabsToMove = tabsToMove.filter(id => id !== tabToKeep);
+      }
+    }
+
+    if (tabsToMove.length === 0) {
+      return;
+    }
 
     try {
       setTabManagementActionInProgress(true);
 
       // 1. Update Tab Records in DB: Change workspaceId for each dragged tab
-      const updateTabPromises = draggedIds.map(async (tabId) => {
+      for (const tabId of tabsToMove) {
         const tabToMove = allApplicationTabs.find(t => t.id === tabId);
         if (tabToMove) {
-          const updatedTab: Tab = { ...tabToMove, workspaceId: targetWorkspaceId, lastModified: Date.now() };
+          const updatedTab = { ...tabToMove, workspaceId: targetWorkspaceId };
           await storage.saveTab(updatedTab);
         }
-      });
-      await Promise.all(updateTabPromises);
+      }
 
       // 2. Update Source Workspace's SplitView (if different from target)
       if (sourceWorkspaceIdForOperation && sourceWorkspaceIdForOperation !== targetWorkspaceId) {
-        let sourceSplitView = await storage.getSplitViewByWorkspace(sourceWorkspaceIdForOperation);
+        const sourceSplitView = await storage.getSplitViewByWorkspace(sourceWorkspaceIdForOperation);
         if (sourceSplitView) {
-          const newSourceSplitView: SplitViewState = { ...sourceSplitView }; // Work on a copy
-
-          // Filter out moved tabs
-          newSourceSplitView.leftTabs = (newSourceSplitView.leftTabs || []).filter(id => !draggedIds.includes(id));
-          newSourceSplitView.rightTabs = (newSourceSplitView.rightTabs || []).filter(id => !draggedIds.includes(id));
-          newSourceSplitView.leftTabHistory = (newSourceSplitView.leftTabHistory || []).filter(id => !draggedIds.includes(id));
-          newSourceSplitView.rightTabHistory = (newSourceSplitView.rightTabHistory || []).filter(id => !draggedIds.includes(id));
-
-          // Update active tabs if necessary
-          if (draggedIds.includes(newSourceSplitView.activeLeftTabId || '')) {
-            newSourceSplitView.activeLeftTabId = getPreviousActiveTab(newSourceSplitView.leftTabHistory, newSourceSplitView.leftTabs);
+          sourceSplitView.leftTabs = sourceSplitView.leftTabs.filter(id => !tabsToMove.includes(id));
+          sourceSplitView.rightTabs = sourceSplitView.rightTabs.filter(id => !tabsToMove.includes(id));
+          if (sourceSplitView.activeLeftTabId && tabsToMove.includes(sourceSplitView.activeLeftTabId)) {
+            sourceSplitView.activeLeftTabId = sourceSplitView.leftTabs[0] || null;
           }
-          if (draggedIds.includes(newSourceSplitView.activeRightTabId || '')) {
-            newSourceSplitView.activeRightTabId = getPreviousActiveTab(newSourceSplitView.rightTabHistory, newSourceSplitView.rightTabs);
+          if (sourceSplitView.activeRightTabId && tabsToMove.includes(sourceSplitView.activeRightTabId)) {
+            sourceSplitView.activeRightTabId = sourceSplitView.rightTabs[0] || null;
           }
-
-          // Handle unsplitting if one side becomes empty
-          if (newSourceSplitView.isSplit) {
-            if (newSourceSplitView.leftTabs.length === 0 && newSourceSplitView.rightTabs.length > 0) { // Left empty
-              newSourceSplitView.isSplit = false;
-              newSourceSplitView.leftTabs = [...newSourceSplitView.rightTabs];
-              newSourceSplitView.leftTabHistory = [...newSourceSplitView.rightTabHistory];
-              newSourceSplitView.activeLeftTabId = newSourceSplitView.activeRightTabId || newSourceSplitView.leftTabs[0] || null;
-              newSourceSplitView.rightTabs = []; newSourceSplitView.rightTabHistory = []; newSourceSplitView.activeRightTabId = null;
-              newSourceSplitView.activeSide = 'left';
-            } else if (newSourceSplitView.rightTabs.length === 0 && newSourceSplitView.leftTabs.length > 0) { // Right empty
-              newSourceSplitView.isSplit = false;
-              newSourceSplitView.activeRightTabId = null; newSourceSplitView.rightTabHistory = [];
-              newSourceSplitView.activeSide = 'left'; // Maintain focus on left
-            } else if (newSourceSplitView.leftTabs.length === 0 && newSourceSplitView.rightTabs.length === 0) { // Both empty
-              newSourceSplitView.isSplit = false;
-              newSourceSplitView.activeLeftTabId = null; newSourceSplitView.activeRightTabId = null;
-              newSourceSplitView.activeSide = 'left';
-            }
-          } else if (newSourceSplitView.leftTabs.length === 0) { // Not split and left is empty
-            newSourceSplitView.activeLeftTabId = null;
-          }
-          newSourceSplitView.lastModified = Date.now();
-          await storage.saveSplitView(newSourceSplitView);
+          await storage.saveSplitView(sourceSplitView);
         }
       }
 
       // 3. Update Target Workspace's SplitView
-      let targetSplitViewRecord = await storage.getSplitViewByWorkspace(targetWorkspaceId);
-      if (!targetSplitViewRecord) {
-        targetSplitViewRecord = useSplitViewStore.getState().createDefaultSplitViewState(targetWorkspaceId);
+      let targetSplitView = await storage.getSplitViewByWorkspace(targetWorkspaceId);
+      if (!targetSplitView) {
+        // Create a default split view if none exists
+        targetSplitView = {
+          id: crypto.randomUUID(),
+          isSplit: false,
+          leftTabs: [],
+          rightTabs: [],
+          activeLeftTabId: null,
+          activeRightTabId: null,
+          activeSide: 'left',
+          splitRatio: 0.5,
+          workspaceId: targetWorkspaceId,
+          lastModified: Date.now()
+        };
       }
-      const newTargetSplitView: SplitViewState = { ...targetSplitViewRecord }; // Work on a copy
 
-      // Add dragged tabs to the left side of the target workspace
-      const updatedTargetLeftTabs = [...new Set([...(newTargetSplitView.leftTabs || []), ...draggedIds])];
-      newTargetSplitView.leftTabs = updatedTargetLeftTabs;
+      // Ensure leftTabs is an array before spreading
+      const currentLeftTabs = targetSplitView.leftTabs || [];
+      targetSplitView.leftTabs = [...new Set([...currentLeftTabs, ...tabsToMove])]; // Use Set to avoid duplicates
 
-      // Update history and active tab for target
-      const firstMovedTabId = draggedIds[0]; // Consider making the first moved tab active
-      if (!newTargetSplitView.activeLeftTabId || !updatedTargetLeftTabs.includes(newTargetSplitView.activeLeftTabId)) {
-        newTargetSplitView.activeLeftTabId = updatedTargetLeftTabs.find(id => draggedIds.includes(id)) || updatedTargetLeftTabs[0] || null;
+      // Set the active tab if there isn't one or the current one isn't valid
+      if (!targetSplitView.activeLeftTabId || !targetSplitView.leftTabs.includes(targetSplitView.activeLeftTabId)) {
+        targetSplitView.activeLeftTabId = tabsToMove[0] || targetSplitView.leftTabs[0] || null;
       }
-      newTargetSplitView.leftTabHistory = updateTabHistory(newTargetSplitView.leftTabHistory || [], newTargetSplitView.activeLeftTabId);
 
-      if(!newTargetSplitView.activeSide) newTargetSplitView.activeSide = 'left';
-      newTargetSplitView.lastModified = Date.now();
-      await storage.saveSplitView(newTargetSplitView);
+      // Explicitly update lastModified timestamp
+      targetSplitView.lastModified = Date.now();
 
-      // 4. Refresh UI State
-      const refreshedAllTabs = await storage.getTabs(); // Get all tabs again for the modal
+      // Save the updated target split view
+      await storage.saveSplitView(targetSplitView);
+
+      // 4. Refresh Modal State
+      const refreshedAllTabs = await storage.getTabs();
       setAllApplicationTabs(refreshedAllTabs);
-
-      // If the *currently active workspace in the main UI* was affected, update its stores
-      const mainUIActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
-
-      if (mainUIActiveWorkspaceId === sourceWorkspaceIdForOperation && sourceWorkspaceIdForOperation !== targetWorkspaceId) {
-        const updatedSourceTabsForUI = await storage.getTabsByWorkspace(sourceWorkspaceIdForOperation);
-        const updatedSourceSplitViewForUI = await storage.getSplitViewByWorkspace(sourceWorkspaceIdForOperation);
-        useTabsStore.setState({ tabs: updatedSourceTabsForUI });
-        if (updatedSourceSplitViewForUI) useSplitViewStore.setState({ splitView: updatedSourceSplitViewForUI });
-      } else if (mainUIActiveWorkspaceId === targetWorkspaceId) {
-        const updatedTargetTabsForUI = await storage.getTabsByWorkspace(targetWorkspaceId);
-        const updatedTargetSplitViewForUI = await storage.getSplitViewByWorkspace(targetWorkspaceId);
-        useTabsStore.setState({ tabs: updatedTargetTabsForUI });
-        if (updatedTargetSplitViewForUI) useSplitViewStore.setState({ splitView: updatedTargetSplitViewForUI });
-      }
-
       // Refresh workspace list in the modal (tab counts might have changed)
       await useWorkspaceStore.getState().loadWorkspaces({ preventAutoSwitch: true });
+
+      // 5. Refresh Main UI State (Zustand Stores)
+      const mainUIActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+
+      if (mainUIActiveWorkspaceId) {
+        if (mainUIActiveWorkspaceId === sourceWorkspaceIdForOperation && sourceWorkspaceIdForOperation !== targetWorkspaceId) {
+          // Main UI was showing the source workspace - Fetch its updated state
+          const updatedSourceTabsForUI = await storage.getTabsByWorkspace(mainUIActiveWorkspaceId);
+          const updatedSourceSplitViewRecord = await storage.getSplitViewByWorkspace(mainUIActiveWorkspaceId);
+          useTabsStore.setState({ tabs: updatedSourceTabsForUI });
+          if (updatedSourceSplitViewRecord) {
+            const updatedSplitViewState: SplitViewState = {
+              id: updatedSourceSplitViewRecord.id,
+              isSplit: updatedSourceSplitViewRecord.isSplit,
+              leftTabs: updatedSourceSplitViewRecord.leftTabs,
+              rightTabs: updatedSourceSplitViewRecord.rightTabs,
+              activeLeftTabId: updatedSourceSplitViewRecord.activeLeftTabId,
+              activeRightTabId: updatedSourceSplitViewRecord.activeRightTabId,
+              activeSide: updatedSourceSplitViewRecord.activeSide as 'left' | 'right' | null, // Assert type
+              splitRatio: updatedSourceSplitViewRecord.splitRatio,
+              workspaceId: updatedSourceSplitViewRecord.workspaceId,
+              leftTabHistory: [], // Add empty history
+              rightTabHistory: [] // Add empty history
+            };
+            useSplitViewStore.setState({ splitView: updatedSplitViewState });
+          }
+        } else if (mainUIActiveWorkspaceId === targetWorkspaceId) {
+          // Main UI was showing the target workspace - Use the already modified targetSplitView object
+          const updatedTargetTabsForUI = await storage.getTabsByWorkspace(mainUIActiveWorkspaceId);
+          useTabsStore.setState({ tabs: updatedTargetTabsForUI });
+          // Use the targetSplitView we modified earlier, ensuring correct type
+          const updatedSplitViewState: SplitViewState = {
+            id: targetSplitView.id,
+            isSplit: targetSplitView.isSplit,
+            leftTabs: targetSplitView.leftTabs,
+            rightTabs: targetSplitView.rightTabs,
+            activeLeftTabId: targetSplitView.activeLeftTabId,
+            activeRightTabId: targetSplitView.activeRightTabId,
+            activeSide: targetSplitView.activeSide as 'left' | 'right' | null, // Assert type
+            splitRatio: targetSplitView.splitRatio,
+            workspaceId: targetSplitView.workspaceId,
+            leftTabHistory: [], // Add empty history
+            rightTabHistory: [] // Add empty history
+          };
+          useSplitViewStore.setState({ splitView: updatedSplitViewState });
+        }
+        // else: Main UI is showing a different workspace, no immediate store update needed for it.
+      }
+
+      // Save the in-memory targetSplitView for potential workspace switching
+      // We'll use this to avoid the race condition with database fetching
+      cacheSplitViewForWorkspace(targetWorkspaceId, {
+        ...targetSplitView,
+        activeSide: targetSplitView.activeSide as 'left' | 'right' | null
+      });
 
     } catch (error) {
       console.error('[MoveToWorkspaceWithId] Failed to move tabs:', error);
@@ -1165,7 +1212,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
 
   const handleCreateWorkspace = () => {
     if (!newWorkspaceName.trim()) return;
-    
+
     createWorkspace(newWorkspaceName.trim());
     setNewWorkspaceName('');
     setIsCreatingWorkspace(false);
@@ -1173,7 +1220,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
 
   const handleRenameWorkspace = () => {
     if (!editingWorkspaceId || !editingWorkspaceName.trim()) return;
-    
+
     renameWorkspace(editingWorkspaceId, editingWorkspaceName.trim());
     setEditingWorkspaceId(null);
     setEditingWorkspaceName('');
@@ -1182,7 +1229,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const handleDeleteWorkspace = (workspaceId: string) => {
     const workspace = workspaces.find(w => w.id === workspaceId);
     if (!workspace) return;
-    
+
     setConfirmationDialog({
       isOpen: true,
       title: 'Delete Workspace',
@@ -1200,7 +1247,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
   const handleRemoveDuplicates = () => {
     const duplicateGroups = Object.values(duplicateTabs);
     if (duplicateGroups.length === 0) return;
-    
+
     setConfirmationDialog({
       isOpen: true,
       title: 'Remove Duplicate Tabs',
@@ -1212,21 +1259,21 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         duplicateGroups.forEach(group => {
           // Sort by lastModified (descending)
           const sorted = [...group].sort((a, b) => b.lastModified - a.lastModified);
-          
+
           // Keep the first one (newest) and remove the rest
           for (let i = 1; i < sorted.length; i++) {
             removeTab(sorted[i].id);
           }
         });
-        
+
         setConfirmationDialog(prev => ({ ...prev, isOpen: false }));
       }
     });
   };
-  
+
   const handleRemoveEmptyTabs = () => {
     if (emptyTabs.length === 0) return;
-    
+
     // Directly remove all empty tabs without confirmation
     emptyTabs.forEach(tab => {
       removeTab(tab.id);
@@ -1242,11 +1289,15 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
     const { active } = event;
     const tabId = active.id as string;
     const draggedTab = allApplicationTabs.find(t => t.id === tabId);
-    
+
+    if (!draggedTab) return;
+
     setActiveDragId(tabId);
     setActiveDragItemData(draggedTab || null);
-    
-    const newDraggedIds = selectedTabIds.has(tabId) ? selectedTabIds : new Set([tabId]);
+
+    // Use the existing selectedTabIds if the tab is part of the selection,
+    // otherwise create a new set with just this tab
+    const newDraggedIds = selectedTabIds.has(tabId) ? new Set(selectedTabIds) : new Set([tabId]);
     setDraggedTabIds(newDraggedIds);
   };
 
@@ -1298,7 +1349,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         handleApplyCurrentOrder(finalNewOrderInCurrentWorkspace);
       }
     }
-    
+
     setDraggedTabIds(new Set());
   };
 
@@ -1312,15 +1363,15 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        // Consider adding collisionDetection strategy if needed:
-        // collisionDetection={closestCenter}
+      // Consider adding collisionDetection strategy if needed:
+      // collisionDetection={closestCenter}
       >
         <div ref={modalContentRef} className="flex h-[70vh]">
-           {/* Left sidebar - Workspaces */}
-           <div className="w-64 border-r border-gray-700/50 flex flex-col">
+          {/* Left sidebar - Workspaces */}
+          <div className="w-64 border-r border-gray-700/50 flex flex-col">
             <div className="p-3 border-b border-gray-700/50"> {/* Header for workspace section */}
               <h3 className="text-sm font-medium text-gray-300 mb-2">Workspaces</h3>
-              
+
               {/* Create workspace button */}
               <button
                 onClick={() => setIsCreatingWorkspace(true)}
@@ -1329,7 +1380,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                 <FolderPlus size={14} />
                 <span>New Workspace</span>
               </button>
-              
+
               {/* Create workspace form */}
               {isCreatingWorkspace && (
                 <div className="mt-3 p-3 bg-gray-800/50 rounded-md">
@@ -1358,7 +1409,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                   </div>
                 </div>
               )}
-              
+
               {/* Edit workspace form */}
               {editingWorkspaceId && (
                 <div className="mt-3 p-3 bg-gray-800/50 rounded-md">
@@ -1388,7 +1439,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                 </div>
               )}
             </div>
-            
+
             {/* Workspace list */}
             <WorkspaceSidebar
               workspaces={workspacesWithCounts}
@@ -1405,7 +1456,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
             />
           </div>
 
-          
+
           {/* Main content - Tabs */}
           <div className="flex-1 flex flex-col">
             {/* Toolbar */}
@@ -1422,7 +1473,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                   />
                   <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                 </div>
-                
+
                 {/* Language filter */}
                 <div className="relative">
                   <select
@@ -1430,7 +1481,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                     onChange={(e) => {
                       const selectedLang = e.target.value;
                       // If "All Languages" is selected (empty value), set to empty array
-                     setLanguageFilter(selectedLang ? [selectedLang] : []);
+                      setLanguageFilter(selectedLang ? [selectedLang] : []);
                     }}
                     className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
                   >
@@ -1443,7 +1494,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                   </select>
                   <Filter size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
                 </div>
-                
+
                 {/* Sort options */}
                 <div className="relative">
                   <select
@@ -1466,7 +1517,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                     <ArrowUpZA size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
                   )}
                 </div>
-                
+
                 {/* Group options */}
                 <div className="relative">
                   <select
@@ -1480,16 +1531,16 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                   <Layers size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
                 </div>
               </div>
-              
+
               {/* Selection info and actions */}
               <div className="flex items-center justify-between mt-3">
                 <div className="flex items-center space-x-3">
                   <div className="text-sm text-gray-400">
-                    {selectedTabIds.size > 0 
-                      ? `${selectedTabIds.size} tab(s) selected` 
+                    {selectedTabIds.size > 0
+                      ? `${selectedTabIds.size} tab(s) selected`
                       : `${filteredTabs.length} tab(s) found`}
                   </div>
-                  
+
                   {selectedTabIds.size > 0 && (
                     <div className="flex items-center space-x-1">
                       <button
@@ -1500,7 +1551,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                       </button>
                     </div>
                   )}
-                  
+
                   {selectedTabIds.size === 0 && filteredTabs.length > 0 && (
                     <div className="flex items-center space-x-2">
                       <button
@@ -1520,7 +1571,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                     </div>
                   )}
                 </div>
-                
+
                 {/* Bulk actions */}
                 {selectedTabIds.size > 0 && activeWorkspaceTabs.some(tab => selectedTabIds.has(tab.id) && tab.workspaceId === activeWorkspaceId) && (
                   <div className="flex items-center space-x-2">
@@ -1532,7 +1583,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                       <Pin size={14} className="text-gray-400" />
                       <span>Toggle Pin</span>
                     </button>
-                    
+
                     <button
                       onClick={handleDuplicateTabs}
                       className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
@@ -1541,7 +1592,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                       <Copy size={14} className="text-gray-400" />
                       <span>Duplicate</span>
                     </button>
-                    
+
                     {selectedTabIds.size >= 2 && (
                       <div className="relative">
                         <button
@@ -1552,7 +1603,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                           <Edit size={14} className="text-gray-400" />
                           <span>Rename</span>
                         </button>
-                        
+
                         {showRenameOptions && (
                           <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
                             <div className="text-xs text-gray-300 mb-2">Base Name</div>
@@ -1563,7 +1614,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                               placeholder="e.g. My Tab"
                               className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
                             />
-                            
+
                             <div className="text-xs text-gray-300 mb-2">Suffix Pattern</div>
                             <input
                               type="text"
@@ -1572,11 +1623,11 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                               placeholder=" {d}"
                               className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
                             />
-                            
+
                             <div className="text-xs text-gray-500 mb-3">
                               The {'{d}'} placeholder will be replaced with the tab number
                             </div>
-                            
+
                             <div className="flex justify-end space-x-2">
                               <button
                                 onClick={() => setShowRenameOptions(false)}
@@ -1596,7 +1647,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                         )}
                       </div>
                     )}
-                    
+
                     {selectedTabIds.size >= 2 && (
                       <div className="relative">
                         <button
@@ -1607,7 +1658,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                           <Merge size={14} className="text-gray-400" />
                           <span>Merge</span>
                         </button>
-                        
+
                         {showMergeOptions && (
                           <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
                             <div className="text-xs text-gray-300 mb-2">Delimiter Between Contents</div>
@@ -1639,7 +1690,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                         )}
                       </div>
                     )}
-                    
+
                     <button
                       onClick={handleCloseTabs}
                       className="flex items-center space-x-1 px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-md hover:bg-red-500/30 transition-colors"
@@ -1652,7 +1703,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                 )}
               </div>
             </div>
-            
+
             {/* Tab list */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {Object.entries(duplicateTabs).length > 0 && (
@@ -1671,7 +1722,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                   </button>
                 </div>
               )}
-              
+
               {emptyTabs.length > 1 && (
                 <div className="m-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md flex items-center justify-between">
                   <div className="flex items-center">
@@ -1688,7 +1739,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
                   </button>
                 </div>
               )}
-              
+
               {filteredTabs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <p>No tabs found matching your criteria</p>
@@ -1734,7 +1785,7 @@ export const TabManagementModal: React.FC<TabManagementModalProps> = ({ isOpen, 
           )}
         </DragOverlay>
       </DndContext>
-      
+
       {/* Confirmation dialog */}
       <ConfirmationDialog
         isOpen={confirmationDialog.isOpen}
@@ -1756,16 +1807,16 @@ type GroupOption = 'none' | 'language';
 interface WorkspaceSidebarProps {
   workspaces: Array<Workspace & { tabCount: number; isLoadingCount?: boolean }>;
   activeWorkspaceId: string | null;
-  onSelect: (id: string, event: React.MouseEvent) => void; 
+  onSelect: (id: string, event: React.MouseEvent) => void;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
 const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
-  workspaces, 
-  activeWorkspaceId, 
-  onSelect, 
-  onRename, 
+  workspaces,
+  activeWorkspaceId,
+  onSelect,
+  onRename,
   onDelete
 }) => {
   return (

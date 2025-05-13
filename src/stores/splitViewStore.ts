@@ -23,13 +23,14 @@ interface SplitViewStore {
   closeTabsToLeft: (tabId: string, isRightSide: boolean) => void;
   closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
   closeAllExcept: (tabId: string, isRightSide: boolean) => void;
-  groupTabsByType: (isRightSide: boolean) => void; // Still a no-op, but defined
+  groupTabsByType: (isRightSide: boolean) => void;
   updateTabOrder: (newLeftTabs: string[], newRightTabs: string[]) => void;
-  reorderTabs: (side: 'left' | 'right', newOrder: string[]) => void; // Add if you intend to use this specific name from rootStore.reorderTabs
+  reorderTabs: (side: 'left' | 'right', newOrder: string[]) => void;
   getTabsToLeft: (tabId: string, isRightSide: boolean) => string[];
   getTabsToRight: (tabId: string, isRightSide: boolean) => string[];
   getAllExcept: (tabId: string, isRightSide: boolean) => string[];
   createDefaultSplitViewState: (workspaceId?: string) => SplitViewState;
+  clearSplitViewForWorkspace: (workspaceId: string) => void;
 }
 
 export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
@@ -95,21 +96,21 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     const newLeftTabs = state.splitView.leftTabs.filter(id => id !== tabId);
     if (newLeftTabs.length === 0 && state.splitView.rightTabs.length === 0) return state; // Prevent moving last tab
     if (newLeftTabs.length === 0 && state.splitView.rightTabs.length > 0) { // If left becomes empty, unsplit to right
-        const allTabs = [...state.splitView.rightTabs, tabId];
-        const activeTab = tabId; // Make the moved tab active
-        return {
-            splitView: {
-                ...state.splitView,
-                isSplit: false,
-                leftTabs: allTabs,
-                rightTabs: [],
-                activeLeftTabId: activeTab,
-                activeRightTabId: null,
-                activeSide: 'left',
-                leftTabHistory: updateTabHistory(state.splitView.rightTabHistory, tabId), // Use right history as base
-                rightTabHistory: []
-            }
-        };
+      const allTabs = [...state.splitView.rightTabs, tabId];
+      const activeTab = tabId; // Make the moved tab active
+      return {
+        splitView: {
+          ...state.splitView,
+          isSplit: false,
+          leftTabs: allTabs,
+          rightTabs: [],
+          activeLeftTabId: activeTab,
+          activeRightTabId: null,
+          activeSide: 'left',
+          leftTabHistory: updateTabHistory(state.splitView.rightTabHistory, tabId), // Use right history as base
+          rightTabHistory: []
+        }
+      };
     }
     const newRightTabs = [...state.splitView.rightTabs, tabId];
     const newActiveLeftTabId = state.splitView.activeLeftTabId === tabId
@@ -133,22 +134,22 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     if (!state.splitView.isSplit || !state.splitView.rightTabs.includes(tabId)) return state;
     const newRightTabs = state.splitView.rightTabs.filter(id => id !== tabId);
     if (newRightTabs.length === 0 && state.splitView.leftTabs.length === 0) return state; // Prevent moving last tab
-     if (newRightTabs.length === 0 && state.splitView.leftTabs.length > 0) { // If right becomes empty, unsplit to left
-        const allTabs = [...state.splitView.leftTabs, tabId];
-        const activeTab = tabId;
-        return {
-            splitView: {
-                ...state.splitView,
-                isSplit: false,
-                leftTabs: allTabs,
-                rightTabs: [],
-                activeLeftTabId: activeTab,
-                activeRightTabId: null,
-                activeSide: 'left',
-                leftTabHistory: updateTabHistory(state.splitView.leftTabHistory, tabId), // Use left history
-                rightTabHistory: []
-            }
-        };
+    if (newRightTabs.length === 0 && state.splitView.leftTabs.length > 0) { // If right becomes empty, unsplit to left
+      const allTabs = [...state.splitView.leftTabs, tabId];
+      const activeTab = tabId;
+      return {
+        splitView: {
+          ...state.splitView,
+          isSplit: false,
+          leftTabs: allTabs,
+          rightTabs: [],
+          activeLeftTabId: activeTab,
+          activeRightTabId: null,
+          activeSide: 'left',
+          leftTabHistory: updateTabHistory(state.splitView.leftTabHistory, tabId), // Use left history
+          rightTabHistory: []
+        }
+      };
     }
     const newLeftTabs = [...state.splitView.leftTabs, tabId];
     const newActiveRightTabId = state.splitView.activeRightTabId === tabId
@@ -266,21 +267,21 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
         newSplitView.activeSide = 'left';
       }
     } else { // Not split
-        if (newSplitView.leftTabs.length === 0) {
-            newSplitView.activeLeftTabId = null;
-        }
+      if (newSplitView.leftTabs.length === 0) {
+        newSplitView.activeLeftTabId = null;
+      }
     }
     // Determine active side after removal
     if (!newSplitView.isSplit) {
-        newSplitView.activeSide = 'left';
+      newSplitView.activeSide = 'left';
     } else if (wasTabOnLeft && newSplitView.leftTabs.length === 0 && newSplitView.rightTabs.length > 0) {
-        newSplitView.activeSide = 'right'; // If left became empty, shift focus to right
+      newSplitView.activeSide = 'right'; // If left became empty, shift focus to right
     } else if (wasTabOnRight && newSplitView.rightTabs.length === 0 && newSplitView.leftTabs.length > 0) {
-        newSplitView.activeSide = 'left'; // If right became empty, shift focus to left
+      newSplitView.activeSide = 'left'; // If right became empty, shift focus to left
     } else if (newSplitView.activeSide === 'left' && newSplitView.leftTabs.length === 0 && newSplitView.rightTabs.length > 0) {
-        newSplitView.activeSide = 'right';
+      newSplitView.activeSide = 'right';
     } else if (newSplitView.activeSide === 'right' && newSplitView.rightTabs.length === 0 && newSplitView.leftTabs.length > 0) {
-        newSplitView.activeSide = 'left';
+      newSplitView.activeSide = 'left';
     }
 
 
@@ -296,11 +297,11 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     if (isRightSide) {
       newSplitView.rightTabs = tabsToKeep;
       newSplitView.rightTabHistory = (newSplitView.rightTabHistory || []).filter(id => tabsToKeep.includes(id) || id === tabId);
-       if (!tabsToKeep.includes(newSplitView.activeRightTabId!)) newSplitView.activeRightTabId = tabId;
+      if (!tabsToKeep.includes(newSplitView.activeRightTabId!)) newSplitView.activeRightTabId = tabId;
     } else {
       newSplitView.leftTabs = tabsToKeep;
       newSplitView.leftTabHistory = (newSplitView.leftTabHistory || []).filter(id => tabsToKeep.includes(id) || id === tabId);
-       if (!tabsToKeep.includes(newSplitView.activeLeftTabId!)) newSplitView.activeLeftTabId = tabId;
+      if (!tabsToKeep.includes(newSplitView.activeLeftTabId!)) newSplitView.activeLeftTabId = tabId;
     }
     return { splitView: newSplitView };
   }),
@@ -314,7 +315,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     if (isRightSide) {
       newSplitView.rightTabs = tabsToKeep;
       newSplitView.rightTabHistory = (newSplitView.rightTabHistory || []).filter(id => tabsToKeep.includes(id));
-       if (!tabsToKeep.includes(newSplitView.activeRightTabId!)) newSplitView.activeRightTabId = tabId;
+      if (!tabsToKeep.includes(newSplitView.activeRightTabId!)) newSplitView.activeRightTabId = tabId;
     } else {
       newSplitView.leftTabs = tabsToKeep;
       newSplitView.leftTabHistory = (newSplitView.leftTabHistory || []).filter(id => tabsToKeep.includes(id));
@@ -412,5 +413,17 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     if (currentTabList.length <= 1 && currentTabList.includes(tabId)) return [];
     return currentTabList.filter(id => id !== tabId);
   },
+
+  clearSplitViewForWorkspace: (workspaceId) => set((state) => {
+    // This is a more specific reorder if rootStore uses this name.
+    // It's similar to updateTabOrder but for a single side.
+    const currentSplitView = state.splitView;
+    if (currentSplitView && currentSplitView.workspaceId === workspaceId) {
+      return {
+        splitView: undefined
+      };
+    }
+    return {};
+  }),
 
 }));

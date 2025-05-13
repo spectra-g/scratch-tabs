@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { Tab, SplitViewState, Workspace, WorkspaceLink } from '../types';
+import { Tab, Workspace, WorkspaceLink } from '../types';
 
 interface TabRecord {
   id: string;
@@ -57,37 +57,37 @@ export class ScratchTabsDB extends Dexie {
   }
 
   private async upgradeToV2(tx: Dexie.Transaction): Promise<void> {
-      // First check if there are any existing tabs that need migration
-      const existingTabs = await tx.table('tabs').toArray();
-      
-      if (existingTabs.length > 0) {
-          // Only create default workspace if there are tabs to migrate
-          const defaultWorkspace: WorkspaceRecord = {
-              id: crypto.randomUUID(),
-              name: 'Default Workspace',
-              links: [],
-              createdAt: Date.now(),
-              lastAccessed: Date.now()
-          };
-  
-          await tx.table('workspaces').add(defaultWorkspace);
-  
-          // Update existing tabs with the workspace ID
-          await Promise.all(existingTabs.map(tab => 
-              tx.table('tabs').update(tab.id, { workspaceId: defaultWorkspace.id })
-          ));
-  
-          // Update split views if they exist
-          const splitViews = await tx.table('splitView').toArray();
-          await Promise.all(splitViews.map(sv => 
-              tx.table('splitView').update(sv.id, { workspaceId: defaultWorkspace.id })
-          ));
-      }
+    // First check if there are any existing tabs that need migration
+    const existingTabs = await tx.table('tabs').toArray();
+
+    if (existingTabs.length > 0) {
+      // Only create default workspace if there are tabs to migrate
+      const defaultWorkspace: WorkspaceRecord = {
+        id: crypto.randomUUID(),
+        name: 'Default Workspace',
+        links: [],
+        createdAt: Date.now(),
+        lastAccessed: Date.now()
+      };
+
+      await tx.table('workspaces').add(defaultWorkspace);
+
+      // Update existing tabs with the workspace ID
+      await Promise.all(existingTabs.map(tab =>
+        tx.table('tabs').update(tab.id, { workspaceId: defaultWorkspace.id })
+      ));
+
+      // Update split views if they exist
+      const splitViews = await tx.table('splitView').toArray();
+      await Promise.all(splitViews.map(sv =>
+        tx.table('splitView').update(sv.id, { workspaceId: defaultWorkspace.id })
+      ));
+    }
   }
-  
+
   async reopenIfClosed(): Promise<void> {
     if (this.isOpen()) return;
-    
+
     try {
       await this.open();
     } catch (error) {
@@ -141,7 +141,7 @@ export class IndexedDBStorage implements StorageProvider {
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): IndexedDBStorage {
     if (!IndexedDBStorage.instance) {
@@ -152,7 +152,7 @@ export class IndexedDBStorage implements StorageProvider {
 
   private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt < this.MAX_RETRIES; attempt++) {
       try {
         await db.reopenIfClosed();
@@ -166,7 +166,7 @@ export class IndexedDBStorage implements StorageProvider {
         throw error;
       }
     }
-    
+
     throw lastError;
   }
 
@@ -180,7 +180,7 @@ export class IndexedDBStorage implements StorageProvider {
   async saveTab(tab: Tab): Promise<void> {
     const now = Date.now();
     if (now - this.lastSaveTabsTime < this.DEBOUNCE_TIME) return;
-    
+
     this.lastSaveTabsTime = now;
     await this.withRetry(async () => {
       await db.tabs.put(toTabRecord(tab));
@@ -190,7 +190,7 @@ export class IndexedDBStorage implements StorageProvider {
   async saveTabs(tabs: Tab[]): Promise<void> {
     const now = Date.now();
     if (now - this.lastSaveTabsTime < this.DEBOUNCE_TIME) return;
-    
+
     this.lastSaveTabsTime = now;
     await this.withRetry(async () => {
       const records = tabs.map(toTabRecord);
@@ -213,7 +213,7 @@ export class IndexedDBStorage implements StorageProvider {
   async saveSplitView(splitView: SplitViewRecord): Promise<void> {
     const now = Date.now();
     if (now - this.lastSaveSplitViewTime < this.DEBOUNCE_TIME) return;
-    
+
     this.lastSaveSplitViewTime = now;
     await this.withRetry(async () => {
       // Generate UUID if not provided
@@ -243,24 +243,36 @@ export class IndexedDBStorage implements StorageProvider {
     });
   }
 
-async deleteWorkspace(id: string): Promise<void> {
-  await this.withRetry(async () => {
-    try {
-      await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
-        await db.workspaces.delete(id);
+  async deleteWorkspace(id: string): Promise<void> {
+    await this.withRetry(async () => {
+      try {
+        await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
+          // 1. Delete tabs associated with the workspace
+          // This will delete all tab records where the 'workspaceId' property equals the given 'id'.
+          const numTabsDeleted = await db.tabs.where('workspaceId').equals(id).delete();
+          // You can add console.log here for debugging if needed:
+          console.log(`Deleted ${numTabsDeleted} tab(s) for workspace ${id}.`);
 
-        await db.tabs.where('workspaceId').equals(id).delete();
+          // 2. Delete split views associated with the workspace
+          // Changed from fetching then looping, to a direct delete operation.
+          // This will delete all splitView records where the 'workspaceId' property equals the given 'id'.
+          const numSplitViewsDeleted = await db.splitView.where('workspaceId').equals(id).delete();
+          // You can add console.log here for debugging if needed:
+          console.log(`Deleted ${numSplitViewsDeleted} splitView(s) for workspace ${id}.`);
 
-        const splitViewsToDelete: SplitViewRecord[] = await db.splitView.where('workspaceId').equals(id).toArray();
-        for (const sv of splitViewsToDelete) {
-          await db.splitView.delete(sv.id);
-        }
-      });
-    } catch (error) {
-      throw error;
-    }
-  });
-}
+          // 3. Delete the workspace itself
+          // This is done last; if any of the above deletions fail, the transaction
+          // will roll back, and the workspace will not be deleted either.
+          await db.workspaces.delete(id);
+          console.log(`Workspace ${id} deleted successfully.`);
+        });
+      } catch (error) {
+        // Log the error or handle it as appropriate for your application
+        console.error(`Error deleting workspace ${id} and its associated data:`, error);
+        throw error; // Re-throw the error to be handled by withRetry or the caller
+      }
+    });
+  }
 
 
   async getTabsByWorkspace(workspaceId: string): Promise<Tab[]> {

@@ -18,7 +18,6 @@ export function createDefaultSplitViewState(workspaceId?: string): SplitViewStat
     leftTabHistory: [],
     rightTabHistory: [],
     workspaceId: workspaceId || 'default',
-    lastModified: Date.now()
   };
 }
 
