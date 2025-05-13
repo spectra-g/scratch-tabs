@@ -8,6 +8,7 @@ export class GroovyDetector extends BaseLanguageDetector {
     id = 'groovy';
     name = 'Groovy';
     extensions = ['groovy', 'gvy', 'gy', 'gsh'];
+    priority = 10; // Increase priority to help win against JavaScript
     
     getFileExtension(): string {
         return 'groovy';
@@ -29,32 +30,82 @@ export class GroovyDetector extends BaseLanguageDetector {
         }
 
         const lines = content.split('\n');
-        let matchScore = 0;
-
-        // Check for common Groovy patterns
+        const nonCommentLines = lines.filter(line => {
+            const trimmed = line.trim();
+            return trimmed.length > 0 && !trimmed.startsWith('//') && !trimmed.startsWith('/*') && !trimmed.startsWith('*');
+        });
+        // If no real content, not a match
+        if (nonCommentLines.length === 0) {
+            return false;
+        }
+        
+        // Heuristic: Average characters per line
+        // Natural language text tends to have longer lines than code
+        const avgCharsPerLine = nonCommentLines.reduce((sum, l) => sum + l.length, 0) / nonCommentLines.length;
+        if (avgCharsPerLine > 70) {
+            return false; // Lines too long on average - likely prose, not code
+        }
+        
+        // Define common Groovy patterns (moved from earlier in the file)
         const patterns = [
-            /\bclass\s+\w+(\s+extends\s+\w+)?\s*\{/,      // Class definition
-            /\bdef\s+\w+\s*=\s*/,                          // def variable assignment
-            /\bdef\s+\w+\s*\([^)]*\)\s*\{/,                // def method definition
-            /\@Grab\(.*\)/,                                 // Grape annotations
-            /\bpackage\s+[\w.]+;?/,                         // package declaration
-            /\bimport\s+[\w.]+;?/,                          // import statements
-            /\$\{.*?\}/,                                    // String interpolation
-            /['"].*?['"]\.each\s*\{/,                       // String.each method
-            /\bfor\s*\(\s*\w+\s+in\s+.+?\)/,               // Groovy for loop
-            /\s*<<\s*/,                                     // Left shift operator
-            /\[\s*.*?\s*\]\s*\.collect\s*\{/,               // List.collect method
+            { regex: /\bclass\s+\w+(\s+extends\s+\w+)?\s*\{/, weight: 1 },      // Class definition
+            { regex: /\bdef\s+\w+\s*=\s*/, weight: 2 },                        // def variable assignment
+            { regex: /\bdef\s+\w+\s*\([^)]*\)\s*\{/, weight: 2.5 },                // def method definition
+            { regex: /\@Grab\(.*\)/, weight: 2 },                                // Grape annotations
+            { regex: /\bpackage\s+[\w.]+;?/, weight: 0.5 },                      // package declaration
+            { regex: /\bimport\s+[\w.]+;?/, weight: 0.5 },                       // import statements
+            { regex: /\$\{.*?\}/, weight: 2.5 },                                   // String interpolation
+            { regex: /"[^"]*\$\{.*?\}[^"]*"/, weight: 3 },                       // String interpolation in double quotes (very Groovy-specific)
+            { regex: /['"].*?['"]\.each\s*\{/, weight: 1.5 },                    // String.each method
+            { regex: /\bfor\s*\(\s*\w+\s+in\s+.+?\)/, weight: 1 },               // Groovy for loop
+            { regex: /\s*<<\s*/, weight: 0.5 },                                  // Left shift operator
+            { regex: /\[\s*.*?\s*\]\s*\.collect\s*\{/, weight: 1.5 },            // List.collect method
+            { regex: /\?\.|(?<!\w)\*\.(?!\w)|\.\&/, weight: 2 },                 // Groovy-specific operators
+            { regex: /\bprintln\s+[^(]/, weight: 3 },                            // println without parentheses (very Groovy-specific)
+            { regex: /\bnew\s+\w+\(.*?:[^,}]+.*?\)/, weight: 2.5 }               // Named parameters in constructor (Groovy-specific)
         ];
 
         // Check for specific keywords
         const keywords = [
-            'groovy', 'def', 'as', 'trait', 'delegate', 'it', 'with', 'Closure'
+            'groovy', 'def', 'trait', 'delegate', 'Closure', 'println'
         ];
+       
+        const wordRegex = /\b\w+\b/g;
+        let totalTokens = 0;
+        let keywordTokens = 0;
+        
+        for (const line of nonCommentLines) {
+            const tokens = line.match(wordRegex);
+            if (!tokens) continue;
+        
+            totalTokens += tokens.length;
+            for (const token of tokens) {
+                if (keywords.includes(token)) {
+                    keywordTokens++;
+                }
+            }
+        }
+        
+        const keywordRatio = keywordTokens / (totalTokens || 1);  // Prevent divide by zero
+        
+        // If too few keywords overall, it's probably not Groovy
+        if (keywordRatio < 0.08) {
+            return false;
+        }
+        
+        // Calculate weighted match score
+        let matchScore = 0;
+        let groovySpecificHits = 0;
 
         for (const line of lines) {
             for (const pattern of patterns) {
-                if (pattern.test(line)) {
-                    matchScore += 1;
+                if (pattern.regex.test(line)) {
+                    matchScore += pattern.weight;
+                    
+                    // Count Groovy-specific patterns (those with weight ≥ 2.5)
+                    if (pattern.weight >= 2.5) {
+                        groovySpecificHits++;
+                    }
                 }
             }
 
@@ -64,9 +115,32 @@ export class GroovyDetector extends BaseLanguageDetector {
                 }
             }
         }
+        
+        // Boost score based on keyword ratio - the higher the ratio, the more likely it's Groovy
+        if (keywordRatio > 0.15) {
+            matchScore += 2;
+        } else if (keywordRatio > 0.1) {
+            matchScore += 1;
+        }
+        
+        // Additional check: If we have enough Groovy-specific hits, it's almost certainly Groovy
+        if (groovySpecificHits >= 2) {
+            matchScore += 3;
+        }
+        
+        // If we see def, println, and string interpolation together, it's very likely Groovy
+        const hasDefKeyword = content.match(/\bdef\b/) !== null;
+        const hasPrintln = content.match(/\bprintln\b/) !== null;
+        const hasStringInterpolation = content.match(/"\$\{/) !== null;
+        
+        if (hasDefKeyword && hasPrintln && hasStringInterpolation) {
+            matchScore += 5; // Very strong boost for this combination
+        } else if ((hasDefKeyword && hasPrintln) || (hasDefKeyword && hasStringInterpolation)) {
+            matchScore += 3; // Strong boost for these combinations
+        }
 
-        // If the file has a high score of Groovy patterns, it's likely Groovy
-        return matchScore >= 2;
+        // Require a higher threshold to reduce false positives
+        return matchScore >= 3;
     }
 
     /**

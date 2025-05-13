@@ -444,7 +444,7 @@ async function generateEventSchedule(faker: any): Promise<string> {
       );
       
       const sessionDate = new Date(startDate);
-      sessionDate.setDate(sessionDate.getDate() + randomInt(0, Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24))));
+      sessionDate.setDate(sessionDate.getDate() + randomInt(0, Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))));
       
       const startHour = randomInt(8, 17);
       const durationMinutes = faker.helpers.arrayElement([30, 45, 60, 90]);
@@ -459,7 +459,7 @@ async function generateEventSchedule(faker: any): Promise<string> {
         id: faker.string.uuid(),
         title: faker.lorem.sentence(),
         description: faker.lorem.paragraph(),
-        speakers: sessionSpeakers.map(speaker => ({
+        speakers: sessionSpeakers.map((speaker: any) => ({
           id: speaker.id,
           name: speaker.name
         })),
@@ -508,9 +508,9 @@ async function generateEventSchedule(faker: any): Promise<string> {
         phone: faker.phone.number()
       },
       social: {
-        twitter: `@${faker.internet.userName()}`,
-        facebook: `facebook.com/${faker.internet.userName()}`,
-        instagram: `instagram.com/${faker.internet.userName()}`
+        twitter: `@${faker.internet.username()}`,
+        facebook: `facebook.com/${faker.internet.username()}`,
+        instagram: `instagram.com/${faker.internet.username()}`
       }
     },
     venues,
@@ -669,6 +669,9 @@ export class JsonLanguageDetector extends BaseLanguageDetector {
   extensions = ['json'];
   priority = 5; // Higher priority because JSON is unambiguous when valid
   
+  // Added a property to store preloaded samples
+  private preloadedSample: string | null = null;
+
   patterns = () => [
     /"[^"]*"\s*:/,                  // "key": pattern
     /\[\s*(?:"[^"]*"|[\d.]+|true|false|null|{)/,  // Array with valid JSON values
@@ -680,30 +683,46 @@ export class JsonLanguageDetector extends BaseLanguageDetector {
   /**
    * Get sample content for JSON
    */
-  async sampleContent(): Promise<string> {
-    try {
-      return await generateThemeBasedJson();
-    } catch (error) {
-      console.error('Error generating dynamic JSON:', error);
-      // Fallback to static JSON if dynamic generation fails
-      return `{
-  "name": "John Doe",
-  "age": 30,
-  "isStudent": false,
-  "hobbies": ["reading", "music", "sports"],
-  "address": {
-    "street": "123 Main St",
-    "city": "Anytown",
-    "country": "USA"
-  },
-  "contact": {
-    "email": "john@example.com",
-    "phone": "+1-555-555-5555"
+  sampleContent(): string {
+    // Use preloaded sample if available
+    if (this.preloadedSample) {
+      const sample = this.preloadedSample;
+      // Clear it so next time we'll get a fresh sample
+      this.preloadedSample = null;
+      // Start preloading the next sample
+      this.preloadDynamicSample();
+      return sample;
+    }
+
+    // If no preloaded sample, return a fallback and start preloading
+    this.preloadDynamicSample();
+    return `{
+  "name": "Sample JSON",
+  "description": "A sample JSON object with various data types",
+  "isActive": true,
+  "count": 42,
+  "price": 19.99,
+  "tags": ["sample", "json", "data"],
+  "metadata": {
+    "created": "${new Date().toISOString()}",
+    "version": "1.0",
+    "random": ${Math.random()}
   }
 }`;
-    }
   }
   
+  /**
+   * Preload a dynamic sample in the background
+   */
+  async preloadDynamicSample(): Promise<void> {
+    try {
+      const dynamicJson = await generateThemeBasedJson();
+      this.preloadedSample = dynamicJson;
+    } catch (error) {
+      console.error('Failed to preload dynamic JSON sample:', error);
+    }
+  }
+
 /**
  * Check if content is valid JSON or matches JSON patterns
  * Works with both complete and partial content
@@ -813,7 +832,7 @@ isMatch(content: string): boolean {
   /**
    * Get Options menu
    */
-  getOptionsMenu(): React.FC<{ editor: monaco.editor.IStandaloneCodeEditor }> {
+  getOptionsMenu(): any {
     return JsonOptionsMenu;
   }
 }
@@ -821,6 +840,9 @@ isMatch(content: string): boolean {
 // Create and register the detector
 const jsonDetector = new JsonLanguageDetector();
 languageRegistry.register(jsonDetector);
+
+// Preload samples for future use
+jsonDetector.preloadDynamicSample();
 
 // Export for backward compatibility
 export const registerJsonProvider = (monaco: any) => {
