@@ -40,7 +40,7 @@ export function duplicateTab(tab: Tab, suffix: string = " (copy)"): Tab {
  * @param tab The tab to check
  */
 export function isTabEmpty(tab: Tab): boolean {
-  return tab.content?.trim() === '';
+  return tab.content.trim() === '';
 }
 
 /**
