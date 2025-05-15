@@ -104,7 +104,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       let currentActiveId = get().activeWorkspaceId;
 
       if (currentWorkspaces.length === 0) {
-        console.log("[ensureWorkspace] No workspaces found. Creating default workspace.");
         const defaultWorkspace: Workspace = {
           id: crypto.randomUUID(),
           name: 'Default Workspace',
