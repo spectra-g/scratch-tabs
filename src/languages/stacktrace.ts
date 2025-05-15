@@ -1,233 +1,495 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import { DetectionResult, LanguageDetector } from './types';
 
 /**
  * Stacktrace language detector
  */
-export class StacktraceLanguageDetector extends BaseLanguageDetector {
-    id = 'stacktrace';
-    name = 'Stack Trace';
-    extensions = ['stacktrace', 'stack'];
-    priority = 10;
+export class StacktraceLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
+  id = 'stacktrace'; // Custom ID, as Monaco might not have a specific one for generic stacktraces
+  name = 'Stack Trace';
+  extensions = ['stacktrace', 'trace', 'log', 'err']; // Common extensions where stacktraces are found
+  priority = 5; // Mid-to-high priority as they are fairly distinct
 
-    /**
-     * Get sample content for stacktrace
-     */
-    sampleContent(): string {
-        return `
-Error: Cannot read properties of undefined (reading 'length')
-    at processItems (/app/src/utils/dataProcessor.ts:42:23)
-    at async Function.handleRequest (/app/src/controllers/itemController.ts:156:12)
-    at async /app/src/middleware/errorHandler.ts:24:7
-    at async /app/node_modules/express/lib/router/layer.js:95:5
+  sampleContent(): string {
+    return `Error: Cannot read properties of undefined (reading 'length')
+    at processItems (webpack:///./src/utils/dataProcessor.ts:42:23)
+    at async Function.handleRequest (/app/src/controllers/itemController.js:156:12)
+    at /app/node_modules/express/lib/router/layer.js:95:5
+    at Layer.handle [as handle_request] (/app/node_modules/express/lib/router/layer.js:95:5)
+Caused by: java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.String java.lang.Object.toString()' on a null object reference
+    at com.example.MyClass.doSomething(MyClass.java:123)
+    at com.example.AnotherClass.callDoSomething(AnotherClass.java:45)
+    ... 3 more
+panic: runtime error: index out of range [2] with length 2
+goroutine 1 [running]:
+main.main()
+    /usr/local/go/src/runtime/proc.go:250 +0x9d fp=0xc000050780 sp=0xc000050770 pc=0x45a25d
+    /path/to/my/project/main.go:15 +0x64
+Exception in thread "main" java.io.FileNotFoundException: /tmp/test (No such file or directory)
+    at java.base/java.io.FileInputStream.open0(Native Method)
+    at java.base/java.io.FileInputStream.open(FileInputStream.java:219)
+    at java.base/java.io.FileInputStream.<init>(FileInputStream.java:157)
+    at java.base/java.io.FileInputStream.<init>(FileInputStream.java:112)
+    at SomeProgram.main(SomeProgram.java:5)
+Uncaught (in promise) DOMException: The operation failed for an unspecified reason.
+    at <anonymous>:1:1`;
+  }
 
-TypeError: Cannot read property 'map' of null
-    at UserComponent.render (UserComponent.tsx:28:31)
-    at renderWithHooks (react-dom.development.js:16305:18)
-    at updateFunctionComponent (react-dom.development.js:19588:20)
-    at beginWork (react-dom.development.js:21601:16)
-    at beginWork$1 (react-dom.development.js:27426:14)
-    at performUnitOfWork (react-dom.development.js:26557:12)
-    at workLoopSync (react-dom.development.js:26466:5)
-    at renderRootSync (react-dom.development.js:26434:7)
-    at performSyncWorkOnRoot (react-dom.development.js:26085:20)
-    at scheduleUpdateOnFiber (react-dom.development.js:25321:7)
-
-ReferenceError: fetch is not defined
-    at Object.<anonymous> (/app/src/services/api.js:12:3)
-    at Module._compile (internal/modules/cjs/loader.js:999:30)
-    at Object.Module._extensions..js (internal/modules/cjs/loader.js:1027:10)
-    at Module.load (internal/modules/cjs/loader.js:863:32)
-    at Function.Module._load (internal/modules/cjs/loader.js:708:14)
-    at Module.require (internal/modules/cjs/loader.js:887:19)
-    at require (internal/modules/cjs/helpers.js:74:18)
-`;
+  /**
+   * Detects if the given content matches stack trace patterns and returns a confidence score.
+   */
+  detect(content: string): DetectionResult {
+    const trimmedContent = content.trim();
+    if (!trimmedContent || trimmedContent.length < 15) { // Min length for something like "Error: at a:1"
+      return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
 
-    /**
-     * Check if content matches stacktrace patterns
-     */
-    isMatch(content: string): boolean {
-        // Skip if content is too short
-        if (content.trim().length < 10) return false;
+    let confidenceScore = 0.0;
+    let patternsMatched = 0;
+    let strongSignalFound = false;
+    let errorKeywordFound = false;
+    let frameLikeSegments = 0;
 
-        const stacktracePatterns = [
-            // Error type and message pattern (can be at the start of a line)
-            /(?:Uncaught\s+)?(?:Error|TypeError|ReferenceError|SyntaxError|RangeError):|Error:/,
-
-            // Stack frame patterns (must be at the start of a line, potentially with leading whitespace)
-            /\s+at\s+(?:\w+\s+)?\(?[^)]+\)?/, // e.g., " at Function.handleRequest (...)" or " at (...)"
-            /\s+at\s+(?:\w+\.)*\w+\s+\(.*:\d+:\d+\)/, // e.g., " at Object.method (file:line:col)"
-            /\s+at\s+(?:\w+\.)*\w+\s+\[.*\]/, // e.g., " at Object.method [as _method]"
-            /\s+at\s+async\s+/, // e.g., " at async Function.handleRequest"
-
-            // File path patterns in stack frames (can appear anywhere in a line)
-            /\([^()]+:\d+:\d+\)/, // e.g., "(file:line:col)"
-            /\s+\(?(?:file|https?|webpack):\/\/[^)]+:\d+:\d+\)?/, // e.g., "(webpack://...)"
-
-            // Common stack frame components (can appear anywhere in a line)
-            /\b(?:node_modules|src|dist|build)\b/,
-            /\b(?:index|bundle|main|app)\.[jt]sx?:/,
-            /\b\d+:\d+\b/ // Simple line:column number pattern
-        ];
-
-        // Split into non-empty lines
-        const lines = content.split('\n').filter(line => line.trim().length > 0);
-        if (lines.length === 1) {
-            // Single non-empty line: relax matching, count how many patterns match this line
-            const line = lines[0];
-            const matchCount = stacktracePatterns.reduce((count, pattern) =>
-                count + (pattern.test(line) ? 1 : 0), 0);
-            return matchCount >= 2;
+    // --- Pre-checks for strong anti-signals ---
+    if (/^\s*<\?php/i.test(trimmedContent) || /^\s*<(!DOCTYPE|html|xml)/i.test(trimmedContent)) {
+        return { match: false, confidence: 0.0, matchedDefinitive: false }; // PHP or HTML/XML
+    }
+    if (/^\s*#include\s*</.test(trimmedContent) || /^\s*package\s+[\w.]+;/.test(trimmedContent)) {
+        return { match: false, confidence: 0.0, matchedDefinitive: false }; // C/C++ or Java
+    }
+     if (/\b(function|class|var|let|const)\s+\w+\s*(=|\(|\{)/.test(trimmedContent) && !/\bat\s+\w+\s*\(/.test(trimmedContent)) {
+        // If common JS/TS keywords are used for definitions and it doesn't also look like a stack frame.
+        if (!trimmedContent.match(/\b(Error|Exception|Panic|Traceback)\b/i)) { // Unless it also has error keywords
+            return { match: false, confidence: 0.0, matchedDefinitive: false };
         }
-
-        // Multi-line: use original logic (apply patterns to the whole content)
-        const matchCount = stacktracePatterns.reduce((count, pattern) =>
-            count + (pattern.test(content) ? 1 : 0), 0);
-        return matchCount >= 2;
     }
 
-    /**
-     * Register stacktrace language provider with Monaco
-     */
-    registerProvider(monaco: any): void {
-        // Register stacktrace language if not already registered
-        if (!monaco.languages.getLanguages().some((lang: any) => lang.id === 'stacktrace')) {
-            monaco.languages.register({ id: 'stacktrace' });
 
-            // Define stacktrace syntax highlighting
-            monaco.languages.setMonarchTokensProvider('stacktrace', {
-                tokenizer: {
-                    root: [
-                        // Error type and message
-                        [/^(?:Uncaught\s+)?(?:Error|TypeError|ReferenceError|SyntaxError|RangeError):/, 'error'],
-                        [/^Error:.*$/, 'error'],
-
-                        // Stack frame components (ensure these match the start of a line)
-                        [/^\s*at\s+/, 'keyword'], // Added \s* to handle potential leading space variations
-                        [/\basync\b/, 'keyword'],
-                        [/\b(?:node_modules|src|dist|build)\b/, 'string'],
-                        [/\b\w+\.[jt]sx?\b/, 'string'],
-                        [/\b(?:\w+\.)*\w+(?=\s*\()/, 'function'],
-                        [/:\d+:\d+/, 'number'],
-                        [/\([^)]+\)/, 'string'],
-
-                        // File paths
-                        [/(?:file|https?|webpack):\/\/[^)\s]+/, 'string'],
-
-                        // Function names (handle cases without file/line info)
-                        [/\b(?:\w+\.)*\w+(?=\s+at\s)/, 'function'], // e.g., "at Function.handleRequest"
-                        [/\b(?:\w+\.)*\w+(?=@)/, 'function'], // e.g., "at Object.method@"
-
-                        // Line and column numbers
-                        [/\b\d+\b/, 'number'],
-
-                        // Special syntax
-                        [/[[\]{}()]/, 'delimiter.bracket'],
-                        [/\./, 'delimiter'],
-
-                        // Everything else
-                        [/[^]/, 'text']
-                    ]
-                }
-            });
-
-            // Define stacktrace theme
-            monaco.editor.defineTheme('stacktrace-theme', {
-                base: 'vs-dark',
-                inherit: true,
-                rules: [
-                    { token: 'error', foreground: 'ff4444', fontStyle: 'bold' },
-                    { token: 'keyword', foreground: '569cd6' },
-                    { token: 'function', foreground: 'dcdcaa' },
-                    { token: 'string', foreground: 'ce9178' },
-                    { token: 'number', foreground: 'b5cea8' },
-                    { token: 'delimiter.bracket', foreground: '808080' },
-                    { token: 'delimiter', foreground: '808080' },
-                    { token: 'text', foreground: 'd4d4d4' }
-                ],
-                colors: {
-                    'editor.background': '#1e1e1e',
-                    'editor.foreground': '#d4d4d4'
-                }
-            });
-        }
-
-        // Configure stacktrace formatting provider
-        monaco.languages.registerDocumentFormattingEditProvider('stacktrace', {
-            provideDocumentFormattingEdits(model: any) {
-                const content = model.getValue();
-
-                const formatStackTrace = (stackTrace: string) => {
-                    // If it's a single line (or all lines are very long), try to split at ' at '
-                    const lines = stackTrace.split('\n');
-                    let processedLines: string[] = [];
-                    for (const line of lines) {
-                        const trimmedLine = line.trim();
-                        if (!trimmedLine) {
-                            processedLines.push('');
-                            continue;
-                        }
-                        // If the line contains multiple stack frames (single-line stacktrace), split at ' at '
-                        if (/ at /.test(trimmedLine) && !/^\s*at\s+/.test(trimmedLine)) {
-                            // Split at ' at ', but keep the first part as the error message
-                            const parts = trimmedLine.split(/(?= at )/g);
-                            if (parts.length > 1) {
-                                processedLines.push(parts[0].trim());
-                                for (let i = 1; i < parts.length; i++) {
-                                    processedLines.push('\t' + parts[i].trim());
-                                }
-                                continue;
-                            }
-                        }
-                        // If it starts with 'at', indent it
-                        if (/^\s*at\s+/i.test(trimmedLine)) {
-                            processedLines.push(`\t${trimmedLine}`);
-                        } else {
-                            processedLines.push(trimmedLine);
-                        }
-                    }
-                    return processedLines.join('\n');
-                }
-
-                return [{
-                    range: model.getFullModelRange(),
-                    text: formatStackTrace(content)
-                }];
-            }
-        });
+    // 1. Check for common error prefixes (can be single line or start of multiline)
+    const errorPrefixRegex = /^(?:uncaught\s+)?([A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault|Traceback))\b(\s*[:-\s])?/i;
+    const errorMatch = trimmedContent.match(errorPrefixRegex);
+    if (errorMatch) {
+      confidenceScore += 0.4;
+      patternsMatched++;
+      strongSignalFound = true;
+      errorKeywordFound = true;
     }
 
-    countSpecificPatterns(content: string): number {
-        // Use the same patterns as isMatch
-        const stacktracePatterns = [
-            /(?:Uncaught\s+)?(?:Error|TypeError|ReferenceError|SyntaxError|RangeError):|Error:/,
-            /\s+at\s+(?:\w+\s+)?\(?[^)]+\)?/,
-            /\s+at\s+(?:\w+\.)*\w+\s+\(.*:\d+:\d+\)/,
-            /\s+at\s+(?:\w+\.)*\w+\s+\[.*\]/,
-            /\s+at\s+async\s+/, 
-            /\([^()]+:\d+:\d+\)/,
-            /\s+\(?(?:file|https?|webpack):\/\/[^)]+:\d+:\d+\)?/,
-            /\b(?:node_modules|src|dist|build)\b/,
-            /\b(?:index|bundle|main|app)\.[jt]sx?:/,
-            /\b\d+:\d+\b/
-        ];
-        // Count total matches across all lines
-        let score = 0;
-        for (const line of content.split('\n')) {
-            for (const pattern of stacktracePatterns) {
-                if (pattern.test(line)) score++;
+    // 2. Look for "at" clauses or typical stack frame patterns globally
+    // This regex tries to find multiple "at" clauses or file:line patterns in the string
+    // Regex for "at function (file:line:col)" or "at file:line:col" or just "at function"
+    // It's made less strict about the start of the line for single-line traces.
+    const framePattern = /(?:\s+at\s+|\bat\s+)?(?:[\w$./<>\[\]~`!@#%^&*+=|\\?-]+(?:\([\w\s,]*\))?\s*)?\(?(?:(?:[a-zA-Z]:\\|[~/\w.-]+[/])?[\w.-]+\.[a-zA-Z]{1,5}):\d+(?::\d+)?\)?|\bat\s+[\w$./<>\[\]~`!@#%^&*+=|\\?-]+(?:\([\w\s,]*\))?/g;
+    const pythonFramePattern = /File\s+"[^"]+",\s*line\s+\d+,\s*in\s+\S+/g;
+    const goFramePattern = /(?:^\s*|\s+)(?:[\w./-]+\.(?:go|s):\d+\s+\+0x[0-9a-fA-F]+|[\w./-]+(?:[\w./-]*\.\w+)?\((?:[^)]*)\))/g;
+
+
+    const frameMatches = Array.from(content.matchAll(framePattern));
+    const pythonFrameMatches = Array.from(content.matchAll(pythonFramePattern));
+    const goFrameMatches = Array.from(content.matchAll(goFramePattern));
+
+    frameLikeSegments = frameMatches.length + pythonFrameMatches.length + goFrameMatches.length;
+
+    if (frameLikeSegments > 0) {
+      confidenceScore += 0.25; // Base for finding any frame-like structures
+      confidenceScore += Math.min(frameLikeSegments, 5) * 0.05; // Bonus for more frames
+      patternsMatched++;
+      if (frameLikeSegments >= 1) strongSignalFound = true;
+    }
+
+    // 3. Specific indicators for Java or .NET stack traces
+    if (/\.{3}\s*\d+\s+more\b/i.test(content)) { // "... N more"
+      confidenceScore += 0.2;
+      strongSignalFound = true;
+      patternsMatched++;
+    }
+    if (/\sCaused by:/i.test(content)) {
+      confidenceScore += 0.15;
+      strongSignalFound = true;
+      patternsMatched++;
+    }
+
+    // 4. Check for multiple lines starting with typical indentation for stack frames
+    // This helps for multi-line traces but is less relevant for single-line.
+    const lines = content.split(/\r\n|\r|\n/); // Split by any common newline
+    if (lines.length > 1) {
+        let indentedFrameLines = 0;
+        for (const line of lines) {
+            if (/^\s{4,}(?:at\s+)?\w|^\s{2,}\w+\.(?:go|s):/.test(line.trimStart())) { // Common indent for Java/JS/Python/Go frames
+                indentedFrameLines++;
             }
         }
-        return score;
+        if (indentedFrameLines >= 1) {
+            confidenceScore += 0.1;
+            if (indentedFrameLines >=2) confidenceScore += 0.1;
+            patternsMatched++;
+            strongSignalFound = true;
+        }
     }
+
+
+    // 5. Adjustments
+    if (errorKeywordFound && frameLikeSegments >= 1) {
+      confidenceScore += 0.25; // Error message + at least one frame is a strong indicator
+    } else if (errorKeywordFound && frameLikeSegments === 0 && lines.length === 1) {
+      // Single line error message without clear "at" frames. Could be a simple error string.
+      confidenceScore *= 0.7; // Reduce confidence slightly
+    } else if (!errorKeywordFound && frameLikeSegments >= 1) {
+      // Has frames but no clear error keyword at the start. Still likely a trace.
+      confidenceScore += 0.1;
+    }
+
+    // If it's a single line, it needs stronger evidence (either error keyword + frame, or multiple frames)
+    if (lines.length === 1 && (!errorKeywordFound || frameLikeSegments < 1) && frameLikeSegments < 2) {
+        confidenceScore -= 0.2;
+    }
+    // If it's a single line and contains " at " multiple times, it's a good sign
+    if (lines.length === 1 && (content.match(/\s+at\s+/g) || []).length >= 2) {
+        confidenceScore += 0.3;
+        strongSignalFound = true;
+    }
+
+
+    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
+
+    // Final match decision
+    let isMatch = false;
+    if (strongSignalFound && confidenceScore >= 0.40) {
+        isMatch = true;
+    } else if (patternsMatched >= 1 && errorKeywordFound && frameLikeSegments >= 1 && confidenceScore >= 0.5) {
+        isMatch = true;
+    } else if (frameLikeSegments >= 2 && confidenceScore >= 0.35) { // Multiple frames are a good sign
+        isMatch = true;
+    } else if (errorKeywordFound && lines.length === 1 && frameLikeSegments >= 1 && confidenceScore >= 0.3) { // Single line error with at least one frame
+        isMatch = true;
+    }
+
+
+    return {
+      match: isMatch,
+      confidence: isMatch ? confidenceScore : 0.0,
+      matchedDefinitive: isMatch && strongSignalFound && confidenceScore > 0.6
+    };
+  }
+
+  getFileExtension(): string {
+    return 'log'; // .log is a common extension for files containing stack traces
+  }
+
+  registerProvider(monaco: any): void {
+    const languageId = this.id; // 'stacktrace'
+
+    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+      monaco.languages.register({ id: languageId });
+    }
+
+    monaco.languages.setMonarchTokensProvider(languageId, {
+      defaultToken: 'source.stacktrace',
+      ignoreCase: false,
+      tokenPostfix: '.stacktrace',
+
+      tokenizer: {
+        root: [
+          // Comments
+          [/^\s*[#;].*$/, 'comment.stacktrace'],
+          [/^\s*\/\/.*/, 'comment.stacktrace'], // Added for JS/Java style comments if they appear
+
+          // Section Delimiters (if relevant, though less common in pure stack traces)
+          // [/^\s*\[/, { token: 'metatag.ini', bracket: '@open', next: '@section' }], // Likely not needed for stacktrace
+
+          // 1. Common Error/Exception lines
+          // Group 1: Optional "Uncaught "
+          // Group 2: Error Name
+          // Group 3: Separator (e.g., ": ")
+          // Group 4: Message
+          [/^((?:Uncaught\s+)?)([A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault))\b((?:\s*:\s*)?)(.*)$/,
+            ['keyword.modifier.stacktrace', 'type.error.stacktrace', 'delimiter.stacktrace', 'string.error.message.stacktrace']
+          ],
+          // Simpler Error: Message
+          // Group 1: "Error" (or similar keywords)
+          // Group 2: Separator (e.g., ": ")
+          // Group 3: Message
+          [/^(Error|Fatal error|Critical|Warning)(\s*:\s*)(.*)$/, // Added Warning
+            ['type.error.stacktrace', 'delimiter.stacktrace', 'string.error.message.stacktrace']
+          ],
+          [/^\s*(Caused by:)/, 'keyword.error.stacktrace'],
+          [/^\s*(Traceback \(most recent call last\):)/, 'keyword.error.stacktrace'],
+
+
+          // 2. Stack frame lines - ORDER MATTERS (most specific first)
+
+          // Python: File "path/to/file.py", line 123, in my_function
+          [/^(File\s+)(".*?")(,\s*line\s+)(\d+)(,\s*in\s+)(.*)$/,
+            ['keyword.frame.stacktrace', 'string.filepath.stacktrace', 'keyword.frame.stacktrace', 'number.linenumber.stacktrace', 'keyword.frame.stacktrace', 'function.name.stacktrace']
+          ],
+          // Python: File "path/to/file.py", line 123
+          [/^(File\s+)(".*?")(,\s*line\s+)(\d+)$/,
+            ['keyword.frame.stacktrace', 'string.filepath.stacktrace', 'keyword.frame.stacktrace', 'number.linenumber.stacktrace']
+          ],
+
+          // Go: /path/to/file.go:123 +0xabc
+          [/^(\s*)([\w./-]+\.(?:go|s))(:)(\d+)((?:\s+\+0x[0-9a-fA-F]+)?)$/,
+            ['white', 'string.filepath.stacktrace', 'delimiter.stacktrace', 'number.linenumber.stacktrace', 'meta.offset.stacktrace']
+          ],
+          // Go: main.main() or path/to/pkg.MyFunction()
+          [/^(\s*)([\w./-]+(?:[\w./-]*\.\w+)?\((?:[^)]*)\))$/,
+            ['white', 'function.name.stacktrace']
+          ],
+          // Go: Simpler path-like identifiers
+          [/^(\s*)([\w./-]+(?:\.[\w./-]+)*)$/,
+            ['white', 'identifier.stacktrace']
+          ],
+
+          // at package.method(FileName.ext:line:col)
+          // G1: "at " | G2: method | G3: " (" | G4: file | G5: ":" | G6: line | G7: ":" | G8: col | G9: ")"
+          [/^(\s*at\s+)([\w$./<>\[\]~`!@#%^&*+=|\\?-]+(?:\([\w\s,]*\))?)(\s*\()(\/?[\w.-/\\]+\.[a-zA-Z]{1,5})(:)(\d+)(:)(\d+)(\))$/,
+            [
+              'keyword.frame.stacktrace',       // G1
+              'function.name.stacktrace',     // G2
+              'delimiter.parenthesis.stacktrace', // G3
+              'string.filepath.stacktrace',   // G4
+              'delimiter.stacktrace',         // G5
+              'number.linenumber.stacktrace', // G6
+              'delimiter.stacktrace',         // G7
+              'number.column.stacktrace',     // G8
+              'delimiter.parenthesis.stacktrace'  // G9
+            ]
+          ],
+          // at package.method(FileName.ext:line)
+          // G1: "at " | G2: method | G3: " (" | G4: file | G5: ":" | G6: line | G7: ")"
+          [/^(\s*at\s+)([\w$./<>\[\]~`!@#%^&*+=|\\?-]+(?:\([\w\s,]*\))?)(\s*\()(\/?[\w.-/\\]+\.[a-zA-Z]{1,5})(:)(\d+)(\))$/,
+            [
+              'keyword.frame.stacktrace',
+              'function.name.stacktrace',
+              'delimiter.parenthesis.stacktrace',
+              'string.filepath.stacktrace',
+              'delimiter.stacktrace',
+              'number.linenumber.stacktrace',
+              'delimiter.parenthesis.stacktrace'
+            ]
+          ],
+          // at package.method(FileName.ext)
+          // G1: "at " | G2: method | G3: " (" | G4: file | G5: ")"
+          [/^(\s*at\s+)([\w$./<>\[\]~`!@#%^&*+=|\\?-]+(?:\([\w\s,]*\))?)(\s*\()(\/?[\w.-/\\]+\.[a-zA-Z]{1,5})(\))$/,
+            [
+              'keyword.frame.stacktrace',
+              'function.name.stacktrace',
+              'delimiter.parenthesis.stacktrace',
+              'string.filepath.stacktrace',
+              'delimiter.parenthesis.stacktrace'
+            ]
+          ],
+          // at package.method (Native Method) or (Unknown Source) or (<anonymous>)
+          // G1: "at " | G2: method | G3: " (" | G4: Info | G5: ")"
+          [/^(\s*at\s+)([\w$./<>\[\]~`!@#%^&*+=|\\?-]+(?:\([\w\s,]*\))?)(\s*\()([^)]+)(\))$/,
+            [
+              'keyword.frame.stacktrace',
+              'function.name.stacktrace',
+              'delimiter.parenthesis.stacktrace',
+              'meta.info.stacktrace',
+              'delimiter.parenthesis.stacktrace'
+            ]
+          ],
+          // at package.method (simplest form, ensure it's tried last among "at" lines with file info)
+          // This rule has 2 groups.
+          [/^(\s*at\s+)(.*)$/,
+            ['keyword.frame.stacktrace', 'function.name.stacktrace']
+          ],
+
+          // --- REVISED GENERIC FILE PATH LINE ---
+          // This rule was complex and had many optional groups.
+          // Let's simplify or ensure all potential parts are captured.
+          // Example: webpack:///./src/utils/dataProcessor.ts:42:23
+          // G1: Optional leading whitespace
+          // G2: Full path including filename (greedy but stops before line/col)
+          // G3: Optional ( Colon + LineNumber )
+          // G4: Optional ( Colon + ColNumber )
+          // G5: Optional ( Closing Parenthesis if path was in parens - less common for this rule)
+          // This is still tricky. A better approach might be to tokenize the path, then line, then col separately.
+          // For now, let's try to capture the whole file:line:col structure if present.
+          [/^(\s*)((?:[a-zA-Z]:\\|[~/\w.-]+[/])?[\w.-]+\.[a-zA-Z]{1,5})((?::\d+)?((?::\d+)?)?)(\)?)$/,
+            [
+              'white',                        // G1: Leading whitespace
+              'string.filepath.stacktrace',   // G2: Full path
+              'number.linenumber.stacktrace', // G3: :line (or empty if no line)
+              'number.column.stacktrace',     // G4: :col (or empty if no col)
+              'delimiter.parenthesis.stacktrace' // G5: Optional closing paren
+            ]
+            // The issue here is that if :line or :col are not present, groups 3 and 4 will be undefined.
+            // Monarch needs a token for each group.
+            // A more robust way is to have separate rules or use non-capturing groups for optional parts
+            // if you don't want to assign them a token.
+          ],
+          // Simpler file path with line number only
+          [/^(\s*)((?:[a-zA-Z]:\\|[~/\w.-]+[/])?[\w.-]+\.[a-zA-Z]{1,5})([:(])(\d+)(\))?$/,
+            ['white', 'string.filepath.stacktrace', 'delimiter.stacktrace', 'number.linenumber.stacktrace', 'delimiter.parenthesis.stacktrace']
+          ],
+
+
+          // ... (other rules: Python, Go frames, keywords, comments, numbers, delimiters)
+          // Ensure these simpler rules don't have group/token mismatches either.
+          // For example:
+          [/\b(async|await|native method|unknown source|webpack:\/\/\/|\[native code\])\b/i, 'keyword.modifier.stacktrace'], // 0 groups, 1 token string (OK)
+          [/\b(node_modules|vendor|gems|site-packages|jdk\.internal|sun\.reflect)\b/, 'namespace.library.stacktrace'], // 0 groups, 1 token string (OK)
+          [/\b\d+\b/, 'number.stacktrace'], // 0 groups, 1 token string (OK)
+          [/[{}()\[\]]/, 'delimiter.bracket.stacktrace'], // 0 groups, 1 token string (OK)
+          [/[:;,.]/, 'delimiter.stacktrace'], // 0 groups, 1 token string (OK)
+        ],
+
+        // Removed 'section' state as it's not typical for stack traces
+      },
+    });
+
+    // Define stacktrace theme
+    monaco.editor.defineTheme(`${languageId}-theme`, {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        { token: 'type.error', foreground: 'F44747', fontStyle: 'bold' }, // Bright Red for Error Type
+        { token: 'error.message', foreground: 'F44747' },            // Red for error message
+        { token: 'keyword.error', foreground: 'F44747', fontStyle: 'italic' },
+        { token: 'keyword.frame', foreground: 'C586C0' },            // Magenta for "at"
+        { token: 'keyword.modifier', foreground: '569CD6' },          // Blue for "async"
+        { token: 'function.name.full', foreground: 'DCDCAA' },       // Yellow for full function path
+        { token: 'type.class', foreground: '4EC9B0' },                // Teal for class names
+        { token: 'function.name', foreground: 'DCDCAA' },            // Yellow for method names
+        { token: 'string.filepath.prefix', foreground: 'CE9178' },   // Orange for path
+        { token: 'string.filepath.filename', foreground: 'CE9178', fontStyle: 'underline' }, // Orange, underlined for filename
+        { token: 'number.linenumber', foreground: 'B5CEA8', fontStyle: 'bold' }, // Green, bold for line
+        { token: 'number.column', foreground: 'B5CEA8' },          // Green for column
+        { token: 'number', foreground: 'B5CEA8' },                 // General numbers
+        { token: 'namespace.library', foreground: '4FD6BE' },      // Cyan-ish for library paths
+        { token: 'identifier', foreground: '9CDCFE' },              // Light blue for other identifiers
+        { token: 'delimiter.bracket', foreground: 'd4d4d4' },
+        { token: 'delimiter', foreground: 'd4d4d4' },
+        { token: 'comment', foreground: '6A9955' },
+        { token: 'source', foreground: 'D4D4D4' }                   // Default text
+      ],
+      colors: {
+        'editor.background': '#1E1E1E',
+      }
+    });
+
+    // The formatter you had is a good attempt for trying to structure potentially mangled stack traces.
+    monaco.languages.registerDocumentFormattingEditProvider(languageId, {
+      provideDocumentFormattingEdits(model: any) {
+        const originalContent = model.getValue();
+    
+        let formattedContent = originalContent;
+    
+        // 1. Normalize explicit newlines `\n` that are part of the string
+        const contentAfterNewlineNormalization = formattedContent.replace(/\\n/g, '\n');
+        if (contentAfterNewlineNormalization !== formattedContent) {
+          formattedContent = contentAfterNewlineNormalization;
+        }
+    
+        // 2. Ensure newline *only if not already present* after a closing parenthesis
+        //    followed by common frame starters.
+        //    Regex:
+        //    - `(\))` : Capture the closing parenthesis (Group 1)
+        //    - `([ \t]*)`: Capture any horizontal whitespace (Group 2) - NOT newlines
+        //    - `(at\s+|Caused by:|\.{3}\s*\d+\s+more\b|File\s+"[^"]+"\s*,\s*line\s+\d+|[\w./-]+\.(?:go|s):\d+|[\w./-]+\((?:[^)]*)\)\s*$)`: Frame starters (Group 3)
+        //    This regex now specifically looks for horizontal whitespace between ')' and 'at'.
+        //    If there's already a newline, this regex won't match that part.
+        const frameStarterRegex = /(\))([ \t]*)((?:at\s+|Caused by:|\.{3}\s*\d+\s+more\b|File\s+"[^"]+"\s*,\s*line\s+\d+|[\w./-]+\.(?:go|s):\d+|[\w./-]+\((?:[^)]*)\)\s*$))/g;
+        const contentAfterFrameSplit = formattedContent.replace(
+          frameStarterRegex,
+          (match, p1ClosingParen, p2Whitespace, p3FrameStarter) => {
+            // p1 is ')', p2 is horizontal whitespace, p3 is the frame starter
+            // We want to ensure there's a newline, and then consistent indentation for the frame starter.
+            return `${p1ClosingParen}\n  ${p3FrameStarter.trimStart()}`;
+          }
+        );
+    
+        if (contentAfterFrameSplit !== formattedContent) {
+          formattedContent = contentAfterFrameSplit;
+        }
+    
+        // 3. Line-by-line processing for indentation and cleaning up excessive blank lines
+        const lines = formattedContent.split('\n');
+        const processedLines: string[] = [];
+        let consecutiveBlankLines = 0;
+    
+        const isFrameStart = (line: string): boolean => {
+          const trimmed = line.trimStart();
+          return /^(at\s+|File\s+"[^"]+"\s*,\s*line\s+\d+|Caused by:|\.{3}\s*\d+\s+more\b|[\w./-]+\.(?:go|s):\d+|[\w./-]+\((?:[^)]*)\)$)/i.test(trimmed) ||
+                 (trimmed.startsWith("Caused by:") && processedLines.length > 0 && processedLines[processedLines.length-1].trim() !== "");
+        };
+    
+        const isErrorKeywordLine = (line: string): boolean => {
+          const trimmed = line.trim();
+          return /^(?:Uncaught\s+)?(?:[A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault|Traceback))\b/i.test(trimmed) ||
+                 /^\s*(Caused by:|Traceback \(most recent call last\):)/i.test(trimmed);
+        };
+    
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const trimmedLine = line.trim();
+    
+          if (!trimmedLine) {
+            consecutiveBlankLines++;
+            if (consecutiveBlankLines <= 1) { // Allow one blank line
+              processedLines.push('');
+            }
+            continue;
+          } else {
+            consecutiveBlankLines = 0; // Reset counter
+          }
+    
+          // If it's an error line and not also a frame start (e.g. "Error: foo at bar.js")
+          if (isErrorKeywordLine(trimmedLine) && !isFrameStart(trimmedLine)) {
+            // If the previous line wasn't blank, and this isn't the first line, add a blank line before a new error block
+            if (processedLines.length > 0 && processedLines[processedLines.length - 1].trim() !== "") {
+                processedLines.push('');
+            }
+            processedLines.push(trimmedLine); // Add error line without extra indent
+          } else if (isFrameStart(trimmedLine)) {
+            // Indent stack frames consistently if they are not already indented by at least 2 spaces
+            if (!/^\s{2,}/.test(line) && line.trimStart() === line) {
+              processedLines.push("  " + trimmedLine);
+            } else {
+              // If already indented, try to normalize to 2 spaces if it's not excessive
+              const currentIndentMatch = line.match(/^(\s*)/);
+              const currentIndentLength = currentIndentMatch ? currentIndentMatch[1].length : 0;
+              if (currentIndentLength < 2 || currentIndentLength > 4) { // Adjust if too little or too much
+                 processedLines.push("  " + trimmedLine);
+              } else {
+                 processedLines.push(line); // Preserve reasonable existing indentation
+              }
+            }
+          } else {
+            // For lines that are part of a multi-line error message or other content
+            processedLines.push(line); // Keep original leading whitespace for these lines
+          }
+        }
+    
+        let finalOutput = processedLines.join('\n');
+        // Remove leading/trailing blank lines that might have been introduced
+        finalOutput = finalOutput.replace(/^\n+/, '').replace(/\n+$/, '');
+        // Ensure a single trailing newline if original content had one and output is not empty
+        if (originalContent.endsWith('\n') && finalOutput !== '') {
+            finalOutput += '\n';
+        }
+    
+        if (finalOutput === originalContent) {
+          return null;
+        }
+    
+        return [{
+          range: model.getFullModelRange(),
+          text: finalOutput
+        }];
+      }
+    });
+  }
 }
 
 // Create and register the detector
 const stacktraceDetector = new StacktraceLanguageDetector();
 languageRegistry.register(stacktraceDetector);
 
-// Export for backward compatibility
+// Export for backward compatibility (optional)
 export const registerStacktraceProvider = (monaco: any) => {
-    stacktraceDetector.registerProvider(monaco);
+  stacktraceDetector.registerProvider(monaco);
 };

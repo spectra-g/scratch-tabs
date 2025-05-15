@@ -1,3 +1,4 @@
+import { DetectionResult, LanguageDetector } from './types'; // Ensure correct import
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { registerJsonValidationProvider } from './json/validation';
@@ -9,7 +10,7 @@ import * as monaco from 'monaco-editor';
 let fakerInstance: any = null;
 
 // Themes for JSON generation
-type JsonTheme = 
+type JsonTheme =
   | 'user'
   | 'product'
   | 'blog'
@@ -29,7 +30,7 @@ const themes: JsonTheme[] = [
 // Async function to load faker
 async function loadFaker() {
   if (fakerInstance) return fakerInstance;
-  
+
   try {
     const { faker } = await import('@faker-js/faker');
     fakerInstance = faker;
@@ -47,17 +48,17 @@ function randomInt(min: number, max: number): number {
 
 // Generate a random array of items
 async function generateArray(
-  itemGenerator: () => Promise<any>, 
-  minLength = 3, 
+  itemGenerator: () => Promise<any>,
+  minLength = 3,
   maxLength = 7
 ): Promise<any[]> {
   const length = randomInt(minLength, maxLength);
   const result = [];
-  
+
   for (let i = 0; i < length; i++) {
     result.push(await itemGenerator());
   }
-  
+
   return result;
 }
 
@@ -65,7 +66,7 @@ async function generateArray(
 async function generateThemeBasedJson(): Promise<string> {
   const faker = await loadFaker();
   const theme = themes[randomInt(0, themes.length - 1)];
-  
+
   switch (theme) {
     case 'user':
       return generateUserProfiles(faker);
@@ -89,7 +90,7 @@ async function generateUserProfiles(faker: any): Promise<string> {
   const users = await generateArray(async () => {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
-    
+
     return {
       id: faker.string.uuid(),
       name: {
@@ -144,7 +145,7 @@ async function generateUserProfiles(faker: any): Promise<string> {
 async function generateProductCatalog(faker: any): Promise<string> {
   const categories = await generateArray(async () => {
     const categoryName = faker.commerce.department();
-    
+
     const products = await generateArray(async () => {
       const productName = faker.commerce.productName();
       return {
@@ -171,14 +172,14 @@ async function generateProductCatalog(faker: any): Promise<string> {
         },
         tags: faker.helpers.arrayElements(
           [
-            'new', 'sale', 'popular', 'limited', 'exclusive', 
+            'new', 'sale', 'popular', 'limited', 'exclusive',
             'eco-friendly', 'handmade', 'organic', 'vegan'
-          ], 
+          ],
           { min: 1, max: 3 }
         )
       };
     });
-    
+
     return {
       id: faker.string.uuid(),
       name: categoryName,
@@ -206,7 +207,7 @@ async function generateBlogPosts(faker: any): Promise<string> {
   const authors = await generateArray(async () => {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
-    
+
     return {
       id: faker.string.uuid(),
       name: `${firstName} ${lastName}`,
@@ -218,11 +219,11 @@ async function generateBlogPosts(faker: any): Promise<string> {
       }
     };
   }, 2, 5);
-  
+
   const posts = await generateArray(async () => {
     const title = faker.lorem.sentence();
     const authorIndex = randomInt(0, authors.length - 1);
-    
+
     const comments = await generateArray(async () => {
       return {
         id: faker.string.uuid(),
@@ -235,7 +236,7 @@ async function generateBlogPosts(faker: any): Promise<string> {
         likes: faker.number.int({ min: 0, max: 50 })
       };
     }, 0, 5);
-    
+
     return {
       id: faker.string.uuid(),
       title,
@@ -282,11 +283,11 @@ async function generateBlogPosts(faker: any): Promise<string> {
 async function generateWeatherForecast(faker: any): Promise<string> {
   const city = faker.location.city();
   const country = faker.location.country();
-  
+
   const forecast = await generateArray(async () => {
     const date = new Date();
     date.setDate(date.getDate() + randomInt(0, 6));
-    
+
     const hourlyForecasts = await generateArray(async () => {
       const hour = randomInt(0, 23);
       return {
@@ -298,7 +299,7 @@ async function generateWeatherForecast(faker: any): Promise<string> {
         windDirection: faker.helpers.arrayElement(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']),
         precipitation: faker.number.float({ min: 0, max: 100, precision: 0.1 }),
         condition: faker.helpers.arrayElement([
-          'Clear', 'Partly Cloudy', 'Cloudy', 'Overcast', 
+          'Clear', 'Partly Cloudy', 'Cloudy', 'Overcast',
           'Rain', 'Thunderstorm', 'Snow', 'Fog', 'Drizzle'
         ]),
         icon: faker.helpers.arrayElement([
@@ -307,7 +308,7 @@ async function generateWeatherForecast(faker: any): Promise<string> {
         ])
       };
     }, 4, 8);
-    
+
     return {
       date: date.toISOString().split('T')[0],
       summary: faker.lorem.sentence(),
@@ -316,7 +317,7 @@ async function generateWeatherForecast(faker: any): Promise<string> {
       sunrise: `0${randomInt(5, 7)}:${randomInt(0, 59).toString().padStart(2, '0')}`,
       sunset: `${randomInt(17, 21)}:${randomInt(0, 59).toString().padStart(2, '0')}`,
       condition: faker.helpers.arrayElement([
-        'Clear', 'Partly Cloudy', 'Cloudy', 'Overcast', 
+        'Clear', 'Partly Cloudy', 'Cloudy', 'Overcast',
         'Rain', 'Thunderstorm', 'Snow', 'Fog', 'Drizzle'
       ]),
       chanceOfRain: faker.number.int({ min: 0, max: 100 }),
@@ -344,7 +345,7 @@ async function generateWeatherForecast(faker: any): Promise<string> {
       uvIndex: faker.number.int({ min: 0, max: 11 }),
       visibility: faker.number.float({ min: 0, max: 10, precision: 0.1 }),
       condition: faker.helpers.arrayElement([
-        'Clear', 'Partly Cloudy', 'Cloudy', 'Overcast', 
+        'Clear', 'Partly Cloudy', 'Cloudy', 'Overcast',
         'Rain', 'Thunderstorm', 'Snow', 'Fog', 'Drizzle'
       ]),
       icon: faker.helpers.arrayElement([
@@ -390,11 +391,11 @@ async function generateEventSchedule(faker: any): Promise<string> {
   const eventName = faker.company.name() + " " + faker.helpers.arrayElement([
     'Conference', 'Summit', 'Expo', 'Festival', 'Convention'
   ]);
-  
+
   const startDate = faker.date.soon();
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + randomInt(1, 5));
-  
+
   const venues = await generateArray(async () => {
     return {
       id: faker.string.uuid(),
@@ -415,7 +416,7 @@ async function generateEventSchedule(faker: any): Promise<string> {
       )
     };
   }, 1, 3);
-  
+
   const speakers = await generateArray(async () => {
     return {
       id: faker.string.uuid(),
@@ -430,31 +431,31 @@ async function generateEventSchedule(faker: any): Promise<string> {
       }
     };
   }, 5, 12);
-  
+
   const tracks = await generateArray(async () => {
     const trackName = faker.helpers.arrayElement([
-      'Main Track', 'Technical', 'Business', 'Design', 'Marketing', 
+      'Main Track', 'Technical', 'Business', 'Design', 'Marketing',
       'Development', 'Research', 'Innovation', 'Leadership'
     ]);
-    
+
     const sessions = await generateArray(async () => {
       const sessionSpeakers = faker.helpers.arrayElements(
         speakers,
         { min: 1, max: 3 }
       );
-      
+
       const sessionDate = new Date(startDate);
       sessionDate.setDate(sessionDate.getDate() + randomInt(0, Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))));
-      
+
       const startHour = randomInt(8, 17);
       const durationMinutes = faker.helpers.arrayElement([30, 45, 60, 90]);
-      
+
       const sessionStart = new Date(sessionDate);
       sessionStart.setHours(startHour, 0, 0);
-      
+
       const sessionEnd = new Date(sessionStart);
       sessionEnd.setMinutes(sessionStart.getMinutes() + durationMinutes);
-      
+
       return {
         id: faker.string.uuid(),
         title: faker.lorem.sentence(),
@@ -478,7 +479,7 @@ async function generateEventSchedule(faker: any): Promise<string> {
         registrations: faker.number.int({ min: 0, max: 500 })
       };
     }, 3, 8);
-    
+
     return {
       id: faker.string.uuid(),
       name: trackName,
@@ -533,33 +534,33 @@ async function generateEventSchedule(faker: any): Promise<string> {
 // Generate restaurant menu JSON
 async function generateRestaurantMenu(faker: any): Promise<string> {
   const cuisineType = faker.helpers.arrayElement([
-    'Italian', 'Mexican', 'Chinese', 'Japanese', 'Indian', 
+    'Italian', 'Mexican', 'Chinese', 'Japanese', 'Indian',
     'French', 'Thai', 'Mediterranean', 'American', 'Greek'
   ]);
-  
+
   const restaurantName = faker.company.name() + " " + faker.helpers.arrayElement([
     'Restaurant', 'Bistro', 'Café', 'Eatery', 'Kitchen', 'Grill', 'Diner'
   ]);
-  
+
   const categories = await generateArray(async () => {
     const categoryName = faker.helpers.arrayElement([
-      'Appetizers', 'Soups', 'Salads', 'Main Courses', 'Pasta', 
-      'Seafood', 'Steaks', 'Burgers', 'Sandwiches', 'Desserts', 
+      'Appetizers', 'Soups', 'Salads', 'Main Courses', 'Pasta',
+      'Seafood', 'Steaks', 'Burgers', 'Sandwiches', 'Desserts',
       'Beverages', 'Sides', 'Specials', 'Breakfast', 'Kids Menu'
     ]);
-    
+
     const items = await generateArray(async () => {
       const isVegetarian = faker.datatype.boolean(0.3);
       const isVegan = isVegetarian && faker.datatype.boolean(0.5);
       const isGlutenFree = faker.datatype.boolean(0.2);
-      
+
       const dietaryTags = [];
       if (isVegetarian) dietaryTags.push('vegetarian');
       if (isVegan) dietaryTags.push('vegan');
       if (isGlutenFree) dietaryTags.push('gluten-free');
-      
+
       const spiceLevels = ['mild', 'medium', 'hot', 'extra hot'];
-      
+
       return {
         id: faker.string.uuid(),
         name: faker.lorem.words(randomInt(2, 4)),
@@ -568,7 +569,7 @@ async function generateRestaurantMenu(faker: any): Promise<string> {
         image: faker.image.urlLoremFlickr({ category: 'food' }),
         ingredients: faker.helpers.arrayElements(
           [
-            'tomato', 'cheese', 'lettuce', 'onion', 'garlic', 'chicken', 
+            'tomato', 'cheese', 'lettuce', 'onion', 'garlic', 'chicken',
             'beef', 'pork', 'fish', 'shrimp', 'rice', 'pasta', 'potato',
             'carrot', 'broccoli', 'spinach', 'mushroom', 'bell pepper',
             'olive oil', 'butter', 'cream', 'flour', 'sugar', 'salt'
@@ -576,15 +577,15 @@ async function generateRestaurantMenu(faker: any): Promise<string> {
           { min: 3, max: 8 }
         ),
         dietary: dietaryTags,
-        spiceLevel: dietaryTags.length > 0 ? 
-          faker.helpers.arrayElement(spiceLevels) : 
+        spiceLevel: dietaryTags.length > 0 ?
+          faker.helpers.arrayElement(spiceLevels) :
           undefined,
         calories: faker.number.int({ min: 100, max: 1200 }),
         prepTime: `${randomInt(5, 30)} minutes`,
         popular: faker.datatype.boolean(0.2)
       };
     }, 4, 10);
-    
+
     return {
       id: faker.string.uuid(),
       name: categoryName,
@@ -631,7 +632,7 @@ async function generateRestaurantMenu(faker: any): Promise<string> {
       },
       features: faker.helpers.arrayElements(
         [
-          'Takeout', 'Delivery', 'Outdoor Seating', 'Reservations', 
+          'Takeout', 'Delivery', 'Outdoor Seating', 'Reservations',
           'Wheelchair Accessible', 'Full Bar', 'Wine List', 'Private Dining',
           'Live Music', 'Catering', 'Happy Hour', 'Family-Friendly'
         ],
@@ -663,12 +664,13 @@ async function generateRestaurantMenu(faker: any): Promise<string> {
 /**
  * JSON language detector
  */
-export class JsonLanguageDetector extends BaseLanguageDetector {
+export class JsonLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
   id = 'json';
   name = 'JSON';
-  extensions = ['json'];
-  priority = 5; // Higher priority because JSON is unambiguous when valid
-  
+  extensions = ['json', 'jsonc', 'geojson', 'tfstate', 'topojson', 'jsonl'];
+  priority = 7; // High priority because valid JSON is very specific
+
+
   // Added a property to store preloaded samples
   private preloadedSample: string | null = null;
 
@@ -710,7 +712,7 @@ export class JsonLanguageDetector extends BaseLanguageDetector {
   }
 }`;
   }
-  
+
   /**
    * Preload a dynamic sample in the background
    */
@@ -723,117 +725,151 @@ export class JsonLanguageDetector extends BaseLanguageDetector {
     }
   }
 
-/**
- * Check if content is valid JSON or matches JSON patterns
- * Works with both complete and partial content
- */
-isMatch(content: string): boolean {
-  const trimmed = content.trim();
-  if (!trimmed) return false; // Added empty check
-
-  // Quick check for starting characters - Strong indicator
-  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
-      return false;
+  /**
+   * Check if content is valid JSON or matches JSON patterns
+   * Works with both complete and partial content
+   */
+  private getJsonPatterns(): Array<{ pattern: RegExp, weight: number, perMatch?: number, specific?: boolean }> {
+    return [
+      // Core structure
+      { pattern: /^\s*\{[\s\S]*\}\s*$/m, weight: 0.2, specific: true }, // Object as root
+      { pattern: /^\s*\[[\s\S]*\]\s*$/m, weight: 0.2, specific: true }, // Array as root
+      // Key-value pairs
+      { pattern: /"[^"\\]*(?:\\.[^"\\]*)*"\s*:/g, weight: 0.25, perMatch: 0.05, specific: true }, // "key": (handles escaped quotes in key)
+      // Common values
+      { pattern: /:\s*"(?:[^"\\]*(?:\\.[^"\\]*)*)"/g, weight: 0.1, perMatch: 0.02, specific: true }, // : "value"
+      { pattern: /:\s*(true|false|null)\b/g, weight: 0.1, perMatch: 0.02, specific: true },       // : true/false/null
+      { pattern: /:\s*-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g, weight: 0.1, perMatch: 0.02, specific: true }, // : number
+      { pattern: /:\s*\{/g, weight: 0.05, perMatch: 0.01 }, // : { (start of nested object)
+      { pattern: /:\s*\[/g, weight: 0.05, perMatch: 0.01 }, // : [ (start of nested array)
+      // Commas separating elements/pairs
+      { pattern: /,(?=\s*["{[tf\d-])/g, weight: 0.05, perMatch: 0.01, specific: true }, // Comma followed by a likely JSON value start
+    ];
   }
 
-  // If it looks complete, try parsing first (most reliable)
-  if (this.looksLikeCompleteJson(trimmed)) {
+  /**
+   * Check if content is valid JSON or matches JSON patterns
+   * Works with both complete and partial content
+   */
+  detect(content: string): DetectionResult {
+    const trimmed = content.trim();
+    if (!trimmed) {
+      return this.noMatch();
+    }
+
+    let confidenceScore = 0.0;
+    let patternsMatched = 0;
+    let specificJsonPatternsHit = 0;
+
+    // 1. Quick check for starting characters - Strong initial filter
+    const startsWithBrace = trimmed.startsWith('{');
+    const startsWithBracket = trimmed.startsWith('[');
+
+    if (!startsWithBrace && !startsWithBracket) {
+      return { match: false, confidence: 0.0 };
+    }
+    confidenceScore += 0.2; // Initial boost if it starts correctly
+
+    // 2. Attempt to parse if it looks like complete JSON (most reliable)
+    const endsWithBrace = trimmed.endsWith('}');
+    const endsWithBracket = trimmed.endsWith(']');
+
+    if ((startsWithBrace && endsWithBrace) || (startsWithBracket && endsWithBracket)) {
       try {
-          JSON.parse(trimmed);
-          return true; // Valid JSON
-      } catch {
-          // Parsing failed, but it might still be partial JSON. Fall through.
+        JSON.parse(trimmed);
+        // If parsing succeeds, it's definitely JSON.
+        // Give high confidence, but allow for some very simple other formats that might also parse.
+        confidenceScore += 0.7; // Add a large chunk for valid parsing
+        patternsMatched++;
+        specificJsonPatternsHit += 3; // Consider valid parse as multiple specific hits
+        // We can return early with high confidence here if desired.
+        // return { match: true, confidence: Math.min(1.0, confidenceScore) };
+      } catch (e) {
+        // Parsing failed. It might be partial JSON or invalid.
+        // Reduce confidence slightly if it looked complete but didn't parse.
+        confidenceScore -= 0.1;
       }
-  }
-
-  // --- NEW: Handle incomplete structures ---
-  // If it starts with { or [ and isn't just the brace/bracket itself,
-  // consider it a potential match, especially if other detectors fail.
-  // This helps keep JSON selected while typing.
-  if ((trimmed.startsWith('{') || trimmed.startsWith('[')) && trimmed.length > 1) {
-       // Check for things that are definitely NOT JSON within the first few lines
-       const lines = content.split('\n').slice(0, 5); // Check first 5 lines
-       const hasYamlIndicators = lines.some(line =>
-          /^\s*-\s+\S/.test(line) || // Starts with `- `
-          /^\s*[a-zA-Z_][a-zA-Z0-9_-]*\s*:/.test(line) // Starts with unquoted key:
-       );
-       if (!hasYamlIndicators) {
-           // It starts like JSON and doesn't immediately contain obvious YAML block features
-           return true; // Assume it's intended JSON for now
-       }
-  }
-  // --- End NEW ---
-
-
-  // Original pattern matching as a fallback (less critical now)
-  return this.matchesJsonPatterns(content); // Keep this for slightly more complex partials
-}
-
-  
-  /**
-   * Check if content looks like it might be complete JSON
-   * This helps avoid trying to parse obviously incomplete JSON
-   */
-  private looksLikeCompleteJson(content: string): boolean {
-    const trimmed = content.trim();
-    
-    // Check if it starts with { or [ and ends with matching } or ]
-    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
-        (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-      return true;
+    } else if (trimmed.length > 1) {
+      // It starts like JSON but doesn't end with a matching brace/bracket.
+      // This is common during typing. Give it a moderate initial confidence.
+      confidenceScore += 0.15;
+      patternsMatched++;
     }
-    
-    return false;
-  }
-  
-  /**
-   * Check if content matches common JSON patterns
-   * This works with partial content
-   */
-  private matchesJsonPatterns(content: string): boolean {
-    const trimmed = content.trim();
-    
-    // Must start with { or [
-    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
-      return false;
+
+
+    // 3. Pattern matching for more nuanced scoring and partial JSON
+    const jsonPatterns = this.getJsonPatterns();
+    for (const p of jsonPatterns) {
+      const matches = content.match(p.pattern); // Test on original content for global multi-line matches
+      if (matches) {
+        confidenceScore += p.weight;
+        if (p.perMatch) {
+          confidenceScore += Math.min(matches.length, 5) * p.perMatch;
+        }
+        patternsMatched++;
+        if (p.specific) {
+          specificJsonPatternsHit++;
+        }
+      }
     }
-    
-    // Count how many JSON patterns match
-    const matchCount = this.patterns().reduce((count, pattern) => 
-      count + (pattern.test(trimmed) ? 1 : 0), 0);
-    
-    // If at least 2 patterns match, consider it JSON
-    return matchCount >= 2;
+
+    // 4. Anti-patterns (check for syntax that is NOT JSON)
+    // YAML/other config files are the most likely culprits
+    const antiPatterns = [
+      { pattern: /^\s*[\w.-]+:(?!\s*")\s*\S+/m, weight: -0.4 }, // key: value (no quotes on key or value is not string/primitive) - common in YAML
+      { pattern: /^\s*-\s+\S+/m, weight: -0.4 },               // YAML list item `- item`
+      { pattern: /^\s*</m, weight: -0.5 },                     // XML/HTML tags at line start
+      { pattern: /\b(function|class|var|let|const)\b/i, weight: -0.3 }, // JS keywords
+      { pattern: /^\s*#.*$/m, weight: -0.1 }, // # comments (JSON has no comments) - small penalty as could be in string
+      { pattern: /'''|"""/, weight: -0.2 } // Python multi-line strings
+    ];
+
+    // Only apply anti-patterns aggressively if initial confidence isn't super high from parsing
+    if (confidenceScore < 0.85) {
+      for (const ap of antiPatterns) {
+        if (ap.pattern.test(content)) {
+          confidenceScore += ap.weight;
+        }
+      }
+    }
+
+
+    // 5. Final Adjustments and Clamping
+    if (specificJsonPatternsHit >= 3 && patternsMatched >= 2) {
+      confidenceScore += 0.15; // Bonus for multiple specific JSON constructs
+    }
+    // If content is very short and only matches basic brace/bracket
+    if (trimmed.length < 20 && patternsMatched <= 1 && specificJsonPatternsHit < 1) {
+      confidenceScore *= 0.5; // Reduce confidence for very short, non-specific matches
+    }
+
+
+    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
+
+    // Determine match status
+    // If it parsed successfully, confidence will be high.
+    // Otherwise, rely on pattern matches and a reasonable confidence score.
+    const isMatch = confidenceScore >= 0.4; // Tune this threshold
+
+    return {
+      match: isMatch,
+      confidence: isMatch ? confidenceScore : 0.0,
+    };
   }
 
-  /**
-   * Count Json-specific patterns (patterns that are unlikely to be in YAML)
-   */
-  countSpecificPatterns(content: string): number {
-    return this.patterns().reduce((count, pattern) =>
-        count + (pattern.test(content) ? 1 : 0), 0);
-  }
-  
-  /**
-   * Register JSON language provider with Monaco
-   */
-  registerProvider(monaco: any): void {
-    // Register validation provider
-    registerJsonValidationProvider(monaco);
-  }
-
-  /**
-   * Get status item component for JSON
-   */
+  // getStatusItem, getOptionsMenu, registerProvider remain the same
   getStatusItem(): React.FC<{ content?: string }> {
     return JsonStatusItem;
   }
 
-  /**
-   * Get Options menu
-   */
   getOptionsMenu(): any {
     return JsonOptionsMenu;
+  }
+
+  registerProvider(monaco: any): void {
+    registerJsonValidationProvider(monaco);
+    // Monaco has excellent built-in JSON support, including formatting,
+    // so usually, no custom formatter or Monarch tokenizer is needed.
   }
 }
 

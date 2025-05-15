@@ -2,6 +2,12 @@ import React from 'react';
 import { StatusItemProps } from '../components/StatusBar/types';
 import * as monaco from 'monaco-editor';
 
+export interface DetectionResult {
+  match: boolean;
+  confidence: number; // A value between 0.0 (no confidence) and 1.0 (high confidence)
+  matchedDefinitive?: boolean; 
+}
+
 /**
  * Interface for language detector implementations
  */
@@ -29,14 +35,8 @@ export interface LanguageDetector {
   /**
    * Check if the content matches this language
    */
-  isMatch: (content: string) => boolean;
-  
-  /**
-   * Count specific patterns that strongly indicate this language
-   * Used for ambiguity resolution
-   */
-  countSpecificPatterns: (content: string) => number;
-  
+  detect(content: string): DetectionResult;
+
   /**
    * Register language provider with Monaco editor
    */

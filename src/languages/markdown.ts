@@ -1,24 +1,23 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
-import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown.tsx";
-import React from 'react';
-import * as yaml from 'js-yaml'; // Import js-yaml here too
+import { DetectionResult, LanguageDetector } from './types';
+import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown";
 
-// --- Constants ---
-const MAX_LINES_TO_PARSE_YAML = 15; // Limit YAML parsing check
+const MAX_LINES_TO_ANALYZE_MD_FOR_YAML = 20;
+const MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE = 2; // Need at least 2 distinct MD features for good confidence
 
-/**
- * Markdown language detector
- */
-export class MarkdownLanguageDetector extends BaseLanguageDetector {
+// YAML patterns (for exclusion/penalty in Markdown detector)
+const YAML_KEY_VALUE_REGEX = /^\s*(?:[\w.-]+|"[^"]*"|'[^']*')\s*:\s*(?:\||>|&|\*|\S.*|$)/m;
+const YAML_LIST_ITEM_REGEX = /^\s*-\s+(?!\[[ xX]\]).+/m; // YAML list item, excluding MD task list
+const YAML_DOC_START_REGEX = /^---\s*$/m; // THIS WILL BE USED NOW
+const YAML_DIRECTIVE_REGEX = /^%YAML\s+[\d.]+\s*$/m; // Added for completeness
+
+export class MarkdownLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
   id = 'markdown';
   name = 'Markdown';
-  extensions = ['md', 'markdown'];
-  priority = 3;
-  
-  /**
-   * Get sample content for Markdown
-   */
+  extensions = ['md', 'markdown', 'mdown', 'mkd'];
+  priority = 4;
+
   sampleContent(): string {
     return `# Sample Markdown Document
 
@@ -45,8 +44,6 @@ Ordered list:
 3. Third item
 
 ### Links and Images
-
-[Visit StackBlitz](https://stackblitz.com)
 
 ![Sample Image](https://picsum.photos/200/300)
 
@@ -76,180 +73,194 @@ function greet(name) {
 
 That's all for this sample!`;
   }
-  
-  /**
-   * Check if content matches Markdown patterns, excluding likely YAML.
-   */
-  isMatch(content: string): boolean {
-    const trimmed = content.trim();
-    if (!trimmed) return false;
 
-    // --- YAML Exclusion ---
-    // 1. Check for YAML frontmatter structure more reliably
-    if (/^---\s*$/.test(trimmed.split('\n')[0]) && /^\s*([a-zA-Z0-9_.-]+|"([^"]*)"|'([^']*)')\s*:\s*(?:\S|$)/m.test(content)) {
-        // Starts with --- and contains key: value pattern -> Likely YAML frontmatter
-        // We might still want to detect this as Markdown *if* there's significant Markdown content *after* potential frontmatter.
-        // Let's check for YAML structure beyond just the frontmatter start.
-        try {
-            const docs = yaml.loadAll(content.slice(0, 1000)); // Parse first 1KB
-            if (docs.length > 0 && typeof docs[0] === 'object' && Object.keys(docs[0] || {}).length > 0) {
-                 // If the first part parses as a non-empty object, lean towards YAML unless strong MD follows.
-                 // This is tricky. For now, let's be conservative and reject MD if valid frontmatter object is found.
-                 // console.log("Markdown Detector: Rejected due to likely YAML frontmatter object.");
-                 // return false; // Re-evaluate this rule based on desired behavior for MD with frontmatter
-            }
-        } catch (e) { /* Ignore YAML parsing errors here */ }
-    }
-
-    // 2. Check if the content parses as complex YAML (object/array)
-    // This helps prevent classifying structured YAML as Markdown
-    try {
-        const lines = content.split('\n');
-        if (lines.length >= 2) { // Only check if more than one line
-            const contentToParse = lines.slice(0, MAX_LINES_TO_PARSE_YAML).join('\n');
-            // Check for minimal YAML structure first to avoid unnecessary parsing
-             if (/^\s*([a-zA-Z0-9_.-]+|"([^"]*)"|'([^']*)')\s*:\s*(?:\S|$)/m.test(contentToParse) || /^\s*-\s+(?:\S|\n\s+\S)/m.test(contentToParse)) {
-                const result = yaml.load(contentToParse);
-                if (typeof result === 'object' && result !== null) {
-                    // If it parses successfully into an object or array, it's unlikely Markdown.
-                    // console.log("Markdown Detector: Rejected due to successful complex YAML parse.");
-                    return false;
-                }
-            }
+  private getContentWithoutFrontmatter(content: string): string {
+    const lines = content.split('\n');
+    if (lines[0]?.trim() === '---') {
+      let endFrontmatterIndex = -1;
+      for (let i = 1; i < lines.length; i++) {
+        if (lines[i].trim() === '---') {
+          endFrontmatterIndex = i;
+          break;
         }
-    } catch (e) { /* Ignore YAML parsing errors */ }
-    // --- End YAML Exclusion ---
-
-
-    // --- Original Markdown Pattern Matching ---
-    const markdownPatterns = [
-      /^#+\s+/m,                  // Headers (H1 included here, YAML check handles ambiguity)
-      /^\s*[-*+]\s+/m,            // Unordered lists (allow +)
-      /^\s*\d+\.\s+/m,            // Ordered lists
-      /\[.+?\]\(.+?\)/m,          // Links
-      /!\[.+?\]\(.+?\)/m,         // Images
-      /^>\s+/m,                   // Blockquotes
-      /`{1,3}[^`\n]+`{1,3}/m,     // Inline code / simple code blocks
-      /`{3}[\s\S]*?`{3}/m,        // Multiline code blocks
-      /(\*\*|__).+?\1/m,          // Bold text (** or __)
-      /(\*|_)[^\*\s_].*?\1/m,     // Italic text (* or _) - avoid matching **/__
-      /^- \[[ x]\] /im,           // Task lists
-      /^(?:---|\*\*\*|___)\s*$/m  // Horizontal rules
-    ];
-
-    // Count how many Markdown patterns match
-    const matchCount = markdownPatterns.reduce((count, pattern) =>
-      count + (pattern.test(content) ? 1 : 0), 0);
-
-    // Require at least 2 distinct Markdown patterns. Adjust as needed.
-    // console.log("Markdown Detector: Match count =", matchCount);
-    return matchCount >= 2;
+      }
+      if (endFrontmatterIndex !== -1 && endFrontmatterIndex + 1 < lines.length) {
+        return lines.slice(endFrontmatterIndex + 1).join('\n');
+      } else if (endFrontmatterIndex !== -1) { // Only frontmatter was present
+        return "";
+      }
+    }
+    return content;
   }
 
-  // ... (countSpecificPatterns can remain similar, focusing on MD patterns) ...
-  countSpecificPatterns(content: string): number {
-     // Use a similar list as in isMatch, maybe weight some higher?
-     const markdownSpecificPatterns = [
-       /^#{1,6}\s+/m,             // Headers H1-H6
-       /\[.+?\]\(.+?\)/m,         // Links
-       /!\[.+?\]\(.+?\)/m,        // Images
-       /`{3}[\s\S]+?`{3}/m,       // Multi-line code blocks
-       /^- \[[ x]\] /im,          // Task lists
-       /^\s*\d+\.\s+/m,           // Ordered lists
-       /^(?:---|\*\*\*|___)\s*$/m,// Horizontal rules
-       /^\s*[-*+]\s+/m,           // Unordered lists
-       /^>\s+/m,                  // Blockquotes
-       /(\*\*|__).+?\1/m,         // Bold
-       /(\*|_)[^\*\s_].*?\1/m,    // Italic
-     ];
+  detect(content: string): DetectionResult {
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
+      return { match: false, confidence: 0.0, matchedDefinitive: false };
+    }
 
-     let score = markdownSpecificPatterns.reduce((count, pattern) =>
-       count + (pattern.test(content) ? (content.match(new RegExp(pattern.source, 'gm'))?.length || 0) : 0), // Count occurrences
-       0);
+    let confidenceScore = 0.0;
+    let patternsMatched = 0;
+    let strongMarkdownSignal = false;
+    let yamlLikePenalty = 0.0;
 
-     // Optional: Penalize if it parses as complex YAML
-     try {
-         const lines = content.split('\n');
-         if (lines.length >= 2) {
-             const contentToParse = lines.slice(0, MAX_LINES_TO_PARSE_YAML).join('\n');
-              if (/^\s*([a-zA-Z0-9_.-]+|"([^"]*)"|'([^']*)')\s*:\s*(?:\S|$)/m.test(contentToParse) || /^\s*-\s+(?:\S|\n\s+\S)/m.test(contentToParse)) {
-                 const result = yaml.load(contentToParse);
-                 if (typeof result === 'object' && result !== null) {
-                     score = Math.max(0, score - 10); // Penalize YAML structure
-                 }
-             }
-         }
-     } catch (e) { /* Ignore */ }
+    // 1. Check for YAML frontmatter
+    let frontmatterPresent = false;
+    const contentForMainAnalysis = this.getContentWithoutFrontmatter(content);
 
-     return score;
-   }
+    if (contentForMainAnalysis !== content) {
+        frontmatterPresent = true;
+        confidenceScore += 0.15;
+        patternsMatched++;
+        strongMarkdownSignal = true;
+    }
 
-  /**
-   * Register Markdown language provider with Monaco
-   */
+    // 2. Analyze content *after* potential frontmatter for YAML-like structure
+    const mainLinesToAnalyze = contentForMainAnalysis.split('\n').slice(0, MAX_LINES_TO_ANALYZE_MD_FOR_YAML);
+    const firstMainLineTrimmed = mainLinesToAnalyze[0]?.trim();
+
+    let yamlLikeLineCount = 0;
+    let nonCommentNonEmptyMainLines = 0;
+
+    if (contentForMainAnalysis.trim().length > 0) {
+        for (const line of mainLinesToAnalyze) {
+            const currentLineTrimmed = line.trim();
+            if (!currentLineTrimmed || currentLineTrimmed.startsWith('#')) continue;
+            nonCommentNonEmptyMainLines++;
+            if (YAML_KEY_VALUE_REGEX.test(currentLineTrimmed) || YAML_LIST_ITEM_REGEX.test(currentLineTrimmed)) {
+                yamlLikeLineCount++;
+            }
+        }
+
+        if (nonCommentNonEmptyMainLines > 1) {
+            const yamlLikeRatio = yamlLikeLineCount / nonCommentNonEmptyMainLines;
+            if (yamlLikeRatio > 0.65 && yamlLikeLineCount >= 2) {
+                yamlLikePenalty += 0.5;
+            } else if (yamlLikeRatio > 0.45 && yamlLikeLineCount >= 1) {
+                yamlLikePenalty += 0.25;
+            }
+        }
+
+        if (firstMainLineTrimmed && (YAML_DIRECTIVE_REGEX.test(firstMainLineTrimmed) || (YAML_DOC_START_REGEX.test(firstMainLineTrimmed) && !frontmatterPresent))) {
+            yamlLikePenalty += 0.6;
+        }
+    }
+    confidenceScore -= yamlLikePenalty;
+
+
+    // 3. Markdown Pattern Matching (on the full original content)
+    const markdownPatterns = [
+      { pattern: /^(#{1,6})\s+.+/gm, weight: 0.25, perMatch: 0.05, specific: true, maxMatches: 5 },
+      { pattern: /\[[^\]]+?\]\([^\)]+?\)/g, weight: 0.20, perMatch: 0.04, specific: true, maxMatches: 5 },
+      { pattern: /!\[[^\]]*?\]\([^\)]+?\)/g, weight: 0.20, perMatch: 0.04, specific: true, maxMatches: 3 },
+      { pattern: /`{3,}(\w*\s*)?\n[\s\S]*?\n`{3,}/g, weight: 0.25, perMatch: 0.05, specific: true, maxMatches: 3 },
+      { pattern: /^- \[([ xX])\]\s+.+/gm, weight: 0.20, perMatch: 0.05, specific: true, maxMatches: 5 },
+      { pattern: /^(?:---|\*\*\*|___)\s*$/gm, weight: 0.15, perMatch: 0.05, specific: true, maxMatches: 2 },
+      { pattern: /^\s*>\s+.*/gm, weight: 0.15, perMatch: 0.03, maxMatches: 5 },
+      { pattern: /^\s*([-*+])\s+(?!\[[ xX]\]).+/gm, weight: 0.1, perMatch: 0.02, maxMatches: 10 },
+      { pattern: /^\s*\d+\.\s+.*/gm, weight: 0.1, perMatch: 0.02, maxMatches: 10 },
+      { pattern: /\*\*([^\s*](?:[^*]*[^\s*])?)\*\*|\_\_([^\s_](?:[^_]*[^\s_])?)\_\_/g, weight: 0.05, perMatch: 0.01, maxMatches: 10 },
+      { pattern: /(?<![\*_])\*([^\s*](?:[^*]*[^\s*])?)\*(?![\*_])|(?<![\*_])_([^\s_](?:[^_]*[^\s_])?)_(?![\*_])/g, weight: 0.05, perMatch: 0.01, maxMatches: 10 },
+      { pattern: /`([^`\n]+?)`/g, weight: 0.05, perMatch: 0.01, maxMatches: 10 },
+      { pattern: /<https?:\/\/[^\s>]+>/g, weight: 0.1, perMatch: 0.02, maxMatches: 3},
+      { pattern: /^\s*\|(?:[^|\n]+\|)+/gm, weight: 0.15, perMatch: 0.03, specific: true, maxMatches: 3 },
+    ];
+
+    let specificMarkdownFeaturesFound = 0;
+    for (const p of markdownPatterns) {
+      const matches = content.match(p.pattern);
+      if (matches) {
+        confidenceScore += p.weight;
+        if (p.perMatch) {
+            confidenceScore += Math.min(matches.length, p.maxMatches || 5) * p.perMatch;
+        }
+        patternsMatched++;
+        if (p.specific) {
+            specificMarkdownFeaturesFound++;
+        }
+      }
+    }
+    
+    if (specificMarkdownFeaturesFound > 0) strongMarkdownSignal = true;
+
+    // Adjustments
+    if (specificMarkdownFeaturesFound >= MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE) {
+        confidenceScore += 0.25;
+    } else if (patternsMatched > 0 && specificMarkdownFeaturesFound < MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE && yamlLikePenalty < 0.1) {
+        confidenceScore *= 0.7;
+    }
+
+    const lines = content.split('\n');
+    if (lines.length > 5 && patternsMatched < 2 && specificMarkdownFeaturesFound === 0 && yamlLikePenalty < 0.1) {
+        const avgLineLength = trimmedContent.length / lines.length;
+        if (avgLineLength > 30 && avgLineLength < 120) {
+            confidenceScore = Math.max(0.05, confidenceScore - 0.15);
+        }
+    }
+    
+    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
+
+    const isMatch = (strongMarkdownSignal && confidenceScore >= 0.30 && yamlLikePenalty < 0.3) ||
+                    (confidenceScore >= 0.40 && patternsMatched >= 2 && specificMarkdownFeaturesFound >=1 && yamlLikePenalty < 0.2) ||
+                    (confidenceScore >= 0.20 && frontmatterPresent && patternsMatched >=1 && yamlLikePenalty < 0.4);
+
+    return {
+      match: isMatch,
+      confidence: isMatch ? confidenceScore : 0.0,
+      matchedDefinitive: isMatch && strongMarkdownSignal && confidenceScore > 0.55 && yamlLikePenalty < 0.2
+    };
+  }
+
+  getFileExtension(): string {
+    return 'md';
+  }
+
+  // registerProvider and getStatusItem remain the same
   registerProvider(monaco: any): void {
-    // Configure Markdown formatting provider
+    const languageId = this.id;
+    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+      monaco.languages.register({ id: languageId });
+    }
+    // Monaco has excellent built-in Markdown support, including a decent tokenizer.
+    // A custom formatter can be useful for consistency.
     monaco.languages.registerDocumentFormattingEditProvider('markdown', {
       provideDocumentFormattingEdits(model: any) {
         const content = model.getValue();
-        const lines = content.split('\n');
-        
-        const formattedLines = lines.map((line: string) => {
-          const trimmedLine = line.trim();
-          
-          // Skip empty lines
-          if (!trimmedLine) return '';
+        // Basic Markdown formatting - this is a simplified heuristic.
+        // For robust formatting, consider integrating a library like Prettier or remark-format.
+        let formatted = content;
 
-          // Format headings (ensure space after #)
-          if (trimmedLine.startsWith('#')) {
-            const match = trimmedLine.match(/^(#+)(.*)$/);
-            if (match) {
-              return `${match[1]} ${match[2].trim()}`;
-            }
-          }
+        // Ensure space after headers
+        formatted = formatted.replace(/^(#{1,6})([^\s#])/gm, '$1 $2');
 
-          // Format list items (ensure space after - * >)
-          if (trimmedLine.match(/^[-*>]/)) {
-            const match = trimmedLine.match(/^([-*>])(.*)$/);
-            if (match) {
-              return `${match[1]} ${match[2].trim()}`;
-            }
-          }
+        // Ensure space after list markers
+        formatted = formatted.replace(/^(\s*[-*+]\s*)([^\s])/gm, '$1 $2');
+        formatted = formatted.replace(/^(\s*\d+\.\s*)([^\s])/gm, '$1 $2');
 
-          // Format task lists
-          if (trimmedLine.match(/^- \[[ x]\]/i)) {
-            const match = trimmedLine.match(/^(- \[[ x]\])(.*)$/i);
-            if (match) {
-              return `${match[1]} ${match[2].trim()}`;
-            }
-          }
+        // Ensure space around task list checkboxes
+        formatted = formatted.replace(/^- \[( ?[xX]? ?)\]([^\s])/gmi, '- [$1] $2');
+        formatted = formatted.replace(/^- \[( ?[xX]? ?)\](\S)/gmi, '- [$1] $2');
 
-          return trimmedLine;
-        });
 
-        const removeConsecutiveEmptyLines = (lines: string[]) => {
-          return lines.reduce((result, current) => {
-            // If the current element is an empty string, check if the last added element is not empty
-            if (current === '' && result[result.length - 1] === '') {
-              return result; // Skip this empty string as it's consecutive
-            }
-            // Otherwise, add the current element to the result array
-            result.push(current);
-            return result;
-          }, []);
-        };
+        // Normalize horizontal rules
+        formatted = formatted.replace(/^\s*([-*_])\s*\1\s*\1\s*$/gm, '---');
+
+        // Add blank lines around fenced code blocks if missing
+        formatted = formatted.replace(/(\S)\n(```)/g, '$1\n\n$2');
+        formatted = formatted.replace(/(```)\n(\S)/g, '$1\n\n$2');
+
+        // Consistent newlines: Ensure single blank line between paragraphs/blocks, no more than one.
+        formatted = formatted.replace(/\n{3,}/g, '\n\n');
+
 
         return [{
           range: model.getFullModelRange(),
-          text: removeConsecutiveEmptyLines(formattedLines).join('\n')
+          text: formatted.trim() + (content.endsWith('\n') && formatted.trim() !== '' ? '\n' : '')
         }];
       }
     });
   }
 
-  /**
-   * Get status item component for JSON
-   */
   getStatusItem(): React.FC<{ content?: string }> {
     return MarkdownStatusItem;
   }
@@ -258,6 +269,9 @@ That's all for this sample!`;
 // Create and register the detector
 const markdownDetector = new MarkdownLanguageDetector();
 languageRegistry.register(markdownDetector);
+
+// Preload samples for future use
+// markdownDetector.preloadDynamicSample(); // If you implement dynamic samples for MD
 
 // Export for backward compatibility
 export const registerMarkdownProvider = (monaco: any) => {

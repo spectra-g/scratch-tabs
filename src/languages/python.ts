@@ -1,204 +1,290 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import { DetectionResult, LanguageDetector } from './types';
 
-/**
- * Python language detector
- */
-export class PythonLanguageDetector extends BaseLanguageDetector {
+export class PythonLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
   id = 'python';
   name = 'Python';
-  extensions = ['py'];
-  priority = 6;
+  extensions = ['py', 'pyw', 'pyi', 'gyp', 'gypi']; // Added .pyi (stub files), .gyp/i (build)
+  priority = 6; // Give Python a good priority
 
   sampleContent(): string {
-    return `from dataclasses import dataclass
-from datetime import datetime
-from typing import List, Optional
+    return `#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-@dataclass
-class Task:
-    title: str
-    priority: int
-    completed: bool = False
-    due_date: Optional[datetime] = None
-    
-    def mark_completed(self) -> None:
-        self.completed = True
-    
-    def __str__(self) -> str:
-        status = "✓" if self.completed else " "
-        due = f", Due: {self.due_date:%Y-%m-%d}" if self.due_date else ""
-        return f"[{status}] {self.title} (Priority: {self.priority}){due}"
+import os
+import asyncio
+from typing import List, Dict, Any, Tuple, Union, Callable
 
-class TaskManager:
-    def __init__(self):
-        self.tasks: List[Task] = []
-    
-    def add_task(self, task: Task) -> None:
-        self.tasks.append(task)
-    
-    def get_pending_tasks(self) -> List[Task]:
-        return [task for task in self.tasks if not task.completed]
-    
-    def display_tasks(self) -> None:
-        print("\\nTask List:")
-        print("-" * 40)
-        for task in sorted(self.tasks, key=lambda x: x.priority, reverse=True):
-            print(task)
+# Global constant
+MAX_RETRIES: int = 3
 
-def main():
-    # Create task manager
-    manager = TaskManager()
+@dataclass(frozen=True)
+class Config:
+    api_key: str
+    timeout_seconds: float = 10.0
+
+class DataProcessor:
+    """
+    A class to process data from various sources.
+    This is a multi-line docstring.
+    """
+    def __init__(self, config: Config):
+        self.config = config
+        self._data_cache: Dict[str, Any] = {}
+
+    async def fetch_data(self, url: str) -> Union[Dict, List, None]:
+        """Fetches data from a URL with retries."""
+        for attempt in range(MAX_RETRIES):
+            try:
+                # In a real app, you'd use a library like httpx or aiohttp
+                print(f"Attempting to fetch {url}, attempt {attempt + 1}")
+                await asyncio.sleep(0.1) # Simulate network request
+                if "error" in url:
+                    raise ConnectionError("Simulated network error")
+                return {"url": url, "content": f"Mock content for {url}"}
+            except ConnectionError as e:
+                print(f"Error fetching {url}: {e}")
+                if attempt == MAX_RETRIES - 1:
+                    return None
+                await asyncio.sleep(2 ** attempt) # Exponential backoff
+        return None
+
+    def process_item(self, item_id: str, transform_func: Callable[[Any], Any]) -> Any:
+        if item_id in self._data_cache:
+            return transform_func(self._data_cache[item_id])
+        
+        raw_data = {"id": item_id, "value": os.urandom(5).hex()} # Example raw data
+        self._data_cache[item_id] = raw_data
+        return transform_func(raw_data)
+
+    def __repr__(self) -> str:
+        return f"<DataProcessor with config: {self.config.api_key[:5]}...>"
+
+def generate_report(data_points: List[float]) -> str:
+    if not data_points:
+        return "No data to report."
     
-    # Add some tasks
-    manager.add_task(Task("Learn Python", 3))
-    manager.add_task(Task("Write tests", 2))
-    manager.add_task(Task("Document code", 1))
+    # List comprehension
+    squared_points = [x*x for x in data_points if x > 0]
     
-    # Mark a task as completed
-    manager.tasks[0].mark_completed()
+    # f-string
+    return f"Report: Count={len(data_points)}, Sum={sum(data_points)}, Positive Squared Sum={sum(squared_points):.2f}"
+
+async def main():
+    print("Python script starting...")
     
-    # Display all tasks
-    manager.display_tasks()
+    my_config = Config(api_key="your_secret_api_key_here")
+    processor = DataProcessor(my_config)
     
-    # Show pending tasks count
-    pending = len(manager.get_pending_tasks())
-    print(f"\\nPending tasks: {pending}")
+    urls_to_fetch = [
+        "https://api.example.com/data1",
+        "https://api.example.com/error_prone_data",
+        "https://api.example.com/data2"
+    ]
+    
+    # Gather results from async functions
+    results = await asyncio.gather(*(processor.fetch_data(url) for url in urls_to_fetch))
+    
+    for i, result in enumerate(results):
+        if result:
+            print(f"Fetched data for {urls_to_fetch[i]}: {str(result)[:50]}...")
+        else:
+            print(f"Failed to fetch data for {urls_to_fetch[i]}")
+
+    report = generate_report([1.0, -2.5, 3.0, 0.0, 5.2])
+    print(report)
+    
+    # Using a lambda
+    transformed = processor.process_item("item123", lambda data: data.get("value", "").upper())
+    print(f"Transformed item: {transformed}")
+
+    # Example of try-except
+    try:
+        num = int("abc")
+    except ValueError as e:
+        print(f"Caught expected error: {e}")
+    finally:
+        print("Finally block executed.")
 
 if __name__ == "__main__":
-    main()`;
+    asyncio.run(main())
+`;
   }
 
-  // Patterns for isMatch - Aim for common constructs
-  private getGeneralPatterns(): RegExp[] {
+  // Helper to get patterns with weights
+  private getPatterns(): Array<{ pattern: RegExp, weight: number, perMatch?: number, specific?: boolean, anti?: boolean, maxMatches?: number }> {
     return [
-      // --- Definitions ---
-      /^def\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\([^)]*\)\s*:/m,  // Function definition (requires colon)
-      /^class\s+[A-Z][a-zA-Z0-9_]*(\([^)]*\))?\s*:/m,   // Class definition (requires colon, allows inheritance)
+      // --- Definitive Python Syntax (High Weights) ---
+      { pattern: /^\s*def\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\((?:[^)]|\n)*?\)\s*:/gm, weight: 0.35, perMatch: 0.05, specific: true, maxMatches: 5 },  // Function definition (handles multiline args)
+      { pattern: /^\s*class\s+[A-Z_][a-zA-Z0-9_]*(\((?:[^)]|\n)*?\))?\s*:/gm, weight: 0.35, perMatch: 0.05, specific: true, maxMatches: 3 },   // Class definition
+      { pattern: /^\s*import\s+[\w.]+(?:\s+as\s+\w+)?(?:,\s*[\w.]+(?:\s+as\s+\w+)?)*$/gm, weight: 0.3, perMatch: 0.04, specific: true, maxMatches: 5 },
+      { pattern: /^\s*from\s+[\w.]+\s+import\s+(?:\*|\w+|\([\w\s,()]*\))$/gm, weight: 0.3, perMatch: 0.04, specific: true, maxMatches: 5 }, // Handles `from foo import (bar, baz)`
+      { pattern: /\bif\s+__name__\s*==\s*(['"])__main__\1\s*:/m, weight: 0.5, specific: true, maxMatches: 1 }, // Main guard - very strong
+      { pattern: /^\s*@[\w.]+/gm, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 3 },            // Decorators
+      { pattern: /^\s*async\s+(def|for|with)\b/gm, weight: 0.3, perMatch: 0.05, specific: true, maxMatches: 3 },
+      { pattern: /\bawait\s+\w+/g, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 5 },
+      { pattern: /\byield\s+(?:from\s+)?/g, weight: 0.2, perMatch: 0.03, specific: true, maxMatches: 3 },
+      { pattern: /^\s*"""[\s\S]*?"""\s*$|^\s*'''[\s\S]*?'''\s*$/m, weight: 0.15, perMatch: 0.03, specific: true, maxMatches: 2 }, // Module/class/func docstrings
 
-      // --- Imports ---
-      /^\s*import\s+[a-zA-Z_][a-zA-Z0-9_.]*(\s+as\s+[a-zA-Z_][a-zA-Z0-9_]*)?/m, // import foo / import foo as bar
-      /^\s*from\s+[a-zA-Z_][a-zA-Z0-9_.]+\s+import\s+(?:\*|\w+|\([^)]+\))/m, // from foo import bar / * / (baz, qux)
+      // --- Common Python Idioms (Medium Weights) ---
+      { pattern: /\bself\.[a-zA-Z_][a-zA-Z0-9_]*/g, weight: 0.15, perMatch: 0.01, maxMatches: 10 },
+      { pattern: /\s*->\s*([\w\[\],.:\s|]+?)(?:\s*#.*)?$/gm, weight: 0.15, perMatch: 0.02, maxMatches: 5 }, // Return type hints `-> Type:`
+      { pattern: /\b\w+\s*:\s*([\w\[\],.:\s|]+?)(?:\s*=\s*[^#\n]+?)?(?:\s*#.*)?$/gm, weight: 0.1, perMatch: 0.01, maxMatches: 10 }, // Variable/arg type hints `var: Type` or `var: Type = val`
+      { pattern: /\bf(["']{1,3})/g, weight: 0.2, perMatch: 0.02, maxMatches: 5 }, // f-string prefix
+      { pattern: /\[.+?\s+for\s+\w+\s+in\s+.+?(?:\s+if\s+.+?)?\]/g, weight: 0.2, perMatch: 0.05, specific: true, maxMatches: 3 },
+      { pattern: /\{.+?\s+for\s+\w+\s+in\s+.+?(?:\s+if\s+.+?)?\}/g, weight: 0.2, perMatch: 0.05, specific: true, maxMatches: 3 },
+      { pattern: /\b(True|False|None)\b/g, weight: 0.15, perMatch: 0.02, maxMatches: 10 },
+      { pattern: /\b(in|is|not|and|or|elif|else|try|except|finally|with|as|pass|break|continue|lambda|del|global|nonlocal|assert|async|await|yield|raise)\b/g, weight: 0.1, perMatch: 0.005, maxMatches: 20 },
 
-      // --- Control Flow & Keywords (with colons where applicable) ---
-      /^\s*if\s+.+:/m,        // If statement
-      /^\s*elif\s+.+:/m,      // Elif statement
-      /^\s*else:/m,         // Else statement
-      /^\s*for\s+\w+\s+in\s+.+:/m, // For loop
-      /^\s*while\s+.+:/m,     // While loop
-      /^\s*try:/m,          // Try block
-      /^\s*except(\s+[\w.]+)?(\s+as\s+\w+)?:/m, // Except block
-      /^\s*finally:/m,       // Finally block
-      /^\s*with\s+.+(\s+as\s+\w+)?:/m, // With statement
+      // --- Indentation (very heuristic, low weight) ---
+      // Python relies on indentation, but it's hard to detect reliably with regex alone without context.
+      // This looks for lines starting with common Python indent levels (multiples of 2 or 4 spaces).
+      { pattern: /^(?: {4}| {8}| {12}| {2}| {6}| {10})\S/m, weight: 0.03, perMatch: 0.002, maxMatches: 10 },
 
-      // --- Common Idioms / Keywords ---
-      /\bself\.[a-zA-Z_][a-zA-Z0-9_]*/m,          // Self reference (still useful indicator)
-      /\bif\s+__name__\s*==\s*(['"])__main__\1/m, // Main guard (improved quotes)
-      /\b(True|False|None)\b/,                   // Boolean/None literals
-      /\b(in|is|not|and|or)\b/,                 // Common operators/keywords
+      // --- Comments ---
+      { pattern: /^\s*#.*$/gm, weight: 0.02, perMatch: 0.001, maxMatches: 20 }, // # comments
 
-      // --- Other Features ---
-      /^\s*@[a-zA-Z_][a-zA-Z0-9_.]*/m,            // Decorators (at line start)
-      /\s*->\s*[\w\[\], .]+/m,                    // Type hints for return (more flexible type)
-      /\w+\s*:\s*[\w\[\], .]+/,                  // Type hints for variables/args
-      /f(['"])/,                                 // f-string prefix
+      // --- Anti-Patterns (Syntax strongly indicating OTHER languages) ---
+      { pattern: /<\?php/i, weight: -0.8, anti: true },
+      { pattern: /System\.out\.println/i, weight: -0.6, anti: true },
+      { pattern: /^\s*package\s+[\w.]+;/m, weight: -0.7, anti: true },
+      { pattern: /=>\s*\{/g, weight: -0.5, anti: true },           // JS arrow function block
+      { pattern: /<\w.*?>/g, weight: -0.7, anti: true },          // HTML/XML tags
+      { pattern: /\b(var|let)\s+\w+\s*=/g, weight: -0.4, anti: true }, // JS var/let (not const, as Python has constants)
+      { pattern: /\bfunction\s+\w+\s*\(/g, weight: -0.6, anti: true }, // JS function keyword
+      { pattern: /\{\s*$/m, weight: -0.1, anti: true }, // Opening brace at end of line (less common in Python, more in C-style)
+      { pattern: /^\s*\}/m, weight: -0.1, anti: true }, // Closing brace on its own line
+      { pattern: /;\s*$/m, weight: -0.2, anti: true }, // Semicolons at end of line (Python doesn't require)
     ];
   }
 
-  // Patterns for countSpecificPatterns - Aim for highly distinctive features
-  private getSpecificPatterns(): RegExp[] {
-    return [
-      /\bif\s+__name__\s*==\s*(['"])__main__\1/m, // Main guard (very specific)
-      /^\s*@[a-zA-Z_][a-zA-Z0-9_.]+/m,            // Decorators (strong indicator)
-      /^\s*from\s+[\w.]+\s+import\s+\(/m,        // from ... import ( ... ) multiline import syntax
-      /^\s*async\s+def\b/m,                     // Async function definition
-      /\bawait\s+/m,                            // Await keyword
-      /\byield\s+/m,                            // Yield keyword (generators)
-      /^\s*with\s+.+\s+as\s+\w+:/m,             // With...as...: statement (specific form)
-      /\s*->\s*[\w\[\], .]+/,                    // Function return type hints
-      /^\s*"""|'''/,                            // Docstring start (at beginning of line, possibly indented)
-      /\{\s*f?(['"]).*?\{.*?}.*?\1\s*\}/,       // Looks for dict with f-string-like interpolation (heuristic)
-      /\[.+for\s+\w+\s+in\s+.+(if\s+.+)?\]/,     // List comprehension (more complete structure)
-      /\{.+for\s+\w+\s+in\s+.+(if\s+.+)?\}/,     // Set/Dict comprehension
+  detect(content: string): DetectionResult {
+    const trimmedContent = content.trim();
+    if (!trimmedContent || trimmedContent.length < 10) {
+      return { match: false, confidence: 0.0, matchedDefinitive: false };
+    }
+
+    let confidenceScore = 0.0;
+    let patternsMatchedCount = 0;
+    let specificPatternsHitCount = 0;
+    let antiPatternPenaltyScore = 0.0;
+
+    // 1. Shebang
+    const shebangMatch = trimmedContent.match(/^\s*#![^\r\n]*python[\d.]*/i);
+    if (shebangMatch) {
+      confidenceScore += 0.75;
+      patternsMatchedCount++;
+      specificPatternsHitCount++;
+    } else if (trimmedContent.match(/^\s*#![^\r\n]*(scala|sh|bash|node|perl|ruby|php|js|ts)/i)) {
+      return { match: false, confidence: 0.0, matchedDefinitive: false }; // Not Python if other script shebang
+    } else if (/^\s*#![^\r\n]*/i.test(trimmedContent)) {
+      confidenceScore -= 0.2;
+    }
+
+    // 2. UTF-8 coding declaration
+    if (/^\s*#.*coding[:=]\s*utf-8/i.test(content.split('\n').slice(0, 2).join('\n'))) {
+      confidenceScore += 0.15;
+      patternsMatchedCount++;
+    }
+
+    const allPatterns = this.getPatterns();
+
+    for (const p of allPatterns) {
+      if (p.pattern.source.includes("#!") || p.pattern.source.includes("coding[:=]")) continue;
+
+      const matches = content.match(p.pattern);
+      if (matches) {
+        if (p.anti) {
+          antiPatternPenaltyScore += p.weight * Math.min(matches.length, p.maxMatches || 2);
+        } else {
+          confidenceScore += p.weight;
+          if (p.perMatch) {
+            confidenceScore += Math.min(matches.length, p.maxMatches || 5) * p.perMatch;
+          }
+          patternsMatchedCount++;
+          if (p.specific) {
+            specificPatternsHitCount++;
+          }
+        }
+      }
+    }
+
+    // --- REFINED SCALA ANTI-PATTERNS for Python Detector ---
+    const scalaAntiPatterns = [
+      // Scala's `def name(...): ReturnType = {` is distinct from Python's `def name(...): -> ReturnType:`
+      { pattern: /\bdef\s+\w+(?:\[[^\]]+\])?\s*\([^)]*\)\s*:\s*[\w\[\],.<>:"']+\s*=/g, weight: -0.7 },
+      { pattern: /\b(?:val|var)\s+\w+\s*:\s*[\w\[\],.<>:"']+/g, weight: -0.5 }, // `val x: Type` or `var y: Type` (Python uses `x: Type`)
+      { pattern: /\b(case\s+class|case\s+object|trait|sealed\s+trait|sealed\s+class)\b/g, weight: -0.8 },
+      { pattern: /\bobject\s+[A-Z]\w*\s*(?:extends\s+App)?\s*\{/g, weight: -0.7 }, // `object Main extends App {`
+      { pattern: /\bimport\s+[\w.]+\.(?:\{[^}]*\}|_)/g, weight: -0.5 }, // `import scala.util.{Try, Success}` or `import scala.collection._`
+      { pattern: /\bs(?:""|"|')/g, weight: -0.6 }, // Scala s"" string interpolator (Python uses f"")
+      { pattern: /\b(implicit|lazy)\b/g, weight: -0.4 }, // Scala specific keywords
+      { pattern: /\w+\s*<:\s*\w+|\w+\s*>:\s*\w+/g, weight: -0.5 }, // Scala type bounds <: >:
+      { pattern: /=>/g, weight: -0.3, except: /\s*->\s*.*:/g } // Scala fat arrow, unless it's part of Python return type hint
     ];
-  }
 
-  isMatch(content: string): boolean {
-    // Avoid matching if it looks *strongly* like JSON or YAML first
-    // (This might be better handled in the central registry logic, but can add safety here)
-    const trimmed = content.trim();
-    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-      // If it looks like complete JSON, parse it. If it parses, it's not Python.
-      try {
-        JSON.parse(trimmed);
-        return false; // It's valid JSON
-      } catch { /* Ignore parsing error */ }
-    }
-    // Basic check for YAML structure (key: value at start of line)
-    if (/^\s*[\w.-]+:\s+/.test(trimmed.split('\n')[0])) {
-      // Could be YAML, be more cautious
-      // Maybe require a higher match count? For now, proceed.
-    }
-
-
-    const patterns = this.getGeneralPatterns();
-    let matchCount = 0;
-    for (const pattern of patterns) {
-      if (pattern.test(content)) {
-        matchCount++;
+    for (const ap of scalaAntiPatterns) {
+      const matches = content.match(ap.pattern);
+      if (matches) {
+        let applyPenalty = true;
+        if (ap.except) {
+          if (ap.except.test(content)) {
+            applyPenalty = false;
+          }
+        }
+        if (applyPenalty) {
+          antiPatternPenaltyScore += ap.weight * Math.min(matches.length, 2);
+        }
       }
     }
+    // --- END SCALA ANTI-PATTERNS ---
 
-    // Require a reasonable number of general Python patterns
-    // Adjust this threshold based on testing. 3 seems like a decent starting point.
-    const requiredMatches = 3;
-    return matchCount >= requiredMatches;
+    confidenceScore += antiPatternPenaltyScore;
+
+    // Adjustments
+    if (specificPatternsHitCount >= 2 && patternsMatchedCount >= 3) {
+      confidenceScore += 0.2;
+    }
+    if (specificPatternsHitCount === 0 && patternsMatchedCount < 2 && confidenceScore > 0.1) {
+      confidenceScore *= 0.5;
+    }
+    const linesCount = content.split('\n').length;
+    if (linesCount > 20 && patternsMatchedCount < 3 && specificPatternsHitCount < 1 && confidenceScore > 0.1) { // Only penalize if confidence isn't already very low
+      confidenceScore -= 0.15;
+    }
+
+    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
+
+    const isMatch = confidenceScore >= 0.35; // Slightly lowered threshold, relies more on anti-patterns now
+
+    return {
+      match: isMatch,
+      confidence: isMatch ? confidenceScore : 0.0,
+      matchedDefinitive: isMatch && (shebangMatch !== null || specificPatternsHitCount >= 2) && confidenceScore > 0.6
+    };
   }
 
-  countSpecificPatterns(content: string): number {
-    const patterns = this.getSpecificPatterns();
-    let count = 0;
-    for (const pattern of patterns) {
-      if (pattern.test(content)) {
-        count++;
-      }
-    }
-    return count;
+  // countSpecificPatterns is now effectively rolled into detect's confidence logic
+  // You can remove it or adapt it if LanguageRegistry needs a separate distinct count
+  // for some tie-breaking beyond confidence and priority.
+
+  getFileExtension(): string {
+    return 'py';
   }
 
   registerProvider(monaco: any): void {
-    monaco.languages.registerDocumentFormattingEditProvider('python', {
-      provideDocumentFormattingEdits(model: any) {
-        const content = model.getValue();
-        const lines = content.split('\n');
-        let indentLevel = 0;
+    const languageId = this.id; // 'python'
 
-        const formattedLines = lines.map((line: string) => {
-          const trimmedLine = line.trim();
-          
-          // Skip empty lines
-          if (!trimmedLine) return '';
+    // Monaco has excellent built-in support for 'python'.
+    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+      monaco.languages.register({ id: languageId });
+    }
 
-          // Calculate current line's indentation
-          const indent = '    '.repeat(indentLevel);
-          const formattedLine = indent + trimmedLine;
-
-          // Adjust indent level for next line
-          if (trimmedLine.endsWith(':')) {
-            indentLevel++;
-          } else if (indentLevel > 0 && line.match(/^[\s]*(return|break|continue|pass|raise)/)) {
-            indentLevel = Math.max(0, indentLevel - 1);
-          }
-
-          return formattedLine;
-        });
-
-        return [{
-          range: model.getFullModelRange(),
-          text: formattedLines.join('\n')
-        }];
-      }
-    });
+    // Python formatting is best handled by tools like Black, Yapf, or Autopep8,
+    // often via an LSP. A simple regex-based formatter is highly inadequate.
+    // The one you had was a very basic indentation attempt.
+    // It's better to rely on Monaco's default (if any) or user's external tools.
   }
 }
 
@@ -206,7 +292,7 @@ if __name__ == "__main__":
 const pythonDetector = new PythonLanguageDetector();
 languageRegistry.register(pythonDetector);
 
-// Export for backward compatibility
+// Export for backward compatibility (optional)
 export const registerPythonProvider = (monaco: any) => {
   pythonDetector.registerProvider(monaco);
 };

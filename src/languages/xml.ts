@@ -1,128 +1,259 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import { DetectionResult, LanguageDetector } from './types';
 
-export class XmlLanguageDetector extends BaseLanguageDetector {
-    id = 'xml';
-    name = 'XML';
-    extensions = ['xml', 'xsd', 'svg', 'rss', 'plist', 'xaml', 'csproj', 'wsdl']; // Added more common XML extensions
-    priority = 3; // Lower priority than potentially more specific formats like HTML
+/**
+ * XML language detector
+ */
+export class XmlLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
+  id = 'xml'; // Monaco's built-in ID for XML
+  name = 'XML';
+  extensions = [
+    'xml', 'xsd', 'svg', 'rss', 'atom', 'plist', 'xaml', 'csproj', 'vbproj', 'fsproj',
+    'xsl', 'xslt', 'wsdl', 'config', 'manifest', 'pom', 'jnlp', 'kml', 'gpx',
+    'collada', 'dae', 'drawio', // Common diagramming format
+  ];
+  priority = 4; // XML is foundational; HTML might have higher priority for .htm/.html
 
-    sampleContent(): string {
-        // A slightly more complex example
-        return `<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>com.example</groupId>
-    <artifactId>my-app</artifactId>
-    <version>1.0.0</version>
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-</project>`;
+  sampleContent(): string {
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- This is a sample XML document -->
+<library name="My Awesome Library" location="Downtown Central">
+    <book id="bk101" available="true">
+        <author title="Mr.">Gambardella, Matthew</author>
+        <title>XML Developer's Guide</title>
+        <genre>Computer</genre>
+        <price>44.95</price>
+        <publish_date>2000-10-01</publish_date>
+        <description>An in-depth look at creating applications with XML.</description>
+        <borrower empty-value="" />
+    </book>
+    <book id="bk102" available="false">
+        <author title="Dr.">Ralls, Kim</author>
+        <title>Midnight Rain</title>
+        <genre>Fantasy</genre>
+        <price>5.95</price>
+        <publish_date>2000-12-16</publish_date>
+        <description>A former architect battles corporate zombies, 
+        an evil sorceress, and her own childhood to become queen 
+        of the world.</description>
+        <borrower type="student">student001</borrower>
+    </book>
+    <journal issue="Spring 2024">
+        <article page="10">
+            <title>The Future of Quantum Computing</title>
+            <author>Dr. Eva Quantum</author>
+        </article>
+    </journal>
+    <special-element self-closing="true"/>
+    <elementWithCData><![CDATA[ This <should> not be &parsed; as XML tags. ]]></elementWithCData>
+</library>`;
+  }
+
+  /**
+   * Detects if the given content matches XML patterns and returns a confidence score.
+   */
+  detect(content: string): DetectionResult {
+    const trimmedContent = content.trim();
+    if (!trimmedContent || trimmedContent.length < 7) { // e.g., "<a/>" or "<a></a>"
+      return this.noMatch();
     }
 
-    /**
-     * Checks for common XML patterns like the declaration or opening/closing tags.
-     */
-    isMatch(content: string): boolean {
-        const trimmed = content.trim();
-        // Check for XML declaration or common root element patterns
-        return /^\s*<\?xml\s+version\s*=/i.test(trimmed) // XML declaration
-            || /^\s*<!DOCTYPE\s/i.test(trimmed) // DOCTYPE
-            || /^\s*<[a-zA-Z_][\w.-]*(\s|>|xmlns=)/.test(trimmed); // Opening root tag
+    let confidenceScore = 0.0;
+    let patternsMatched = 0;
+    let strongSignalFound = false;
+
+    // 1. XML Declaration or DOCTYPE (Very Strong Signals)
+    if (/^\s*<\?xml\s+version\s*=/i.test(trimmedContent)) {
+      confidenceScore += 0.7;
+      patternsMatched++;
+      strongSignalFound = true;
+    }
+    if (/^\s*<!DOCTYPE\s+\w+/i.test(trimmedContent)) {
+      confidenceScore += 0.5; // Slightly less common than XML decl but still strong
+      patternsMatched++;
+      strongSignalFound = true;
     }
 
-    /**
-     * Registers XML language support and formatting provider with Monaco.
-     */
-    registerProvider(monaco: any): void {
-        // Monaco has built-in support for XML syntax highlighting, themes, etc.
-        // We only need to register the ID if it's not already there (unlikely)
-        // and then add our custom formatter.
-        if (!monaco.languages.getLanguages().some((lang: any) => lang.id === 'xml')) {
-            monaco.languages.register({ id: 'xml' });
+    // 2. Basic Tag Structure
+    //    Count opening tags, closing tags, and self-closing tags.
+    //    Regex for a simple opening tag: <tagname ...>
+    //    Regex for a simple closing tag: </tagname>
+    //    Regex for a self-closing tag: <tagname ... />
+    const openingTagRegex = /<([a-zA-Z_][\w.-]*)(?:\s+[\w.-]+(?:=(?:"[^"]*"|'[^']*'|[^>\s]+))?)*\s*>/g;
+    const closingTagRegex = /<\/([a-zA-Z_][\w.-]*)\s*>/g;
+    const selfClosingTagRegex = /<([a-zA-Z_][\w.-]*)(?:\s+[\w.-]+(?:=(?:"[^"]*"|'[^']*'|[^>\s]+))?)*\s*\/>/g;
+
+    const openingMatches = content.match(openingTagRegex);
+    const closingMatches = content.match(closingTagRegex);
+    const selfClosingMatches = content.match(selfClosingTagRegex);
+
+    const numOpening = openingMatches ? openingMatches.length : 0;
+    const numClosing = closingMatches ? closingMatches.length : 0;
+    const numSelfClosing = selfClosingMatches ? selfClosingMatches.length : 0;
+    const totalTags = numOpening + numClosing + numSelfClosing;
+
+    if (totalTags > 0) {
+        confidenceScore += 0.1; // Base for finding any tags
+        patternsMatched++;
+        if (totalTags >= 2) strongSignalFound = true; // At least one pair or two distinct tags
+
+        // Bonus for balanced-ish tags (heuristic)
+        if (numOpening > 0 && numClosing > 0 && Math.abs(numOpening - numClosing) <= numOpening * 0.5 + 1) {
+            confidenceScore += 0.15;
+        } else if (numSelfClosing >= 2) {
+            confidenceScore += 0.1;
         }
-
-        // Configure XML formatting provider using a regex-based approach
-        monaco.languages.registerDocumentFormattingEditProvider('xml', {
-            provideDocumentFormattingEdits(model: any, options: any) {
-                const content = model.getValue();
-                const tabSize = options?.tabSize ?? 4;
-                const insertSpaces = options?.insertSpaces ?? true;
-                const indentChar = insertSpaces ? ' '.repeat(tabSize) : '\t';
-
-                // Refined Line-by-Line XML Formatter
-                const formatXml = (xml: string, indent: string): string => {
-                    let formatted = '';
-                    let indentLevel = 0;
-                    const lines = xml.split('\n');
-
-                    lines.forEach(line => {
-                        const trimmedLine = line.trim();
-                        if (!trimmedLine) return; // Skip empty lines
-
-                        // Determine tag types more carefully
-                        const isClosingTag = trimmedLine.startsWith('</');
-                        const isSelfClosingTag = trimmedLine.endsWith('/>');
-                        const isProcessingInstruction = trimmedLine.startsWith('<?');
-                        const isComment = trimmedLine.startsWith('<!--');
-                        const isDoctype = trimmedLine.startsWith('<!DOCTYPE');
-                        const isCdata = trimmedLine.startsWith('<![CDATA['); // Assume CDATA fits on one line for this basic approach
-                        const isOpeningTagOnly = trimmedLine.startsWith('<') && !isClosingTag && !isSelfClosingTag && !isProcessingInstruction && !isComment && !isDoctype && !isCdata;
-                        // Heuristic: Check if a line contains both opening and closing for simple cases like <tag>value</tag>
-                        const containsOpeningAndClosing = isOpeningTagOnly && trimmedLine.includes('</');
-
-
-                        // 1. Adjust Indentation Level *Before* Adding Line
-                        //    Dedent if the current line STARTS with a closing tag
-                        if (isClosingTag) {
-                            indentLevel = Math.max(0, indentLevel - 1);
-                        }
-
-                        // 2. Add the indented line
-                        formatted += indent.repeat(indentLevel) + trimmedLine + '\n';
-
-                        // 3. Adjust Indentation Level *After* Adding Line (for the *next* line)
-                        //    Indent if the current line was purely an opening tag (not self-closing, not closing on same line)
-                        if (isOpeningTagOnly && !containsOpeningAndClosing) {
-                            indentLevel++;
-                        }
-                        // No change for self-closing, comments, PI, DOCTYPE, CDATA, or simple closing tags.
-                    });
-
-                    // Remove trailing newline
-                    return formatted.trimEnd();
-                };
-
-                try {
-                    // Basic pre-pass to ensure each tag starts on a new line for simpler processing
-                    // This helps handle cases like <tag1><tag2> on one line.
-                    const normalizedContent = content.replace(/>(\s*)</g, '>\n$1<');
-
-                    const formattedText = formatXml(normalizedContent, indentChar);
-                    return [{
-                        range: model.getFullModelRange(),
-                        text: formattedText
-                    }];
-                } catch (e) {
-                    console.error("XML Formatting Error:", e);
-                    return [];
-                }
-            }
-        });
+        confidenceScore += Math.min(totalTags, 20) * 0.01; // Small bonus for more tags
     }
+    
+    // 3. XML Comments <!-- ... -->
+    if (/<!--[\s\S]*?-->/g.test(content)) {
+      confidenceScore += 0.1;
+      patternsMatched++;
+    }
+
+    // 4. CDATA Sections <![CDATA[...]]>
+    if (/<!\[CDATA\[[\s\S]*?]]>/g.test(content)) {
+      confidenceScore += 0.15;
+      patternsMatched++;
+      strongSignalFound = true;
+    }
+    
+    // 5. Processing Instructions <?target ...?>
+    if (/<\?[\w-]+[\s\S]*?\?>/g.test(content) && !/<\?xml/i.test(content) /* exclude XML decl */) {
+      confidenceScore += 0.1;
+      patternsMatched++;
+    }
+
+    // 6. Namespace declarations (xmlns:)
+    if (/\sxmlns(?::\w+)?\s*=\s*["'][^"']+["']/g.test(content)) {
+      confidenceScore += 0.2;
+      patternsMatched++;
+      strongSignalFound = true;
+    }
+
+    // 7. Anti-patterns (Reduce confidence if it looks more like other formats)
+    //    Be careful as HTML is a form of XML. HTML detector should have higher priority or more specific anti-patterns.
+    const antiPatterns = [
+      { pattern: /\b(function|class|var|let|const|def|if|for|while)\s*[\({]/gi, weight: -0.3 }, // Common code keywords + block start
+      { pattern: /=>|->/g, weight: -0.2 }, // Arrows not typical in XML data
+      { pattern: /^package\s|System\.out\.println|#include/gi, weight: -0.5 }, // Java, C, etc.
+      // If it has many lines *not* starting with < or whitespace then <, it's less likely XML
+    ];
+
+    // If no strong XML signals were found initially, apply anti-patterns more aggressively
+    if (confidenceScore < 0.4) {
+        for (const ap of antiPatterns) {
+            if (ap.pattern.test(content)) {
+                confidenceScore += ap.weight;
+            }
+        }
+    }
+
+    // 8. Final Adjustments and Clamping
+    if (strongSignalFound && patternsMatched >= 2) {
+      confidenceScore += 0.1;
+    }
+    if (trimmedContent.startsWith('<') && trimmedContent.endsWith('>') && totalTags >= 2) {
+        confidenceScore += 0.05; // General well-formedness check
+    }
+
+
+    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
+
+    const isMatch = (strongSignalFound && confidenceScore >= 0.4) || (patternsMatched >= 2 && confidenceScore >= 0.5);
+
+    return {
+      match: isMatch,
+      confidence: isMatch ? confidenceScore : 0.0,
+      matchedDefinitive: isMatch && strongSignalFound
+    };
+  }
+
+  getFileExtension(): string {
+    return 'xml';
+  }
+
+  registerProvider(monaco: any): void {
+    const languageId = this.id; // 'xml'
+
+    // Monaco has excellent built-in support for 'xml'.
+    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+      monaco.languages.register({ id: languageId });
+    }
+
+    // The built-in XML formatter in Monaco (if enabled/available through its HTML services)
+    // is generally good. A custom regex-based formatter for XML can be very complex
+    // to do correctly due to nesting, attributes, comments, CDATA, PIs, etc.
+    // The one you had is a good starting point for a heuristic indenter.
+    monaco.languages.registerDocumentFormattingEditProvider(languageId, {
+        provideDocumentFormattingEdits(model: any, options: monaco.languages.FormattingOptions) {
+            const content = model.getValue();
+            const indentChar = options.insertSpaces ? ' '.repeat(options.tabSize) : '\t';
+            let formattedXml = '';
+            let indentLevel = 0;
+            // Regex to split XML by tags, keeping delimiters. It's complex.
+            // This regex tries to handle: tags, comments, PIs, CDATA, DOCTYPE
+            const tagRegex = /(<\?xml.*?\?>|<!DOCTYPE[^>]*>|<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?]]>|<[^>]+>)/g;
+            const parts = content.split(tagRegex).filter(part => part && part.trim() !== '');
+
+            parts.forEach((part, index) => {
+                const trimmedPart = part.trim();
+                let currentLineIndented = false;
+
+                if (trimmedPart.startsWith('</')) { // Closing tag
+                    indentLevel = Math.max(0, indentLevel - 1);
+                    formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
+                    currentLineIndented = true;
+                } else if (trimmedPart.startsWith('<?') || trimmedPart.startsWith('<!DOCTYPE') || trimmedPart.startsWith('<!--') || trimmedPart.startsWith('<![CDATA[')) { // PI, DOCTYPE, Comment, CDATA
+                    formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
+                    currentLineIndented = true;
+                } else if (trimmedPart.endsWith('/>')) { // Self-closing tag
+                    formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
+                    currentLineIndented = true;
+                } else if (trimmedPart.startsWith('<')) { // Opening tag
+                    formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
+                    indentLevel++;
+                    currentLineIndented = true;
+                } else { // Text content
+                    // Only add text if it's not just whitespace between tags that are already on new lines
+                    if (trimmedPart) {
+                         formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
+                         currentLineIndented = true;
+                    } else if (formattedXml.endsWith('\n\n')) {
+                        // Avoid adding more newlines if already double spaced
+                    } else if (formattedXml.endsWith('\n')) {
+                         // Avoid adding newline if previous part already added one and this is just whitespace
+                    } else if (part.trim() === '' && index > 0 && parts[index-1].trim().endsWith('>')) {
+                        // If it's just whitespace after a tag, don't add extra indent or newline
+                        // formattedXml += part; // preserve original whitespace for careful scenarios
+                    }
+
+                }
+            });
+            
+            // Remove leading/trailing newlines and ensure only one at the end if original had it
+            formattedXml = formattedXml.trim();
+            if (content.trim().length > 0 && content.endsWith('\n')) {
+                 formattedXml += '\n';
+            }
+
+
+            return [{
+                range: model.getFullModelRange(),
+                text: formattedXml
+            }];
+        }
+    });
+  }
 }
 
+// Create and register the detector
 const xmlDetector = new XmlLanguageDetector();
 languageRegistry.register(xmlDetector);
 
+// Export for backward compatibility (optional)
 export const registerXmlProvider = (monaco: any) => {
-    xmlDetector.registerProvider(monaco);
+  xmlDetector.registerProvider(monaco);
 };
