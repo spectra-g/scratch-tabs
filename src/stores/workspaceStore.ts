@@ -250,22 +250,22 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         };
 
         // Use a Dexie transaction for atomicity
-        console.log("[createWorkspace] Creating new workspace");
         await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
           await storage.saveWorkspace(newWorkspace);
           await storage.saveTab(initialTab);
           await storage.saveSplitView(initialSplitViewRecord);
         });
-        console.log("[createWorkspace] New workspace created");
 
         // Update Zustand state AFTER successful DB transaction
         set(state => ({
           workspaces: [...state.workspaces, newWorkspace].sort((a, b) => a.name.localeCompare(b.name)),
-          // activeWorkspaceId will be set by switchWorkspace
+          activeWorkspaceId: newWorkspace.id, 
+          isLoading: false
         }));
 
-        // Switch to the newly created workspace (this will load its state into other stores)
-        await get().switchWorkspace(newWorkspace.id);
+        // Directly update other stores with the new workspace's initial state
+        useTabsStore.setState({ tabs: [initialTab], activeTabId: initialTab.id });
+        useSplitViewStore.setState({ splitView: initialSplitViewState });
 
         return newWorkspace.id;
       } catch (error) {

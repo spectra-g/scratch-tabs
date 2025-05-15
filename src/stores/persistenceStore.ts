@@ -26,16 +26,13 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
 
     saveState: async () => {
       if (get().isTransactionLocked) {
-        console.log("[saveState] Transaction locked, skipping save");
         return;
       }
-      console.log("[saveState] Saving state, current time is", new Date().toISOString());
       const { tabs } = useTabsStore.getState();
       const { splitView } = useSplitViewStore.getState();
       const { activeWorkspaceId } = useWorkspaceStore.getState();
 
       if (!activeWorkspaceId) {
-        console.log("[saveState] No active workspace, skipping save");
         return; // Cannot save without an active workspace context
       }
 
@@ -45,7 +42,6 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
         // Only save if there's actually data for the current workspace
         if (workspaceTabs.length > 0 || (splitView && splitView.workspaceId === activeWorkspaceId)) {
           await storage.saveTabs(workspaceTabs);
-          console.log("[saveState] Saved tabs");
           if (splitView && splitView.workspaceId === activeWorkspaceId) {
             await storage.saveSplitView({
               ...splitView,
