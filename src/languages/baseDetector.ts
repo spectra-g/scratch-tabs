@@ -1,4 +1,4 @@
-import { LanguageDetector } from './types';
+import { DetectionResult, LanguageDetector } from './types';
 
 /**
  * Base class for language detectors
@@ -28,16 +28,7 @@ export abstract class BaseLanguageDetector implements LanguageDetector {
   /**
    * Check if content matches this language
    */
-  abstract isMatch(content: string): boolean;
-  
-  /**
-   * Count specific patterns that strongly indicate this language
-   * Used for ambiguity resolution
-   * Default implementation returns 0
-   */
-  countSpecificPatterns(content: string): number {
-    return 0;
-  }
+  abstract detect(content: string): DetectionResult;
   
   /**
    * Register language provider with Monaco editor
@@ -90,5 +81,20 @@ export abstract class BaseLanguageDetector implements LanguageDetector {
         // Use the first defined extension or fallback to the language ID
         return this.extensions[0] || this.id;
     }
+  }
+
+  noMatch(): DetectionResult {
+    return {
+      match: false,
+      confidence: 0
+    };
+  }
+
+  match(): DetectionResult {
+    return {
+      match: true,
+      confidence: 1,
+      matchedDefinitive: true
+    };
   }
 }

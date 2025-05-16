@@ -249,22 +249,17 @@ export class IndexedDBStorage implements StorageProvider {
         await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
           // 1. Delete tabs associated with the workspace
           // This will delete all tab records where the 'workspaceId' property equals the given 'id'.
-          const numTabsDeleted = await db.tabs.where('workspaceId').equals(id).delete();
-          // You can add console.log here for debugging if needed:
-          console.log(`Deleted ${numTabsDeleted} tab(s) for workspace ${id}.`);
+          await db.tabs.where('workspaceId').equals(id).delete();
 
           // 2. Delete split views associated with the workspace
           // Changed from fetching then looping, to a direct delete operation.
           // This will delete all splitView records where the 'workspaceId' property equals the given 'id'.
-          const numSplitViewsDeleted = await db.splitView.where('workspaceId').equals(id).delete();
-          // You can add console.log here for debugging if needed:
-          console.log(`Deleted ${numSplitViewsDeleted} splitView(s) for workspace ${id}.`);
+          await db.splitView.where('workspaceId').equals(id).delete();
 
           // 3. Delete the workspace itself
           // This is done last; if any of the above deletions fail, the transaction
           // will roll back, and the workspace will not be deleted either.
           await db.workspaces.delete(id);
-          console.log(`Workspace ${id} deleted successfully.`);
         });
       } catch (error) {
         // Log the error or handle it as appropriate for your application

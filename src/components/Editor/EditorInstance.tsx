@@ -23,7 +23,16 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     setActiveRightTab,
     updateTabState,
     updateTabLanguage,
-  } = useRootStore();
+    activeEditorSide,
+  } = useRootStore(state => ({
+    updateTabContent: state.updateTabContent,
+    setCursorPosition: state.setCursorPosition,
+    setActiveLeftTab: state.setActiveLeftTab,
+    setActiveRightTab: state.setActiveRightTab,
+    updateTabState: state.updateTabState,
+    updateTabLanguage: state.updateTabLanguage,
+    activeEditorSide: state.splitView.activeSide,
+  }));
 
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -54,13 +63,22 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   }, [activeTab.id, activeTab.content]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-       if (editorRef.current) {
+    // Only focus if this editor instance's side matches the globally active editor side
+    // AND the activeTab for this instance is indeed the one that should be active on this side.
+    const shouldFocus =
+      activeEditorSide === side &&
+      ((side === 'left' && activeTab.id === useRootStore.getState().splitView.activeLeftTabId) ||
+       (side === 'right' && activeTab.id === useRootStore.getState().splitView.activeRightTabId));
+
+    if (shouldFocus) {
+      const timer = setTimeout(() => {
+        if (editorRef.current && document.activeElement !== editorRef.current.getDomNode()?.querySelector('textarea')) {
           editorRef.current.focus();
-       }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [side, activeTab.id]);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [side, activeTab.id, activeEditorSide]);
 
   // --- Editor Event Handlers ---
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {

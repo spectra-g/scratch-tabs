@@ -6,7 +6,7 @@ import { Folders, MoreHorizontal, Pencil, Trash2, Plus, Upload, Download, ListTo
 import { StorageProviderFactory } from '../../db';
 import { ExportWorkspacesModal } from './ExportWorkspacesModal';
 import { ImportWorkspacesModal } from './ImportWorkspacesModal';
-import { TabManagementModal } from '../Tab/TabManagementModal';
+import { TabManagementModal } from '../Tab/Management';
 
 export const WorkspaceSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

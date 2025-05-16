@@ -1,18 +1,16 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import { DetectionResult, LanguageDetector } from './types';
 
 /**
  * HTML language detector
  */
-export class HtmlLanguageDetector extends BaseLanguageDetector {
-  id = 'html';
+export class HtmlLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
+  id = 'html'; // Monaco's built-in ID for HTML
   name = 'HTML';
-  extensions = ['html', 'htm'];
-  priority = 4;
-  
-  /**
-   * Get sample content for HTML
-   */
+  extensions = ['html', 'htm', 'xhtml'];
+  priority = 5; // HTML is quite distinct, give it a good priority
+
   sampleContent(): string {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -20,193 +18,235 @@ export class HtmlLanguageDetector extends BaseLanguageDetector {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sample HTML Page</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            background-color: #f5f5f5;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
+        body { font-family: sans-serif; }
     </style>
 </head>
 <body>
     <header>
-        <h1>Welcome to My Website</h1>
-        <nav>
-            <ul>
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
+        <h1>Page Title</h1>
     </header>
-
-    <main>
-        <section id="home" class="container">
-            <h2>Home Section</h2>
-            <p>This is a sample HTML page demonstrating various HTML elements and structure.</p>
-            <img src="https://picsum.photos/400/200" alt="Random sample image">
-        </section>
-
-        <section id="about" class="container">
-            <h2>About Us</h2>
-            <p>Learn more about our company and what we do.</p>
-            <ul>
-                <li>Feature 1</li>
-                <li>Feature 2</li>
-                <li>Feature 3</li>
-            </ul>
-        </section>
-
-        <section id="contact" class="container">
-            <h2>Contact Form</h2>
-            <form action="/submit" method="POST">
-                <div>
-                    <label for="name">Name:</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div>
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div>
-                    <label for="message">Message:</label>
-                    <textarea id="message" name="message" rows="4"></textarea>
-                </div>
-                <button type="submit" class="btn">Send Message</button>
-            </form>
-        </section>
+    <main class="container">
+        <p>This is a paragraph with a <a href="#">link</a>.</p>
+        <img src="image.jpg" alt="Sample Image">
+        <!-- This is an HTML comment -->
+        <div id="app"></div>
     </main>
-
     <footer>
-        <p>&copy; 2025 My Website. All rights reserved.</p>
+        <p>© ${new Date().getFullYear()} My Website</p>
     </footer>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Page loaded!');
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>`;
   }
-  
+
   /**
-   * Check if content matches HTML patterns
+   * Detects if the given content matches HTML patterns and returns a confidence score.
    */
-  isMatch(content: string): boolean {
-    // Normalize content for better detection
-    const normalizedContent = content.trim();
-    
-    // Check for HTML doctype declaration
-    if (normalizedContent.toLowerCase().startsWith('<!doctype html>') || 
-        normalizedContent.toLowerCase().startsWith('<!DOCTYPE html>')) {
-      return true;
+  detect(content: string): DetectionResult {
+    if (!content || content.trim().length < 10) { // e.g., "<html></html>"
+      return this.noMatch();
     }
-    
-    // Check for common HTML patterns
-    const htmlPatterns = [
-      /<html[\s>]/i,                           // HTML tag
-      /<head[\s>]/i,                           // HEAD tag
-      /<body[\s>]/i,                           // BODY tag
-      /<div[\s>]/i,                            // DIV tag
-      /<span[\s>]/i,                           // SPAN tag
-      /<p[\s>]/i,                              // P tag
-      /<a\s+[^>]*href=/i,                      // A tag with href
-      /<img\s+[^>]*src=/i,                     // IMG tag with src
-      /<script[\s>]/i,                         // SCRIPT tag
-      /<style[\s>]/i,                          // STYLE tag
-      /<\/[a-z0-9]+>/i,                        // Closing tags
-      /<[a-z0-9]+\s+[^>]*>/i,                  // Tags with attributes
-      /&[a-z]+;/i                              // HTML entities
+
+    const normalizedContent = content.trim(); // Used for some initial checks
+    let confidenceScore = 0.0;
+    let patternsMatched = 0; // Count of distinct pattern types hit
+    let strongSignalFound = false;
+
+    // 1. DOCTYPE declaration (very strong signal)
+    if (/^\s*<!DOCTYPE\s+html\s*>/i.test(normalizedContent)) {
+      confidenceScore += 0.7;
+      patternsMatched++;
+      strongSignalFound = true;
+    }
+
+    // 2. Core HTML tags (<html>, <head>, <body> are very strong)
+    const coreTagPatterns = [
+      { pattern: /<html[\s>]/i, weight: 0.35 },
+      { pattern: /<head[\s>][\s\S]*?<\/head>/i, weight: 0.25 }, // Presence of head block
+      { pattern: /<body[\s>][\s\S]*?<\/body>/i, weight: 0.3 },   // Presence of body block
+      { pattern: /<title[\s>][\s\S]*?<\/title>/i, weight: 0.15 },
+      { pattern: /<meta[\s>]/i, weight: 0.1 },
     ];
-    
-    // Count how many HTML patterns match
-    const matchCount = htmlPatterns.reduce((count, pattern) => 
-      count + (pattern.test(normalizedContent) ? 1 : 0), 0);
-    
-    // If at least 3 patterns match, consider it HTML
-    return matchCount >= 3;
+
+    for (const tp of coreTagPatterns) {
+      if (tp.pattern.test(content)) { // Test on original content for multi-line matches
+        confidenceScore += tp.weight;
+        patternsMatched++;
+        strongSignalFound = true;
+      }
+    }
+
+    // 3. Common HTML tags and structures
+    const commonHtmlPatterns = [
+      { pattern: /<div[\s>]/gi, weight: 0.05, perMatch: 0.01 },
+      { pattern: /<span[\s>]/gi, weight: 0.05, perMatch: 0.01 },
+      { pattern: /<p[\s>]/gi, weight: 0.05, perMatch: 0.01 },
+      { pattern: /<a\s+[^>]*href=/gi, weight: 0.1, perMatch: 0.02 },
+      { pattern: /<img\s+[^>]*src=/gi, weight: 0.1, perMatch: 0.02 },
+      { pattern: /<form[\s>]/gi, weight: 0.1, perMatch: 0.02 },
+      { pattern: /<input[\s>]/gi, weight: 0.08, perMatch: 0.01 },
+      { pattern: /<button[\s>]/gi, weight: 0.08, perMatch: 0.01 },
+      { pattern: /<h[1-6][\s>]/gi, weight: 0.08, perMatch: 0.01 },
+      { pattern: /<ul[\s>]|<\/ul>|<ol[\s>]|<\/ol>|<li[\s>]|<\/li>/gi, weight: 0.1, perMatch: 0.01 },
+      { pattern: /<table[\s>]|<\/table>|<tr[\s>]|<\/tr>|<td[\s>]|<\/td>|<th[\s>]|<\/th>/gi, weight: 0.1, perMatch: 0.01 },
+      { pattern: /<\/[a-zA-Z0-9]+>/g, weight: 0.1, perMatch: 0.005 }, // Generic closing tags
+      { pattern: /&[a-zA-Z0-9#]+;/g, weight: 0.05, perMatch: 0.005 }, // HTML entities
+    ];
+
+    for (const p of commonHtmlPatterns) {
+      const matches = content.match(p.pattern);
+      if (matches) {
+        confidenceScore += p.weight;
+        if (p.perMatch) {
+          confidenceScore += Math.min(matches.length, 10) * p.perMatch; // Cap per-match bonus
+        }
+        patternsMatched++;
+      }
+    }
+
+    // 4. Embedded <script> and <style> tags (common in HTML, but can also appear elsewhere)
+    if (/<script[\s>]/.test(content) && /<\/script>/i.test(content)) {
+      confidenceScore += 0.05; // Small boost
+      patternsMatched++;
+    }
+    if (/<style[\s>]/.test(content) && /<\/style>/i.test(content)) {
+      confidenceScore += 0.05; // Small boost
+      patternsMatched++;
+    }
+
+    // 5. HTML Comments <!-- ... -->
+    if (/<!--[\s\S]*?-->/g.test(content)) {
+      confidenceScore += 0.1;
+      patternsMatched++;
+    }
+
+    // 6. Anti-patterns (syntax strongly indicating other languages)
+    // Be careful as HTML can embed JS and CSS
+    const antiPatterns = [
+      { pattern: /^package\s+\w+;/im, weight: -0.6 },             // Java package
+      { pattern: /^\s*#include\s+<.+>/m, weight: -0.6 },         // C/C++ include
+      // If there are many JS keywords *outside* <script> tags, it's less likely pure HTML
+      // This is harder to do perfectly with regex. A simpler check:
+      { pattern: /\b(function|class|const|let|var)\s+\w+\s*=/g, weight: -0.1, threshold: 3 }, // Penalize if many JS assignments outside script
+      { pattern: /^\s*(FROM|RUN|CMD|EXPOSE)\s+/mi, weight: -0.7 } // Dockerfile instructions
+    ];
+
+    for (const ap of antiPatterns) {
+      const matches = content.match(ap.pattern);
+      if (matches) {
+        if (ap.threshold && matches.length < ap.threshold) continue; // Apply penalty only if threshold met
+        confidenceScore += ap.weight * (matches.length > 1 ? 1.5 : 1); // Heavier penalty for multiple occurrences
+      }
+    }
+
+    // 7. Final Adjustments and Clamping
+    if (patternsMatched >= 3 && strongSignalFound) {
+      confidenceScore += 0.1;
+    }
+    // If it has html, head, and body tags, it's very likely HTML.
+    if (/<html[\s>]/.test(content) && /<head[\s>]/.test(content) && /<body[\s>]/.test(content)) {
+        confidenceScore += 0.2;
+        strongSignalFound = true;
+    }
+
+
+    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
+
+    // Determine match status
+    const isMatch = (strongSignalFound && confidenceScore >= 0.5) || (patternsMatched >= 3 && confidenceScore >= 0.6);
+
+    return {
+      match: isMatch,
+      confidence: isMatch ? confidenceScore : 0.0,
+      matchedDefinitive: isMatch && strongSignalFound
+    };
   }
-  
-  /**
-   * Register HTML language provider with Monaco
-   */
+
+  getFileExtension(): string {
+    return 'html';
+  }
+
   registerProvider(monaco: any): void {
-    // Configure HTML formatting provider
-    monaco.languages.registerDocumentFormattingEditProvider('html', {
+    const languageId = this.id; // 'html'
+
+    // Monaco has excellent built-in support for 'html'.
+    // You usually don't need to register a custom Monarch tokenizer or formatter.
+    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+      monaco.languages.register({ id: languageId });
+    }
+
+    // For formatting, you can enable Monaco's built-in HTML formatter if it's not on by default,
+    // or integrate an external library like Prettier via a language server or directly if feasible.
+    // The basic formatter you had is a good heuristic starting point for simple indentation.
+    monaco.languages.registerDocumentFormattingEditProvider(languageId, {
       provideDocumentFormattingEdits(model: any) {
+        // Using Monaco's built-in formatter is preferred if available and suitable.
+        // This is a placeholder for a more complex external formatter or a very basic heuristic.
+        // The one you provided was a good attempt for a basic indenter.
+        // For simplicity, and because Monaco's HTML support is good, we might not need a custom one.
+        // However, if you want to ensure *your* specific basic formatting:
+
         const content = model.getValue();
-        
-        // Basic HTML formatting
-        let formattedHtml = content;
-        
-        // Format tags with proper indentation
-        const indentSize = 2;
+        let formattedHtml = "";
         let indentLevel = 0;
+        const indentSize = 2; // Common for HTML
+        let inTag = false;
         let inPreTag = false;
-        
-        // Split by tags, preserving the tags
-        const parts = formattedHtml.split(/(<[^>]*>)/g);
-        
-        formattedHtml = parts.map((part: string) => {
-          // Skip empty parts
-          if (!part.trim()) return part;
-          
-          // Check if we're entering or exiting a pre tag
-          if (part.match(/<pre[\s>]/i)) inPreTag = true;
-          if (part.match(/<\/pre[\s>]/i)) inPreTag = false;
-          
-          // Don't format content inside pre tags
-          if (inPreTag) return part;
-          
-          // Handle self-closing tags
-          const isSelfClosing = part.match(/<[^>]*\/>/i);
-          
-          // Handle closing tags
-          if (part.match(/<\/[^>]*>/i)) {
-            indentLevel = Math.max(0, indentLevel - 1);
-            return '\n' + ' '.repeat(indentLevel * indentSize) + part;
-          }
-          
-          // Handle opening tags
-          if (part.match(/<[^/][^>]*>/i)) {
-            const result = '\n' + ' '.repeat(indentLevel * indentSize) + part;
-            
-            // Don't increase indent for self-closing tags or void elements
-            if (!isSelfClosing && 
-                !part.match(/<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)[\s>]/i)) {
-              indentLevel++;
+
+        const lines = content.split('\n');
+
+        lines.forEach((line, index) => {
+            const trimmedLine = line.trim();
+
+            if (!trimmedLine) {
+                formattedHtml += '\n';
+                return;
             }
             
-            return result;
-          }
-          
-          // Text content
-          return part.trim() ? ('\n' + ' '.repeat(indentLevel * indentSize) + part.trim()) : '';
-        }).join('');
-        
-        // Clean up extra newlines
-        formattedHtml = formattedHtml.replace(/\n\s*\n/g, '\n').trim();
-        
+            // Handle <pre> tags
+            if (trimmedLine.match(/<pre\b.*?>/i)) inPreTag = true;
+            if (inPreTag && trimmedLine.match(/<\/pre\b.*?>/i)) {
+                 // Line with closing pre tag is still part of pre content
+                 formattedHtml += line + '\n'; // Keep original line including its indent
+                 inPreTag = false;
+                 return;
+            }
+            if (inPreTag) {
+                formattedHtml += line + '\n'; // Keep original line including its indent
+                return;
+            }
+
+            // Closing tags decrease indent before printing the line
+            // unless it's a self-closing tag or a void element on the same line
+            if (trimmedLine.startsWith('</') || 
+                (trimmedLine.startsWith('{') && trimmedLine.endsWith('}')) || // For embedded template syntax (e.g., Vue/Angular)
+                (trimmedLine.startsWith('(') && trimmedLine.endsWith(')'))) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+
+            formattedHtml += ' '.repeat(indentLevel * indentSize) + trimmedLine + '\n';
+
+            // Opening tags (not self-closing, not void) increase indent for next line
+            if (trimmedLine.startsWith('<') &&
+                !trimmedLine.startsWith('</') && // Not a closing tag
+                !trimmedLine.endsWith('/>') &&    // Not a self-closing tag
+                !trimmedLine.match(/<(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)\b/i) // Not a void element
+                ) {
+                 if(!trimmedLine.endsWith('>')) { // If tag spans multiple lines, only indent if it's a new opening tag.
+                     // This logic is still simple and might fail for complex multi-line tags
+                 } else if (trimmedLine.includes('</') && trimmedLine.indexOf('</') < trimmedLine.indexOf('>')) {
+                    // Contains a closing tag before its own closing > (e.g. <p>text</p>) - no indent change for next line
+                 } else {
+                    indentLevel++;
+                 }
+            }
+        });
+
         return [{
           range: model.getFullModelRange(),
-          text: formattedHtml
+          text: formattedHtml.trimEnd() + (content.endsWith('\n') && formattedHtml.trimEnd() !== '' ? '\n' : ''),
         }];
       }
     });
@@ -217,7 +257,7 @@ export class HtmlLanguageDetector extends BaseLanguageDetector {
 const htmlDetector = new HtmlLanguageDetector();
 languageRegistry.register(htmlDetector);
 
-// Export for backward compatibility
+// Export for backward compatibility (optional)
 export const registerHtmlProvider = (monaco: any) => {
   htmlDetector.registerProvider(monaco);
 };

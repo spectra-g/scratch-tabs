@@ -1,3 +1,4 @@
+import { DetectionResult } from './types';
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 
@@ -58,72 +59,89 @@ export class JavaLanguageDetector extends BaseLanguageDetector {
     /**
      * Check if content matches Java patterns
      */
-    isMatch(content: string): boolean {
-        // Skip if content is too short
-        if (content.trim().length < 10) return false;
-
-        // Exclude non-Java code: require at least one semicolon or brace
-        if (!/[;{}]/.test(content)) return false;
-
-        // First check for definitive Java patterns
-        const definitivePatterns = [
-            /\bpublic\s+class\s+\w+/i,                    // Public class declaration
-            /\bprivate\s+static\s+final\s+\w+/i,          // Private static final fields
-            /\bpackage\s+[\w.]+;/i,                       // Package declaration
-            /\bimport\s+[\w.]+;/i,                        // Java-style imports
-            /\bpublic\s+static\s+void\s+main\s*\(/i,      // Main method
-            /\b@Override\b/i,                             // Override annotation
-            /\bSystem\.out\.println\(/i,                  // System.out.println
-            /\bextends\s+\w+(\s+implements\s+\w+)?/i,     // Class inheritance
-            /\bthrows\s+\w+Exception/i,                   // Exception handling
-            /\binterface\s+\w+/i                          // Interface declaration
-        ];
-
-        // If any definitive pattern matches, it's definitely Java
-        if (definitivePatterns.some(pattern => pattern.test(content))) {
-            return true;
+    detect(content: string): DetectionResult {
+        if (!content || content.trim().length < 5) {
+            return this.noMatch();
         }
-
-        // Check for common Java patterns
-        const javaPatterns = [
-            /\b(public|private|protected)\s+\w+/i,         // Access modifiers
-            /\b(int|boolean|String|void)\s+\w+\s*\(/i,     // Method declarations
-            /\bnew\s+\w+\s*\([^)]*\)/i,                   // Object instantiation
-            /\btry\s*\{[\s\S]*\}\s*catch\s*\(/i,          // Try-catch blocks
-            /\bfor\s*\(\s*int\s+\w+/i,                    // For loops with int
-            /\bArrayList<\w+>/i,                          // Generic collections
-            /\bthis\.\w+/i,                               // This keyword usage
-            /\bsuper\.\w+/i,                              // Super keyword usage
-            /\bfinal\s+\w+/i,                             // Final keyword
-            /\bstatic\s+\w+/i                             // Static keyword
+        // Exclude non-Java code: require at least one semicolon or brace
+        if (!/[;{}]/.test(content)) {
+            return this.noMatch();
+        }
+    
+        // Anti-patterns for JavaScript/TypeScript (strong signals it's NOT Java)
+        const jsAntiPatterns = [
+            /\bimport\s+[\w{}*\s,]+from\s*['"]/i, // ES6 import
+            /\bexport\s+(default\s+)?(async\s+)?(function|class|const|let|var)\b/i, // ES6 export
+            /=>\s*[{]/i, // Arrow function with block
+            /=>\s*[^({]/i, // Arrow function with implicit return
+            /\b(const|let)\s+\w+\s*=/i, // const/let
+            /`.*?\$\{.*?\}.*?`/s, // Template literals
         ];
-
-        // Count how many Java patterns match
-        const matchCount = javaPatterns.reduce((count, pattern) =>
-            count + (pattern.test(content) ? 1 : 0), 0);
-
-        // If at least 4 patterns match, consider it Java (increased threshold to reduce false positives)
-        return matchCount >= 4;
-    }
-
-    /**
-     * Count Java-specific patterns for ambiguity resolution
-     */
-    countSpecificPatterns(content: string): number {
-        const specificPatterns = [
-            /\bpublic\s+class\s+\w+/i,                    // Public class declaration
-            /\bpackage\s+[\w.]+;/i,                       // Package declaration
-            /\bimport\s+[\w.]+;/i,                        // Java-style imports
-            /\bpublic\s+static\s+void\s+main\s*\(/i,      // Main method
-            /\b@Override\b/i,                             // Override annotation
-            /\bSystem\.out\.println\(/i,                  // System.out.println
-            /\bthrows\s+\w+Exception/i,                   // Exception handling
-            /\bArrayList<\w+>/i,                          // Generic collections
-            /\bString\[\]\s+args/i                        // Command line arguments
+        if (jsAntiPatterns.some(pattern => pattern.test(content))) {
+          // If strong JS syntax is found, significantly reduce confidence or bail
+          return this.noMatch();
+        }
+    
+        let confidenceScore = 0.0;
+        let definitiveMatch = false;
+    
+        const definitivePatterns = [
+          { pattern: /\bpublic\s+class\s+\w+/i, weight: 0.4 },
+          { pattern: /\bpackage\s+[\w.]+;/i, weight: 0.35 },
+          { pattern: /\bimport\s+[\w.*]+;/i, weight: 0.3 }, // Java-style imports
+          { pattern: /\bpublic\s+static\s+void\s+main\s*\(String(?:\[\]|\s*\.\.\.)\s+\w+\)/i, weight: 0.5 },
+          { pattern: /\b@Override\b/i, weight: 0.25 },
+          { pattern: /\bSystem\.out\.print(ln)?\(/i, weight: 0.2 }, // Can be in JS comments, so slightly lower
+          { pattern: /\b(?:extends|implements)\s+\w+/i, weight: 0.2 },
+          { pattern: /\bthrows\s+\w+Exception/i, weight: 0.2 },
+          { pattern: /\binterface\s+\w+/i, weight: 0.3 }
         ];
-
-        return specificPatterns.reduce((count, pattern) =>
-            count + (pattern.test(content) ? 1 : 0), 0);
+    
+        for (const dp of definitivePatterns) {
+          if (dp.pattern.test(content)) {
+            confidenceScore += dp.weight;
+            definitiveMatch = true;
+          }
+        }
+        
+        // If a very strong definitive pattern matched, we can boost confidence
+        if (definitiveMatch && confidenceScore > 0.4) {
+            return { match: true, confidence: Math.min(1.0, 0.6 + confidenceScore * 0.5) };
+        }
+    
+    
+        // Common Java patterns
+        const commonPatterns = [
+          { pattern: /\b(public|private|protected)\s+(static\s+)?(final\s+)?\w+\s+\w+\s*\(.*\)\s*\{/i, weight: 0.15 }, // Method signature
+          { pattern: /\b(int|boolean|String|void|double|float|long|char|byte)\s+\w+(\s*\[\])?\s*;/i, weight: 0.15 }, // Variable declaration with types
+          { pattern: /\bnew\s+\w+\s*\([^)]*\)/i, weight: 0.1 },
+          { pattern: /\btry\s*\{[\s\S]*\}\s*catch\s*\((\w+Exception|\w+)\s+\w+\)/i, weight: 0.15 }, // Try-catch
+          { pattern: /\bfor\s*\(\s*(int|String)\s+\w+\s*:\s*\w+\s*\)/i, weight: 0.1 }, // Enhanced for loop
+          { pattern: /\b(ArrayList|HashMap|List|Map|Set)<\w*>/i, weight: 0.2 }, // Generic collections
+          { pattern: /\bthis\.\w+/i, weight: 0.05 },
+          { pattern: /\b(final|static)\s+\w+/i, weight: 0.05 },
+        ];
+    
+        let commonMatches = 0;
+        for (const cp of commonPatterns) {
+          if (cp.pattern.test(content)) {
+            confidenceScore += cp.weight;
+            commonMatches++;
+          }
+        }
+    
+        if (commonMatches > 0) {
+          // If we had some definitive matches, add to that, otherwise base on common
+          const base = definitiveMatch ? (0.4 + confidenceScore) : (0.1 + confidenceScore);
+          return { match: true, confidence: Math.min(0.9, Math.max(0, base)) };
+        }
+        
+        // If only one definitive pattern matched with low base score (e.g. only System.out.println)
+        if (definitiveMatch && confidenceScore <= 0.4) {
+            return { match: true, confidence: Math.min(0.5, confidenceScore) };
+        }
+    
+        return this.noMatch();
     }
 
     /**

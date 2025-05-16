@@ -1,44 +1,29 @@
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
+import { DetectionResult, LanguageDetector } from './types';
+import * as yaml from 'js-yaml';
 
-// --- Constants ---
-const MAX_LINES_TO_CHECK = 50; // How many lines to analyze
+const MAX_LINES_TO_ANALYZE_FOR_YAML = 50;
+const MIN_STRUCTURAL_LINES_FOR_CONFIDENCE = 2; // Minimum distinct YAML structural lines
+const MIN_KEY_VALUE_PAIRS_FOR_STRONG_YAML = 2; // Require at least a few key:value for it to be strongly YAML-like
 
-// --- Markdown Patterns (for exclusion) ---
-const MARKDOWN_HEADER_REGEX = /^#{2,6}\s+/m;
-const MARKDOWN_LINK_REGEX = /\[.+?\]\(.+?\)/m;
-const MARKDOWN_IMAGE_REGEX = /!\[.+?\]\(.+?\)/m;
-const MARKDOWN_CODE_BLOCK_REGEX = /`{3}/m;
-const MARKDOWN_TASK_LIST_REGEX = /^- \[[ x]\] /im;
-const MARKDOWN_ORDERED_LIST_REGEX = /^\s*\d+\.\s+/m;
-const MARKDOWN_BLOCKQUOTE_REGEX = /^>\s+/m;
+// --- Markdown Patterns (for exclusion/penalty in YAML detector) ---
+const MARKDOWN_HEADER_REGEX = /^\s*#{1,6}\s+.+/m;
+const MARKDOWN_LIST_ITEM_REGEX = /^\s*(?:[-*+]|[0-9]+\.)\s+(?!\[[ xX]\])/m; // Exclude task lists for this check
+const MARKDOWN_FENCED_CODE_REGEX = /^```(\w*\s*)?$/m;
+const MARKDOWN_BLOCKQUOTE_REGEX = /^\s*>\s*.*/m;
+const MARKDOWN_LINK_IMAGE_REGEX = /!?\[.*?\]\(.*?\)/m;
+const MARKDOWN_TABLE_PIPE_REGEX = /^\s*\|.*\|.*\|/m; // Simple table row indicator
+const MARKDOWN_TASK_LIST_REGEX = /^\s*-\s+\[[ xX]\]\s+.*/m;
 
 // --- JSON Boundary Regex (for exclusion) ---
-const JSON_OBJECT_BOUNDARY_REGEX = /^\s*\{[\s\S]*\}\s*$/;
-const JSON_ARRAY_BOUNDARY_REGEX = /^\s*\[[\s\S]*\]\s*$/;
+const JSON_START_END_REGEX = /^\s*(?:\{[\s\S]*\}|\[[\s\S]*\])\s*$/;
 
-
-/**
- * YAML language detector - Purely Regex-based approach
- */
-export class YamlLanguageDetector extends BaseLanguageDetector {
+export class YamlLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
   id = 'yaml';
   name = 'YAML';
   extensions = ['yaml', 'yml'];
-  priority = 4;
-
-  // --- YAML Line Pattern Regexes ---
-  // More specific regexes for line classification
-  private directiveLineRegex = /^%YAML\s+[\d.]+\s*$/;
-  private docStartLineRegex = /^---\s*$/;
-  private docEndLineRegex = /^\.\.\.\s*$/;
-  // Key-Value: Allows quoted/unquoted keys, requires colon, allows empty value.
-  // Key part: `(?:[^#\s:"'][^:]*|"[^"]*"|'[^']*')` - Starts with non-#/space/quote OR is quoted. Avoids matching comments as keys.
-  private keyValueLineRegex = /^\s*(?:[^#\s:"'][^:]*|"[^"]*"|'[^']*')\s*:\s*(?:.*)?$/;
-  // List Item: Starts with '- ', requires some content after space.
-  private listItemLineRegex = /^\s*-\s+(?:\S.*)?$/;
-  private commentLineRegex = /^\s*#/;
-  private emptyLineRegex = /^\s*$/;
+  priority = 5;
 
   sampleContent(): string {
     return `# Project Configuration
@@ -95,194 +80,173 @@ features:
 `;
   }
 
-  /**
-   * Check if content is likely YAML based on line patterns and thresholds.
-   */
-  isMatch(content: string): boolean {
-    const trimmed = content.trim();
-    if (!trimmed) return false;
+  private directiveLineRegex = /^%YAML\s+[\d.]+\s*$/m;
+  private docStartLineRegex = /^---\s*$/m;
+  private docEndLineRegex = /^\.\.\.\s*$/m;
+  // Key: unquoted, or quoted. Value: can be empty, or start with indicators, or be a plain scalar.
+  // Crucially, ensure there's a space after the colon for common YAML, or it's the end of the line.
+  private keyValueLineRegex = /^\s*(?:[\w.-]+|"[^"]*"|'[^']*')\s*:\s*(?:\||>|&|\*|\S.*|$)?$/m;
+  private listItemLineRegex = /^\s*-\s+(?:.+)?$/m; // Requires something after "- " or just "- "
+  private commentLineRegex = /^\s*#/;
+  private emptyLineRegex = /^\s*$/m;
+  private cssPropertyLikelyRegex = /^\s*[\w-]+\s*:\s*[^;{]+;\s*$/m;
 
-    const lines = content.split('\n').slice(0, MAX_LINES_TO_CHECK);
-    if (lines.length === 0) return false;
 
-    // --- Early Exclusions ---
-    // 1. JSON Exclusion
-    if (JSON_OBJECT_BOUNDARY_REGEX.test(trimmed) || JSON_ARRAY_BOUNDARY_REGEX.test(trimmed)) {
-      // If it looks like JSON, it's not YAML unless it *also* has strong YAML markers
-      if (!this.directiveLineRegex.test(lines[0]) && !this.docStartLineRegex.test(lines[0]) && !lines.some(line => this.listItemLineRegex.test(line))) {
-         // console.log("YAML Detector: Rejected due to JSON structure without strong YAML markers.");
-        return false;
+  detect(content: string): DetectionResult {
+    const trimmedContent = content.trim();
+    if (!trimmedContent || trimmedContent.length < 2) {
+      return { match: false, confidence: 0.0 };
+    }
+
+    let confidenceScore = 0.0;
+    let patternsMatchedCount = 0; // How many *distinct types* of YAML patterns were found
+    let strongYAMLSignal = false;
+    let structuralYamlLineCount = 0; // Lines that are key-value, list items, directives, or doc separators
+    let keyValueCount = 0;
+    let listItemCount = 0;
+    let nonCommentNonEmptyLinesInSample = 0;
+
+    const allLines = content.split('\n');
+    const linesToAnalyze = allLines.slice(0, MAX_LINES_TO_ANALYZE_FOR_YAML);
+
+    if (linesToAnalyze.length === 0) {
+      return { match: false, confidence: 0.0 };
+    }
+
+    const potentialYamlLines: string[] = [];
+    let cssLikeLineCount = 0;
+
+    for (const line of linesToAnalyze) {
+      const currentLineTrimmed = line.trim();
+      if (this.cssPropertyLikelyRegex.test(currentLineTrimmed)) {
+        cssLikeLineCount++;
+        continue; // Skip this line for YAML structural analysis
       }
+      potentialYamlLines.push(line);
     }
 
-    // 2. Markdown Exclusion
-    let markdownPatternCount = 0;
-    const contentToCheck = lines.join('\n'); // Use only checked lines for MD check
-    if (MARKDOWN_HEADER_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_LINK_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_IMAGE_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_CODE_BLOCK_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_TASK_LIST_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_ORDERED_LIST_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (MARKDOWN_BLOCKQUOTE_REGEX.test(contentToCheck)) markdownPatternCount++;
-    if (markdownPatternCount >= 2) { // Require multiple MD patterns
-       // console.log("YAML Detector: Rejected due to strong Markdown patterns:", markdownPatternCount);
-      return false;
+    if (linesToAnalyze.length > 3 && cssLikeLineCount > linesToAnalyze.length * 0.5) {
+      confidenceScore -= 0.5; // Penalize heavily if most lines look like CSS
     }
-    // --- End Exclusions ---
 
-
-    let yamlLineCount = 0;
-    let structuralLineCount = 0;
-    let nonEmptyCommentLineCount = 0;
-    const structuralPatternsFound = new Set<string>();
-
-    for (const line of lines) {
-      let isYamlLine = false;
-      let isStructural = false;
-      let patternType = '';
-
-      if (this.emptyLineRegex.test(line)) {
-        // Empty lines don't contribute positively or negatively unless checking strictness
+    for (const line of potentialYamlLines) {
+      const currentLineTrimmed = line.trim();
+      if (this.emptyLineRegex.test(currentLineTrimmed)) {
         continue;
       }
-      if (this.commentLineRegex.test(line)) {
-        isYamlLine = true; // Comments are valid YAML lines
-        patternType = 'comment';
-        // Don't count comments as structural
-      } else if (this.directiveLineRegex.test(line)) {
-        isYamlLine = true; isStructural = true; patternType = 'directive';
-      } else if (this.docStartLineRegex.test(line)) {
-        isYamlLine = true; isStructural = true; patternType = 'docStart';
-      } else if (this.docEndLineRegex.test(line)) {
-         isYamlLine = true; isStructural = true; patternType = 'docEnd'; // Count docEnd as structural
-      } else if (this.keyValueLineRegex.test(line)) {
-        isYamlLine = true; isStructural = true; patternType = 'keyValue';
-      } else if (this.listItemLineRegex.test(line)) {
-        isYamlLine = true; isStructural = true; patternType = 'listItem';
+      nonCommentNonEmptyLinesInSample++;
+
+      if (this.commentLineRegex.test(currentLineTrimmed)) {
+        confidenceScore += 0.01; // Very minor boost for comments
+        continue;
       }
 
-      if (isYamlLine) {
-        yamlLineCount++;
-        if (patternType !== 'comment' && patternType !== '') {
-             nonEmptyCommentLineCount++; // Count non-empty, non-comment lines
+      let lineIsStructuralYAML = false;
+      if (this.directiveLineRegex.test(currentLineTrimmed)) {
+        confidenceScore += 0.6; strongYAMLSignal = true; lineIsStructuralYAML = true; patternsMatchedCount++;
+      } else if (this.docStartLineRegex.test(currentLineTrimmed)) {
+        confidenceScore += 0.5; strongYAMLSignal = true; lineIsStructuralYAML = true; patternsMatchedCount++;
+      } else if (this.docEndLineRegex.test(currentLineTrimmed)) {
+        confidenceScore += 0.15; lineIsStructuralYAML = true; patternsMatchedCount++;
+      } else if (this.keyValueLineRegex.test(currentLineTrimmed)) {
+        // Ensure it's not a Markdown header with a colon, or a URL
+        if (!currentLineTrimmed.startsWith('#') && !/https?:\/\//.test(currentLineTrimmed)) {
+          confidenceScore += 0.20; lineIsStructuralYAML = true; patternsMatchedCount++; keyValueCount++;
+          if (currentLineTrimmed.includes(': ')) strongYAMLSignal = true; // Space after colon is common
+        }
+      } else if (this.listItemLineRegex.test(currentLineTrimmed)) {
+        // Ensure it's not a Markdown task list item or other MD list-like structures
+        if (!MARKDOWN_TASK_LIST_REGEX.test(currentLineTrimmed) && !currentLineTrimmed.match(/^\s*[*+]\s/) && !currentLineTrimmed.match(/^\s*\d+\.\s/)) {
+          confidenceScore += 0.15; lineIsStructuralYAML = true; patternsMatchedCount++; listItemCount++;
+          if (currentLineTrimmed.startsWith('- ')) strongYAMLSignal = true;
         }
       }
-      if (isStructural) {
-        structuralLineCount++;
-        structuralPatternsFound.add(patternType);
+
+      if (lineIsStructuralYAML) {
+        structuralYamlLineCount++;
       }
     }
 
-    // --- Apply Rules ---
+    // --- Penalties for other formats based on the *original* content (first few lines) ---
+    const firstFewOriginalLines = linesToAnalyze.join('\n');
 
-    // Rule 0: Quick wins for very strong indicators
-    if (structuralPatternsFound.has('directive')) return true;
-    // --- might be frontmatter, don't return true immediately
-
-    // Rule 4 Check (Variety): Must have at least 2 different structural patterns
-    const hasVariety = structuralPatternsFound.size >= 2;
-
-    // Rule 2 Logic (< 4 non-empty/non-comment lines)
-    if (nonEmptyCommentLineCount > 0 && nonEmptyCommentLineCount < 4) {
-      // All non-empty/non-comment lines must be structural
-      const allStructural = structuralLineCount === nonEmptyCommentLineCount;
-      // console.log(`YAML Detector (<4 lines): NonEmptyComment=${nonEmptyCommentLineCount}, Structural=${structuralLineCount}, Variety=${hasVariety}`);
-      return allStructural && hasVariety;
+    if (JSON_START_END_REGEX.test(trimmedContent)) {
+      try {
+        JSON.parse(trimmedContent); // Check if it's valid JSON
+        if (!strongYAMLSignal || keyValueCount < 1) confidenceScore -= 0.7; // Strong penalty if it's valid JSON and not clearly YAML
+      } catch (e) { /* Not valid JSON, no penalty from this rule */ }
     }
 
-    // Rule 3 Logic (>= 4 non-empty/non-comment lines)
-    if (nonEmptyCommentLineCount >= 4) {
-      // Calculate required percentage (example: starts at 60%, drops to 25%)
-      const totalSignificantLines = lines.filter(l => !this.emptyLineRegex.test(l)).length; // Count non-empty lines for percentage base
-      if (totalSignificantLines === 0) return false; // Avoid division by zero
+    let markdownFeatureCount = 0;
+    if (MARKDOWN_HEADER_REGEX.test(firstFewOriginalLines)) markdownFeatureCount++;
+    if (MARKDOWN_LIST_ITEM_REGEX.test(firstFewOriginalLines) && listItemCount === 0) markdownFeatureCount++; // Count MD list if YAML list items weren't primary
+    if (MARKDOWN_FENCED_CODE_REGEX.test(firstFewOriginalLines)) markdownFeatureCount++;
+    if (MARKDOWN_BLOCKQUOTE_REGEX.test(firstFewOriginalLines)) markdownFeatureCount++;
+    if (MARKDOWN_LINK_IMAGE_REGEX.test(firstFewOriginalLines)) markdownFeatureCount++;
+    if (MARKDOWN_TABLE_PIPE_REGEX.test(firstFewOriginalLines)) markdownFeatureCount++;
 
-      let requiredPercentage = 0.25 + (0.60 - 0.25) * Math.exp(-0.1 * (totalSignificantLines - 4));
-      requiredPercentage = Math.max(0.25, Math.min(0.60, requiredPercentage)); // Clamp percentage
-
-      const actualPercentage = yamlLineCount / totalSignificantLines; // Percentage of *any* valid YAML line (incl comments)
-
-      // console.log(`YAML Detector (>=4 lines): TotalSig=${totalSignificantLines}, YamlLines=${yamlLineCount}, ActualPerc=${actualPercentage.toFixed(2)}, ReqPerc=${requiredPercentage.toFixed(2)}, Variety=${hasVariety}`);
-
-      // Require meeting percentage AND having variety
-      return actualPercentage >= requiredPercentage && hasVariety;
+    if (markdownFeatureCount >= 2 && !strongYAMLSignal) {
+      confidenceScore -= 0.4; // Penalize if multiple MD features are present and YAML signals are weak
+    }
+    if (markdownFeatureCount >= 1 && keyValueCount === 0 && listItemCount < 2 && !strongYAMLSignal) {
+      confidenceScore -= 0.2; // Penalize if some MD and very little YAML structure
     }
 
-    // Default: If none of the above conditions were met (e.g., only comments, few lines but not all structural)
-    // console.log("YAML Detector: Defaulting to false, conditions not met.");
-    return false;
-  }
 
-
-  // --- countSpecificPatterns ---
-  // Score based on the regex matches and rules
-  countSpecificPatterns(content: string): number {
-    let score = 0;
-    const lines = content.split('\n').slice(0, MAX_LINES_TO_CHECK);
-    if (lines.length === 0) return 0;
-
-    // Penalize early for JSON/Markdown
-    const trimmed = content.trim();
-    if (JSON_OBJECT_BOUNDARY_REGEX.test(trimmed) || JSON_ARRAY_BOUNDARY_REGEX.test(trimmed)) score -= 15;
-    // Add markdown penalty logic similar to isMatch if needed
-
-    let yamlLineCount = 0;
-    let structuralLineCount = 0;
-    const structuralPatternsFound = new Set<string>();
-
-    lines.forEach(line => {
-      let isStructural = false;
-      let patternType = '';
-
-       if (this.emptyLineRegex.test(line)) return;
-       if (this.commentLineRegex.test(line)) {
-           yamlLineCount++;
-           score += 0.5; // Small score for comments
-           return;
-       }
-       if (this.directiveLineRegex.test(line)) { isStructural = true; patternType = 'directive'; score += 10; }
-       else if (this.docStartLineRegex.test(line)) { isStructural = true; patternType = 'docStart'; score += 5; }
-       else if (this.docEndLineRegex.test(line)) { isStructural = true; patternType = 'docEnd'; score += 2; }
-       else if (this.keyValueLineRegex.test(line)) { isStructural = true; patternType = 'keyValue'; score += 3; }
-       else if (this.listItemLineRegex.test(line)) { isStructural = true; patternType = 'listItem'; score += 2; }
-
-       if (patternType) yamlLineCount++;
-       if (isStructural) {
-           structuralLineCount++;
-           structuralPatternsFound.add(patternType);
-       }
-    });
-
-    // Bonus for variety
-    if (structuralPatternsFound.size >= 2) {
-        score += 5;
+    // --- Score Adjustments based on YAML structure ---
+    if (nonCommentNonEmptyLinesInSample > 0) {
+      const structuralRatio = structuralYamlLineCount / nonCommentNonEmptyLinesInSample;
+      if (structuralRatio > 0.6 && structuralYamlLineCount >= MIN_STRUCTURAL_LINES_FOR_CONFIDENCE) {
+        confidenceScore += 0.3;
+        strongYAMLSignal = true;
+      } else if (structuralRatio > 0.35 && structuralYamlLineCount >= 1) {
+        confidenceScore += 0.15;
+      }
     }
 
-    // Bonus/Penalty based on percentage rule (simplified check)
-    const totalSignificantLines = lines.filter(l => !this.emptyLineRegex.test(l)).length;
-    if (totalSignificantLines >= 4) {
-        const actualPercentage = totalSignificantLines > 0 ? yamlLineCount / totalSignificantLines : 0;
-        if (actualPercentage > 0.4) score += 5; // Bonus if > 40% YAML lines
-        else if (actualPercentage < 0.2) score -= 5; // Penalty if < 20%
-    } else if (totalSignificantLines > 0) {
-        // For < 4 lines, check if all are structural
-        if (structuralLineCount === totalSignificantLines) score += 5; // Bonus if all structural
-        else score -= 5; // Penalty if not all structural
+    // If it looks like frontmatter but nothing else YAML-like, reduce confidence
+    if (this.docStartLineRegex.test(linesToAnalyze[0]) && structuralYamlLineCount <= 1 && linesToAnalyze.length > 3 && markdownFeatureCount === 0 && keyValueCount === 0) {
+      confidenceScore = Math.max(0.05, confidenceScore - 0.3); // Could be just '---' in plain text or simple MD rule
     }
 
-    return Math.max(0, Math.round(score)); // Return non-negative integer score
+    // Boost if there's consistent indentation (a hallmark of YAML)
+    const indentedLines = potentialYamlLines.filter(l => l.match(/^\s{2,}[^\s#]/) && !this.emptyLineRegex.test(l)).length;
+    if (indentedLines > nonCommentNonEmptyLinesInSample * 0.3 && structuralYamlLineCount >= 1) {
+      confidenceScore += 0.2;
+      strongYAMLSignal = true;
+    }
+
+    // Try parsing with js-yaml as a final strong signal, but only if confidence isn't already very low or very high
+    if (confidenceScore > 0.15 && confidenceScore < 0.75 && nonCommentNonEmptyLinesInSample > 1 && (keyValueCount > 0 || listItemCount > 0)) {
+      try {
+        const parsed = yaml.load(potentialYamlLines.join('\n'));
+        if (typeof parsed === 'object' && parsed !== null && Object.keys(parsed).length > 0) {
+          confidenceScore += 0.35; strongYAMLSignal = true;
+        } else if (Array.isArray(parsed) && parsed.length > 0) {
+          confidenceScore += 0.3; strongYAMLSignal = true;
+        }
+      } catch (e) {
+        // Parsing failed, penalize if we had some structural elements suggesting it *should* have parsed
+        if (structuralYamlLineCount >= MIN_STRUCTURAL_LINES_FOR_CONFIDENCE) confidenceScore -= 0.15;
+        else if (nonCommentNonEmptyLinesInSample > 0) confidenceScore -= 0.25;
+      }
+    }
+
+    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
+
+    // Final match decision: requires stronger signals for YAML
+    const isMatch = (strongYAMLSignal && confidenceScore >= 0.45 && (structuralYamlLineCount >= MIN_STRUCTURAL_LINES_FOR_CONFIDENCE || keyValueCount >= MIN_KEY_VALUE_PAIRS_FOR_STRONG_YAML)) ||
+      (confidenceScore >= 0.6 && patternsMatchedCount >= 1 && structuralYamlLineCount >= 1);
+
+    return {
+      match: isMatch,
+      confidence: isMatch ? confidenceScore : 0.0,
+      matchedDefinitive: isMatch && strongYAMLSignal && confidenceScore > 0.6 // More concrete "definitive"
+    };
   }
 
   registerProvider(monaco: any): void {
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === 'yaml')) {
-      monaco.languages.register({ id: 'yaml' });
-    }
-    monaco.languages.registerDocumentFormattingEditProvider('yaml', {
-      provideDocumentFormattingEdits(model: any) {
-         console.warn("YAML formatting requires a proper parser. Basic formatting disabled.");
-        return [];
-      }
-    });
+    // Monaco has built-in YAML support, usually no custom formatter needed.
   }
 }
 
@@ -290,7 +254,7 @@ features:
 const yamlDetector = new YamlLanguageDetector();
 languageRegistry.register(yamlDetector);
 
-// Export for backward compatibility
+// Export for backward compatibility (optional)
 export const registerYamlProvider = (monaco: any) => {
   yamlDetector.registerProvider(monaco);
 };

@@ -6,15 +6,28 @@ import { useSplitViewStore } from './splitViewStore';
 
 interface PersistenceStore {
   saveState: () => Promise<void>;
+  isTransactionLocked: boolean;
+  lockTransactions: () => void;
+  unlockTransactions: () => void;
 }
 
 export const usePersistenceStore = create<PersistenceStore>((set, get) => {
   const storage = StorageProviderFactory.getProvider();
 
   return {
+    isTransactionLocked: false,
+
+    lockTransactions: () => {
+      set({ isTransactionLocked: true });
+    },
+    unlockTransactions: () => {
+      set({ isTransactionLocked: false });
+    },
 
     saveState: async () => {
-      // Get current state directly from stores
+      if (get().isTransactionLocked) {
+        return;
+      }
       const { tabs } = useTabsStore.getState();
       const { splitView } = useSplitViewStore.getState();
       const { activeWorkspaceId } = useWorkspaceStore.getState();
@@ -26,30 +39,19 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
       try {
         // Filter tabs belonging to the active workspace
         const workspaceTabs = tabs.filter(tab => tab.workspaceId === activeWorkspaceId);
-        await storage.saveTabs(workspaceTabs);
-
-        // Save the split view state associated with the active workspace
-        if (splitView && splitView.workspaceId === activeWorkspaceId) {
-          await storage.saveSplitView({
-            ...splitView,
-            id: splitView.id || crypto.randomUUID(), // Ensure ID exists
-            lastModified: Date.now()
-          });
-        } else if (splitView && !splitView.workspaceId) {
-          // If splitView somehow lost its workspaceId, assign the active one
-          console.warn("[saveState] SplitView was missing workspaceId. Assigning active one.");
-          await storage.saveSplitView({
-            ...splitView,
-            id: splitView.id || crypto.randomUUID(),
-            workspaceId: activeWorkspaceId, // Assign current active ID
-            lastModified: Date.now()
-          });
+        // Only save if there's actually data for the current workspace
+        if (workspaceTabs.length > 0 || (splitView && splitView.workspaceId === activeWorkspaceId)) {
+          await storage.saveTabs(workspaceTabs);
+          if (splitView && splitView.workspaceId === activeWorkspaceId) {
+            await storage.saveSplitView({
+              ...splitView,
+              id: splitView.id || crypto.randomUUID(),
+              lastModified: Date.now()
+            });
+          }
         }
-
       } catch (error) {
         console.error('[saveState] Failed to save state:', error);
-        // Optionally set an error state in persistenceStore if needed
-        // set({ error: error instanceof Error ? error.message : 'Failed to save state' });
       }
     }
   };
