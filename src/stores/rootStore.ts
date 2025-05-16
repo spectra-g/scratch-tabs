@@ -117,9 +117,11 @@ export const useRootStore = create<RootStore>((set, get) => {
         setActiveLeftTab(tab.id);
       }
     },
+
     addBackgroundTab: (tab, toRightSide = false) => {
       useTabsStore.getState().addBackgroundTab(tab);
-      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
+      const currentTabId = toRightSide ? useSplitViewStore.getState().splitView.activeRightTabId : useSplitViewStore.getState().splitView.activeLeftTabId;
+      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide,  currentTabId || undefined);
     },
 
     handleNewTab: async (isRightSide: boolean, content?: string) => {
