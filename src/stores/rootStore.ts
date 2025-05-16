@@ -13,6 +13,7 @@ import {
 } from '../utils';
 import { detectLanguage, isAmbiguousLanguage } from "../languages";
 import { StorageProviderFactory } from '../db';
+import { broadcastManager } from './broadcastStore';
 
 interface RootStore {
   tabs: Tab[];
@@ -116,12 +117,16 @@ export const useRootStore = create<RootStore>((set, get) => {
       } else {
         setActiveLeftTab(tab.id);
       }
+      broadcastManager.broadcastWorkspaceState(useSplitViewStore.getState().splitView.workspaceId, {
+        tabs: useTabsStore.getState().tabs,
+        splitView: useSplitViewStore.getState().splitView,
+      });
     },
 
     addBackgroundTab: (tab, toRightSide = false) => {
       useTabsStore.getState().addBackgroundTab(tab);
       const currentTabId = toRightSide ? useSplitViewStore.getState().splitView.activeRightTabId : useSplitViewStore.getState().splitView.activeLeftTabId;
-      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide,  currentTabId || undefined);
+      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide, currentTabId || undefined);
     },
 
     handleNewTab: async (isRightSide: boolean, content?: string) => {
@@ -187,6 +192,10 @@ export const useRootStore = create<RootStore>((set, get) => {
         }
       };
       checkAndDeleteWorkspace();
+      broadcastManager.broadcastWorkspaceState(useSplitViewStore.getState().splitView.workspaceId, {
+        tabs: useTabsStore.getState().tabs,
+        splitView: useSplitViewStore.getState().splitView,
+      });
     },
     setActiveTab: (id: string) => {
       const { splitView } = get();
@@ -300,12 +309,20 @@ export const useRootStore = create<RootStore>((set, get) => {
       } else {
         setActiveLeftTab(newTabId);
       }
+      broadcastManager.broadcastWorkspaceState(useSplitViewStore.getState().splitView.workspaceId, {
+        tabs: useTabsStore.getState().tabs,
+        splitView: useSplitViewStore.getState().splitView,
+      });
       return newTabId;
     },
     duplicateAndSplitTab: (tabId) => {
       const newTabId = get().duplicateTab(tabId, true); // Duplicate to right side
       if (!newTabId) return '';
       get().splitScreen(tabId, newTabId); // Split with original on left, new on right
+      broadcastManager.broadcastWorkspaceState(useSplitViewStore.getState().splitView.workspaceId, {
+        tabs: useTabsStore.getState().tabs,
+        splitView: useSplitViewStore.getState().splitView,
+      });
       return newTabId;
     },
     setCursorPosition: (tabId, cursorPosition) => useTabsStore.getState().setCursorPosition(tabId, cursorPosition),

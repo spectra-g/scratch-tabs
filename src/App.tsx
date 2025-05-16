@@ -2,6 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { initializeLanguageProviders } from './languages';
 import { useAIStore } from './stores/aiStore';
+import { broadcastManager } from './stores/broadcastStore';
 
 // Initialize language providers once when the app loads
 initializeLanguageProviders();
@@ -26,7 +27,16 @@ function App() {
         // Optionally show a global error message to the user
     });
   }, [initializeAI]); // Dependency array includes the action
-
+  
+  useEffect(() => {
+    broadcastManager.initialize();
+  
+    return () => {
+      // Optional: broadcastManager.cleanup(); if you want to close the channel
+      // when the main app component unmounts, though usually not necessary
+      // as channel closes when the browser tab closes.
+    };
+  }, []);
 
   return (
     <BrowserRouter>
