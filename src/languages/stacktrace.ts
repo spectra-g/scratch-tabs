@@ -36,140 +36,186 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
     at <anonymous>:1:1`;
   }
 
-  /**
-   * Detects if the given content matches stack trace patterns and returns a confidence score.
-   */
+  private typicalFrameLineStartRegex = new RegExp(
+    [
+      /^(\s*at\s+)/i,                                      // Java, JS, .NET: "at com.example..." or "   at func (file.js:1:1)"
+      /^(\s*File\s+"[^"]+"\s*,\s*line\s+\d+)/i,            // Python: "File "path/to/file.py", line 123"
+      /^(\s*[\w./-]+\.(?:go|s):\d+)/i,                      // Go: "path/to/file.go:123"
+      /^(\s*[\w./-]+(?:[\w./-]*\.\w+)?\((?:[^)]*)\))/,     // Go: "main.main()" or "pkg.MyFunction()" on its own line often
+      // Add more language-specific frame starts if needed (e.g., Ruby, C++)
+      // Be cautious about overly generic patterns here.
+    ].map(r => r.source).join('|')
+  );
+
+
   detect(content: string): DetectionResult {
     const trimmedContent = content.trim();
-    if (!trimmedContent || trimmedContent.length < 15) { // Min length for something like "Error: at a:1"
-      return { match: false, confidence: 0.0, matchedDefinitive: false };
+    if (!trimmedContent || trimmedContent.length < 15) {
+      return this.noMatch();
     }
 
     let confidenceScore = 0.0;
-    let patternsMatched = 0;
+    let patternsMatched = 0; // Number of distinct pattern types found
     let strongSignalFound = false;
     let errorKeywordFound = false;
-    let frameLikeSegments = 0;
+    let framePatternHits = 0; // Count of individual frame-like regex pattern hits
 
-    // --- Pre-checks for strong anti-signals ---
+    // --- Pre-checks for strong anti-signals (same as before) ---
     if (/^\s*<\?php/i.test(trimmedContent) || /^\s*<(!DOCTYPE|html|xml)/i.test(trimmedContent)) {
-        return { match: false, confidence: 0.0, matchedDefinitive: false }; // PHP or HTML/XML
+      return this.noMatch();
     }
     if (/^\s*#include\s*</.test(trimmedContent) || /^\s*package\s+[\w.]+;/.test(trimmedContent)) {
-        return { match: false, confidence: 0.0, matchedDefinitive: false }; // C/C++ or Java
+      return this.noMatch();
     }
-     if (/\b(function|class|var|let|const)\s+\w+\s*(=|\(|\{)/.test(trimmedContent) && !/\bat\s+\w+\s*\(/.test(trimmedContent)) {
-        // If common JS/TS keywords are used for definitions and it doesn't also look like a stack frame.
-        if (!trimmedContent.match(/\b(Error|Exception|Panic|Traceback)\b/i)) { // Unless it also has error keywords
-            return { match: false, confidence: 0.0, matchedDefinitive: false };
-        }
+    if (/\b(function|class|var|let|const)\s+\w+\s*(=|\(|\{)/.test(trimmedContent) && !/\bat\s+\w+\s*\(/.test(trimmedContent)) {
+      if (!trimmedContent.match(/\b(Error|Exception|Panic|Traceback|Fault|Failure)\b/i)) { // Added Fault/Failure
+        return this.noMatch();
+      }
+    }
+    // Prevent matching SQL more aggressively
+    if (content.match(/\b(SELECT|CREATE\s+TABLE|INSERT\s+INTO|UPDATE\s+\w+\s+SET)\b/gi) &&
+      content.match(/;/g) &&
+      !trimmedContent.match(/\b(Error|Exception|Panic|Traceback|Fault|Failure)\b/i)) { // If SQL keywords and semicolons but no error words
+      return this.noMatch();
     }
 
-
-    // 1. Check for common error prefixes (can be single line or start of multiline)
+    // 1. Check for common error prefixes
     const errorPrefixRegex = /^(?:uncaught\s+)?([A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault|Traceback))\b(\s*[:-\s])?/i;
     const errorMatch = trimmedContent.match(errorPrefixRegex);
     if (errorMatch) {
-      confidenceScore += 0.4;
+      confidenceScore += 0.35; // Slightly reduced base, will be boosted by frames
       patternsMatched++;
       strongSignalFound = true;
       errorKeywordFound = true;
     }
 
-    // 2. Look for "at" clauses or typical stack frame patterns globally
-    // This regex tries to find multiple "at" clauses or file:line patterns in the string
-    // Regex for "at function (file:line:col)" or "at file:line:col" or just "at function"
-    // It's made less strict about the start of the line for single-line traces.
-    const framePattern = /(?:\s+at\s+|\bat\s+)?(?:[\w$./<>\[\]~`!@#%^&*+=|\\?-]+(?:\([\w\s,]*\))?\s*)?\(?(?:(?:[a-zA-Z]:\\|[~/\w.-]+[/])?[\w.-]+\.[a-zA-Z]{1,5}):\d+(?::\d+)?\)?|\bat\s+[\w$./<>\[\]~`!@#%^&*+=|\\?-]+(?:\([\w\s,]*\))?/g;
-    const pythonFramePattern = /File\s+"[^"]+",\s*line\s+\d+,\s*in\s+\S+/g;
-    const goFramePattern = /(?:^\s*|\s+)(?:[\w./-]+\.(?:go|s):\d+\s+\+0x[0-9a-fA-F]+|[\w./-]+(?:[\w./-]*\.\w+)?\((?:[^)]*)\))/g;
+    // 2. Global scan for various frame patterns (more specific now)
+    // These are for counting occurrences, not just line starts.
+    const framePatternsForCounting = [
+      /\bat\s+[\w$./<>()[\]~`!@#%^&*+=|\\?-]+(?:\s*\(.*?\))?/g, // "at com.example.MyClass.method(MyClass.java:123)" or "at func (file.js:1:1)" or "at MyFunc"
+      /File\s+"[^"]+",\s*line\s+\d+,\s*in\s+\S+/g,            // Python
+      /[\w./-]+\.(?:go|s):\d+(?:\s+\+0x[0-9a-fA-F]+)?/g,        // Go
+      // A very generic file:line:col pattern (use cautiously, lower weight)
+      // /(?:[a-zA-Z]:\\|[~\w./-]+[/])?[\w.-]+\.[a-zA-Z]{1,5}:\d+(?::\d+)?/g
+    ];
 
-
-    const frameMatches = Array.from(content.matchAll(framePattern));
-    const pythonFrameMatches = Array.from(content.matchAll(pythonFramePattern));
-    const goFrameMatches = Array.from(content.matchAll(goFramePattern));
-
-    frameLikeSegments = frameMatches.length + pythonFrameMatches.length + goFrameMatches.length;
-
-    if (frameLikeSegments > 0) {
-      confidenceScore += 0.25; // Base for finding any frame-like structures
-      confidenceScore += Math.min(frameLikeSegments, 5) * 0.05; // Bonus for more frames
-      patternsMatched++;
-      if (frameLikeSegments >= 1) strongSignalFound = true;
+    for (const fp of framePatternsForCounting) {
+      const matches = content.match(fp);
+      if (matches) {
+        framePatternHits += matches.length;
+      }
     }
 
-    // 3. Specific indicators for Java or .NET stack traces
-    if (/\.{3}\s*\d+\s+more\b/i.test(content)) { // "... N more"
-      confidenceScore += 0.2;
-      strongSignalFound = true;
+    if (framePatternHits > 0) {
+      confidenceScore += 0.20; // Base for finding any such patterns
+      confidenceScore += Math.min(framePatternHits, 5) * 0.04; // Bonus for more
       patternsMatched++;
+      if (framePatternHits >= 1) strongSignalFound = true;
+    }
+
+    // 3. Specific indicators for Java or .NET
+    if (/\.{3}\s*\d+\s+more\b/i.test(content)) {
+      confidenceScore += 0.2; strongSignalFound = true; patternsMatched++;
     }
     if (/\sCaused by:/i.test(content)) {
-      confidenceScore += 0.15;
-      strongSignalFound = true;
-      patternsMatched++;
+      confidenceScore += 0.15; strongSignalFound = true; patternsMatched++;
     }
 
-    // 4. Check for multiple lines starting with typical indentation for stack frames
-    // This helps for multi-line traces but is less relevant for single-line.
-    const lines = content.split(/\r\n|\r|\n/); // Split by any common newline
-    if (lines.length > 1) {
-        let indentedFrameLines = 0;
-        for (const line of lines) {
-            if (/^\s{4,}(?:at\s+)?\w|^\s{2,}\w+\.(?:go|s):/.test(line.trimStart())) { // Common indent for Java/JS/Python/Go frames
-                indentedFrameLines++;
-            }
+    // --- 4. Ratio of Frame-Like Lines (NEW & CRITICAL) ---
+    const lines = content.split(/\r\n|\r|\n/);
+    const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+    let typicalFrameLinesCount = 0;
+
+    if (nonEmptyLines.length > 0) {
+      nonEmptyLines.forEach(line => {
+        if (this.typicalFrameLineStartRegex.test(line.trimStart())) {
+          typicalFrameLinesCount++;
         }
-        if (indentedFrameLines >= 1) {
-            confidenceScore += 0.1;
-            if (indentedFrameLines >=2) confidenceScore += 0.1;
-            patternsMatched++;
-            strongSignalFound = true;
+      });
+
+      const frameLineRatio = typicalFrameLinesCount / nonEmptyLines.length;
+      // console.log(`Stacktrace Detector: FrameLineRatio=${frameLineRatio.toFixed(3)}, TypicalFrameLines=${typicalFrameLinesCount}, NonEmptyLines=${nonEmptyLines.length}`);
+
+      if (typicalFrameLinesCount === 0 && nonEmptyLines.length > 3 && !errorKeywordFound) {
+        // If no lines look like typical frames, and no error keyword, it's very unlikely a stacktrace.
+        // This is a strong negative signal for prose.
+        // console.log("Stacktrace Detector: No typical frame lines and no error keyword found in multi-line text.");
+        return this.noMatch();
+      }
+
+      if (frameLineRatio >= 0.5 && typicalFrameLinesCount >= 1) { // At least 50% of lines are frame-like
+        confidenceScore += 0.30;
+        strongSignalFound = true; patternsMatched++;
+      } else if (frameLineRatio >= 0.25 && typicalFrameLinesCount >= 1) { // At least 25%
+        confidenceScore += 0.15;
+        strongSignalFound = true; patternsMatched++;
+      } else if (typicalFrameLinesCount > 0 && nonEmptyLines.length <= 3 && errorKeywordFound) { // Short trace with error
+        confidenceScore += 0.10;
+      } else if (typicalFrameLinesCount === 0 && nonEmptyLines.length > 5 && errorKeywordFound) {
+        // Has an error keyword, but no subsequent lines look like frames. Might be just an error message.
+        confidenceScore *= 0.5; // Reduce confidence
+      }
+    }
+    // --- End Ratio of Frame-Like Lines ---
+
+
+    // 5. Adjustments (combining signals)
+    if (errorKeywordFound && (typicalFrameLinesCount >= 1 || framePatternHits >= 1)) {
+      confidenceScore += 0.20; // Error message + at least one frame is a strong indicator
+    } else if (errorKeywordFound && typicalFrameLinesCount === 0 && framePatternHits === 0 && lines.length === 1) {
+      confidenceScore *= 0.6; // Single line error message, no frames
+    } else if (!errorKeywordFound && (typicalFrameLinesCount >= 1 || framePatternHits >= 1)) {
+      confidenceScore += 0.05; // Has frames but no clear error keyword
+    }
+
+    if (lines.length === 1 && (!errorKeywordFound || framePatternHits < 1) && typicalFrameLinesCount < 1) {
+      confidenceScore -= 0.3; // Penalize single lines without strong trace characteristics
+    }
+
+    // --- Prose Anti-Pattern (If it looks like sentences and signals are weak) ---
+    if (nonEmptyLines.length > 3 && typicalFrameLinesCount < Math.max(1, nonEmptyLines.length * 0.1) && !strongSignalFound) {
+      let sentenceLikeLines = 0;
+      nonEmptyLines.slice(0, 10).forEach(line => {
+        const words = line.trim().split(/\s+/);
+        if (words.length > 5 && (line.endsWith('.') || line.endsWith(':') || line.endsWith('?'))) {
+          let commonWordCount = 0;
+          words.forEach(w => { if (['the', 'a', 'is', 'to', 'of', 'and', 'in', 'it', 'for', 'with'].includes(w.toLowerCase())) commonWordCount++; });
+          if (commonWordCount / words.length > 0.2) sentenceLikeLines++;
         }
+      });
+      if (sentenceLikeLines >= 2) {
+        // console.log("Stacktrace Detector: Prose-like content detected, penalizing score.");
+        confidenceScore *= 0.2; // Strong penalty if it looks like prose
+      }
     }
-
-
-    // 5. Adjustments
-    if (errorKeywordFound && frameLikeSegments >= 1) {
-      confidenceScore += 0.25; // Error message + at least one frame is a strong indicator
-    } else if (errorKeywordFound && frameLikeSegments === 0 && lines.length === 1) {
-      // Single line error message without clear "at" frames. Could be a simple error string.
-      confidenceScore *= 0.7; // Reduce confidence slightly
-    } else if (!errorKeywordFound && frameLikeSegments >= 1) {
-      // Has frames but no clear error keyword at the start. Still likely a trace.
-      confidenceScore += 0.1;
-    }
-
-    // If it's a single line, it needs stronger evidence (either error keyword + frame, or multiple frames)
-    if (lines.length === 1 && (!errorKeywordFound || frameLikeSegments < 1) && frameLikeSegments < 2) {
-        confidenceScore -= 0.2;
-    }
-    // If it's a single line and contains " at " multiple times, it's a good sign
-    if (lines.length === 1 && (content.match(/\s+at\s+/g) || []).length >= 2) {
-        confidenceScore += 0.3;
-        strongSignalFound = true;
-    }
-
+    // --- End Prose Anti-Pattern ---
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    // Final match decision
+    // Final match decision:
+    // Needs an error keyword and some frame indication, OR a high ratio of frame-like lines.
     let isMatch = false;
-    if (strongSignalFound && confidenceScore >= 0.40) {
-        isMatch = true;
-    } else if (patternsMatched >= 1 && errorKeywordFound && frameLikeSegments >= 1 && confidenceScore >= 0.5) {
-        isMatch = true;
-    } else if (frameLikeSegments >= 2 && confidenceScore >= 0.35) { // Multiple frames are a good sign
-        isMatch = true;
-    } else if (errorKeywordFound && lines.length === 1 && frameLikeSegments >= 1 && confidenceScore >= 0.3) { // Single line error with at least one frame
-        isMatch = true;
+    if (errorKeywordFound && (typicalFrameLinesCount >= 1 || framePatternHits >= 1) && confidenceScore >= 0.30) {
+      isMatch = true;
+    } else if (typicalFrameLinesCount >= 2 && (typicalFrameLinesCount / nonEmptyLines.length >= 0.4) && confidenceScore >= 0.35) { // At least 2 frames and good ratio
+      isMatch = true;
+    } else if (strongSignalFound && confidenceScore >= 0.45) { // General strong signal fallback
+      isMatch = true;
+    }
+
+    // If it's long but has very few frame-like lines or error keywords, it's probably not a stack trace.
+    if (nonEmptyLines.length > 10 && typicalFrameLinesCount < 2 && !errorKeywordFound && framePatternHits < 2) {
+      isMatch = false;
+    }
+    if (confidenceScore < 0.20 && nonEmptyLines.length > 5) { // If after all checks, confidence is still very low for multi-line
+      isMatch = false;
     }
 
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongSignalFound && confidenceScore > 0.6
+      matchedDefinitive: isMatch && strongSignalFound && confidenceScore > 0.55
     };
   }
 
@@ -375,15 +421,15 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
     monaco.languages.registerDocumentFormattingEditProvider(languageId, {
       provideDocumentFormattingEdits(model: any) {
         const originalContent = model.getValue();
-    
+
         let formattedContent = originalContent;
-    
+
         // 1. Normalize explicit newlines `\n` that are part of the string
         const contentAfterNewlineNormalization = formattedContent.replace(/\\n/g, '\n');
         if (contentAfterNewlineNormalization !== formattedContent) {
           formattedContent = contentAfterNewlineNormalization;
         }
-    
+
         // 2. Ensure newline *only if not already present* after a closing parenthesis
         //    followed by common frame starters.
         //    Regex:
@@ -401,32 +447,32 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
             return `${p1ClosingParen}\n  ${p3FrameStarter.trimStart()}`;
           }
         );
-    
+
         if (contentAfterFrameSplit !== formattedContent) {
           formattedContent = contentAfterFrameSplit;
         }
-    
+
         // 3. Line-by-line processing for indentation and cleaning up excessive blank lines
         const lines = formattedContent.split('\n');
         const processedLines: string[] = [];
         let consecutiveBlankLines = 0;
-    
+
         const isFrameStart = (line: string): boolean => {
           const trimmed = line.trimStart();
           return /^(at\s+|File\s+"[^"]+"\s*,\s*line\s+\d+|Caused by:|\.{3}\s*\d+\s+more\b|[\w./-]+\.(?:go|s):\d+|[\w./-]+\((?:[^)]*)\)$)/i.test(trimmed) ||
-                 (trimmed.startsWith("Caused by:") && processedLines.length > 0 && processedLines[processedLines.length-1].trim() !== "");
+            (trimmed.startsWith("Caused by:") && processedLines.length > 0 && processedLines[processedLines.length - 1].trim() !== "");
         };
-    
+
         const isErrorKeywordLine = (line: string): boolean => {
           const trimmed = line.trim();
           return /^(?:Uncaught\s+)?(?:[A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault|Traceback))\b/i.test(trimmed) ||
-                 /^\s*(Caused by:|Traceback \(most recent call last\):)/i.test(trimmed);
+            /^\s*(Caused by:|Traceback \(most recent call last\):)/i.test(trimmed);
         };
-    
+
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
           const trimmedLine = line.trim();
-    
+
           if (!trimmedLine) {
             consecutiveBlankLines++;
             if (consecutiveBlankLines <= 1) { // Allow one blank line
@@ -436,12 +482,12 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
           } else {
             consecutiveBlankLines = 0; // Reset counter
           }
-    
+
           // If it's an error line and not also a frame start (e.g. "Error: foo at bar.js")
           if (isErrorKeywordLine(trimmedLine) && !isFrameStart(trimmedLine)) {
             // If the previous line wasn't blank, and this isn't the first line, add a blank line before a new error block
             if (processedLines.length > 0 && processedLines[processedLines.length - 1].trim() !== "") {
-                processedLines.push('');
+              processedLines.push('');
             }
             processedLines.push(trimmedLine); // Add error line without extra indent
           } else if (isFrameStart(trimmedLine)) {
@@ -453,9 +499,9 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
               const currentIndentMatch = line.match(/^(\s*)/);
               const currentIndentLength = currentIndentMatch ? currentIndentMatch[1].length : 0;
               if (currentIndentLength < 2 || currentIndentLength > 4) { // Adjust if too little or too much
-                 processedLines.push("  " + trimmedLine);
+                processedLines.push("  " + trimmedLine);
               } else {
-                 processedLines.push(line); // Preserve reasonable existing indentation
+                processedLines.push(line); // Preserve reasonable existing indentation
               }
             }
           } else {
@@ -463,19 +509,19 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
             processedLines.push(line); // Keep original leading whitespace for these lines
           }
         }
-    
+
         let finalOutput = processedLines.join('\n');
         // Remove leading/trailing blank lines that might have been introduced
         finalOutput = finalOutput.replace(/^\n+/, '').replace(/\n+$/, '');
         // Ensure a single trailing newline if original content had one and output is not empty
         if (originalContent.endsWith('\n') && finalOutput !== '') {
-            finalOutput += '\n';
+          finalOutput += '\n';
         }
-    
+
         if (finalOutput === originalContent) {
           return null;
         }
-    
+
         return [{
           range: model.getFullModelRange(),
           text: finalOutput
