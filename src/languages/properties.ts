@@ -41,108 +41,139 @@ path.to.something = C:\\Users\\Default\\My Documents
    */
   detect(content: string): DetectionResult {
     const trimmedContent = content.trim();
-    if (!trimmedContent || trimmedContent.length < 3) { // e.g., "a=b"
+    if (!trimmedContent || trimmedContent.length < 3) {
       return this.noMatch();
     }
 
     let confidenceScore = 0.0;
-    let patternsMatched = 0;
+    // patternsMatched is not as useful here as the line structure ratio
+    // let patternsMatched = 0;
     let keyValuePairsCount = 0;
     let sectionHeadersCount = 0;
     let commentLinesCount = 0;
+    let otherLinesCount = 0; // Count lines that are not comments, sections, or key-value
 
     const lines = content.split('\n');
-    const nonEmptyLines = lines.map(l => l.trim()).filter(l => l.length > 0);
+    const nonEmptyTrimmedLines = lines.map(l => l.trim()).filter(l => l.length > 0);
 
-    if (nonEmptyLines.length < 1) {
+    if (nonEmptyTrimmedLines.length < 1) {
       return this.noMatch();
     }
 
-    // 1. Check for key-value pairs (key = value or key : value)
-    //    Allows for spaces around '=' or ':'
-    //    Ignores lines starting with comment characters '#' or ';'
-    const keyValueRegex = /^\s*[^#;\s][\w.-]+\s*[:=]\s*(.*)/;
-    for (const line of nonEmptyLines) {
-      if (keyValueRegex.test(line)) {
-        keyValuePairsCount++;
-      } else if (line.startsWith('#') || line.startsWith(';')) {
+    // Stricter regex for key-value: key can contain dots, hyphens. Value can be empty.
+    // Ensures it's not just any colon, but one likely separating a key from a value.
+    const keyValueRegex = /^\s*([a-zA-Z0-9_.-]+)\s*([:=])\s*(.*)/;
+    const sectionRegex = /^\s*\[([^\]]+)\]\s*$/; // Simpler section regex
+
+    for (const line of nonEmptyTrimmedLines) {
+      if (line.startsWith('#') || line.startsWith(';')) {
         commentLinesCount++;
-      } else if (/^\s*\[.*\]\s*$/.test(line)) { // [section_header]
+      } else if (sectionRegex.test(line)) {
         sectionHeadersCount++;
+      } else if (keyValueRegex.test(line)) {
+        keyValuePairsCount++;
+      } else {
+        otherLinesCount++; // This line doesn't fit INI structure
       }
     }
 
-    if (keyValuePairsCount > 0) {
-      confidenceScore += 0.3; // Base score for finding any key-value pairs
-      confidenceScore += Math.min(keyValuePairsCount, 10) * 0.04; // Bonus for more pairs
-      patternsMatched++;
-    }
+    // --- Core Heuristic: Ratio of INI-like lines to total non-comment lines ---
+    const totalStructuralLines = keyValuePairsCount + sectionHeadersCount;
+    const totalNonCommentLines = nonEmptyTrimmedLines.length - commentLinesCount;
 
-    // 2. Check for section headers (e.g., [database]) - common in INI files
-    if (sectionHeadersCount > 0) {
-      confidenceScore += 0.25;
-      confidenceScore += Math.min(sectionHeadersCount, 5) * 0.05;
-      patternsMatched++;
-    }
+    if (totalNonCommentLines <= 0 && (keyValuePairsCount > 0 || sectionHeadersCount > 0)) {
+      // This case means all lines were key-value or sections, which is valid if there are any.
+      // Or it implies the file was only comments that also happened to match k/v or section,
+      // but our loop structure above should handle this by totalNonCommentLines being 0.
+      // If totalNonCommentLines is 0 but we have keyValuePairs/sectionHeaders, it means
+      // every non-empty line was one of these structural elements (after stripping comments).
+      if (totalStructuralLines > 0) {
+        confidenceScore += 0.6; // Good sign if all non-comment lines are structural
+      } else {
+        return this.noMatch(); // Only comments, or empty after stripping comments
+      }
 
-    // 3. Presence of comments (# or ;)
-    if (commentLinesCount > 0) {
-      confidenceScore += Math.min(commentLinesCount, 5) * 0.02; // Small bonus for comments
-      patternsMatched++;
-    }
+    } else if (totalNonCommentLines > 0) {
+      const ratioValidIniLines = totalStructuralLines / totalNonCommentLines;
+      // console.log(`INI Detector: RatioValidIniLines=${ratioValidIniLines.toFixed(3)}, Structural=${totalStructuralLines}, NonComment=${totalNonCommentLines}, Other=${otherLinesCount}`);
 
-    // 4. Check line structure consistency
-    //    If most non-empty/non-comment lines are key-value or sections, it's a good sign.
-    const totalSignificantLines = keyValuePairsCount + sectionHeadersCount;
-    if (nonEmptyLines.length > 0 && totalSignificantLines > 0) {
-      const ratioValidLines = totalSignificantLines / nonEmptyLines.filter(l => !l.startsWith('#') && !l.startsWith(';')).length;
-      if (ratioValidLines >= 0.75) { // At least 75% of non-comment lines are key-value or sections
-        confidenceScore += 0.2;
-      } else if (ratioValidLines >= 0.5) {
+      if (ratioValidIniLines >= 0.85 && totalStructuralLines >= 1) { // Very high percentage must be INI structure
+        confidenceScore += 0.6; // Strong boost
+      } else if (ratioValidIniLines >= 0.65 && totalStructuralLines >= 2) { // Still a good majority
+        confidenceScore += 0.3;
+      } else if (ratioValidIniLines >= 0.40 && totalStructuralLines >= 1) {
         confidenceScore += 0.1;
+      } else if (totalStructuralLines >= 1) { // Some INI structure but low ratio means many "other" lines
+        confidenceScore -= 0.2 - (0.1 * ratioValidIniLines); // Penalize based on how low the ratio is
+      } else { // No key-value or sections found among non-comment lines
+        return this.noMatch(); // If non-comment lines exist but none are k/v or sections, it's not INI.
       }
+    } else { // No non-empty, non-comment lines at all
+      return this.noMatch();
     }
 
-    // 5. Anti-patterns (syntax from other languages)
+
+    // Add small bonuses if specific elements were found, but only if base confidence is okay
+    if (confidenceScore > 0) {
+      if (keyValuePairsCount > 0) confidenceScore += Math.min(keyValuePairsCount, 5) * 0.02;
+      if (sectionHeadersCount > 0) confidenceScore += Math.min(sectionHeadersCount, 3) * 0.03;
+      if (commentLinesCount > 0 && totalStructuralLines > 0) confidenceScore += 0.01; // Comments only useful if there's also data
+    }
+
+
+    // Anti-patterns
     const antiPatterns = [
-      { pattern: /[{}[\]]/g, weight: -0.3 }, // Braces/brackets (JSON, code blocks) - penalize if not within value and many
-      { pattern: /<\w.*?>/g, weight: -0.4 }, // HTML/XML tags
-      { pattern: /\b(function|class|var|let|const|import|export|def|public|private)\b/i, weight: -0.5 }, // Code keywords
-      { pattern: /=>|->/g, weight: -0.3 }    // Arrow/pointer like syntax
+      { pattern: /\{|\}|\[(?![^\]]*\]\s*$)/g, weight: -0.4, threshold: 2 }, // Braces, or non-section brackets (allow more if score is high)
+      { pattern: /<\w.*?>/g, weight: -0.5, threshold: 1 },
+      { pattern: /\b(function|class|var|let|const|import|export|def|public|private|SELECT|FROM|WHERE|UPDATE|INSERT)\b/i, weight: -0.6, threshold: 1 },
+      { pattern: /=>|->|#!/g, weight: -0.5, threshold: 1 }
     ];
 
-    let antiPatternHitCount = 0;
     for (const ap of antiPatterns) {
-      const matches = content.match(ap.pattern);
-      if (matches) {
-        // Apply penalty more carefully for braces/brackets, as they might appear in values
-        if (ap.pattern.source.includes('[{}]') && matches.length < 3 && keyValuePairsCount > 0) {
-          // Allow a few braces/brackets if key-value pairs are present
-        } else {
+      const matches = content.match(ap.pattern); // Check on original content
+      if (matches && matches.length >= ap.threshold) {
+        // Only apply anti-pattern if confidence isn't already super high from structure
+        if (confidenceScore < 0.7 || ap.pattern.source.includes("SELECT")) { // Apply SQL anti-pattern more readily
           confidenceScore += ap.weight;
-          antiPatternHitCount++;
         }
       }
     }
-    if (antiPatternHitCount > 1) confidenceScore -= 0.1; // Extra penalty for multiple anti-pattern types
 
-    // 6. Final Adjustments and Clamping
-    if (keyValuePairsCount > 0 && (sectionHeadersCount > 0 || commentLinesCount > 0)) {
-      confidenceScore += 0.1; // Bonus for mixed characteristic elements
+    // Final Adjustments
+    // If it has sections, it's more likely INI than simple key-value (like .env might be)
+    if (sectionHeadersCount > 0 && keyValuePairsCount > 0 && confidenceScore > 0.2) {
+      confidenceScore += 0.1;
     }
-    if (keyValuePairsCount === 0 && sectionHeadersCount === 0) { // No actual data, just comments or empty
-      return this.noMatch();
+    // If it's mostly "other" lines despite some matches, penalize heavily
+    if (totalNonCommentLines > 0 && otherLinesCount > totalNonCommentLines * 0.4 && confidenceScore > 0) {
+      // console.log(`INI Detector: High 'otherLinesCount' (${otherLinesCount}/${totalNonCommentLines}), penalizing.`);
+      confidenceScore *= 0.3; // Drastic reduction
     }
 
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    // Determine match status
-    const isMatch = confidenceScore >= 0.4; // Adjust this threshold
+    // Determine match status: Now primarily driven by the ratio of valid INI lines
+    // A high ratio of structural lines is key.
+    let isMatch = false;
+    if (confidenceScore >= 0.45 && totalStructuralLines >= 1) { // Min confidence and at least one k/v or section
+      isMatch = true;
+    } else if (confidenceScore >= 0.30 && totalStructuralLines >= 2 && sectionHeadersCount > 0) { // Slightly lower if sections are present
+      isMatch = true;
+    }
+
+    // If the text is long and the ratio of INI lines was very poor, ensure it's not a match
+    if (nonEmptyTrimmedLines.length > 10 && totalNonCommentLines > 0 && (totalStructuralLines / totalNonCommentLines) < 0.25) {
+      isMatch = false;
+    }
+    if (confidenceScore < 0.2) { // Absolute floor
+      isMatch = false;
+    }
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
+      matchedDefinitive: isMatch && confidenceScore > 0.6 && (totalStructuralLines / (totalNonCommentLines + 0.001)) > 0.8
     };
   }
 
@@ -162,24 +193,24 @@ path.to.something = C:\\Users\\Default\\My Documents
       defaultToken: 'source.ini', // More specific default
       ignoreCase: true,
       tokenPostfix: '.ini',
-    
+
       tokenizer: {
         root: [
           [/^\s*[#;].*$/, 'comment.ini'],
           [/^\s*\[/, { token: 'metatag.ini', bracket: '@open', next: '@section' }],
-      
+
           // Regex 1: Key = Value with inline comment
           [/^\s*([^#;\s][^:=]*?)(\s*[:=]\s*)(.*?)(\s+[#;].*)$/,
-            [ 'keyword.ini', 'delimiter.ini', 'string.ini', 'comment.ini' ]
+            ['keyword.ini', 'delimiter.ini', 'string.ini', 'comment.ini']
           ],
           // Regex 2: Key = Value (no inline comment)
           [/^\s*([^#;\s][^:=]*?)(\s*[:=]\s*)(.*)$/,
-            [ 'keyword.ini', 'delimiter.ini', 'string.ini']
+            ['keyword.ini', 'delimiter.ini', 'string.ini']
           ],
           // Regex 3: Key only
           [/^\s*([^#;\s][^:=]*?)\s*$/, 'keyword.ini'],
         ],
-    
+
         section: [
           [/[^\]]+/, 'type.identifier.ini'],
           [/\]/, { token: 'metatag.ini', bracket: '@close', next: '@pop' }]

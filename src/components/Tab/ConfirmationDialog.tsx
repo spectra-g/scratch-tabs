@@ -16,8 +16,6 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     confirmButtonText = 'Confirm'
 }) => {
 
-    console.log('[ConfirmationDialog] Component RENDERED. isOpen:', isOpen, 'Message:', message); // <<< ADD THIS
-
     if (!isOpen) return null;
 
     const handleModalContentClick = (e: React.MouseEvent) => {
