@@ -1,17 +1,8 @@
 export type ContentType = 
   | 'plaintext' 
-  | 'json' 
-  | 'javascript' 
-  | 'typescript' 
-  | 'python' 
-  | 'shell' 
-  | 'markdown' 
-  | 'url' 
-  | 'yaml' 
-  | 'xml' 
-  | 'sql' 
-  | 'html' 
-  | 'css';
+  | 'code'
+  | 'script'
+  | 'url';
 
 export interface VaultItem {
   id: string;
