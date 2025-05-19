@@ -41,9 +41,9 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
         const workspaceTabs = tabs.filter(tab => tab.workspaceId === activeWorkspaceId);
         // Only save if there's actually data for the current workspace
         if (workspaceTabs.length > 0 || (splitView && splitView.workspaceId === activeWorkspaceId)) {
-          await storage.saveTabs(workspaceTabs);
+          await storage.saveTabsInterval(workspaceTabs);
           if (splitView && splitView.workspaceId === activeWorkspaceId) {
-            await storage.saveSplitView({
+            await storage.saveSplitViewInterval({
               ...splitView,
               id: splitView.id || crypto.randomUUID(),
               lastModified: Date.now()

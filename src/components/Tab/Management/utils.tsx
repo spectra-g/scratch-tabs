@@ -3,6 +3,7 @@ import { useTabsStore } from '../../../stores/tabsStore';
 import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { StorageProviderFactory } from '../../../db';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
+import { usePersistenceStore } from '../../../stores/persistenceStore';
 import { broadcastManager } from '../../../stores/broadcastStore';
 
 /**
@@ -52,6 +53,8 @@ export const moveTabsToWorkspace = async (
   }
 
   const storage = StorageProviderFactory.getProvider();
+  const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
+  lockTransactions();
 
   try {
     setTabManagementActionInProgress(true);
@@ -63,7 +66,7 @@ export const moveTabsToWorkspace = async (
         ...tab,
         workspaceId: targetWorkspaceId
       }));
-      await storage.saveTabs(updatedTabsInDB);
+      await storage.saveTabsNow(updatedTabsInDB);
     }
 
     let finalSourceSplitView: SplitViewRecord | null = null;
@@ -87,7 +90,7 @@ export const moveTabsToWorkspace = async (
         sourceSplitViewRecord.activeRightTabId = fallbackTabId;
       }
       sourceSplitViewRecord.lastModified = Date.now();
-      await storage.saveSplitView(sourceSplitViewRecord);
+      await storage.saveSplitViewNow(sourceSplitViewRecord);
       finalSourceSplitView = sourceSplitViewRecord;
     }
 
@@ -98,15 +101,20 @@ export const moveTabsToWorkspace = async (
     }
 
     // Add moved tabs to the target (e.g., to leftTabs by default)
-    const currentTargetLeftTabs = targetSplitViewRecord.leftTabs || [];
-    targetSplitViewRecord.leftTabs = [...new Set([...currentTargetLeftTabs, ...tabIdsToMove])];
+    const currentTargetLeftTabs = targetSplitViewRecord?.leftTabs || [];
 
-    if (!targetSplitViewRecord.activeLeftTabId || !targetSplitViewRecord.leftTabs.includes(targetSplitViewRecord.activeLeftTabId)) {
-      targetSplitViewRecord.activeLeftTabId = tabIdsToMove[0] || targetSplitViewRecord.leftTabs[0] || null;
+    if (targetSplitViewRecord) {
+      targetSplitViewRecord.leftTabs = [...new Set([...currentTargetLeftTabs, ...tabIdsToMove])];
+
+      if (!targetSplitViewRecord.activeLeftTabId || !targetSplitViewRecord.leftTabs.includes(targetSplitViewRecord.activeLeftTabId)) {
+        const newActiveLeftTabId = tabIdsToMove[0] || targetSplitViewRecord.leftTabs[0] || null;
+        targetSplitViewRecord.activeLeftTabId = newActiveLeftTabId;
+      }
+
+      targetSplitViewRecord.lastModified = Date.now();
+      await storage.saveSplitViewNow(targetSplitViewRecord);
+      finalTargetSplitView = targetSplitViewRecord;
     }
-    targetSplitViewRecord.lastModified = Date.now();
-    await storage.saveSplitView(targetSplitViewRecord);
-    finalTargetSplitView = targetSplitViewRecord;
 
     // Cache the target split view for potential immediate switch (if this tab switches)
     if (finalTargetSplitView) {
@@ -133,22 +141,24 @@ export const moveTabsToWorkspace = async (
     });
     // --- END BROADCASTING ---
 
-    // 4. Refresh Modal State (using the latest from DB)
+    // 4. Refresh Modal State
     const refreshedAllTabsFromDBForModal = await storage.getTabs();
     setAllApplicationTabs(refreshedAllTabsFromDBForModal);
-    await useWorkspaceStore.getState().loadWorkspaces({ preventAutoSwitch: true }); // Refreshes tab counts
+    await useWorkspaceStore.getState().loadWorkspaces({ preventAutoSwitch: true });
 
-    // 5. Refresh Main UI State (Zustand Stores for THIS browser tab)
+    // 5. Refresh Main UI State
     const mainUIActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
 
     if (mainUIActiveWorkspaceId) {
       if (mainUIActiveWorkspaceId === sourceWorkspaceIdForOperation && sourceWorkspaceIdForOperation !== targetWorkspaceId) {
-        useTabsStore.setState({ tabs: await storage.getTabsByWorkspace(mainUIActiveWorkspaceId) });
+        const sourceTabs = await storage.getTabsByWorkspace(mainUIActiveWorkspaceId);
+        useTabsStore.setState({ tabs: sourceTabs });
         if (finalSourceSplitView) {
           useSplitViewStore.setState({ splitView: finalSourceSplitView as unknown as SplitViewState });
         }
       } else if (mainUIActiveWorkspaceId === targetWorkspaceId) {
-        useTabsStore.setState({ tabs: await storage.getTabsByWorkspace(mainUIActiveWorkspaceId) });
+        const targetTabs = await storage.getTabsByWorkspace(mainUIActiveWorkspaceId);
+        useTabsStore.setState({ tabs: targetTabs });
         if (finalTargetSplitView) {
           useSplitViewStore.setState({ splitView: finalTargetSplitView as unknown as SplitViewState });
         }
@@ -156,9 +166,9 @@ export const moveTabsToWorkspace = async (
     }
 
   } catch (error) {
-    console.error('[MoveToWorkspace] Failed to move tabs:', error);
-    // Optionally: Revert DB changes in a more complex setup, or at least notify user.
+    console.error('[MoveTabsToWorkspace] Failed to move tabs:', error);
   } finally {
+    unlockTransactions();
     setTabManagementActionInProgress(false);
     setDraggedTabIds(new Set());
   }
