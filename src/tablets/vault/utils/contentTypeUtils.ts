@@ -1,4 +1,4 @@
-import { FileText, FileJson, FileCode, Terminal, FileType, Link, FileSpreadsheet, Code, FileSymlink, Database, FileHtml, FileType2 } from 'lucide-react';
+import { FileText, FileJson, FileCode, Terminal, FileType, Link, FileSpreadsheet, Code, FileSymlink, Database, File as FileHtml, FileType2 } from 'lucide-react';
 import { ContentType } from '../types';
 import { detectLanguage } from '../../../languages';
 
