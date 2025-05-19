@@ -119,11 +119,13 @@ const toTab = (record: TabRecord): Tab => {
 
 export interface StorageProvider {
   getTabs(): Promise<Tab[]>;
-  saveTab(tab: Tab): Promise<void>;
-  saveTabs(tabs: Tab[]): Promise<void>;
+  saveTabsInterval(tabs: Tab[]): Promise<void>;
+  saveTabNow(tab: Tab): Promise<void>;
+  saveTabsNow(tabs: Tab[]): Promise<void>;
   deleteTab(id: string): Promise<void>;
   getSplitView(): Promise<SplitViewRecord | null>;
-  saveSplitView(splitView: SplitViewRecord): Promise<void>;
+  saveSplitViewInterval(splitView: SplitViewRecord): Promise<void>;
+  saveSplitViewNow(splitView: SplitViewRecord): Promise<void>;
   getWorkspaces(): Promise<Workspace[]>;
   getWorkspace(id: string): Promise<Workspace | null>;
   saveWorkspace(workspace: Workspace): Promise<void>;
@@ -177,21 +179,26 @@ export class IndexedDBStorage implements StorageProvider {
     });
   }
 
-  async saveTab(tab: Tab): Promise<void> {
+  async saveTabsInterval(tabs: Tab[]): Promise<void> {
     const now = Date.now();
     if (now - this.lastSaveTabsTime < this.DEBOUNCE_TIME) return;
 
     this.lastSaveTabsTime = now;
     await this.withRetry(async () => {
+      const records = tabs.map(toTabRecord);
+      await db.tabs.bulkPut(records);
+    });
+  }
+
+  async saveTabNow(tab: Tab): Promise<void> {
+    this.lastSaveTabsTime = Date.now();
+    await this.withRetry(async () => {
       await db.tabs.put(toTabRecord(tab));
     });
   }
 
-  async saveTabs(tabs: Tab[]): Promise<void> {
-    const now = Date.now();
-    if (now - this.lastSaveTabsTime < this.DEBOUNCE_TIME) return;
-
-    this.lastSaveTabsTime = now;
+  async saveTabsNow(tabs: Tab[]): Promise<void> {
+    this.lastSaveTabsTime = Date.now();
     await this.withRetry(async () => {
       const records = tabs.map(toTabRecord);
       await db.tabs.bulkPut(records);
@@ -210,11 +217,22 @@ export class IndexedDBStorage implements StorageProvider {
     });
   }
 
-  async saveSplitView(splitView: SplitViewRecord): Promise<void> {
+  async saveSplitViewInterval(splitView: SplitViewRecord): Promise<void> {
     const now = Date.now();
     if (now - this.lastSaveSplitViewTime < this.DEBOUNCE_TIME) return;
 
     this.lastSaveSplitViewTime = now;
+    await this.withRetry(async () => {
+      // Generate UUID if not provided
+      if (!splitView.id) {
+        splitView.id = crypto.randomUUID();
+      }
+      await db.splitView.put(splitView);
+    });
+  }
+
+  async saveSplitViewNow(splitView: SplitViewRecord): Promise<void> {
+    this.lastSaveSplitViewTime = Date.now();
     await this.withRetry(async () => {
       // Generate UUID if not provided
       if (!splitView.id) {

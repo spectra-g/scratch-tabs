@@ -30,6 +30,13 @@ const MainLayout: React.FC = () => {
       saveTabDataById: state.saveTabDataById,
   }));
 
+
+  function setRealHeight() {
+    document.documentElement.style.setProperty('--real-vh', `${window.innerHeight * 0.01}px`);
+  }
+  window.addEventListener('resize', setRealHeight);
+  setRealHeight();
+
   const { loadWorkspaces } = useWorkspaceStore();
   const { saveState } = usePersistenceStore(); // Get saveState function
   const [isAppInitialized, setIsAppInitialized] = useState(false);

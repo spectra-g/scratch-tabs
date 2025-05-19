@@ -68,7 +68,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           } else {
             // If no split view record, create a default one for this workspace
             workspaceSplitView = useSplitViewStore.getState().createDefaultSplitViewState(newActiveWorkspaceId);
-            await storage.saveSplitView({ ...workspaceSplitView, lastModified: Date.now() });
+            await storage.saveSplitViewNow({ ...workspaceSplitView, lastModified: Date.now() });
           }
 
           // Update lastAccessed for the determined active workspace
@@ -118,7 +118,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
           await db.transaction('rw', db.workspaces, db.splitView, async () => {
             await storage.saveWorkspace(defaultWorkspace);
-            await storage.saveSplitView(initialSplitViewRecord);
+            await storage.saveSplitViewNow(initialSplitViewRecord);
           });
 
           set({ workspaces: [defaultWorkspace], activeWorkspaceId: defaultWorkspace.id });
@@ -252,8 +252,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         // Use a Dexie transaction for atomicity
         await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
           await storage.saveWorkspace(newWorkspace);
-          await storage.saveTab(initialTab);
-          await storage.saveSplitView(initialSplitViewRecord);
+          await storage.saveTabNow(initialTab);
+          await storage.saveSplitViewNow(initialSplitViewRecord);
         });
 
         // Update Zustand state AFTER successful DB transaction
