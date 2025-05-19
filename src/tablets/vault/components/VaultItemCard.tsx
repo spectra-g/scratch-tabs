@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pin, Copy, ExternalLink, Trash2, Edit, Check, Tag, Clock, Hash, Globe } from 'lucide-react';
+import { Pin, Copy, ExternalLink, Trash2, Edit, Check, Tag, Clock, Hash, Globe, X } from 'lucide-react';
 import { VaultItem } from '../types';
 import { getContentTypeIcon } from '../utils/contentTypeUtils';
 import { formatRelativeTime } from '../utils/dateUtils';
