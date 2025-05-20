@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pin, Copy, ExternalLink, Trash2, Edit, Check, Tag, Clock, Hash, Globe, X } from 'lucide-react';
+import { Pin, Copy, ExternalLink, Trash2, Edit, Check, Tag, Clock, Hash, Globe, X, CopyPlus } from 'lucide-react';
 import { VaultItem } from '../types';
 import { getContentTypeIcon } from '../utils/contentTypeUtils';
 import { formatRelativeTime } from '../utils/dateUtils';
@@ -12,6 +12,7 @@ interface VaultItemCardProps {
   onCopy: () => void;
   onOpenInNewTab: () => void;
   onOpenUrl: () => void;
+  onDuplicate: () => void;
   isCopied: boolean;
   isOpened: boolean;
 }
@@ -24,6 +25,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
   onCopy,
   onOpenInNewTab,
   onOpenUrl,
+  onDuplicate,
   isCopied,
   isOpened
 }) => {
@@ -134,6 +136,14 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
             title="Copy content"
           >
             {isCopied ? <Check size={16} /> : <Copy size={16} />}
+          </button>
+          
+          <button
+            onClick={onDuplicate}
+            className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+            title="Duplicate item"
+          >
+            <CopyPlus size={16} />
           </button>
           
           <button

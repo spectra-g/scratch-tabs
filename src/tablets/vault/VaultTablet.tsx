@@ -317,6 +317,30 @@ export const VaultTablet: Tablet = {
       setTimeout(() => setCopiedItemId(null), 1500);
     }, [state, onChange]);
     
+    const handleDuplicateItem = useCallback((id: string) => {
+      const item = state.data.items.find(item => item.id === id);
+      if (!item) return;
+      
+      const now = Date.now();
+      const duplicatedItem: VaultItem = {
+        ...item,
+        id: crypto.randomUUID(),
+        title: `${item.title} (copy)`,
+        createdTimestamp: now,
+        modifiedTimestamp: now,
+        lastUsedTimestamp: now,
+        usageCount: 0
+      };
+      
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          items: [duplicatedItem, ...state.data.items]
+        }
+      });
+    }, [state, onChange]);
+    
     const handleOpenInNewTab = useCallback((id: string) => {
       const item = state.data.items.find(item => item.id === id);
       if (!item) return;
@@ -444,6 +468,7 @@ export const VaultTablet: Tablet = {
                   onCopy={() => handleCopyContent(item.id)}
                   onOpenInNewTab={() => handleOpenInNewTab(item.id)}
                   onOpenUrl={() => handleOpenUrl(item.id)}
+                  onDuplicate={() => handleDuplicateItem(item.id)}
                   isCopied={copiedItemId === item.id}
                   isOpened={openedItemId === item.id}
                 />
