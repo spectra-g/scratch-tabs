@@ -8,6 +8,7 @@ import { IPDetailsTablet } from './ipdetails/IPDetailsTablet';
 import { ClipboardTablet } from './clipboard/ClipboardTablet';
 import { ConverterTablet } from './converter/ConverterTablet';
 import { VaultTablet } from './vault/VaultTablet';
+import { RestClientTablet } from './restclient/RestClientTablet';
 
 // Register built-in tablets
 tabletRegistry.register(PasswordTablet);
@@ -19,6 +20,7 @@ tabletRegistry.register(IPDetailsTablet);
 tabletRegistry.register(ClipboardTablet);
 tabletRegistry.register(ConverterTablet);
 tabletRegistry.register(VaultTablet);
+tabletRegistry.register(RestClientTablet);
 
 export { TabletSelector } from './components/TabletSelector';
 export { tabletRegistry } from './registry';
