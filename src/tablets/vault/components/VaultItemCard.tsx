@@ -10,9 +10,9 @@ interface VaultItemCardProps {
   onDelete: () => void;
   onTogglePin: () => void;
   onCopy: () => void;
+  onDuplicate: () => void; // New prop for duplicate functionality
   onOpenInNewTab: () => void;
   onOpenUrl: () => void;
-  onDuplicate: () => void;
   isCopied: boolean;
   isOpened: boolean;
 }
@@ -23,9 +23,9 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
   onDelete,
   onTogglePin,
   onCopy,
+  onDuplicate, // New prop
   onOpenInNewTab,
   onOpenUrl,
-  onDuplicate,
   isCopied,
   isOpened
 }) => {
@@ -124,38 +124,53 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
         </div>
         
         <div className="flex items-center space-x-1">
-          {renderActionButton()}
-          
-          <button
-            onClick={onCopy}
-            className={`p-1.5 transition-colors ${
-              isCopied 
-                ? 'text-green-400' 
-                : 'text-gray-400 hover:text-blue-400 hover:bg-gray-700/50'
-            }`}
-            title="Copy content"
-          >
-            {isCopied ? <Check size={16} /> : <Copy size={16} />}
-          </button>
-          
-          <button
-            onClick={onDuplicate}
-            className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
-            title="Duplicate item"
-          >
-            <CopyPlus size={16} />
-          </button>
-          
-          <button
-            onClick={onEdit}
-            className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
-            title="Edit item"
-          >
-            <Edit size={16} />
-          </button>
-          
-          {showDeleteConfirm ? (
+          {/* Only show action buttons when not in delete confirmation mode */}
+          {!showDeleteConfirm && (
             <>
+              {renderActionButton()}
+              
+              <button
+                onClick={onCopy}
+                className={`p-1.5 transition-colors ${
+                  isCopied 
+                    ? 'text-green-400' 
+                    : 'text-gray-400 hover:text-blue-400 hover:bg-gray-700/50'
+                }`}
+                title="Copy content"
+              >
+                {isCopied ? <Check size={16} /> : <Copy size={16} />}
+              </button>
+              
+              <button
+                onClick={onDuplicate}
+                className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                title="Duplicate item"
+              >
+                <CopyPlus size={16} />
+              </button>
+              
+              <button
+                onClick={onEdit}
+                className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                title="Edit item"
+              >
+                <Edit size={16} />
+              </button>
+              
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
+                title="Delete item"
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
+          
+          {/* Delete confirmation buttons - shown in a separate row when active */}
+          {showDeleteConfirm && (
+            <div className="flex items-center space-x-2 ml-auto">
+              <span className="text-red-400 mr-1">Delete?</span>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
@@ -173,15 +188,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
               >
                 <Check size={16} />
               </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
-              title="Delete item"
-            >
-              <Trash2 size={16} />
-            </button>
+            </div>
           )}
         </div>
       </div>
