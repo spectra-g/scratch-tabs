@@ -43,6 +43,7 @@ export const VariablesEditor: React.FC<VariablesEditorProps> = ({
         onChange={handleChange}
         placeholder="Variable name"
         valuePlaceholder="Variable value"
+        showSecrets={showSecrets}
       />
     </div>
   );

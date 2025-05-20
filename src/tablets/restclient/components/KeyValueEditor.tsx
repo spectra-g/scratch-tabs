@@ -8,6 +8,7 @@ interface KeyValueEditorProps {
   placeholder?: string;
   valuePlaceholder?: string;
   suggestions?: string[];
+  showSecrets?: boolean;
 }
 
 export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
@@ -15,7 +16,8 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
   onChange,
   placeholder = 'Key',
   valuePlaceholder = 'Value',
-  suggestions = []
+  suggestions = [],
+  showSecrets = true
 }) => {
   const handleAddPair = () => {
     onChange([
@@ -46,6 +48,13 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
       [field]: value
     };
     onChange(newPairs);
+  };
+  
+  // Determine if a value should be masked (for sensitive data)
+  const shouldMaskValue = (key: string): boolean => {
+    if (showSecrets) return false;
+    const sensitiveKeys = ['token', 'password', 'secret', 'key', 'auth', 'api', 'access'];
+    return sensitiveKeys.some(sensitiveKey => key.toLowerCase().includes(sensitiveKey));
   };
   
   return (
@@ -87,7 +96,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
               />
               
               <input
-                type="text"
+                type={shouldMaskValue(pair.key) ? 'password' : 'text'}
                 value={pair.value}
                 onChange={(e) => handleChangePair(index, 'value', e.target.value)}
                 placeholder={valuePlaceholder}
