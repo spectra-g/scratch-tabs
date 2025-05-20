@@ -1,25 +1,30 @@
 import React, { useState } from 'react';
 import { Play, AlertCircle } from 'lucide-react';
-import { HttpRequest } from '../types';
+import { HttpRequest, ExplanationLevel } from '../types';
 import { UrlBar } from './UrlBar';
 import { Tabs } from './ui/Tabs';
 import { KeyValueEditor } from './KeyValueEditor';
 import { AuthEditor } from './AuthEditor';
 import { BodyEditor } from './BodyEditor';
 import { VariablesEditor } from './VariablesEditor';
+import { RequestExplainer } from './RequestExplainer';
 
 interface RequestBuilderProps {
   request: HttpRequest;
   onUpdateRequest: (request: Partial<HttpRequest>) => void;
   onExecute: () => void;
   isExecuting: boolean;
+  explanationLevel: ExplanationLevel;
+  onExplanationLevelChange: (level: ExplanationLevel) => void;
 }
 
 export const RequestBuilder: React.FC<RequestBuilderProps> = ({
   request,
   onUpdateRequest,
   onExecute,
-  isExecuting
+  isExecuting,
+  explanationLevel,
+  onExplanationLevelChange
 }) => {
   const [activeTab, setActiveTab] = useState('headers');
   
@@ -66,7 +71,8 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
             { id: 'auth', label: 'Auth' },
             { id: 'params', label: 'Query Params' },
             { id: 'body', label: 'Body' },
-            { id: 'variables', label: 'Variables' }
+            { id: 'variables', label: 'Variables' },
+            { id: 'explain', label: 'Explain' }
           ]}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -125,6 +131,14 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
           <VariablesEditor
             variables={request.variables}
             onChange={(variables) => onUpdateRequest({ variables })}
+          />
+        )}
+
+        {activeTab === 'explain' && (
+          <RequestExplainer
+            request={request}
+            level={explanationLevel}
+            onLevelChange={onExplanationLevelChange}
           />
         )}
       </div>
