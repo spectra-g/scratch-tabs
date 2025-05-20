@@ -3,7 +3,6 @@ import { Tablet, TabletState } from '../types';
 import { Network } from 'lucide-react';
 import { RequestBuilder } from './components/RequestBuilder';
 import { RequestConverter } from './components/RequestConverter';
-import { RequestExplainer } from './components/RequestExplainer';
 import { ResponseViewer } from './components/ResponseViewer';
 import { ResponseHistory } from './components/ResponseHistory';
 import { 
@@ -196,10 +195,12 @@ export const RestClientTablet: Tablet = {
               onUpdateRequest={updateRequest}
               onExecute={handleExecuteRequest}
               isExecuting={data.isExecuting}
+              explanationLevel={data.explanationLevel}
+              onExplanationLevelChange={handleSetExplanationLevel}
             />
           </div>
           
-          {/* Right Panel - Conversion, Explanation, Response */}
+          {/* Right Panel - Conversion, Response */}
           <div className="w-full md:w-1/2 flex flex-col overflow-hidden">
             {/* Conversion Panel */}
             <div className="flex-none p-4 border-b border-gray-700/50">
@@ -208,15 +209,6 @@ export const RestClientTablet: Tablet = {
                 format={data.conversionFormat}
                 onFormatChange={handleSetConversionFormat}
                 onUpdateRequest={updateRequest}
-              />
-            </div>
-            
-            {/* Explanation Panel */}
-            <div className="flex-none p-4 border-b border-gray-700/50">
-              <RequestExplainer 
-                request={data.request}
-                level={data.explanationLevel}
-                onLevelChange={handleSetExplanationLevel}
               />
             </div>
             
