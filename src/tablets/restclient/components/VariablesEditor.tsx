@@ -24,7 +24,7 @@ export const VariablesEditor: React.FC<VariablesEditorProps> = ({
         <Info size={16} className="mr-2 mt-0.5 flex-shrink-0" />
         <div>
           <p>Variables can be used in URLs, headers, and body content using the <code className="bg-blue-500/20 px-1 rounded">{'{{variable}}'}</code> syntax.</p>
-          <p className="mt-1">Example: <code className="bg-blue-500/20 px-1 rounded">https://{{host}}/api/users</code></p>
+          <p className="mt-1">Example: <code className="bg-blue-500/20 px-1 rounded">https://{'{{host}}'}/api/users</code></p>
         </div>
       </div>
       
@@ -44,16 +44,6 @@ export const VariablesEditor: React.FC<VariablesEditorProps> = ({
         placeholder="Variable name"
         valuePlaceholder="Variable value"
       />
-      
-      <style jsx>{`
-        /* Apply blur to password-like fields */
-        input[type="password"] {
-          filter: blur(4px);
-        }
-        input[type="password"]:focus {
-          filter: none;
-        }
-      `}</style>
     </div>
   );
 };
