@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@monaco-editor/react';
 import { Copy, Code } from 'lucide-react';
 import { HttpRequest } from '../types';
@@ -19,13 +19,19 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
   onUpdateRequest
 }) => {
   const [convertedText, setConvertedText] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isCurlCopied, setIsCurlCopied] = useState(false);
-  
+
+  const selfUpdateRef = useRef(false);
+
   // Convert request to selected format
   useEffect(() => {
+    if (selfUpdateRef.current) {
+      selfUpdateRef.current = false;
+      return;
+    }
+
     const converter = getConverter(format);
     if (converter) {
       try {
@@ -42,21 +48,19 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
       setIsError(true);
     }
   }, [request, format]);
-  
+
   // Handle text change in the editor
   const handleEditorChange = (value: string | undefined) => {
-    if (!isEditing) {
-      setIsEditing(true);
-    }
-    
-    setConvertedText(value || '');
-    
+
+    setConvertedText(value || ''); 
+
     // Try to parse the text if the format supports parsing
     const converter = getConverter(format);
     if (converter && converter.parse && value) {
       try {
         const parsedRequest = converter.parse(value);
         if (parsedRequest) {
+          selfUpdateRef.current = true;
           onUpdateRequest(parsedRequest);
           setIsError(false);
         } else {
@@ -66,9 +70,13 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
         console.error(`Error parsing ${format}:`, error);
         setIsError(true);
       }
+    } else if (!converter?.parse) {
+      // If no parse function, editing means it's out of sync.
+      // No action needed here other than displaying the text.
+      // The readOnly prop on Editor should ideally handle this.
     }
   };
-  
+
   // Copy the converted text to clipboard
   const handleCopy = async () => {
     try {
@@ -79,7 +87,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
       console.error('Failed to copy:', error);
     }
   };
-  
+
   // Copy cURL command to clipboard
   const handleCopyCurl = async () => {
     try {
@@ -91,7 +99,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
       console.error('Failed to copy cURL:', error);
     }
   };
-  
+
   // Get language for syntax highlighting
   const getLanguage = () => {
     switch (format) {
@@ -105,7 +113,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
         return 'plaintext';
     }
   };
-  
+
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
@@ -113,7 +121,9 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
           <label className="text-sm font-medium text-gray-300">Format:</label>
           <select
             value={format}
-            onChange={(e) => onFormatChange(e.target.value)}
+              onChange={(e) => {
+              onFormatChange(e.target.value);
+            }}
             className="bg-gray-800/50 border border-gray-700/50 rounded-md px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
           >
             {converters.map((converter) => (
@@ -123,7 +133,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
             ))}
           </select>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
             onClick={handleCopyCurl}
@@ -133,7 +143,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
             <Code size={14} />
             <span>{isCurlCopied ? 'Copied!' : 'Copy cURL'}</span>
           </button>
-          
+
           <button
             onClick={handleCopy}
             className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
@@ -144,7 +154,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
           </button>
         </div>
       </div>
-      
+
       <div className={`border rounded-md overflow-hidden ${isError ? 'border-red-500/50' : 'border-gray-700/50'}`}>
         <Editor
           height="150px"
@@ -161,10 +171,10 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
           }}
         />
       </div>
-      
+
       {isError && (
         <div className="text-sm text-red-400">
-          Invalid format. Changes will not be applied to the request.
+          Invalid format. Changes may not be fully applied to the request.
         </div>
       )}
     </div>
