@@ -1,10 +1,10 @@
-export type HttpMethod = 
-  | 'GET' 
-  | 'POST' 
-  | 'PUT' 
-  | 'DELETE' 
-  | 'PATCH' 
-  | 'HEAD' 
+export type HttpMethod =
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'DELETE'
+  | 'PATCH'
+  | 'HEAD'
   | 'OPTIONS';
 
 export type AuthType = 'none' | 'basic' | 'bearer' | 'apikey';
@@ -77,10 +77,18 @@ export interface ResponseHistoryItem {
   response: HttpResponse;
 }
 
+export interface HttpRequestHistoryItem {
+  id: string;
+  timestamp: number;
+  request: HttpRequest;
+  isPinned: boolean;
+}
+
 export interface RestClientState {
   request: HttpRequest;
   response: HttpResponse | null;
   responseHistory: ResponseHistoryItem[];
+  requestHistory: HttpRequestHistoryItem[];
   conversionFormat: string;
   explanationLevel: ExplanationLevel;
   isExecuting: boolean;

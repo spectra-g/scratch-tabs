@@ -125,7 +125,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
               title="View response history"
             >
               <History size={14} />
-              <span>History</span>
+              <span>History ({historyCount})</span>
             </button>
           </div>
         </div>
