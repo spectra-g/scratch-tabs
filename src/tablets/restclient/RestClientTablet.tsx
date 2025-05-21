@@ -83,6 +83,8 @@ export const RestClientTablet: Tablet = {
 
   render(state: RestClientTabletState, onChange) {
     const { data } = state;
+    const currentRequestHistory = data.requestHistory || []; // This line is key!
+
     const [showResponseHistory, setShowResponseHistory] = useState(false);
     const [showRequestHistory, setShowRequestHistory] = useState(false); 
 
@@ -139,7 +141,7 @@ export const RestClientTablet: Tablet = {
           response,
           isExecuting: false,
           responseHistory: [responseHistoryItem, ...data.responseHistory],
-          requestHistory: [requestHistoryItem, ...data.requestHistory] 
+          requestHistory: [requestHistoryItem, ...currentRequestHistory] 
         });
       } catch (error) {
         console.error('Request execution error:', error);
@@ -147,7 +149,7 @@ export const RestClientTablet: Tablet = {
           isExecuting: false,
           error: error instanceof Error ? error.message : 'Failed to execute request',
           // Still save request to history even if it fails
-          requestHistory: [requestHistoryItem, ...data.requestHistory]
+          requestHistory: [requestHistoryItem, ...currentRequestHistory]
         });
       }
     };
@@ -172,14 +174,14 @@ export const RestClientTablet: Tablet = {
 
     // --- Request History Handlers ---
     const handlePinRequestHistoryItem = (id: string, isPinned: boolean) => {
-      const updatedHistory = data.requestHistory.map(item =>
+      const updatedHistory = currentRequestHistory.map(item =>
         item.id === id ? { ...item, isPinned } : item
       );
       updateState({ requestHistory: updatedHistory });
     };
 
     const handleDeleteRequestHistoryItem = (id: string) => {
-      const updatedHistory = data.requestHistory.filter(item => item.id !== id);
+      const updatedHistory = currentRequestHistory.filter(item => item.id !== id);
       updateState({ requestHistory: updatedHistory });
     };
 
@@ -205,19 +207,19 @@ export const RestClientTablet: Tablet = {
       const filteredResponseHistory = data.responseHistory.filter(item =>
         item.isPinned || (now - item.timestamp) < ONE_HOUR
       );
-      const filteredRequestHistory = data.requestHistory.filter(item =>
+      const filteredRequestHistory = currentRequestHistory.filter(item =>
         item.isPinned || (now - item.timestamp) < ONE_HOUR
       );
 
       if (filteredResponseHistory.length !== data.responseHistory.length ||
-          filteredRequestHistory.length !== data.requestHistory.length) {
+          filteredRequestHistory.length !== currentRequestHistory.length) {
         updateState({
             responseHistory: filteredResponseHistory,
             requestHistory: filteredRequestHistory
         });
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data.responseHistory, data.requestHistory]); 
+    }, [data.responseHistory, currentRequestHistory]); 
 
     return (
       <div className="h-full bg-gray-900 flex flex-col">
@@ -249,7 +251,7 @@ export const RestClientTablet: Tablet = {
             <div className="flex-none p-4 border-b border-gray-700/50">
               {showRequestHistory ? (
                 <RequestHistoryViewer
-                  history={data.requestHistory}
+                  history={currentRequestHistory}
                   onPinItem={handlePinRequestHistoryItem}
                   onDeleteItem={handleDeleteRequestHistoryItem}
                   onRestoreItem={handleRestoreRequestHistoryItem}
@@ -261,8 +263,8 @@ export const RestClientTablet: Tablet = {
                   format={data.conversionFormat}
                   onFormatChange={handleSetConversionFormat}
                   onUpdateRequest={updateRequest}
-                  onShowRequestHistory={() => setShowRequestHistory(true)} 
-                  requestHistoryCount={data.requestHistory.length} 
+                  onShowRequestHistory={() => setShowRequestHistory(true)}
+                  requestHistoryCount={currentRequestHistory.length}
                 />
               )}
             </div>
