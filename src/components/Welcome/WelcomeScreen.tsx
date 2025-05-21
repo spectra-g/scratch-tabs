@@ -6,7 +6,7 @@ import { Tablet } from '../../tablets';
 import { TabActions } from '../Tab/TabActions';
 
 export const WelcomeScreen: React.FC = () => {
-  const { handleNewTab, addTab } = useRootStore();
+  const { handleNewTab, handleNewPopulatedTab } = useRootStore();
   const welcomeRef = useRef<HTMLDivElement>(null);
   const tabletButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -38,7 +38,7 @@ export const WelcomeScreen: React.FC = () => {
     const state = tablet.createInitialState();
     const serializedState = tablet.serializeState ? tablet.serializeState(state) : JSON.stringify(state);
 
-    addTab({
+    handleNewPopulatedTab({
       id: crypto.randomUUID(),
       title: tablet.label,
       content: '',
@@ -50,7 +50,7 @@ export const WelcomeScreen: React.FC = () => {
     });
 
     closeTabletSelector(false);
-  }, [addTab, closeTabletSelector]);
+  }, [handleNewPopulatedTab, closeTabletSelector]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {

@@ -102,13 +102,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
         lineNumber: e.position.lineNumber,
         column: e.position.column,
       });
-      // Tablet selector logic
-      if (showTabletSelector) { // Uses component state, which is up-to-date
-        const currentLineContent = editor.getModel()?.getLineContent(e.position.lineNumber) ?? '';
-        if (!currentLineContent.trim().startsWith('/')) {
-          closeTabletSelector(false);
-        }
-      }
     });
 
     return () => {
@@ -132,13 +125,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     updateTabContent(currentTabId, newContent);
 
     if (!activeTab.isTablet) {
-      const trimmedContent = newContent.trim();
-      if (trimmedContent.startsWith('/')) {
-        updateTabletQuery(trimmedContent.slice(1));
-        openTabletSelector();
-      } else if (showTabletSelector) {
-        closeTabletSelector(false);
-      }
       detectAndSetLanguage(currentTabId, newContent, prevContent, activeTab.language, activeTab.languageLocked);
     }
     previousContentRef.current = newContent;

@@ -19,6 +19,7 @@ interface RootStore {
   tabs: Tab[];
   activeTabId: string | null;
   addTab: (tab: Tab, toRightSide?: boolean) => void;
+  handleNewPopulatedTab: (tab: Tab, toRightSide?: boolean) => void;
   addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
   handleNewTab: (isRightSide: boolean, content?: string) => void;
   handleNewTabFromPaste: (isRightSide: boolean) => void;
@@ -160,6 +161,18 @@ export const useRootStore = create<RootStore>((set, get) => {
         cursorPosition: { lineNumber: 1, column: 1 }
       };
       addTab(newTab, isRightSide);
+    },
+
+    handleNewPopulatedTab: async (newTab, toRightSide = false) => {
+      const { addTab } = get();
+
+      const ensuredWorkspaceId = await useWorkspaceStore.getState().ensureWorkspace();
+      if (!ensuredWorkspaceId) {
+        console.error("[handleNewTab] Failed to ensure an active workspace. Cannot create tab.");
+        return;
+      }
+
+      addTab(newTab, toRightSide);
     },
 
     handleNewTabFromPaste: (isRightSide: boolean) => {
