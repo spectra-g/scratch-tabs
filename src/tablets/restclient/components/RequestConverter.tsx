@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { Copy, Code } from 'lucide-react';
+import { Copy, Code, History } from 'lucide-react'; 
 import { HttpRequest } from '../types';
 import { converters, getConverter } from '../converters';
 import { requestToCurl } from '../converters/curlConverter';
@@ -10,28 +10,29 @@ interface RequestConverterProps {
   format: string;
   onFormatChange: (format: string) => void;
   onUpdateRequest: (request: Partial<HttpRequest>) => void;
+  onShowRequestHistory: () => void; 
+  requestHistoryCount: number;     
 }
 
 export const RequestConverter: React.FC<RequestConverterProps> = ({
   request,
   format,
   onFormatChange,
-  onUpdateRequest
+  onUpdateRequest,
+  onShowRequestHistory,     
+  requestHistoryCount       
 }) => {
   const [convertedText, setConvertedText] = useState('');
   const [isError, setIsError] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isCurlCopied, setIsCurlCopied] = useState(false);
-
   const selfUpdateRef = useRef(false);
 
-  // Convert request to selected format
   useEffect(() => {
     if (selfUpdateRef.current) {
       selfUpdateRef.current = false;
       return;
     }
-
     const converter = getConverter(format);
     if (converter) {
       try {
@@ -49,12 +50,8 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
     }
   }, [request, format]);
 
-  // Handle text change in the editor
   const handleEditorChange = (value: string | undefined) => {
-
-    setConvertedText(value || ''); 
-
-    // Try to parse the text if the format supports parsing
+    setConvertedText(value || '');
     const converter = getConverter(format);
     if (converter && converter.parse && value) {
       try {
@@ -70,14 +67,9 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
         console.error(`Error parsing ${format}:`, error);
         setIsError(true);
       }
-    } else if (!converter?.parse) {
-      // If no parse function, editing means it's out of sync.
-      // No action needed here other than displaying the text.
-      // The readOnly prop on Editor should ideally handle this.
     }
   };
 
-  // Copy the converted text to clipboard
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(convertedText);
@@ -88,7 +80,6 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
     }
   };
 
-  // Copy cURL command to clipboard
   const handleCopyCurl = async () => {
     try {
       const curlCommand = requestToCurl(request);
@@ -100,17 +91,12 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
     }
   };
 
-  // Get language for syntax highlighting
   const getLanguage = () => {
     switch (format) {
-      case 'curl':
-        return 'shell';
-      case 'http':
-        return 'plaintext';
-      case 'postman':
-        return 'json';
-      default:
-        return 'plaintext';
+      case 'curl': return 'shell';
+      case 'http': return 'plaintext';
+      case 'postman': return 'json';
+      default: return 'plaintext';
     }
   };
 
@@ -121,9 +107,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
           <label className="text-sm font-medium text-gray-300">Format:</label>
           <select
             value={format}
-              onChange={(e) => {
-              onFormatChange(e.target.value);
-            }}
+            onChange={(e) => onFormatChange(e.target.value)}
             className="bg-gray-800/50 border border-gray-700/50 rounded-md px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
           >
             {converters.map((converter) => (
@@ -152,6 +136,15 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
             <Copy size={14} />
             <span>{isCopied ? 'Copied!' : 'Copy'}</span>
           </button>
+
+          <button
+            onClick={onShowRequestHistory}
+            className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+            title="View request history"
+          >
+            <History size={14} />
+            <span>History ({requestHistoryCount})</span>
+          </button>
         </div>
       </div>
 
@@ -174,7 +167,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
 
       {isError && (
         <div className="text-sm text-red-400">
-          Invalid format. Changes may not be fully applied to the request.
+          Invalid format. Changes will not be applied to the request.
         </div>
       )}
     </div>

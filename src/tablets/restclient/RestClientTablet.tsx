@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Network } from 'lucide-react';
 import { RequestBuilder } from './components/RequestBuilder';
 import { RequestConverter } from './components/RequestConverter';
 import { ResponseViewer } from './components/ResponseViewer';
 import { ResponseHistory } from './components/ResponseHistory';
-import { 
-  HttpRequest, 
-  HttpResponse, 
-  RestClientState, 
+import { RequestHistoryViewer } from './components/RequestHistoryViewer'; 
+import {
+  HttpRequest,
+  RestClientState,
   ResponseHistoryItem,
+  HttpRequestHistoryItem,
   ExplanationLevel
 } from './types';
 import { executeRequest } from './utils/requestUtils';
@@ -51,6 +52,7 @@ export const RestClientTablet: Tablet = {
         },
         response: null,
         responseHistory: [],
+        requestHistory: [], 
         conversionFormat: 'curl',
         explanationLevel: 'medium',
         isExecuting: false,
@@ -67,6 +69,10 @@ export const RestClientTablet: Tablet = {
     try {
       const parsed = JSON.parse(json);
       if (parsed.type === 'restclient' && parsed.data) {
+        // Ensure new fields have default values if loading old state
+        if (!parsed.data.requestHistory) {
+          parsed.data.requestHistory = [];
+        }
         return parsed;
       }
     } catch (e) {
@@ -78,6 +84,7 @@ export const RestClientTablet: Tablet = {
   render(state: RestClientTabletState, onChange) {
     const { data } = state;
     const [showResponseHistory, setShowResponseHistory] = useState(false);
+    const [showRequestHistory, setShowRequestHistory] = useState(false); 
 
     const updateRequest = (request: Partial<HttpRequest>) => {
       onChange({
@@ -104,12 +111,19 @@ export const RestClientTablet: Tablet = {
 
     const handleExecuteRequest = async () => {
       updateState({ isExecuting: true, error: null });
-      
+
+      const requestHistoryItem: HttpRequestHistoryItem = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        request: JSON.parse(JSON.stringify(data.request)), 
+        isPinned: false,
+      };
+
       try {
         const response = await executeRequest(data.request);
-        
-        // Create a history item
-        const historyItem: ResponseHistoryItem = {
+
+        // Create a response history item
+        const responseHistoryItem: ResponseHistoryItem = {
           id: crypto.randomUUID(),
           timestamp: Date.now(),
           method: data.request.method,
@@ -120,39 +134,61 @@ export const RestClientTablet: Tablet = {
           isPinned: false,
           response
         };
-        
-        // Update state with response and add to history
-        updateState({ 
-          response, 
+
+        updateState({
+          response,
           isExecuting: false,
-          responseHistory: [historyItem, ...data.responseHistory]
+          responseHistory: [responseHistoryItem, ...data.responseHistory],
+          requestHistory: [requestHistoryItem, ...data.requestHistory] 
         });
       } catch (error) {
         console.error('Request execution error:', error);
-        updateState({ 
-          isExecuting: false, 
-          error: error instanceof Error ? error.message : 'Failed to execute request'
+        updateState({
+          isExecuting: false,
+          error: error instanceof Error ? error.message : 'Failed to execute request',
+          // Still save request to history even if it fails
+          requestHistory: [requestHistoryItem, ...data.requestHistory]
         });
       }
     };
 
-    const handlePinHistoryItem = (id: string, isPinned: boolean) => {
-      const updatedHistory = data.responseHistory.map(item => 
+    // --- Response History Handlers ---
+    const handlePinResponseHistoryItem = (id: string, isPinned: boolean) => {
+      const updatedHistory = data.responseHistory.map(item =>
         item.id === id ? { ...item, isPinned } : item
       );
-      
       updateState({ responseHistory: updatedHistory });
     };
 
-    const handleDeleteHistoryItem = (id: string) => {
+    const handleDeleteResponseHistoryItem = (id: string) => {
       const updatedHistory = data.responseHistory.filter(item => item.id !== id);
       updateState({ responseHistory: updatedHistory });
     };
 
-    const handleRestoreHistoryItem = (historyItem: ResponseHistoryItem) => {
+    const handleRestoreResponseHistoryItem = (historyItem: ResponseHistoryItem) => {
       updateState({ response: historyItem.response });
       setShowResponseHistory(false);
     };
+
+    // --- Request History Handlers ---
+    const handlePinRequestHistoryItem = (id: string, isPinned: boolean) => {
+      const updatedHistory = data.requestHistory.map(item =>
+        item.id === id ? { ...item, isPinned } : item
+      );
+      updateState({ requestHistory: updatedHistory });
+    };
+
+    const handleDeleteRequestHistoryItem = (id: string) => {
+      const updatedHistory = data.requestHistory.filter(item => item.id !== id);
+      updateState({ requestHistory: updatedHistory });
+    };
+
+    const handleRestoreRequestHistoryItem = (historyItem: HttpRequestHistoryItem) => {
+      // Restore the request details to the main request object
+      updateRequest(JSON.parse(JSON.stringify(historyItem.request)));
+      setShowRequestHistory(false);
+    };
+
 
     const handleSetExplanationLevel = (level: ExplanationLevel) => {
       updateState({ explanationLevel: level });
@@ -162,19 +198,26 @@ export const RestClientTablet: Tablet = {
       updateState({ conversionFormat: format });
     };
 
-    // Clean up expired history items (non-pinned items older than 1 hour)
     useEffect(() => {
       const now = Date.now();
       const ONE_HOUR = 60 * 60 * 1000;
-      
-      const filteredHistory = data.responseHistory.filter(item => 
+
+      const filteredResponseHistory = data.responseHistory.filter(item =>
         item.isPinned || (now - item.timestamp) < ONE_HOUR
       );
-      
-      if (filteredHistory.length !== data.responseHistory.length) {
-        updateState({ responseHistory: filteredHistory });
+      const filteredRequestHistory = data.requestHistory.filter(item =>
+        item.isPinned || (now - item.timestamp) < ONE_HOUR
+      );
+
+      if (filteredResponseHistory.length !== data.responseHistory.length ||
+          filteredRequestHistory.length !== data.requestHistory.length) {
+        updateState({
+            responseHistory: filteredResponseHistory,
+            requestHistory: filteredRequestHistory
+        });
       }
-    }, [data.responseHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.responseHistory, data.requestHistory]); 
 
     return (
       <div className="h-full bg-gray-900 flex flex-col">
@@ -185,12 +228,12 @@ export const RestClientTablet: Tablet = {
             <h2 className="text-xl font-semibold text-gray-100">REST Client</h2>
           </div>
         </div>
-        
+
         {/* Main Content */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* Left Panel - Request Builder */}
           <div className="w-full md:w-1/2 flex flex-col overflow-hidden border-r border-gray-700/50">
-            <RequestBuilder 
+            <RequestBuilder
               request={data.request}
               onUpdateRequest={updateRequest}
               onExecute={handleExecuteRequest}
@@ -199,31 +242,43 @@ export const RestClientTablet: Tablet = {
               onExplanationLevelChange={handleSetExplanationLevel}
             />
           </div>
-          
+
           {/* Right Panel - Conversion, Response */}
           <div className="w-full md:w-1/2 flex flex-col overflow-hidden">
-            {/* Conversion Panel */}
+            {/* Conversion Panel / Request History */}
             <div className="flex-none p-4 border-b border-gray-700/50">
-              <RequestConverter 
-                request={data.request}
-                format={data.conversionFormat}
-                onFormatChange={handleSetConversionFormat}
-                onUpdateRequest={updateRequest}
-              />
+              {showRequestHistory ? (
+                <RequestHistoryViewer
+                  history={data.requestHistory}
+                  onPinItem={handlePinRequestHistoryItem}
+                  onDeleteItem={handleDeleteRequestHistoryItem}
+                  onRestoreItem={handleRestoreRequestHistoryItem}
+                  onClose={() => setShowRequestHistory(false)}
+                />
+              ) : (
+                <RequestConverter
+                  request={data.request}
+                  format={data.conversionFormat}
+                  onFormatChange={handleSetConversionFormat}
+                  onUpdateRequest={updateRequest}
+                  onShowRequestHistory={() => setShowRequestHistory(true)} 
+                  requestHistoryCount={data.requestHistory.length} 
+                />
+              )}
             </div>
-            
-            {/* Response Panel / History */}
+
+            {/* Response Panel / Response History */}
             <div className="flex-1 overflow-hidden">
               {showResponseHistory ? (
-                <ResponseHistory 
+                <ResponseHistory
                   history={data.responseHistory}
-                  onPinItem={handlePinHistoryItem}
-                  onDeleteItem={handleDeleteHistoryItem}
-                  onRestoreItem={handleRestoreHistoryItem}
+                  onPinItem={handlePinResponseHistoryItem}
+                  onDeleteItem={handleDeleteResponseHistoryItem}
+                  onRestoreItem={handleRestoreResponseHistoryItem}
                   onClose={() => setShowResponseHistory(false)}
                 />
               ) : (
-                <ResponseViewer 
+                <ResponseViewer
                   response={data.response}
                   error={data.error}
                   isLoading={data.isExecuting}
