@@ -22,7 +22,7 @@ interface SortableTabProps {
     onMouseLeaveTab: (tabId: string) => void;
 }
 
-const MIN_WIDTH_FOR_X = 45; // pixels
+const MIN_WIDTH_FOR_X = 20; // pixels
 const EDITING_INPUT_MIN_WIDTH = '150px';
 
 export const SortableTab: React.FC<SortableTabProps> = ({
