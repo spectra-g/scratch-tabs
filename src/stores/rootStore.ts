@@ -99,6 +99,36 @@ export const useRootStore = create<RootStore>((set, get) => {
     });
   });
 
+  const _createFinalTabObject = (
+    partialInputTab: Partial<Tab>, // Input data, can be empty or partially filled
+    workspaceId: string,
+    options: {
+      defaultTitle: string;
+      initialContent?: string;
+    }
+  ): Tab => {
+    const now = Date.now();
+    // Use content from input, fallback to initialContent, then to empty string
+    const content = partialInputTab.content ?? options.initialContent ?? '';
+
+    const language = content ? detectLanguage(content) : 'plaintext';
+    const languageLocked = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
+
+    return {
+      id: partialInputTab.id || crypto.randomUUID(),
+      title: partialInputTab.title || options.defaultTitle,
+      content: content,
+      language: language,
+      languageLocked: languageLocked,
+      workspaceId: workspaceId,
+      dateCreated: partialInputTab.dateCreated || now,
+      lastModified: now, 
+      cursorPosition: partialInputTab.cursorPosition || { lineNumber: 1, column: 1 },
+      isPinned: partialInputTab.isPinned || false,
+      isTablet: partialInputTab.isTablet || false, 
+    };
+  };
+
   return {
     // Initial state (will be quickly overwritten by loadWorkspaces)
     tabs: [],
@@ -144,35 +174,41 @@ export const useRootStore = create<RootStore>((set, get) => {
       }
 
       const currentTabsCount = useTabsStore.getState().tabs.filter(t => t.workspaceId === ensuredWorkspaceId).length;
+      const defaultTitle = `new ${currentTabsCount + 1}`;
 
-      const language = content ? detectLanguage(content) : 'plaintext';
-      const shouldLock = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
-      const newTabId = crypto.randomUUID();
-
-      const newTab: Tab = {
-        id: newTabId,
-        title: `new ${currentTabsCount + 1}`,
-        content: content || '',
-        language,
-        languageLocked: shouldLock,
-        workspaceId: ensuredWorkspaceId,
-        dateCreated: Date.now(),
-        lastModified: Date.now(),
-        cursorPosition: { lineNumber: 1, column: 1 }
-      };
-      addTab(newTab, isRightSide);
+      const newTabObject = _createFinalTabObject(
+        {},
+        ensuredWorkspaceId,
+        {
+          defaultTitle: defaultTitle,
+          initialContent: content,
+        }
+      );
+      addTab(newTabObject, isRightSide);
     },
 
-    handleNewPopulatedTab: async (newTab, toRightSide = false) => {
-      const { addTab } = get();
+    handleNewPopulatedTab: async (tabInput: Tab, toRightSide = false) => {
+      const { canAddNewTab, addTab } = get();
 
-      const ensuredWorkspaceId = await useWorkspaceStore.getState().ensureWorkspace();
-      if (!ensuredWorkspaceId) {
-        console.error("[handleNewTab] Failed to ensure an active workspace. Cannot create tab.");
+      if (!canAddNewTab(toRightSide)) { 
         return;
       }
 
-      addTab(newTab, toRightSide);
+      const ensuredWorkspaceId = await useWorkspaceStore.getState().ensureWorkspace();
+      if (!ensuredWorkspaceId) {
+        console.error("[handleNewPopulatedTab] Failed to ensure an active workspace. Cannot create tab.");
+        return;
+      }
+
+      // For populated tabs, we respect provided language/lock, but detect/derive if missing.
+      const newTabObject = _createFinalTabObject(
+        tabInput, // Pass the provided Tab object as the base
+        ensuredWorkspaceId,
+        {
+          defaultTitle: tabInput.title || 'Populated Tab',
+        }
+      );
+      addTab(newTabObject, toRightSide);
     },
 
     handleNewTabFromPaste: (isRightSide: boolean) => {

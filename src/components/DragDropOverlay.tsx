@@ -51,7 +51,7 @@ const DragDropOverlay: React.FC = () => {
           id: crypto.randomUUID(),
           title: fileName,
           content: fileContent,
-          language: 'plaintext', // Language will be auto-detected
+          language: 'plaintext',
           languageLocked: false,
           cursorPosition: { lineNumber: 1, column: 1 },
           dateCreated: Date.now(),
