@@ -86,7 +86,7 @@ const DragDropOverlay: React.FC = () => {
       document.removeEventListener('dragleave', handleDragLeave);
       document.removeEventListener('drop', handleDrop);
     };
-  }, [handleNewPopulatedTab, splitView.activeSide]);
+  }, [handleNewPopulatedTab, splitView?.activeSide]);
 
   if (!isDragging && !isUploading) return null;
 
