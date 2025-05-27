@@ -2,18 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Upload } from 'lucide-react';
 import { useRootStore } from '../stores';
 import { useSplitViewStore } from '../stores/splitViewStore';
+import { useModalStore } from '../stores/modalStore';
 
 const DragDropOverlay: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const { handleNewPopulatedTab } = useRootStore();
   const { splitView } = useSplitViewStore();
+  const { isImportModalActive } = useModalStore();
 
   useEffect(() => {
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (e.dataTransfer?.types.includes('Files')) {
+      if (!isImportModalActive && e.dataTransfer?.types.includes('Files')) {
         setIsDragging(true);
       }
     };
@@ -31,21 +33,26 @@ const DragDropOverlay: React.FC = () => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
-      
+
+      // If import modal is active, do nothing here
+      if (isImportModalActive) {
+        return;
+      }
+
       if (!e.dataTransfer?.files.length) return;
-      
+
       setIsUploading(true);
-      
+
       try {
         const file = e.dataTransfer.files[0]; // Take only the first file for now
         const fileContent = await readFileAsText(file);
-        
+
         // Get file name without extension for the tab title
         const fileName = file.name.replace(/\.[^/.]+$/, "");
-        
+
         // Determine if we should open in right side
         const toRightSide = splitView?.activeSide === 'right' || false;
-        
+
         // Create and open the new tab
         handleNewPopulatedTab({
           id: crypto.randomUUID(),
@@ -86,9 +93,11 @@ const DragDropOverlay: React.FC = () => {
       document.removeEventListener('dragleave', handleDragLeave);
       document.removeEventListener('drop', handleDrop);
     };
-  }, [handleNewPopulatedTab, splitView?.activeSide]);
+  }, [handleNewPopulatedTab, splitView?.activeSide, isImportModalActive]);
 
-  if (!isDragging && !isUploading) return null;
+  if (isImportModalActive || (!isDragging && !isUploading)) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-none">

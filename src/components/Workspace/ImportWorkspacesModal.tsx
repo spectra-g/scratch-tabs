@@ -21,9 +21,9 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({ is
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
       if (!file.name.endsWith('.scratch')) {
-          setProcessingError("Invalid file type. Please select a '.scratch' file.");
-          setStep('selectFile'); // Stay on select file step
-          return;
+        setProcessingError("Invalid file type. Please select a '.scratch' file.");
+        setStep('selectFile'); // Stay on select file step
+        return;
       }
       setProcessingError(null);
       setStep('loading');
@@ -75,9 +75,9 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({ is
           </div>
         )}
         {processingError && step === 'selectFile' && (
-            <p className="mt-3 text-sm text-red-400 bg-red-500/10 p-3 rounded-md flex items-center">
-                <AlertTriangle size={18} className="mr-2" /> {processingError}
-            </p>
+          <p className="mt-3 text-sm text-red-400 bg-red-500/10 p-3 rounded-md flex items-center">
+            <AlertTriangle size={18} className="mr-2" /> {processingError}
+          </p>
         )}
 
 
@@ -105,22 +105,22 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({ is
                 {summary.importedWorkspaces.map((item, idx) => (
                   <div key={idx} className="p-3 bg-gray-700/50 rounded-md">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <CheckCircle size={18} className="mr-2 text-green-400" />
-                            <span className="text-gray-100">{item.name}</span>
-                        </div>
-                        <span className="text-xs text-gray-400">{item.tabCount} tab{item.tabCount === 1 ? '' : 's'}</span>
+                      <div className="flex items-center">
+                        <CheckCircle size={18} className="mr-2 text-green-400" />
+                        <span className="text-gray-100">{item.name}</span>
+                      </div>
+                      <span className="text-xs text-gray-400">{item.tabCount} tab{item.tabCount === 1 ? '' : 's'}</span>
                     </div>
                     {item.status === 'merged' && item.reason && (
-                        <p className="text-xs text-yellow-400/80 mt-1 ml-6">{item.reason}</p>
+                      <p className="text-xs text-yellow-400/80 mt-1 ml-6">{item.reason}</p>
                     )}
                   </div>
                 ))}
               </div>
             )}
-             {summary.errors.length === 0 && summary.importedWorkspaces.length === 0 && (
-                <p className="text-center text-gray-400 py-4">No workspaces were imported. The file might have been empty or contained no new data.</p>
-             )}
+            {summary.errors.length === 0 && summary.importedWorkspaces.length === 0 && (
+              <p className="text-center text-gray-400 py-4">No workspaces were imported. The file might have been empty or contained no new data.</p>
+            )}
           </div>
         )}
 
