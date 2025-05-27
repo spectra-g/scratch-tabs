@@ -44,7 +44,7 @@ const DragDropOverlay: React.FC = () => {
         const fileName = file.name.replace(/\.[^/.]+$/, "");
         
         // Determine if we should open in right side
-        const toRightSide = splitView.activeSide === 'right';
+        const toRightSide = splitView?.activeSide === 'right' || false;
         
         // Create and open the new tab
         handleNewPopulatedTab({
