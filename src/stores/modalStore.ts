@@ -6,7 +6,9 @@ interface ModalState {
   openTabManagementModal: () => void;
   closeTabManagementModal: () => void;
   setTabManagementActionInProgress: (inProgress: boolean) => void;
-  // Add other modal states and actions as needed
+  isImportModalActive: boolean;
+  openImportModal: () => void;
+  closeImportModal: () => void;
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -16,4 +18,7 @@ export const useModalStore = create<ModalState>((set) => ({
   closeTabManagementModal: () => set({ isTabManagementModalOpen: false }),
   setTabManagementActionInProgress: (inProgress: boolean) => 
     set({ isTabManagementActionInProgress: inProgress }),
+    isImportModalActive: false,
+    openImportModal: () => set({ isImportModalActive: true, isTabManagementActionInProgress: false }),
+    closeImportModal: () => set({ isImportModalActive: false }),
 })); 

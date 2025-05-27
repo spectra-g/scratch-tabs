@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { initializeLanguageProviders } from './languages';
 import { useAIStore } from './stores/aiStore';
 import { broadcastManager } from './stores/broadcastStore';
+import DragDropOverlay from './components/DragDropOverlay';
 
 // Initialize language providers once when the app loads
 initializeLanguageProviders();
@@ -40,6 +41,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <DragDropOverlay />
       <Routes>
         <Route
           path="/:identifier?"

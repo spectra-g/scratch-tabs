@@ -17,20 +17,22 @@ export const WorkspaceSwitcher: React.FC = () => {
   const [showContextMenu, setShowContextMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [tabCounts, setTabCounts] = useState<Record<string, number>>({});
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  
+
   // Use modal store instead of local state
-  const { 
-    isTabManagementModalOpen, 
-    openTabManagementModal, 
-    closeTabManagementModal 
+  const {
+    isTabManagementModalOpen,
+    openTabManagementModal,
+    closeTabManagementModal,
+    isImportModalActive,
+    openImportModal,
+    closeImportModal,
   } = useModalStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   const {
     workspaces,
     activeWorkspaceId,
@@ -74,7 +76,7 @@ export const WorkspaceSwitcher: React.FC = () => {
     setIsOpen(false);
     setShowContextMenu(null);
   });
-  
+
   const handleCreateWorkspace = async () => {
     if (!newWorkspaceName.trim()) return;
     try {
@@ -85,7 +87,7 @@ export const WorkspaceSwitcher: React.FC = () => {
       console.error('[WorkspaceSwitcher] Failed to create workspace:', error);
     }
   };
-  
+
   const handleRenameWorkspace = async (id: string) => {
     if (!editingName.trim()) return;
     try {
@@ -96,12 +98,12 @@ export const WorkspaceSwitcher: React.FC = () => {
       console.error('[WorkspaceSwitcher] Failed to rename workspace:', error);
     }
   };
-  
+
   const handleDeleteWorkspace = async (id: string) => {
     if (!confirm('Are you sure you want to delete this workspace?')) {
       return;
     }
-    
+
     try {
       await deleteWorkspace(id);
       setShowContextMenu(null);
@@ -122,7 +124,7 @@ export const WorkspaceSwitcher: React.FC = () => {
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       const dropdownTop = rect.bottom + 4;
-      
+
       if (containerRef.current) {
         containerRef.current.style.top = `${dropdownTop}px`;
         containerRef.current.style.right = '8px';
@@ -142,12 +144,12 @@ export const WorkspaceSwitcher: React.FC = () => {
       >
         <Folders size={16} className="text-gray-400" />
       </button>
-      
+
       {isOpen && (
-        <div 
+        <div
           ref={containerRef}
           className="fixed w-64 bg-gray-800/95 backdrop-blur border border-gray-700/50 rounded-lg shadow-2xl overflow-hidden"
-          style={{ 
+          style={{
             top: (buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 4 : 40),
             right: '8px',
             maxHeight: '80vh',
@@ -159,15 +161,14 @@ export const WorkspaceSwitcher: React.FC = () => {
           <div className="px-3 py-2 border-b border-gray-700/50">
             <h3 className="text-sm font-medium text-gray-200">Workspaces</h3>
           </div>
-          
+
           {/* Workspace List */}
           <div className="py-1 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(80vh - 100px)' }}>
             {workspaces.map(workspace => (
               <div
                 key={workspace.id}
-                className={`group relative flex items-center justify-between px-3 py-2 hover:bg-gray-700/50 transition-colors cursor-pointer ${
-                  workspace.id === activeWorkspaceId ? 'bg-gray-700/30' : ''
-                }`}
+                className={`group relative flex items-center justify-between px-3 py-2 hover:bg-gray-700/50 transition-colors cursor-pointer ${workspace.id === activeWorkspaceId ? 'bg-gray-700/30' : ''
+                  }`}
                 onClick={() => handleSwitchWorkspace(workspace.id)}
               >
                 {editingId === workspace.id ? (
@@ -212,7 +213,7 @@ export const WorkspaceSwitcher: React.FC = () => {
               </div>
             ))}
           </div>
-          
+
           {/* Create New Workspace */}
           <div className="px-3 py-2 border-t border-gray-700/50">
             {isCreating ? (
@@ -248,9 +249,9 @@ export const WorkspaceSwitcher: React.FC = () => {
           </div>
           <div className="px-1 py-1 border-t border-gray-700/50"> {/* Section for Import/Export */}
             <button
-              onClick={() => { 
-                openTabManagementModal(); 
-                setIsOpen(false); 
+              onClick={() => {
+                openTabManagementModal();
+                setIsOpen(false);
               }}
               className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
             >
@@ -265,7 +266,7 @@ export const WorkspaceSwitcher: React.FC = () => {
               <span>Export Workspaces...</span>
             </button>
             <button
-              onClick={() => { setIsImportModalOpen(true); setIsOpen(false); }}
+              onClick={() => { openImportModal(); setIsOpen(false); }}
               className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
             >
               <Upload size={14} />
@@ -274,7 +275,7 @@ export const WorkspaceSwitcher: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {/* Context Menu */}
       {showContextMenu && (
         <div
@@ -310,13 +311,13 @@ export const WorkspaceSwitcher: React.FC = () => {
           </button>
         </div>
       )}
-      <ExportWorkspacesModal 
-        isOpen={isExportModalOpen} 
-        onClose={() => setIsExportModalOpen(false)} 
+      <ExportWorkspacesModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
       />
-      <ImportWorkspacesModal 
-        isOpen={isImportModalOpen} 
-        onClose={() => setIsImportModalOpen(false)} 
+      <ImportWorkspacesModal
+        isOpen={isImportModalActive}
+        onClose={closeImportModal}
       />
       <TabManagementModal
         isOpen={isTabManagementModalOpen}
