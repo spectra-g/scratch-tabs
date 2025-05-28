@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { FileDown, FileUp, Trash2, AlertTriangle } from 'lucide-react';
+import { FileDown, FileUp, Trash2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { decodeJwt } from '../utils/jwtUtils';
 import { CopyButton } from './ui/CopyButton';
@@ -31,19 +31,19 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   onTokenChange
 }) => {
   const [localToken, setLocalToken] = useState(token);
-  
+
   // Update local token when prop changes
   useEffect(() => {
     setLocalToken(token);
   }, [token]);
-  
+
   // Decode token when local token changes
   const decodeToken = useCallback((tokenToDecode: string) => {
     if (!tokenToDecode.trim()) {
       onTokenChange('', {}, {}, '', null);
       return;
     }
-    
+
     try {
       const { header, payload, signature } = decodeJwt(tokenToDecode);
       onTokenChange(tokenToDecode, header, payload, signature, null);
@@ -57,36 +57,36 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
       );
     }
   }, [onTokenChange]);
-  
+
   // Handle token input change
   const handleTokenChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newToken = e.target.value;
     setLocalToken(newToken);
     decodeToken(newToken);
   };
-  
+
   // Clear token
   const handleClearToken = () => {
     setLocalToken('');
     onTokenChange('', {}, {}, '', null);
   };
-  
+
   // File upload handling
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
-    
+
     const file = acceptedFiles[0];
     const reader = new FileReader();
-    
+
     reader.onload = () => {
       const content = reader.result as string;
       setLocalToken(content.trim());
       decodeToken(content.trim());
     };
-    
+
     reader.readAsText(file);
   }, [decodeToken]);
-  
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
@@ -96,11 +96,11 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
     maxFiles: 1,
     multiple: false
   });
-  
+
   // Download token as file
   const handleDownloadToken = () => {
     if (!token) return;
-    
+
     const blob = new Blob([token], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -111,7 +111,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-  
+
   return (
     <div className="p-6 space-y-6">
       {/* Token Input */}
@@ -143,14 +143,13 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
             </Button>
           </div>
         </div>
-        
-        <div 
-          {...getRootProps()} 
-          className={`border-2 border-dashed rounded-md transition-colors ${
-            isDragActive 
-              ? 'border-blue-500 bg-blue-500/10' 
+
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-md transition-colors ${isDragActive
+              ? 'border-blue-500 bg-blue-500/10'
               : 'border-gray-700 hover:border-gray-600'
-          }`}
+            }`}
         >
           <textarea
             value={localToken}
@@ -162,7 +161,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
             onFocus={(e) => e.stopPropagation()}
           />
           <input {...getInputProps()} />
-          
+
           <div className="px-3 py-2 text-center border-t border-gray-700">
             <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
               <FileUp size={16} />
@@ -171,14 +170,14 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Error Message */}
       {error && (
         <Alert variant="error" title="Error Decoding JWT">
           {error}
         </Alert>
       )}
-      
+
       {/* Decoded Sections */}
       {token && !error && (
         <div className="space-y-6">
@@ -186,9 +185,9 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-300">Header</h3>
-              <CopyButton 
-                text={JSON.stringify(header, null, 2)} 
-                label="Copy Header" 
+              <CopyButton
+                text={JSON.stringify(header, null, 2)}
+                label="Copy Header"
               />
             </div>
             <div className="border border-gray-700/50 rounded-md overflow-hidden">
@@ -207,14 +206,14 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
               />
             </div>
           </div>
-          
+
           {/* Payload */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-300">Payload</h3>
-              <CopyButton 
-                text={JSON.stringify(payload, null, 2)} 
-                label="Copy Payload" 
+              <CopyButton
+                text={JSON.stringify(payload, null, 2)}
+                label="Copy Payload"
               />
             </div>
             <div className="border border-gray-700/50 rounded-md overflow-hidden">
@@ -233,14 +232,14 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
               />
             </div>
           </div>
-          
+
           {/* Signature */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-300">Signature</h3>
-              <CopyButton 
-                text={signature} 
-                label="Copy Signature" 
+              <CopyButton
+                text={signature}
+                label="Copy Signature"
               />
             </div>
             <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
@@ -249,7 +248,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
               </div>
             </div>
           </div>
-          
+
           {/* Security Notice */}
           <div className="pt-2">
             <Alert variant="info">

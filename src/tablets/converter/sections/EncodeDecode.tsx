@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ConversionPanel } from '../components/ConversionPanel';
 import { ConversionInput } from '../components/ConversionInput';
-import { jwtDecode } from 'jwt-decode';
 
 interface Converter {
   id: string;
@@ -55,19 +54,6 @@ const converters: Converter[] = [
       } else {
         textarea.textContent = input;
         return textarea.innerHTML;
-      }
-    }
-  },
-  {
-    id: 'jwt',
-    title: 'JWT Decoder',
-    description: 'Decode JSON Web Tokens',
-    convert: (input: string) => {
-      try {
-        const decoded = jwtDecode(input);
-        return JSON.stringify(decoded, null, 2);
-      } catch (e) {
-        return 'Invalid JWT';
       }
     }
   },
@@ -131,9 +117,7 @@ export const EncodeDecode: React.FC<Props> = ({ searchQuery }) => {
       const converter = converters.find(c => c.id === id);
       if (converter && input) {
         newResults[`${id}-encode`] = converter.convert(input, false);
-        if (id !== 'jwt') { // JWT is decode-only
-          newResults[`${id}-decode`] = converter.convert(input, true);
-        }
+        newResults[`${id}-decode`] = converter.convert(input, true);
       }
     });
     

@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Key } from 'lucide-react';
 import { JwtDecoder } from './components/JwtDecoder';
@@ -16,7 +15,7 @@ interface JwtTabletState extends TabletState {
 
 export const JwtTablet: Tablet = {
   id: 'jwt',
-  label: 'JWT Tool',
+  label: 'JWT',
   keywords: ['jwt', 'token', 'json web token', 'decode', 'verify', 'sign'],
 
   createInitialState(): JwtTabletState {
@@ -49,25 +48,47 @@ export const JwtTablet: Tablet = {
     try {
       const parsed = JSON.parse(json);
       if (parsed.type === 'jwt' && parsed.data) {
-        // Ensure all required properties exist
+        // Ensure all required properties exist for the main data
+        const deserializedData: JwtState = {
+          token: parsed.data.token || '',
+          header: typeof parsed.data.header === 'object' && parsed.data.header !== null ? parsed.data.header : {},
+          payload: typeof parsed.data.payload === 'object' && parsed.data.payload !== null ? parsed.data.payload : {},
+          signature: parsed.data.signature || '',
+          isValid: parsed.data.isValid === true || parsed.data.isValid === false ? parsed.data.isValid : null, // Explicitly check boolean or null
+          error: parsed.data.error || null,
+          activeTab: parsed.data.activeTab || 'decode',
+          history: [], // Initialize, will be populated next
+          storedKeys: Array.isArray(parsed.data.storedKeys)
+            ? parsed.data.storedKeys.map((k: any) => ({ // Sanitize stored keys too
+              name: k?.name || 'Unnamed Key',
+              value: k?.value || '',
+              type: ['text', 'base64', 'pem'].includes(k?.type) ? k.type : 'text',
+              algorithm: k?.algorithm || undefined,
+              isPublic: typeof k?.isPublic === 'boolean' ? k.isPublic : false,
+              createdAt: typeof k?.createdAt === 'number' ? k.createdAt : Date.now(),
+            }))
+            : [],
+          verificationKey: parsed.data.verificationKey || '',
+          verificationKeyType: ['text', 'base64', 'pem'].includes(parsed.data.verificationKeyType) ? parsed.data.verificationKeyType : 'text',
+          signingKey: parsed.data.signingKey || '',
+          signingKeyType: ['text', 'base64', 'pem'].includes(parsed.data.signingKeyType) ? parsed.data.signingKeyType : 'text',
+          signingAlgorithm: parsed.data.signingAlgorithm || 'HS256'
+        };
+
+        // Sanitize history items
+        if (Array.isArray(parsed.data.history)) {
+          deserializedData.history = parsed.data.history.map((histItem: any): JwtHistoryItem => ({
+            token: histItem?.token || '',
+            header: typeof histItem?.header === 'object' && histItem.header !== null ? histItem.header : {}, // Ensure header is an object
+            payload: typeof histItem?.payload === 'object' && histItem.payload !== null ? histItem.payload : {}, // Ensure payload is an object
+            signature: histItem?.signature || '',
+            timestamp: typeof histItem?.timestamp === 'number' ? histItem.timestamp : Date.now(),
+          })).slice(0, 20); // Also re-apply history limit
+        }
+
         return {
-          ...parsed,
-          data: {
-            token: parsed.data.token || '',
-            header: parsed.data.header || {},
-            payload: parsed.data.payload || {},
-            signature: parsed.data.signature || '',
-            isValid: parsed.data.isValid || null,
-            error: parsed.data.error || null,
-            activeTab: parsed.data.activeTab || 'decode',
-            history: Array.isArray(parsed.data.history) ? parsed.data.history : [],
-            storedKeys: Array.isArray(parsed.data.storedKeys) ? parsed.data.storedKeys : [],
-            verificationKey: parsed.data.verificationKey || '',
-            verificationKeyType: parsed.data.verificationKeyType || 'text',
-            signingKey: parsed.data.signingKey || '',
-            signingKeyType: parsed.data.signingKeyType || 'text',
-            signingAlgorithm: parsed.data.signingAlgorithm || 'HS256'
-          }
+          ...parsed, // Keep top-level type
+          data: deserializedData,
         };
       }
     } catch (e) {
@@ -78,7 +99,7 @@ export const JwtTablet: Tablet = {
 
   render(state: JwtTabletState, onChange) {
     const { data } = state;
-    
+
     const updateState = (newData: Partial<JwtState>) => {
       onChange({
         ...state,
@@ -88,25 +109,25 @@ export const JwtTablet: Tablet = {
         }
       });
     };
-    
+
     const handleTabChange = (tab: string) => {
       updateState({ activeTab: tab });
     };
-    
+
     const addToHistory = (item: JwtHistoryItem) => {
       // Check if token already exists in history
       const exists = data.history.some(historyItem => historyItem.token === item.token);
       if (exists) return;
-      
+
       // Add to history, limit to 20 items
       const newHistory = [item, ...data.history].slice(0, 20);
       updateState({ history: newHistory });
     };
-    
+
     const clearHistory = () => {
       updateState({ history: [] });
     };
-    
+
     const loadFromHistory = (item: JwtHistoryItem) => {
       updateState({
         token: item.token,
@@ -115,13 +136,13 @@ export const JwtTablet: Tablet = {
         signature: item.signature
       });
     };
-    
+
     const addStoredKey = (key: StoredKey) => {
       // Check if key with same name already exists
       const exists = data.storedKeys.some(k => k.name === key.name);
       if (exists) {
         // Update existing key
-        const newKeys = data.storedKeys.map(k => 
+        const newKeys = data.storedKeys.map(k =>
           k.name === key.name ? key : k
         );
         updateState({ storedKeys: newKeys });
@@ -130,16 +151,16 @@ export const JwtTablet: Tablet = {
         updateState({ storedKeys: [...data.storedKeys, key] });
       }
     };
-    
+
     const removeStoredKey = (name: string) => {
       const newKeys = data.storedKeys.filter(k => k.name !== name);
       updateState({ storedKeys: newKeys });
     };
-    
+
     const clearStoredKeys = () => {
       updateState({ storedKeys: [] });
     };
-    
+
     const useStoredKey = (key: StoredKey, purpose: 'verification' | 'signing') => {
       if (purpose === 'verification') {
         updateState({
@@ -154,7 +175,7 @@ export const JwtTablet: Tablet = {
         });
       }
     };
-    
+
     return (
       <div className="h-full bg-gray-900 flex flex-col">
         {/* Header */}
@@ -164,7 +185,7 @@ export const JwtTablet: Tablet = {
             <h2 className="text-xl font-semibold text-gray-100">JWT Tool</h2>
           </div>
         </div>
-        
+
         {/* Tabs */}
         <div className="flex-none border-b border-gray-700/50">
           <Tabs
@@ -179,7 +200,7 @@ export const JwtTablet: Tablet = {
             onTabChange={handleTabChange}
           />
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 overflow-auto custom-scrollbar">
           {data.activeTab === 'decode' && (
@@ -203,7 +224,7 @@ export const JwtTablet: Tablet = {
               }}
             />
           )}
-          
+
           {data.activeTab === 'verify' && (
             <JwtVerifier
               token={data.token}
@@ -214,14 +235,14 @@ export const JwtTablet: Tablet = {
               onVerificationKeyChange={(key, type) => {
                 updateState({ verificationKey: key, verificationKeyType: type });
               }}
-              onVerificationResult={(isValid) => {
-                updateState({ isValid });
+              onVerificationResult={(isValidResult, errorMsg) => {
+                updateState({ isValid: isValidResult, error: errorMsg || null });
               }}
               storedKeys={data.storedKeys}
               onUseStoredKey={(key) => useStoredKey(key, 'verification')}
             />
           )}
-          
+
           {data.activeTab === 'edit' && (
             <JwtEditor
               header={data.header}
@@ -255,7 +276,7 @@ export const JwtTablet: Tablet = {
               onUseStoredKey={(key) => useStoredKey(key, 'signing')}
             />
           )}
-          
+
           {data.activeTab === 'keys' && (
             <JwtKeyManager
               storedKeys={data.storedKeys}
@@ -264,7 +285,7 @@ export const JwtTablet: Tablet = {
               onClearKeys={clearStoredKeys}
             />
           )}
-          
+
           {data.activeTab === 'history' && (
             <JwtHistory
               history={data.history}

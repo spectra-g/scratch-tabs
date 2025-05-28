@@ -12,11 +12,11 @@ export function decodeJwt(token: string): DecodedJwt {
     const header = decoded.header as Record<string, any>;
     const payload = decoded as Record<string, any>;
     delete payload.header; // Remove header from payload
-    
+
     // Extract signature
     const parts = token.split('.');
     const signature = parts.length === 3 ? parts[2] : '';
-    
+
     return { header, payload, signature };
   } catch (error) {
     throw new Error(`Failed to decode JWT: ${error instanceof Error ? error.message : String(error)}`);
@@ -31,7 +31,7 @@ export function splitJwtParts(token: string): JwtParts {
   if (parts.length !== 3) {
     throw new Error('Invalid JWT format. Expected three parts separated by dots.');
   }
-  
+
   return {
     header: parts[0],
     payload: parts[1],
@@ -46,14 +46,14 @@ export async function verifyJwt(token: string, key: string, keyType: KeyType): P
   try {
     const { header } = decodeJwt(token);
     const algorithm = header.alg;
-    
+
     if (!algorithm) {
       return { isValid: false, error: 'No algorithm specified in token header' };
     }
-    
+
     // Convert key based on type and algorithm
     let verificationKey: Uint8Array | jose.KeyLike;
-    
+
     if (algorithm.startsWith('HS')) {
       // HMAC algorithms use a secret
       if (keyType === 'base64') {
@@ -75,21 +75,21 @@ export async function verifyJwt(token: string, key: string, keyType: KeyType): P
           return { isValid: false, error: 'Invalid key type for asymmetric algorithm' };
         }
       } catch (error) {
-        return { 
-          isValid: false, 
-          error: `Invalid public key: ${error instanceof Error ? error.message : String(error)}` 
+        return {
+          isValid: false,
+          error: `Invalid public key: ${error instanceof Error ? error.message : String(error)}`
         };
       }
     }
-    
+
     // Verify the token
     await jose.jwtVerify(token, verificationKey);
-    
+
     return { isValid: true };
   } catch (error) {
-    return { 
-      isValid: false, 
-      error: `Verification failed: ${error instanceof Error ? error.message : String(error)}` 
+    return {
+      isValid: false,
+      error: `Verification failed: ${error instanceof Error ? error.message : String(error)}`
     };
   }
 }
@@ -105,14 +105,14 @@ export async function signJwt(
 ): Promise<SigningResult> {
   try {
     const algorithm = header.alg;
-    
+
     if (!algorithm) {
       return { token: '', error: 'No algorithm specified in token header' };
     }
-    
+
     // Convert key based on type and algorithm
     let signingKey: Uint8Array | jose.KeyLike;
-    
+
     if (algorithm.startsWith('HS')) {
       // HMAC algorithms use a secret
       if (keyType === 'base64') {
@@ -134,23 +134,23 @@ export async function signJwt(
           return { token: '', error: 'Invalid key type for asymmetric algorithm' };
         }
       } catch (error) {
-        return { 
-          token: '', 
-          error: `Invalid private key: ${error instanceof Error ? error.message : String(error)}` 
+        return {
+          token: '',
+          error: `Invalid private key: ${error instanceof Error ? error.message : String(error)}`
         };
       }
     }
-    
+
     // Create a new JWT
     const jwt = await new jose.SignJWT(payload)
       .setProtectedHeader(header)
       .sign(signingKey);
-    
+
     return { token: jwt };
   } catch (error) {
-    return { 
-      token: '', 
-      error: `Signing failed: ${error instanceof Error ? error.message : String(error)}` 
+    return {
+      token: '',
+      error: `Signing failed: ${error instanceof Error ? error.message : String(error)}`
     };
   }
 }
@@ -161,23 +161,23 @@ export async function signJwt(
 export async function generateKeyPair(algorithm: string): Promise<{ publicKey: string, privateKey: string }> {
   try {
     let keyPair: jose.GenerateKeyPairResult;
-    
+
     if (algorithm.startsWith('RS') || algorithm.startsWith('PS')) {
       // RSA key pair
       keyPair = await jose.generateKeyPair(algorithm, { modulusLength: 2048 });
     } else if (algorithm.startsWith('ES')) {
       // ECDSA key pair
-      const crv = algorithm === 'ES256' ? 'P-256' : 
-                 algorithm === 'ES384' ? 'P-384' : 'P-521';
+      const crv = algorithm === 'ES256' ? 'P-256' :
+        algorithm === 'ES384' ? 'P-384' : 'P-521';
       keyPair = await jose.generateKeyPair(algorithm, { crv });
     } else {
       throw new Error(`Unsupported algorithm for key pair generation: ${algorithm}`);
     }
-    
+
     // Export keys to PEM format
     const publicKey = await jose.exportSPKI(keyPair.publicKey);
     const privateKey = await jose.exportPKCS8(keyPair.privateKey);
-    
+
     return { publicKey, privateKey };
   } catch (error) {
     throw new Error(`Key pair generation failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -198,7 +198,7 @@ export function generateSecret(length: number = 32): string {
  */
 export function formatTimestamp(timestamp: number): string {
   if (!timestamp) return 'Invalid timestamp';
-  
+
   try {
     const date = new Date(timestamp * 1000);
     return date.toLocaleString();
@@ -212,11 +212,11 @@ export function formatTimestamp(timestamp: number): string {
  */
 export function getTimeDifference(timestamp: number): string {
   if (!timestamp) return 'Invalid timestamp';
-  
+
   try {
     const now = Math.floor(Date.now() / 1000);
     const diff = timestamp - now;
-    
+
     if (diff > 0) {
       // Future
       if (diff < 60) return `Valid for ${diff} seconds`;

@@ -23,7 +23,7 @@ export const JwtHistory: React.FC<JwtHistoryProps> = ({
       </div>
     );
   }
-  
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -37,7 +37,7 @@ export const JwtHistory: React.FC<JwtHistoryProps> = ({
           Clear History
         </Button>
       </div>
-      
+
       <div className="space-y-2">
         {history.map((item, index) => (
           <div key={index} className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
@@ -52,9 +52,9 @@ export const JwtHistory: React.FC<JwtHistoryProps> = ({
                 </p>
                 <div className="flex items-center mt-1 text-xs text-gray-500">
                   <span className="truncate">
-                    {item.header.alg && `Algorithm: ${item.header.alg}`}
-                    {item.payload.sub && ` • Subject: ${item.payload.sub}`}
-                    {item.payload.iss && ` • Issuer: ${item.payload.iss}`}
+                    {item.header?.alg && `Algorithm: ${item.header.alg}`}
+                    {item.payload?.sub && ` • Subject: ${item.payload.sub}`}
+                    {item.payload?.iss && ` • Issuer: ${item.payload.iss}`}
                   </span>
                 </div>
               </div>
