@@ -1,0 +1,555 @@
+import React, { useState, useEffect } from 'react';
+import { Editor } from '@monaco-editor/react';
+import { ArrowLeft, Save, Play, FileCode, Wand2, Upload } from 'lucide-react';
+import { MappingConfig, MappingRule, PathInfo } from '../types';
+import { MappingTable } from './MappingTable';
+import { extractPaths, isValidJson, formatJson } from '../utils/jsonUtils';
+import { suggestMappings, createRulesFromSuggestions, validateRules } from '../utils/mappingUtils';
+import { readFileAsText } from '../utils/fileUtils';
+
+interface MappingEditorProps {
+  mapping: MappingConfig;
+  isNew: boolean;
+  onSave: (mapping: MappingConfig) => void;
+  onCancel: () => void;
+  onTest: (mapping: MappingConfig) => void;
+  onGenerateCode: (mapping: MappingConfig) => void;
+}
+
+export const MappingEditor: React.FC<MappingEditorProps> = ({
+  mapping,
+  isNew,
+  onSave,
+  onCancel,
+  onTest,
+  onGenerateCode
+}) => {
+  const [name, setName] = useState(mapping.name);
+  const [description, setDescription] = useState(mapping.description);
+  const [sourceJson, setSourceJson] = useState(mapping.sourceJson);
+  const [targetJson, setTargetJson] = useState(mapping.targetJson);
+  const [rules, setRules] = useState<MappingRule[]>(mapping.rules);
+  const [sourceJsonError, setSourceJsonError] = useState<string | null>(null);
+  const [targetJsonError, setTargetJsonError] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // Validate JSON when it changes
+  useEffect(() => {
+    if (sourceJson) {
+      try {
+        JSON.parse(sourceJson);
+        setSourceJsonError(null);
+      } catch (error) {
+        setSourceJsonError('Invalid JSON');
+      }
+    } else {
+      setSourceJsonError(null);
+    }
+  }, [sourceJson]);
+  
+  useEffect(() => {
+    if (targetJson) {
+      try {
+        JSON.parse(targetJson);
+        setTargetJsonError(null);
+      } catch (error) {
+        setTargetJsonError('Invalid JSON');
+      }
+    } else {
+      setTargetJsonError(null);
+    }
+  }, [targetJson]);
+  
+  const handleSourceJsonChange = (value: string | undefined) => {
+    setSourceJson(value || '');
+  };
+  
+  const handleTargetJsonChange = (value: string | undefined) => {
+    setTargetJson(value || '');
+  };
+  
+  const handleLoadSourceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      const content = await readFileAsText(file);
+      if (isValidJson(content)) {
+        setSourceJson(formatJson(content));
+        setSourceJsonError(null);
+      } else {
+        setSourceJsonError('Invalid JSON file');
+      }
+    } catch (error) {
+      setSourceJsonError('Error reading file');
+    }
+    
+    // Reset the input value so the same file can be selected again
+    e.target.value = '';
+  };
+  
+  const handleLoadTargetFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      const content = await readFileAsText(file);
+      if (isValidJson(content)) {
+        setTargetJson(formatJson(content));
+        setTargetJsonError(null);
+      } else {
+        setTargetJsonError('Invalid JSON file');
+      }
+    } catch (error) {
+      setTargetJsonError('Error reading file');
+    }
+    
+    // Reset the input value so the same file can be selected again
+    e.target.value = '';
+  };
+  
+  const handleAnalyzeAndSuggest = async () => {
+    if (!sourceJson || sourceJsonError) {
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    
+    try {
+      const sourceData = JSON.parse(sourceJson);
+      const sourcePaths = extractPaths(sourceData);
+      
+      let targetPaths: PathInfo[] = [];
+      if (targetJson && !targetJsonError) {
+        const targetData = JSON.parse(targetJson);
+        targetPaths = extractPaths(targetData);
+      }
+      
+      // If we have both source and target, suggest mappings
+      if (targetPaths.length > 0) {
+        const suggestions = suggestMappings(sourcePaths, targetPaths);
+        const newRules = createRulesFromSuggestions(suggestions);
+        
+        // Merge with existing rules, preserving user-defined ones
+        const existingRuleMap = new Map<string, MappingRule>();
+        rules.forEach(rule => {
+          if (rule.isUserDefined) {
+            existingRuleMap.set(rule.sourcePath, rule);
+          }
+        });
+        
+        const mergedRules = newRules.map(rule => {
+          const existingRule = existingRuleMap.get(rule.sourcePath);
+          return existingRule || rule;
+        });
+        
+        // Add any unmapped source paths
+        const mappedSourcePaths = new Set(mergedRules.map(rule => rule.sourcePath));
+        const unmappedSourcePaths = sourcePaths.filter(p => 
+          p.type !== 'array' && 
+          p.type !== 'object' && 
+          !mappedSourcePaths.has(p.path)
+        );
+        
+        const unmappedRules = unmappedSourcePaths.map(path => ({
+          id: crypto.randomUUID(),
+          sourcePath: path.path,
+          targetPath: '',
+          transformationType: 'none' as const,
+          transformation: '',
+          sourceDataType: path.type,
+          targetDataType: 'unknown' as const,
+          status: 'unmapped' as const,
+          confidence: 0,
+          isUserDefined: false
+        }));
+        
+        setRules([...mergedRules, ...unmappedRules]);
+      } else {
+        // If we only have source, create unmapped rules for all source paths
+        const sourceLeafPaths = sourcePaths.filter(p => 
+          p.type !== 'array' && p.type !== 'object'
+        );
+        
+        const newRules = sourceLeafPaths.map(path => ({
+          id: crypto.randomUUID(),
+          sourcePath: path.path,
+          targetPath: '',
+          transformationType: 'none' as const,
+          transformation: '',
+          sourceDataType: path.type,
+          targetDataType: 'unknown' as const,
+          status: 'unmapped' as const,
+          confidence: 0,
+          isUserDefined: false
+        }));
+        
+        setRules(newRules);
+      }
+    } catch (error) {
+      console.error('Error analyzing JSON:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+  
+  const handleAddRule = () => {
+    const newRule: MappingRule = {
+      id: crypto.randomUUID(),
+      sourcePath: '',
+      targetPath: '',
+      transformationType: 'none',
+      transformation: '',
+      sourceDataType: 'unknown',
+      targetDataType: 'unknown',
+      status: 'unmapped',
+      confidence: 0,
+      isUserDefined: true
+    };
+    
+    setRules([...rules, newRule]);
+  };
+  
+  const handleUpdateRule = (updatedRule: MappingRule) => {
+    setRules(rules.map(rule => 
+      rule.id === updatedRule.id ? { ...updatedRule, isUserDefined: true } : rule
+    ));
+  };
+  
+  const handleDeleteRule = (id: string) => {
+    setRules(rules.filter(rule => rule.id !== id));
+  };
+  
+  const handleIgnoreRule = (id: string) => {
+    setRules(rules.map(rule => 
+      rule.id === id ? { ...rule, status: rule.status === 'ignored' ? 'unmapped' : 'ignored' } : rule
+    ));
+  };
+  
+  const handleReEvaluateRule = (id: string) => {
+    if (!sourceJson || !targetJson || sourceJsonError || targetJsonError) {
+      return;
+    }
+    
+    try {
+      const sourceData = JSON.parse(sourceJson);
+      const targetData = JSON.parse(targetJson);
+      
+      const rule = rules.find(r => r.id === id);
+      if (!rule) return;
+      
+      const updatedRules = validateRules([rule], sourceData, targetData);
+      
+      setRules(rules.map(r => 
+        r.id === id ? updatedRules[0] : r
+      ));
+    } catch (error) {
+      console.error('Error re-evaluating rule:', error);
+    }
+  };
+  
+  const handleReEvaluateAll = () => {
+    if (!sourceJson || !targetJson || sourceJsonError || targetJsonError) {
+      return;
+    }
+    
+    try {
+      const sourceData = JSON.parse(sourceJson);
+      const targetData = JSON.parse(targetJson);
+      
+      const updatedRules = validateRules(rules, sourceData, targetData);
+      setRules(updatedRules);
+    } catch (error) {
+      console.error('Error re-evaluating all rules:', error);
+    }
+  };
+  
+  const handleClearAllRules = () => {
+    setRules([]);
+  };
+  
+  const handleSave = () => {
+    if (!name.trim()) {
+      alert('Please enter a name for the mapping');
+      return;
+    }
+    
+    if (!sourceJson || sourceJsonError) {
+      alert('Please enter valid source JSON');
+      return;
+    }
+    
+    const updatedMapping: MappingConfig = {
+      ...mapping,
+      name: name.trim(),
+      description: description.trim(),
+      sourceJson,
+      targetJson,
+      rules,
+      updatedAt: Date.now()
+    };
+    
+    onSave(updatedMapping);
+  };
+  
+  const handleTest = () => {
+    if (!name.trim() || !sourceJson || sourceJsonError) {
+      alert('Please enter a name and valid source JSON');
+      return;
+    }
+    
+    const updatedMapping: MappingConfig = {
+      ...mapping,
+      name: name.trim(),
+      description: description.trim(),
+      sourceJson,
+      targetJson,
+      rules,
+      updatedAt: Date.now()
+    };
+    
+    onTest(updatedMapping);
+  };
+  
+  const handleGenerateCode = () => {
+    if (!name.trim() || !sourceJson || sourceJsonError) {
+      alert('Please enter a name and valid source JSON');
+      return;
+    }
+    
+    const updatedMapping: MappingConfig = {
+      ...mapping,
+      name: name.trim(),
+      description: description.trim(),
+      sourceJson,
+      targetJson,
+      rules,
+      updatedAt: Date.now()
+    };
+    
+    onGenerateCode(updatedMapping);
+  };
+  
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex-none p-4 border-b border-gray-700/50">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onCancel}
+              className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+              title="Back to mappings"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2 className="text-xl font-semibold text-gray-100">
+              {isNew ? 'Create Mapping' : 'Edit Mapping'}
+            </h2>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleTest}
+              className="flex items-center space-x-2 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-md hover:bg-green-500/30 transition-colors"
+              disabled={!sourceJson || !!sourceJsonError}
+            >
+              <Play size={16} />
+              <span>Test</span>
+            </button>
+            <button
+              onClick={handleGenerateCode}
+              className="flex items-center space-x-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-md hover:bg-purple-500/30 transition-colors"
+              disabled={!sourceJson || !!sourceJsonError}
+            >
+              <FileCode size={16} />
+              <span>Generate Code</span>
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
+            >
+              <Save size={16} />
+              <span>Save</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-4 custom-scrollbar">
+        <div className="space-y-6">
+          {/* Mapping Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Mapping Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                placeholder="Enter mapping name..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Description
+              </label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                placeholder="Enter description..."
+              />
+            </div>
+          </div>
+          
+          {/* JSON Editors */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Source JSON */}
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-300">
+                  Source JSON
+                </label>
+                <div className="flex space-x-2">
+                  <label className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors cursor-pointer">
+                    <Upload size={14} />
+                    <span>Load File</span>
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleLoadSourceFile}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className={`border rounded-md overflow-hidden ${sourceJsonError ? 'border-red-500/50' : 'border-gray-700/50'}`}>
+                <Editor
+                  height="300px"
+                  language="json"
+                  value={sourceJson}
+                  onChange={handleSourceJsonChange}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    wordWrap: 'on',
+                    padding: { top: 8, bottom: 8 },
+                  }}
+                />
+              </div>
+              {sourceJsonError && (
+                <p className="mt-1 text-xs text-red-400">{sourceJsonError}</p>
+              )}
+            </div>
+            
+            {/* Target JSON */}
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-300">
+                  Target JSON
+                </label>
+                <div className="flex space-x-2">
+                  <label className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors cursor-pointer">
+                    <Upload size={14} />
+                    <span>Load File</span>
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleLoadTargetFile}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className={`border rounded-md overflow-hidden ${targetJsonError ? 'border-red-500/50' : 'border-gray-700/50'}`}>
+                <Editor
+                  height="300px"
+                  language="json"
+                  value={targetJson}
+                  onChange={handleTargetJsonChange}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    wordWrap: 'on',
+                    padding: { top: 8, bottom: 8 },
+                  }}
+                />
+              </div>
+              {targetJsonError && (
+                <p className="mt-1 text-xs text-red-400">{targetJsonError}</p>
+              )}
+            </div>
+          </div>
+          
+          {/* Analyze Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={handleAnalyzeAndSuggest}
+              disabled={!sourceJson || !!sourceJsonError || isAnalyzing}
+              className={`
+                flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium
+                ${!sourceJson || !!sourceJsonError || isAnalyzing
+                  ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                }
+                transition-colors
+              `}
+            >
+              <Wand2 size={16} className={isAnalyzing ? 'animate-spin' : ''} />
+              <span>{isAnalyzing ? 'Analyzing...' : 'Analyze & Suggest Mappings'}</span>
+            </button>
+          </div>
+          
+          {/* Mapping Table */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-sm font-medium text-gray-300">
+                Mapping Rules
+              </h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleAddRule}
+                  className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                >
+                  <Plus size={14} />
+                  <span>Add Rule</span>
+                </button>
+                <button
+                  onClick={handleReEvaluateAll}
+                  className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                  disabled={!sourceJson || !targetJson || !!sourceJsonError || !!targetJsonError}
+                >
+                  <Wand2 size={14} />
+                  <span>Re-evaluate All</span>
+                </button>
+                <button
+                  onClick={handleClearAllRules}
+                  className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                  disabled={rules.length === 0}
+                >
+                  <span>Clear All</span>
+                </button>
+              </div>
+            </div>
+            
+            <MappingTable
+              rules={rules}
+              onUpdateRule={handleUpdateRule}
+              onDeleteRule={handleDeleteRule}
+              onIgnoreRule={handleIgnoreRule}
+              onReEvaluateRule={handleReEvaluateRule}
+              sourceJson={sourceJson}
+              targetJson={targetJson}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
