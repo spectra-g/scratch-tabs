@@ -80,7 +80,7 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
   const renderVerificationStatus = () => {
     if (isVerifying) {
       return (
-        <Alert variant="info" title="Verifying...">
+        <Alert variant="info\" title="Verifying...">
           <div className="flex items-center">
             <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
             <span>Verifying token signature...</span>
