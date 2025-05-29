@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tablet, TabletState } from '../types';
-import { Network, Search, FileJson, ArrowRight, ArrowLeft, FileCode, Play, Upload } from 'lucide-react';
+import { Search, FileJson, Upload } from 'lucide-react';
 import { MappingList } from './components/MappingList';
 import { MappingEditor } from './components/MappingEditor';
 import { TestMappingModal } from './components/TestMappingModal';
 import { CodeGenerationModal } from './components/CodeGenerationModal';
 import { BatchTransformModal } from './components/BatchTransformModal';
-import { JsonMapperState, MappingConfig, MappingDirection, TargetLanguage } from './types';
+import { JsonMapperState, MappingConfig } from './types';
 
 export const JsonMapperTablet: Tablet = {
   id: 'jsonmapper',
@@ -157,59 +157,6 @@ export const JsonMapperTablet: Tablet = {
       });
     };
 
-    const handleTestMappingFromEditor = (mappingInProgress: MappingConfig) => {
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          activeMappingId: mappingInProgress.id,
-          isTestingMapping: true,
-          testInput: mappingInProgress.sourceJson,
-        }
-      });
-    };
-
-    const handleGenerateCodeFromEditor = (mappingInProgress: MappingConfig) => {
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          activeMappingId: mappingInProgress.id,
-          isGeneratingCode: true,
-          // Similar to testing, CodeGenerationModal will need `mappingInProgress`
-        }
-      });
-    };
-
-    const handleTestMapping = (id: string) => {
-      const mapping = state.data.mappings.find(m => m.id === id);
-      if (!mapping) return;
-
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          activeMappingId: id,
-          isTestingMapping: true,
-          testInput: mapping.sourceJson
-        }
-      });
-    };
-
-    const handleGenerateCode = (id: string) => {
-      const mapping = state.data.mappings.find(m => m.id === id);
-      if (!mapping) return;
-
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          activeMappingId: id,
-          isGeneratingCode: true
-        }
-      });
-    };
-
     const handleSaveMapping = (updatedMapping: MappingConfig) => {
       onChange({
         ...state,
@@ -248,30 +195,6 @@ export const JsonMapperTablet: Tablet = {
           }
         });
       }
-    };
-
-    const handleCloseTestModal = () => {
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          isTestingMapping: false,
-          testInput: '',
-          testOutput: '',
-          testError: null
-        }
-      });
-    };
-
-    const handleCloseCodeModal = () => {
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          isGeneratingCode: false,
-          generatedCode: ''
-        }
-      });
     };
 
     const handleCloseBatchModal = () => {

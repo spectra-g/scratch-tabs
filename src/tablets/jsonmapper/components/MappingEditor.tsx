@@ -32,6 +32,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const [sourceJsonError, setSourceJsonError] = useState<string | null>(null);
   const [targetJsonError, setTargetJsonError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentSortedRules, setCurrentSortedRules] = useState<MappingRule[]>(mapping.rules);
 
   // Validate JSON when it changes
   useEffect(() => {
@@ -60,8 +61,12 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     }
   }, [targetJson]);
 
+  const handleSortedRulesChange = (sortedRules: MappingRule[]) => {
+    setCurrentSortedRules(sortedRules);
+  };
+
   const handleExportRulesToCsv = () => {
-    if (rules.length === 0) {
+    if (currentSortedRules.length === 0) {
       alert("No rules to export.");
       return;
     }
@@ -83,7 +88,8 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
     const csvRows = [headers.join(',')];
 
-    rules.forEach(rule => {
+    // Use sorted rules instead of original rules
+    currentSortedRules.forEach(rule => {
       const row = [
         `"${rule.id}"`,
         `"${jsonPathToReadablePath(rule.sourcePath)}"`,
@@ -104,7 +110,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     const csvString = csvRows.join('\n');
     const filename = `${name.trim().replace(/\s+/g, '_') || 'mapping'}_rules.csv`;
 
-    // Use your existing downloadStringAsFile but adjust for CSV MIME type
+    // Create and trigger download
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -655,6 +661,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               onReEvaluateRule={handleReEvaluateRule}
               sourceJson={sourceJson}
               targetJson={targetJson}
+              onSortedRulesChange={handleSortedRulesChange}
             />
           </div>
         </div>
