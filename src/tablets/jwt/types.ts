@@ -57,6 +57,7 @@ export interface DecodedJwt {
   header: Record<string, any>;
   payload: Record<string, any>;
   signature: string;
+  warning?: string | null;
 }
 
 export interface VerificationResult {

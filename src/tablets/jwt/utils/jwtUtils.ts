@@ -4,19 +4,63 @@ import { DecodedJwt, JwtParts, VerificationResult, SigningResult, KeyType } from
 
 export function decodeJwt(token: string): DecodedJwt {
   try {
-    // Behavior for jwt-decode v3.x.x (and v4.x.x if header is all it gives for some reason)
-    const headerObject = jwtDecode<JwtHeader>(token, { header: true });
-    const payloadObject = jwtDecode<JwtPayload>(token); // Separate call for payload in v3
-
+    // Split the token into parts
     const parts = token.split('.');
-    const signature = parts.length === 3 ? parts[2] : '';
+    let headerObject = {};
+    let payloadObject = {};
+    let signature = '';
+    let warning = null;
+
+    // Check for complete JWT structure
+    if (parts.length < 2) {
+      warning = 'Incomplete JWT format. Expected at least header and payload parts.';
+    } else if (parts.length < 3) {
+      warning = 'Missing signature part in JWT.';
+    }
+
+    // Try to decode the header (first part)
+    if (parts[0]) {
+      try {
+        headerObject = jwtDecode<JwtHeader>(token, { header: true });
+      } catch (headerError) {
+        console.warn('[decodeJwt] Error decoding header:', headerError);
+        // Try to decode base64 manually if jwt-decode fails
+        try {
+          const headerStr = atob(parts[0].replace(/-/g, '+').replace(/_/g, '/'));
+          headerObject = JSON.parse(headerStr);
+        } catch (e) {
+          console.warn('[decodeJwt] Failed manual header decode:', e);
+        }
+      }
+    }
+
+    // Try to decode the payload (second part)
+    if (parts.length > 1 && parts[1]) {
+      try {
+        payloadObject = jwtDecode<JwtPayload>(token);
+      } catch (payloadError) {
+        console.warn('[decodeJwt] Error decoding payload:', payloadError);
+        // Try to decode base64 manually if jwt-decode fails
+        try {
+          const payloadStr = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+          payloadObject = JSON.parse(payloadStr);
+        } catch (e) {
+          console.warn('[decodeJwt] Failed manual payload decode:', e);
+        }
+      }
+    }
+
+    // Get the signature (third part)
+    if (parts.length > 2) {
+      signature = parts[2];
+    }
 
     return {
       header: headerObject || {},
       payload: payloadObject || {},
-      signature
+      signature,
+      warning
     };
-
   } catch (error) {
     console.error('[decodeJwt] Error during decoding:', error);
     // Return a default/empty structure on error to prevent UI crashes
@@ -24,8 +68,7 @@ export function decodeJwt(token: string): DecodedJwt {
       header: {},
       payload: {},
       signature: '',
-      // Consider adding an 'error' field to DecodedJwt interface
-      // and propagating the error message if you want to display it
+      warning: error instanceof Error ? error.message : String(error)
     };
   }
 }
