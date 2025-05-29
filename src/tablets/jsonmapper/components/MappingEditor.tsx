@@ -173,12 +173,12 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
     try {
       const sourceData = JSON.parse(sourceJson);
-      const sourcePaths = extractPaths(sourceData);
+      const sourcePaths = extractPaths(sourceData, '$', { optimizeArrays: true });
 
       let targetPaths: PathInfo[] = [];
       if (targetJson && !targetJsonError) {
         const targetData = JSON.parse(targetJson);
-        targetPaths = extractPaths(targetData);
+        targetPaths = extractPaths(targetData, '$', { optimizeArrays: true });
       }
 
       // If we have both source and target, suggest mappings
@@ -194,13 +194,57 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
           }
         });
 
-        const mergedRules = newRules.map(rule => {
-          const existingRule = existingRuleMap.get(rule.sourcePath);
-          return existingRule || rule;
+        // Check for better confidence scores in new mappings compared to existing ones
+        const updatedExistingRules = [...rules];
+        newRules.forEach(newRule => {
+          // Find existing non-user-defined rule with the same source path
+          const existingRuleIndex = updatedExistingRules.findIndex(
+            r => !r.isUserDefined && r.sourcePath === newRule.sourcePath
+          );
+          
+          if (existingRuleIndex >= 0) {
+            const existingRule = updatedExistingRules[existingRuleIndex];
+            // If new rule has better confidence, update the existing rule
+            if (newRule.confidence > existingRule.confidence) {
+              updatedExistingRules[existingRuleIndex] = {
+                ...existingRule,
+                targetPath: newRule.targetPath,
+                confidence: newRule.confidence,
+                sourceDataType: newRule.sourceDataType,
+                targetDataType: newRule.targetDataType,
+                status: 'mapped'
+              };
+            }
+          } else if (!existingRuleMap.has(newRule.sourcePath)) {
+            // Add new rule if it doesn't exist and isn't user-defined
+            updatedExistingRules.push(newRule);
+          }
+        });
+
+        // Filter out any rules that have array indices in the source path
+        // but there's already a wildcard rule for the same path pattern
+        const finalRules = updatedExistingRules.filter(rule => {
+          // Skip filtering for user-defined rules
+          if (rule.isUserDefined) return true;
+          
+          // Check if this is an indexed array path
+          const indexMatch = rule.sourcePath.match(/\[(\d+)\]/);
+          if (indexMatch) {
+            // Create the wildcard version of this path
+            const wildcardPath = rule.sourcePath.replace(/\[\d+\]/g, '[*]');
+            
+            // Check if a wildcard version already exists with better or equal confidence
+            const wildcardRule = updatedExistingRules.find(
+              r => r.sourcePath === wildcardPath && r.confidence >= rule.confidence
+            );
+            
+            return !wildcardRule; // Keep only if no wildcard rule exists
+          }
+          return true; // Keep all non-array-index rules
         });
 
         // Add any unmapped source paths
-        const mappedSourcePaths = new Set(mergedRules.map(rule => rule.sourcePath));
+        const mappedSourcePaths = new Set(finalRules.map(rule => rule.sourcePath));
         const unmappedSourcePaths = sourcePaths.filter(p =>
           p.type !== 'array' &&
           p.type !== 'object' &&
@@ -220,7 +264,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
           isUserDefined: false
         }));
 
-        setRules([...mergedRules, ...unmappedRules]);
+        setRules([...finalRules, ...unmappedRules]);
       } else {
         // If we only have source, create unmapped rules for all source paths
         const sourceLeafPaths = sourcePaths.filter(p =>
