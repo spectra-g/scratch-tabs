@@ -118,118 +118,175 @@ export function transformJson(
   direction: MappingDirection = 'sourceToTarget'
 ): any {
   let outputObject: any = {};
+  // Initialize outputObject as array if the first rule's target path implies it
   const firstMeaningfulRule = rules.find(r => {
-    const pathToCheck = direction === 'sourceToTarget' ? r.targetPath : r.sourcePath;
-    return pathToCheck && pathToCheck !== '$'; // Ensure path is not empty or just root
+      const pathToCheck = direction === 'sourceToTarget' ? r.targetPath : r.sourcePath;
+      return pathToCheck && pathToCheck !== '$';
   });
-
   if (firstMeaningfulRule) {
-    const firstTargetPath = direction === 'sourceToTarget' ? firstMeaningfulRule.targetPath : firstMeaningfulRule.sourcePath;
-    if (firstTargetPath) { // Check again as find could return undefined
-        const segments = parseJsonPathSegments(firstTargetPath);
-        if (segments.length > 0 && (typeof segments[0] === 'number' || segments[0] === '*')) {
-            outputObject = [];
-        }
-    }
+      const firstTargetPath = direction === 'sourceToTarget' ? firstMeaningfulRule.targetPath : firstMeaningfulRule.sourcePath;
+      if (firstTargetPath) {
+          const segments = parseJsonPathSegments(firstTargetPath);
+          if (segments.length > 0 && (typeof segments[0] === 'number' || segments[0] === '*')) {
+              outputObject = [];
+          }
+      }
   }
 
-  const activeRules = rules.filter(rule =>
-    rule.status !== 'ignored' && rule.status !== 'error'
-  );
+  // Sort rules to process them in the correct order (parent paths before child paths)
+  const activeRules = rules
+    .filter(rule => rule.status !== 'ignored' && rule.status !== 'error')
+    .sort((a, b) => {
+      const pathA = direction === 'sourceToTarget' ? a.sourcePath : a.targetPath;
+      const pathB = direction === 'sourceToTarget' ? b.sourcePath : b.targetPath;
+      return pathA.split('[').length - pathB.split('[').length; // Process less nested paths first
+    });
 
+  // First pass: Process all non-nested array rules
   for (const rule of activeRules) {
     const currentRuleSourcePath = direction === 'sourceToTarget' ? rule.sourcePath : rule.targetPath;
     const currentRuleTargetPath = direction === 'sourceToTarget' ? rule.targetPath : rule.sourcePath;
     const currentRuleTransformation = rule.transformation;
     const currentRuleTransformationType = rule.transformationType;
 
-    if (!currentRuleTargetPath || currentRuleTargetPath === '$') {
-        continue;
+    if (!currentRuleTargetPath || currentRuleTargetPath === '$' || !currentRuleSourcePath || currentRuleSourcePath === '$') {
+      console.warn(`Skipping rule ID "${rule.id}" due to empty or root source/target path.`);
+      continue;
     }
-    if (!currentRuleSourcePath) {
-        continue;
+
+    // Skip doubly-nested array rules in first pass
+    const nestedArrayCount = (currentRuleSourcePath.match(/\[\*\]/g) || []).length;
+    if (nestedArrayCount > 1) {
+      continue; // Will handle in second pass
     }
 
     try {
-      // Special handling for wildcards in source path
-      if (currentRuleSourcePath.includes('[*]')) {
-        // Extract the actual array from the source using a modified path
-        // that gets the parent array of the wildcard
-        const wildcardIndex = currentRuleSourcePath.indexOf('[*]');
-        const arrayParentPath = currentRuleSourcePath.substring(0, wildcardIndex);
-        const remainingPath = currentRuleSourcePath.substring(wildcardIndex + 3); // +3 to skip [*]
-        
-        const sourceArray = getValueByPath(sourceJson, arrayParentPath);
-        
-        if (Array.isArray(sourceArray)) {
-          // Process each item in the array
-          for (let i = 0; i < sourceArray.length; i++) {
-            const specificSourcePath = `${arrayParentPath}[${i}]${remainingPath}`;
-            const specificTargetPath = currentRuleTargetPath.replace('[*]', `[${i}]`);
-            
-            let valueToSet = getValueByPath(sourceJson, specificSourcePath);
-            
-            if (valueToSet === undefined && specificSourcePath !== '$') {
-              continue;
-            }
-            
-            if (direction === 'sourceToTarget' && currentRuleTransformationType !== 'none') {
-              valueToSet = applyTransformation(
-                valueToSet,
-                currentRuleTransformation,
-                currentRuleTransformationType,
-                sourceJson
-              );
-            } else if (direction === 'targetToSource' && currentRuleTransformationType !== 'none') {
-              valueToSet = applyTransformation(
-                valueToSet,
-                currentRuleTransformation,
-                currentRuleTransformationType,
-                sourceJson
-              );
-            }
-            
-            if (valueToSet !== undefined) {
-              setValueByPath(outputObject, specificTargetPath, valueToSet);
+      // Handle array-to-object transformation patterns
+      if (currentRuleSourcePath.includes('[*]') && currentRuleTargetPath.includes('[*]') &&
+          currentRuleSourcePath.endsWith('[*]')) {
+
+        // Extract the parent array paths
+        const sourceParentArrayPath = currentRuleSourcePath.substring(0, currentRuleSourcePath.lastIndexOf('[*]'));
+        const sourceParentWildcardIndex = sourceParentArrayPath.indexOf('[*]');
+        const sourceOuterArrayPath = sourceParentArrayPath.substring(0, sourceParentWildcardIndex);
+
+        const targetParentArrayPath = currentRuleTargetPath.substring(0, currentRuleTargetPath.lastIndexOf('[*]'));
+
+        // Get the outer arrays
+        const sourceOuterArray = getValueByPath(sourceJson, sourceOuterArrayPath);
+
+        if (Array.isArray(sourceOuterArray)) {
+          // Process each outer array item
+          for (let i = 0; i < sourceOuterArray.length; i++) {
+            // Construct paths with specific indices
+            const specificSourceParentPath = sourceParentArrayPath.replace('[*]', `[${i}]`);
+            const specificTargetParentPath = targetParentArrayPath.replace('[*]', `[${i}]`);
+
+            // Get the inner array
+            const sourceInnerArray = getValueByPath(sourceJson, specificSourceParentPath);
+
+            if (Array.isArray(sourceInnerArray)) {
+              // Create the target array if it doesn't exist
+              let targetArray = getValueByPath(outputObject, specificTargetParentPath);
+              if (!targetArray) {
+                targetArray = [];
+                setValueByPath(outputObject, specificTargetParentPath, targetArray);
+              }
+
+              // Apply transformation to each array item
+              let transformedArray;
+              if (direction === 'sourceToTarget' && rule.transformationType !== 'none') {
+                // Use custom or built-in transformation
+                transformedArray = sourceInnerArray.map(item => {
+                  return applyTransformation(
+                    item,
+                    rule.transformation,
+                    rule.transformationType,
+                    sourceJson
+                  );
+                });
+              } else {
+                // Completely generic transformation - no assumptions about field names
+                transformedArray = sourceInnerArray.map(item => {
+                  if (typeof item === "object" && item !== null) {
+                    // If the source item is already an object, pass it through
+                    return item;
+                  } else {
+                    // For primitive values, create a generic value wrapper
+                    return { value: item };
+                  }
+                });
+              }
+
+              // Set the transformed array
+              setValueByPath(outputObject, specificTargetParentPath, transformedArray);
             }
           }
-          continue; // Skip the standard processing below
+        }
+
+        continue; // Skip standard processing
+      }
+      
+      // General case for other nested array mappings
+      // Find the outermost [*] in both paths
+      const sourceOuterWildcardIndex = currentRuleSourcePath.indexOf('[*]');
+      const sourceOuterArrayPath = currentRuleSourcePath.substring(0, sourceOuterWildcardIndex);
+      const sourceNestedPath = currentRuleSourcePath.substring(sourceOuterWildcardIndex + 3);
+      
+      const targetOuterWildcardIndex = currentRuleTargetPath.indexOf('[*]');
+      const targetOuterArrayPath = currentRuleTargetPath.substring(0, targetOuterWildcardIndex);
+      const targetNestedPath = currentRuleTargetPath.substring(targetOuterWildcardIndex + 3);
+      
+      const sourceOuterArray = getValueByPath(sourceJson, sourceOuterArrayPath);
+      
+      if (Array.isArray(sourceOuterArray)) {
+        // Process each outer array item
+        for (let i = 0; i < sourceOuterArray.length; i++) {
+          // Get inner array with specific outer index
+          const sourceSpecificOuterPath = `${sourceOuterArrayPath}[${i}]`;
+          const targetSpecificOuterPath = `${targetOuterArrayPath}[${i}]`;
+          
+          // Get the inner array for this outer item
+          const sourceInnerArray = getValueByPath(sourceJson, `${sourceSpecificOuterPath}${sourceNestedPath.substring(0, sourceNestedPath.indexOf('[*]'))}`);
+          
+          if (Array.isArray(sourceInnerArray)) {
+            // For each inner array item
+            for (let j = 0; j < sourceInnerArray.length; j++) {
+              // Construct full paths with specific indices
+              const specificSourcePath = `${sourceSpecificOuterPath}${sourceNestedPath.replace('[*]', `[${j}]`)}`;
+              const specificTargetPath = `${targetSpecificOuterPath}${targetNestedPath.replace('[*]', `[${j}]`)}`;
+              
+              // Get source value
+              let valueToSet = getValueByPath(sourceJson, specificSourcePath);
+              
+              if (valueToSet !== undefined) {
+                // Apply transformation if needed
+                if (direction === 'sourceToTarget' && rule.transformationType !== 'none') {
+                  valueToSet = applyTransformation(
+                    valueToSet,
+                    rule.transformation,
+                    rule.transformationType,
+                    sourceJson
+                  );
+                }
+                
+                // Set the value in the target
+                if (valueToSet !== undefined) {
+                  setValueByPath(outputObject, specificTargetPath, valueToSet);
+                }
+              }
+            }
+          }
         }
       }
       
-      // Standard (non-wildcard) processing
-      let valueToSet = getValueByPath(sourceJson, currentRuleSourcePath);
-
-      if (valueToSet === undefined && currentRuleSourcePath !== '$') {
-          continue;
-      }
-
-      if (direction === 'sourceToTarget' && currentRuleTransformationType !== 'none') {
-        valueToSet = applyTransformation(
-          valueToSet,
-          currentRuleTransformation,
-          currentRuleTransformationType,
-          sourceJson
-        );
-      } else if (direction === 'targetToSource' && currentRuleTransformationType !== 'none') {
-        valueToSet = applyTransformation(
-          valueToSet,
-          currentRuleTransformation, 
-          currentRuleTransformationType,
-          sourceJson
-        );
-      }
-
-      if (valueToSet !== undefined) {
-         setValueByPath(outputObject, currentRuleTargetPath, valueToSet);
-      }
-
     } catch (e) {
       const readableFromPath = jsonPathToReadablePath(currentRuleSourcePath);
       const readableToPath = jsonPathToReadablePath(currentRuleTargetPath);
       console.error(`Error processing rule ID "${rule.id}" from "${readableFromPath}" to "${readableToPath}":`, e);
     }
   }
+
   return outputObject;
 }
 
