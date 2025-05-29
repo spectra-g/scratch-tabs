@@ -52,7 +52,7 @@ export const JsonMapperTablet: Tablet = {
 
   render(state: JsonMapperState, onChange) {
     const [showBatchTransform, setShowBatchTransform] = useState(false);
-    
+
     const handleSearchChange = (query: string) => {
       onChange({
         ...state,
@@ -62,7 +62,7 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleCreateMapping = () => {
       const newMapping: MappingConfig = {
         id: crypto.randomUUID(),
@@ -74,7 +74,7 @@ export const JsonMapperTablet: Tablet = {
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
-      
+
       onChange({
         ...state,
         data: {
@@ -85,7 +85,7 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleEditMapping = (id: string) => {
       onChange({
         ...state,
@@ -96,7 +96,7 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleDeleteMapping = (id: string) => {
       onChange({
         ...state,
@@ -106,11 +106,11 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleDuplicateMapping = (id: string) => {
       const mapping = state.data.mappings.find(m => m.id === id);
       if (!mapping) return;
-      
+
       const newMapping: MappingConfig = {
         ...mapping,
         id: crypto.randomUUID(),
@@ -118,7 +118,7 @@ export const JsonMapperTablet: Tablet = {
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
-      
+
       onChange({
         ...state,
         data: {
@@ -127,11 +127,64 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
+    const handleTestMappingFromList = (id: string) => {
+      const mappingToListTest = state.data.mappings.find(m => m.id === id);
+      if (!mappingToListTest) return;
+
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          activeMappingId: id,
+          isTestingMapping: true,
+          testInput: mappingToListTest.sourceJson,
+        }
+      });
+    };
+
+    const handleGenerateCodeFromList = (id: string) => {
+      const mappingToGenCode = state.data.mappings.find(m => m.id === id);
+      if (!mappingToGenCode) return;
+
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          activeMappingId: id,
+          isGeneratingCode: true,
+        }
+      });
+    };
+
+    const handleTestMappingFromEditor = (mappingInProgress: MappingConfig) => {
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          activeMappingId: mappingInProgress.id,
+          isTestingMapping: true,
+          testInput: mappingInProgress.sourceJson,
+        }
+      });
+    };
+
+    const handleGenerateCodeFromEditor = (mappingInProgress: MappingConfig) => {
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          activeMappingId: mappingInProgress.id,
+          isGeneratingCode: true,
+          // Similar to testing, CodeGenerationModal will need `mappingInProgress`
+        }
+      });
+    };
+
     const handleTestMapping = (id: string) => {
       const mapping = state.data.mappings.find(m => m.id === id);
       if (!mapping) return;
-      
+
       onChange({
         ...state,
         data: {
@@ -142,11 +195,11 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleGenerateCode = (id: string) => {
       const mapping = state.data.mappings.find(m => m.id === id);
       if (!mapping) return;
-      
+
       onChange({
         ...state,
         data: {
@@ -156,13 +209,13 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleSaveMapping = (updatedMapping: MappingConfig) => {
       onChange({
         ...state,
         data: {
           ...state.data,
-          mappings: state.data.mappings.map(m => 
+          mappings: state.data.mappings.map(m =>
             m.id === updatedMapping.id ? updatedMapping : m
           ),
           activeMappingId: null,
@@ -171,7 +224,7 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleCancelEdit = () => {
       // If creating a new mapping, remove it
       if (state.data.isCreatingMapping) {
@@ -196,7 +249,7 @@ export const JsonMapperTablet: Tablet = {
         });
       }
     };
-    
+
     const handleCloseTestModal = () => {
       onChange({
         ...state,
@@ -209,7 +262,7 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleCloseCodeModal = () => {
       onChange({
         ...state,
@@ -220,15 +273,25 @@ export const JsonMapperTablet: Tablet = {
         }
       });
     };
-    
+
     const handleCloseBatchModal = () => {
       setShowBatchTransform(false);
     };
-    
-    const activeMapping = state.data.activeMappingId
+
+    const activeSavedMapping = state.data.activeMappingId
       ? state.data.mappings.find(m => m.id === state.data.activeMappingId)
       : null;
-    
+
+    let mappingForTestModal: MappingConfig | null = null;
+    if (state.data.isTestingMapping && state.data.activeMappingId) {
+      mappingForTestModal = state.data.mappings.find(m => m.id === state.data.activeMappingId) || null;
+    }
+
+    let mappingForCodeModal: MappingConfig | null = null;
+    if (state.data.isGeneratingCode && state.data.activeMappingId) {
+      mappingForCodeModal = state.data.mappings.find(m => m.id === state.data.activeMappingId) || null;
+    }
+
     return (
       <div className="h-full bg-gray-900 flex flex-col">
         {/* Header */}
@@ -238,7 +301,7 @@ export const JsonMapperTablet: Tablet = {
               <FileJson className="text-gray-400" size={24} />
               <h2 className="text-xl font-semibold text-gray-100">JSON Mapper</h2>
             </div>
-            
+
             {!state.data.isEditingMapping && !state.data.isCreatingMapping && (
               <div className="flex items-center space-x-3">
                 <div className="relative">
@@ -251,7 +314,7 @@ export const JsonMapperTablet: Tablet = {
                     className="bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors w-64"
                   />
                 </div>
-                
+
                 {state.data.mappings.length > 0 && (
                   <button
                     onClick={() => setShowBatchTransform(true)}
@@ -265,18 +328,39 @@ export const JsonMapperTablet: Tablet = {
             )}
           </div>
         </div>
-        
+
         {/* Main Content */}
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">
           {state.data.isEditingMapping || state.data.isCreatingMapping ? (
-            activeMapping && (
+            activeSavedMapping && (
               <MappingEditor
-                mapping={activeMapping}
+                mapping={activeSavedMapping}
                 isNew={state.data.isCreatingMapping}
                 onSave={handleSaveMapping}
                 onCancel={handleCancelEdit}
-                onTest={handleTestMapping}
-                onGenerateCode={handleGenerateCode}
+                onTest={(mappingInProgress) => {
+                  onChange({
+                    ...state,
+                    data: {
+                      ...state.data,
+                      activeMappingId: mappingInProgress.id,
+                      isTestingMapping: true,
+                      testInput: mappingInProgress.sourceJson,
+                      _transientMappingForModal: mappingInProgress,
+                    }
+                  });
+                }}
+                onGenerateCode={(mappingInProgress) => {
+                  onChange({
+                    ...state,
+                    data: {
+                      ...state.data,
+                      activeMappingId: mappingInProgress.id,
+                      isGeneratingCode: true,
+                      _transientMappingForModal: mappingInProgress,
+                    }
+                  });
+                }}
               />
             )
           ) : (
@@ -287,30 +371,38 @@ export const JsonMapperTablet: Tablet = {
               onEditMapping={handleEditMapping}
               onDeleteMapping={handleDeleteMapping}
               onDuplicateMapping={handleDuplicateMapping}
-              onTestMapping={handleTestMapping}
-              onGenerateCode={handleGenerateCode}
+              onTestMapping={handleTestMappingFromList}
+              onGenerateCode={handleGenerateCodeFromList}
             />
           )}
         </div>
-        
+
         {/* Modals */}
-        {state.data.isTestingMapping && activeMapping && (
+        {state.data.isTestingMapping && (state.data._transientMappingForModal || activeSavedMapping) && (
           <TestMappingModal
-            mapping={activeMapping}
-            initialInput={state.data.testInput}
-            onClose={handleCloseTestModal}
+            mapping={state.data._transientMappingForModal || activeSavedMapping!}
+            initialInput={state.data._transientMappingForModal?.sourceJson || state.data.testInput}
+            onClose={() => {
+              const nextData = { ...state.data, isTestingMapping: false, testInput: '', testOutput: '', testError: null };
+              delete nextData._transientMappingForModal;
+              onChange({ ...state, data: nextData });
+            }}
           />
         )}
-        
-        {state.data.isGeneratingCode && activeMapping && (
+
+        {state.data.isGeneratingCode && (state.data._transientMappingForModal || activeSavedMapping) && (
           <CodeGenerationModal
-            mapping={activeMapping}
-            onClose={handleCloseCodeModal}
+            mapping={state.data._transientMappingForModal || activeSavedMapping!}
+            onClose={() => {
+              const nextData = { ...state.data, isGeneratingCode: false, generatedCode: '' };
+              delete nextData._transientMappingForModal;
+              onChange({ ...state, data: nextData });
+            }}
             initialLanguage={state.data.selectedLanguage}
             initialDirection={state.data.selectedDirection}
           />
         )}
-        
+
         {showBatchTransform && state.data.mappings.length > 0 && (
           <BatchTransformModal
             mapping={state.data.mappings[0]} // Default to first mapping, could add a selector

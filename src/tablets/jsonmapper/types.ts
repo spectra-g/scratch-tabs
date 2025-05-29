@@ -46,6 +46,7 @@ export interface JsonMapperState extends TabletState {
     selectedDirection: MappingDirection;
     generatedCode: string;
     searchQuery: string;
+    _transientMappingForModal?: MappingConfig;
   };
 }
 
