@@ -11,27 +11,45 @@ interface JwtKeyManagerProps {
   onAddKey: (key: StoredKey) => void;
   onRemoveKey: (name: string) => void;
   onClearKeys: () => void;
+  keyName?: string;
+  keyValue?: string;
+  keyType?: KeyType;
+  keyAlgorithm?: string;
+  isPublic?: boolean;
+  activeTab?: string;
+  onKeyNameChange: (value: string) => void;
+  onKeyValueChange: (value: string) => void;
+  onKeyTypeChange: (value: KeyType) => void;
+  onKeyAlgorithmChange: (value: string) => void;
+  onIsPublicChange: (value: boolean) => void;
+  onActiveTabChange: (value: string) => void;
 }
 
 export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
   storedKeys,
   onAddKey,
   onRemoveKey,
-  onClearKeys
+  onClearKeys,
+  keyName = '',
+  keyValue = '',
+  keyType = 'text',
+  keyAlgorithm = '',
+  isPublic = false,
+  activeTab = 'generate',
+  onKeyNameChange,
+  onKeyValueChange,
+  onKeyTypeChange,
+  onKeyAlgorithmChange,
+  onIsPublicChange,
+  onActiveTabChange
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPublicKey, setGeneratedPublicKey] = useState('');
   const [generatedPrivateKey, setGeneratedPrivateKey] = useState('');
   const [generatedSecret, setGeneratedSecret] = useState('');
   const [generationAlgorithm, setGenerationAlgorithm] = useState('HS256');
-  const [keyName, setKeyName] = useState('');
-  const [keyValue, setKeyValue] = useState('');
-  const [keyType, setKeyType] = useState<KeyType>('text');
-  const [keyAlgorithm, setKeyAlgorithm] = useState('');
-  const [isPublic, setIsPublic] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('generate');
 
   // Generate key pair
   const handleGenerateKeyPair = async () => {
@@ -104,36 +122,36 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
     onAddKey(newKey);
 
     // Reset form
-    setKeyName('');
-    setKeyValue('');
-    setKeyType('text');
-    setKeyAlgorithm('');
-    setIsPublic(false);
+    onKeyNameChange('');
+    onKeyValueChange('');
+    onKeyTypeChange('text');
+    onKeyAlgorithmChange('');
+    onIsPublicChange(false);
     setError(null);
   };
 
   // Store generated key
-  const handleStoreGeneratedKey = (key: string, isPublic: boolean) => {
+  const handleStoreGeneratedKey = (key: string, isKeyPublic: boolean) => {
     if (!key) return;
 
-    setKeyName(`${generationAlgorithm} ${isPublic ? 'Public' : 'Private'} Key`);
-    setKeyValue(key);
-    setKeyType('pem');
-    setKeyAlgorithm(generationAlgorithm);
-    setIsPublic(isPublic);
-    setActiveTab('manual'); // Switch to manual tab when storing a generated key
+    onKeyNameChange(`${generationAlgorithm} ${isKeyPublic ? 'Public' : 'Private'} Key`);
+    onKeyValueChange(key);
+    onKeyTypeChange('pem');
+    onKeyAlgorithmChange(generationAlgorithm);
+    onIsPublicChange(isKeyPublic);
+    onActiveTabChange('manual'); // Switch to manual tab when storing a generated key
   };
 
   // Store generated secret
   const handleStoreGeneratedSecret = () => {
     if (!generatedSecret) return;
 
-    setKeyName(`${generationAlgorithm} Secret`);
-    setKeyValue(generatedSecret);
-    setKeyType('base64');
-    setKeyAlgorithm(generationAlgorithm);
-    setIsPublic(false);
-    setActiveTab('manual'); // Switch to manual tab when storing a generated secret
+    onKeyNameChange(`${generationAlgorithm} Secret`);
+    onKeyValueChange(generatedSecret);
+    onKeyTypeChange('base64');
+    onKeyAlgorithmChange(generationAlgorithm);
+    onIsPublicChange(false);
+    onActiveTabChange('manual'); // Switch to manual tab when storing a generated secret
   };
 
   // Copy key to clipboard
@@ -391,7 +409,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
           <input
             type="text"
             value={keyName}
-            onChange={(e) => setKeyName(e.target.value)}
+            onChange={(e) => onKeyNameChange(e.target.value)}
             placeholder="Enter a name for this key"
             className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
           />
@@ -404,7 +422,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
             <Button
               key="any"
-              onClick={() => setKeyAlgorithm('')}
+              onClick={() => onKeyAlgorithmChange('')}
               variant={keyAlgorithm === '' ? 'primary' : 'secondary'}
               size="sm"
             >
@@ -413,7 +431,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
             {SUPPORTED_ALGORITHMS.map(alg => (
               <Button
                 key={alg.id}
-                onClick={() => setKeyAlgorithm(alg.id)}
+                onClick={() => onKeyAlgorithmChange(alg.id)}
                 variant={keyAlgorithm === alg.id ? 'primary' : 'secondary'}
                 size="sm"
               >
@@ -432,7 +450,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
           <div className="flex items-center space-x-2">
             <button
               type="button"
-              onClick={() => setKeyType('text')}
+              onClick={() => onKeyTypeChange('text')}
               className={`px-2 py-1 text-xs rounded-md ${keyType === 'text'
                   ? 'bg-blue-500/20 text-blue-400'
                   : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
@@ -442,7 +460,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setKeyType('base64')}
+              onClick={() => onKeyTypeChange('base64')}
               className={`px-2 py-1 text-xs rounded-md ${keyType === 'base64'
                   ? 'bg-blue-500/20 text-blue-400'
                   : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
@@ -452,7 +470,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setKeyType('pem')}
+              onClick={() => onKeyTypeChange('pem')}
               className={`px-2 py-1 text-xs rounded-md ${keyType === 'pem'
                   ? 'bg-blue-500/20 text-blue-400'
                   : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
@@ -464,7 +482,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
         </div>
         <textarea
           value={keyValue}
-          onChange={(e) => setKeyValue(e.target.value)}
+          onChange={(e) => onKeyValueChange(e.target.value)}
           placeholder="Enter key value..."
           rows={5}
           className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
@@ -476,7 +494,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
           type="checkbox"
           id="isPublic"
           checked={isPublic}
-          onChange={(e) => setIsPublic(e.target.checked)}
+          onChange={(e) => onIsPublicChange(e.target.checked)}
           className="h-4 w-4 rounded border-gray-600 text-blue-500 focus:ring-blue-500/50 bg-gray-700"
         />
         <label htmlFor="isPublic" className="ml-2 text-sm text-gray-300">
@@ -490,7 +508,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
           variant="primary"
           size="md"
           icon={Plus}
-          disabled={!keyName.trim() || !keyValue.trim()}
+          disabled={!(keyName?.trim?.() || '') || !(keyValue?.trim?.() || '')}
         >
           Store Key
         </Button>
@@ -514,7 +532,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
             { id: 'manual', label: 'Manual' }
           ]}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={onActiveTabChange}
         />
         
         {activeTab === 'generate' && renderGenerateTab()}
