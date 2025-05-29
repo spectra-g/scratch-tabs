@@ -1,0 +1,251 @@
+import React, { useState, useEffect } from 'react';
+import { Editor } from '@monaco-editor/react';
+import { X, Play, ArrowRight, ArrowLeft, Upload, Download } from 'lucide-react';
+import { MappingConfig, MappingDirection } from '../types';
+import { transformJson } from '../utils/mappingUtils';
+import { isValidJson, formatJson } from '../utils/jsonUtils';
+import { readFileAsText, downloadStringAsFile } from '../utils/fileUtils';
+
+interface TestMappingModalProps {
+  mapping: MappingConfig;
+  initialInput: string;
+  onClose: () => void;
+}
+
+export const TestMappingModal: React.FC<TestMappingModalProps> = ({
+  mapping,
+  initialInput,
+  onClose
+}) => {
+  const [input, setInput] = useState(initialInput || mapping.sourceJson);
+  const [output, setOutput] = useState('');
+  const [direction, setDirection] = useState<MappingDirection>('sourceToTarget');
+  const [error, setError] = useState<string | null>(null);
+  const [isTransforming, setIsTransforming] = useState(false);
+  
+  // Transform when the component mounts
+  useEffect(() => {
+    handleTransform();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  const handleInputChange = (value: string | undefined) => {
+    setInput(value || '');
+    setError(null);
+  };
+  
+  const handleDirectionChange = (newDirection: MappingDirection) => {
+    setDirection(newDirection);
+    setError(null);
+    
+    // Swap input/output if direction changes
+    if (newDirection !== direction && output) {
+      setInput(output);
+      setOutput('');
+    }
+  };
+  
+  const handleTransform = () => {
+    if (!input) {
+      setError('Please enter input JSON');
+      return;
+    }
+    
+    if (!isValidJson(input)) {
+      setError('Invalid JSON input');
+      return;
+    }
+    
+    setIsTransforming(true);
+    setError(null);
+    
+    try {
+      const inputData = JSON.parse(input);
+      const result = transformJson(inputData, mapping.rules, direction);
+      setOutput(JSON.stringify(result, null, 2));
+    } catch (error) {
+      console.error('Error transforming JSON:', error);
+      setError(error instanceof Error ? error.message : 'Error transforming JSON');
+      setOutput('');
+    } finally {
+      setIsTransforming(false);
+    }
+  };
+  
+  const handleLoadInputFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      const content = await readFileAsText(file);
+      if (isValidJson(content)) {
+        setInput(formatJson(content));
+        setError(null);
+      } else {
+        setError('Invalid JSON file');
+      }
+    } catch (error) {
+      setError('Error reading file');
+    }
+    
+    // Reset the input value so the same file can be selected again
+    e.target.value = '';
+  };
+  
+  const handleDownloadOutput = () => {
+    if (!output) return;
+    
+    const filename = `${mapping.name.replace(/\s+/g, '_')}_${direction}_output.json`;
+    downloadStringAsFile(output, filename);
+  };
+  
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
+          <h2 className="text-xl font-semibold text-gray-100">
+            Test Mapping: {mapping.name}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6 custom-scrollbar">
+          <div className="space-y-6">
+            {/* Direction Selector */}
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => handleDirectionChange('sourceToTarget')}
+                className={`
+                  flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm
+                  ${direction === 'sourceToTarget'
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                  }
+                  transition-colors
+                `}
+              >
+                <span>Source to Target</span>
+                <ArrowRight size={16} />
+              </button>
+              <button
+                onClick={() => handleDirectionChange('targetToSource')}
+                className={`
+                  flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm
+                  ${direction === 'targetToSource'
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                  }
+                  transition-colors
+                `}
+              >
+                <ArrowLeft size={16} />
+                <span>Target to Source</span>
+              </button>
+            </div>
+            
+            {/* Input/Output Editors */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Input */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Input JSON ({direction === 'sourceToTarget' ? 'Source' : 'Target'})
+                  </label>
+                  <div className="flex space-x-2">
+                    <label className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors cursor-pointer">
+                      <Upload size={14} />
+                      <span>Load File</span>
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleLoadInputFile}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+                <div className={`border rounded-md overflow-hidden ${error ? 'border-red-500/50' : 'border-gray-700/50'}`}>
+                  <Editor
+                    height="400px"
+                    language="json"
+                    value={input}
+                    onChange={handleInputChange}
+                    theme="vs-dark"
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      wordWrap: 'on',
+                      padding: { top: 8, bottom: 8 },
+                    }}
+                  />
+                </div>
+                {error && (
+                  <p className="mt-1 text-xs text-red-400">{error}</p>
+                )}
+              </div>
+              
+              {/* Output */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    Output JSON ({direction === 'sourceToTarget' ? 'Target' : 'Source'})
+                  </label>
+                  {output && (
+                    <button
+                      onClick={handleDownloadOutput}
+                      className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                    >
+                      <Download size={14} />
+                      <span>Download</span>
+                    </button>
+                  )}
+                </div>
+                <div className="border border-gray-700/50 rounded-md overflow-hidden">
+                  <Editor
+                    height="400px"
+                    language="json"
+                    value={output}
+                    theme="vs-dark"
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      wordWrap: 'on',
+                      padding: { top: 8, bottom: 8 },
+                      readOnly: true
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="flex justify-end px-6 py-4 border-t border-gray-700/50">
+          <button
+            onClick={handleTransform}
+            disabled={!input || isTransforming}
+            className={`
+              flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium
+              ${!input || isTransforming
+                ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+              }
+              transition-colors
+            `}
+          >
+            <Play size={16} className={isTransforming ? 'animate-spin' : ''} />
+            <span>{isTransforming ? 'Transforming...' : 'Transform'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

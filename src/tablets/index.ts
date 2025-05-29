@@ -10,6 +10,7 @@ import { ConverterTablet } from './converter/ConverterTablet';
 import { VaultTablet } from './vault/VaultTablet';
 import { RestClientTablet } from './restclient/RestClientTablet';
 import { JwtTablet } from './jwt/JwtTablet';
+import { JsonMapperTablet } from './jsonmapper/JsonMapperTablet';
 
 // Register built-in tablets
 tabletRegistry.register(PasswordTablet);
@@ -23,6 +24,7 @@ tabletRegistry.register(ConverterTablet);
 tabletRegistry.register(VaultTablet);
 tabletRegistry.register(RestClientTablet);
 tabletRegistry.register(JwtTablet);
+tabletRegistry.register(JsonMapperTablet);
 
 export { TabletSelector } from './components/TabletSelector';
 export { tabletRegistry } from './registry';
