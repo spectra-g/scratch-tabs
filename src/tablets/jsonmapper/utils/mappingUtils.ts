@@ -127,7 +127,7 @@ export function transformJson(
     const firstTargetPath = direction === 'sourceToTarget' ? firstMeaningfulRule.targetPath : firstMeaningfulRule.sourcePath;
     if (firstTargetPath) { // Check again as find could return undefined
         const segments = parseJsonPathSegments(firstTargetPath);
-        if (segments.length > 0 && typeof segments[0] === 'number') {
+        if (segments.length > 0 && (typeof segments[0] === 'number' || segments[0] === '*')) {
             outputObject = [];
         }
     }
@@ -151,6 +151,53 @@ export function transformJson(
     }
 
     try {
+      // Special handling for wildcards in source path
+      if (currentRuleSourcePath.includes('[*]')) {
+        // Extract the actual array from the source using a modified path
+        // that gets the parent array of the wildcard
+        const wildcardIndex = currentRuleSourcePath.indexOf('[*]');
+        const arrayParentPath = currentRuleSourcePath.substring(0, wildcardIndex);
+        const remainingPath = currentRuleSourcePath.substring(wildcardIndex + 3); // +3 to skip [*]
+        
+        const sourceArray = getValueByPath(sourceJson, arrayParentPath);
+        
+        if (Array.isArray(sourceArray)) {
+          // Process each item in the array
+          for (let i = 0; i < sourceArray.length; i++) {
+            const specificSourcePath = `${arrayParentPath}[${i}]${remainingPath}`;
+            const specificTargetPath = currentRuleTargetPath.replace('[*]', `[${i}]`);
+            
+            let valueToSet = getValueByPath(sourceJson, specificSourcePath);
+            
+            if (valueToSet === undefined && specificSourcePath !== '$') {
+              continue;
+            }
+            
+            if (direction === 'sourceToTarget' && currentRuleTransformationType !== 'none') {
+              valueToSet = applyTransformation(
+                valueToSet,
+                currentRuleTransformation,
+                currentRuleTransformationType,
+                sourceJson
+              );
+            } else if (direction === 'targetToSource' && currentRuleTransformationType !== 'none') {
+              valueToSet = applyTransformation(
+                valueToSet,
+                currentRuleTransformation,
+                currentRuleTransformationType,
+                sourceJson
+              );
+            }
+            
+            if (valueToSet !== undefined) {
+              setValueByPath(outputObject, specificTargetPath, valueToSet);
+            }
+          }
+          continue; // Skip the standard processing below
+        }
+      }
+      
+      // Standard (non-wildcard) processing
       let valueToSet = getValueByPath(sourceJson, currentRuleSourcePath);
 
       if (valueToSet === undefined && currentRuleSourcePath !== '$') {
@@ -165,12 +212,11 @@ export function transformJson(
           sourceJson
         );
       } else if (direction === 'targetToSource' && currentRuleTransformationType !== 'none') {
-        // Consider if T->S transformations need different logic or applyTransformation needs to be direction-aware
         valueToSet = applyTransformation(
           valueToSet,
-          currentRuleTransformation, // This script was defined for S->T
+          currentRuleTransformation, 
           currentRuleTransformationType,
-          sourceJson // In T->S, sourceJson is the "target" object structure
+          sourceJson
         );
       }
 
