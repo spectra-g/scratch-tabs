@@ -1,25 +1,75 @@
 import * as jose from 'jose';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode, JwtPayload, JwtHeader } from 'jwt-decode';
 import { DecodedJwt, JwtParts, VerificationResult, SigningResult, KeyType } from '../types';
 
-/**
- * Decodes a JWT token without verification
- */
 export function decodeJwt(token: string): DecodedJwt {
   try {
-    // First try with jwt-decode for basic parsing
-    const decoded = jwtDecode(token, { header: true });
-    const header = decoded.header as Record<string, any>;
-    const payload = decoded as Record<string, any>;
-    delete payload.header; // Remove header from payload
-
-    // Extract signature
+    // Split the token into parts
     const parts = token.split('.');
-    const signature = parts.length === 3 ? parts[2] : '';
+    let headerObject = {};
+    let payloadObject = {};
+    let signature = '';
+    let warning = null;
 
-    return { header, payload, signature };
+    // Check for complete JWT structure
+    if (parts.length < 2) {
+      warning = 'Incomplete JWT format. Expected at least header and payload parts.';
+    } else if (parts.length < 3) {
+      warning = 'Missing signature part in JWT.';
+    }
+
+    // Try to decode the header (first part)
+    if (parts[0]) {
+      try {
+        headerObject = jwtDecode<JwtHeader>(token, { header: true });
+      } catch (headerError) {
+        console.warn('[decodeJwt] Error decoding header:', headerError);
+        // Try to decode base64 manually if jwt-decode fails
+        try {
+          const headerStr = atob(parts[0].replace(/-/g, '+').replace(/_/g, '/'));
+          headerObject = JSON.parse(headerStr);
+        } catch (e) {
+          console.warn('[decodeJwt] Failed manual header decode:', e);
+        }
+      }
+    }
+
+    // Try to decode the payload (second part)
+    if (parts.length > 1 && parts[1]) {
+      try {
+        payloadObject = jwtDecode<JwtPayload>(token);
+      } catch (payloadError) {
+        console.warn('[decodeJwt] Error decoding payload:', payloadError);
+        // Try to decode base64 manually if jwt-decode fails
+        try {
+          const payloadStr = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+          payloadObject = JSON.parse(payloadStr);
+        } catch (e) {
+          console.warn('[decodeJwt] Failed manual payload decode:', e);
+        }
+      }
+    }
+
+    // Get the signature (third part)
+    if (parts.length > 2) {
+      signature = parts[2];
+    }
+
+    return {
+      header: headerObject || {},
+      payload: payloadObject || {},
+      signature,
+      warning
+    };
   } catch (error) {
-    throw new Error(`Failed to decode JWT: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('[decodeJwt] Error during decoding:', error);
+    // Return a default/empty structure on error to prevent UI crashes
+    return {
+      header: {},
+      payload: {},
+      signature: '',
+      warning: error instanceof Error ? error.message : String(error)
+    };
   }
 }
 
@@ -98,7 +148,7 @@ export async function verifyJwt(token: string, key: string, keyType: KeyType): P
  * Signs a JWT token
  */
 export async function signJwt(
-  header: Record<string, any>,
+  header: { alg: string } & Record<string, any>,
   payload: Record<string, any>,
   key: string,
   keyType: KeyType
@@ -164,12 +214,18 @@ export async function generateKeyPair(algorithm: string): Promise<{ publicKey: s
 
     if (algorithm.startsWith('RS') || algorithm.startsWith('PS')) {
       // RSA key pair
-      keyPair = await jose.generateKeyPair(algorithm, { modulusLength: 2048 });
+      keyPair = await jose.generateKeyPair(algorithm, { 
+        modulusLength: 2048,
+        extractable: true 
+      });
     } else if (algorithm.startsWith('ES')) {
       // ECDSA key pair
       const crv = algorithm === 'ES256' ? 'P-256' :
         algorithm === 'ES384' ? 'P-384' : 'P-521';
-      keyPair = await jose.generateKeyPair(algorithm, { crv });
+      keyPair = await jose.generateKeyPair(algorithm, { 
+        crv,
+        extractable: true 
+      });
     } else {
       throw new Error(`Unsupported algorithm for key pair generation: ${algorithm}`);
     }

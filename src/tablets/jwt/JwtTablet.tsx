@@ -35,7 +35,14 @@ export const JwtTablet: Tablet = {
         verificationKeyType: 'text',
         signingKey: '',
         signingKeyType: 'text',
-        signingAlgorithm: 'HS256'
+        signingAlgorithm: 'HS256',
+        // Manual key form state
+        keyName: '',
+        keyValue: '',
+        keyType: 'text',
+        keyAlgorithm: '',
+        isPublic: false,
+        keyManagerActiveTab: 'generate'
       }
     };
   },
@@ -72,7 +79,14 @@ export const JwtTablet: Tablet = {
           verificationKeyType: ['text', 'base64', 'pem'].includes(parsed.data.verificationKeyType) ? parsed.data.verificationKeyType : 'text',
           signingKey: parsed.data.signingKey || '',
           signingKeyType: ['text', 'base64', 'pem'].includes(parsed.data.signingKeyType) ? parsed.data.signingKeyType : 'text',
-          signingAlgorithm: parsed.data.signingAlgorithm || 'HS256'
+          signingAlgorithm: parsed.data.signingAlgorithm || 'HS256',
+          // Manual key form state
+          keyName: parsed.data.keyName || '',
+          keyValue: parsed.data.keyValue || '',
+          keyType: ['text', 'base64', 'pem'].includes(parsed.data.keyType) ? parsed.data.keyType : 'text',
+          keyAlgorithm: parsed.data.keyAlgorithm || '',
+          isPublic: typeof parsed.data.isPublic === 'boolean' ? parsed.data.isPublic : false,
+          keyManagerActiveTab: parsed.data.keyManagerActiveTab || 'generate'
         };
 
         // Sanitize history items
@@ -168,11 +182,18 @@ export const JwtTablet: Tablet = {
           verificationKeyType: key.type
         });
       } else {
-        updateState({
+        // For signing, update the algorithm if specified in the key
+        const newState: Partial<JwtState> = {
           signingKey: key.value,
           signingKeyType: key.type,
-          signingAlgorithm: key.algorithm || data.signingAlgorithm
-        });
+        };
+        
+        // Update algorithm if specified in the key
+        if (key.algorithm) {
+          newState.signingAlgorithm = key.algorithm;
+        }
+        
+        updateState(newState);
       }
     };
 
@@ -182,7 +203,7 @@ export const JwtTablet: Tablet = {
         <div className="flex-none p-4 border-b border-gray-700/50">
           <div className="flex items-center space-x-3">
             <Key className="text-gray-400" size={24} />
-            <h2 className="text-xl font-semibold text-gray-100">JWT Tool</h2>
+            <h2 className="text-xl font-semibold text-gray-100">JWT</h2>
           </div>
         </div>
 
@@ -283,6 +304,20 @@ export const JwtTablet: Tablet = {
               onAddKey={addStoredKey}
               onRemoveKey={removeStoredKey}
               onClearKeys={clearStoredKeys}
+              // Pass the manual key form state
+              keyName={data.keyName}
+              keyValue={data.keyValue}
+              keyType={data.keyType}
+              keyAlgorithm={data.keyAlgorithm}
+              isPublic={data.isPublic}
+              activeTab={data.keyManagerActiveTab}
+              // Add handlers to update the state
+              onKeyNameChange={(value) => updateState({ keyName: value })}
+              onKeyValueChange={(value) => updateState({ keyValue: value })}
+              onKeyTypeChange={(value) => updateState({ keyType: value })}
+              onKeyAlgorithmChange={(value) => updateState({ keyAlgorithm: value })}
+              onIsPublicChange={(value) => updateState({ isPublic: value })}
+              onActiveTabChange={(value) => updateState({ keyManagerActiveTab: value })}
             />
           )}
 

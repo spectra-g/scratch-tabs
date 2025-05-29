@@ -13,6 +13,13 @@ export interface JwtState {
   signingKey: string;
   signingKeyType: KeyType;
   signingAlgorithm: string;
+  // Manual key form state
+  keyName: string;
+  keyValue: string;
+  keyType: KeyType;
+  keyAlgorithm: string;
+  isPublic: boolean;
+  keyManagerActiveTab: string;
 }
 
 export interface JwtHistoryItem {
@@ -50,6 +57,7 @@ export interface DecodedJwt {
   header: Record<string, any>;
   payload: Record<string, any>;
   signature: string;
+  warning?: string | null;
 }
 
 export interface VerificationResult {
