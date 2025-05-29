@@ -1,6 +1,6 @@
 import stringSimilarity from 'string-similarity';
-import { MappingRule, PathInfo, SuggestionResult, DataType, MappingDirection } from '../types';
-import { getValueByPath, setValueByPath, getDataType, jsonPathToReadablePath } from './jsonUtils';
+import { MappingRule, PathInfo, SuggestionResult, DataType, MappingDirection, MappingStatus, TargetLanguage } from '../types';
+import { getValueByPath, setValueByPath, getDataType, jsonPathToReadablePath, parseJsonPathSegments } from './jsonUtils';
 
 /**
  * Suggests mappings between source and target JSON
@@ -117,83 +117,107 @@ export function transformJson(
   rules: MappingRule[],
   direction: MappingDirection = 'sourceToTarget'
 ): any {
-  try {
-    // Start with an empty object
-    let result = {};
-    
-    // Apply each mapping rule
-    for (const rule of rules) {
-      // Skip ignored rules
-      if (rule.status === 'ignored') {
+  let outputObject: any = {};
+  const firstMeaningfulRule = rules.find(r => {
+    const pathToCheck = direction === 'sourceToTarget' ? r.targetPath : r.sourcePath;
+    return pathToCheck && pathToCheck !== '$'; // Ensure path is not empty or just root
+  });
+
+  if (firstMeaningfulRule) {
+    const firstTargetPath = direction === 'sourceToTarget' ? firstMeaningfulRule.targetPath : firstMeaningfulRule.sourcePath;
+    if (firstTargetPath) { // Check again as find could return undefined
+        const segments = parseJsonPathSegments(firstTargetPath);
+        if (segments.length > 0 && typeof segments[0] === 'number') {
+            outputObject = [];
+        }
+    }
+  }
+
+  const activeRules = rules.filter(rule =>
+    rule.status !== 'ignored' && rule.status !== 'error'
+  );
+
+  for (const rule of activeRules) {
+    const currentRuleSourcePath = direction === 'sourceToTarget' ? rule.sourcePath : rule.targetPath;
+    const currentRuleTargetPath = direction === 'sourceToTarget' ? rule.targetPath : rule.sourcePath;
+    const currentRuleTransformation = rule.transformation;
+    const currentRuleTransformationType = rule.transformationType;
+
+    if (!currentRuleTargetPath || currentRuleTargetPath === '$') {
         continue;
-      }
-      
-      // Determine source and target paths based on direction
-      const fromPath = direction === 'sourceToTarget' ? rule.sourcePath : rule.targetPath;
-      const toPath = direction === 'sourceToTarget' ? rule.targetPath : rule.sourcePath;
-      
-      // Get the source value
-      const sourceValue = getValueByPath(sourceJson, fromPath);
-      
-      // Skip if source value is undefined
-      if (sourceValue === undefined) {
+    }
+    if (!currentRuleSourcePath) {
         continue;
+    }
+
+    try {
+      let valueToSet = getValueByPath(sourceJson, currentRuleSourcePath);
+
+      if (valueToSet === undefined && currentRuleSourcePath !== '$') {
+          continue;
       }
-      
-      // Apply transformation if specified
-      let transformedValue = sourceValue;
-      
-      if (rule.transformationType !== 'none' && direction === 'sourceToTarget') {
-        transformedValue = applyTransformation(
-          sourceValue,
-          rule.transformation,
-          rule.transformationType,
+
+      if (direction === 'sourceToTarget' && currentRuleTransformationType !== 'none') {
+        valueToSet = applyTransformation(
+          valueToSet,
+          currentRuleTransformation,
+          currentRuleTransformationType,
           sourceJson
         );
+      } else if (direction === 'targetToSource' && currentRuleTransformationType !== 'none') {
+        // Consider if T->S transformations need different logic or applyTransformation needs to be direction-aware
+        valueToSet = applyTransformation(
+          valueToSet,
+          currentRuleTransformation, // This script was defined for S->T
+          currentRuleTransformationType,
+          sourceJson // In T->S, sourceJson is the "target" object structure
+        );
       }
-      
-      // Set the value in the result
-      result = setValueByPath(result, toPath, transformedValue);
+
+      if (valueToSet !== undefined) {
+         setValueByPath(outputObject, currentRuleTargetPath, valueToSet);
+      }
+
+    } catch (e) {
+      const readableFromPath = jsonPathToReadablePath(currentRuleSourcePath);
+      const readableToPath = jsonPathToReadablePath(currentRuleTargetPath);
+      console.error(`Error processing rule ID "${rule.id}" from "${readableFromPath}" to "${readableToPath}":`, e);
     }
-    
-    return result;
-  } catch (error) {
-    console.error('Error transforming JSON:', error);
-    throw error;
   }
+  return outputObject;
 }
 
 /**
  * Applies a transformation to a value
  */
 export function applyTransformation(
-  value: any,
-  transformation: string,
+  inputValue: any,
+  transformationScript: string,
   type: 'none' | 'builtin' | 'custom',
-  sourceObject: any
+  entireSourceObject: any
 ): any {
-  if (type === 'none' || !transformation) {
-    return value;
+  if (type === 'none' || !transformationScript) {
+    return inputValue;
   }
-  
+
   try {
     if (type === 'builtin') {
-      return applyBuiltinTransformation(value, transformation);
+      return applyBuiltinTransformation(inputValue, transformationScript);
     } else if (type === 'custom') {
-      // Create a function from the transformation string
-      const transformFn = new Function(
-        'sourceValue',
-        'sourceObject',
-        `"use strict"; return (${transformation});`
-      );
-      
-      return transformFn(value, sourceObject);
+      const paramNames = ['sourceValue', 'sourceObject'];
+      const functionBody = `"use strict"; return (${transformationScript});`;
+      const transformFn = new Function(...paramNames, functionBody);
+
+      const result = transformFn(inputValue, entireSourceObject);
+      return result;
     }
-    
-    return value;
+    return inputValue;
   } catch (error) {
-    console.error('Error applying transformation:', error);
-    return value;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(
+      `Error applying transformation (Type: ${type}, Script: "${transformationScript}", Input: ${JSON.stringify(inputValue)}): ${errorMessage}`
+    );
+    throw new Error(`Transformation Error: ${errorMessage} (Script: "${transformationScript}")`);
   }
 }
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { ArrowLeft, Save, Play, FileCode, Wand2, Upload } from 'lucide-react';
+import { ArrowLeft, Save, Play, Plus, FileCode, Wand2, Upload, DownloadCloud } from 'lucide-react';
 import { MappingConfig, MappingRule, PathInfo } from '../types';
 import { MappingTable } from './MappingTable';
-import { extractPaths, isValidJson, formatJson } from '../utils/jsonUtils';
+import { extractPaths, isValidJson, formatJson, jsonPathToReadablePath } from '../utils/jsonUtils';
 import { suggestMappings, createRulesFromSuggestions, validateRules } from '../utils/mappingUtils';
 import { readFileAsText } from '../utils/fileUtils';
 
@@ -32,7 +32,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const [sourceJsonError, setSourceJsonError] = useState<string | null>(null);
   const [targetJsonError, setTargetJsonError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  
+
   // Validate JSON when it changes
   useEffect(() => {
     if (sourceJson) {
@@ -46,7 +46,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       setSourceJsonError(null);
     }
   }, [sourceJson]);
-  
+
   useEffect(() => {
     if (targetJson) {
       try {
@@ -59,19 +59,75 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       setTargetJsonError(null);
     }
   }, [targetJson]);
-  
+
+  const handleExportRulesToCsv = () => {
+    if (rules.length === 0) {
+      alert("No rules to export.");
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "Source Path (Readable)",
+      "Target Path (Readable)",
+      "Source Path (JSONPath)",
+      "Target Path (JSONPath)",
+      "Transformation Type",
+      "Transformation Script/Details",
+      "Source Data Type",
+      "Target Data Type",
+      "Status",
+      "Confidence",
+      "User Defined"
+    ];
+
+    const csvRows = [headers.join(',')];
+
+    rules.forEach(rule => {
+      const row = [
+        `"${rule.id}"`,
+        `"${jsonPathToReadablePath(rule.sourcePath)}"`,
+        `"${jsonPathToReadablePath(rule.targetPath)}"`,
+        `"${rule.sourcePath}"`,
+        `"${rule.targetPath}"`,
+        `"${rule.transformationType}"`,
+        `"${rule.transformation.replace(/"/g, '""')}"`, // Escape double quotes in transformation script
+        `"${rule.sourceDataType}"`,
+        `"${rule.targetDataType}"`,
+        `"${rule.status}"`,
+        `${rule.confidence}`,
+        `${rule.isUserDefined}`
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const filename = `${name.trim().replace(/\s+/g, '_') || 'mapping'}_rules.csv`;
+
+    // Use your existing downloadStringAsFile but adjust for CSV MIME type
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleSourceJsonChange = (value: string | undefined) => {
     setSourceJson(value || '');
   };
-  
+
   const handleTargetJsonChange = (value: string | undefined) => {
     setTargetJson(value || '');
   };
-  
+
   const handleLoadSourceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     try {
       const content = await readFileAsText(file);
       if (isValidJson(content)) {
@@ -83,15 +139,15 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     } catch (error) {
       setSourceJsonError('Error reading file');
     }
-    
+
     // Reset the input value so the same file can be selected again
     e.target.value = '';
   };
-  
+
   const handleLoadTargetFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     try {
       const content = await readFileAsText(file);
       if (isValidJson(content)) {
@@ -103,33 +159,33 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     } catch (error) {
       setTargetJsonError('Error reading file');
     }
-    
+
     // Reset the input value so the same file can be selected again
     e.target.value = '';
   };
-  
+
   const handleAnalyzeAndSuggest = async () => {
     if (!sourceJson || sourceJsonError) {
       return;
     }
-    
+
     setIsAnalyzing(true);
-    
+
     try {
       const sourceData = JSON.parse(sourceJson);
       const sourcePaths = extractPaths(sourceData);
-      
+
       let targetPaths: PathInfo[] = [];
       if (targetJson && !targetJsonError) {
         const targetData = JSON.parse(targetJson);
         targetPaths = extractPaths(targetData);
       }
-      
+
       // If we have both source and target, suggest mappings
       if (targetPaths.length > 0) {
         const suggestions = suggestMappings(sourcePaths, targetPaths);
         const newRules = createRulesFromSuggestions(suggestions);
-        
+
         // Merge with existing rules, preserving user-defined ones
         const existingRuleMap = new Map<string, MappingRule>();
         rules.forEach(rule => {
@@ -137,20 +193,20 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
             existingRuleMap.set(rule.sourcePath, rule);
           }
         });
-        
+
         const mergedRules = newRules.map(rule => {
           const existingRule = existingRuleMap.get(rule.sourcePath);
           return existingRule || rule;
         });
-        
+
         // Add any unmapped source paths
         const mappedSourcePaths = new Set(mergedRules.map(rule => rule.sourcePath));
-        const unmappedSourcePaths = sourcePaths.filter(p => 
-          p.type !== 'array' && 
-          p.type !== 'object' && 
+        const unmappedSourcePaths = sourcePaths.filter(p =>
+          p.type !== 'array' &&
+          p.type !== 'object' &&
           !mappedSourcePaths.has(p.path)
         );
-        
+
         const unmappedRules = unmappedSourcePaths.map(path => ({
           id: crypto.randomUUID(),
           sourcePath: path.path,
@@ -163,14 +219,14 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
           confidence: 0,
           isUserDefined: false
         }));
-        
+
         setRules([...mergedRules, ...unmappedRules]);
       } else {
         // If we only have source, create unmapped rules for all source paths
-        const sourceLeafPaths = sourcePaths.filter(p => 
+        const sourceLeafPaths = sourcePaths.filter(p =>
           p.type !== 'array' && p.type !== 'object'
         );
-        
+
         const newRules = sourceLeafPaths.map(path => ({
           id: crypto.randomUUID(),
           sourcePath: path.path,
@@ -183,7 +239,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
           confidence: 0,
           isUserDefined: false
         }));
-        
+
         setRules(newRules);
       }
     } catch (error) {
@@ -192,7 +248,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       setIsAnalyzing(false);
     }
   };
-  
+
   const handleAddRule = () => {
     const newRule: MappingRule = {
       id: crypto.randomUUID(),
@@ -206,79 +262,79 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       confidence: 0,
       isUserDefined: true
     };
-    
+
     setRules([...rules, newRule]);
   };
-  
+
   const handleUpdateRule = (updatedRule: MappingRule) => {
-    setRules(rules.map(rule => 
+    setRules(rules.map(rule =>
       rule.id === updatedRule.id ? { ...updatedRule, isUserDefined: true } : rule
     ));
   };
-  
+
   const handleDeleteRule = (id: string) => {
     setRules(rules.filter(rule => rule.id !== id));
   };
-  
+
   const handleIgnoreRule = (id: string) => {
-    setRules(rules.map(rule => 
+    setRules(rules.map(rule =>
       rule.id === id ? { ...rule, status: rule.status === 'ignored' ? 'unmapped' : 'ignored' } : rule
     ));
   };
-  
+
   const handleReEvaluateRule = (id: string) => {
     if (!sourceJson || !targetJson || sourceJsonError || targetJsonError) {
       return;
     }
-    
+
     try {
       const sourceData = JSON.parse(sourceJson);
       const targetData = JSON.parse(targetJson);
-      
+
       const rule = rules.find(r => r.id === id);
       if (!rule) return;
-      
+
       const updatedRules = validateRules([rule], sourceData, targetData);
-      
-      setRules(rules.map(r => 
+
+      setRules(rules.map(r =>
         r.id === id ? updatedRules[0] : r
       ));
     } catch (error) {
       console.error('Error re-evaluating rule:', error);
     }
   };
-  
+
   const handleReEvaluateAll = () => {
     if (!sourceJson || !targetJson || sourceJsonError || targetJsonError) {
       return;
     }
-    
+
     try {
       const sourceData = JSON.parse(sourceJson);
       const targetData = JSON.parse(targetJson);
-      
+
       const updatedRules = validateRules(rules, sourceData, targetData);
       setRules(updatedRules);
     } catch (error) {
       console.error('Error re-evaluating all rules:', error);
     }
   };
-  
+
   const handleClearAllRules = () => {
     setRules([]);
   };
-  
+
   const handleSave = () => {
     if (!name.trim()) {
       alert('Please enter a name for the mapping');
       return;
     }
-    
+
     if (!sourceJson || sourceJsonError) {
       alert('Please enter valid source JSON');
       return;
     }
-    
+
     const updatedMapping: MappingConfig = {
       ...mapping,
       name: name.trim(),
@@ -288,16 +344,16 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       rules,
       updatedAt: Date.now()
     };
-    
+
     onSave(updatedMapping);
   };
-  
+
   const handleTest = () => {
     if (!name.trim() || !sourceJson || sourceJsonError) {
       alert('Please enter a name and valid source JSON');
       return;
     }
-    
+
     const updatedMapping: MappingConfig = {
       ...mapping,
       name: name.trim(),
@@ -307,16 +363,16 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       rules,
       updatedAt: Date.now()
     };
-    
+
     onTest(updatedMapping);
   };
-  
+
   const handleGenerateCode = () => {
     if (!name.trim() || !sourceJson || sourceJsonError) {
       alert('Please enter a name and valid source JSON');
       return;
     }
-    
+
     const updatedMapping: MappingConfig = {
       ...mapping,
       name: name.trim(),
@@ -326,10 +382,10 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       rules,
       updatedAt: Date.now()
     };
-    
+
     onGenerateCode(updatedMapping);
   };
-  
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -365,6 +421,15 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               <span>Generate Code</span>
             </button>
             <button
+              onClick={handleExportRulesToCsv}
+              className="flex items-center space-x-2 px-3 py-1.5 bg-teal-500/20 text-teal-400 rounded-md hover:bg-teal-500/30 transition-colors"
+              title="Export rules to CSV"
+              disabled={rules.length === 0}
+            >
+              <DownloadCloud size={16} />
+              <span>Export CSV</span>
+            </button>
+            <button
               onClick={handleSave}
               className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
             >
@@ -374,7 +439,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="flex-1 overflow-auto p-4 custom-scrollbar">
         <div className="space-y-6">
@@ -405,7 +470,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               />
             </div>
           </div>
-          
+
           {/* JSON Editors */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Source JSON */}
@@ -446,7 +511,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                 <p className="mt-1 text-xs text-red-400">{sourceJsonError}</p>
               )}
             </div>
-            
+
             {/* Target JSON */}
             <div>
               <div className="flex justify-between items-center mb-2">
@@ -486,7 +551,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               )}
             </div>
           </div>
-          
+
           {/* Analyze Button */}
           <div className="flex justify-center">
             <button
@@ -505,7 +570,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               <span>{isAnalyzing ? 'Analyzing...' : 'Analyze & Suggest Mappings'}</span>
             </button>
           </div>
-          
+
           {/* Mapping Table */}
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -537,7 +602,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                 </button>
               </div>
             </div>
-            
+
             <MappingTable
               rules={rules}
               onUpdateRule={handleUpdateRule}
