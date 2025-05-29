@@ -112,6 +112,7 @@ export const WelcomeScreen: React.FC = () => {
             <li>Double-click anywhere here</li>
             <li>Use the buttons above</li>
             <li>Paste text from your clipboard</li>
+            <li>Drag a file from your desktop</li>
             <li>Type <span className="font-mono bg-gray-700 px-1 rounded text-gray-300">/</span> to select a Tablet</li>
           </ol>
         </div>

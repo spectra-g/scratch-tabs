@@ -61,7 +61,6 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
     
     try {
       const inputData = JSON.parse(input);
-      console.log("TestMappingModal - RULES:", JSON.stringify(mapping.rules, null, 2));
       const result = transformJson(inputData, mapping.rules, direction);
       setOutput(JSON.stringify(result, null, 2));
     } catch (error) {
