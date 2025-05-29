@@ -50,7 +50,11 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
 
     // For asymmetric algorithms, we need a public key
     if (isAsymmetric) {
-      return key.isPublic && (!key.algorithm || key.algorithm === algorithm);
+      return key.isPublic && 
+             // Either the key has no algorithm specified or it matches our selected algorithm
+             (!key.algorithm || algorithm === key.algorithm || 
+              // Match algorithm family (RS*, ES*, PS*)
+              (key.algorithm && algorithm.substring(0, 2) === key.algorithm.substring(0, 2)));
     }
 
     return true;

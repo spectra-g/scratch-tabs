@@ -76,16 +76,20 @@ export const KeyInput: React.FC<KeyInputProps> = ({
         </div>
       </div>
       
-      <div className="relative">
+      <div className={`relative ${isPrivate ? 'group' : ''}`}>
+        {isPrivate && !showKey && (
+          <div className="absolute right-10 top-2 text-xs text-gray-500">
+            <span className="opacity-70 group-hover:opacity-0 transition-opacity duration-200">Hover to reveal</span>
+          </div>
+        )}
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value, type)}
           placeholder={placeholder}
           rows={5}
-          className={`w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors ${
-            isPrivate && !showKey ? 'text-security-disc' : ''
+          className={`w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-all duration-200 ${
+            isPrivate && !showKey ? 'filter blur-sm group-hover:blur-none focus:blur-none' : ''
           }`}
-          style={isPrivate && !showKey ? { WebkitTextSecurity: 'disc' } as React.CSSProperties : undefined}
         />
         
         {isPrivate && (

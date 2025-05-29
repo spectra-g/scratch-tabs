@@ -174,15 +174,20 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
   
   // Filter stored keys based on algorithm
   const filteredStoredKeys = storedKeys.filter(key => {
-    // For symmetric algorithms (HS*), we need a secret key
+    // For symmetric algorithms (HS*), any key is fine
     if (signingAlgorithm.startsWith('HS')) {
       return !key.algorithm || key.algorithm.startsWith('HS');
     }
     
-    // For asymmetric algorithms, we need a private key
-    return !key.isPublic && (!key.algorithm || key.algorithm === signingAlgorithm);
+    // For asymmetric algorithms (RS*, ES*, PS*), we need a private key
+    // Private keys have isPublic = false
+    return !key.isPublic && 
+           // Either the key has no algorithm specified or it matches our selected algorithm
+           (!key.algorithm || key.algorithm === signingAlgorithm || 
+            // Match algorithm family (RS*, ES*, PS*)
+            (key.algorithm && signingAlgorithm.substring(0, 2) === key.algorithm.substring(0, 2)));
   });
-  
+
   // Download generated token
   const handleDownloadToken = () => {
     if (!generatedToken) return;
@@ -342,22 +347,21 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-gray-300">Signing Options</h3>
         
-        {/* Algorithm Selector */}
+        {/* Signing Algorithm */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-300">
-            Algorithm
-          </label>
-          <select
-            value={signingAlgorithm}
-            onChange={(e) => onSigningAlgorithmChange(e.target.value)}
-            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
-          >
-            {SUPPORTED_ALGORITHMS.map((alg) => (
-              <option key={alg.id} value={alg.id}>
-                {alg.name} ({alg.id})
-              </option>
+          <h3 className="text-sm font-medium text-gray-300">Signing Algorithm</h3>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            {SUPPORTED_ALGORITHMS.map(alg => (
+              <Button
+                key={alg.id}
+                onClick={() => onSigningAlgorithmChange(alg.id)}
+                variant={signingAlgorithm === alg.id ? 'primary' : 'secondary'}
+                size="sm"
+              >
+                {alg.id}
+              </Button>
             ))}
-          </select>
+          </div>
         </div>
         
         {/* Signing Key */}
@@ -382,7 +386,7 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
                     <div>
                       <p className="text-sm font-medium text-gray-200">{key.name}</p>
                       <p className="text-xs text-gray-400">
-                        {key.algorithm || 'Any'} • {key.type}
+                        {key.algorithm || 'Any'} • {key.type} • {key.isPublic ? 'Public' : 'Private'}
                       </p>
                     </div>
                     <Button

@@ -3,6 +3,7 @@ import { Eye, Key, Plus, Trash2, AlertTriangle, Copy, Check, Download } from 'lu
 import { generateKeyPair, generateSecret, isPemFormat, isBase64 } from '../utils/jwtUtils';
 import { Button } from './ui/Button';
 import { Alert } from './ui/Alert';
+import { Tabs } from './ui/Tabs';
 import { StoredKey, KeyType, SUPPORTED_ALGORITHMS } from '../types';
 
 interface JwtKeyManagerProps {
@@ -30,6 +31,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
   const [isPublic, setIsPublic] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('generate');
 
   // Generate key pair
   const handleGenerateKeyPair = async () => {
@@ -119,6 +121,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
     setKeyType('pem');
     setKeyAlgorithm(generationAlgorithm);
     setIsPublic(isPublic);
+    setActiveTab('manual'); // Switch to manual tab when storing a generated key
   };
 
   // Store generated secret
@@ -130,6 +133,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
     setKeyType('base64');
     setKeyAlgorithm(generationAlgorithm);
     setIsPublic(false);
+    setActiveTab('manual'); // Switch to manual tab when storing a generated secret
   };
 
   // Copy key to clipboard
@@ -156,321 +160,347 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      {/* Key Generation */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-300">Generate Keys</h3>
+  // Render the Generate tab content
+  const renderGenerateTab = () => (
+    <div className="space-y-4 mt-4">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-300">
+          Algorithm
+        </label>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+          {SUPPORTED_ALGORITHMS.map(alg => (
+            <Button
+              key={alg.id}
+              onClick={() => setGenerationAlgorithm(alg.id)}
+              variant={generationAlgorithm === alg.id ? 'primary' : 'secondary'}
+              size="sm"
+            >
+              {alg.id}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          onClick={handleGenerateKeyPair}
+          variant="primary"
+          size="md"
+          disabled={isGenerating || generationAlgorithm.startsWith('HS')}
+        >
+          {isGenerating ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+              Generating...
+            </>
+          ) : (
+            'Generate Key Pair'
+          )}
+        </Button>
+
+        <Button
+          onClick={handleGenerateSecret}
+          variant="primary"
+          size="md"
+          disabled={isGenerating || !generationAlgorithm.startsWith('HS')}
+        >
+          {isGenerating ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+              Generating...
+            </>
+          ) : (
+            'Generate Secret'
+          )}
+        </Button>
+      </div>
+
+      {error && (
+        <Alert variant="error">
+          {error}
+        </Alert>
+      )}
+
+      {/* Generated Keys */}
+      {generatedPublicKey && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-gray-300">Public Key</h4>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={() => handleCopyKey(generatedPublicKey)}
+                variant="secondary"
+                size="sm"
+                icon={copiedKey === generatedPublicKey ? Check : Copy}
+                title={copiedKey === generatedPublicKey ? 'Copied!' : 'Copy to clipboard'}
+              >
+                {copiedKey === generatedPublicKey ? 'Copied!' : 'Copy'}
+              </Button>
+              <Button
+                onClick={() => handleDownloadKey(generatedPublicKey, 'public_key.pem')}
+                variant="secondary"
+                size="sm"
+                icon={Download}
+                title="Download as file"
+              >
+                Download
+              </Button>
+              <Button
+                onClick={() => handleStoreGeneratedKey(generatedPublicKey, true)}
+                variant="secondary"
+                size="sm"
+                icon={Key}
+                title="Store key"
+              >
+                Store
+              </Button>
+            </div>
+          </div>
+          <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
+            <pre className="font-mono text-xs text-gray-300 whitespace-pre-wrap break-all">
+              {generatedPublicKey}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      {generatedPrivateKey && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-gray-300">Private Key</h4>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={() => handleCopyKey(generatedPrivateKey)}
+                variant="secondary"
+                size="sm"
+                icon={copiedKey === generatedPrivateKey ? Check : Copy}
+                title={copiedKey === generatedPrivateKey ? 'Copied!' : 'Copy to clipboard'}
+              >
+                {copiedKey === generatedPrivateKey ? 'Copied!' : 'Copy'}
+              </Button>
+              <Button
+                onClick={() => handleDownloadKey(generatedPrivateKey, 'private_key.pem')}
+                variant="secondary"
+                size="sm"
+                icon={Download}
+                title="Download as file"
+              >
+                Download
+              </Button>
+              <Button
+                onClick={() => handleStoreGeneratedKey(generatedPrivateKey, false)}
+                variant="secondary"
+                size="sm"
+                icon={Key}
+                title="Store key"
+              >
+                Store
+              </Button>
+            </div>
+          </div>
+          <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
+            <pre className="font-mono text-xs text-gray-300 whitespace-pre-wrap break-all">
+              {generatedPrivateKey}
+            </pre>
+          </div>
+          <Alert variant="warning" title="Security Warning">
+            <div className="flex items-center">
+              <AlertTriangle size={18} className="mr-2 flex-shrink-0" />
+              <span>
+                Never share your private key. For production use, store private keys securely and never in client-side code.
+              </span>
+            </div>
+          </Alert>
+        </div>
+      )}
+
+      {generatedSecret && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-gray-300">Secret</h4>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={() => handleCopyKey(generatedSecret)}
+                variant="secondary"
+                size="sm"
+                icon={copiedKey === generatedSecret ? Check : Copy}
+                title={copiedKey === generatedSecret ? 'Copied!' : 'Copy to clipboard'}
+              >
+                {copiedKey === generatedSecret ? 'Copied!' : 'Copy'}
+              </Button>
+              <Button
+                onClick={() => handleDownloadKey(generatedSecret, 'secret.txt')}
+                variant="secondary"
+                size="sm"
+                icon={Download}
+                title="Download as file"
+              >
+                Download
+              </Button>
+              <Button
+                onClick={handleStoreGeneratedSecret}
+                variant="secondary"
+                size="sm"
+                icon={Key}
+                title="Store key"
+              >
+                Store
+              </Button>
+            </div>
+          </div>
+          <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
+            <div className="font-mono text-sm text-gray-300 break-all">
+              {generatedSecret}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Render the Manual tab content
+  const renderManualTab = () => (
+    <div className="space-y-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Key Name
+          </label>
+          <input
+            type="text"
+            value={keyName}
+            onChange={(e) => setKeyName(e.target.value)}
+            placeholder="Enter a name for this key"
+            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+          />
+        </div>
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">
-            Algorithm
+            Algorithm (Optional)
           </label>
-          <select
-            value={generationAlgorithm}
-            onChange={(e) => setGenerationAlgorithm(e.target.value)}
-            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
-          >
-            {SUPPORTED_ALGORITHMS.map((alg) => (
-              <option key={alg.id} value={alg.id}>
-                {alg.name} ({alg.id})
-              </option>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            <Button
+              key="any"
+              onClick={() => setKeyAlgorithm('')}
+              variant={keyAlgorithm === '' ? 'primary' : 'secondary'}
+              size="sm"
+            >
+              Any
+            </Button>
+            {SUPPORTED_ALGORITHMS.map(alg => (
+              <Button
+                key={alg.id}
+                onClick={() => setKeyAlgorithm(alg.id)}
+                variant={keyAlgorithm === alg.id ? 'primary' : 'secondary'}
+                size="sm"
+              >
+                {alg.id}
+              </Button>
             ))}
-          </select>
+          </div>
         </div>
+      </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={handleGenerateKeyPair}
-            variant="primary"
-            size="md"
-            disabled={isGenerating || generationAlgorithm.startsWith('HS')}
-          >
-            {isGenerating ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
-                Generating...
-              </>
-            ) : (
-              'Generate Key Pair'
-            )}
-          </Button>
-
-          <Button
-            onClick={handleGenerateSecret}
-            variant="primary"
-            size="md"
-            disabled={isGenerating || !generationAlgorithm.startsWith('HS')}
-          >
-            {isGenerating ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
-                Generating...
-              </>
-            ) : (
-              'Generate Secret'
-            )}
-          </Button>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-gray-300">
+            Key Value
+          </label>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setKeyType('text')}
+              className={`px-2 py-1 text-xs rounded-md ${keyType === 'text'
+                  ? 'bg-blue-500/20 text-blue-400'
+                  : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                }`}
+            >
+              Text
+            </button>
+            <button
+              type="button"
+              onClick={() => setKeyType('base64')}
+              className={`px-2 py-1 text-xs rounded-md ${keyType === 'base64'
+                  ? 'bg-blue-500/20 text-blue-400'
+                  : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                }`}
+            >
+              Base64
+            </button>
+            <button
+              type="button"
+              onClick={() => setKeyType('pem')}
+              className={`px-2 py-1 text-xs rounded-md ${keyType === 'pem'
+                  ? 'bg-blue-500/20 text-blue-400'
+                  : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                }`}
+            >
+              PEM
+            </button>
+          </div>
         </div>
+        <textarea
+          value={keyValue}
+          onChange={(e) => setKeyValue(e.target.value)}
+          placeholder="Enter key value..."
+          rows={5}
+          className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+        />
+      </div>
+
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id="isPublic"
+          checked={isPublic}
+          onChange={(e) => setIsPublic(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-600 text-blue-500 focus:ring-blue-500/50 bg-gray-700"
+        />
+        <label htmlFor="isPublic" className="ml-2 text-sm text-gray-300">
+          This is a public key
+        </label>
+      </div>
+
+      <div className="flex items-center space-x-4">
+        <Button
+          onClick={handleStoreKey}
+          variant="primary"
+          size="md"
+          icon={Plus}
+          disabled={!keyName.trim() || !keyValue.trim()}
+        >
+          Store Key
+        </Button>
 
         {error && (
-          <Alert variant="error">
-            {error}
-          </Alert>
-        )}
-
-        {/* Generated Keys */}
-        {generatedPublicKey && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-300">Public Key</h4>
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => handleCopyKey(generatedPublicKey)}
-                  variant="secondary"
-                  size="sm"
-                  icon={copiedKey === generatedPublicKey ? Check : Copy}
-                  title={copiedKey === generatedPublicKey ? 'Copied!' : 'Copy to clipboard'}
-                >
-                  {copiedKey === generatedPublicKey ? 'Copied!' : 'Copy'}
-                </Button>
-                <Button
-                  onClick={() => handleDownloadKey(generatedPublicKey, 'public_key.pem')}
-                  variant="secondary"
-                  size="sm"
-                  icon={Download}
-                  title="Download as file"
-                >
-                  Download
-                </Button>
-                <Button
-                  onClick={() => handleStoreGeneratedKey(generatedPublicKey, true)}
-                  variant="secondary"
-                  size="sm"
-                  icon={Key}
-                  title="Store key"
-                >
-                  Store
-                </Button>
-              </div>
-            </div>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
-              <pre className="font-mono text-xs text-gray-300 whitespace-pre-wrap break-all">
-                {generatedPublicKey}
-              </pre>
-            </div>
-          </div>
-        )}
-
-        {generatedPrivateKey && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-300">Private Key</h4>
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => handleCopyKey(generatedPrivateKey)}
-                  variant="secondary"
-                  size="sm"
-                  icon={copiedKey === generatedPrivateKey ? Check : Copy}
-                  title={copiedKey === generatedPrivateKey ? 'Copied!' : 'Copy to clipboard'}
-                >
-                  {copiedKey === generatedPrivateKey ? 'Copied!' : 'Copy'}
-                </Button>
-                <Button
-                  onClick={() => handleDownloadKey(generatedPrivateKey, 'private_key.pem')}
-                  variant="secondary"
-                  size="sm"
-                  icon={Download}
-                  title="Download as file"
-                >
-                  Download
-                </Button>
-                <Button
-                  onClick={() => handleStoreGeneratedKey(generatedPrivateKey, false)}
-                  variant="secondary"
-                  size="sm"
-                  icon={Key}
-                  title="Store key"
-                >
-                  Store
-                </Button>
-              </div>
-            </div>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
-              <pre className="font-mono text-xs text-gray-300 whitespace-pre-wrap break-all">
-                {generatedPrivateKey}
-              </pre>
-            </div>
-            <Alert variant="warning" title="Security Warning">
-              <div className="flex items-center">
-                <AlertTriangle size={18} className="mr-2 flex-shrink-0" />
-                <span>
-                  Never share your private key. For production use, store private keys securely and never in client-side code.
-                </span>
-              </div>
-            </Alert>
-          </div>
-        )}
-
-        {generatedSecret && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-300">Secret</h4>
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => handleCopyKey(generatedSecret)}
-                  variant="secondary"
-                  size="sm"
-                  icon={copiedKey === generatedSecret ? Check : Copy}
-                  title={copiedKey === generatedSecret ? 'Copied!' : 'Copy to clipboard'}
-                >
-                  {copiedKey === generatedSecret ? 'Copied!' : 'Copy'}
-                </Button>
-                <Button
-                  onClick={() => handleDownloadKey(generatedSecret, 'secret.txt')}
-                  variant="secondary"
-                  size="sm"
-                  icon={Download}
-                  title="Download as file"
-                >
-                  Download
-                </Button>
-                <Button
-                  onClick={handleStoreGeneratedSecret}
-                  variant="secondary"
-                  size="sm"
-                  icon={Key}
-                  title="Store key"
-                >
-                  Store
-                </Button>
-              </div>
-            </div>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
-              <div className="font-mono text-sm text-gray-300 break-all">
-                {generatedSecret}
-              </div>
-            </div>
-          </div>
+          <span className="text-sm text-red-400">{error}</span>
         )}
       </div>
+    </div>
+  );
 
-      {/* Store Key */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-300">Store Key</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">
-              Key Name
-            </label>
-            <input
-              type="text"
-              value={keyName}
-              onChange={(e) => setKeyName(e.target.value)}
-              placeholder="Enter a name for this key"
-              className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">
-              Algorithm (Optional)
-            </label>
-            <select
-              value={keyAlgorithm}
-              onChange={(e) => setKeyAlgorithm(e.target.value)}
-              className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
-            >
-              <option value="">Any</option>
-              {SUPPORTED_ALGORITHMS.map((alg) => (
-                <option key={alg.id} value={alg.id}>
-                  {alg.name} ({alg.id})
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-300">
-              Key Value
-            </label>
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                onClick={() => setKeyType('text')}
-                className={`px-2 py-1 text-xs rounded-md ${keyType === 'text'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
-                  }`}
-              >
-                Text
-              </button>
-              <button
-                type="button"
-                onClick={() => setKeyType('base64')}
-                className={`px-2 py-1 text-xs rounded-md ${keyType === 'base64'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
-                  }`}
-              >
-                Base64
-              </button>
-              <button
-                type="button"
-                onClick={() => setKeyType('pem')}
-                className={`px-2 py-1 text-xs rounded-md ${keyType === 'pem'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
-                  }`}
-              >
-                PEM
-              </button>
-            </div>
-          </div>
-          <textarea
-            value={keyValue}
-            onChange={(e) => setKeyValue(e.target.value)}
-            placeholder="Enter key value..."
-            rows={5}
-            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
-          />
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="isPublic"
-            checked={isPublic}
-            onChange={(e) => setIsPublic(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-600 text-blue-500 focus:ring-blue-500/50 bg-gray-700"
-          />
-          <label htmlFor="isPublic" className="ml-2 text-sm text-gray-300">
-            This is a public key
-          </label>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <Button
-            onClick={handleStoreKey}
-            variant="primary"
-            size="md"
-            icon={Plus}
-            disabled={!keyName.trim() || !keyValue.trim()}
-          >
-            Store Key
-          </Button>
-
-          {error && (
-            <span className="text-sm text-red-400">{error}</span>
-          )}
-        </div>
+  return (
+    <div className="p-6 space-y-6">
+      {/* Key Creation Section with Tabs */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-medium text-gray-300 mb-2">Create Key</h3>
+        
+        <Tabs
+          tabs={[
+            { id: 'generate', label: 'Generate' },
+            { id: 'manual', label: 'Manual' }
+          ]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        
+        {activeTab === 'generate' && renderGenerateTab()}
+        {activeTab === 'manual' && renderManualTab()}
       </div>
 
-      {/* Stored Keys */}
-      <div className="space-y-4">
+      {/* Stored Keys Section */}
+      <div className="space-y-4 mt-8 pt-4 border-t border-gray-700/50">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-300">Stored Keys</h3>
           {storedKeys.length > 0 && (
@@ -527,14 +557,18 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
                       size="sm"
                       icon={copiedKey === key.value ? Check : Copy}
                       title={copiedKey === key.value ? 'Copied!' : 'Copy to clipboard'}
-                    />
+                    >
+                      {copiedKey === key.value ? 'Copied' : 'Copy'}
+                    </Button>
                     <Button
                       onClick={() => onRemoveKey(key.name)}
                       variant="danger"
                       size="sm"
                       icon={Trash2}
                       title="Remove key"
-                    />
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -547,7 +581,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
       <div className="pt-2">
         <Alert variant="warning" title="Security Warning">
           <p>
-            Keys are stored in your browser's local storage and are not sent to any server. However, it's best practice to avoid storing sensitive keys in the browser. Consider using a secure key management system for production use.
+            Keys are stored in your browser's local storage and are not sent to any server. However, it's best practice to delete these from the JWT tablet after use.
           </p>
         </Alert>
       </div>

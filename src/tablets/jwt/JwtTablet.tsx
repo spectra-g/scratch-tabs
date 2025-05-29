@@ -168,11 +168,18 @@ export const JwtTablet: Tablet = {
           verificationKeyType: key.type
         });
       } else {
-        updateState({
+        // For signing, update the algorithm if specified in the key
+        const newState: Partial<JwtState> = {
           signingKey: key.value,
           signingKeyType: key.type,
-          signingAlgorithm: key.algorithm || data.signingAlgorithm
-        });
+        };
+        
+        // Update algorithm if specified in the key
+        if (key.algorithm) {
+          newState.signingAlgorithm = key.algorithm;
+        }
+        
+        updateState(newState);
       }
     };
 
@@ -182,7 +189,7 @@ export const JwtTablet: Tablet = {
         <div className="flex-none p-4 border-b border-gray-700/50">
           <div className="flex items-center space-x-3">
             <Key className="text-gray-400" size={24} />
-            <h2 className="text-xl font-semibold text-gray-100">JWT Tool</h2>
+            <h2 className="text-xl font-semibold text-gray-100">JWT</h2>
           </div>
         </div>
 
