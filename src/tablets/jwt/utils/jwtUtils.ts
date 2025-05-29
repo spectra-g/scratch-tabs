@@ -1,25 +1,32 @@
 import * as jose from 'jose';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode, JwtPayload, JwtHeader } from 'jwt-decode';
 import { DecodedJwt, JwtParts, VerificationResult, SigningResult, KeyType } from '../types';
 
-/**
- * Decodes a JWT token without verification
- */
 export function decodeJwt(token: string): DecodedJwt {
   try {
-    // First try with jwt-decode for basic parsing
-    const decoded = jwtDecode(token, { header: true });
-    const header = decoded.header as Record<string, any>;
-    const payload = decoded as Record<string, any>;
-    delete payload.header; // Remove header from payload
+    // Behavior for jwt-decode v3.x.x (and v4.x.x if header is all it gives for some reason)
+    const headerObject = jwtDecode<JwtHeader>(token, { header: true });
+    const payloadObject = jwtDecode<JwtPayload>(token); // Separate call for payload in v3
 
-    // Extract signature
     const parts = token.split('.');
     const signature = parts.length === 3 ? parts[2] : '';
 
-    return { header, payload, signature };
+    return {
+      header: headerObject || {},
+      payload: payloadObject || {},
+      signature
+    };
+
   } catch (error) {
-    throw new Error(`Failed to decode JWT: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('[decodeJwt] Error during decoding:', error);
+    // Return a default/empty structure on error to prevent UI crashes
+    return {
+      header: {},
+      payload: {},
+      signature: '',
+      // Consider adding an 'error' field to DecodedJwt interface
+      // and propagating the error message if you want to display it
+    };
   }
 }
 
