@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit, Trash2, EyeOff, Eye, RefreshCw } from 'lucide-react';
+import { Edit, Trash2, EyeOff, Eye, RefreshCw, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { MappingRule } from '../types';
 import { TransformationRuleEditor } from './TransformationRuleEditor';
 import { jsonPathToReadablePath } from '../utils/jsonUtils';
@@ -12,7 +12,11 @@ interface MappingTableProps {
   onReEvaluateRule: (id: string) => void;
   sourceJson: string;
   targetJson: string;
+  onSortedRulesChange?: (sortedRules: MappingRule[]) => void;
 }
+
+type SortField = 'sourcePath' | 'targetPath' | 'transformationType' | 'sourceDataType' | 'targetDataType' | 'status' | 'confidence';
+type SortDirection = 'asc' | 'desc';
 
 export const MappingTable: React.FC<MappingTableProps> = ({
   rules,
@@ -21,9 +25,12 @@ export const MappingTable: React.FC<MappingTableProps> = ({
   onIgnoreRule,
   onReEvaluateRule,
   sourceJson,
-  targetJson
+  targetJson,
+  onSortedRulesChange
 }) => {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>('sourcePath');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   
   const handleEditRule = (id: string) => {
     setEditingRuleId(id);
@@ -36,6 +43,27 @@ export const MappingTable: React.FC<MappingTableProps> = ({
   
   const handleCancelEdit = () => {
     setEditingRuleId(null);
+  };
+  
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+  
+  const getSortIcon = (field: SortField) => {
+    if (field !== sortField) {
+      return <ArrowUpDown size={14} className="ml-1 inline-block opacity-50" />;
+    }
+    
+    return sortDirection === 'asc' 
+      ? <ArrowUp size={14} className="ml-1 inline-block text-blue-400" />
+      : <ArrowDown size={14} className="ml-1 inline-block text-blue-400" />;
   };
   
   const getStatusBadgeClass = (status: string) => {
@@ -64,6 +92,67 @@ export const MappingTable: React.FC<MappingTableProps> = ({
     return null;
   };
   
+  // Sort the rules
+  const sortedRules = [...rules].sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (sortField) {
+      case 'sourcePath':
+        aValue = jsonPathToReadablePath(a.sourcePath).toLowerCase();
+        bValue = jsonPathToReadablePath(b.sourcePath).toLowerCase();
+        break;
+      case 'targetPath':
+        aValue = jsonPathToReadablePath(a.targetPath || '').toLowerCase();
+        bValue = jsonPathToReadablePath(b.targetPath || '').toLowerCase();
+        break;
+      case 'transformationType':
+        // Sort by transformation type first, then by transformation value
+        if (a.transformationType !== b.transformationType) {
+          aValue = a.transformationType;
+          bValue = b.transformationType;
+        } else {
+          aValue = a.transformation;
+          bValue = b.transformation;
+        }
+        break;
+      case 'sourceDataType':
+        aValue = a.sourceDataType;
+        bValue = b.sourceDataType;
+        break;
+      case 'targetDataType':
+        aValue = a.targetDataType;
+        bValue = b.targetDataType;
+        break;
+      case 'status':
+        aValue = a.status;
+        bValue = b.status;
+        break;
+      case 'confidence':
+        aValue = a.confidence;
+        bValue = b.confidence;
+        break;
+      default:
+        aValue = a.sourcePath;
+        bValue = b.sourcePath;
+    }
+    
+    // Handle numeric comparison
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    // String comparison
+    const comparison = String(aValue).localeCompare(String(bValue));
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+  
+  // Notify parent component when sorted rules change
+  React.useEffect(() => {
+    if (onSortedRulesChange) {
+      onSortedRulesChange(sortedRules);
+    }
+  }, [sortedRules, onSortedRulesChange]);
+  
   if (rules.length === 0) {
     return (
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-8 text-center">
@@ -81,17 +170,55 @@ export const MappingTable: React.FC<MappingTableProps> = ({
         <table className="w-full text-sm text-left text-gray-300">
           <thead className="text-xs text-gray-400 uppercase bg-gray-800">
             <tr>
-              <th scope="col" className="px-4 py-3">Source Path</th>
-              <th scope="col" className="px-4 py-3">Target Path</th>
-              <th scope="col" className="px-4 py-3">Transformation</th>
-              <th scope="col" className="px-4 py-3">Source Type</th>
-              <th scope="col" className="px-4 py-3">Target Type</th>
-              <th scope="col" className="px-4 py-3">Status</th>
-              <th scope="col" className="px-4 py-3">Actions</th>
+              <th 
+                scope="col" 
+                className="px-4 py-3 cursor-pointer hover:text-blue-300"
+                onClick={() => handleSort('sourcePath')}
+              >
+                Source Path {getSortIcon('sourcePath')}
+              </th>
+              <th 
+                scope="col" 
+                className="px-4 py-3 cursor-pointer hover:text-blue-300"
+                onClick={() => handleSort('targetPath')}
+              >
+                Target Path {getSortIcon('targetPath')}
+              </th>
+              <th 
+                scope="col" 
+                className="px-4 py-3 cursor-pointer hover:text-blue-300"
+                onClick={() => handleSort('transformationType')}
+              >
+                Transformation {getSortIcon('transformationType')}
+              </th>
+              <th 
+                scope="col" 
+                className="px-4 py-3 cursor-pointer hover:text-blue-300"
+                onClick={() => handleSort('sourceDataType')}
+              >
+                Source Type {getSortIcon('sourceDataType')}
+              </th>
+              <th 
+                scope="col" 
+                className="px-4 py-3 cursor-pointer hover:text-blue-300"
+                onClick={() => handleSort('targetDataType')}
+              >
+                Target Type {getSortIcon('targetDataType')}
+              </th>
+              <th 
+                scope="col" 
+                className="px-4 py-3 cursor-pointer hover:text-blue-300"
+                onClick={() => handleSort('status')}
+              >
+                Status {getSortIcon('status')}
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
-            {rules.map(rule => (
+            {sortedRules.map(rule => (
               <tr key={rule.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
                 <td className="px-4 py-3 font-mono text-xs">
                   {jsonPathToReadablePath(rule.sourcePath)}

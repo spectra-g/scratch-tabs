@@ -1,5 +1,5 @@
 import stringSimilarity from 'string-similarity';
-import { MappingRule, PathInfo, SuggestionResult, DataType, MappingDirection, MappingStatus, TargetLanguage } from '../types';
+import { MappingRule, PathInfo, SuggestionResult, MappingDirection, MappingStatus, TargetLanguage } from '../types';
 import { getValueByPath, setValueByPath, getDataType, jsonPathToReadablePath, parseJsonPathSegments } from './jsonUtils';
 
 /**
