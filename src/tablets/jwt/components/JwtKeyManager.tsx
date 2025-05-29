@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, Key, Plus, Trash2, AlertTriangle, Copy, Check, Download } from 'lucide-react';
+import { Eye, Key, Plus, Trash2, AlertTriangle, Copy, Check, Download, X } from 'lucide-react';
 import { generateKeyPair, generateSecret, isPemFormat, isBase64 } from '../utils/jwtUtils';
 import { Button } from './ui/Button';
 import { Alert } from './ui/Alert';
@@ -160,9 +160,31 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  // Clear all generated keys
+  const handleClearGeneratedKeys = () => {
+    setGeneratedPublicKey('');
+    setGeneratedPrivateKey('');
+    setGeneratedSecret('');
+    setError(null);
+  };
+
   // Render the Generate tab content
   const renderGenerateTab = () => (
     <div className="space-y-4 mt-4">
+      {/* Clear button - only show when keys are generated */}
+      {(generatedPublicKey || generatedPrivateKey || generatedSecret) && (
+        <div className="flex justify-end">
+          <Button
+            onClick={handleClearGeneratedKeys}
+            variant="secondary"
+            size="sm"
+            icon={X}
+          >
+            Clear Generated Keys
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-300">
           Algorithm
@@ -307,7 +329,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
             <div className="flex items-center">
               <AlertTriangle size={18} className="mr-2 flex-shrink-0" />
               <span>
-                Never share your private key. For production use, store private keys securely and never in client-side code.
+                Never share your private key. For production use, store private keys securely.
               </span>
             </div>
           </Alert>

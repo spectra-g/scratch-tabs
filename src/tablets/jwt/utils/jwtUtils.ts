@@ -105,7 +105,7 @@ export async function verifyJwt(token: string, key: string, keyType: KeyType): P
  * Signs a JWT token
  */
 export async function signJwt(
-  header: Record<string, any>,
+  header: { alg: string } & Record<string, any>,
   payload: Record<string, any>,
   key: string,
   keyType: KeyType
@@ -171,12 +171,18 @@ export async function generateKeyPair(algorithm: string): Promise<{ publicKey: s
 
     if (algorithm.startsWith('RS') || algorithm.startsWith('PS')) {
       // RSA key pair
-      keyPair = await jose.generateKeyPair(algorithm, { modulusLength: 2048 });
+      keyPair = await jose.generateKeyPair(algorithm, { 
+        modulusLength: 2048,
+        extractable: true 
+      });
     } else if (algorithm.startsWith('ES')) {
       // ECDSA key pair
       const crv = algorithm === 'ES256' ? 'P-256' :
         algorithm === 'ES384' ? 'P-384' : 'P-521';
-      keyPair = await jose.generateKeyPair(algorithm, { crv });
+      keyPair = await jose.generateKeyPair(algorithm, { 
+        crv,
+        extractable: true 
+      });
     } else {
       throw new Error(`Unsupported algorithm for key pair generation: ${algorithm}`);
     }
