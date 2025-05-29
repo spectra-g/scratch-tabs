@@ -293,24 +293,28 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
           <div className="flex items-center space-x-2 mb-2">
             <span className="text-xs text-gray-400">Set expiration:</span>
             <button
+              key="5min"
               onClick={() => handleSetExpiration(5)}
               className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
             >
               5 min
             </button>
             <button
+              key="1hour"
               onClick={() => handleSetExpiration(60)}
               className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
             >
               1 hour
             </button>
             <button
+              key="1day"
               onClick={() => handleSetExpiration(1440)}
               className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
             >
               1 day
             </button>
             <button
+              key="1week"
               onClick={() => handleSetExpiration(10080)}
               className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
             >
@@ -322,7 +326,7 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
         {/* Timestamp Helpers */}
         {Object.entries(payload).map(([key, value]) => 
           typeof value === 'number' && STANDARD_CLAIMS[key]?.isTimestamp
-            ? renderTimestampHelper(key, value)
+            ? <div key={key}>{renderTimestampHelper(key, value)}</div>
             : null
         )}
         
