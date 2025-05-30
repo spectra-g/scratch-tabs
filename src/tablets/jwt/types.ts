@@ -5,6 +5,7 @@ export interface JwtState {
   signature: string;
   isValid: boolean | null;
   error: string | null;
+  warning: string | null;
   activeTab: string;
   history: JwtHistoryItem[];
   storedKeys: StoredKey[];
@@ -13,13 +14,6 @@ export interface JwtState {
   signingKey: string;
   signingKeyType: KeyType;
   signingAlgorithm: string;
-  // Manual key form state
-  keyName: string;
-  keyValue: string;
-  keyType: KeyType;
-  keyAlgorithm: string;
-  isPublic: boolean;
-  keyManagerActiveTab: string;
 }
 
 export interface JwtHistoryItem {
@@ -63,6 +57,7 @@ export interface DecodedJwt {
 export interface VerificationResult {
   isValid: boolean;
   error?: string;
+  warning?: string;
 }
 
 export interface SigningResult {

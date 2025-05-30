@@ -116,7 +116,10 @@ export async function verifyJwt(token: string, key: string, keyType: KeyType): P
     } else {
       // RSA and ECDSA algorithms use a public key
       try {
-        if (keyType === 'pem') {
+        // Check if the key is in PEM format regardless of selected type
+        const isPem = key.trim().startsWith('-----BEGIN');
+        
+        if (isPem || keyType === 'pem') {
           verificationKey = await jose.importSPKI(key, algorithm);
         } else if (keyType === 'base64') {
           const pemKey = `-----BEGIN PUBLIC KEY-----\n${key}\n-----END PUBLIC KEY-----`;
@@ -132,10 +135,22 @@ export async function verifyJwt(token: string, key: string, keyType: KeyType): P
       }
     }
 
-    // Verify the token
-    await jose.jwtVerify(token, verificationKey);
-
-    return { isValid: true };
+    try {
+      // Try to verify with jose.jwtVerify
+      await jose.jwtVerify(token, verificationKey);
+      return { isValid: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // If the only error is that the token is expired, we still consider it valid
+      // for the purposes of this tool (which is verifying signatures, not enforcing validity)
+      if (errorMessage.includes('"exp" claim timestamp check failed')) {
+        return { isValid: true, warning: 'Note: The token has expired, but the signature is valid.' };
+      }
+      
+      // For any other error, the verification truly failed
+      return { isValid: false, error: errorMessage };
+    }
   } catch (error) {
     return {
       isValid: false,
@@ -175,7 +190,10 @@ export async function signJwt(
     } else {
       // RSA and ECDSA algorithms use a private key
       try {
-        if (keyType === 'pem') {
+        // Check if the key is in PEM format regardless of selected type
+        const isPem = key.trim().startsWith('-----BEGIN');
+        
+        if (isPem || keyType === 'pem') {
           signingKey = await jose.importPKCS8(key, algorithm);
         } else if (keyType === 'base64') {
           const pemKey = `-----BEGIN PRIVATE KEY-----\n${key}\n-----END PRIVATE KEY-----`;

@@ -28,6 +28,7 @@ export const JwtTablet: Tablet = {
         signature: '',
         isValid: null,
         error: null,
+        warning: null,
         activeTab: 'decode',
         history: [],
         storedKeys: [],
@@ -35,14 +36,7 @@ export const JwtTablet: Tablet = {
         verificationKeyType: 'text',
         signingKey: '',
         signingKeyType: 'text',
-        signingAlgorithm: 'HS256',
-        // Manual key form state
-        keyName: '',
-        keyValue: '',
-        keyType: 'text',
-        keyAlgorithm: '',
-        isPublic: false,
-        keyManagerActiveTab: 'generate'
+        signingAlgorithm: 'HS256'
       }
     };
   },
@@ -63,6 +57,7 @@ export const JwtTablet: Tablet = {
           signature: parsed.data.signature || '',
           isValid: parsed.data.isValid === true || parsed.data.isValid === false ? parsed.data.isValid : null, // Explicitly check boolean or null
           error: parsed.data.error || null,
+          warning: parsed.data.warning || null,
           activeTab: parsed.data.activeTab || 'decode',
           history: [], // Initialize, will be populated next
           storedKeys: Array.isArray(parsed.data.storedKeys)
@@ -79,14 +74,7 @@ export const JwtTablet: Tablet = {
           verificationKeyType: ['text', 'base64', 'pem'].includes(parsed.data.verificationKeyType) ? parsed.data.verificationKeyType : 'text',
           signingKey: parsed.data.signingKey || '',
           signingKeyType: ['text', 'base64', 'pem'].includes(parsed.data.signingKeyType) ? parsed.data.signingKeyType : 'text',
-          signingAlgorithm: parsed.data.signingAlgorithm || 'HS256',
-          // Manual key form state
-          keyName: parsed.data.keyName || '',
-          keyValue: parsed.data.keyValue || '',
-          keyType: ['text', 'base64', 'pem'].includes(parsed.data.keyType) ? parsed.data.keyType : 'text',
-          keyAlgorithm: parsed.data.keyAlgorithm || '',
-          isPublic: typeof parsed.data.isPublic === 'boolean' ? parsed.data.isPublic : false,
-          keyManagerActiveTab: parsed.data.keyManagerActiveTab || 'generate'
+          signingAlgorithm: parsed.data.signingAlgorithm || 'HS256'
         };
 
         // Sanitize history items
@@ -231,8 +219,9 @@ export const JwtTablet: Tablet = {
               payload={data.payload}
               signature={data.signature}
               error={data.error}
-              onTokenChange={(token, header, payload, signature, error) => {
-                updateState({ token, header, payload, signature, error });
+              warning={data.warning}
+              onTokenChange={(token, header, payload, signature, error, warning) => {
+                updateState({ token, header, payload, signature, error, warning });
                 if (token && !error) {
                   addToHistory({
                     token,
@@ -256,8 +245,8 @@ export const JwtTablet: Tablet = {
               onVerificationKeyChange={(key, type) => {
                 updateState({ verificationKey: key, verificationKeyType: type });
               }}
-              onVerificationResult={(isValidResult, errorMsg) => {
-                updateState({ isValid: isValidResult, error: errorMsg || null });
+              onVerificationResult={(isValid, error, warning) => {
+                updateState({ isValid, error, warning });
               }}
               storedKeys={data.storedKeys}
               onUseStoredKey={(key) => useStoredKey(key, 'verification')}
@@ -304,20 +293,6 @@ export const JwtTablet: Tablet = {
               onAddKey={addStoredKey}
               onRemoveKey={removeStoredKey}
               onClearKeys={clearStoredKeys}
-              // Pass the manual key form state
-              keyName={data.keyName}
-              keyValue={data.keyValue}
-              keyType={data.keyType}
-              keyAlgorithm={data.keyAlgorithm}
-              isPublic={data.isPublic}
-              activeTab={data.keyManagerActiveTab}
-              // Add handlers to update the state
-              onKeyNameChange={(value) => updateState({ keyName: value })}
-              onKeyValueChange={(value) => updateState({ keyValue: value })}
-              onKeyTypeChange={(value) => updateState({ keyType: value })}
-              onKeyAlgorithmChange={(value) => updateState({ keyAlgorithm: value })}
-              onIsPublicChange={(value) => updateState({ isPublic: value })}
-              onActiveTabChange={(value) => updateState({ keyManagerActiveTab: value })}
             />
           )}
 
