@@ -125,12 +125,19 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
       value: key,
       type: 'pem',
       algorithm: generationAlgorithm,
-      isPublic,
+      isPublic: isKeyPublic,
       createdAt: Date.now()
     };
 
     onAddKey(newKey);
     setError(null);
+    
+    // Only clear the specific key that was stored
+    if (isKeyPublic) {
+      setGeneratedPublicKey('');
+    } else {
+      setGeneratedPrivateKey('');
+    }
   };
 
   // Store generated secret
@@ -149,6 +156,9 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
 
     onAddKey(newKey);
     setError(null);
+    
+    // Clear the generated secret after storing
+    setGeneratedSecret('');
   };
 
   // Copy key to clipboard
