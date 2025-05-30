@@ -28,6 +28,7 @@ export const JwtTablet: Tablet = {
         signature: '',
         isValid: null,
         error: null,
+        warning: null,
         activeTab: 'decode',
         history: [],
         storedKeys: [],
@@ -63,6 +64,7 @@ export const JwtTablet: Tablet = {
           signature: parsed.data.signature || '',
           isValid: parsed.data.isValid === true || parsed.data.isValid === false ? parsed.data.isValid : null, // Explicitly check boolean or null
           error: parsed.data.error || null,
+          warning: parsed.data.warning || null,
           activeTab: parsed.data.activeTab || 'decode',
           history: [], // Initialize, will be populated next
           storedKeys: Array.isArray(parsed.data.storedKeys)
@@ -231,8 +233,9 @@ export const JwtTablet: Tablet = {
               payload={data.payload}
               signature={data.signature}
               error={data.error}
-              onTokenChange={(token, header, payload, signature, error) => {
-                updateState({ token, header, payload, signature, error });
+              warning={data.warning}
+              onTokenChange={(token, header, payload, signature, error, warning) => {
+                updateState({ token, header, payload, signature, error, warning });
                 if (token && !error) {
                   addToHistory({
                     token,
@@ -256,8 +259,8 @@ export const JwtTablet: Tablet = {
               onVerificationKeyChange={(key, type) => {
                 updateState({ verificationKey: key, verificationKeyType: type });
               }}
-              onVerificationResult={(isValidResult, errorMsg) => {
-                updateState({ isValid: isValidResult, error: errorMsg || null });
+              onVerificationResult={(isValid, error, warning) => {
+                updateState({ isValid, error, warning });
               }}
               storedKeys={data.storedKeys}
               onUseStoredKey={(key) => useStoredKey(key, 'verification')}

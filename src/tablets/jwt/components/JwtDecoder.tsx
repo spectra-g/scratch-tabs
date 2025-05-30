@@ -13,12 +13,14 @@ interface JwtDecoderProps {
   payload: Record<string, any>;
   signature: string;
   error: string | null;
+  warning?: string | null;
   onTokenChange: (
     token: string,
     header: Record<string, any>,
     payload: Record<string, any>,
     signature: string,
-    error: string | null
+    error: string | null,
+    warning?: string | null
   ) => void;
 }
 
@@ -28,6 +30,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   payload,
   signature,
   error,
+  warning,
   onTokenChange
 }) => {
   const [localToken, setLocalToken] = useState(token);
@@ -40,20 +43,21 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   // Decode token when local token changes
   const decodeToken = useCallback((tokenToDecode: string) => {
     if (!tokenToDecode.trim()) {
-      onTokenChange('', {}, {}, '', null);
+      onTokenChange('', {}, {}, '', null, null);
       return;
     }
 
     try {
-      const { header, payload, signature } = decodeJwt(tokenToDecode);
-      onTokenChange(tokenToDecode, header, payload, signature, null);
+      const { header, payload, signature, warning } = decodeJwt(tokenToDecode);
+      onTokenChange(tokenToDecode, header, payload, signature, null, warning);
     } catch (error) {
       onTokenChange(
         tokenToDecode,
         {},
         {},
         '',
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
+        null
       );
     }
   }, [onTokenChange]);
@@ -68,7 +72,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   // Clear token
   const handleClearToken = () => {
     setLocalToken('');
-    onTokenChange('', {}, {}, '', null);
+    onTokenChange('', {}, {}, '', null, null);
   };
 
   // File upload handling
@@ -175,6 +179,13 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
       {error && (
         <Alert variant="error" title="Error Decoding JWT">
           {error}
+        </Alert>
+      )}
+
+      {/* Warning Message */}
+      {!error && warning && (
+        <Alert variant="warning" title="JWT Warning">
+          {warning}
         </Alert>
       )}
 

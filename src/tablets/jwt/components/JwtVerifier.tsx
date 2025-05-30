@@ -13,7 +13,7 @@ interface JwtVerifierProps {
   verificationKeyType: KeyType;
   isValid: boolean | null;
   onVerificationKeyChange: (key: string, type: KeyType) => void;
-  onVerificationResult: (isValid: boolean | null, error?: string) => void;
+  onVerificationResult: (isValid: boolean | null, error?: string, warning?: string) => void;
   storedKeys: StoredKey[];
   onUseStoredKey: (key: StoredKey) => void;
 }
@@ -30,6 +30,7 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
   onUseStoredKey
 }) => {
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [verificationWarning, setVerificationWarning] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const onVerificationResultRef = useRef(onVerificationResult);
 
@@ -65,16 +66,19 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
     if (!token || !verificationKey) {
       onVerificationResultRef.current(null, undefined)
       setVerificationError(null);
+      setVerificationWarning(null);
       return;
     }
 
     const verifyToken = async () => {
       setIsVerifying(true);
       setVerificationError(null);
+      setVerificationWarning(null);
       try {
         const result = await verifyJwt(token, verificationKey, verificationKeyType);
-        onVerificationResultRef.current(result.isValid, result.error);
+        onVerificationResultRef.current(result.isValid, result.error, result.warning);
         setVerificationError(result.error || null);
+        setVerificationWarning(result.warning || null);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         onVerificationResultRef.current(false, errorMsg);
@@ -121,10 +125,17 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
 
     if (isValid === true) {
       return (
-        <Alert variant="success" title="Signature Valid">
+        <Alert variant={verificationWarning ? "warning" : "success"} title={verificationWarning ? "Signature Valid (with warnings)" : "Signature Valid"}>
           <div className="flex items-center">
             <ShieldCheck size={18} className="mr-2" />
-            <span>The token signature is valid.</span>
+            <div>
+              <span>The token signature is valid.</span>
+              {verificationWarning && (
+                <div className="mt-1 text-amber-400">
+                  {verificationWarning}
+                </div>
+              )}
+            </div>
           </div>
         </Alert>
       );
