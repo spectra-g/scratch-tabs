@@ -307,6 +307,22 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
         }
     }, []);
 
+    const copyAllVisiblePaths = useCallback(async () => {
+        const paths = filteredNodes.map(node => node.path).filter(path => path !== ''); // Exclude root path
+        if (paths.length === 0) {
+            setEvaluationStatus('No paths to copy');
+            return;
+        }
+        
+        const pathsText = paths.join('\n');
+        try {
+            await navigator.clipboard.writeText(pathsText);
+            setEvaluationStatus(`Copied ${paths.length} path${paths.length !== 1 ? 's' : ''} to clipboard`);
+        } catch (err) {
+            console.error('Failed to copy paths:', err);
+            setEvaluationStatus('Error copying paths');
+        }
+    }, [filteredNodes]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
@@ -439,6 +455,9 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
                     </button>
                     <button onClick={() => toggleAllNodes(false)} className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded" title="Collapse All">
                         <ChevronsUp size={16} />
+                    </button>
+                    <button onClick={copyAllVisiblePaths} className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded" title="Copy All Visible Paths">
+                        <Copy size={16} />
                     </button>
                 </div>
             </div>

@@ -6,7 +6,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Tab } from "../../types.ts";
 import { AIStatusIcon } from '../AI/AIStatusIcon';
 import { useRootStore } from '../../stores';
-import { Search } from 'lucide-react';
+import { Search, Coffee } from 'lucide-react';
 import { useSearchStore } from '../../stores/searchStore';
 
 interface StatusBarProps {
@@ -60,6 +60,15 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
         )}
       </div>
       <div className="flex items-center space-x-2">
+        {showAIIcon &&
+            <button
+                onClick={() => window.open('https://ko-fi.com/scratchtabs', '_blank')}
+                className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+                title="Support on Ko-fi"
+            >
+                <Coffee size={14} />
+            </button> }
+
         {showAIIcon &&
             <button
                 onClick={() => toggleSearch()} // Open search with no initial query

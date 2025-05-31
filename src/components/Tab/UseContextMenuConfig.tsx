@@ -56,9 +56,7 @@ export const useContextMenuConfig = (
   const canDuplicateAndSplit = !store.splitView.isSplit && store.tabs.length === 1;
   const canMoveRight = store.splitView.isSplit && !isRightSide && store.splitView.leftTabs.length > 1;
   const canMoveLeft = store.splitView.isSplit && isRightSide && store.splitView.rightTabs.length > 1;
-  const canUnsplit = store.splitView.isSplit &&
-    ((isRightSide && store.splitView.rightTabs.length === 1) ||
-      (!isRightSide && store.splitView.leftTabs.length === 1));
+  const canUnsplit = store.splitView.isSplit && isRightSide;
   const canShowFromSample = !!tab && !tab.isTablet;
   const canCloseToLeft = tabIndex > 0;
   const canCloseToRight = tabIndex < currentTabList.length - 1;
@@ -301,7 +299,7 @@ export const useContextMenuConfig = (
       id: 'unsplit',
       label: 'Unsplit',
       icon: Maximize,
-      action: () => handleSimpleAction(store.unsplitScreen, isRightSide),
+      action: () => handleSimpleAction(store.unsplitScreen),
       condition: canUnsplit,
     },
     { id: 'sep2', isSeparator: true, condition: canDownload },
