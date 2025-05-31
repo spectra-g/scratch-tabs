@@ -427,7 +427,7 @@ export function applyTransformation(
 export function applyBuiltinTransformation(value: any, transformation: string): any {
   const [funcName, ...args] = transformation.split('(');
   const argsStr = args.join('(').replace(/\)$/, '');
-  const parsedArgs = argsStr ? argsStr.split(',').map(arg => arg.trim()) : [];
+  const parsedArgs = argsStr ? argsStr.split(',').map(arg => arg.trim().replace(/['"]/g, '')) : [];
   
   switch (funcName.trim()) {
     // String transformations
@@ -443,9 +443,11 @@ export function applyBuiltinTransformation(value: any, transformation: string): 
         parsedArgs[1] ? parseInt(parsedArgs[1]) : undefined
       );
     case 'append':
-      return String(value) + (parsedArgs[0] || '');
+      const appendText = argsStr.replace(/['"]/g, '');
+      return String(value) + appendText;
     case 'prepend':
-      return (parsedArgs[0] || '') + String(value);
+      const prependText = argsStr.replace(/['"]/g, '');
+      return prependText + String(value);
       
     // Type casts
     case 'toNumber':
@@ -465,7 +467,8 @@ export function applyBuiltinTransformation(value: any, transformation: string): 
       
     // Array transformations
     case 'join':
-      return Array.isArray(value) ? value.join(parsedArgs[0] || ',') : value;
+      const joinSeparator = argsStr.replace(/['"]/g, '') || ',';
+      return Array.isArray(value) ? value.join(joinSeparator) : value;
     case 'firstElement':
       return Array.isArray(value) && value.length > 0 ? value[0] : null;
     case 'lastElement':
@@ -689,14 +692,16 @@ function transform(${sourceVar}) {
             code += `      transformedValue = String(sourceValue).trim();\n`;
             break;
           case 'substring':
-            const substringArgs = argsStr.split(',').map(a => a.trim());
+            const substringArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
             code += `      transformedValue = String(sourceValue).substring(${substringArgs.join(', ')});\n`;
             break;
           case 'append':
-            code += `      transformedValue = String(sourceValue) + "${argsStr}";\n`;
+            const appendText = argsStr.replace(/['"]/g, '');
+            code += `      transformedValue = String(sourceValue) + "${appendText}";\n`;
             break;
           case 'prepend':
-            code += `      transformedValue = "${argsStr}" + String(sourceValue);\n`;
+            const prependText = argsStr.replace(/['"]/g, '');
+            code += `      transformedValue = "${prependText}" + String(sourceValue);\n`;
             break;
           case 'toNumber':
             code += `      transformedValue = Number(sourceValue);\n`;
@@ -714,7 +719,8 @@ function transform(${sourceVar}) {
             code += `      transformedValue = new Date(sourceValue).getTime();\n`;
             break;
           case 'join':
-            code += `      transformedValue = Array.isArray(sourceValue) ? sourceValue.join("${argsStr || ','}") : sourceValue;\n`;
+            const joinSeparator = argsStr.replace(/['"]/g, '') || ',';
+            code += `      transformedValue = Array.isArray(sourceValue) ? sourceValue.join("${joinSeparator}") : sourceValue;\n`;
             break;
           case 'firstElement':
             code += `      transformedValue = Array.isArray(sourceValue) && sourceValue.length > 0 ? sourceValue[0] : null;\n`;
@@ -890,14 +896,16 @@ function transform(${sourceVar}: any): any {
             code += `      transformedValue = String(sourceValue).trim();\n`;
             break;
           case 'substring':
-            const substringArgs = argsStr.split(',').map(a => a.trim());
+            const substringArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
             code += `      transformedValue = String(sourceValue).substring(${substringArgs.join(', ')});\n`;
             break;
           case 'append':
-            code += `      transformedValue = String(sourceValue) + "${argsStr}";\n`;
+            const appendText = argsStr.replace(/['"]/g, '');
+            code += `      transformedValue = String(sourceValue) + "${appendText}";\n`;
             break;
           case 'prepend':
-            code += `      transformedValue = "${argsStr}" + String(sourceValue);\n`;
+            const prependText = argsStr.replace(/['"]/g, '');
+            code += `      transformedValue = "${prependText}" + String(sourceValue);\n`;
             break;
           case 'toNumber':
             code += `      transformedValue = Number(sourceValue);\n`;
@@ -915,7 +923,8 @@ function transform(${sourceVar}: any): any {
             code += `      transformedValue = new Date(sourceValue).getTime();\n`;
             break;
           case 'join':
-            code += `      transformedValue = Array.isArray(sourceValue) ? sourceValue.join("${argsStr || ','}") : sourceValue;\n`;
+            const joinSeparator = argsStr.replace(/['"]/g, '') || ',';
+            code += `      transformedValue = Array.isArray(sourceValue) ? sourceValue.join("${joinSeparator}") : sourceValue;\n`;
             break;
           case 'firstElement':
             code += `      transformedValue = Array.isArray(sourceValue) && sourceValue.length > 0 ? sourceValue[0] : null;\n`;
@@ -1105,7 +1114,7 @@ def transform(${sourceVar}):
             code += `                transformed_value = str(source_value).strip()\n`;
             break;
           case 'substring':
-            const substringArgs = argsStr.split(',').map(a => a.trim());
+            const substringArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
             if (substringArgs.length === 1) {
               code += `                transformed_value = str(source_value)[${substringArgs[0]}:]\n`;
             } else if (substringArgs.length >= 2) {
@@ -1115,10 +1124,12 @@ def transform(${sourceVar}):
             }
             break;
           case 'append':
-            code += `                transformed_value = str(source_value) + "${argsStr}"\n`;
+            const appendText = argsStr.replace(/['"]/g, '');
+            code += `                transformed_value = str(source_value) + "${appendText}"\n`;
             break;
           case 'prepend':
-            code += `                transformed_value = "${argsStr}" + str(source_value)\n`;
+            const prependText = argsStr.replace(/['"]/g, '');
+            code += `                transformed_value = "${prependText}" + str(source_value)\n`;
             break;
           case 'toNumber':
             code += `                transformed_value = float(source_value)\n`;
@@ -1133,10 +1144,12 @@ def transform(${sourceVar}):
             code += `                transformed_value = datetime.fromisoformat(source_value.replace('Z', '+00:00')).isoformat()\n`;
             break;
           case 'toTimestamp':
-            code += `                transformed_value = int(datetime.fromisoformat(source_value.replace('Z', '+00:00')).timestamp() * 1000)\n`;
+            code += `                import time\n`;
+            code += `                transformed_value = int(time.mktime(datetime.fromisoformat(source_value.replace('Z', '+00:00')).timetuple()) * 1000)\n`;
             break;
           case 'join':
-            code += `                transformed_value = "${argsStr || ','}" .join(source_value) if isinstance(source_value, list) else source_value\n`;
+            const joinSeparator = argsStr.replace(/['"]/g, '') || ',';
+            code += `                transformed_value = "${joinSeparator}".join(map(str, source_value)) if isinstance(source_value, list) else source_value\n`;
             break;
           case 'firstElement':
             code += `                transformed_value = source_value[0] if isinstance(source_value, list) and len(source_value) > 0 else None\n`;
@@ -1274,7 +1287,7 @@ public class JsonMapper {
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
             break;
           case 'substring':
-            const substringArgs = argsStr.split(',').map(a => a.trim());
+            const substringArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
             if (substringArgs.length === 1) {
               code += `                    String transformedValue = sourceValue.asText().substring(${substringArgs[0]});\n`;
             } else if (substringArgs.length >= 2) {
@@ -1285,11 +1298,13 @@ public class JsonMapper {
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
             break;
           case 'append':
-            code += `                    String transformedValue = sourceValue.asText() + "${argsStr}";\n`;
+            const appendText = argsStr.replace(/['"]/g, '');
+            code += `                    String transformedValue = sourceValue.asText() + "${appendText}";\n`;
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
             break;
           case 'prepend':
-            code += `                    String transformedValue = "${argsStr}" + sourceValue.asText();\n`;
+            const prependText = argsStr.replace(/['"]/g, '');
+            code += `                    String transformedValue = "${prependText}" + sourceValue.asText();\n`;
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
             break;
           case 'toNumber':
@@ -1313,10 +1328,11 @@ public class JsonMapper {
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
             break;
           case 'join':
+            const joinSeparator = argsStr.replace(/['"]/g, '') || ',';
             code += `                    if (sourceValue.isArray()) {\n`;
             code += `                        StringBuilder sb = new StringBuilder();\n`;
             code += `                        for (int i = 0; i < sourceValue.size(); i++) {\n`;
-            code += `                            if (i > 0) sb.append("${argsStr || ','}");\n`;
+            code += `                            if (i > 0) sb.append("${joinSeparator}");\n`;
             code += `                            sb.append(sourceValue.get(i).asText());\n`;
             code += `                        }\n`;
             code += `                        setValueByPath(${targetVar}, "${toPath}", sb.toString());\n`;
