@@ -11,6 +11,7 @@ import { VaultTablet } from './vault/VaultTablet';
 import { RestClientTablet } from './restclient/RestClientTablet';
 import { JwtTablet } from './jwt/JwtTablet';
 import { JsonMapperTablet } from './jsonmapper/JsonMapperTablet';
+import { PomodoroTablet } from './pomodoro/PomodoroTablet';
 
 // Register built-in tablets
 tabletRegistry.register(PasswordTablet);
@@ -25,6 +26,7 @@ tabletRegistry.register(VaultTablet);
 tabletRegistry.register(RestClientTablet);
 tabletRegistry.register(JwtTablet);
 tabletRegistry.register(JsonMapperTablet);
+tabletRegistry.register(PomodoroTablet);
 
 export { TabletSelector } from './components/TabletSelector';
 export { tabletRegistry } from './registry';
