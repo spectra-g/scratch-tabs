@@ -4,6 +4,7 @@ import { useTabletSelector } from '../../hooks/useTabletSelector';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
 import { TabActions } from '../Tab/TabActions';
+import { FileText, Layers, Upload, FolderOpen, File } from 'lucide-react';
 
 export const WelcomeScreen: React.FC = () => {
   const { handleNewTab, handleNewPopulatedTab } = useRootStore();
@@ -37,6 +38,7 @@ export const WelcomeScreen: React.FC = () => {
   const handleTabletSelect = useCallback((tablet: Tablet) => {
     const state = tablet.createInitialState();
     const serializedState = tablet.serializeState ? tablet.serializeState(state) : JSON.stringify(state);
+    const now = Date.now();
 
     handleNewPopulatedTab({
       id: crypto.randomUUID(),
@@ -47,10 +49,71 @@ export const WelcomeScreen: React.FC = () => {
       isTablet: true,
       tabletState: serializedState,
       cursorPosition: { lineNumber: 1, column: 1 },
+      dateCreated: now,
+      lastModified: now,
+      workspaceId: '', // Will be set by the store
     });
 
     closeTabletSelector(false);
   }, [handleNewPopulatedTab, closeTabletSelector]);
+
+  const handleCreateNewTab = useCallback(() => {
+    handleNewTab(false);
+  }, [handleNewTab]);
+
+  const handleOpenTabletSelector = useCallback(() => {
+    if (welcomeRef.current) {
+      const rect = welcomeRef.current.getBoundingClientRect();
+      const position = {
+        x: rect.left + rect.width / 2 - 150,
+        y: rect.top + 150,
+      };
+      openTabletSelector(position);
+    }
+  }, [openTabletSelector]);
+
+  const handleImportFromClipboard = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        handleNewTab(false, text);
+      }
+    } catch (err) {
+      console.error('Failed to read from clipboard:', err);
+      // Fallback: could show a message to user that they should use Ctrl+V instead
+    }
+  }, [handleNewTab]);
+
+  const handleOpenFile = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '*/*'; // Accept all file types
+    input.style.display = 'none';
+    
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target?.result as string;
+          if (content) {
+            // Extract filename without extension for tab title
+            const fileName = file.name.replace(/\.[^/.]+$/, '');
+            handleNewTab(false, content);
+            // Update the tab title after creation
+            // Note: This is a simplified approach - in a real implementation 
+            // you might want to wait for the tab to be created and then update its title
+          }
+        };
+        reader.readAsText(file);
+      }
+      // Clean up
+      document.body.removeChild(input);
+    };
+    
+    document.body.appendChild(input);
+    input.click();
+  }, [handleNewTab]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -60,14 +123,7 @@ export const WelcomeScreen: React.FC = () => {
         !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
       ) {
         e.preventDefault();
-        if (welcomeRef.current) {
-          const rect = welcomeRef.current.getBoundingClientRect();
-          const position = {
-            x: rect.left + rect.width / 2 - 150,
-            y: rect.top + 150,
-          };
-          openTabletSelector(position);
-        }
+        handleOpenTabletSelector();
       }
     };
 
@@ -75,7 +131,40 @@ export const WelcomeScreen: React.FC = () => {
     return () => {
       document.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [showTabletSelector, openTabletSelector]);
+  }, [showTabletSelector, handleOpenTabletSelector]);
+
+  const actions = [
+    {
+      icon: FileText,
+      title: 'Start scratching',
+      action: 'Double-click anywhere',
+      onClick: handleCreateNewTab,
+    },
+    {
+      icon: File,
+      title: 'Open file',
+      action: 'Open file from your computer',
+      onClick: handleOpenFile,
+    },
+    {
+      icon: Layers,
+      title: 'Open specialized tablet',
+      action: 'Press / key',
+      onClick: handleOpenTabletSelector,
+    },
+    {
+      icon: Upload,
+      title: 'Import from clipboard',
+      action: 'Paste text here',
+      onClick: handleImportFromClipboard,
+    },
+    {
+      icon: FolderOpen,
+      title: 'Drag a file',
+      action: 'Drop a file here to open',
+      onClick: () => {}, // Handled by drag and drop
+    },
+  ];
 
   return (
     <div className="h-full w-full flex flex-col bg-gray-900">
@@ -95,26 +184,77 @@ export const WelcomeScreen: React.FC = () => {
       {/* Welcome Content */}
       <div
         ref={welcomeRef}
-        className="flex-1 flex flex-col items-center pt-24 md:pt-32 text-gray-400 cursor-pointer relative outline-none"
+        className="flex-1 flex flex-col items-center justify-center text-gray-400 cursor-pointer relative outline-none px-8"
         onDoubleClick={handleDoubleClick}
         onPaste={handlePaste}
         tabIndex={-1}
       >
-        <img
-          src="/favicon-gray.svg"
-          alt="Scratch Tabs Logo"
-          className="w-16 h-16 mb-6"
-        />
-        <h1 className="text-2xl font-semibold mb-8 text-gray-200">Welcome to Scratch Tabs!</h1>
-        <div className="text-center max-w-md">
-          <p className="mb-8 text-lg text-gray-300">To get started:</p>
-          <ol className="list-decimal list-inside text-left space-y-3 text-gray-400 mx-auto inline-block">
-            <li>Double-click anywhere here</li>
-            <li>Use the buttons above</li>
-            <li>Paste text from your clipboard</li>
-            <li>Drag a file from your desktop</li>
-            <li>Type <span className="font-mono bg-gray-700 px-1 rounded text-gray-300">/</span> to select a Tablet</li>
-          </ol>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <img
+            src="/favicon-gray.svg"
+            alt="Scratch Tabs Logo"
+            className="w-12 h-12 mb-4 mx-auto opacity-60"
+          />
+          <h1 className="text-3xl font-light mb-2 text-gray-100">Scratch Tabs</h1>
+          <p className="text-gray-400 text-sm">Version 1.0</p>
+        </div>
+
+        {/* Actions Grid */}
+        <div className="w-full max-w-2xl">
+          <div className="grid gap-3">
+            {actions.map((action, index) => {
+              // Render drag action as non-clickable
+              if (action.title === 'Drag a file') {
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg border border-transparent text-left w-full opacity-75"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-gray-700/50 rounded-md">
+                        <action.icon size={18} className="text-gray-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-gray-200 font-medium text-sm mb-1">
+                          {action.title}
+                        </div>
+                        <div className="text-gray-500 text-xs">
+                          {action.action}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Render other actions as clickable buttons
+              return (
+                <button
+                  key={index}
+                  onClick={action.onClick}
+                  className="group flex items-center justify-between p-4 bg-gray-800/30 hover:bg-gray-800/50 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-700/50 text-left w-full"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-gray-700/50 rounded-md group-hover:bg-gray-700/70 transition-colors">
+                      <action.icon size={18} className="text-gray-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-gray-200 font-medium text-sm mb-1">
+                        {action.title}
+                      </div>
+                      <div className="text-gray-500 text-xs">
+                        {action.action}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-gray-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                    Click to try
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
