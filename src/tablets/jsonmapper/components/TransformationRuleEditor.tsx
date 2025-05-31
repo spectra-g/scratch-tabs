@@ -87,6 +87,18 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
             case 'join':
               params.separator = args[0] || ',';
               break;
+            case 'toFixed':
+              params.decimals = args[0] || '0';
+              break;
+            case 'add':
+            case 'subtract':
+            case 'multiply':
+            case 'divide':
+              params.value = args[0] || (funcName === 'divide' || funcName === 'multiply' ? '1' : '0');
+              break;
+            case 'default':
+              params.defaultValue = args[0] || '';
+              break;
           }
         }
         setBuiltinParams(params);
@@ -101,6 +113,7 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
       switch (selectedBuiltin) {
         case 'toUpperCase':
         case 'toLowerCase':
+        case 'capitalize':
         case 'trim':
         case 'toNumber':
         case 'toString':
@@ -109,6 +122,13 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
         case 'toTimestamp':
         case 'firstElement':
         case 'lastElement':
+        case 'round':
+        case 'floor':
+        case 'ceil':
+        case 'not':
+        case 'isEmpty':
+        case 'isNull':
+        case 'length':
           transformationStr = `${selectedBuiltin}()`;
           break;
         case 'substring':
@@ -124,6 +144,18 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
           break;
         case 'join':
           transformationStr = `${selectedBuiltin}("${builtinParams.separator || ','}")`;
+          break;
+        case 'toFixed':
+          transformationStr = `${selectedBuiltin}(${builtinParams.decimals || '0'})`;
+          break;
+        case 'add':
+        case 'subtract':
+        case 'multiply':
+        case 'divide':
+          transformationStr = `${selectedBuiltin}(${builtinParams.value || (selectedBuiltin === 'divide' || selectedBuiltin === 'multiply' ? '1' : '0')})`;
+          break;
+        case 'default':
+          transformationStr = `${selectedBuiltin}("${builtinParams.defaultValue || ''}")`;
           break;
       }
       setTransformation(transformationStr);
@@ -160,6 +192,11 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
             setPreviewValue(String(sourceValue).toLowerCase());
             setError(null);
             break;
+          case 'capitalize':
+            const str = String(sourceValue);
+            setPreviewValue(str.charAt(0).toUpperCase() + str.slice(1).toLowerCase());
+            setError(null);
+            break;
           case 'trim':
             setPreviewValue(String(sourceValue).trim());
             setError(null);
@@ -178,6 +215,10 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
             setPreviewValue((parsedArgs[0] || '') + String(sourceValue));
             setError(null);
             break;
+          case 'length':
+            setPreviewValue((Array.isArray(sourceValue) || typeof sourceValue === 'string') ? sourceValue.length : 0);
+            setError(null);
+            break;
           case 'toNumber':
             setPreviewValue(Number(sourceValue));
             setError(null);
@@ -188,6 +229,63 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
             break;
           case 'toBoolean':
             setPreviewValue(Boolean(sourceValue));
+            setError(null);
+            break;
+          case 'round':
+            setPreviewValue(Math.round(Number(sourceValue)));
+            setError(null);
+            break;
+          case 'floor':
+            setPreviewValue(Math.floor(Number(sourceValue)));
+            setError(null);
+            break;
+          case 'ceil':
+            setPreviewValue(Math.ceil(Number(sourceValue)));
+            setError(null);
+            break;
+          case 'toFixed':
+            const decimals = parseInt(parsedArgs[0] || '0');
+            setPreviewValue(Number(sourceValue).toFixed(decimals));
+            setError(null);
+            break;
+          case 'add':
+            setPreviewValue(Number(sourceValue) + Number(parsedArgs[0] || 0));
+            setError(null);
+            break;
+          case 'subtract':
+            setPreviewValue(Number(sourceValue) - Number(parsedArgs[0] || 0));
+            setError(null);
+            break;
+          case 'multiply':
+            setPreviewValue(Number(sourceValue) * Number(parsedArgs[0] || 1));
+            setError(null);
+            break;
+          case 'divide':
+            const divisor = Number(parsedArgs[0] || 1);
+            if (divisor === 0) {
+              setError('Cannot divide by zero');
+              setPreviewValue(sourceValue);
+            } else {
+              setPreviewValue(Number(sourceValue) / divisor);
+              setError(null);
+            }
+            break;
+          case 'not':
+            setPreviewValue(!sourceValue);
+            setError(null);
+            break;
+          case 'isEmpty':
+            setPreviewValue(sourceValue === null || sourceValue === undefined || sourceValue === '' || 
+                           (Array.isArray(sourceValue) && sourceValue.length === 0));
+            setError(null);
+            break;
+          case 'isNull':
+            setPreviewValue(sourceValue === null || sourceValue === undefined);
+            setError(null);
+            break;
+          case 'default':
+            const defaultValue = parsedArgs[0] || '';
+            setPreviewValue(sourceValue === null || sourceValue === undefined ? defaultValue : sourceValue);
             setError(null);
             break;
           case 'formatDate':
@@ -289,6 +387,9 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
         case 'toLowerCase':
           customCode = 'sourceValue.toLowerCase()';
           break;
+        case 'capitalize':
+          customCode = 'sourceValue.charAt(0).toUpperCase() + sourceValue.slice(1).toLowerCase()';
+          break;
         case 'trim':
           customCode = 'sourceValue.trim()';
           break;
@@ -303,6 +404,9 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
         case 'prepend':
           customCode = `"${builtinParams.text || ''}" + sourceValue`;
           break;
+        case 'length':
+          customCode = 'sourceValue.length';
+          break;
         case 'toNumber':
           customCode = 'Number(sourceValue)';
           break;
@@ -311,6 +415,42 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
           break;
         case 'toBoolean':
           customCode = 'Boolean(sourceValue)';
+          break;
+        case 'round':
+          customCode = 'Math.round(sourceValue)';
+          break;
+        case 'floor':
+          customCode = 'Math.floor(sourceValue)';
+          break;
+        case 'ceil':
+          customCode = 'Math.ceil(sourceValue)';
+          break;
+        case 'toFixed':
+          customCode = `sourceValue.toFixed(${builtinParams.decimals || '0'})`;
+          break;
+        case 'add':
+          customCode = `sourceValue + ${builtinParams.value || '0'}`;
+          break;
+        case 'subtract':
+          customCode = `sourceValue - ${builtinParams.value || '0'}`;
+          break;
+        case 'multiply':
+          customCode = `sourceValue * ${builtinParams.value || '1'}`;
+          break;
+        case 'divide':
+          customCode = `sourceValue / ${builtinParams.value || '1'}`;
+          break;
+        case 'not':
+          customCode = '!sourceValue';
+          break;
+        case 'isEmpty':
+          customCode = 'sourceValue === null || sourceValue === undefined || sourceValue === "" || (Array.isArray(sourceValue) && sourceValue.length === 0)';
+          break;
+        case 'isNull':
+          customCode = 'sourceValue === null || sourceValue === undefined';
+          break;
+        case 'default':
+          customCode = `sourceValue === null || sourceValue === undefined ? "${builtinParams.defaultValue || ''}" : sourceValue`;
           break;
         case 'formatDate':
           customCode = 'new Date(sourceValue).toISOString()';
@@ -426,6 +566,51 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
               onChange={(e) => handleBuiltinParamChange('separator', e.target.value)}
               className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
               placeholder=","
+            />
+          </div>
+        );
+      case 'toFixed':
+        return (
+          <div className="mb-2">
+            <label className="block text-xs text-gray-400 mb-1">Decimal Places</label>
+            <input
+              type="number"
+              min="0"
+              max="20"
+              value={builtinParams.decimals || '0'}
+              onChange={(e) => handleBuiltinParamChange('decimals', e.target.value)}
+              className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+              placeholder="0"
+            />
+          </div>
+        );
+      case 'add':
+      case 'subtract':
+      case 'multiply':
+      case 'divide':
+        return (
+          <div className="mb-2">
+            <label className="block text-xs text-gray-400 mb-1">Value to {selectedBuiltin}</label>
+            <input
+              type="number"
+              step="any"
+              value={builtinParams.value || (selectedBuiltin === 'divide' || selectedBuiltin === 'multiply' ? '1' : '0')}
+              onChange={(e) => handleBuiltinParamChange('value', e.target.value)}
+              className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+              placeholder={selectedBuiltin === 'divide' || selectedBuiltin === 'multiply' ? '1' : '0'}
+            />
+          </div>
+        );
+      case 'default':
+        return (
+          <div className="mb-2">
+            <label className="block text-xs text-gray-400 mb-1">Default Value</label>
+            <input
+              type="text"
+              value={builtinParams.defaultValue || ''}
+              onChange={(e) => handleBuiltinParamChange('defaultValue', e.target.value)}
+              className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+              placeholder="Enter default value..."
             />
           </div>
         );
@@ -549,15 +734,35 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                     <optgroup label="String">
                       <option value="toUpperCase">toUpperCase()</option>
                       <option value="toLowerCase">toLowerCase()</option>
+                      <option value="capitalize">capitalize()</option>
                       <option value="trim">trim()</option>
                       <option value="substring">substring(start, end)</option>
                       <option value="append">append(text)</option>
                       <option value="prepend">prepend(text)</option>
+                      <option value="length">length()</option>
+                    </optgroup>
+                    <optgroup label="Number">
+                      <option value="toNumber">toNumber()</option>
+                      <option value="round">round()</option>
+                      <option value="floor">floor()</option>
+                      <option value="ceil">ceil()</option>
+                      <option value="toFixed">toFixed(decimals)</option>
+                      <option value="add">add(value)</option>
+                      <option value="subtract">subtract(value)</option>
+                      <option value="multiply">multiply(value)</option>
+                      <option value="divide">divide(value)</option>
                     </optgroup>
                     <optgroup label="Type Conversion">
-                      <option value="toNumber">toNumber()</option>
                       <option value="toString">toString()</option>
                       <option value="toBoolean">toBoolean()</option>
+                    </optgroup>
+                    <optgroup label="Boolean/Logic">
+                      <option value="not">not()</option>
+                      <option value="isEmpty">isEmpty()</option>
+                      <option value="isNull">isNull()</option>
+                    </optgroup>
+                    <optgroup label="Utility">
+                      <option value="default">default(value)</option>
                     </optgroup>
                     <optgroup label="Date">
                       <option value="formatDate">formatDate()</option>

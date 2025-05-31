@@ -435,6 +435,9 @@ export function applyBuiltinTransformation(value: any, transformation: string): 
       return String(value).toUpperCase();
     case 'toLowerCase':
       return String(value).toLowerCase();
+    case 'capitalize':
+      const str = String(value);
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     case 'trim':
       return String(value).trim();
     case 'substring':
@@ -448,6 +451,8 @@ export function applyBuiltinTransformation(value: any, transformation: string): 
     case 'prepend':
       const prependText = argsStr.replace(/['"]/g, '');
       return prependText + String(value);
+    case 'length':
+      return (Array.isArray(value) || typeof value === 'string') ? value.length : 0;
       
     // Type casts
     case 'toNumber':
@@ -456,6 +461,40 @@ export function applyBuiltinTransformation(value: any, transformation: string): 
       return String(value);
     case 'toBoolean':
       return Boolean(value);
+      
+    // Number transformations
+    case 'round':
+      return Math.round(Number(value));
+    case 'floor':
+      return Math.floor(Number(value));
+    case 'ceil':
+      return Math.ceil(Number(value));
+    case 'toFixed':
+      const decimals = parseInt(parsedArgs[0] || '0');
+      return Number(value).toFixed(decimals);
+    case 'add':
+      return Number(value) + Number(parsedArgs[0] || 0);
+    case 'subtract':
+      return Number(value) - Number(parsedArgs[0] || 0);
+    case 'multiply':
+      return Number(value) * Number(parsedArgs[0] || 1);
+    case 'divide':
+      const divisor = Number(parsedArgs[0] || 1);
+      return divisor !== 0 ? Number(value) / divisor : value;
+      
+    // Boolean/logical transformations
+    case 'not':
+      return !value;
+    case 'isEmpty':
+      return value === null || value === undefined || value === '' || 
+             (Array.isArray(value) && value.length === 0);
+    case 'isNull':
+      return value === null || value === undefined;
+      
+    // Utility transformations
+    case 'default':
+      const defaultValue = parsedArgs[0] || '';
+      return value === null || value === undefined ? defaultValue : value;
       
     // Date transformations
     case 'formatDate':
@@ -688,6 +727,9 @@ function transform(${sourceVar}) {
           case 'toLowerCase':
             code += `      transformedValue = String(sourceValue).toLowerCase();\n`;
             break;
+          case 'capitalize':
+            code += `      transformedValue = String(sourceValue).charAt(0).toUpperCase() + String(sourceValue).slice(1).toLowerCase();\n`;
+            break;
           case 'trim':
             code += `      transformedValue = String(sourceValue).trim();\n`;
             break;
@@ -703,6 +745,9 @@ function transform(${sourceVar}) {
             const prependText = argsStr.replace(/['"]/g, '');
             code += `      transformedValue = "${prependText}" + String(sourceValue);\n`;
             break;
+          case 'length':
+            code += `      transformedValue = (Array.isArray(sourceValue) || typeof sourceValue === 'string') ? sourceValue.length : 0;\n`;
+            break;
           case 'toNumber':
             code += `      transformedValue = Number(sourceValue);\n`;
             break;
@@ -711,6 +756,49 @@ function transform(${sourceVar}) {
             break;
           case 'toBoolean':
             code += `      transformedValue = Boolean(sourceValue);\n`;
+            break;
+          case 'round':
+            code += `      transformedValue = Math.round(Number(sourceValue));\n`;
+            break;
+          case 'floor':
+            code += `      transformedValue = Math.floor(Number(sourceValue));\n`;
+            break;
+          case 'ceil':
+            code += `      transformedValue = Math.ceil(Number(sourceValue));\n`;
+            break;
+          case 'toFixed':
+            const fixedArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = Number(sourceValue).toFixed(${fixedArgs[0] || '0'});\n`;
+            break;
+          case 'add':
+            const addArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = Number(sourceValue) + Number(${addArgs[0] || '0'});\n`;
+            break;
+          case 'subtract':
+            const subtractArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = Number(sourceValue) - Number(${subtractArgs[0] || '0'});\n`;
+            break;
+          case 'multiply':
+            const multiplyArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = Number(sourceValue) * Number(${multiplyArgs[0] || '1'});\n`;
+            break;
+          case 'divide':
+            const divideArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      const divisor = Number(${divideArgs[0] || '1'});\n`;
+            code += `      transformedValue = divisor !== 0 ? Number(sourceValue) / divisor : sourceValue;\n`;
+            break;
+          case 'not':
+            code += `      transformedValue = !sourceValue;\n`;
+            break;
+          case 'isEmpty':
+            code += `      transformedValue = sourceValue === null || sourceValue === undefined || sourceValue === '' || (Array.isArray(sourceValue) && sourceValue.length === 0);\n`;
+            break;
+          case 'isNull':
+            code += `      transformedValue = sourceValue === null || sourceValue === undefined;\n`;
+            break;
+          case 'default':
+            const defaultArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = sourceValue === null || sourceValue === undefined ? "${defaultArgs[0] || ''}" : sourceValue;\n`;
             break;
           case 'formatDate':
             code += `      transformedValue = new Date(sourceValue).toISOString();\n`;
@@ -892,6 +980,9 @@ function transform(${sourceVar}: any): any {
           case 'toLowerCase':
             code += `      transformedValue = String(sourceValue).toLowerCase();\n`;
             break;
+          case 'capitalize':
+            code += `      transformedValue = String(sourceValue).charAt(0).toUpperCase() + String(sourceValue).slice(1).toLowerCase();\n`;
+            break;
           case 'trim':
             code += `      transformedValue = String(sourceValue).trim();\n`;
             break;
@@ -907,6 +998,9 @@ function transform(${sourceVar}: any): any {
             const prependText = argsStr.replace(/['"]/g, '');
             code += `      transformedValue = "${prependText}" + String(sourceValue);\n`;
             break;
+          case 'length':
+            code += `      transformedValue = (Array.isArray(sourceValue) || typeof sourceValue === 'string') ? sourceValue.length : 0;\n`;
+            break;
           case 'toNumber':
             code += `      transformedValue = Number(sourceValue);\n`;
             break;
@@ -915,6 +1009,49 @@ function transform(${sourceVar}: any): any {
             break;
           case 'toBoolean':
             code += `      transformedValue = Boolean(sourceValue);\n`;
+            break;
+          case 'round':
+            code += `      transformedValue = Math.round(Number(sourceValue));\n`;
+            break;
+          case 'floor':
+            code += `      transformedValue = Math.floor(Number(sourceValue));\n`;
+            break;
+          case 'ceil':
+            code += `      transformedValue = Math.ceil(Number(sourceValue));\n`;
+            break;
+          case 'toFixed':
+            const fixedArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = Number(sourceValue).toFixed(${fixedArgs[0] || '0'});\n`;
+            break;
+          case 'add':
+            const addArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = Number(sourceValue) + Number(${addArgs[0] || '0'});\n`;
+            break;
+          case 'subtract':
+            const subtractArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = Number(sourceValue) - Number(${subtractArgs[0] || '0'});\n`;
+            break;
+          case 'multiply':
+            const multiplyArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = Number(sourceValue) * Number(${multiplyArgs[0] || '1'});\n`;
+            break;
+          case 'divide':
+            const divideArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      const divisor = Number(${divideArgs[0] || '1'});\n`;
+            code += `      transformedValue = divisor !== 0 ? Number(sourceValue) / divisor : sourceValue;\n`;
+            break;
+          case 'not':
+            code += `      transformedValue = !sourceValue;\n`;
+            break;
+          case 'isEmpty':
+            code += `      transformedValue = sourceValue === null || sourceValue === undefined || sourceValue === '' || (Array.isArray(sourceValue) && sourceValue.length === 0);\n`;
+            break;
+          case 'isNull':
+            code += `      transformedValue = sourceValue === null || sourceValue === undefined;\n`;
+            break;
+          case 'default':
+            const defaultArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `      transformedValue = sourceValue === null || sourceValue === undefined ? "${defaultArgs[0] || ''}" : sourceValue;\n`;
             break;
           case 'formatDate':
             code += `      transformedValue = new Date(sourceValue).toISOString();\n`;
@@ -1110,6 +1247,10 @@ def transform(${sourceVar}):
           case 'toLowerCase':
             code += `                transformed_value = str(source_value).lower()\n`;
             break;
+          case 'capitalize':
+            code += `                source_str = str(source_value)\n`;
+            code += `                transformed_value = source_str[0].upper() + source_str[1:].lower() if source_str else ""\n`;
+            break;
           case 'trim':
             code += `                transformed_value = str(source_value).strip()\n`;
             break;
@@ -1131,6 +1272,9 @@ def transform(${sourceVar}):
             const prependText = argsStr.replace(/['"]/g, '');
             code += `                transformed_value = "${prependText}" + str(source_value)\n`;
             break;
+          case 'length':
+            code += `                transformed_value = len(source_value) if isinstance(source_value, (str, list)) else 0\n`;
+            break;
           case 'toNumber':
             code += `                transformed_value = float(source_value)\n`;
             break;
@@ -1139,6 +1283,51 @@ def transform(${sourceVar}):
             break;
           case 'toBoolean':
             code += `                transformed_value = bool(source_value)\n`;
+            break;
+          case 'round':
+            code += `                transformed_value = round(float(source_value))\n`;
+            break;
+          case 'floor':
+            code += `                import math\n`;
+            code += `                transformed_value = math.floor(float(source_value))\n`;
+            break;
+          case 'ceil':
+            code += `                import math\n`;
+            code += `                transformed_value = math.ceil(float(source_value))\n`;
+            break;
+          case 'toFixed':
+            const fixedArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                transformed_value = f"{float(source_value):.${fixedArgs[0] || '0'}f}"\n`;
+            break;
+          case 'add':
+            const addArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                transformed_value = float(source_value) + float(${addArgs[0] || '0'})\n`;
+            break;
+          case 'subtract':
+            const subtractArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                transformed_value = float(source_value) - float(${subtractArgs[0] || '0'})\n`;
+            break;
+          case 'multiply':
+            const multiplyArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                transformed_value = float(source_value) * float(${multiplyArgs[0] || '1'})\n`;
+            break;
+          case 'divide':
+            const divideArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                divisor = float(${divideArgs[0] || '1'})\n`;
+            code += `                transformed_value = float(source_value) / divisor if divisor != 0 else source_value\n`;
+            break;
+          case 'not':
+            code += `                transformed_value = not source_value\n`;
+            break;
+          case 'isEmpty':
+            code += `                transformed_value = source_value is None or source_value == "" or (isinstance(source_value, list) and len(source_value) == 0)\n`;
+            break;
+          case 'isNull':
+            code += `                transformed_value = source_value is None\n`;
+            break;
+          case 'default':
+            const defaultArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                transformed_value = source_value if source_value is not None else "${defaultArgs[0] || ''}"\n`;
             break;
           case 'formatDate':
             code += `                transformed_value = datetime.fromisoformat(source_value.replace('Z', '+00:00')).isoformat()\n`;
@@ -1282,6 +1471,11 @@ public class JsonMapper {
             code += `                    String transformedValue = sourceValue.asText().toLowerCase();\n`;
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
             break;
+          case 'capitalize':
+            code += `                    String sourceStr = sourceValue.asText();\n`;
+            code += `                    String transformedValue = sourceStr.isEmpty() ? "" : sourceStr.substring(0, 1).toUpperCase() + sourceStr.substring(1).toLowerCase();\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
           case 'trim':
             code += `                    String transformedValue = sourceValue.asText().trim();\n`;
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
@@ -1307,6 +1501,17 @@ public class JsonMapper {
             code += `                    String transformedValue = "${prependText}" + sourceValue.asText();\n`;
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
             break;
+          case 'length':
+            code += `                    int transformedValue;\n`;
+            code += `                    if (sourceValue.isArray()) {\n`;
+            code += `                        transformedValue = sourceValue.size();\n`;
+            code += `                    } else if (sourceValue.isTextual()) {\n`;
+            code += `                        transformedValue = sourceValue.asText().length();\n`;
+            code += `                    } else {\n`;
+            code += `                        transformedValue = 0;\n`;
+            code += `                    }\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
           case 'toNumber':
             code += `                    double transformedValue = sourceValue.asDouble();\n`;
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
@@ -1317,6 +1522,63 @@ public class JsonMapper {
             break;
           case 'toBoolean':
             code += `                    boolean transformedValue = sourceValue.asBoolean();\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'round':
+            code += `                    long transformedValue = Math.round(sourceValue.asDouble());\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'floor':
+            code += `                    double transformedValue = Math.floor(sourceValue.asDouble());\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'ceil':
+            code += `                    double transformedValue = Math.ceil(sourceValue.asDouble());\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'toFixed':
+            const fixedArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                    String transformedValue = String.format("%.${fixedArgs[0] || '0'}f", sourceValue.asDouble());\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'add':
+            const addArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                    double transformedValue = sourceValue.asDouble() + ${addArgs[0] || '0'};\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'subtract':
+            const subtractArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                    double transformedValue = sourceValue.asDouble() - ${subtractArgs[0] || '0'};\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'multiply':
+            const multiplyArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                    double transformedValue = sourceValue.asDouble() * ${multiplyArgs[0] || '1'};\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'divide':
+            const divideArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                    double divisor = ${divideArgs[0] || '1'};\n`;
+            code += `                    double transformedValue = divisor != 0 ? sourceValue.asDouble() / divisor : sourceValue.asDouble();\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'not':
+            code += `                    boolean transformedValue = !sourceValue.asBoolean();\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'isEmpty':
+            code += `                    boolean transformedValue = sourceValue.isMissingNode() || sourceValue.isNull() || \n`;
+            code += `                        (sourceValue.isTextual() && sourceValue.asText().isEmpty()) || \n`;
+            code += `                        (sourceValue.isArray() && sourceValue.size() == 0);\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'isNull':
+            code += `                    boolean transformedValue = sourceValue.isMissingNode() || sourceValue.isNull();\n`;
+            code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
+            break;
+          case 'default':
+            const defaultArgs = argsStr.split(',').map(a => a.trim().replace(/['"]/g, ''));
+            code += `                    Object transformedValue = (sourceValue.isMissingNode() || sourceValue.isNull()) ? "${defaultArgs[0] || ''}" : sourceValue;\n`;
             code += `                    setValueByPath(${targetVar}, "${toPath}", transformedValue);\n`;
             break;
           case 'formatDate':
