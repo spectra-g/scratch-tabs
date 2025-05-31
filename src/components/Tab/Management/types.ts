@@ -1,4 +1,3 @@
-
 export interface TabManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,7 +10,7 @@ export interface Workspace {
   isLoadingCount?: boolean;
 }
 
-export type SortOption = 'current' | 'title-asc' | 'title-desc' | 'created-asc' | 'created-desc' | 'modified-asc' | 'modified-desc' | 'language';
+export type SortOption = 'current' | 'title-asc' | 'title-desc' | 'created-asc' | 'created-desc' | 'modified-asc' | 'modified-desc' | 'language' | 'lines-most' | 'lines-least';
 export type GroupOption = 'none' | 'language';
 
 export interface ConfirmationState {

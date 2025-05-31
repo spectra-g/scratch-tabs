@@ -83,6 +83,20 @@ export const useFilteredTabs = (
           return aLang.localeCompare(bLang);
         });
         break;
+      case 'lines-most':
+        result.sort((a, b) => {
+          const aLines = a.isTablet ? 0 : (a.content.split('\n').length);
+          const bLines = b.isTablet ? 0 : (b.content.split('\n').length);
+          return bLines - aLines; // Descending order (most first)
+        });
+        break;
+      case 'lines-least':
+        result.sort((a, b) => {
+          const aLines = a.isTablet ? 0 : (a.content.split('\n').length);
+          const bLines = b.isTablet ? 0 : (b.content.split('\n').length);
+          return aLines - bLines; // Ascending order (least first)
+        });
+        break;
     }
 
     return result;
