@@ -12,6 +12,7 @@ import { RestClientTablet } from './restclient/RestClientTablet';
 import { JwtTablet } from './jwt/JwtTablet';
 import { JsonMapperTablet } from './jsonmapper/JsonMapperTablet';
 import { PomodoroTablet } from './pomodoro/PomodoroTablet';
+import { RegexTablet } from './regex/RegexTablet';
 
 // Register built-in tablets
 tabletRegistry.register(PasswordTablet);
@@ -27,6 +28,7 @@ tabletRegistry.register(RestClientTablet);
 tabletRegistry.register(JwtTablet);
 tabletRegistry.register(JsonMapperTablet);
 tabletRegistry.register(PomodoroTablet);
+tabletRegistry.register(RegexTablet);
 
 export { TabletSelector } from './components/TabletSelector';
 export { tabletRegistry } from './registry';
