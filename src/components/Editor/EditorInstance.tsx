@@ -15,6 +15,10 @@ interface EditorInstanceProps {
   activeTab: Tab;
 }
 
+// Global storage for Monaco models and view states per tab
+const tabModels = new Map<string, Monaco.editor.ITextModel>();
+const tabViewStates = new Map<string, Monaco.editor.ICodeEditorViewState>();
+
 export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab}) => {
   const {
     updateTabContent,
@@ -35,8 +39,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   }));
 
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<typeof Monaco | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const previousContentRef = useRef<string>(activeTab.content);
+  const currentTabIdRef = useRef<string>(activeTab.id);
 
   // --- Ref to hold the latest activeTab data ---
   const latestActiveTabRef = useRef(activeTab);
@@ -52,16 +58,76 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     tabletQuery,
     selectorPosition,
     tabletSelectorContainerRef,
-    openTabletSelector,
     closeTabletSelector,
-    updateTabletQuery,
   } = useTabletSelector(editorRef, editorContainerRef, activeTab?.id, updateTabContent);
 
-  // --- Effects ---
-  useEffect(() => {
-    previousContentRef.current = activeTab.content;
-  }, [activeTab.id, activeTab.content]);
+  // Function to create or get model for a tab
+  const getOrCreateModelForTab = (tabId: string, content: string, language: string): Monaco.editor.ITextModel => {
+    if (!monacoRef.current) throw new Error('Monaco not initialized');
+    
+    let model = tabModels.get(tabId);
+    if (!model) {
+      // Create new model for this tab
+      model = monacoRef.current.editor.createModel(content, language);
+      tabModels.set(tabId, model);
+      
+      // Listen for content changes on this model
+      model.onDidChangeContent(() => {
+        const newContent = model!.getValue();
+        updateTabContent(tabId, newContent);
+        
+        if (!latestActiveTabRef.current.isTablet) {
+          detectAndSetLanguage(tabId, newContent, previousContentRef.current, language, latestActiveTabRef.current.languageLocked);
+        }
+        previousContentRef.current = newContent;
+      });
+    } else {
+      // Update existing model if content has changed externally
+      if (model.getValue() !== content) {
+        model.setValue(content);
+      }
+      // Update language if needed
+      if (model.getLanguageId() !== language) {
+        monacoRef.current.editor.setModelLanguage(model, language);
+      }
+    }
+    return model;
+  };
 
+  // Effect to switch models when active tab changes
+  useEffect(() => {
+    if (!editorRef.current || !monacoRef.current) return;
+
+    const editor = editorRef.current;
+    const currentModel = editor.getModel();
+    
+    // Save view state for the previous tab
+    if (currentTabIdRef.current && currentModel) {
+      const viewState = editor.saveViewState();
+      if (viewState) {
+        tabViewStates.set(currentTabIdRef.current, viewState);
+      }
+    }
+
+    // Get or create model for the new active tab
+    const newModel = getOrCreateModelForTab(activeTab.id, activeTab.content, activeTab.language);
+    
+    // Switch to the new model
+    editor.setModel(newModel);
+    
+    // Restore view state for the new tab
+    const savedViewState = tabViewStates.get(activeTab.id);
+    if (savedViewState) {
+      editor.restoreViewState(savedViewState);
+    }
+    
+    // Update current tab reference
+    currentTabIdRef.current = activeTab.id;
+    previousContentRef.current = activeTab.content;
+    
+  }, [activeTab.id, activeTab.content, activeTab.language]);
+
+  // --- Effects ---
   useEffect(() => {
     // Only focus if this editor instance's side matches the globally active editor side
     // AND the activeTab for this instance is indeed the one that should be active on this side.
@@ -82,13 +148,20 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
 
   // --- Editor Event Handlers ---
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
-    const currentTabId = activeTab.id;
     editorRef.current = editor;
-    restoreScrollPosition(currentTabId);
+    monacoRef.current = monaco;
+    
+    // Initialize with the current tab's model
+    const model = getOrCreateModelForTab(activeTab.id, activeTab.content, activeTab.language);
+    editor.setModel(model);
+    currentTabIdRef.current = activeTab.id;
+    previousContentRef.current = activeTab.content;
+
+    restoreScrollPosition(activeTab.id);
 
     // --- Add Commands and Listeners ---
     // Ctrl+K (Format)
-    const formatCommand = editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
        if (!editor.hasTextFocus()) {
            return;
        }
@@ -105,29 +178,21 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     });
 
     return () => {
-        editorRef.current = null;
-
-        if (formatCommand) {
-             formatCommand.dispose();
+        // Save view state before cleanup
+        if (currentTabIdRef.current) {
+          const viewState = editor.saveViewState();
+          if (viewState) {
+            tabViewStates.set(currentTabIdRef.current, viewState);
+          }
         }
+        
+        editorRef.current = null;
+        monacoRef.current = null;
+
         if (cursorListener) {
             cursorListener.dispose();
         }
     };
-  };
-
-  const handleEditorChange = (value: string | undefined) => {
-    if (value === undefined) return;
-    const newContent = value;
-    const prevContent = previousContentRef.current;
-    const currentTabId = activeTab.id;
-
-    updateTabContent(currentTabId, newContent);
-
-    if (!activeTab.isTablet) {
-      detectAndSetLanguage(currentTabId, newContent, prevContent, activeTab.language, activeTab.languageLocked);
-    }
-    previousContentRef.current = newContent;
   };
 
   const handleEditorFocus = () => {
@@ -165,9 +230,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
             height="100%"
             width="100%"
             theme="vs-dark"
-            language={activeTab.language} // Use current language prop
-            value={activeTab.content}    // Use current content prop
-            onChange={handleEditorChange}
             onMount={handleEditorDidMount}
             options={{
               minimap: {enabled: false},
@@ -182,7 +244,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
                 addExtraSpaceOnTop: false,
               },
             }}
-            key={activeTab.id} // Key ensures component re-mounts if tab ID changes
           />
           {showTabletSelector && (
             <div

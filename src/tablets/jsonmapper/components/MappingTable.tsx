@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Edit, Trash2, EyeOff, Eye, RefreshCw, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Edit, Trash2, EyeOff, Eye, RefreshCw, ArrowUpDown, ArrowDown, ArrowUp, Eraser } from 'lucide-react';
 import { MappingRule } from '../types';
 import { TransformationRuleEditor } from './TransformationRuleEditor';
 import { jsonPathToReadablePath } from '../utils/jsonUtils';
@@ -10,6 +10,7 @@ interface MappingTableProps {
   onDeleteRule: (id: string) => void;
   onIgnoreRule: (id: string) => void;
   onReEvaluateRule: (id: string) => void;
+  onClearRule: (id: string) => void;
   sourceJson: string;
   targetJson: string;
   onSortedRulesChange?: (sortedRules: MappingRule[]) => void;
@@ -24,6 +25,7 @@ export const MappingTable: React.FC<MappingTableProps> = ({
   onDeleteRule,
   onIgnoreRule,
   onReEvaluateRule,
+  onClearRule,
   sourceJson,
   targetJson,
   onSortedRulesChange
@@ -93,58 +95,60 @@ export const MappingTable: React.FC<MappingTableProps> = ({
   };
   
   // Sort the rules
-  const sortedRules = [...rules].sort((a, b) => {
-    let aValue, bValue;
-    
-    switch (sortField) {
-      case 'sourcePath':
-        aValue = jsonPathToReadablePath(a.sourcePath).toLowerCase();
-        bValue = jsonPathToReadablePath(b.sourcePath).toLowerCase();
-        break;
-      case 'targetPath':
-        aValue = jsonPathToReadablePath(a.targetPath || '').toLowerCase();
-        bValue = jsonPathToReadablePath(b.targetPath || '').toLowerCase();
-        break;
-      case 'transformationType':
-        // Sort by transformation type first, then by transformation value
-        if (a.transformationType !== b.transformationType) {
-          aValue = a.transformationType;
-          bValue = b.transformationType;
-        } else {
-          aValue = a.transformation;
-          bValue = b.transformation;
-        }
-        break;
-      case 'sourceDataType':
-        aValue = a.sourceDataType;
-        bValue = b.sourceDataType;
-        break;
-      case 'targetDataType':
-        aValue = a.targetDataType;
-        bValue = b.targetDataType;
-        break;
-      case 'status':
-        aValue = a.status;
-        bValue = b.status;
-        break;
-      case 'confidence':
-        aValue = a.confidence;
-        bValue = b.confidence;
-        break;
-      default:
-        aValue = a.sourcePath;
-        bValue = b.sourcePath;
-    }
-    
-    // Handle numeric comparison
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-    }
-    
-    // String comparison
-    const comparison = String(aValue).localeCompare(String(bValue));
-    return sortDirection === 'asc' ? comparison : -comparison;
-  });
+  const sortedRules = useMemo(() => {
+    return [...rules].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortField) {
+        case 'sourcePath':
+          aValue = jsonPathToReadablePath(a.sourcePath).toLowerCase();
+          bValue = jsonPathToReadablePath(b.sourcePath).toLowerCase();
+          break;
+        case 'targetPath':
+          aValue = jsonPathToReadablePath(a.targetPath || '').toLowerCase();
+          bValue = jsonPathToReadablePath(b.targetPath || '').toLowerCase();
+          break;
+        case 'transformationType':
+          // Sort by transformation type first, then by transformation value
+          if (a.transformationType !== b.transformationType) {
+            aValue = a.transformationType;
+            bValue = b.transformationType;
+          } else {
+            aValue = a.transformation;
+            bValue = b.transformation;
+          }
+          break;
+        case 'sourceDataType':
+          aValue = a.sourceDataType;
+          bValue = b.sourceDataType;
+          break;
+        case 'targetDataType':
+          aValue = a.targetDataType;
+          bValue = b.targetDataType;
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        case 'confidence':
+          aValue = a.confidence;
+          bValue = b.confidence;
+          break;
+        default:
+          aValue = a.sourcePath;
+          bValue = b.sourcePath;
+      }
+      
+      // Handle numeric comparison
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      // String comparison
+      const comparison = String(aValue).localeCompare(String(bValue));
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [rules, sortField, sortDirection]);
   
   // Notify parent component when sorted rules change
   React.useEffect(() => {
@@ -270,6 +274,13 @@ export const MappingTable: React.FC<MappingTableProps> = ({
                       title={rule.status === 'ignored' ? 'Unignore rule' : 'Ignore rule'}
                     >
                       {rule.status === 'ignored' ? <Eye size={16} /> : <EyeOff size={16} />}
+                    </button>
+                    <button
+                      onClick={() => onClearRule(rule.id)}
+                      className="p-1 text-gray-400 hover:text-orange-400 hover:bg-gray-700/50 rounded transition-colors"
+                      title="Clear rule fields"
+                    >
+                      <Eraser size={16} />
                     </button>
                     <button
                       onClick={() => onReEvaluateRule(rule.id)}

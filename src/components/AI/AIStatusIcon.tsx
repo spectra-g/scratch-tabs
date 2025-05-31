@@ -58,7 +58,7 @@ export const AIStatusIcon: React.FC = () => {
     animationClass = 'animate-pulse'; // Pulse when isLoading is true
     title = `AI Initializing (${progressStatus})... ${progress}%`;
   } else if (isReady) { // Check isReady only if not loading/errored
-    iconColor = 'text-green-400'; // Green when ready
+    iconColor = 'text-green-100'; // Green when ready
     hoverColor = 'hover:text-green-300';
     title = 'AI Ready';
   }

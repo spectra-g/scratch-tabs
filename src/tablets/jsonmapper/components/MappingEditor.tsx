@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { ArrowLeft, Save, Play, Plus, FileCode, Wand2, Upload, DownloadCloud } from 'lucide-react';
+import { ArrowLeft, Save, Play, Plus, FileCode, Wand2, Upload, DownloadCloud, Copy, Check } from 'lucide-react';
 import { MappingConfig, MappingRule, PathInfo } from '../types';
 import { MappingTable } from './MappingTable';
 import { extractPaths, isValidJson, formatJson, jsonPathToReadablePath } from '../utils/jsonUtils';
@@ -33,6 +33,8 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const [targetJsonError, setTargetJsonError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentSortedRules, setCurrentSortedRules] = useState<MappingRule[]>(mapping.rules);
+  const [sourceCopied, setSourceCopied] = useState(false);
+  const [targetCopied, setTargetCopied] = useState(false);
 
   // Validate JSON when it changes
   useEffect(() => {
@@ -61,9 +63,9 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     }
   }, [targetJson]);
 
-  const handleSortedRulesChange = (sortedRules: MappingRule[]) => {
+  const handleSortedRulesChange = useCallback((sortedRules: MappingRule[]) => {
     setCurrentSortedRules(sortedRules);
-  };
+  }, []);
 
   const handleExportRulesToCsv = () => {
     if (currentSortedRules.length === 0) {
@@ -168,6 +170,30 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
     // Reset the input value so the same file can be selected again
     e.target.value = '';
+  };
+
+  const handleCopySource = async () => {
+    if (!sourceJson) return;
+    
+    try {
+      await navigator.clipboard.writeText(sourceJson);
+      setSourceCopied(true);
+      setTimeout(() => setSourceCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy source JSON:', error);
+    }
+  };
+
+  const handleCopyTarget = async () => {
+    if (!targetJson) return;
+    
+    try {
+      await navigator.clipboard.writeText(targetJson);
+      setTargetCopied(true);
+      setTimeout(() => setTargetCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy target JSON:', error);
+    }
   };
 
   const handleAnalyzeAndSuggest = async () => {
@@ -332,6 +358,21 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     ));
   };
 
+  const handleClearRule = (id: string) => {
+    setRules(rules.map(rule =>
+      rule.id === id ? {
+        ...rule,
+        targetPath: '',
+        transformationType: 'none' as const,
+        transformation: '',
+        targetDataType: 'unknown' as const,
+        status: 'unmapped' as const,
+        confidence: 0,
+        isUserDefined: true
+      } : rule
+    ));
+  };
+
   const handleReEvaluateRule = (id: string) => {
     if (!sourceJson || !targetJson || sourceJsonError || targetJsonError) {
       return;
@@ -344,11 +385,48 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       const rule = rules.find(r => r.id === id);
       if (!rule) return;
 
-      const updatedRules = validateRules([rule], sourceData, targetData);
-
-      setRules(rules.map(r =>
-        r.id === id ? updatedRules[0] : r
-      ));
+      // If the rule has been cleared (empty targetPath), re-run mapping suggestions
+      if (!rule.targetPath || rule.targetPath === '') {
+        const sourcePaths = extractPaths(sourceData, '$', { optimizeArrays: true });
+        const targetPaths = extractPaths(targetData, '$', { optimizeArrays: true });
+        
+        // Find the source path info for this rule
+        const sourcePathInfo = sourcePaths.find(p => p.path === rule.sourcePath);
+        if (sourcePathInfo) {
+          const suggestions = suggestMappings([sourcePathInfo], targetPaths);
+          const newRules = createRulesFromSuggestions(suggestions);
+          
+          if (newRules.length > 0) {
+            // Update the rule with the best suggestion
+            const bestSuggestion = newRules[0];
+            const updatedRule = {
+              ...rule,
+              targetPath: bestSuggestion.targetPath,
+              transformationType: bestSuggestion.transformationType,
+              transformation: bestSuggestion.transformation,
+              targetDataType: bestSuggestion.targetDataType,
+              status: bestSuggestion.status,
+              confidence: bestSuggestion.confidence,
+              isUserDefined: true
+            };
+            
+            setRules(rules.map(r => r.id === id ? updatedRule : r));
+          } else {
+            // No suggestions found, keep as unmapped
+            const updatedRule = {
+              ...rule,
+              status: 'unmapped' as const,
+              isUserDefined: true
+            };
+            
+            setRules(rules.map(r => r.id === id ? updatedRule : r));
+          }
+        }
+      } else {
+        // Normal validation for rules with target paths
+        const updatedRules = validateRules([rule], sourceData, targetData);
+        setRules(rules.map(r => r.id === id ? updatedRules[0] : r));
+      }
     } catch (error) {
       console.error('Error re-evaluating rule:', error);
     }
@@ -540,6 +618,14 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                       className="hidden"
                     />
                   </label>
+                  <button
+                    onClick={handleCopySource}
+                    disabled={!sourceJson}
+                    className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
+                  >
+                    {sourceCopied ? <Check size={14} /> : <Copy size={14} />}
+                    <span>{sourceCopied ? 'Copied!' : 'Copy'}</span>
+                  </button>
                 </div>
               </div>
               <div className={`border rounded-md overflow-hidden ${sourceJsonError ? 'border-red-500/50' : 'border-gray-700/50'}`}>
@@ -579,6 +665,14 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                       className="hidden"
                     />
                   </label>
+                  <button
+                    onClick={handleCopyTarget}
+                    disabled={!targetJson}
+                    className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
+                  >
+                    {targetCopied ? <Check size={14} /> : <Copy size={14} />}
+                    <span>{targetCopied ? 'Copied!' : 'Copy'}</span>
+                  </button>
                 </div>
               </div>
               <div className={`border rounded-md overflow-hidden ${targetJsonError ? 'border-red-500/50' : 'border-gray-700/50'}`}>
@@ -659,6 +753,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               onDeleteRule={handleDeleteRule}
               onIgnoreRule={handleIgnoreRule}
               onReEvaluateRule={handleReEvaluateRule}
+              onClearRule={handleClearRule}
               sourceJson={sourceJson}
               targetJson={targetJson}
               onSortedRulesChange={handleSortedRulesChange}

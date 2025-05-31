@@ -90,6 +90,23 @@ fun main(args: Array<String>) = runBlocking { // Entry point
     if (/^\s*#![^\r\n]*(scala|python|ruby|bash|sh)/i.test(trimmedContent)) { // Shebangs for other common scripts
       return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
+    
+    // Strong stacktrace anti-pattern - if we see multiple "at" lines, this is likely a stacktrace
+    const atFramePattern = /^\s*at\s+[\w$.]+/gm;
+    const atFrameMatches = content.match(atFramePattern);
+    if (atFrameMatches && atFrameMatches.length >= 3) {
+      // 3 or more "at" frame lines strongly suggests stacktrace, not Kotlin
+      return { match: false, confidence: 0.0, matchedDefinitive: false };
+    }
+    
+    // Check for common stacktrace error patterns
+    if (/^(?:[A-Za-z_][\w.$]*(?:Error|Exception|Panic|Traceback))/m.test(trimmedContent)) {
+      // If it starts with an error/exception and has "at" frames, it's a stacktrace
+      if (atFrameMatches && atFrameMatches.length >= 1) {
+        return { match: false, confidence: 0.0, matchedDefinitive: false };
+      }
+    }
+    
     if (/\b(case\s+class|case\s+object|trait)\b/g.test(content)) { // Strong Scala keywords
       confidenceScore -= 0.7; // Heavy penalty
     }
@@ -118,7 +135,7 @@ fun main(args: Array<String>) = runBlocking { // Entry point
       { pattern: /\bdata\s+class\s+\w+/g, weight: 0.3, perMatch: 0.1, specific: true, maxMatches: 2 },
       { pattern: /\bobject\s+\w+(?:\s*:\s*[\w<>]+)?\s*(?:,\s*[\w<>]+)*\s*\{/g, weight: 0.25, perMatch: 0.05, specific: true, maxMatches: 2 }, // object Foo or object Bar : Baz
       { pattern: /\b(interface|enum\s+class|sealed\s+class|annotation\s+class)\s+\w+/g, weight: 0.2, perMatch: 0.05, specific: true, maxMatches: 3 },
-      { pattern: /\$\{[^}]+\}|\$[a-zA-Z_]\w*/g, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 10 }, // String templates
+      { pattern: /\$\{[^}]+\}/g, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 10 }, // String templates - only ${...} syntax
       { pattern: /\bwhen\s*(?:\([^)]*\))?\s*\{/g, weight: 0.2, perMatch: 0.03, specific: true, maxMatches: 3 },
       { pattern: /\w+\?\.|\w+\?\:|\w+!!/g, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 5 }, // Null safety ?. ?: !!
       { pattern: /\b(lateinit\s+var|lazy\s*(?:\{\s*\}|\bval\b))/g, weight: 0.3, perMatch: 0.1, specific: true, maxMatches: 2 },

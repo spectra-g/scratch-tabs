@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { X, Play, ArrowRight, ArrowLeft, Upload, Download } from 'lucide-react';
+import { X, Play, Upload, Download, Copy, Check } from 'lucide-react';
 import { MappingConfig, MappingDirection } from '../types';
 import { transformJson } from '../utils/mappingUtils';
 import { isValidJson, formatJson } from '../utils/jsonUtils';
@@ -19,9 +19,11 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
 }) => {
   const [input, setInput] = useState(initialInput || mapping.sourceJson);
   const [output, setOutput] = useState('');
-  const [direction, setDirection] = useState<MappingDirection>('sourceToTarget');
+  const [direction] = useState<MappingDirection>('sourceToTarget'); // Fixed direction
   const [error, setError] = useState<string | null>(null);
   const [isTransforming, setIsTransforming] = useState(false);
+  const [inputCopied, setInputCopied] = useState(false);
+  const [outputCopied, setOutputCopied] = useState(false);
   
   // Transform when the component mounts
   useEffect(() => {
@@ -32,17 +34,6 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
   const handleInputChange = (value: string | undefined) => {
     setInput(value || '');
     setError(null);
-  };
-  
-  const handleDirectionChange = (newDirection: MappingDirection) => {
-    setDirection(newDirection);
-    setError(null);
-    
-    // Swap input/output if direction changes
-    if (newDirection !== direction && output) {
-      setInput(output);
-      setOutput('');
-    }
   };
   
   const handleTransform = () => {
@@ -91,11 +82,35 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
     // Reset the input value so the same file can be selected again
     e.target.value = '';
   };
+
+  const handleCopyInput = async () => {
+    if (!input) return;
+    
+    try {
+      await navigator.clipboard.writeText(input);
+      setInputCopied(true);
+      setTimeout(() => setInputCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy input:', error);
+    }
+  };
+
+  const handleCopyOutput = async () => {
+    if (!output) return;
+    
+    try {
+      await navigator.clipboard.writeText(output);
+      setOutputCopied(true);
+      setTimeout(() => setOutputCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy output:', error);
+    }
+  };
   
   const handleDownloadOutput = () => {
     if (!output) return;
     
-    const filename = `${mapping.name.replace(/\s+/g, '_')}_${direction}_output.json`;
+    const filename = `${mapping.name.replace(/\s+/g, '_')}_output.json`;
     downloadStringAsFile(output, filename);
   };
   
@@ -118,45 +133,13 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">
           <div className="space-y-6">
-            {/* Direction Selector */}
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => handleDirectionChange('sourceToTarget')}
-                className={`
-                  flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm
-                  ${direction === 'sourceToTarget'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
-                  }
-                  transition-colors
-                `}
-              >
-                <span>Source to Target</span>
-                <ArrowRight size={16} />
-              </button>
-              <button
-                onClick={() => handleDirectionChange('targetToSource')}
-                className={`
-                  flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm
-                  ${direction === 'targetToSource'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
-                  }
-                  transition-colors
-                `}
-              >
-                <ArrowLeft size={16} />
-                <span>Target to Source</span>
-              </button>
-            </div>
-            
             {/* Input/Output Editors */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Input */}
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-gray-300">
-                    Input JSON ({direction === 'sourceToTarget' ? 'Source' : 'Target'})
+                    Input JSON
                   </label>
                   <div className="flex space-x-2">
                     <label className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors cursor-pointer">
@@ -169,6 +152,14 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                         className="hidden"
                       />
                     </label>
+                    <button
+                      onClick={handleCopyInput}
+                      disabled={!input}
+                      className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
+                    >
+                      {inputCopied ? <Check size={14} /> : <Copy size={14} />}
+                      <span>{inputCopied ? 'Copied!' : 'Copy'}</span>
+                    </button>
                   </div>
                 </div>
                 <div className={`border rounded-md overflow-hidden ${error ? 'border-red-500/50' : 'border-gray-700/50'}`}>
@@ -195,17 +186,28 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-gray-300">
-                    Output JSON ({direction === 'sourceToTarget' ? 'Target' : 'Source'})
+                    Transformed JSON
                   </label>
-                  {output && (
-                    <button
-                      onClick={handleDownloadOutput}
-                      className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
-                    >
-                      <Download size={14} />
-                      <span>Download</span>
-                    </button>
-                  )}
+                  <div className="flex space-x-2">
+                    {output && (
+                      <>
+                        <button
+                          onClick={handleDownloadOutput}
+                          className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                        >
+                          <Download size={14} />
+                          <span>Download</span>
+                        </button>
+                        <button
+                          onClick={handleCopyOutput}
+                          className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                        >
+                          {outputCopied ? <Check size={14} /> : <Copy size={14} />}
+                          <span>{outputCopied ? 'Copied!' : 'Copy'}</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="border border-gray-700/50 rounded-md overflow-hidden">
                   <Editor
