@@ -9,7 +9,7 @@ export class StacktraceLanguageDetector extends BaseLanguageDetector implements 
   id = 'stacktrace'; // Custom ID, as Monaco might not have a specific one for generic stacktraces
   name = 'Stack Trace';
   extensions = ['stacktrace', 'trace', 'log', 'err']; // Common extensions where stacktraces are found
-  priority = 5; // Mid-to-high priority as they are fairly distinct
+  priority = 7; // High priority - higher than Kotlin to win tie-breakers
 
   sampleContent(): string {
     return `Error: Cannot read properties of undefined (reading 'length')
@@ -40,8 +40,8 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
     [
       /^(\s*at\s+)/i,                                      // Java, JS, .NET: "at com.example..." or "   at func (file.js:1:1)"
       /^(\s*File\s+"[^"]+"\s*,\s*line\s+\d+)/i,            // Python: "File "path/to/file.py", line 123"
-      /^(\s*[\w./-]+\.(?:go|s):\d+)/i,                      // Go: "path/to/file.go:123"
-      /^(\s*[\w./-]+(?:[\w./-]*\.\w+)?\((?:[^)]*)\))/,     // Go: "main.main()" or "pkg.MyFunction()" on its own line often
+      /^(\s*[\w.$/-]+\.(?:go|s):\d+)/i,                     // Go: "path/to/file.go:123" - now includes $
+      /^(\s*[\w.$/-]+(?:[\w.$/-]*\.\w+)?\((?:[^)]*)\))/,    // Go: "main.main()" or "pkg.MyFunction()" - now includes $
       // Add more language-specific frame starts if needed (e.g., Ruby, C++)
       // Be cautious about overly generic patterns here.
     ].map(r => r.source).join('|')
@@ -49,7 +49,16 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
 
 
   detect(content: string): DetectionResult {
-    const trimmedContent = content.trim();
+    // Normalize literal escape sequences before detection
+    let normalizedContent = content;
+    // Convert literal \n sequences to actual newlines
+    normalizedContent = normalizedContent.replace(/\\n/g, '\n');
+    // Convert literal \t sequences to actual tabs
+    normalizedContent = normalizedContent.replace(/\\t/g, '\t');
+    // Convert literal \r sequences to actual carriage returns
+    normalizedContent = normalizedContent.replace(/\\r/g, '\r');
+    
+    const trimmedContent = normalizedContent.trim();
     if (!trimmedContent || trimmedContent.length < 15) {
       return this.noMatch();
     }
@@ -73,14 +82,14 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
       }
     }
     // Prevent matching SQL more aggressively
-    if (content.match(/\b(SELECT|CREATE\s+TABLE|INSERT\s+INTO|UPDATE\s+\w+\s+SET)\b/gi) &&
-      content.match(/;/g) &&
+    if (normalizedContent.match(/\b(SELECT|CREATE\s+TABLE|INSERT\s+INTO|UPDATE\s+\w+\s+SET)\b/gi) &&
+      normalizedContent.match(/;/g) &&
       !trimmedContent.match(/\b(Error|Exception|Panic|Traceback|Fault|Failure)\b/i)) { // If SQL keywords and semicolons but no error words
       return this.noMatch();
     }
 
     // 1. Check for common error prefixes
-    const errorPrefixRegex = /^(?:uncaught\s+)?([A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault|Traceback))\b(\s*[:-\s])?/i;
+    const errorPrefixRegex = /^(?:uncaught\s+)?([A-Za-z_][\w.$]*(?:Error|Exception|Panic|AssertionError|Failure|Fault|Traceback))\b(\s*[:-\s])?/i;
     const errorMatch = trimmedContent.match(errorPrefixRegex);
     if (errorMatch) {
       confidenceScore += 0.35; // Slightly reduced base, will be boosted by frames
@@ -89,10 +98,18 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
       errorKeywordFound = true;
     }
 
+    // Also check for "Wrapped by:" which is a strong Java/Scala stacktrace indicator
+    if (/^Wrapped by:/mi.test(normalizedContent)) {
+      confidenceScore += 0.2; 
+      strongSignalFound = true; 
+      patternsMatched++;
+      errorKeywordFound = true;
+    }
+
     // 2. Global scan for various frame patterns (more specific now)
     // These are for counting occurrences, not just line starts.
     const framePatternsForCounting = [
-      /\bat\s+[\w$./<>()[\]~`!@#%^&*+=|\\?-]+(?:\s*\(.*?\))?/g, // "at com.example.MyClass.method(MyClass.java:123)" or "at func (file.js:1:1)" or "at MyFunc"
+      /\bat\s+[\w$./()<>[\]~`!@#%^&*+=|\\?-]+(?:\s*\(.*?\))?/g, // "at com.example.MyClass.method(MyClass.java:123)" or "at func (file.js:1:1)" or "at MyFunc" - now includes $
       /File\s+"[^"]+",\s*line\s+\d+,\s*in\s+\S+/g,            // Python
       /[\w./-]+\.(?:go|s):\d+(?:\s+\+0x[0-9a-fA-F]+)?/g,        // Go
       // A very generic file:line:col pattern (use cautiously, lower weight)
@@ -100,7 +117,7 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
     ];
 
     for (const fp of framePatternsForCounting) {
-      const matches = content.match(fp);
+      const matches = normalizedContent.match(fp);
       if (matches) {
         framePatternHits += matches.length;
       }
@@ -114,15 +131,15 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
     }
 
     // 3. Specific indicators for Java or .NET
-    if (/\.{3}\s*\d+\s+more\b/i.test(content)) {
+    if (/\.{3}\s*\d+\s+more\b/i.test(normalizedContent)) {
       confidenceScore += 0.2; strongSignalFound = true; patternsMatched++;
     }
-    if (/\sCaused by:/i.test(content)) {
+    if (/\sCaused by:/i.test(normalizedContent)) {
       confidenceScore += 0.15; strongSignalFound = true; patternsMatched++;
     }
 
     // --- 4. Ratio of Frame-Like Lines (NEW & CRITICAL) ---
-    const lines = content.split(/\r\n|\r|\n/);
+    const lines = normalizedContent.split(/\r\n|\r|\n/);
     const nonEmptyLines = lines.filter(line => line.trim().length > 0);
     let typicalFrameLinesCount = 0;
 
@@ -430,6 +447,12 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
           formattedContent = contentAfterNewlineNormalization;
         }
 
+        // 1b. Normalize explicit tabs `\t` that are part of the string
+        const contentAfterTabNormalization = formattedContent.replace(/\\t/g, '\t');
+        if (contentAfterTabNormalization !== formattedContent) {
+          formattedContent = contentAfterTabNormalization;
+        }
+
         // 2. Ensure newline *only if not already present* after a closing parenthesis
         //    followed by common frame starters.
         //    Regex:
@@ -441,7 +464,7 @@ Uncaught (in promise) DOMException: The operation failed for an unspecified reas
         const frameStarterRegex = /(\))([ \t]*)((?:at\s+|Caused by:|\.{3}\s*\d+\s+more\b|File\s+"[^"]+"\s*,\s*line\s+\d+|[\w./-]+\.(?:go|s):\d+|[\w./-]+\((?:[^)]*)\)\s*$))/g;
         const contentAfterFrameSplit = formattedContent.replace(
           frameStarterRegex,
-          (match, p1ClosingParen, p2Whitespace, p3FrameStarter) => {
+          (match: string, p1ClosingParen: string, p2Whitespace: string, p3FrameStarter: string): string => {
             // p1 is ')', p2 is horizontal whitespace, p3 is the frame starter
             // We want to ensure there's a newline, and then consistent indentation for the frame starter.
             return `${p1ClosingParen}\n  ${p3FrameStarter.trimStart()}`;

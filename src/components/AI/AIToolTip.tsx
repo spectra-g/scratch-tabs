@@ -85,16 +85,6 @@ export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, p
       content = <div className="font-semibold text-gray-400 capitalize">{status || 'Initializing...'}</div>;
   }
 
-  // Helper to format bytes
-  function formatBytes(bytes?: number): string {
-    if (bytes === undefined || isNaN(bytes)) return '';
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }
-
   return (
     <div
       style={style}

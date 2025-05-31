@@ -78,110 +78,114 @@ a:hover {
     }
 
     let confidenceScore = 0.0;
-    let patternsMatched = 0; // Count of distinct features/pattern groups
+    let patternsMatched = 0;
     let strongCssSignal = false;
 
-    let ruleBlockCount = 0;
-    let propertyCount = 0;
-    let atRuleCount = 0;
-    let scssLessFeatureCount = 0;
-
-    // Regex for a typical CSS selector part (simplified)
-    const selectorPartRegex = /(?:[.#@\w*-]|[:\[\(])(?:[^\{\};]*?)/;
-    // Regex for a property: value;
-    const propertyValueRegex = /^\s*([\w-]+)\s*:\s*([^;{}]+?)(?:;|(?=\s*\}))/; // Property, value, optional semicolon before }
-
-
+    // Simple patterns as specified
+    const selectorLineRegex = /^\s*\w[\w\-]*\s*\{$/; // h1 {
+    const declarationLineRegex = /^\s*[\w\-]+\s*:\s*[^;]+;\s*$/; // color: red;
+    const commentLineRegex = /^\s*\/\*.*\*\/\s*$/; // /* comment */
+    
+    // Common CSS properties (almost always CSS)
+    const commonCssProperties = new Set([
+      'color', 'background', 'background-color', 'margin', 'padding', 
+      'font-size', 'font-family', 'font-weight', 'text-align', 'display',
+      'width', 'height', 'border', 'position', 'top', 'left', 'right', 'bottom'
+    ]);
+    
+    // Split into lines and analyze
     const lines = content.split('\n');
-    let inBlock = false;
-    let currentBlockHasProperty = false;
+    let selectorLineCount = 0;
+    let declarationLineCount = 0;
+    let commonPropertyCount = 0;
+    let hyphenatedPropertyCount = 0;
 
     for (const line of lines) {
       const trimmedLine = line.trim();
       if (!trimmedLine) continue;
 
-      if (trimmedLine.includes('{')) {
-        // Check if it's a selector block, not a JS object literal or function block
-        if (selectorPartRegex.test(trimmedLine.substring(0, trimmedLine.indexOf('{')))) {
-          inBlock = true;
-          currentBlockHasProperty = false;
-          ruleBlockCount++;
-        }
+      // Skip comments (don't count them for or against)
+      if (commentLineRegex.test(trimmedLine)) {
+        continue;
       }
 
-      if (inBlock) {
-        if (propertyValueRegex.test(trimmedLine)) {
-          propertyCount++;
-          currentBlockHasProperty = true;
-        }
+      // Skip closing braces (don't count them as they're common in many languages)
+      if (trimmedLine === '}') {
+        continue;
       }
 
-      if (trimmedLine.includes('}')) {
-        if (inBlock && currentBlockHasProperty) { // Only count as a valid CSS block if it had properties
-          confidenceScore += 0.25; // Base for a rule block with properties
-          patternsMatched++;
-          strongCssSignal = true;
-        }
-        inBlock = false;
-        currentBlockHasProperty = false;
-      }
-
-      // @-rules
-      if (/@(?:media|keyframes|font-face|supports|import|charset|namespace)\b/.test(trimmedLine)) {
-        atRuleCount++;
-        confidenceScore += 0.2;
+      // Check for selector lines: h1 {
+      if (selectorLineRegex.test(trimmedLine)) {
+        selectorLineCount++;
+        confidenceScore += 0.3; // Strong signal
         patternsMatched++;
         strongCssSignal = true;
       }
-      // SCSS/LESS specific
-      if (/(?:\$|\@)[\w-]+\s*:/.test(trimmedLine) || /&\s*[:.#\w-]/.test(trimmedLine) || /@(?:mixin|include|extend|function)\b/.test(trimmedLine)) {
-        scssLessFeatureCount++;
-        confidenceScore += 0.15; // These are quite specific
+
+      // Check for declaration lines: color: red;
+      if (declarationLineRegex.test(trimmedLine)) {
+        declarationLineCount++;
+        confidenceScore += 0.2; // Good signal
+        
+        // Extract property name to check if it's common CSS
+        const propertyMatch = trimmedLine.match(/^\s*([\w\-]+)\s*:/);
+        if (propertyMatch) {
+          const propertyName = propertyMatch[1].toLowerCase();
+          
+          // Check for common CSS properties
+          if (commonCssProperties.has(propertyName)) {
+            commonPropertyCount++;
+            confidenceScore += 0.15; // Bonus for common CSS properties
+            strongCssSignal = true;
+          }
+          
+          // Check for hyphenated property names (common in CSS)
+          if (propertyName.includes('-')) {
+            hyphenatedPropertyCount++;
+            confidenceScore += 0.1; // Bonus for hyphenated properties
+          }
+        }
+        
         patternsMatched++;
-        strongCssSignal = true;
       }
     }
-    // Add bonuses based on counts collected above
-    confidenceScore += Math.min(ruleBlockCount, 5) * 0.05;
-    confidenceScore += Math.min(propertyCount, 10) * 0.02;
-    confidenceScore += Math.min(atRuleCount, 3) * 0.05;
-    confidenceScore += Math.min(scssLessFeatureCount, 3) * 0.05;
 
-
-    // Comments (very low weight)
-    if (/\/\*[\s\S]*?\*\//g.test(content)) { confidenceScore += 0.02; patternsMatched++; }
-    if (/\/\/.*/g.test(content) && (this.extensions.includes('scss') || this.extensions.includes('less'))) { confidenceScore += 0.01; }
-
-
-    // --- Anti-Patterns (More Aggressive for JS/Code like structures) ---
-    let antiPatternScore = 0;
-    // Count specific JS/Code keywords that are NOT CSS properties
-    const jsKeywords = /\b(function|var|let|const|return|await|async|new|constructor|yield|typeof|instanceof)\b/g;
-    const jsKeywordMatches = content.match(jsKeywords);
-    if (jsKeywordMatches && jsKeywordMatches.length > 2) { // If more than 2 JS keywords
-      antiPatternScore += 0.3 + (jsKeywordMatches.length * 0.05);
+    // Bonus for multiple declarations (CSS rules usually have multiple properties)
+    if (declarationLineCount >= 2) {
+      confidenceScore += 0.1;
+      patternsMatched++;
     }
-    if (/\bimport\s+.*\s+from\s*['"]/.test(content)) antiPatternScore += 0.4; // ES6 import
-    if (/\b(class|interface)\s+\w+\s*\{/.test(content) && !content.includes("</style>")) antiPatternScore += 0.2; // Class/Interface not in style tag
-    if (content.match(/=>/g) && content.match(/=>/g).length > 0) antiPatternScore += 0.3; // Arrow functions
-    if (content.match(/===|!==/g) && content.match(/===|!==/g).length > 0) antiPatternScore += 0.2; // Strict equality
-    if (content.includes("<?php")) antiPatternScore += 0.7;
-    if (content.includes("System.out.println")) antiPatternScore += 0.6;
 
-    confidenceScore -= antiPatternScore;
+    // Bonus for having both selectors and declarations
+    if (selectorLineCount >= 1 && declarationLineCount >= 1) {
+      confidenceScore += 0.2;
+      strongCssSignal = true;
+    }
+
+    // Anti-patterns: Strong indicators this is NOT CSS
+    if (/\b(function|var|let|const|return|import|export)\b/.test(content)) {
+      confidenceScore -= 0.4; // JavaScript keywords
+    }
+    
+    if (/"[\w\-]+"\s*:/.test(content) && !selectorLineCount) {
+      confidenceScore -= 0.3; // JSON-like quoted keys without CSS selectors
+    }
+
+    if (/<\/?\w+[^>]*>/.test(content) && !selectorLineCount) {
+      confidenceScore -= 0.3; // HTML tags without CSS selectors
+    }
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    const isMatch = (strongCssSignal && confidenceScore >= 0.30 && patternsMatched >= 1) || // Need at least one strong CSS signal (selector block, @rule, scss/less)
-      (confidenceScore >= 0.45 && patternsMatched >= 2);
-
-
-    // console.log(`CSS: Score=${confidenceScore.toFixed(3)}, Patterns=${patternsMatched}, Rules=${ruleBlockCount}, Props=${propertyCount}, @=${atRuleCount}, SCSS=${scssLessFeatureCount}, Strong=${strongCssSignal}, Match=${isMatch}`);
+    // Simple matching criteria
+    const isMatch = (selectorLineCount >= 1 && declarationLineCount >= 1) || // At least one selector and one declaration
+                   (declarationLineCount >= 3 && commonPropertyCount >= 1) ||  // Multiple declarations with common CSS properties
+                   (strongCssSignal && confidenceScore >= 0.4);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongCssSignal
+      matchedDefinitive: isMatch && strongCssSignal && selectorLineCount >= 1 && commonPropertyCount >= 1
     };
   }
 
