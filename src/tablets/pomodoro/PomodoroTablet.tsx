@@ -6,7 +6,7 @@ import { PomodoroSettings } from './components/PomodoroSettings';
 import { PomodoroStats } from './components/PomodoroStats';
 import { PomodoroQuote } from './components/PomodoroQuote';
 import { PomodoroTimeline } from './components/PomodoroTimeline';
-import { PomodoroState, TimerStatus, SessionType, PomodoroSession, PomodoroSettings as Settings } from './types';
+import { PomodoroState, TimerStatus, SessionType, PomodoroSession, PomodoroSettings as PomodoroSettingsType } from './types';
 import { DEFAULT_SETTINGS, DEFAULT_QUOTES } from './constants';
 import { formatTime } from './utils/timeUtils';
 
@@ -61,7 +61,7 @@ export const PomodoroTablet: Tablet = {
         const data = parsed.data as PomodoroState;
         
         // Ensure settings have all required properties
-        const settings: Settings = {
+        const settings: PomodoroSettingsType = {
           ...DEFAULT_SETTINGS,
           ...(data.settings || {})
         };
@@ -426,7 +426,7 @@ export const PomodoroTablet: Tablet = {
       });
     }, [data, state, onChange]);
     
-    const handleChangeSettings = useCallback((newSettings: Settings) => {
+    const handleChangeSettings = useCallback((newSettings: PomodoroSettingsType) => {
       // Update settings and reset current session
       const sessionType = data.currentSession.type;
       const duration = 
