@@ -186,6 +186,10 @@ export const PasswordTablet: Tablet = {
       });
     };
 
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      updateData({ currentPassword: e.target.value });
+    };
+
     const handleHistoryChange = (id: string, field: 'identifier' | 'purpose', value: string) => {
          const newHistory = data.history.map(entry =>
             entry.id === id ? { ...entry, [field]: value } : entry
@@ -246,9 +250,14 @@ export const PasswordTablet: Tablet = {
 
           {/* Password Display */}
           <div className="flex items-center space-x-3">
-            <code className="flex-1 font-mono text-lg text-gray-100 bg-gray-900/50 px-3 py-2 rounded-md truncate" title={data.currentPassword}>
-              {data.currentPassword}
-            </code>
+            <input
+              type="text"
+              value={data.currentPassword}
+              onChange={handlePasswordChange}
+              className="flex-1 font-mono text-lg text-gray-100 bg-gray-900/50 px-3 py-2 rounded-md border border-gray-700/50 focus:border-blue-500/50 focus:outline-none transition-colors"
+              placeholder="Your password..."
+              title="Edit password manually or use generator settings"
+            />
             <button
               onClick={handleCopyToHistory}
               className={`p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-all duration-150 relative ${copiedId === 'current' ? 'text-green-400' : ''}`}
