@@ -198,12 +198,14 @@ export const WelcomeScreen: React.FC = () => {
       >
         {/* Header */}
         <div className="text-center mb-12">
-          <img
-            src="/favicon-gray.svg"
-            alt="Scratch Tabs Logo"
-            className="w-12 h-12 mb-4 mx-auto opacity-60"
-          />
-          <h1 className="text-3xl font-light mb-2 text-gray-100">Scratch Tabs</h1>
+          <div className="flex">
+              <img
+                src="/favicon-gray.svg"
+                alt="Scratch Tabs Logo"
+                className="w-7 h-7 mr-4 mt-1 mx-auto "
+              />
+              <h1 className="text-3xl font-light mb-2 text-gray-100">Scratch Tabs</h1>
+          </div>
           <p className="text-gray-400 text-sm">Version 1.0</p>
         </div>
 
