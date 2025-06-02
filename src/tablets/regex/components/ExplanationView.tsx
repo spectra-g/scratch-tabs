@@ -128,17 +128,17 @@ export function ExplanationView({ explanation, pattern }: ExplanationViewProps) 
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex items-center gap-2 p-3 border-b border-gray-700/50">
         <Book size={16} className="text-gray-400" />
         <div className="text-sm font-medium text-gray-300">Pattern Explanation</div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
         {/* Highlighted Pattern */}
         <div>
           <h3 className="text-sm font-medium text-gray-200 mb-2">Pattern Breakdown:</h3>
-          <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-3">
+          <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-3 max-h-40 overflow-y-auto custom-scrollbar">
             {renderPatternWithHighlight()}
           </div>
         </div>

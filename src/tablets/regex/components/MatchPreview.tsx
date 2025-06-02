@@ -64,7 +64,7 @@ export function MatchPreview({ matches, testString, onCopy, copiedId }: MatchPre
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col overflow-hidden custom-scrollbar">
       <div className="flex items-center justify-between p-3 border-b border-gray-700/50">
         <div className="text-sm font-medium text-gray-300">
           Matches ({matches.length})
@@ -74,13 +74,13 @@ export function MatchPreview({ matches, testString, onCopy, copiedId }: MatchPre
       {/* Highlighted Text */}
       <div className="flex-shrink-0 p-3 border-b border-gray-700/50 bg-gray-800/20">
         <div className="text-xs text-gray-400 mb-2">Highlighted Text:</div>
-        <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-3 max-h-32 overflow-y-auto">
+        <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-3 max-h-32 overflow-y-auto overflow-x-auto custom-scrollbar">
           {highlightMatches()}
         </div>
       </div>
 
       {/* Match Details */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {matches.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500 text-sm">
             No matches found
@@ -88,7 +88,7 @@ export function MatchPreview({ matches, testString, onCopy, copiedId }: MatchPre
         ) : (
           <div className="space-y-3 p-3">
             {matches.map((match, index) => (
-              <div key={index} className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-3">
+              <div key={index} className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-3 overflow-x-auto custom-scrollbar">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium text-gray-200">
                     Match {index + 1}
@@ -113,7 +113,7 @@ export function MatchPreview({ matches, testString, onCopy, copiedId }: MatchPre
                       "{match.match}"
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-4">
                     <div className="text-gray-400">Position:</div>
                     <div className="text-gray-300">
@@ -127,7 +127,7 @@ export function MatchPreview({ matches, testString, onCopy, copiedId }: MatchPre
                       <div className="text-gray-400 mb-2">Capture Groups:</div>
                       <div className="space-y-1">
                         {match.groups.map((group, groupIndex) => (
-                          <div 
+                          <div
                             key={groupIndex}
                             className={`flex items-center justify-between p-2 rounded border text-xs ${
                               GROUP_COLORS[groupIndex % GROUP_COLORS.length]
@@ -165,7 +165,7 @@ export function MatchPreview({ matches, testString, onCopy, copiedId }: MatchPre
                       <div className="text-gray-400 mb-2">Named Groups:</div>
                       <div className="space-y-1">
                         {Object.entries(match.namedGroups).map(([name, value], namedIndex) => (
-                          <div 
+                          <div
                             key={name}
                             className={`flex items-center justify-between p-2 rounded border text-xs ${
                               GROUP_COLORS[namedIndex % GROUP_COLORS.length]
