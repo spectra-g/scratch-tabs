@@ -128,42 +128,132 @@ export const PomodoroTablet: Tablet = {
       };
     }, []);
     
-    // Timer logic
+    // Timer logic - completely rewritten to avoid state inconsistencies
     useEffect(() => {
-      if (data.status === 'running') {
-        timerRef.current = window.setInterval(() => {
-          const now = Date.now();
-          const elapsed = Math.floor((now - data.currentSession.startTime + data.currentSession.totalPausedTime) / 1000);
-          const timeRemaining = Math.max(0, data.currentSession.duration - elapsed);
-          
-          if (timeRemaining <= 0) {
-            // Session completed
-            handleSessionComplete();
-          } else {
-            // Update time remaining
-            onChange({
-              ...state,
-              data: {
-                ...data,
-                currentSession: {
-                  ...data.currentSession,
-                  timeRemaining
-                }
-              }
-            });
-          }
-        }, 1000);
-      } else if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
+      // Only start timer if status is running
+      if (data.status !== 'running') {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        return;
       }
       
+      // Start the timer interval
+      timerRef.current = window.setInterval(() => {
+        // This function will run every second with the current state values
+        const now = Date.now();
+        const elapsed = Math.floor((now - data.currentSession.startTime + data.currentSession.totalPausedTime) / 1000);
+        const timeRemaining = Math.max(0, data.currentSession.duration - elapsed);
+        
+        if (timeRemaining <= 0) {
+          // Clear the interval before handling session complete to avoid race conditions
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          
+          // Session completed logic is separated out
+          const completedSession: PomodoroSession = {
+            type: data.currentSession.type,
+            duration: data.currentSession.duration,
+            startTime: data.currentSession.startTime - data.currentSession.totalPausedTime,
+            endTime: Date.now(),
+            completed: true
+          };
+          
+          // Play sound if enabled
+          if (data.soundEnabled && audioRef.current) {
+            audioRef.current.play().catch(err => console.error('Error playing sound:', err));
+          }
+          
+          // Update stats
+          const newTodayStats = { ...data.todayStats };
+          
+          if (data.currentSession.type === 'focus') {
+            newTodayStats.focusCompleted++;
+            newTodayStats.totalFocusTime += data.currentSession.duration;
+            newTodayStats.currentStreak++;
+            newTodayStats.bestStreak = Math.max(newTodayStats.bestStreak, newTodayStats.currentStreak);
+          } else if (data.currentSession.type === 'shortBreak') {
+            newTodayStats.shortBreakCompleted++;
+          } else if (data.currentSession.type === 'longBreak') {
+            newTodayStats.longBreakCompleted++;
+          }
+          
+          // Determine next session type
+          let nextSessionType: SessionType;
+          
+          if (data.currentSession.type === 'focus') {
+            // After focus, check if we need a long break
+            if (newTodayStats.focusCompleted % data.settings.longBreakInterval === 0) {
+              nextSessionType = 'longBreak';
+            } else {
+              nextSessionType = 'shortBreak';
+            }
+          } else {
+            // After any break, go back to focus
+            nextSessionType = 'focus';
+          }
+          
+          // Set up next session
+          const nextSessionDuration = 
+            nextSessionType === 'focus' ? data.settings.focusDuration * 60 :
+            nextSessionType === 'shortBreak' ? data.settings.shortBreakDuration * 60 :
+            data.settings.longBreakDuration * 60;
+          
+          const nextSession = {
+            type: nextSessionType,
+            duration: nextSessionDuration,
+            timeRemaining: nextSessionDuration,
+            startTime: 0,
+            pauseTime: 0,
+            totalPausedTime: 0
+          };
+          
+          // Update state with all changes at once
+          onChange({
+            ...state,
+            data: {
+              ...data,
+              status: data.settings.autoStartNextSession ? 'running' : 'idle',
+              currentSession: {
+                ...nextSession,
+                startTime: data.settings.autoStartNextSession ? Date.now() : 0
+              },
+              sessions: [...data.sessions, completedSession],
+              todayStats: newTodayStats
+            }
+          });
+        } else {
+          // Just update the time remaining
+          onChange({
+            ...state,
+            data: {
+              ...data,
+              currentSession: {
+                ...data.currentSession,
+                timeRemaining
+              }
+            }
+          });
+        }
+      }, 1000);
+      
+      // Clean up on unmount or when dependencies change
       return () => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
+          timerRef.current = null;
         }
       };
-    }, [data.status, data.currentSession.startTime, data.currentSession.totalPausedTime]);
+    }, [
+      data.status, 
+      data.currentSession.startTime, 
+      data.currentSession.totalPausedTime,
+      data.settings,
+      data.soundEnabled
+    ]);
     
     // Check if it's a new day and reset stats if needed
     useEffect(() => {
@@ -225,82 +315,6 @@ export const PomodoroTablet: Tablet = {
         window.removeEventListener('keydown', handleKeyDown);
       };
     }, [data.status]);
-    
-    // Handle session completion
-    const handleSessionComplete = useCallback(() => {
-      // Play sound if enabled
-      if (data.soundEnabled && audioRef.current) {
-        audioRef.current.play().catch(err => console.error('Error playing sound:', err));
-      }
-      
-      // Record completed session
-      const completedSession: PomodoroSession = {
-        type: data.currentSession.type,
-        duration: data.currentSession.duration,
-        startTime: data.currentSession.startTime - data.currentSession.totalPausedTime,
-        endTime: Date.now(),
-        completed: true
-      };
-      
-      // Update stats
-      const newTodayStats = { ...data.todayStats };
-      
-      if (data.currentSession.type === 'focus') {
-        newTodayStats.focusCompleted++;
-        newTodayStats.totalFocusTime += data.currentSession.duration;
-        newTodayStats.currentStreak++;
-        newTodayStats.bestStreak = Math.max(newTodayStats.bestStreak, newTodayStats.currentStreak);
-      } else if (data.currentSession.type === 'shortBreak') {
-        newTodayStats.shortBreakCompleted++;
-      } else if (data.currentSession.type === 'longBreak') {
-        newTodayStats.longBreakCompleted++;
-      }
-      
-      // Determine next session type
-      let nextSessionType: SessionType;
-      
-      if (data.currentSession.type === 'focus') {
-        // After focus, check if we need a long break
-        if (newTodayStats.focusCompleted % data.settings.longBreakInterval === 0) {
-          nextSessionType = 'longBreak';
-        } else {
-          nextSessionType = 'shortBreak';
-        }
-      } else {
-        // After any break, go back to focus
-        nextSessionType = 'focus';
-      }
-      
-      // Set up next session
-      const nextSessionDuration = 
-        nextSessionType === 'focus' ? data.settings.focusDuration * 60 :
-        nextSessionType === 'shortBreak' ? data.settings.shortBreakDuration * 60 :
-        data.settings.longBreakDuration * 60;
-      
-      const nextSession = {
-        type: nextSessionType,
-        duration: nextSessionDuration,
-        timeRemaining: nextSessionDuration,
-        startTime: 0,
-        pauseTime: 0,
-        totalPausedTime: 0
-      };
-      
-      // Update state
-      onChange({
-        ...state,
-        data: {
-          ...data,
-          status: data.settings.autoStartNextSession ? 'running' : 'idle',
-          currentSession: {
-            ...nextSession,
-            startTime: data.settings.autoStartNextSession ? Date.now() : 0
-          },
-          sessions: [...data.sessions, completedSession],
-          todayStats: newTodayStats
-        }
-      });
-    }, [data, state, onChange]);
     
     // Timer control handlers
     const handleStart = useCallback(() => {

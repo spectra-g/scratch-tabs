@@ -5,11 +5,13 @@ import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
 import { TabActions } from '../Tab/TabActions';
 import { FileText, Layers, Upload, FolderOpen, File } from 'lucide-react';
+import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export const WelcomeScreen: React.FC = () => {
   const { handleNewTab, handleNewPopulatedTab } = useRootStore();
   const welcomeRef = useRef<HTMLDivElement>(null);
   const tabletButtonRef = useRef<HTMLButtonElement>(null);
+  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const {
     showTabletSelector,
@@ -18,7 +20,7 @@ export const WelcomeScreen: React.FC = () => {
     openTabletSelector,
     closeTabletSelector,
   } = useTabletSelector(
-    null,
+    editorRef,
     welcomeRef,
     null,
     undefined
@@ -139,30 +141,35 @@ export const WelcomeScreen: React.FC = () => {
       title: 'Start scratching',
       action: 'Double-click anywhere',
       onClick: handleCreateNewTab,
+      clickable: true
     },
     {
       icon: File,
       title: 'Open file',
       action: 'Open file from your computer',
       onClick: handleOpenFile,
+      clickable: true
     },
     {
       icon: Layers,
       title: 'Open specialized tablet',
       action: 'Press / key',
       onClick: handleOpenTabletSelector,
+      clickable: true
     },
     {
       icon: Upload,
       title: 'Import from clipboard',
       action: 'Paste text here',
       onClick: handleImportFromClipboard,
+      clickable: true
     },
     {
       icon: FolderOpen,
       title: 'Drag a file',
       action: 'Drop a file here to open',
       onClick: () => {}, // Handled by drag and drop
+      clickable: false
     },
   ];
 
@@ -204,8 +211,8 @@ export const WelcomeScreen: React.FC = () => {
         <div className="w-full max-w-2xl">
           <div className="grid gap-3">
             {actions.map((action, index) => {
-              // Render drag action as non-clickable
-              if (action.title === 'Drag a file') {
+              // Render non-clickable action
+              if (!action.clickable) {
                 return (
                   <div
                     key={index}
@@ -228,7 +235,7 @@ export const WelcomeScreen: React.FC = () => {
                 );
               }
 
-              // Render other actions as clickable buttons
+              // Render clickable action
               return (
                 <button
                   key={index}
