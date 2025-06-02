@@ -127,6 +127,8 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
           <option value="modified-asc">Recently Modified</option>
           <option value="modified-desc">Least Recently Modified</option>
           <option value="language">Language</option>
+          <option value="lines-most">Most Lines</option>
+          <option value="lines-least">Least Lines</option>
         </select>
         {sortOption.includes('asc') ? (
           <ArrowDownAZ size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />

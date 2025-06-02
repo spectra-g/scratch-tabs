@@ -47,7 +47,7 @@ interface RootStore {
     activeSide: string | null;
   };
   splitScreen: (leftTabId: string, rightTabId?: string) => void;
-  unsplitScreen: (fromRight: boolean) => void;
+  unsplitScreen: () => void;
   moveTabToRight: (tabId: string) => void;
   moveTabToLeft: (tabId: string) => void;
   setActiveLeftTab: (id: string) => void;
@@ -323,7 +323,7 @@ export const useRootStore = create<RootStore>((set, get) => {
 
       useSplitViewStore.getState().splitScreen(targetLeftIds, targetRightId);
     },
-    unsplitScreen: (fromRight) => useSplitViewStore.getState().unsplitScreen(fromRight),
+    unsplitScreen: () => useSplitViewStore.getState().unsplitScreen(),
     moveTabToRight: (tabId) => useSplitViewStore.getState().moveTabToRight(tabId),
     moveTabToLeft: (tabId) => useSplitViewStore.getState().moveTabToLeft(tabId),
     setActiveLeftTab: (id) => useSplitViewStore.getState().setActiveLeftTab(id),
