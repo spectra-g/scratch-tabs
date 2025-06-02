@@ -114,19 +114,21 @@ export const useRootStore = create<RootStore>((set, get) => {
     const language = content ? detectLanguage(content) : 'plaintext';
     const languageLocked = language !== 'plaintext' && !isAmbiguousLanguage(content || '');
 
-    return {
+    const finalTab = {
       id: partialInputTab.id || crypto.randomUUID(),
       title: partialInputTab.title || options.defaultTitle,
       content: content,
-      language: language,
-      languageLocked: languageLocked,
+      language: partialInputTab.language || language,
+      languageLocked: partialInputTab.languageLocked ?? languageLocked,
       workspaceId: workspaceId,
       dateCreated: partialInputTab.dateCreated || now,
       lastModified: now, 
       cursorPosition: partialInputTab.cursorPosition || { lineNumber: 1, column: 1 },
       isPinned: partialInputTab.isPinned || false,
-      isTablet: partialInputTab.isTablet || false, 
+      isTablet: partialInputTab.isTablet || false,
+      tabletState: partialInputTab.tabletState || '',
     };
+    return finalTab;
   };
 
   return {

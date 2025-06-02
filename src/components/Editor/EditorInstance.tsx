@@ -66,8 +66,17 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     if (!monacoRef.current) throw new Error('Monaco not initialized');
     
     let model = tabModels.get(tabId);
-    if (!model) {
-      // Create new model for this tab
+    
+    // Check if model exists and is not disposed
+    const modelIsValid = model && !model.isDisposed();
+    
+    if (!modelIsValid) {
+      // If we have a model but it's disposed, remove it from the map
+      if (model) {
+        tabModels.delete(tabId);
+      }
+      
+      // Create new model
       model = monacoRef.current.editor.createModel(content, language);
       tabModels.set(tabId, model);
       
@@ -81,7 +90,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
         }
         previousContentRef.current = newContent;
       });
-    } else {
+    } else if (model) {  // Extra check to satisfy TypeScript
       // Update existing model if content has changed externally
       if (model.getValue() !== content) {
         model.setValue(content);
@@ -91,7 +100,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
         monacoRef.current.editor.setModelLanguage(model, language);
       }
     }
-    return model;
+    
+    // At this point model must be defined
+    return model!;
   };
 
   // Effect to switch models when active tab changes
@@ -145,6 +156,18 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
       return () => clearTimeout(timer);
     }
   }, [side, activeTab.id, activeEditorSide]);
+
+  // Effect to clean up models for tabs that were converted to tablets
+  useEffect(() => {
+    if (activeTab.isTablet && tabModels.has(activeTab.id)) {
+      // If a tab was converted to a tablet, dispose of its Monaco model
+      const modelToDispose = tabModels.get(activeTab.id);
+      if (modelToDispose && !modelToDispose.isDisposed()) {
+        modelToDispose.dispose();
+      }
+      tabModels.delete(activeTab.id);
+    }
+  }, [activeTab.id, activeTab.isTablet]);
 
   // --- Editor Event Handlers ---
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
@@ -204,7 +227,14 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   };
 
   const handleTabletSelect = (tablet: Tablet) => {
-    // activeTab here is the prop passed during this render
+    // If the tab has a Monaco model, dispose it before converting to tablet
+    const existingModel = tabModels.get(activeTab.id);
+    if (existingModel && !existingModel.isDisposed()) {
+      existingModel.dispose();
+    }
+    tabModels.delete(activeTab.id);
+    
+    // Convert to tablet
     const state = tablet.createInitialState();
     const serializedState = tablet.serializeState ? tablet.serializeState(state) : JSON.stringify(state);
     updateTabState(activeTab.id, {

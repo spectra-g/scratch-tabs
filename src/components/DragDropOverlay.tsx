@@ -3,6 +3,7 @@ import { Upload } from 'lucide-react';
 import { useRootStore } from '../stores';
 import { useSplitViewStore } from '../stores/splitViewStore';
 import { useModalStore } from '../stores/modalStore';
+import { languageRegistry } from '../languages';
 
 const readFileAsText = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -38,6 +39,20 @@ interface FileSystemDirectoryReader {
     errorCallback?: (error: Error) => void
   ) => void;
 }
+
+const detectLanguageFromFileName = (fileName: string): string => {
+  if (!fileName) return 'plaintext';
+  
+  const extension = fileName.split('.').pop()?.toLowerCase();
+  if (!extension) return 'plaintext';
+  
+  // Try to find a matching language detector by its supported extensions
+  const detector = languageRegistry.getAll().find(detector => 
+    detector.extensions.includes(extension)
+  );
+  
+  return detector?.id || 'plaintext';
+};
 
 const DragDropOverlay: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -169,18 +184,22 @@ const DragDropOverlay: React.FC = () => {
             try {
               const fileContent = await readFileAsText(file);
               const fileName = file.name.replace(/\.[^/.]+$/, ""); // Title without extension
+              
+              // Detect language from file extension
+              const language = detectLanguageFromFileName(file.name);
+              
               // TODO: Add a small delay or batch tab creation if many files are dropped
               // to avoid overwhelming the system or hitting rate limits if any.
               handleNewPopulatedTab({
                 id: crypto.randomUUID(),
                 title: fileName,
                 content: fileContent,
-                language: 'plaintext',
-                languageLocked: false,
+                language: language,
+                languageLocked: language !== 'plaintext', // Only lock if we detected a specific language
                 cursorPosition: { lineNumber: 1, column: 1 },
                 dateCreated: Date.now(),
                 lastModified: Date.now(),
-                // workspaceId will be handled by handleNewPopulatedTab
+                workspaceId: '', // Empty string, will be handled by handleNewPopulatedTab
               }, toRightSide);
             } catch (fileReadError) {
               console.error(`Error reading file ${file.name}:`, fileReadError);
