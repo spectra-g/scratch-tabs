@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tablet, TabletState } from '../types';
-import { Timer, Settings, BarChart2, Clock, Play, Pause, RotateCcw, SkipForward, Volume2, VolumeX, ChevronDown, ChevronUp, CheckCircle2, Coffee, Brain } from 'lucide-react';
+import { Timer, Settings, BarChart2, Clock, Play, Pause, RotateCcw, SkipForward, Volume2, VolumeX, ChevronDown, ChevronUp, Coffee, Brain } from 'lucide-react';
 import { PomodoroTimer } from './components/PomodoroTimer';
 import { PomodoroSettings } from './components/PomodoroSettings';
 import { PomodoroStats } from './components/PomodoroStats';
 import { PomodoroQuote } from './components/PomodoroQuote';
 import { PomodoroTimeline } from './components/PomodoroTimeline';
-import { PomodoroState, TimerStatus, SessionType, PomodoroSession, PomodoroSettings as PomodoroSettingsType } from './types';
+import { PomodoroState, SessionType, PomodoroSession, PomodoroSettings as PomodoroSettingsType } from './types';
 import { DEFAULT_SETTINGS, DEFAULT_QUOTES } from './constants';
 import { formatTime } from './utils/timeUtils';
 
