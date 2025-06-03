@@ -1,16 +1,17 @@
+// File path: bash.ts
+
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types'; // Import updated types
+import { DetectionResult, LanguageDetector } from './types';
 
 /**
  * Bash/Shell language detector
  */
 export class BashLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'shell'; // Monaco often uses 'shell' for bash/sh
+  id = 'shell';
   name = 'Bash/Shell';
-  extensions = ['sh', 'bash', '.profile', '.bashrc', '.zshrc']; // Added common shell script file names
-  priority = 4; // Adjust priority as needed relative to other languages
-
+  extensions = ['sh', 'bash', '.profile', '.bashrc', '.zshrc'];
+  priority = 4;
 
   private coreShellKeywordsForRatio: Set<string>;
   private allShellKeywordsForPatterns: Set<string>;
@@ -18,49 +19,38 @@ export class BashLanguageDetector extends BaseLanguageDetector implements Langua
 
   constructor() {
     super();
-    // CORE_SHELL_KEYWORDS_FOR_RATIO: *Extremely* unambiguous Shell-specific keywords.
-    // These should almost never appear in regular prose.
     const CORE_SHELL_KEYWORDS_FOR_RATIO_LIST = [
-        "ELIF", "FI", "ESAC", // Block terminators
-        "GETOPTS", "ULIMIT", "TYPESET", // More specific commands/keywords
-        // "FUNCTION" removed as "function" is common in prose. `function foo() {` is better handled by structural regex.
-        // "DECLARE", "LOCAL", "EXPORT", "UNSET", "SHIFT", "EVAL", "EXEC", "SOURCE", "ALIAS", "TRAP" are okay.
+        "ELIF", "FI", "ESAC", "GETOPTS", "ULIMIT", "TYPESET",
         "DECLARE", "LOCAL", "EXPORT", "UNSET", "SHIFT", "EVAL", "EXEC", "SOURCE", "ALIAS", "TRAP"
     ];
     this.coreShellKeywordsForRatio = new Set(CORE_SHELL_KEYWORDS_FOR_RATIO_LIST);
 
-    this.commonShellCommandsForLineStart = new Set([/* ... same as before ... */
+    this.commonShellCommandsForLineStart = new Set([
         "ECHO", "READ", "EXIT", "EXPORT", "UNSET", "SHIFT", "EVAL", "EXEC", "SOURCE", "SET",
         "CD", "LS", "MKDIR", "RM", "CP", "MV", "CAT", "GREP", "AWK", "SED", "FIND", "XARGS",
         "GIT", "DOCKER", "KUBECTL", "NPM", "YARN", "PIP", "SUDO", "APT-GET", "YUM", "BREW",
         "CURL", "WGET", "TAR", "GZIP", "BZIP2", "SSH", "SCP", "RSYNC", "CHMOD", "CHOWN",
     ].map(cmd => cmd.toUpperCase()));
 
-
     const ALL_SHELL_KEYWORDS_FOR_PATTERNS_LIST = [
-        ...CORE_SHELL_KEYWORDS_FOR_RATIO_LIST, // Includes the very core set
-        "IF", "THEN", "ELSE", "FOR", "WHILE", "UNTIL", "CASE", "SELECT", "DONE", // Control flow
-        "FUNCTION", // The keyword "function"
+        ...CORE_SHELL_KEYWORDS_FOR_RATIO_LIST,
+        "IF", "THEN", "ELSE", "FOR", "WHILE", "UNTIL", "CASE", "SELECT", "DONE", "FUNCTION",
         "ECHO", "READ", "EXIT", "PRINTF", "TEST", "TRUE", "FALSE", "SET", "LET",
         "GREP", "AWK", "SED", "XARGS", "CUT", "TR", "SORT", "UNIQ", "HEAD", "TAIL", "FIND"
     ];
     this.allShellKeywordsForPatterns = new Set(ALL_SHELL_KEYWORDS_FOR_PATTERNS_LIST.map(kw => kw.toUpperCase()));
   }
 
-
-  sampleContent(): string {
+  sampleContent(): string { /* ... same as before ... */
     return `
 #!/bin/bash
-
 # Variable declaration
 greeting="Hello"
 name="User"
-
 # Function definition
 function greet_user {
     echo "$greeting, $1!"
 }
-
 # Function to check if a number is even or odd
 check_even_odd() { # Another common function syntax
     if (( $1 % 2 == 0 )); then
@@ -69,22 +59,18 @@ check_even_odd() { # Another common function syntax
         echo "$1 is odd."
     fi
 }
-
 # Print greeting using the function
 greet_user "$name"
-
 # While loop example: count from 1 to 5
 counter=1
 while [ $counter -le 5 ]; do
     echo "Counter is $counter"
     ((counter++))
 done
-
 # Read user input
 echo "Please enter a number to check if it's even or odd:"
 read number
 check_even_odd $number
-
 # If-else example
 echo "Checking if the number is greater than 10:"
 if (( $number > 10 )); then
@@ -94,17 +80,14 @@ elif [ "$number" -eq 10 ]; then # Added elif for more variety
 else
     echo "The number is less than 10."
 fi
-
 # Array example
 numbers=("one" "two" "three" "four")
 echo "Array of numbers: \${numbers[@]}"
-
 # For loop example: Iterate through array
 echo "Looping through the array:"
 for num in "\${numbers[@]}"; do
     echo "Number: $num"
 done
-
 # Case example
 echo "Enter a day of the week (e.g., Monday, Tuesday):"
 read day
@@ -119,12 +102,12 @@ case $day in
         echo "Unknown day!"
         ;;
 esac
-
 # Exit with a status code
 echo "Exiting the script."
 exit 0
     `;
   }
+
 
   detect(content: string): DetectionResult {
     const originalTrimmedContent = content.trim();
@@ -132,291 +115,215 @@ exit 0
       return this.noMatch();
     }
 
-    let confidenceScore = 0.0;
-    let patternsMatchedTypeCount = 0; // How many *types* of patterns matched
-    let strongSignalFound = false;
-    let shellSpecificSyntaxHits = 0;  // Count of hits from specific syntax patterns (like [[...]], $(...), etc.)
-    let actualKeywordTokenHits = 0;   // Count of tokens matching allShellKeywordsForPatterns
+    let confidenceScore = 0.0; // This will be less critical now
+    // `strongSignalFound` will primarily dictate the match
+    let hasShellShebang = false;
+    let shellSpecificSyntaxHits = 0;
+    let coreKeywordTokenCount = 0;
+    let linesStartingWithShellCmd = 0;
 
     let contentWithoutComments = content.replace(/^\s*#.*/gm, '');
     contentWithoutComments = contentWithoutComments.replace(/(^|[^#\\])#.*/g, '$1');
     const linesForAnalysis = contentWithoutComments.split('\n').filter(line => line.trim().length > 0);
     const nonCommentContent = linesForAnalysis.join('\n');
 
-    if (nonCommentContent.trim().length < 2 && originalTrimmedContent.length > 10) { // Min length for original to avoid trivial content
-      // console.log("Shell Detector: Content became too short after comment removal.");
+    if (nonCommentContent.trim().length < 2 && originalTrimmedContent.length > 10) {
       return this.noMatch();
     }
 
-    // --- Shebang Check ---
-    let hasShellShebang = false;
+    // --- 1. Shebang Check ---
     const trimmedContentStart = content.trimStart();
     if (trimmedContentStart.startsWith('#!')) {
-      // ... (same shebang logic as before, sets hasShellShebang, adjusts confidenceScore)
       const firstLine = trimmedContentStart.split('\n')[0].toLowerCase();
       if (firstLine.includes('/bash') || firstLine.includes('/sh') || firstLine.includes('/zsh') || firstLine.includes('/ksh') || firstLine.includes('/env bash') || firstLine.includes('/env sh')) {
-        confidenceScore += 0.60; // Strong signal, but not absolute
-        patternsMatchedTypeCount++;
-        strongSignalFound = true;
         hasShellShebang = true;
-        actualKeywordTokenHits++;
-      } else if (firstLine.length > 2 && (firstLine.includes('python') || firstLine.includes('ruby') || firstLine.includes('perl') || firstLine.includes('node'))) {
-        return this.noMatch();
-      } else if (firstLine.length > 2) {
-        confidenceScore -= 0.5;
+      } else if (firstLine.length > 2 && (firstLine.includes('python') || firstLine.includes('ruby') || firstLine.includes('perl') || firstLine.includes('node') || firstLine.includes('php'))) {
+        return this.noMatch(); // Definitive other script
       }
+      // An unknown shebang doesn't give a shell point but doesn't disqualify yet
     }
 
-    // --- Anti-Patterns (JS/TS, HTML, other languages) ---
-    // (Keep your JS anti-patterns, they are good. Add others if needed)
+    // --- 2. Strong Anti-Patterns for other languages ---
+    // If these are present, it's definitely not shell, even if a keyword matched.
     const langAntiPatterns = [
-      // ... same as before, ensure weights are aggressive enough, e.g., -0.7 to -0.9
-      { pattern: /\bimport\s+(?:{[\s\S]*?}|[\w*]+)\s+from\s*['"]/i, weight: -0.8 },
-      { pattern: /\bexport\s+(?:default|const|let|var|function|class)\b/i, weight: -0.8 },
-      { pattern: /=>\s*\{/i, weight: -0.7 },
-      { pattern: /^\s*<\?php/i, weight: -0.9 },
-      { pattern: /(<html|<body|<div|<script)/i, weight: -0.9 },
-      { pattern: /^\s*package\s+[\w.]+;/m, weight: -0.9 },
-      { pattern: /System\.out\.println/i, weight: -0.8 },
-      { pattern: /^\s*#include\s*</m, weight: -0.9 },
-      { pattern: /\bdef\s+\w+\s*\(.*?\):/m, weight: -0.8 },
-      { pattern: /\b(SELECT\b.*\bFROM\b|\bCREATE\s+TABLE\b)/gi, weight: -0.5 } // SQL fragments
+      /\bimport\s+(?:{[\s\S]*?}|[\w*]+)\s+from\s*['"]/i, /\bexport\s+(?:default|const|let|var|function|class)\b/i, /=>\s*\{/i, // JS/TS
+      /^\s*<\?php/i, /(<html|<body|<div|<script|<style)/i, // PHP, HTML
+      /^\s*package\s+[\w.]+;/m, /System\.out\.println/i, // Java
+      /^\s*#include\s*</m, // C/C++
+      /\bdef\s+\w+\s*\(.*?\)\s*:/m, // Python func: (colon is key)
+      /\b(SELECT\b.*\bFROM\b|\bCREATE\s+TABLE\b)/gi, // SQL
+      /^%YAML/m, /^\s*[\w.-]+:\s+(?:\||>|&\S+|\*\S+)/m, // YAML directive or block scalar
+      /^diff --git/m, /^(?:--- a\/|\+\+\+ b\/)/m, // Diff
+      /^\s*at\s+[\w$./\\()<>-]+:\d+(?::\d+)?/m, /(?:Exception|Error|panic|Traceback)(?:[:\s]|$)/i, // Stacktrace
+      /^#{1,6}\s+.+/m, /^\s*-\s+\[[ xX]\]\s+.+/m, /^\s*>\s*.+/m, /!?\[.*?\]\(.*?\)/m, // Markdown structural elements
     ];
-
     for (const ap of langAntiPatterns) {
-      const matches = content.match(ap.pattern);
-      if (matches) {
-        confidenceScore += ap.weight * Math.min(matches.length, 2);
-      }
-    }
-    if (confidenceScore < -0.6) return { match: false, confidence: 0, matchedDefinitive: false };
-
-
-    // --- Lines Starting with Shell Keywords/Commands Heuristic ---
-    let linesStartingWithShellPattern = 0;
-    if (linesForAnalysis.length > 0) {
-      // ... (same logic as before using this.coreShellKeywordsForRatio and this.commonShellCommandsForLineStart)
-      linesForAnalysis.forEach(line => {
-        const firstWord = (line.trim().split(/\s+|;|\||&|\(|\)/)[0] || "").toUpperCase(); // More splitters
-        if (this.coreShellKeywordsForRatio.has(firstWord) || this.commonShellCommandsForLineStart.has(firstWord)) {
-          linesStartingWithShellPattern++;
-        }
-      });
-
-      if (linesForAnalysis.length >= 1 && linesStartingWithShellPattern > 0) {
-        const ratioLinesStartShell = linesStartingWithShellPattern / linesForAnalysis.length;
-        if (ratioLinesStartShell >= 0.3 && linesForAnalysis.length >= 1) { // Stricter: 30% for a good boost
-          confidenceScore += 0.20; strongSignalFound = true; patternsMatchedTypeCount++;
-        } else if (ratioLinesStartShell >= 0.1 && linesForAnalysis.length >= 2) {
-          confidenceScore += 0.10; strongSignalFound = true; patternsMatchedTypeCount++;
-        }
-      } else if (linesForAnalysis.length > 8 && linesStartingWithShellPattern === 0 && !hasShellShebang) {
-        confidenceScore -= 0.25;
+      if (ap.test(content)) {
+        // console.log(`Shell Detector: Strong anti-pattern matched: ${ap.source}. Not Shell.`);
+        return this.noMatch();
       }
     }
 
-    // --- Keyword-to-Token Ratio (using coreShellKeywordsForRatio) ---
-    let keywordRatio = -1.0; // Initialize to a value indicating not calculated or not applicable
-    let totalSignificantTokens = 0;
-    let coreKeywordTokenCountForRatio = 0;
+    // --- 3. Check for Specific Shell Syntax Elements ---
+    const shellSyntaxPatterns = [
+      /^\s*(?:function\s+)?\w[\w-]*\s*\(\s*\)\s*\{/, // function name() { (check start of line)
+      /\$\([^\)]+\)/,   // $(command_substitution)
+      /`[^`]+`/,        // `command_substitution_backticks`
+      /\[\[.*?\]\]/,    // [[ ... ]] test
+      // More specific [ ... ] test, looking for common operators
+      /\[\s+(?:[^\]"]|"[^"]*")+\s+(-eq|-ne|-gt|-lt|-ge|-le|==|!=|=~|!|-z|-n|-f|-d|-e)\s+(?:[^\]"]|"[^"]*")+\s+\]/,
+      /\b(?:let|declare|typeset|local)\s+\w+(?:=.*)?/,
+      />(?:&[0-9]|>)|<<<?|&\>/, // Redirections, Here strings/docs
+      /\$@|\$#|\$\?|\$[0-9]|\$\$|\$\{[^}]+\}/, // Special shell vars and parameter expansion
+    ];
+    for (const p of shellSyntaxPatterns) {
+      if (p.test(nonCommentContent)) { // Test on content without comments
+        shellSpecificSyntaxHits++;
+      }
+    }
 
-    if (linesForAnalysis.length > 0 && nonCommentContent.length > 10) { // Min length for non-comment content
-      const shellTokenRegex = /([a-zA-Z_][\w-]*)|([$@#?*0-9]+(?:[=!]=?)?)|(\$\([^\)]*\))|(`[^`]*`)|(\$\{[^}]*\})|(\[\[.*?\]\])|(\[.*?\])|([(){};&|<=>!+-/*`"']|>>|>|<|&&|\|\|)/g;
+    // --- 4. Calculate Core Keyword Ratio & Line Starts ---
+    if (linesForAnalysis.length > 0 && nonCommentContent.length > 10) {
+      const shellTokenRegex = /([a-zA-Z_][\w-]*)|([$@#?*0-9]+(?:[=!]=?)?)|([(){};&|<=>!+\-/*`"']|>>|>|<|&&|\|\|)/g;
       const tokensFromContent: string[] = [];
       let matchToken;
       while ((matchToken = shellTokenRegex.exec(nonCommentContent)) !== null) {
         if (matchToken[0]) tokensFromContent.push(matchToken[0]);
       }
-      totalSignificantTokens = tokensFromContent.length;
+      const totalSignificantTokens = tokensFromContent.length;
 
-      if (totalSignificantTokens > 8) { // Min tokens for ratio to be somewhat reliable
+      if (totalSignificantTokens > 8) {
         tokensFromContent.forEach(token => {
           if (this.coreShellKeywordsForRatio.has(token.toUpperCase())) {
-            coreKeywordTokenCountForRatio++;
+            coreKeywordTokenCount++;
           }
         });
-        actualKeywordTokenHits = tokensFromContent.filter(t => this.allShellKeywordsForPatterns.has(t.toUpperCase())).length;
-        if (hasShellShebang) actualKeywordTokenHits++;
-
-        if (totalSignificantTokens > 0) {
-          keywordRatio = coreKeywordTokenCountForRatio / totalSignificantTokens;
-          // console.log(`Shell Detector: Ratio (Core)=${keywordRatio.toFixed(3)}, CoreKeys=${coreKeywordTokenCountForRatio}, TotalTokens=${totalSignificantTokens}, AllKeysHit=${actualKeywordTokenHits}`);
-
-          const MIN_SHELL_RATIO_FLOOR = 0.015; // Very strict floor, e.g., 1.5% for core keywords
-          const MIN_TOKENS_FOR_SHELL_RATIO_CHECK = 40; // Apply to texts with at least 40 tokens
-
-          if (totalSignificantTokens > MIN_TOKENS_FOR_SHELL_RATIO_CHECK && keywordRatio < MIN_SHELL_RATIO_FLOOR && coreKeywordTokenCountForRatio < 1) {
-            // console.log(`Shell Detector: Exit. Very low CORE ratio (${keywordRatio.toFixed(3)}) and 0 core hits.`);
-            return this.noMatch();
-          }
-
-          if (keywordRatio < 0.02 && totalSignificantTokens > 50 && !strongSignalFound && linesStartingWithShellPattern < 1) {
-            confidenceScore *= 0.1; // Massive penalty
-          } else if (keywordRatio < 0.04 && totalSignificantTokens > 60) {
-            confidenceScore *= 0.4;
-          } else if (keywordRatio >= 0.08 && coreKeywordTokenCountForRatio >= 1) { // Needs at least one core keyword
-            confidenceScore += 0.15; strongSignalFound = true;
-          }
-        }
       }
     }
-    // --- End Ratio Calculation ---
 
-    // --- Positive Shell Syntax Patterns (on nonCommentContent) ---
-    // These patterns should be for syntax elements, not just keywords (keywords are in ratio).
-    // Reduce weights if they are very generic.
-    const shellSyntaxPatterns = [
-      // Control structures with specific shell syntax (fi, esac, done are already in core keywords)
-      { pattern: /^\s*(?:function\s+)?\w[\w-]*\s*\(\s*\)\s*\{/gm, weight: 0.15, perMatch: 0.04, specific: true }, // function name() {
-      { pattern: /\$\{[^}]+\}/g, weight: 0.05, perMatch: 0.01 }, // ${VAR} - *careful, overlaps with JS template strings if JS anti-pattern fails*
-      { pattern: /\$\([^\)]+\)/g, weight: 0.15, perMatch: 0.03, specific: true }, // $(command_substitution)
-      { pattern: /`[^`]+`/g, weight: 0.10, perMatch: 0.02, specific: true }, // `command_substitution_backticks`
-      { pattern: /\[\[.*?\]\]/g, weight: 0.20, perMatch: 0.04, specific: true }, // [[ ... ]] test
-      // POSIX test `[ ... ]` - This is very problematic for prose. Make it very specific or remove.
-      // Stricter: requires common test operators inside
-      { pattern: /\[\s+(?:[^\]"]|"[^"]*")+\s+(-eq|-ne|-gt|-lt|-ge|-le|==|!=|=~|!|-z|-n|-f|-d|-e)\s+(?:[^\]"]|"[^"]*")+\s+\]/g, weight: 0.15, perMatch: 0.03, specific: true },
-      { pattern: /\b(?:let|declare|typeset|local)\s+\w+(?:=.*)?/g, weight: 0.10, perMatch: 0.02, specific: true },
-      { pattern: />(?:&[0-9]|>)|<<<?/g, weight: 0.15, perMatch: 0.03, specific: true }, // Redirections, Here strings/docs
-      { pattern: /\|\s*\w+/g, weight: 0.05, perMatch: 0.01 }, // Simple pipe `| command`
-      { pattern: /\$@|\$#|\$\?|\$[0-9]|\$\$/g, weight: 0.18, perMatch: 0.04, specific: true }, // Special shell vars
-    ];
-
-    for (const p of shellSyntaxPatterns) {
-      const matches = nonCommentContent.match(p.pattern);
-      if (matches) {
-        confidenceScore += p.weight;
-        if (p.perMatch) {
-          confidenceScore += Math.min(matches.length, 3) * p.perMatch; // Reduced cap
-        }
-        patternsMatchedTypeCount++;
-        if (p.specific) {
-          shellSpecificSyntaxHits += matches.length;
-          strongSignalFound = true;
-        }
-      }
-    }
-    if (shellSpecificSyntaxHits > 0) {
-      confidenceScore += Math.min(shellSpecificSyntaxHits, 3) * 0.03; // Reduced bonus
-    }
-    actualKeywordTokenHits = Math.max(actualKeywordTokenHits, shellSpecificSyntaxHits);
-
-
-    // --- Prose Anti-Pattern (Strengthened) ---
-    if (linesForAnalysis.length > 3 && actualKeywordTokenHits < 2 && shellSpecificSyntaxHits < 1 && (keywordRatio === -1.0 || keywordRatio < 0.03) && !hasShellShebang && linesStartingWithShellPattern === 0) {
-      let sentenceLikeLines = 0;
-      let totalWordsInSample = 0;
-      let colonHeavyLines = 0; // Lines like "Feature: description"
-      const commonEnglishWords = new Set(['THE', 'A', 'AN', 'IS', 'ARE', 'WAS', 'WERE', 'BE', 'TO', 'OF', 'AND', 'IN', 'IT', 'FOR', 'WITH', 'ON', 'AT', 'BY', 'FROM', 'AS', 'IF', 'OR', 'BUT', 'SO', 'MY', 'YOUR', 'THIS', 'THAT', 'CAN', 'SHOULD', 'USER', 'TAB', 'MODAL', 'VIEW', 'DATA', 'CODE']);
-
-      linesForAnalysis.slice(0, 25).forEach(line => { // Analyze more lines for prose
-        const trimmedLine = line.trim();
-        if (trimmedLine.length < 15) return; // Ignore very short lines
-
-        const words = trimmedLine.split(/[\s():;,."[]{}]+/); // More splitters for prose
-        totalWordsInSample += words.length;
-
-        if (trimmedLine.includes(': ') && words.length < 8 && words.length > 1 && /^[A-Z]/.test(words[0])) {
-          // Check if the first word (potential key) is NOT a shell keyword/command
-          if (!this.allShellKeywordsForPatterns.has(words[0].toUpperCase()) && !this.commonShellCommandsForLineStart.has(words[0].toUpperCase())) {
-            colonHeavyLines++;
-          }
-        }
-
-        if (words.length >= 5 && (trimmedLine.endsWith('.') || trimmedLine.endsWith(':'))) {
-          let commonFound = 0;
-          let properNounsOrAcronyms = 0;
-          words.forEach(w => {
-            const cleanWord = w.replace(/[.,:?]/g, '');
-            if (commonEnglishWords.has(cleanWord.toUpperCase())) commonFound++;
-            if (cleanWord.length > 1 && /^[A-Z]+$/.test(cleanWord) && cleanWord !== "UI") properNounsOrAcronyms++; // Count ALL CAPS as potential non-prose if too many
-          });
-
-          // If many common English words and not too many all-caps "keywords"
-          if (commonFound / words.length > 0.35 && properNounsOrAcronyms < words.length * 0.3) {
-            sentenceLikeLines++;
-          }
+    if (linesForAnalysis.length > 0) {
+      linesForAnalysis.forEach(line => {
+        const firstWord = (line.trim().split(/\s+|;|\||&|\(|\)/)[0] || "").toUpperCase();
+        if (this.commonShellCommandsForLineStart.has(firstWord)) {
+          linesStartingWithShellCmd++;
         }
       });
+    }
 
-      if ((sentenceLikeLines >= 3 || colonHeavyLines >= 3) && totalWordsInSample > 40) {
-        // console.log(`Shell Detector: Prose-like (sentences: ${sentenceLikeLines}, colons: ${colonHeavyLines}). Strong penalty. Current score: ${confidenceScore.toFixed(3)}`);
-        confidenceScore = Math.max(-1.0, confidenceScore * 0.05); // Very strong penalty
-      } else if (sentenceLikeLines >= 2) {
-        confidenceScore = Math.max(-0.5, confidenceScore * 0.3);
+    // --- 5. Prose/Markdown Check (if no strong shell signals yet) ---
+    // This runs if no shebang, no specific shell syntax, and few core keywords/line starts.
+    if (!hasShellShebang && shellSpecificSyntaxHits === 0 && (coreKeywordTokenCount < 2 && linesStartingWithShellCmd < 2)) {
+      // console.log("Shell Detector: Entering simplified Prose/MD check.");
+      let markdownFeatureCount = 0;
+      let sentenceLikeLines = 0;
+
+      const mdHeaderRegex = /^\s*#{1,6}\s+/;
+      const mdUnorderedListRegex = /^\s*[-*+]\s+(?!\[[ xX]\])/;
+      const mdOrderedListRegex = /^\s*\d+\.\s+/;
+      const mdBlockquoteRegex = /^\s*>\s+/;
+      const mdFencedCodeStartRegex = /^```(\w+)?/;
+      const mdLinkImageRegex = /!?\[[^\]]+\]\([^)]+\)/g;
+      const mdBoldItalicStar = /(?:\*\*.*?\*\*|\*.*?\*)/g; // **bold** or *italic*
+      const mdBoldItalicUnder = /(?:__.*?__|_.*?_)/g;   // __bold__ or _italic_
+
+      let nonCommentLineCountForProseCheck = 0;
+      for (const line of linesForAnalysis.slice(0, 35)) { // Check up to 35 non-comment lines
+          nonCommentLineCountForProseCheck++;
+          const trimmedLine = line.trim();
+          if (mdHeaderRegex.test(line)) markdownFeatureCount++;
+          if (mdUnorderedListRegex.test(line)) markdownFeatureCount++;
+          if (mdOrderedListRegex.test(line)) markdownFeatureCount++;
+          if (mdBlockquoteRegex.test(line)) markdownFeatureCount++;
+          if (mdFencedCodeStartRegex.test(line)) markdownFeatureCount+=2; // Fenced code is stronger MD
+          if (trimmedLine.match(mdLinkImageRegex)) markdownFeatureCount+=2;
+          if (trimmedLine.match(mdBoldItalicStar) || trimmedLine.match(mdBoldItalicUnder)) markdownFeatureCount++;
+
+          const words = trimmedLine.split(/\s+/);
+          if (words.length >= 5 && (trimmedLine.endsWith('.') || trimmedLine.endsWith('!') || trimmedLine.endsWith('?'))) {
+            sentenceLikeLines++;
+          }
+      }
+
+      // If several MD features or sentence-like lines are found in a decent sample, it's not shell.
+      if (nonCommentLineCountForProseCheck > 2 && (markdownFeatureCount >= 3 || sentenceLikeLines >= 2)) {
+        // console.log(`Shell Detector: Prose/MD features found (MD: ${markdownFeatureCount}, Sentences: ${sentenceLikeLines}). Not Shell.`);
+        return this.noMatch();
       }
     }
-    // --- End Prose Anti-Pattern ---
 
-    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore)); // Max 0 for score before this point.
 
-    let isMatch = false;
-    if (hasShellShebang && confidenceScore >= 0.45) {
-      isMatch = true;
-    } else if (strongSignalFound && shellSpecificSyntaxHits >= 1 && confidenceScore >= 0.25) { // Lowered threshold if truly specific syntax found
-      isMatch = true;
-    } else if (patternsMatchedTypeCount >= 2 && shellSpecificSyntaxHits >= 1 && confidenceScore >= 0.35) {
-      isMatch = true;
-    } else if (keywordRatio >= 0.07 && coreKeywordTokenCountForRatio >= 1 && linesStartingWithShellPattern > 0 && confidenceScore >= 0.30) { // Ratio + line starts
-      isMatch = true;
+    // --- 6. Final Match Decision ---
+    // A match requires strong, unambiguous signals.
+    if (hasShellShebang) {
+      // If shebang is present, and not overwhelmingly contradicted by anti-patterns (already checked), it's a match.
+      // Confidence can be adjusted based on other factors if needed, but match is true.
+      confidenceScore = 0.8; // Base for shebang
+      if (shellSpecificSyntaxHits > 0) confidenceScore += 0.1;
+      if (coreKeywordTokenCount > 0) confidenceScore += 0.05;
+      return { match: true, confidence: Math.min(1.0, confidenceScore), matchedDefinitive: true };
     }
 
-    // Final check: if score is positive but very low, and text is long with few distinguishing shell features -> not a match
-    if (isMatch && confidenceScore < 0.15 && originalTrimmedContent.length > 300 && actualKeywordTokenHits < 3 && shellSpecificSyntaxHits < 1 && !hasShellShebang) {
-      isMatch = false;
+    // Without shebang, need multiple specific syntax hits OR a good combo of core keywords and line starts.
+    if (shellSpecificSyntaxHits >= 2) { // e.g., function definition + command substitution
+      confidenceScore = 0.6;
+      if (shellSpecificSyntaxHits >=3) confidenceScore += 0.15;
+      if (coreKeywordTokenCount > 0) confidenceScore += 0.1;
+      return { match: true, confidence: Math.min(1.0, confidenceScore), matchedDefinitive: true };
     }
-    if (confidenceScore < 0.05 && originalTrimmedContent.length > 100) { // Absolute floor for longer texts
-      isMatch = false;
+    if (shellSpecificSyntaxHits === 1 && (coreKeywordTokenCount >=1 || linesStartingWithShellCmd >=1)) {
+        confidenceScore = 0.45;
+        if (coreKeywordTokenCount >=2 || linesStartingWithShellCmd >=2) confidenceScore +=0.1;
+         return { match: true, confidence: Math.min(1.0, confidenceScore), matchedDefinitive: true };
     }
 
-    return {
-      match: isMatch,
-      confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && (hasShellShebang || (strongSignalFound && shellSpecificSyntaxHits >= 1 && confidenceScore > 0.50))
-    };
+    // Case for scripts without explicit functions or complex syntax, but with commands and core keywords
+    // Thresholds here are important to avoid matching prose.
+    if (coreKeywordTokenCount >= 2 && linesStartingWithShellCmd >= 2 && nonCommentContent.length > 20) {
+      confidenceScore = 0.35;
+      if (coreKeywordTokenCount >= 3) confidenceScore += 0.1;
+      if (linesStartingWithShellCmd >= 3) confidenceScore += 0.1;
+      // Only match if prose/MD check didn't already rule it out (implied by not returning noMatch() earlier)
+      return { match: true, confidence: Math.min(1.0, confidenceScore), matchedDefinitive: false };
+    }
+
+    // If it's a short piece of text that happens to have one core keyword or one line start,
+    // but no specific syntax and no shebang, it's too weak.
+    // The prose/MD check should have caught longer texts.
+
+    return this.noMatch(); // Default to no match if no strong conditions met
   }
 
-  // registerProvider method can remain the same
-  registerProvider(monaco: any): void {
-    // Configure Shell formatting provider
+  // registerProvider and getFileExtension methods remain the same
+  registerProvider(monaco: any): void { /* ... same as before ... */
     monaco.languages.registerDocumentFormattingEditProvider('shell', {
       provideDocumentFormattingEdits(model: any) {
         const content = model.getValue();
-        // Your existing basic formatter logic is a good start.
-        // For truly robust shell formatting, you'd typically rely on an external tool
-        // or a more sophisticated parser.
-        // The provided formatter is a heuristic approach.
         const lines = content.split('\n');
         let indentLevel = 0;
-        const indentSize = 2; // Or 4, common in shell
+        const indentSize = 2;
 
         const formattedLines = lines.map((line: string) => {
           let trimmedLine = line.trim();
 
-          // Handle lines that decrease indent
           if (trimmedLine.match(/^(fi|done|esac|\})$/)) {
             indentLevel = Math.max(0, indentLevel - 1);
           }
 
           let currentIndent = ' '.repeat(indentLevel * indentSize);
 
-          // Handle lines that shouldn't indent further or are part of else/elif
           if (trimmedLine.match(/^(else|elif|then)$/) && indentLevel > 0) {
             currentIndent = ' '.repeat(Math.max(0, indentLevel - 1) * indentSize);
           }
 
-
           const formattedLine = currentIndent + trimmedLine;
 
-          // Handle lines that increase indent for the next line
           if (trimmedLine.match(/\b(if|for|while|case|until|select)\b|\{\s*$/) && !trimmedLine.match(/\b(then|do|in)\s*$/) && !trimmedLine.endsWith("}")) {
-            if (!trimmedLine.endsWith("do") && !trimmedLine.endsWith("then")) { // Avoid double indent for one-liners
+            if (!trimmedLine.endsWith("do") && !trimmedLine.endsWith("then")) {
               indentLevel++;
             }
           } else if (trimmedLine.endsWith("do") || trimmedLine.endsWith("then")) {
             indentLevel++;
           }
-
-
           return formattedLine;
         });
 
@@ -427,17 +334,13 @@ exit 0
       }
     });
   }
-
-  getFileExtension(): string {
-    return 'sh';
-  }
+  getFileExtension(): string { return 'sh'; }
 }
 
 // Create and register the detector
 const bashDetector = new BashLanguageDetector();
 languageRegistry.register(bashDetector);
 
-// Export for backward compatibility if still needed elsewhere, though ideally, all consumers use the registry.
 export const registerBashProvider = (monaco: any) => {
   bashDetector.registerProvider(monaco);
 };

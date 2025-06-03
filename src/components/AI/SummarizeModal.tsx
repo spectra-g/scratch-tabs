@@ -9,20 +9,20 @@ interface SummarizeModalProps {
 }
 
 export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose }) => {
-  const { 
-    summarizeText, 
-    isAiReady, 
-    aiError, 
-    isGenerating, // Get generation status from store
-    summaryResult, // Get summary result from store
-    storeError // Get error specifically set during summarization
+  const {
+    summarizeText,
+    isAiReady,
+    aiError,
+    isGenerating,
+    summaryResult,
+    storeError
   } = useAIStore(state => ({
-      summarizeText: state.summarizeText,
-      isAiReady: state.ai.isReady,
-      aiError: state.ai.error, // Initial worker/load error
-      isGenerating: state.ai.isGenerating,
-      summaryResult: state.ai.summaryResult,
-      storeError: state.ai.error // Also monitor error set by store during summary
+    summarizeText: state.summarizeText,
+    isAiReady: state.ai.isReady,
+    aiError: state.ai.error,
+    isGenerating: state.ai.isGenerating,
+    summaryResult: state.ai.summaryResult,
+    storeError: state.ai.error
   }));
 
   const [localSummary, setLocalSummary] = useState<string>('');
@@ -34,57 +34,62 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
   useEffect(() => {
     isMounted.current = true;
     didInitiateSummarize.current = false;
-    setLocalError(aiError); // Set initial error from worker/load
+    setLocalError(aiError);
     setLocalSummary('');
     return () => {
       isMounted.current = false;
     };
-  }, [aiError]); // Only depend on initial load error
+  }, [aiError]);
 
   // Summarization Trigger Effect - only triggers the process
   useEffect(() => {
-    if (!content || !isAiReady || aiError) return; // If not ready or initial error
-    if (didInitiateSummarize.current) return; // Prevent re-triggering
-    
+    if (!content || !isAiReady || aiError) return;
+    if (didInitiateSummarize.current) return;
+
     didInitiateSummarize.current = true;
-    setLocalError(null); // Clear local error before starting
+    setLocalError(null);
     setLocalSummary('');
-    summarizeText(content); // Trigger the worker, don't await
+    summarizeText(content);
   }, [content, summarizeText, isAiReady, aiError]);
 
   // Effect to react to store changes (summary result or error)
   useEffect(() => {
-    if (!isMounted.current) return;
-    if (summaryResult) {
-      const fullText = summaryResult.replace(/^['\"]|['\"]$/g, '');
-      let idx = 0;
-      setLocalSummary('');
-      setLocalError(null);
-      const interval = setInterval(() => {
-        setLocalSummary(prev => prev + fullText[idx]);
+    if (!isMounted.current || !summaryResult) return;
+
+    // Fix for removing quotes but not stripping first character
+    const fullText = summaryResult.replace(/^['"]|['"]$/g, '');
+
+    // Reset for new summary
+    setLocalSummary('');
+    setLocalError(null);
+
+    let currentText = '';
+    let idx = 0;
+
+    const interval = setInterval(() => {
+      if (idx < fullText.length) {
+        currentText += fullText[idx];
+        setLocalSummary(currentText);
         idx++;
-        if (idx >= fullText.length) {
-          clearInterval(interval);
-        }
-      }, 30);
-      return () => clearInterval(interval);
-    }
+      } else {
+        clearInterval(interval);
+      }
+    }, 30);
+
+    return () => clearInterval(interval);
   }, [summaryResult]);
 
   useEffect(() => {
     if (!isMounted.current) return;
-    // Use the error from the store if it occurred *during* generation
-    if (isGenerating === false && storeError && storeError !== aiError) { 
-       setLocalError(storeError);
-       setLocalSummary('');
+    if (isGenerating === false && storeError && storeError !== aiError) {
+      setLocalError(storeError);
+      setLocalSummary('');
     }
-     // Clear local error if generation starts successfully without initial error
-     else if (isGenerating === true && !aiError) { 
-       setLocalError(null);
-     }
+    else if (isGenerating === true && !aiError) {
+      setLocalError(null);
+    }
   }, [storeError, isGenerating, aiError]);
 
-  // Determine final error state to display
   const currentError = localError;
   const showThinking = isGenerating;
   const thinkingText = 'Thinking...';
@@ -92,7 +97,13 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
   return (
     <BaseModal title="Summary" onClose={onClose} maxWidthClass="max-w-4xl">
       <div className="p-2 min-h-[250px] flex flex-col">
-        <div className="flex-1 overflow-auto custom-scrollbar bg-gray-900/30 rounded-md p-4 flex items-center justify-center">
+        {/* Experimental feature notice */}
+        <div className="mb-3 px-3 py-2 bg-blue-900/30 border border-blue-500/30 rounded-md text-xs text-blue-200">
+          <span className="font-semibold">Experimental Feature:</span> This AI summary is processed entirely in your browser.
+          No content is sent to any servers - your data remains private and local.
+        </div>
+
+        <div className="flex-1 overflow-auto custom-scrollbar bg-gray-900/30 rounded-md p-4 flex items-center justify-center border border-gray-700/50 shadow-inner">
           {showThinking && !currentError && (
             <div className="flex items-center justify-center space-x-1 text-blue-400">
               <div className="text-shimmer p-1">
@@ -101,13 +112,13 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
             </div>
           )}
           {currentError && (
-            <div className="text-center text-red-300 p-4 bg-red-900/80 rounded border border-red-500/40">
+            <div className="text-center text-red-300 p-4 bg-red-900/80 rounded border border-red-500/40 shadow-lg">
               <p className="font-semibold text-red-200 mb-1">Summarization Error</p>
               <p className="text-sm">{currentError}</p>
             </div>
           )}
           {!showThinking && !currentError && (
-            <div className="relative prose prose-sm prose-invert max-w-none text-gray-200 whitespace-pre-wrap leading-relaxed">
+            <div className="relative prose prose-sm prose-invert max-w-none text-gray-200 whitespace-pre-wrap leading-relaxed p-2 bg-gray-800/30 rounded-md border border-gray-600/20">
               {localSummary || <span className="text-gray-500 italic">Summary could not be generated or is empty.</span>}
             </div>
           )}
