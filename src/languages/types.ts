@@ -90,6 +90,15 @@ export interface LanguageRegistry {
   isAmbiguous: (content: string) => boolean;
   
   /**
+   * Get potential language matches for content
+   */
+  getPotentialMatches: (content: string, limit?: number) => Array<{
+    id: string;
+    name: string;
+    score: number;
+  }>;
+  
+  /**
    * Initialize all language providers with Monaco
    */
   initializeProviders: (monaco: any) => void;

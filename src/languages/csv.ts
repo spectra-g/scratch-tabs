@@ -80,16 +80,31 @@ export class CsvLanguageDetector extends BaseLanguageDetector implements Languag
       }
     }
 
-    // --- 3. If Consistent, It's a Match ---
-    // The problem statement ("my language detector thinks this is CSV. I think it's currently setup to be too clever")
-    // refers to the example text which is prose. This simplified detector *should* correctly identify
-    // that prose as NOT CSV because it won't have a consistent delimiter count.
-    // Example: "That's a fantastic goal..." will have varying comma counts.
-    // If lines.length === 1, it's still a match if it's internally consistent.
-    // For example, "a,b,c" is a valid single-line CSV. "hello" is a valid single-line, single-column CSV.
-
+    // --- 3. Stronger Checks to Prevent False Positives ---
+    
+    // Minimum delimiter requirement: Must have at least 3 delimiters to be considered CSV
+    if (!chosenDelimiter || expectedDelimiterCount < 3) {
+      return this.noMatch();
+    }
+    
+    // Reject content that looks like JSON, XML, or other structured data
+    const fullText = lines.join('\n');
+    
+    // Check for JSON-like patterns (braces, brackets)
+    if (/^\s*[{[]/.test(fullText) && /[}\]]\s*$/.test(fullText)) {
+      return this.noMatch();
+    }
+    
+    // Check if most of the content consists of braces, brackets
+    const braceContent = fullText.replace(/[^{}[\]]/g, '').length;
+    const totalContent = fullText.length;
+    if (braceContent > 0 && braceContent / totalContent > 0.1) {
+      // If more than 10% of content is braces/brackets, likely not CSV
+      return this.noMatch();
+    }
+    
     // A small check: if it's single-column and only one line, and very long, it's likely prose.
-    if (lines.length === 1 && !chosenDelimiter && firstLine.length > 80 && firstLine.includes(' ')) {
+    if (lines.length === 1 && firstLine.length > 80 && firstLine.includes(' ')) {
         // Check if it resembles typical prose rather than a single data value
         const wordCount = firstLine.trim().split(/\s+/).length;
         if (wordCount > 5) { // Arbitrary threshold: if more than 5 words, likely prose
@@ -97,8 +112,13 @@ export class CsvLanguageDetector extends BaseLanguageDetector implements Languag
         }
     }
 
-
-    return this.match(); // Uses BaseLanguageDetector's match (confidence 1.0, definitive true)
+    // Adjust confidence based on delimiter count and consistency
+    const confidence = Math.min(0.9, 0.5 + (expectedDelimiterCount * 0.05));
+    return {
+      match: true,
+      confidence: confidence,
+      matchedDefinitive: expectedDelimiterCount > 5 // Only definitive if many delimiters
+    };
   }
 
 
@@ -125,7 +145,7 @@ export class CsvLanguageDetector extends BaseLanguageDetector implements Languag
           [/\|/, 'delimiter.pipe.csv'],
           [/"([^"\\]|\\.)*"/, 'string.quoted.double.csv'],
           [/'([^'\\]|\\.)*'/, 'string.quoted.single.csv'],
-          [/[^,\t;|"'“”\r\n]+/, 'identifier.csv'],
+          [/[^,\t;|"'""\r\n]+/, 'identifier.csv'],
           [/["']/, 'text.csv'],
         ]
       }

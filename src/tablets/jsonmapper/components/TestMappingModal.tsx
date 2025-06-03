@@ -243,7 +243,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
               transition-colors
             `}
           >
-            <Play size={16} className={isTransforming ? 'animate-spin' : ''} />
+            <Play size={14} className={isTransforming ? 'animate-spin' : ''} />
             <span>{isTransforming ? 'Transforming...' : 'Transform'}</span>
           </button>
         </div>

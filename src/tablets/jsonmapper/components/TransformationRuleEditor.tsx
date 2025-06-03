@@ -830,16 +830,16 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-gray-300 hover:text-gray-100 transition-colors"
+            className="px-4 py-2 text-gray-300 hover:text-gray-100 transition-colors text-sm"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="ml-3 px-4 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-md transition-colors flex items-center"
+            className="ml-3 px-4 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-md transition-colors flex items-center text-sm"
           >
-            <Save size={16} className="mr-2" />
+            <Save size={14} className="mr-2" />
             Save
           </button>
         </div>

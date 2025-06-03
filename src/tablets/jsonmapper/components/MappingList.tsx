@@ -61,9 +61,9 @@ export const MappingList: React.FC<MappingListProps> = ({
         </h2>
         <button
           onClick={onCreateMapping}
-          className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
+          className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
         >
-          <Plus size={16} />
+          <Plus size={14} />
           <span>Create Mapping</span>
         </button>
       </div>

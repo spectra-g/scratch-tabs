@@ -50,3 +50,30 @@ export const detectLanguage = (content: string): string => {
 export const isAmbiguousLanguage = (content: string): boolean => {
   return languageRegistry.isAmbiguous(content);
 };
+
+/**
+ * Get potential language matches for the given content
+ * Returns an array of language objects with their confidence scores
+ * Always includes plaintext as a fallback if no other languages match
+ */
+export const getPotentialLanguageMatches = (content: string, limit: number = 5): Array<{
+  id: string;
+  name: string;
+  score: number;
+}> => {
+  const matches = languageRegistry.getPotentialMatches(content, limit);
+  
+  // Ensure we always have at least plaintext in the results
+  if (matches.length === 0) {
+    const plaintext = languageRegistry.getById('plaintext');
+    if (plaintext) {
+      return [{
+        id: 'plaintext',
+        name: plaintext.name,
+        score: 1.0
+      }];
+    }
+  }
+  
+  return matches;
+};
