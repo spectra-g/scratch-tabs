@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Tablet, TabletState } from '../types';
-import { Archive, Search, Plus, Tag, FileCode, Filter, SortDesc, Pin, Copy, ExternalLink, Trash2, Edit, Check, X, ChevronDown, ChevronUp, Clock, Hash, Star, SortAsc } from 'lucide-react';
+import { Archive, Plus, Filter, Pin, Copy, ExternalLink, Trash2, Edit, Check, X, Hash, LayoutGrid, List, CopyPlus, Globe } from 'lucide-react';
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { detectLanguage } from '../../languages';
@@ -8,7 +8,7 @@ import { VaultItemCard } from './components/VaultItemCard';
 import { VaultItemModal } from './components/VaultItemModal';
 import { VaultSidebar } from './components/VaultSidebar';
 import { VaultItem, SortOrder, VaultTabletState, ContentType } from './types';
-import { getContentTypeIcon, detectContentType, getFileExtensionForContentType } from './utils/contentTypeUtils';
+import { getContentTypeIcon } from './utils/contentTypeUtils';
 import { filterItems, sortItems } from './utils/filterUtils';
 
 export const VaultTablet: Tablet = {
@@ -29,7 +29,8 @@ export const VaultTablet: Tablet = {
         },
         sortOrder: 'lastUsed',
         editItem: null,
-        isAddingItem: false
+        isAddingItem: false,
+        viewMode: 'card' // Default to card view
       }
     };
   },
@@ -57,7 +58,7 @@ export const VaultTablet: Tablet = {
             lastUsedTimestamp: item.lastUsedTimestamp || item.createdTimestamp || Date.now()
           }));
         }
-        
+
         // Ensure other state properties
         parsed.data.searchQuery = parsed.data.searchQuery || '';
         parsed.data.activeFilters = parsed.data.activeFilters || {
@@ -68,13 +69,14 @@ export const VaultTablet: Tablet = {
         parsed.data.sortOrder = parsed.data.sortOrder || 'lastUsed';
         parsed.data.editItem = null; // Always reset edit state on load
         parsed.data.isAddingItem = false; // Always reset add state on load
-        
+        parsed.data.viewMode = parsed.data.viewMode || 'card'; // Add viewMode with default
+
         return parsed;
       }
     } catch (e) {
       console.error("Failed to deserialize vault state:", e);
     }
-    
+
     // Return default state if parsing fails
     return this.createInitialState();
   },
@@ -82,11 +84,16 @@ export const VaultTablet: Tablet = {
   render(state: VaultTabletState, onChange) {
     const { addBackgroundTab, splitView } = useRootStore();
     const { activeWorkspaceId } = useWorkspaceStore();
-    
+
     // Local state for UI interactions
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
     const [openedItemId, setOpenedItemId] = useState<string | null>(null);
-    
+    const [deleteConfirmItemId, setDeleteConfirmItemId] = useState<string | null>(null);
+    const [preserveOrder, setPreserveOrder] = useState<boolean>(false);
+
+    // Store the current sorted order in state when we need to preserve it
+    const [manualOrder, setManualOrder] = useState<string[]>([]);
+
     // Memoized filtered and sorted items
     const filteredItems = useMemo(() => {
       return filterItems(
@@ -101,11 +108,43 @@ export const VaultTablet: Tablet = {
       state.data.activeFilters.contentType,
       state.data.activeFilters.showPinnedOnly
     ]);
-    
+
     const sortedItems = useMemo(() => {
+      // If we're preserving order, use the manual order instead of sorting
+      if (preserveOrder && manualOrder.length > 0) {
+        // Create a map for O(1) lookups
+        const itemMap = new Map(filteredItems.map(item => [item.id, item]));
+
+        // Get items in the manual order, but only if they exist in filtered items
+        const orderedItems = manualOrder
+          .map(id => itemMap.get(id))
+          .filter(item => item !== undefined) as VaultItem[];
+
+        // Add any new items that weren't in the manual order
+        const newItemIds = new Set(manualOrder);
+        const newItems = filteredItems.filter(item => !newItemIds.has(item.id));
+
+        return [...orderedItems, ...newItems];
+      }
+
+      // Otherwise use the normal sorting
       return sortItems(filteredItems, state.data.sortOrder);
-    }, [filteredItems, state.data.sortOrder]);
-    
+    }, [filteredItems, state.data.sortOrder, preserveOrder, manualOrder]);
+
+    // Store the current order when sort order changes
+    useEffect(() => {
+      if (sortedItems.length > 0) {
+        setManualOrder(sortedItems.map(item => item.id));
+      }
+    }, [state.data.sortOrder, sortedItems]);
+
+    // Initialize manual order when items change
+    useEffect(() => {
+      if (!preserveOrder && sortedItems.length > 0) {
+        setManualOrder(sortedItems.map(item => item.id));
+      }
+    }, [state.data.items, preserveOrder, sortedItems]);
+
     // Get all unique labels across all items
     const allLabels = useMemo(() => {
       const labelSet = new Set<string>();
@@ -114,7 +153,7 @@ export const VaultTablet: Tablet = {
       });
       return Array.from(labelSet).sort();
     }, [state.data.items]);
-    
+
     // Get all unique content types across all items
     const allContentTypes = useMemo(() => {
       const contentTypeSet = new Set<ContentType>();
@@ -123,9 +162,12 @@ export const VaultTablet: Tablet = {
       });
       return Array.from(contentTypeSet).sort();
     }, [state.data.items]);
-    
+
     // Handlers
     const handleSearchChange = useCallback((query: string) => {
+      // Reset preserved order when filtering
+      setPreserveOrder(false);
+
       onChange({
         ...state,
         data: {
@@ -134,8 +176,11 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleFilterByLabel = useCallback((label: string) => {
+      // Reset preserved order when filtering
+      setPreserveOrder(false);
+
       onChange({
         ...state,
         data: {
@@ -149,8 +194,11 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleFilterByContentType = useCallback((contentType: ContentType | null) => {
+      // Reset preserved order when filtering
+      setPreserveOrder(false);
+
       onChange({
         ...state,
         data: {
@@ -162,8 +210,11 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleTogglePinnedFilter = useCallback(() => {
+      // Reset preserved order when filtering
+      setPreserveOrder(false);
+
       onChange({
         ...state,
         data: {
@@ -175,8 +226,11 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleChangeSortOrder = useCallback((sortOrder: SortOrder) => {
+      // Reset preserved order when changing sort order
+      setPreserveOrder(false);
+
       onChange({
         ...state,
         data: {
@@ -185,8 +239,11 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleClearFilters = useCallback(() => {
+      // Reset preserved order when filtering
+      setPreserveOrder(false);
+
       onChange({
         ...state,
         data: {
@@ -199,7 +256,7 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleAddItem = useCallback(() => {
       onChange({
         ...state,
@@ -209,7 +266,7 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleEditItem = useCallback((item: VaultItem) => {
       onChange({
         ...state,
@@ -219,7 +276,7 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleCloseModal = useCallback(() => {
       onChange({
         ...state,
@@ -230,20 +287,20 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleSaveItem = useCallback((item: VaultItem, isNew: boolean) => {
       const now = Date.now();
       const newItem = {
         ...item,
         modifiedTimestamp: now
       };
-      
+
       if (isNew) {
         newItem.id = crypto.randomUUID();
         newItem.createdTimestamp = now;
         newItem.lastUsedTimestamp = now;
         newItem.usageCount = 0;
-        
+
         onChange({
           ...state,
           data: {
@@ -264,7 +321,7 @@ export const VaultTablet: Tablet = {
         });
       }
     }, [state, onChange]);
-    
+
     const handleDeleteItem = useCallback((id: string) => {
       onChange({
         ...state,
@@ -274,89 +331,128 @@ export const VaultTablet: Tablet = {
         }
       });
     }, [state, onChange]);
-    
+
     const handleTogglePin = useCallback((id: string) => {
       onChange({
         ...state,
         data: {
           ...state.data,
-          items: state.data.items.map(item => 
-            item.id === id 
+          items: state.data.items.map(item =>
+            item.id === id
               ? { ...item, isPinned: !item.isPinned }
               : item
           )
         }
       });
     }, [state, onChange]);
-    
+
     const handleCopyContent = useCallback((id: string) => {
       const item = state.data.items.find(item => item.id === id);
       if (!item) return;
-      
+
       navigator.clipboard.writeText(item.content);
       setCopiedItemId(id);
-      
-      // Update usage stats
+
+      // Save the current order before updating
+      if ((state.data.sortOrder === 'lastUsed' || state.data.sortOrder === 'usageCount') && sortedItems.length > 0) {
+        setManualOrder(sortedItems.map(item => item.id));
+        setPreserveOrder(true);
+      }
+
+      // Always update usage count and lastUsedTimestamp
       const now = Date.now();
+      const updatedItems = state.data.items.map(i =>
+        i.id === id
+          ? {
+            ...i,
+            usageCount: i.usageCount + 1,
+            lastUsedTimestamp: now
+          }
+          : i
+      );
+
       onChange({
         ...state,
         data: {
           ...state.data,
-          items: state.data.items.map(i => 
-            i.id === id 
-              ? { 
-                  ...i, 
-                  usageCount: i.usageCount + 1,
-                  lastUsedTimestamp: now
-                }
-              : i
-          )
+          items: updatedItems
         }
       });
-      
+
       setTimeout(() => setCopiedItemId(null), 1500);
-    }, [state, onChange]);
+    }, [state, onChange, sortedItems]);
 
     const handleDuplicateItem = useCallback((id: string) => {
       const item = state.data.items.find(item => item.id === id);
       if (!item) return;
-      
+
+      // Save the current order before updating
+      if ((state.data.sortOrder === 'created' || state.data.sortOrder === 'lastUsed' || state.data.sortOrder === 'usageCount') && sortedItems.length > 0) {
+        setManualOrder(sortedItems.map(item => item.id));
+        setPreserveOrder(true);
+      }
+
       const now = Date.now();
       const duplicatedItem: VaultItem = {
         ...item,
         id: crypto.randomUUID(),
         title: `${item.title} (copy)`,
-        createdTimestamp: now,
         modifiedTimestamp: now,
-        lastUsedTimestamp: now,
         usageCount: 0
       };
-      
+
+      // For 'created' sort, preserve the original timestamp but make it just slightly newer
+      // This will place it next to the original item
+      if (state.data.sortOrder === 'created') {
+        duplicatedItem.createdTimestamp = item.createdTimestamp + 1;
+      } else {
+        duplicatedItem.createdTimestamp = now;
+      }
+
+      // Insert the duplicated item in the appropriate position
+      let newItems: VaultItem[];
+
+      if (state.data.sortOrder === 'created') {
+        // Find the index of the original item
+        const originalIndex = state.data.items.findIndex(i => i.id === id);
+        if (originalIndex !== -1) {
+          // Insert the duplicated item right after the original item
+          newItems = [...state.data.items];
+          newItems.splice(originalIndex + 1, 0, duplicatedItem);
+        } else {
+          // Fallback if original item not found (shouldn't happen)
+          newItems = [...state.data.items, duplicatedItem];
+        }
+      } else {
+        // Default behavior for other sort orders
+        newItems = [duplicatedItem, ...state.data.items];
+      }
+
       onChange({
         ...state,
         data: {
           ...state.data,
-          items: [duplicatedItem, ...state.data.items]
+          items: newItems
         }
       });
-    }, [state, onChange]);
-    
+    }, [state, onChange, sortedItems]);
+
     const handleOpenInNewTab = useCallback((id: string) => {
       const item = state.data.items.find(item => item.id === id);
       if (!item) return;
-      
+
       setOpenedItemId(id);
-      
+
       // Determine which pane to open in
       const paneElem = document.querySelector('[data-editor-pane-side]');
       const sideAttr = paneElem?.getAttribute('data-editor-pane-side');
       const isRightSide = splitView.isSplit && sideAttr === 'right';
-      
+
       // Detect language if not already set
-      const language = item.contentType === 'plaintext' 
+      const language = item.contentType === 'plaintext'
         ? detectLanguage(item.content)
         : item.contentType;
-      
+
       // Create a new tab with the content
       addBackgroundTab({
         id: crypto.randomUUID(),
@@ -369,58 +465,223 @@ export const VaultTablet: Tablet = {
         lastModified: Date.now(),
         workspaceId: activeWorkspaceId || ''
       }, isRightSide);
-      
+
+      // Save the current order before updating
+      if ((state.data.sortOrder === 'lastUsed' || state.data.sortOrder === 'usageCount') && sortedItems.length > 0) {
+        setManualOrder(sortedItems.map(item => item.id));
+        setPreserveOrder(true);
+      }
+
       // Update usage stats
       const now = Date.now();
+      const updatedItems = state.data.items.map(i => {
+        if (i.id === id) {
+          return {
+            ...i,
+            usageCount: i.usageCount + 1,
+            lastUsedTimestamp: now
+          };
+        }
+        return i;
+      });
+
       onChange({
         ...state,
         data: {
           ...state.data,
-          items: state.data.items.map(i => 
-            i.id === id 
-              ? { 
-                  ...i, 
-                  usageCount: i.usageCount + 1,
-                  lastUsedTimestamp: now
-                }
-              : i
-          )
+          items: updatedItems
         }
       });
-      
+
       setTimeout(() => setOpenedItemId(null), 1500);
-    }, [state, onChange, addBackgroundTab, splitView.isSplit, activeWorkspaceId]);
-    
+    }, [state, onChange, addBackgroundTab, splitView.isSplit, activeWorkspaceId, sortedItems]);
+
     const handleOpenUrl = useCallback((id: string) => {
       const item = state.data.items.find(item => item.id === id);
       if (!item || item.contentType !== 'url') return;
-      
+
       // Try to open the URL
       try {
         window.open(item.content, '_blank');
-        
+
+        // Save the current order before updating
+        if ((state.data.sortOrder === 'lastUsed' || state.data.sortOrder === 'usageCount') && sortedItems.length > 0) {
+          setManualOrder(sortedItems.map(item => item.id));
+          setPreserveOrder(true);
+        }
+
         // Update usage stats
         const now = Date.now();
+        const updatedItems = state.data.items.map(i => {
+          if (i.id === id) {
+            return {
+              ...i,
+              usageCount: i.usageCount + 1,
+              lastUsedTimestamp: now
+            };
+          }
+          return i;
+        });
+
         onChange({
           ...state,
           data: {
             ...state.data,
-            items: state.data.items.map(i => 
-              i.id === id 
-                ? { 
-                    ...i, 
-                    usageCount: i.usageCount + 1,
-                    lastUsedTimestamp: now
-                  }
-                : i
-            )
+            items: updatedItems
           }
         });
       } catch (error) {
         console.error('Failed to open URL:', error);
       }
+    }, [state, onChange, sortedItems]);
+
+    // Toggle view mode between card and list
+    const handleToggleViewMode = useCallback(() => {
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          viewMode: state.data.viewMode === 'card' ? 'list' : 'card'
+        }
+      });
     }, [state, onChange]);
-    
+
+    // Render a list item for the list view
+    const renderListItem = (item: VaultItem) => {
+      const ContentTypeIcon = getContentTypeIcon(item.contentType);
+      const isShowingDeleteConfirm = deleteConfirmItemId === item.id;
+
+      // Determine what primary action button to show based on content type
+      const renderPrimaryAction = () => {
+        if (item.contentType === 'url') {
+          return (
+            <button
+              onClick={() => handleOpenUrl(item.id)}
+              className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+              title="Open URL"
+            >
+              <Globe size={16} />
+            </button>
+          );
+        }
+
+        return (
+          <button
+            onClick={() => handleOpenInNewTab(item.id)}
+            className={`p-1.5 transition-colors ${openedItemId === item.id
+              ? 'text-green-400'
+              : 'text-gray-400 hover:text-blue-400 hover:bg-gray-700/50'
+              }`}
+            title="Open in new tab"
+          >
+            {openedItemId === item.id ? <Check size={16} /> : <ExternalLink size={16} />}
+          </button>
+        );
+      };
+
+      return (
+        <div
+          key={item.id}
+          className="flex items-center border-b border-gray-700/50 py-2 hover:bg-gray-800/50 px-3 transition-colors group relative cursor-pointer"
+          onClick={() => handleCopyContent(item.id)}
+        >
+          {/* Icon + Count Section */}
+          <div className="flex items-center gap-1 mr-3">
+            {/* Pin icon or spacer */}
+            <div className="w-4 flex justify-center">
+              {item.isPinned && <Pin size={14} className="text-yellow-400" />}
+            </div>
+            <ContentTypeIcon size={16} className="text-gray-400" />
+            <Hash size={12} className="text-gray-400" />
+            <div className="w-8 text-left text-gray-400 text-sm">{item.usageCount}</div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 min-w-0 mr-4 font-mono text-sm text-gray-200">
+            {item.content.length > 100
+              ? `${item.content.substring(0, 100)}...`
+              : item.content}
+          </div>
+
+          {/* Actions - Hidden by default, visible on hover */}
+          <div className="flex items-center space-x-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+            {!isShowingDeleteConfirm ? (
+              <>
+                {renderPrimaryAction()}
+
+                <button
+                  onClick={() => handleCopyContent(item.id)}
+                  className={`p-1.5 transition-colors ${copiedItemId === item.id
+                    ? 'text-green-400'
+                    : 'text-gray-400 hover:text-blue-400 hover:bg-gray-700/50'
+                    }`}
+                  title="Copy content"
+                >
+                  {copiedItemId === item.id ? <Check size={16} /> : <Copy size={16} />}
+                </button>
+
+                <button
+                  onClick={() => handleDuplicateItem(item.id)}
+                  className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                  title="Duplicate item"
+                >
+                  <CopyPlus size={16} />
+                </button>
+
+                <button
+                  onClick={() => handleTogglePin(item.id)}
+                  className={`p-1.5 rounded transition-colors ${item.isPinned
+                    ? 'text-yellow-400 hover:bg-yellow-500/20'
+                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                    }`}
+                  title={item.isPinned ? "Unpin item" : "Pin item"}
+                >
+                  <Pin size={16} />
+                </button>
+
+                <button
+                  onClick={() => handleEditItem(item)}
+                  className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                  title="Edit item"
+                >
+                  <Edit size={16} />
+                </button>
+
+                <button
+                  onClick={() => setDeleteConfirmItemId(item.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
+                  title="Delete item"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <span className="text-red-400 mr-1">Delete?</span>
+                <button
+                  onClick={() => setDeleteConfirmItemId(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                  title="Cancel"
+                >
+                  <X size={16} />
+                </button>
+                <button
+                  onClick={() => {
+                    setDeleteConfirmItemId(null);
+                    handleDeleteItem(item.id);
+                  }}
+                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                  title="Confirm delete"
+                >
+                  <Check size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
     return (
       <div className="h-full bg-gray-900 flex">
         {/* Sidebar */}
@@ -438,48 +699,76 @@ export const VaultTablet: Tablet = {
           sortOrder={state.data.sortOrder}
           onChangeSortOrder={handleChangeSortOrder}
         />
-        
+
         {/* Main Content */}
         <div className="flex-1 overflow-auto custom-scrollbar p-6">
-          {/* Header with item count */}
+          {/* Header with item count and view mode toggle */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-100">
               {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
             </h2>
-            <button
-              onClick={handleAddItem}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
-            >
-              <Plus size={16} />
-              <span>Add Item</span>
-            </button>
-          </div>
-          
-          {/* Items Grid */}
-          {sortedItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sortedItems.map(item => (
-                <VaultItemCard
-                  key={item.id}
-                  item={item}
-                  onEdit={() => handleEditItem(item)}
-                  onDelete={() => handleDeleteItem(item.id)}
-                  onTogglePin={() => handleTogglePin(item.id)}
-                  onCopy={() => handleCopyContent(item.id)}
-                  onDuplicate={() => handleDuplicateItem(item.id)}
-                  onOpenInNewTab={() => handleOpenInNewTab(item.id)}
-                  onOpenUrl={() => handleOpenUrl(item.id)}
-                  isCopied={copiedItemId === item.id}
-                  isOpened={openedItemId === item.id}
-                />
-              ))}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleToggleViewMode}
+                className={`p-1.5 rounded-md transition-colors ${state.data.viewMode === 'card'
+                  ? 'text-blue-400 bg-blue-500/20'
+                  : 'text-gray-400 hover:text-blue-400 hover:bg-blue-500/10'
+                  }`}
+                title="Card view"
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button
+                onClick={handleToggleViewMode}
+                className={`p-1.5 rounded-md transition-colors ${state.data.viewMode === 'list'
+                  ? 'text-blue-400 bg-blue-500/20'
+                  : 'text-gray-400 hover:text-blue-400 hover:bg-blue-500/10'
+                  }`}
+                title="List view"
+              >
+                <List size={16} />
+              </button>
+              <button
+                onClick={handleAddItem}
+                className="flex items-center space-x-2 ml-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
+              >
+                <Plus size={16} />
+                <span>Add Item</span>
+              </button>
             </div>
+          </div>
+
+          {/* Items Display - Card or List view */}
+          {sortedItems.length > 0 ? (
+            state.data.viewMode === 'card' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sortedItems.map(item => (
+                  <VaultItemCard
+                    key={item.id}
+                    item={item}
+                    onEdit={() => handleEditItem(item)}
+                    onDelete={() => handleDeleteItem(item.id)}
+                    onTogglePin={() => handleTogglePin(item.id)}
+                    onCopy={() => handleCopyContent(item.id)}
+                    onDuplicate={() => handleDuplicateItem(item.id)}
+                    onOpenInNewTab={() => handleOpenInNewTab(item.id)}
+                    onOpenUrl={() => handleOpenUrl(item.id)}
+                    isCopied={copiedItemId === item.id}
+                    isOpened={openedItemId === item.id}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-0 border-t border-gray-700/50">
+                {sortedItems.map(item => renderListItem(item))}
+              </div>
+            )
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-              {state.data.searchQuery || 
-               state.data.activeFilters.labels.length > 0 || 
-               state.data.activeFilters.contentType || 
-               state.data.activeFilters.showPinnedOnly ? (
+              {state.data.searchQuery ||
+                state.data.activeFilters.labels.length > 0 ||
+                state.data.activeFilters.contentType ||
+                state.data.activeFilters.showPinnedOnly ? (
                 <>
                   <Filter size={48} className="mb-4 opacity-50" />
                   <p className="text-lg">No items match your filters</p>
@@ -507,7 +796,7 @@ export const VaultTablet: Tablet = {
             </div>
           )}
         </div>
-        
+
         {/* Edit/Add Modal */}
         {(state.data.editItem || state.data.isAddingItem) && (
           <VaultItemModal

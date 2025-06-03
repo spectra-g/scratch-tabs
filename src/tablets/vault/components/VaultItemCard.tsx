@@ -63,7 +63,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
   };
   
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/50 transition-colors">
+    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/50 transition-colors group">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-gray-800 border-b border-gray-700/50">
         <div className="flex items-center space-x-2 min-w-0">
@@ -85,10 +85,11 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
         </div>
       </div>
       
-      {/* Content Preview */}
+      {/* Content Preview - Clickable to copy */}
       <div 
-        className="px-3 py-2 text-sm text-gray-300 font-mono whitespace-pre-wrap overflow-hidden"
+        className="px-3 py-2 text-sm text-gray-300 font-mono whitespace-pre-wrap overflow-hidden cursor-pointer relative"
         style={{ maxHeight: '100px' }}
+        onClick={onCopy}
       >
         {item.content.length > 200 
           ? `${item.content.substring(0, 200)}...` 
@@ -123,7 +124,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
           </span>
         </div>
         
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {/* Only show action buttons when not in delete confirmation mode */}
           {!showDeleteConfirm && (
             <>
