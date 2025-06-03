@@ -19,6 +19,8 @@ export interface VaultItem {
 
 export type SortOrder = 'title' | 'created' | 'modified' | 'lastUsed' | 'usageCount';
 
+export type ViewMode = 'card' | 'list';
+
 export interface VaultTabletState {
   type: 'vault';
   data: {
@@ -32,5 +34,6 @@ export interface VaultTabletState {
     sortOrder: SortOrder;
     editItem: VaultItem | null;
     isAddingItem: boolean;
+    viewMode: ViewMode;
   };
 }

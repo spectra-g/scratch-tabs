@@ -1,17 +1,22 @@
-// In languages/csv.ts (or your equivalent file)
+// File path: csv.ts
 
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { DetectionResult, LanguageDetector } from './types';
 
+// Helper to escape characters for RegExp constructor
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
- * CSV/TSV language detector
+ * CSV/TSV language detector (Simplified)
  */
 export class CsvLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'csv'; // Keep 'csv' as the Monaco language ID
-  name = 'CSV / TSV'; // More descriptive name
-  extensions = ['csv', 'tsv', 'txt']; // .txt can often be CSV/TSV
-  priority = 2; // Lower priority, as many things can look like CSV
+  id = 'csv';
+  name = 'CSV / TSV';
+  extensions = ['csv', 'tsv', 'txt'];
+  priority = 2; // Still relatively low due to potential for false positives with simple text
 
   sampleContent(): string {
     return `ID,First Name,Last Name,Email
@@ -20,218 +25,194 @@ export class CsvLanguageDetector extends BaseLanguageDetector implements Languag
 3,Michael,Johnson,michael.j@example.com`;
   }
 
-  /**
-   * Detects if the given content matches CSV/TSV patterns and returns a confidence score.
-   */
   detect(content: string): DetectionResult {
-    if (!content || content.trim().length < 5) { // e.g., "a,b"
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
       return this.noMatch();
     }
 
-    // --- Anti-patterns (strong negative signals) ---
-    // Common code structures that are definitely not CSV
-    const codeAntiPatterns = [
-      /\b(function|class|interface|enum|namespace|type)\s+\w+/i, // JS, TS, Java, C# keywords
-      /^\s*#include\s+<.+>/m,  // C/C++ include
-      /^\s*import\s+[\w.*]+(?:from\s*['"].*['"])?;?/im, // JS/TS/Python/Java import
-      /^\s*package\s+[\w.]+;/im, // Java package
-      /<\?php/i,               // PHP tag
-      /<html\b|<body\b|<div\b|<script\b/i, // HTML/XML tags
-      /^\s*@\w+/m,             // CSS @-rules, some decorators
-      /\{\s*".*"\s*:\s*".*"\s*\}/g, // Looks like JSON object
-      /-\s*-\s*-\s*/,           // Common Markdown separator
-    ];
-
-    if (codeAntiPatterns.some(pattern => pattern.test(content))) {
-      return { match: false, confidence: 0.0 };
-    }
-    // More subtle anti-patterns (reduce confidence if found)
-    let antiPatternPenalty = 0;
-    if (content.includes(';') && !content.includes(',')) {
-      // If semicolons are prevalent and commas aren't, it might be code (e.g. JS, Java, C#)
-      // but CSV can also use semicolons. This is tricky.
-      // Let's make it a small penalty for now if it wasn't caught by stronger anti-patterns.
-      const semicolonLines = content.split('\n').filter(line => line.trim().endsWith(';')).length;
-      if (semicolonLines > content.split('\n').length / 2) {
-        antiPatternPenalty += 0.2;
-      }
-    }
-    if (content.includes('//') || content.includes('/*')) {
-      antiPatternPenalty += 0.1; // Comments might exist in data, but less likely
-    }
-
-
     const lines = content.split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
+      .map(line => line.trimEnd()) // Keep leading spaces for tab detection, remove trailing
+      .filter(line => line.trim().length > 0); // Filter out fully empty/whitespace lines
 
-    if (lines.length < 2) { // Need at least a header and one data row for good detection
-      return { match: false, confidence: 0.0 };
+    if (lines.length === 0) {
+      return this.noMatch();
     }
 
-    const maxLinesToAnalyze = Math.min(lines.length, 10); // Analyze up to 10 lines
-    const linesToAnalyze = lines.slice(0, maxLinesToAnalyze);
+    // --- 1. Determine Delimiter from the First Line ---
+    const firstLine = lines[0];
+    const candidateDelimiters = [',', '\t', ';', '|'];
+    let chosenDelimiter: string | null = null;
+    let expectedDelimiterCount = -1;
 
-    const delimiters = [
-      { char: ',', name: 'comma', weight: 0.3 },
-      { char: '\t', name: 'tab', weight: 0.25 },
-      { char: ';', name: 'semicolon', weight: 0.2 },
-      // { char: '|', name: 'pipe', weight: 0.15 } // Less common, can add if needed
-    ];
+    let maxDelimiterFrequency = 0;
 
-    let bestDelimiterMatch: { delim: string, avgFields: number, consistency: number, confidenceBoost: number } | null = null;
-    let highestConfidence = 0.0;
+    for (const delim of candidateDelimiters) {
+      const occurrences = (firstLine.match(new RegExp(escapeRegExp(delim), 'g')) || []).length;
+      if (occurrences > 0 && occurrences > maxDelimiterFrequency) {
+        maxDelimiterFrequency = occurrences;
+        chosenDelimiter = delim;
+      }
+    }
 
-    for (const delimInfo of delimiters) {
-      const delimiter = delimInfo.char;
-      const fieldCounts = linesToAnalyze.map(line => line.split(delimiter).length);
+    if (chosenDelimiter) {
+      expectedDelimiterCount = maxDelimiterFrequency;
+    } else {
+      // No common delimiters found in the first line, treat as single-column case
+      expectedDelimiterCount = 0;
+    }
 
-      if (fieldCounts.length === 0 || fieldCounts[0] <= 1) { // Must have at least one delimiter (=> 2 fields)
-        continue;
+    // --- 2. Check All Non-Empty Lines for Consistency ---
+    for (const line of lines) {
+      let currentLineDelimiterCount: number;
+
+      if (chosenDelimiter) {
+        currentLineDelimiterCount = (line.match(new RegExp(escapeRegExp(chosenDelimiter), 'g')) || []).length;
+      } else {
+        // Single-column case: check if *any* candidate delimiter appears
+        const hasAnyCandidateDelimiter = candidateDelimiters.some(d => line.includes(d));
+        currentLineDelimiterCount = hasAnyCandidateDelimiter ? -999 : 0; // -999 to fail the check
       }
 
-      const headerFieldCount = fieldCounts[0];
-      let consistentCount = 0;
-      let totalFields = 0;
+      if (currentLineDelimiterCount !== expectedDelimiterCount) {
+        // Any inconsistency means it's not CSV by this strict definition
+        return this.noMatch();
+      }
+    }
 
-      for (let i = 0; i < fieldCounts.length; i++) {
-        totalFields += fieldCounts[i];
-        // Check consistency: allow some variation for potentially quoted fields with internal delimiters
-        // A simple check: if it's "close" to the header count.
-        // Or, more strictly, require exact match for unquoted lines.
-        // For simplicity here, let's prefer exact matches but allow minor deviations.
-        if (Math.abs(fieldCounts[i] - headerFieldCount) <= 1) { // Allow one field difference
-          consistentCount++;
-        } else if (fieldCounts[i] === headerFieldCount) {
-          consistentCount++;
+    // --- 3. Stronger Checks to Prevent False Positives ---
+    
+    // Minimum delimiter requirement: Must have at least 3 delimiters to be considered CSV
+    if (!chosenDelimiter || expectedDelimiterCount < 3) {
+      return this.noMatch();
+    }
+    
+    // Reject content that looks like JSON, XML, or other structured data
+    const fullText = lines.join('\n');
+    
+    // Check for JSON-like patterns (braces, brackets)
+    if (/^\s*[{[]/.test(fullText) && /[}\]]\s*$/.test(fullText)) {
+      return this.noMatch();
+    }
+    
+    // Check if most of the content consists of braces, brackets
+    const braceContent = fullText.replace(/[^{}[\]]/g, '').length;
+    const totalContent = fullText.length;
+    if (braceContent > 0 && braceContent / totalContent > 0.1) {
+      // If more than 10% of content is braces/brackets, likely not CSV
+      return this.noMatch();
+    }
+    
+    // A small check: if it's single-column and only one line, and very long, it's likely prose.
+    if (lines.length === 1 && firstLine.length > 80 && firstLine.includes(' ')) {
+        // Check if it resembles typical prose rather than a single data value
+        const wordCount = firstLine.trim().split(/\s+/).length;
+        if (wordCount > 5) { // Arbitrary threshold: if more than 5 words, likely prose
+            return this.noMatch();
         }
-      }
-
-      const consistencyRatio = consistentCount / fieldCounts.length;
-      const averageFields = totalFields / fieldCounts.length;
-
-      if (averageFields > 1.5 && consistencyRatio >= 0.7) { // At least ~1.5 fields on avg, 70% consistency
-        let currentConfidence = delimInfo.weight; // Base confidence from delimiter type
-        currentConfidence += (consistencyRatio * 0.4); // Add consistency bonus
-        currentConfidence += Math.min(averageFields / 5, 0.2); // Bonus for more fields (capped)
-        currentConfidence -= antiPatternPenalty; // Apply penalty
-
-        // Prefer delimiters that result in more fields, if confidence is similar
-        if (currentConfidence > highestConfidence) {
-          highestConfidence = currentConfidence;
-          bestDelimiterMatch = { delim: delimiter, avgFields: averageFields, consistency: consistencyRatio, confidenceBoost: currentConfidence };
-        } else if (currentConfidence === highestConfidence && bestDelimiterMatch && averageFields > bestDelimiterMatch.avgFields) {
-          bestDelimiterMatch = { delim: delimiter, avgFields: averageFields, consistency: consistencyRatio, confidenceBoost: currentConfidence };
-        }
-      }
     }
 
-    if (bestDelimiterMatch) {
-      // Check for purely numeric data which is less likely to be "prose" plaintext
-      const firstLineParts = linesToAnalyze[0].split(bestDelimiterMatch.delim);
-      const isMostlyNumeric = firstLineParts.every(part => !isNaN(parseFloat(part))) && firstLineParts.length > 1;
-      if (isMostlyNumeric) {
-        highestConfidence += 0.1;
-      }
-      // If header looks like typical column names (alphanumeric, spaces, underscores)
-      const headerLooksGood = firstLineParts.every(part => /^[a-z0-9\s_-]+$/i.test(part.trim()));
-      if (headerLooksGood && firstLineParts.length > 2) {
-        highestConfidence += 0.15;
-      }
-
-
-      highestConfidence = Math.min(1.0, Math.max(0.0, highestConfidence));
-      return { match: true, confidence: highestConfidence };
-    }
-
-    return { match: false, confidence: 0.0 };
+    // Adjust confidence based on delimiter count and consistency
+    const confidence = Math.min(0.9, 0.5 + (expectedDelimiterCount * 0.05));
+    return {
+      match: true,
+      confidence: confidence,
+      matchedDefinitive: expectedDelimiterCount > 5 // Only definitive if many delimiters
+    };
   }
 
 
   getFileExtension(): string {
-    // Could be smarter based on detected delimiter, but 'csv' is a safe default.
     return 'csv';
   }
 
   registerProvider(monaco: any): void {
-    const languageId = this.id; // 'csv'
+    const languageId = this.id;
 
     if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
       monaco.languages.register({ id: languageId });
-
-      // Basic Monarch tokenizer for CSV/TSV
-      // This is a simplified version and might not handle all edge cases like quoted fields with delimiters.
-      // In CsvLanguageDetector.registerProvider
-
-      // In CsvLanguageDetector.registerProvider
-      monaco.languages.setMonarchTokensProvider(languageId, {
-        defaultToken: 'invalid', // Will color unhandled characters red
-        tokenizer: {
-          root: [
-            // 1. Match a semicolon (delimiter)
-            //    This rule is simple and consumes one character.
-            [';', 'delimiter.semicolon'],
-
-            // 2. Match field content: One or more characters that are NOT a semicolon and NOT a newline.
-            //    The `+` is crucial: it ensures at least one character is consumed.
-            //    This should be placed AFTER specific delimiter rules.
-            [/[^;\r\n]+/, 'identifier'],
-
-            // 3. Optional: Match whitespace if you want to tokenize it separately (often not needed)
-            //    If not tokenized, it might become part of an 'identifier' if adjacent,
-            //    or 'invalid' if standalone between delimiters.
-            //    [/\s+/, 'white'] // For debugging, you can see what it does.
-          ]
-        }
-      });
-
-      // Define a basic theme for CSV
-      // In CsvLanguageDetector.registerProvider method, defineTheme:
-      monaco.editor.defineTheme(`${languageId}-theme`, {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-          { token: 'string.quoted.double', foreground: 'ce9178' }, // Orange-ish for strings
-          { token: 'string.quoted.single', foreground: 'ce9178' },
-          { token: 'delimiter.comma', foreground: 'd4d4d4', fontStyle: 'bold' },
-          { token: 'delimiter.tab', foreground: '6A9955', fontStyle: 'bold' },
-          { token: 'delimiter.semicolon', foreground: 'c586c0', fontStyle: 'bold' }, // Your CSV uses ;
-          { token: 'delimiter.pipe', foreground: '569cd6', fontStyle: 'bold' },
-          { token: 'identifier', foreground: '9cdcfe' },         // Light blue for field content
-          { token: 'comment', foreground: '6a9955' },            // If you add comment rule
-          { token: 'invalid', foreground: 'ff0000', fontStyle: 'italic' } // For defaultToken
-        ],
-        colors: {
-          'editor.foreground': '#d4d4d4'
-        }
-      });
     }
 
-    // Basic CSV formatter (trims fields) - can be improved
+    // Basic Monarch tokenizer for CSV/TSV (same as before, very generic)
+    monaco.languages.setMonarchTokensProvider(languageId, {
+      defaultToken: 'text.csv',
+      ignoreCase: true,
+      tokenizer: {
+        root: [
+          [/,/, 'delimiter.comma.csv'],
+          [/\t/, 'delimiter.tab.csv'],
+          [/;/, 'delimiter.semicolon.csv'],
+          [/\|/, 'delimiter.pipe.csv'],
+          [/"([^"\\]|\\.)*"/, 'string.quoted.double.csv'],
+          [/'([^'\\]|\\.)*'/, 'string.quoted.single.csv'],
+          [/[^,\t;|"'""\r\n]+/, 'identifier.csv'],
+          [/["']/, 'text.csv'],
+        ]
+      }
+    });
+
+    monaco.editor.defineTheme(`${languageId}-theme`, {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        { token: 'delimiter.comma.csv', foreground: 'D4D4D4', fontStyle: 'bold' },
+        { token: 'delimiter.tab.csv', foreground: '6A9955', fontStyle: 'bold' },
+        { token: 'delimiter.semicolon.csv', foreground: 'C586C0', fontStyle: 'bold' },
+        { token: 'delimiter.pipe.csv', foreground: '569CD6', fontStyle: 'bold' },
+        { token: 'string.quoted.double.csv', foreground: 'CE9178' },
+        { token: 'string.quoted.single.csv', foreground: 'CE9178' },
+        { token: 'identifier.csv', foreground: '9CDCFE' },
+        { token: 'text.csv', foreground: 'D4D4D4' },
+      ],
+      colors: {
+        'editor.foreground': '#d4d4d4'
+      }
+    });
+
+    // Basic CSV formatter
     monaco.languages.registerDocumentFormattingEditProvider(languageId, {
       provideDocumentFormattingEdits(model: any) {
         const content = model.getValue();
         const lines = content.split('\n');
-        let detectedDelimiter = ','; // Default
+        let detectedDelimiter = ',';
 
-        // Simple delimiter detection for formatting (could be more robust)
         if (lines.length > 0) {
           const header = lines[0];
-          if (header.includes('\t')) detectedDelimiter = '\t';
-          else if (header.includes(';')) detectedDelimiter = ';';
-          else if (header.includes('|')) detectedDelimiter = '|';
+          const counts = { ',': 0, '\t': 0, ';': 0, '|': 0 };
+          for (let char of header) {
+            if (char in counts) counts[char as keyof typeof counts]++;
+          }
+          let maxCount = 0;
+          for (const [delim, count] of Object.entries(counts)) {
+            if (count > maxCount) {
+              maxCount = count;
+              detectedDelimiter = delim;
+            }
+          }
+          if (maxCount === 0 && header.length > 0) detectedDelimiter = ''; // Single column
         }
 
         const formattedLines = lines.map((line: string) => {
-          if (!line.trim()) return '';
+          if (!line.trim()) return line; // Preserve empty lines
+          if (!detectedDelimiter) return line.trim();
+
           return line.split(detectedDelimiter)
             .map((field: string) => field.trim())
             .join(detectedDelimiter);
         });
 
+        let finalText = formattedLines.join('\n');
+        if (content.endsWith('\n') && finalText.trim() !== '') {
+            if (!finalText.endsWith('\n')) {
+                finalText += '\n';
+            }
+        } else {
+            finalText = finalText.trimEnd();
+        }
+
         return [{
           range: model.getFullModelRange(),
-          text: formattedLines.join('\n')
+          text: finalText
         }];
       }
     });

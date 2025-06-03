@@ -160,7 +160,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
             onChange={handleTokenChange}
             placeholder="Paste your JWT token here or drop a file..."
             rows={4}
-            className="w-full bg-transparent px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none"
+            className="w-full bg-transparent px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none custom-scrollbar"
             onClick={(e) => e.stopPropagation()}
             onFocus={(e) => e.stopPropagation()}
           />

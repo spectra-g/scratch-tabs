@@ -534,34 +534,34 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
           <div className="flex space-x-3">
             <button
               onClick={handleTest}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-md hover:bg-green-500/30 transition-colors"
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-md hover:bg-green-500/30 transition-colors"
               disabled={!sourceJson || !!sourceJsonError}
             >
-              <Play size={16} />
+              <Play size={14} />
               <span>Test</span>
             </button>
             <button
               onClick={handleGenerateCode}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-md hover:bg-purple-500/30 transition-colors"
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-md hover:bg-purple-500/30 transition-colors"
               disabled={!sourceJson || !!sourceJsonError}
             >
-              <FileCode size={16} />
+              <FileCode size={14} />
               <span>Generate Code</span>
             </button>
             <button
               onClick={handleExportRulesToCsv}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-teal-500/20 text-teal-400 rounded-md hover:bg-teal-500/30 transition-colors"
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-teal-500/20 text-teal-400 rounded-md hover:bg-teal-500/30 transition-colors"
               title="Export rules to CSV"
               disabled={rules.length === 0}
             >
-              <DownloadCloud size={16} />
+              <DownloadCloud size={14} />
               <span>Export CSV</span>
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
             >
-              <Save size={16} />
+              <Save size={14} />
               <span>Save</span>
             </button>
           </div>
@@ -710,7 +710,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                 transition-colors
               `}
             >
-              <Wand2 size={16} className={isAnalyzing ? 'animate-spin' : ''} />
+              <Wand2 size={14} className={isAnalyzing ? 'animate-spin' : ''} />
               <span>{isAnalyzing ? 'Analyzing...' : 'Analyze & Suggest Mappings'}</span>
             </button>
           </div>

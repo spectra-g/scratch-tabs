@@ -7,8 +7,6 @@ type UpdateTabLanguageFn = (tabId: string, language: string, locked: boolean) =>
 
 // Debounce delay in milliseconds
 const LANGUAGE_DETECTION_DEBOUNCE_MS = 400;
-// Minimum content length before considering an automatic lock
-const MIN_CONTENT_LENGTH_FOR_AUTO_LOCK = 50;
 // How many characters difference suggests a non-trivial change?
 const SIGNIFICANT_LENGTH_DIFFERENCE = 30;
 // How many lines difference suggests a non-trivial change?
@@ -26,7 +24,7 @@ export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => 
     newContent: string,
     prevContent: string,
     currentLanguage: string,
-    languageLocked: boolean // IMPORTANT: Rename parameter to clarify it's the USER lock
+    languageLocked: boolean // Whether the language is locked by the user
   ) => {
     // --- 1. Respect Manual Lock ---
     if (languageLocked) {
@@ -63,7 +61,7 @@ export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => 
 
     // --- 4. Perform Language Detection ---
     // Always detect unless manually locked or empty
-    const newDetectedLanguage = detectLanguage(trimmedNewContent); // Assuming returns { language: string, isAmbiguous: boolean }
+    const newDetectedLanguage = detectLanguage(trimmedNewContent);
     const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent); // Use the ambiguity result from detection
 
     // --- 5. Decide Whether to Update the Tab's Language ---
@@ -74,54 +72,39 @@ export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => 
       // This forces re-evaluation after pastes/replaces.
       if (newDetectedLanguage !== currentLanguage) {
         shouldUpdate = true;
-      } else {
       }
     } else {
       // For normal typing (non-significant change):
-      // Only update if the detected language is different AND the current language isn't already locked automatically.
-      // Or if switching away from plaintext.
-      // We need the tab's current *auto-lock* state here. Let's assume we can get it.
-      // For simplicity without direct access, we can be slightly less strict:
-      // Update if detected language changes, OR if we are currently plaintext.
-      if (newDetectedLanguage !== currentLanguage && currentLanguage === 'plaintext') {
-         shouldUpdate = true;
-      } else if (newDetectedLanguage !== currentLanguage) {
-         // Avoid flip-flopping if a language was previously auto-locked?
-         // This is tricky without knowing the current auto-lock state.
-         // Let's allow the update for now, the locking logic below will stabilize it.
-         shouldUpdate = true;
+      // Only update if the detected language is different and:
+      // 1. We're currently in plaintext mode, OR
+      // 2. The new detection is reasonably confident and not ambiguous
+      if (newDetectedLanguage !== currentLanguage) {
+        if (currentLanguage === 'plaintext' || !newDetectionIsAmbiguous) {
+          shouldUpdate = true;
+        }
       }
     }
 
-    // --- 6. Perform Update and Determine Auto-Lock State ---
+    // --- 6. Perform Update ---
     if (shouldUpdate) {
-      // Determine if the *new* state warrants an automatic lock
-      const contentIsSubstantial = trimmedNewContent.length >= MIN_CONTENT_LENGTH_FOR_AUTO_LOCK;
-      const shouldAutoLock =
-        newDetectedLanguage !== 'plaintext' && // Don't lock plaintext
-        !newDetectionIsAmbiguous &&           // Don't lock if detection is ambiguous
-        contentIsSubstantial;                 // Don't lock if content is too short
-
-      // Call the store function to update the language AND the automatic lock state.
-      // The store needs to handle clearing any previous auto-lock if shouldAutoLock is false.
-      updateTabLanguage(tabId, newDetectedLanguage, shouldAutoLock);
+      // Update the language with the lock parameter set to false to ensure user can override
+      updateTabLanguage(tabId, newDetectedLanguage, false);
     }
 
   }, [updateTabLanguage]); // Dependency: The store update function
 
   // Effect to setup/update the debounced function when the callback changes
   useEffect(() => {
-    // Create the debounced function based on the latest callback
+    // Create a new debounced function whenever performDetectionAndUpdate changes
     debouncedUpdateRef.current = debounce(performDetectionAndUpdate, LANGUAGE_DETECTION_DEBOUNCE_MS);
-
-    // Cleanup function: Cancel any pending invocation when the hook unmounts
-    // or when performDetectionAndUpdate changes (which happens if updateTabLanguage changes)
+    
     return () => {
-      debouncedUpdateRef.current?.cancel(); // Use optional chaining and cancel method if available
+      // Cleanup: cancel any pending debounced calls
+      debouncedUpdateRef.current?.cancel();
     };
-  }, [performDetectionAndUpdate]); // Re-create debounce if the core logic function changes
+  }, [performDetectionAndUpdate]);
 
-  // The function returned by the hook. It calls the debounced function held in the ref.
+  // Return a function to trigger the debounced detection when tab content changes
   const detectAndSetLanguage = useCallback((
     tabId: string,
     newContent: string,
@@ -129,9 +112,9 @@ export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => 
     currentLanguage: string,
     languageLocked: boolean
   ) => {
-    // Always call the *current* debounced function from the ref
+    // Directly invoke the latest debounced function stored in the ref
     debouncedUpdateRef.current?.(tabId, newContent, prevContent, currentLanguage, languageLocked);
-  }, []); // This function itself doesn't have dependencies as it relies on the ref
-
-  return {detectAndSetLanguage};
+  }, []); // No dependencies - will remain stable across renders
+  
+  return { detectAndSetLanguage };
 };

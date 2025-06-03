@@ -115,6 +115,51 @@ class LanguageRegistryImpl implements LanguageRegistry {
     });
   }
   
+  /**
+   * Get potential language matches for content
+   */
+  getPotentialMatches(content: string, limit: number = 5): Array<{
+    id: string;
+    name: string;
+    score: number;
+  }> {
+    if (!content || !content.trim()) {
+      // For empty content, return plaintext as the only match
+      const plaintext = this.getById('plaintext');
+      if (plaintext) {
+        return [{
+          id: 'plaintext',
+          name: plaintext.name,
+          score: 1.0
+        }];
+      }
+      return [];
+    }
+
+    const detectionResults: Array<{
+      id: string;
+      name: string;
+      score: number;
+    }> = [];
+
+    // Get matches from all detectors
+    for (const detector of this.detectors) {
+      const result = detector.detect(content);
+      if (result.match) {
+        detectionResults.push({
+          id: detector.id,
+          name: detector.name,
+          score: result.confidence
+        });
+      }
+    }
+
+    // Sort by confidence (descending)
+    detectionResults.sort((a, b) => b.score - a.score);
+
+    // Return the top N matches
+    return detectionResults.slice(0, limit);
+  }
 }
 
 // Create and export a singleton instance

@@ -1,7 +1,9 @@
+// File path: markdown.ts
+
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { DetectionResult, LanguageDetector } from './types';
-import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown";
+import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown"; // Assuming this path is correct
 
 const MAX_LINES_TO_ANALYZE_MD_FOR_YAML = 20;
 const MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE = 2; // Need at least 2 distinct MD features for good confidence
@@ -9,14 +11,14 @@ const MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE = 2; // Need at least 2 distinct MD f
 // YAML patterns (for exclusion/penalty in Markdown detector)
 const YAML_KEY_VALUE_REGEX = /^\s*(?:[\w.-]+|"[^"]*"|'[^']*')\s*:\s*(?:\||>|&|\*|\S.*|$)/m;
 const YAML_LIST_ITEM_REGEX = /^\s*-\s+(?!\[[ xX]\]).+/m; // YAML list item, excluding MD task list
-const YAML_DOC_START_REGEX = /^---\s*$/m; // THIS WILL BE USED NOW
-const YAML_DIRECTIVE_REGEX = /^%YAML\s+[\d.]+\s*$/m; // Added for completeness
+const YAML_DOC_START_REGEX = /^---\s*$/m;
+const YAML_DIRECTIVE_REGEX = /^%YAML\s+[\d.]+\s*$/m;
 
 export class MarkdownLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
   id = 'markdown';
   name = 'Markdown';
   extensions = ['md', 'markdown', 'mdown', 'mkd'];
-  priority = 4;
+  priority = 4; // Lower than YAML (5)
 
   sampleContent(): string {
     return `# Sample Markdown Document
@@ -44,7 +46,7 @@ Ordered list:
 3. Third item
 
 ### Links and Images
-
+[Visit OpenAI](https://www.openai.com)
 ![Sample Image](https://picsum.photos/200/300)
 
 ### Code
@@ -86,7 +88,7 @@ That's all for this sample!`;
       }
       if (endFrontmatterIndex !== -1 && endFrontmatterIndex + 1 < lines.length) {
         return lines.slice(endFrontmatterIndex + 1).join('\n');
-      } else if (endFrontmatterIndex !== -1) { // Only frontmatter was present
+      } else if (endFrontmatterIndex !== -1) {
         return "";
       }
     }
@@ -104,7 +106,6 @@ That's all for this sample!`;
     let strongMarkdownSignal = false;
     let yamlLikePenalty = 0.0;
 
-    // 1. Check for YAML frontmatter
     let frontmatterPresent = false;
     const contentForMainAnalysis = this.getContentWithoutFrontmatter(content);
 
@@ -112,10 +113,9 @@ That's all for this sample!`;
         frontmatterPresent = true;
         confidenceScore += 0.15;
         patternsMatched++;
-        strongMarkdownSignal = true;
+        strongMarkdownSignal = true; // Frontmatter is a specific MD (or Jekyll/etc.) feature
     }
 
-    // 2. Analyze content *after* potential frontmatter for YAML-like structure
     const mainLinesToAnalyze = contentForMainAnalysis.split('\n').slice(0, MAX_LINES_TO_ANALYZE_MD_FOR_YAML);
     const firstMainLineTrimmed = mainLinesToAnalyze[0]?.trim();
 
@@ -125,48 +125,51 @@ That's all for this sample!`;
     if (contentForMainAnalysis.trim().length > 0) {
         for (const line of mainLinesToAnalyze) {
             const currentLineTrimmed = line.trim();
-            if (!currentLineTrimmed || currentLineTrimmed.startsWith('#')) continue;
+            if (!currentLineTrimmed || currentLineTrimmed.startsWith('#')) continue; // YAML comments too
             nonCommentNonEmptyMainLines++;
             if (YAML_KEY_VALUE_REGEX.test(currentLineTrimmed) || YAML_LIST_ITEM_REGEX.test(currentLineTrimmed)) {
                 yamlLikeLineCount++;
             }
         }
-
         if (nonCommentNonEmptyMainLines > 1) {
             const yamlLikeRatio = yamlLikeLineCount / nonCommentNonEmptyMainLines;
-            if (yamlLikeRatio > 0.65 && yamlLikeLineCount >= 2) {
-                yamlLikePenalty += 0.5;
-            } else if (yamlLikeRatio > 0.45 && yamlLikeLineCount >= 1) {
-                yamlLikePenalty += 0.25;
-            }
+            if (yamlLikeRatio > 0.65 && yamlLikeLineCount >= 2) yamlLikePenalty += 0.5;
+            else if (yamlLikeRatio > 0.45 && yamlLikeLineCount >= 1) yamlLikePenalty += 0.25;
         }
-
         if (firstMainLineTrimmed && (YAML_DIRECTIVE_REGEX.test(firstMainLineTrimmed) || (YAML_DOC_START_REGEX.test(firstMainLineTrimmed) && !frontmatterPresent))) {
             yamlLikePenalty += 0.6;
         }
     }
     confidenceScore -= yamlLikePenalty;
 
-
-    // 3. Markdown Pattern Matching (on the full original content)
+    // --- MODIFIED markdownPatterns ---
     const markdownPatterns = [
+      // Strong, specific structural elements
       { pattern: /^(#{1,6})\s+.+/gm, weight: 0.25, perMatch: 0.05, specific: true, maxMatches: 5 },
-      { pattern: /\[[^\]]+?\]\([^\)]+?\)/g, weight: 0.20, perMatch: 0.04, specific: true, maxMatches: 5 },
-      { pattern: /!\[[^\]]*?\]\([^\)]+?\)/g, weight: 0.20, perMatch: 0.04, specific: true, maxMatches: 3 },
-      { pattern: /`{3,}(\w*\s*)?\n[\s\S]*?\n`{3,}/g, weight: 0.25, perMatch: 0.05, specific: true, maxMatches: 3 },
-      { pattern: /^- \[([ xX])\]\s+.+/gm, weight: 0.20, perMatch: 0.05, specific: true, maxMatches: 5 },
-      { pattern: /^(?:---|\*\*\*|___)\s*$/gm, weight: 0.15, perMatch: 0.05, specific: true, maxMatches: 2 },
-      { pattern: /^\s*>\s+.*/gm, weight: 0.15, perMatch: 0.03, maxMatches: 5 },
-      { pattern: /^\s*([-*+])\s+(?!\[[ xX]\]).+/gm, weight: 0.1, perMatch: 0.02, maxMatches: 10 },
-      { pattern: /^\s*\d+\.\s+.*/gm, weight: 0.1, perMatch: 0.02, maxMatches: 10 },
-      { pattern: /\*\*([^\s*](?:[^*]*[^\s*])?)\*\*|\_\_([^\s_](?:[^_]*[^\s_])?)\_\_/g, weight: 0.05, perMatch: 0.01, maxMatches: 10 },
-      { pattern: /(?<![\*_])\*([^\s*](?:[^*]*[^\s*])?)\*(?![\*_])|(?<![\*_])_([^\s_](?:[^_]*[^\s_])?)_(?![\*_])/g, weight: 0.05, perMatch: 0.01, maxMatches: 10 },
-      { pattern: /`([^`\n]+?)`/g, weight: 0.05, perMatch: 0.01, maxMatches: 10 },
-      { pattern: /<https?:\/\/[^\s>]+>/g, weight: 0.1, perMatch: 0.02, maxMatches: 3},
-      { pattern: /^\s*\|(?:[^|\n]+\|)+/gm, weight: 0.15, perMatch: 0.03, specific: true, maxMatches: 3 },
+      { pattern: /\[[^\]]+?\]\([^\)]+?\)/g, weight: 0.25, perMatch: 0.04, specific: true, maxMatches: 5 },
+      { pattern: /!\[[^\]]*?\]\([^\)]+?\)/g, weight: 0.25, perMatch: 0.04, specific: true, maxMatches: 3 },
+      { pattern: /`{3,}(\w*\s*)?\n[\s\S]*?\n`{3,}/g, weight: 0.30, perMatch: 0.05, specific: true, maxMatches: 3 },
+      { pattern: /^- \[([ xX])\]\s+.+/gm, weight: 0.25, perMatch: 0.05, specific: true, maxMatches: 5 },
+      { pattern: /^(?:---|\*\*\*|___)\s*$/gm, weight: 0.20, perMatch: 0.05, specific: true, maxMatches: 2 },
+      { pattern: /^\s*\|(?:[^|\n]+\|)+/gm, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 3 },
+
+      // Common, fairly specific elements
+      { pattern: /^\s*>\s+.*/gm, weight: 0.20, perMatch: 0.03, specific: true, maxMatches: 5 },
+      { pattern: /^\s*([-*+])\s+(?!\[[ xX]\]).+/gm, weight: 0.20, perMatch: 0.02, specific: true, maxMatches: 10 },
+      { pattern: /^\s*\d+\.\s+.*/gm, weight: 0.20, perMatch: 0.02, specific: true, maxMatches: 10 },
+
+      // Inline elements
+      // Corrected bold regex to not be overly greedy with initial/trailing spaces
+      { pattern: /\*\*([^\s*].*?[^\s*])\*\*|\_\_([^\s_].*?[^\s_])\_\_/g, weight: 0.15, perMatch: 0.01, specific: true, maxMatches: 10 },
+      // Corrected italic regex
+      { pattern: /(?<![\w*_])\*([^\s*].*?[^\s*])\*(?![\w*_])|(?<![\w*_])_([^\s_].*?[^\s_])_(?![\w*_])/g, weight: 0.15, perMatch: 0.01, specific: true, maxMatches: 10 },
+      { pattern: /`([^`\n]+?)`/g, weight: 0.10, perMatch: 0.01, specific: true, maxMatches: 10 },
+      { pattern: /<https?:\/\/[^\s>]+>/g, weight: 0.15, perMatch: 0.02, specific: true, maxMatches: 3}, // Made specific
     ];
 
     let specificMarkdownFeaturesFound = 0;
+    if (frontmatterPresent) specificMarkdownFeaturesFound++; // Frontmatter counts as one specific feature
+
     for (const p of markdownPatterns) {
       const matches = content.match(p.pattern);
       if (matches) {
@@ -180,34 +183,39 @@ That's all for this sample!`;
         }
       }
     }
-    
+
     if (specificMarkdownFeaturesFound > 0) strongMarkdownSignal = true;
 
     // Adjustments
     if (specificMarkdownFeaturesFound >= MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE) {
         confidenceScore += 0.25;
-    } else if (patternsMatched > 0 && specificMarkdownFeaturesFound < MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE && yamlLikePenalty < 0.1) {
+    } else if (patternsMatched > 0 && specificMarkdownFeaturesFound < MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE && yamlLikePenalty < 0.1 && !frontmatterPresent) {
+        // Only penalize if no frontmatter and low specific features, even if some general patterns matched
         confidenceScore *= 0.7;
     }
 
     const lines = content.split('\n');
-    if (lines.length > 5 && patternsMatched < 2 && specificMarkdownFeaturesFound === 0 && yamlLikePenalty < 0.1) {
+    // If it's many lines but very few MD patterns were found (and not much YAML penalty), it's likely prose.
+    if (lines.length > 10 && patternsMatched < 2 && specificMarkdownFeaturesFound === 0 && yamlLikePenalty < 0.1 && !frontmatterPresent) {
         const avgLineLength = trimmedContent.length / lines.length;
-        if (avgLineLength > 30 && avgLineLength < 120) {
-            confidenceScore = Math.max(0.05, confidenceScore - 0.15);
+        // Average line length for English prose is around 15-20 words, assume ~5 chars/word + spaces = 75-120 chars
+        if (avgLineLength > 30 && avgLineLength < 150) { // Heuristic for prose-like lines
+            confidenceScore = Math.max(0.05, confidenceScore - 0.25); // More aggressive penalty
         }
     }
-    
+
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    const isMatch = (strongMarkdownSignal && confidenceScore >= 0.30 && yamlLikePenalty < 0.3) ||
-                    (confidenceScore >= 0.40 && patternsMatched >= 2 && specificMarkdownFeaturesFound >=1 && yamlLikePenalty < 0.2) ||
-                    (confidenceScore >= 0.20 && frontmatterPresent && patternsMatched >=1 && yamlLikePenalty < 0.4);
+    const isMatch = (strongMarkdownSignal && confidenceScore >= 0.30 && yamlLikePenalty < 0.4) || // Lowered YAML penalty threshold here
+                    (confidenceScore >= 0.45 && patternsMatched >= 2 && specificMarkdownFeaturesFound >=1 && yamlLikePenalty < 0.3) || // General case
+                    (confidenceScore >= 0.25 && frontmatterPresent && patternsMatched >=1 && yamlLikePenalty < 0.5); // Frontmatter case
+
+    // console.log(`Markdown detect: score=${confidenceScore.toFixed(3)}, patternsMatched=${patternsMatched}, specificFound=${specificMarkdownFeaturesFound}, yamlPenalty=${yamlLikePenalty.toFixed(3)}, isMatch=${isMatch}`);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongMarkdownSignal && confidenceScore > 0.55 && yamlLikePenalty < 0.2
+      matchedDefinitive: isMatch && strongMarkdownSignal && confidenceScore > 0.55 && yamlLikePenalty < 0.25 // Adjusted definitive
     };
   }
 
@@ -215,47 +223,46 @@ That's all for this sample!`;
     return 'md';
   }
 
-  // registerProvider and getStatusItem remain the same
   registerProvider(monaco: any): void {
     const languageId = this.id;
     if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
       monaco.languages.register({ id: languageId });
     }
-    // Monaco has excellent built-in Markdown support, including a decent tokenizer.
-    // A custom formatter can be useful for consistency.
     monaco.languages.registerDocumentFormattingEditProvider('markdown', {
       provideDocumentFormattingEdits(model: any) {
         const content = model.getValue();
-        // Basic Markdown formatting - this is a simplified heuristic.
-        // For robust formatting, consider integrating a library like Prettier or remark-format.
         let formatted = content;
-
-        // Ensure space after headers
         formatted = formatted.replace(/^(#{1,6})([^\s#])/gm, '$1 $2');
-
-        // Ensure space after list markers
         formatted = formatted.replace(/^(\s*[-*+]\s*)([^\s])/gm, '$1 $2');
         formatted = formatted.replace(/^(\s*\d+\.\s*)([^\s])/gm, '$1 $2');
-
-        // Ensure space around task list checkboxes
         formatted = formatted.replace(/^- \[( ?[xX]? ?)\]([^\s])/gmi, '- [$1] $2');
         formatted = formatted.replace(/^- \[( ?[xX]? ?)\](\S)/gmi, '- [$1] $2');
-
-
-        // Normalize horizontal rules
         formatted = formatted.replace(/^\s*([-*_])\s*\1\s*\1\s*$/gm, '---');
-
-        // Add blank lines around fenced code blocks if missing
-        formatted = formatted.replace(/(\S)\n(```)/g, '$1\n\n$2');
-        formatted = formatted.replace(/(```)\n(\S)/g, '$1\n\n$2');
-
-        // Consistent newlines: Ensure single blank line between paragraphs/blocks, no more than one.
+        // Ensure single blank line between paragraphs/blocks, no more than one.
+        // More careful: don't add blank lines inside code blocks or list items that might be multi-line.
+        // This is a simple version:
         formatted = formatted.replace(/\n{3,}/g, '\n\n');
 
+        // Add blank lines around fenced code blocks if missing
+        // This should be done carefully to avoid breaking indentation inside the block
+        // Using a function for replacement to check context would be safer, but for simplicity:
+        formatted = formatted.replace(/(\S)\n(```)/g, (match, p1, p2) => {
+            if (p1.match(/^\s*$/)) return match; // If p1 is already whitespace, don't add more
+            return `${p1}\n\n${p2}`;
+        });
+        formatted = formatted.replace(/(```)\n(\S)/g, (match, p1, p2) => {
+            if (p2.match(/^\s*$/)) return match;
+            return `${p1}\n\n${p2}`;
+        });
+
+        let finalFormatted = formatted.trim();
+        if (content.endsWith('\n') && finalFormatted !== '') {
+             finalFormatted += '\n';
+        }
 
         return [{
           range: model.getFullModelRange(),
-          text: formatted.trim() + (content.endsWith('\n') && formatted.trim() !== '' ? '\n' : '')
+          text: finalFormatted
         }];
       }
     });
@@ -266,14 +273,9 @@ That's all for this sample!`;
   }
 }
 
-// Create and register the detector
 const markdownDetector = new MarkdownLanguageDetector();
 languageRegistry.register(markdownDetector);
 
-// Preload samples for future use
-// markdownDetector.preloadDynamicSample(); // If you implement dynamic samples for MD
-
-// Export for backward compatibility
 export const registerMarkdownProvider = (monaco: any) => {
   markdownDetector.registerProvider(monaco);
 };
