@@ -131,19 +131,15 @@ export const VaultTablet: Tablet = {
       return sortItems(filteredItems, state.data.sortOrder);
     }, [filteredItems, state.data.sortOrder, preserveOrder, manualOrder]);
 
-    // Store the current order when sort order changes
-    useEffect(() => {
-      if (sortedItems.length > 0) {
-        setManualOrder(sortedItems.map(item => item.id));
-      }
-    }, [state.data.sortOrder, sortedItems]);
-
     // Initialize manual order when items change
     useEffect(() => {
       if (!preserveOrder && sortedItems.length > 0) {
-        setManualOrder(sortedItems.map(item => item.id));
+        const newManualOrderIds = sortedItems.map(item => item.id);
+        if (JSON.stringify(newManualOrderIds) !== JSON.stringify(manualOrder)) {
+          setManualOrder(newManualOrderIds);
+        }
       }
-    }, [state.data.items, preserveOrder, sortedItems]);
+    }, [state.data.items, state.data.activeFilters, state.data.sortOrder, preserveOrder, sortedItems, manualOrder]);
 
     // Get all unique labels across all items
     const allLabels = useMemo(() => {
