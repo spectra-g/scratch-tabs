@@ -22,7 +22,7 @@ interface SortableTabProps {
     onMouseLeaveTab: (tabId: string) => void;
 }
 
-const MIN_WIDTH_FOR_X = 20; // pixels
+const MIN_WIDTH_FOR_X = 50;
 const EDITING_INPUT_MIN_WIDTH = '150px';
 
 export const SortableTab: React.FC<SortableTabProps> = ({
@@ -89,7 +89,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
             resizeObserver.unobserve(tabElement);
             resizeObserver.disconnect();
         };
-    }, [tabElement]); // Dependency on tabElement instead of empty array
+    }, [tabElement]);
 
     useEffect(() => {
         if (isEditing && inputRef.current) {
@@ -140,7 +140,9 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         onMouseLeaveTab(tab.id);
     };
 
-    const showCloseButton = !tab.isPinned && (isActive || currentWidth > MIN_WIDTH_FOR_X);
+    // Better logic: show X if tab has reasonable width OR if it's the active tab
+    // This ensures active tab always has close button unless severely constrained
+    const showCloseButton = !tab.isPinned && (currentWidth > MIN_WIDTH_FOR_X || (isActive && currentWidth > 35));
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         // If we're editing or it's a right-click, don't activate
@@ -156,9 +158,13 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         <>
             <div
                 ref={setRefs}
-                className={`tab-item relative flex items-center flex-shrink-0 px-1 py-1 cursor-pointer border-r border-gray-700 text-xs ${
-                    isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
-                } ${isDragging && !tab.isPinned ? 'bg-blue-500 text-white' : ''}`}
+                className={`tab-item relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
+                    ${isActive 
+                        ? 'bg-gray-600/90 text-gray-100 border-b-2 border-blue-400 shadow-sm'
+                        : 'text-gray-300 hover:text-gray-100 hover:bg-gray-700/40 border-b-2 border-transparent'
+                    }
+                    ${isDragging && !tab.isPinned ? 'bg-blue-500/90 text-white shadow-md scale-105' : ''}
+                    border-r-2 border-r-gray-700/90 backdrop-blur-sm`}
                 style={style}
                 onClick={() => !isEditing && onClick()}
                 onMouseDown={handleMouseDown}
@@ -172,14 +178,14 @@ export const SortableTab: React.FC<SortableTabProps> = ({
             >
                 {!tab.isTablet && lineCount > 0 && !isEditing && (
                     <div
-                        className="absolute left-0 bottom-0 h-0.5 bg-gray-500 opacity-50"
+                        className="absolute left-0 bottom-0 h-0.5 bg-blue-400/60 opacity-70 rounded-r-sm"
                         style={{ width: `${relativeWidth}%` }}
                         aria-hidden="true"
                     />
                 )}
 
                 {tab.isPinned && (
-                    <Pin size={12} className="flex-shrink-0 text-blue-400 mr-1" />
+                    <Pin size={11} className="flex-shrink-0 text-yellow-400/90 mr-1.5 drop-shadow-sm" />
                 )}
 
                 <div className={`flex-1 min-w-0 flex items-center ${showCloseButton ? 'mr-1' : ''}`}>
@@ -210,19 +216,15 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                     />
                 )}
 
-                {!isEditing && (
-                    <>
-                        {!tab.isPinned && showCloseButton && (
-                            <button
-                                className="flex-shrink-0 hover:bg-gray-600 rounded p-0.5 ml-auto"
-                                onClick={handleCloseClick}
-                                aria-label={`Close tab ${tab.title}`}
-                                title={`Close tab ${tab.title}`}
-                            >
-                                <X size={12} />
-                            </button>
-                        )}
-                    </>
+                {!isEditing && showCloseButton && (
+                    <button
+                        className="flex-shrink-0 hover:bg-gray-600/80 rounded-sm transition-all duration-150 hover:text-red-300"
+                        onClick={handleCloseClick}
+                        aria-label={`Close tab ${tab.title}`}
+                        title={`Close tab ${tab.title}`}
+                    >
+                        <X size={11} />
+                    </button>
                 )}
             </div>
 
