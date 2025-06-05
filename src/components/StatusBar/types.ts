@@ -3,3 +3,9 @@ export interface StatusItemProps {
   className?: string;
   content?: string;
 }
+
+export interface PopupMenuItem {
+  id: string;
+  name: string;
+  isSeparator?: boolean;
+}

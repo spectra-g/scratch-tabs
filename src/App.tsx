@@ -9,6 +9,7 @@ import DragDropOverlay from './components/DragDropOverlay';
 initializeLanguageProviders();
 
 const MainLayout = React.lazy(() => import('./components/Layout/MainLayout'));
+// const OGWelcomeScreen = React.lazy(() => import('./components/Welcome/OGWelcomeScreen').then(module => ({ default: module.OGWelcomeScreen })));
 
 const AppLoadingFallback = () => (
   <div className="app-loading-container">
@@ -43,6 +44,14 @@ function App() {
     <BrowserRouter>
       <DragDropOverlay />
       <Routes>
+        {/* <Route
+          path="/og-image"
+          element={
+            <Suspense fallback={<AppLoadingFallback />}>
+              <OGWelcomeScreen />
+            </Suspense>
+          }
+        /> */}
         <Route
           path="/:identifier?"
           element={
