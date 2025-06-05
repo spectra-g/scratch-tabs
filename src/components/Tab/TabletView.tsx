@@ -1,6 +1,8 @@
 import React, { memo, useMemo } from 'react';
 import { tabletRegistry } from '../../tablets';
 import { Tab } from '../../types.ts';
+import { TabletErrorBoundary } from '../Tablet/TabletErrorBoundary';
+import { useRootStore } from '../../stores';
 
 interface TabletViewProps {
   tab: Tab;
@@ -29,13 +31,15 @@ function getTabletComponent(tabletId: string) {
 
 // Memoized wrapper to prevent unnecessary re-renders
 const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
+  const { removeTab } = useRootStore();
+  
   if (!tab.isTablet || !tab.tabletState) {
     return null;
   }
   
   const state = useMemo(() => {
     try {
-      return JSON.parse(tab.tabletState);
+      return JSON.parse(tab.tabletState || '{}');
     } catch (e) {
       console.error('Failed to parse tablet state:', e);
       return null;
@@ -60,13 +64,31 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     );
   }
 
+  // Error boundary recovery functions
+  const handleCloseTab = () => {
+    removeTab(tab.id);
+  };
+
+  const handleRetry = () => {
+    // Force a re-render by updating the tab state slightly
+    onChange(tab.tabletState || '{}');
+  };
+
   return (
-    <div className="h-full">
-      <TabletComponent
-        state={state}
-        onChange={(newState) => onChange(JSON.stringify(newState))}
-      />
-    </div>
+    <TabletErrorBoundary
+      tabletType={state.type || 'unknown'}
+      tabletId={tab.id}
+      tabletState={tab.tabletState}
+      onCloseTab={handleCloseTab}
+      onRetry={handleRetry}
+    >
+      <div className="h-full">
+        <TabletComponent
+          state={state}
+          onChange={(newState) => onChange(JSON.stringify(newState))}
+        />
+      </div>
+    </TabletErrorBoundary>
   );
 });
 
