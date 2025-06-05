@@ -3,7 +3,7 @@ import { useAIStore } from "../../stores/aiStore";
 import {
   Brain,
   ChevronLeft, ChevronLeftSquare, ChevronRight, ChevronRightSquare, Copy, Edit3, FileCode, GitCompare,
-  Layers, Maximize, Split, XCircle, ClipboardPaste, Pin, Download, History
+  Layers, Maximize, Split, XCircle, ClipboardPaste, Pin, Download, History, ExternalLink
 } from 'lucide-react';
 import { LanguageSelector } from "./LanguageSelector";
 import { languageRegistry } from '../../languages';
@@ -210,6 +210,66 @@ export const useContextMenuConfig = (
     return "Summarize";
   }
 
+  const generateGitHubIssueUrl = (tab: any) => {
+    const title = `Tab Issue Report: ${tab.title || 'Untitled'}`;
+    
+    const body = `**Problem Description**
+Please describe the issue you encountered with this tab.
+
+**Tab Details**
+- **Title**: ${tab.title || 'Untitled'}
+- **Language**: ${tab.language || 'Unknown'}
+- **Type**: ${tab.isTablet ? 'Tablet' : 'Editor'}
+- **Created**: ${tab.dateCreated ? new Date(tab.dateCreated).toISOString() : 'Unknown'}
+- **Last Modified**: ${tab.lastModified ? new Date(tab.lastModified).toISOString() : 'Unknown'}
+- **Workspace ID**: ${tab.workspaceId || 'Unknown'}
+- **Is Pinned**: ${tab.isPinned ? 'Yes' : 'No'}
+- **Language Locked**: ${tab.languageLocked ? 'Yes' : 'No'}
+- **Browser**: ${navigator.userAgent}
+
+**Steps to Reproduce**
+1. 
+2. 
+3. 
+
+**Expected Behavior**
+What you expected to happen.
+
+**Actual Behavior**
+What actually happened.
+
+**Additional Context**
+Add any other context about the problem here.
+`;
+
+    const params = new URLSearchParams({
+      title,
+      body,
+      labels: 'bug,tab-issue'
+    });
+
+    return `https://github.com/spectra-g/scratch-tabs-feedback/issues/new?${params.toString()}`;
+  };
+
+  const handleReportIssue = () => {
+    if (tab) {
+      const githubUrl = generateGitHubIssueUrl(tab);
+      window.open(githubUrl, '_blank', 'noopener,noreferrer');
+    }
+    closeContextMenu();
+  };
+
+  const handleCopyContent = async () => {
+    if (tab && !tab.isTablet) {
+      try {
+        await navigator.clipboard.writeText(tab.content);
+      } catch (error) {
+        console.error('Failed to copy content to clipboard:', error);
+      }
+    }
+    closeContextMenu();
+  };
+
   const menuItems: MenuItem[] = [
     {
       id: 'summarize',
@@ -224,6 +284,13 @@ export const useContextMenuConfig = (
       icon: Edit3,
       action: handleRename,
       condition: canRename,
+    },
+    {
+      id: 'copyContent',
+      label: 'Copy content',
+      icon: Copy,
+      action: handleCopyContent,
+      condition: !!tab && !tab.isTablet,
     },
     {
       id: 'fromSample',
@@ -369,6 +436,13 @@ export const useContextMenuConfig = (
         tabId
       ),
       condition: canCloseToRight,
+    },
+    { id: 'sep3', isSeparator: true },
+    {
+      id: 'reportIssue',
+      label: 'Report issue',
+      icon: ExternalLink,
+      action: handleReportIssue,
     },
   ];
 
