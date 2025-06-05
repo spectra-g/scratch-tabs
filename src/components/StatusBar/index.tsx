@@ -6,11 +6,12 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Tab } from "../../types.ts";
 import { AIStatusIcon } from '../AI/AIStatusIcon';
 import { useRootStore } from '../../stores';
-import { Search, Coffee, ChevronDown } from 'lucide-react';
+import { Search, Coffee } from 'lucide-react';
 import { useSearchStore } from '../../stores/searchStore';
 import { languageRegistry } from '../../languages';
 import { getPotentialLanguageMatches } from '../../languages';
 import { LanguageSelectionPopup } from './LanguageSelectionPopup';
+import type { PopupMenuItem } from './types';
 
 interface StatusBarProps {
   editor: monaco.editor.IStandaloneCodeEditor | null,
@@ -23,7 +24,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const languageLabelRef = useRef<HTMLDivElement>(null);
-  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
 
   const showAIIcon = (!splitView.isSplit && side === 'left') || (splitView.isSplit && side === 'right');
 
@@ -47,48 +47,78 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
   const LanguageOptionsMenu = activeTab && !activeTab.isTablet ? 
     getLanguageOptionsMenu(activeTab.language, editor) : null;
 
-  // Get potential language matches for the current content
-  const potentialLanguages = useMemo(() => {
-    if (!activeTab || activeTab.isTablet) return [];
-    return getPotentialLanguageMatches(activeTab.content);
-  }, [activeTab]);
-
-  // Get languages to display in the popup
-  const getPopupLanguages = () => {
+  // Get languages to display in the popup with the new ordering rules
+  const getPopupLanguages = (): PopupMenuItem[] => {
     if (!activeTab || activeTab.isTablet) return [];
 
-    let languages = [];
+    const allLangs = languageRegistry.getAll().map(lang => ({ 
+      id: lang.id, 
+      name: lang.name, 
+      isSeparator: false 
+    })).sort((a, b) => a.name.localeCompare(b.name));
     
-    if (activeTab.languageLocked) {
-      // If language is locked, show other potential matches excluding the current language
-      languages = potentialLanguages.filter(lang => lang.id !== activeTab.language);
-    } else if (activeTab.content.trim() === '') {
-      // If content is empty and not locked, show all languages
-      languages = languageRegistry.getAll().map(lang => ({
-        id: lang.id,
-        name: lang.name
-      }));
-    } else {
-      // If content is not empty and not locked, show potential matches
-      languages = [...potentialLanguages];
+    const potentialMatches = getPotentialLanguageMatches(activeTab.content);
+    const isLocked = activeTab.languageLocked;
+    const currentLanguageId = activeTab.language;
+    const popupList: PopupMenuItem[] = [];
+
+    const plaintextEntry = allLangs.find(l => l.id === 'plaintext');
+    const isCurrentlyPlaintext = currentLanguageId === 'plaintext';
+
+    // Scenario A: Locked, empty, or no real suggestions (just plaintext)
+    if (isLocked || !activeTab.content.trim() || potentialMatches.length === 0 || 
+        (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
+      
+      // Add plaintext first if it's not the current language
+      if (plaintextEntry && !isCurrentlyPlaintext) {
+        popupList.push(plaintextEntry);
+      }
+      
+      // Add all other languages except plaintext and current language
+      popupList.push(...allLangs.filter(l => 
+        l.id !== 'plaintext' && l.id !== currentLanguageId
+      ));
+      
+      return popupList;
     }
-    
-    // Sort alphabetically by name
-    return languages.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Scenario B: Suggestions found, not locked
+    const topSuggestionInStatusBar = potentialMatches[0]; // This is already displayed
+    const otherSuggestions = potentialMatches.slice(1)
+                                .filter(s => s.id !== topSuggestionInStatusBar.id);
+
+    // 1. Suggested languages group at the TOP
+    // Second-best suggestion first, then third-best, etc.
+    popupList.push(...otherSuggestions.map(s => ({ 
+      id: s.id, 
+      name: s.name, 
+      isSeparator: false 
+    })));
+
+    // Add Plaintext at the bottom of the suggestions group if it's not current language
+    if (plaintextEntry && !isCurrentlyPlaintext) {
+      popupList.push(plaintextEntry);
+    }
+
+    // 2. Separator line
+    popupList.push({ id: 'sep1', name: '-', isSeparator: true });
+
+    // 3. All other non-suggested languages (alphabetical)
+    // Exclude plaintext, topSuggestion, otherSuggestions, and current language
+    const nonSuggestedLangs = allLangs.filter(lang =>
+      lang.id !== 'plaintext' &&
+      lang.id !== topSuggestionInStatusBar.id &&
+      lang.id !== currentLanguageId &&
+      !otherSuggestions.some(s => s.id === lang.id)
+    );
+    popupList.push(...nonSuggestedLangs);
+
+    return popupList;
   };
 
   // Handle opening the language popup
   const handleOpenLanguagePopup = () => {
-    if (languageLabelRef.current && !activeTab.isTablet) {
-      const rect = languageLabelRef.current.getBoundingClientRect();
-      
-      // Just use the actual element position - the popup component will
-      // position itself correctly above the element
-      setPopupPosition({
-        top: rect.top,
-        left: rect.left
-      });
-      
+    if (!activeTab.isTablet) {
       // Always ensure we close any existing popup before opening a new one
       setShowLanguagePopup(false);
       
@@ -107,81 +137,68 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     setShowLanguagePopup(false);
   };
 
-  // Render the language section
+  // Render the language section with new simplified logic
   const renderLanguageSection = () => {
-    if (!activeTab || activeTab.isTablet) {
+    if (!activeTab) return null;
+
+    if (activeTab.isTablet) {
       return <span className="capitalize">{tabletLabel}</span>;
     }
 
-    const currentLanguage = languageRegistry.getById(activeTab.language);
-    const languageName = currentLanguage?.name || activeTab.language;
-    
-    if (activeTab.languageLocked) {
-      // Locked language
-      const hasAlternatives = potentialLanguages.some(lang => lang.id !== activeTab.language);
-      return (
-        <div 
-          ref={languageLabelRef}
-          onClick={hasAlternatives ? handleOpenLanguagePopup : undefined}
-          className={`flex items-center ${hasAlternatives ? 'cursor-pointer hover:bg-gray-700' : ''} px-1.5 py-0.5 rounded`}
-        >
-          <span className="capitalize">{languageName}</span>
-          {hasAlternatives && (
-            <span className="ml-1 text-blue-400 text-xs">.</span>
-          )}
-        </div>
-      );
-    } else if (activeTab.content.trim() === '') {
-      // Empty content, not locked - always show dropdown since all languages are available
-      return (
-        <div 
-          ref={languageLabelRef}
-          onClick={handleOpenLanguagePopup}
-          className="flex items-center cursor-pointer hover:bg-gray-700 px-1.5 py-0.5 rounded"
-        >
-          <span className="capitalize">Plaintext</span>
-          <span className="ml-1 text-gray-400">?</span>
-        </div>
-      );
-    } else {
-      // Content present, not locked, show suggestions
-      const topSuggestions = potentialLanguages.slice(0, 3);
-      
-      if (topSuggestions.length === 0) {
-        // No language suggestions - show plaintext with a question mark but no dropdown
-        return (
-          <div ref={languageLabelRef} className="flex items-center px-1.5 py-0.5 rounded">
-            <span className="capitalize">Plaintext</span>
-            <span className="ml-1 text-gray-400">?</span>
-          </div>
-        );
+    // Language Info
+    const currentLanguageId = activeTab.language;
+    const currentLanguageObject = languageRegistry.getById(currentLanguageId);
+    const currentLanguageName = currentLanguageObject?.name || currentLanguageId;
+    const isLocked = activeTab.languageLocked;
+    const potentialMatches = getPotentialLanguageMatches(activeTab.content);
+
+    let displayLabel = "Plaintext";
+    let showDotIndicator = false;
+
+    if (isLocked) {
+      displayLabel = currentLanguageName;
+      // For locked languages, show alternatives if content is ambiguous or different
+      const hasAlternatives = potentialMatches.length > 0 && potentialMatches.some(lang => lang.id !== currentLanguageId);
+      if (hasAlternatives) {
+         showDotIndicator = true; // Show a dot if alternatives exist even when locked
       }
-      
-      // Check if there are more languages beyond what we're displaying
-      const hasMoreLanguages = potentialLanguages.length > topSuggestions.length;
-      
-      return (
-        <div ref={languageLabelRef} className="flex items-center space-x-2">
-          {topSuggestions.map((lang, index) => (
-            <button
-              key={lang.id}
-              onClick={() => handleSelectLanguage(lang.id)}
-              className="hover:bg-gray-700 px-1.5 py-0.5 rounded text-gray-300"
-            >
-              {lang.name}{index === topSuggestions.length - 1 ? '?' : ''}
-            </button>
-          ))}
-          {hasMoreLanguages && (
-            <button
-              onClick={handleOpenLanguagePopup}
-              className="hover:bg-gray-700 px-1 rounded text-gray-400"
-            >
-              <ChevronDown size={12} />
-            </button>
+    } else if (!activeTab.content.trim()) {
+      displayLabel = "Plaintext"; // Already default
+    } else if (potentialMatches.length === 0 || (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
+      displayLabel = "Plaintext";
+    } else {
+      const topSuggestion = potentialMatches[0];
+      displayLabel = topSuggestion.name;
+      if (potentialMatches.length > 1 && topSuggestion.id !== 'plaintext') {
+        showDotIndicator = true;
+      }
+    }
+
+    return (
+      <div className="relative">
+        <div
+          ref={languageLabelRef}
+          onClick={handleOpenLanguagePopup} // Always open popup on click
+          className="flex items-center cursor-pointer hover:bg-gray-700/50 px-1.5 py-0.5 rounded transition-colors"
+          title="Change language"
+        >
+          <span className="capitalize">{displayLabel}</span>
+          {showDotIndicator && (
+            <span className="ml-1 text-blue-400 text-xs leading-none">•</span>
           )}
         </div>
-      );
-    }
+        
+        {/* Language Selection Popup */}
+        {showLanguagePopup && (
+          <LanguageSelectionPopup
+            languages={getPopupLanguages()}
+            onSelectLanguage={handleSelectLanguage}
+            onClose={() => setShowLanguagePopup(false)}
+            title={activeTab?.languageLocked ? "Other Language Options" : "Select Language"}
+          />
+        )}
+      </div>
+    );
   };
 
   return (
@@ -222,18 +239,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
         {showAIIcon && <AIStatusIcon />}
         <Macro editor={editor}/>
       </div>
-      
-      {/* Language Selection Popup */}
-      {showLanguagePopup && (
-        <LanguageSelectionPopup
-          languages={getPopupLanguages()}
-          onSelectLanguage={handleSelectLanguage}
-          onClose={() => setShowLanguagePopup(false)}
-          position={popupPosition}
-          showScores={false}
-          title={activeTab?.languageLocked ? "Other Language Options" : "Select Language"}
-        />
-      )}
     </div>
   );
 };
