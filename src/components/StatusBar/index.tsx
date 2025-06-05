@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef } from 'react';
 import { getLanguageStatusItem, getLanguageOptionsMenu } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
@@ -62,7 +62,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     const currentLanguageId = activeTab.language;
     const popupList: PopupMenuItem[] = [];
 
-    const plaintextEntry = allLangs.find(l => l.id === 'plaintext');
+    // Manually ensure plaintext is always available (it might not be in the registry)
+    const plaintextEntry = allLangs.find(l => l.id === 'plaintext') || 
+                           { id: 'plaintext', name: 'Plaintext', isSeparator: false };
     const isCurrentlyPlaintext = currentLanguageId === 'plaintext';
 
     // Scenario A: Locked, empty, or no real suggestions (just plaintext)
@@ -75,9 +77,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
       }
       
       // Add all other languages except plaintext and current language
-      popupList.push(...allLangs.filter(l => 
+      const otherLangs = allLangs.filter(l => 
         l.id !== 'plaintext' && l.id !== currentLanguageId
-      ));
+      );
+      popupList.push(...otherLangs);
       
       return popupList;
     }
@@ -89,11 +92,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
 
     // 1. Suggested languages group at the TOP
     // Second-best suggestion first, then third-best, etc.
-    popupList.push(...otherSuggestions.map(s => ({ 
+    const suggestionItems = otherSuggestions.map(s => ({ 
       id: s.id, 
       name: s.name, 
       isSeparator: false 
-    })));
+    }));
+    popupList.push(...suggestionItems);
 
     // Add Plaintext at the bottom of the suggestions group if it's not current language
     if (plaintextEntry && !isCurrentlyPlaintext) {
