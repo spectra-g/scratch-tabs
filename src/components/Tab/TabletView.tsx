@@ -76,6 +76,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
 
   return (
     <TabletErrorBoundary
+      key={`${tab.id}-${state.type}`}
       tabletType={state.type || 'unknown'}
       tabletId={tab.id}
       tabletState={tab.tabletState}
