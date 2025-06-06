@@ -56,7 +56,8 @@ path.to.something = C:\\Users\\Default\\My Documents
     const lines = content.split('\n');
     const nonEmptyTrimmedLines = lines.map(l => l.trim()).filter(l => l.length > 0);
 
-    if (nonEmptyTrimmedLines.length < 1) {
+    // Require more than 3 lines for properties/INI detection
+    if (nonEmptyTrimmedLines.length <= 3) {
       return this.noMatch();
     }
 
@@ -64,12 +65,16 @@ path.to.something = C:\\Users\\Default\\My Documents
     // Ensures it's not just any colon, but one likely separating a key from a value.
     const keyValueRegex = /^\s*([a-zA-Z0-9_.-]+)\s*([:=])\s*(.*)/;
     const sectionRegex = /^\s*\[([^\]]+)\]\s*$/; // Simpler section regex
+    const urlRegex = /https?:\/\/[^\s]+/i; // URL detection regex
 
     for (const line of nonEmptyTrimmedLines) {
       if (line.startsWith('#') || line.startsWith(';')) {
         commentLinesCount++;
       } else if (sectionRegex.test(line)) {
         sectionHeadersCount++;
+      } else if (urlRegex.test(line)) {
+        // Lines containing URLs should not be considered key-value pairs
+        otherLinesCount++;
       } else if (keyValueRegex.test(line)) {
         keyValuePairsCount++;
       } else {
@@ -126,15 +131,21 @@ path.to.something = C:\\Users\\Default\\My Documents
       { pattern: /\{|\}|\[(?![^\]]*\]\s*$)/g, weight: -0.4, threshold: 2 }, // Braces, or non-section brackets (allow more if score is high)
       { pattern: /<\w.*?>/g, weight: -0.5, threshold: 1 },
       { pattern: /\b(function|class|var|let|const|import|export|def|public|private|SELECT|FROM|WHERE|UPDATE|INSERT)\b/i, weight: -0.6, threshold: 1 },
-      { pattern: /=>|->|#!/g, weight: -0.5, threshold: 1 }
+      { pattern: /=>|->|#!/g, weight: -0.5, threshold: 1 },
+      { pattern: /https?:\/\/[^\s]+/gi, weight: -0.8, threshold: 1 } // URLs should strongly indicate this is not a properties file
     ];
 
     for (const ap of antiPatterns) {
       const matches = content.match(ap.pattern); // Check on original content
       if (matches && matches.length >= ap.threshold) {
         // Only apply anti-pattern if confidence isn't already super high from structure
-        if (confidenceScore < 0.7 || ap.pattern.source.includes("SELECT")) { // Apply SQL anti-pattern more readily
-          confidenceScore += ap.weight;
+        if (confidenceScore < 0.7 || ap.pattern.source.includes("SELECT") || ap.pattern.source.includes("https")) { // Apply SQL and URL anti-patterns more readily
+          // For URLs, scale the penalty based on how many URLs there are
+          if (ap.pattern.source.includes("https")) {
+            confidenceScore += ap.weight * Math.min(matches.length, 3); // Cap at 3x penalty
+          } else {
+            confidenceScore += ap.weight;
+          }
         }
       }
     }
@@ -166,6 +177,13 @@ path.to.something = C:\\Users\\Default\\My Documents
     if (nonEmptyTrimmedLines.length > 10 && totalNonCommentLines > 0 && (totalStructuralLines / totalNonCommentLines) < 0.25) {
       isMatch = false;
     }
+    
+    // If most lines contain URLs, it's definitely not a properties file
+    const urlMatches = content.match(/https?:\/\/[^\s]+/gi);
+    if (urlMatches && urlMatches.length >= nonEmptyTrimmedLines.length * 0.5) {
+      isMatch = false;
+    }
+    
     if (confidenceScore < 0.2) { // Absolute floor
       isMatch = false;
     }
@@ -243,7 +261,7 @@ path.to.something = C:\\Users\\Default\\My Documents
         let maxKeyLengthBeforeDelim = 0;
 
         // First pass: find max key length for alignment
-        lines.forEach(line => {
+        lines.forEach((line: string) => {
           const trimmedLine = line.trim();
           if (!trimmedLine.startsWith('#') && !trimmedLine.startsWith(';')) {
             const match = trimmedLine.match(/^([\w.-]+)\s*([:=])/);
@@ -253,7 +271,7 @@ path.to.something = C:\\Users\\Default\\My Documents
           }
         });
 
-        const formattedLines = lines.map(line => {
+        const formattedLines = lines.map((line: string) => {
           const trimmedLine = line.trim();
           if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith(';')) {
             return line; // Keep comments and empty lines as is (or just trimmedLine for consistency)
