@@ -1,24 +1,32 @@
-// File path: markdown.ts
+// --- START OF FILE markdown.ts ---
 
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { DetectionResult, LanguageDetector } from './types';
-import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown"; // Assuming this path is correct
+import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown";
 
 const MAX_LINES_TO_ANALYZE_MD_FOR_YAML = 20;
-const MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE = 2; // Need at least 2 distinct MD features for good confidence
+const MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE = 2;
 
-// YAML patterns (for exclusion/penalty in Markdown detector)
 const YAML_KEY_VALUE_REGEX = /^\s*(?:[\w.-]+|"[^"]*"|'[^']*')\s*:\s*(?:\||>|&|\*|\S.*|$)/m;
-const YAML_LIST_ITEM_REGEX = /^\s*-\s+(?!\[[ xX]\]).+/m; // YAML list item, excluding MD task list
+const YAML_LIST_ITEM_REGEX = /^\s*-\s+(?!\[[ xX]\]).+/m;
 const YAML_DOC_START_REGEX = /^---\s*$/m;
 const YAML_DIRECTIVE_REGEX = /^%YAML\s+[\d.]+\s*$/m;
+
+const MARKDOWN_HEADER_REGEX = /^\s*#{1,6}\s+.+/; // No 'm' flag needed for line-by-line check
+const MARKDOWN_FENCED_CODE_REGEX = /^```(\w*\s*)?$/m;
+const MARKDOWN_BLOCKQUOTE_REGEX = /^\s*>\s*.*/m;
+const MARKDOWN_LINK_IMAGE_REGEX = /!?\[.*?\]\(.*?\)/m;
+const MARKDOWN_TABLE_PIPE_REGEX = /^\s*\|.*\|.*\|/m;
+const MARKDOWN_TASK_LIST_REGEX = /^\s*-\s+\[[ xX]\]\s+.*/m;
+
+const JSON_START_END_REGEX = /^\s*(?:\{[\s\S]*\}|\[[\s\S]*\])\s*$/;
 
 export class MarkdownLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
   id = 'markdown';
   name = 'Markdown';
   extensions = ['md', 'markdown', 'mdown', 'mkd'];
-  priority = 4; // Lower than YAML (5)
+  priority = 4;
 
   sampleContent(): string {
     return `# Sample Markdown Document
@@ -113,7 +121,7 @@ That's all for this sample!`;
         frontmatterPresent = true;
         confidenceScore += 0.15;
         patternsMatched++;
-        strongMarkdownSignal = true; // Frontmatter is a specific MD (or Jekyll/etc.) feature
+        strongMarkdownSignal = true;
     }
 
     const mainLinesToAnalyze = contentForMainAnalysis.split('\n').slice(0, MAX_LINES_TO_ANALYZE_MD_FOR_YAML);
@@ -125,7 +133,14 @@ That's all for this sample!`;
     if (contentForMainAnalysis.trim().length > 0) {
         for (const line of mainLinesToAnalyze) {
             const currentLineTrimmed = line.trim();
-            if (!currentLineTrimmed || currentLineTrimmed.startsWith('#')) continue; // YAML comments too
+            if (!currentLineTrimmed) continue; // Skip empty lines
+
+            // FIX: Differentiate between a Markdown header and a YAML comment.
+            // If a line starts with '#' but is NOT a valid MD header, treat it as a comment and skip.
+            if (currentLineTrimmed.startsWith('#') && !MARKDOWN_HEADER_REGEX.test(line)) {
+                continue;
+            }
+
             nonCommentNonEmptyMainLines++;
             if (YAML_KEY_VALUE_REGEX.test(currentLineTrimmed) || YAML_LIST_ITEM_REGEX.test(currentLineTrimmed)) {
                 yamlLikeLineCount++;
@@ -142,9 +157,7 @@ That's all for this sample!`;
     }
     confidenceScore -= yamlLikePenalty;
 
-    // --- MODIFIED markdownPatterns ---
     const markdownPatterns = [
-      // Strong, specific structural elements
       { pattern: /^(#{1,6})\s+.+/gm, weight: 0.25, perMatch: 0.05, specific: true, maxMatches: 5 },
       { pattern: /\[[^\]]+?\]\([^\)]+?\)/g, weight: 0.25, perMatch: 0.04, specific: true, maxMatches: 5 },
       { pattern: /!\[[^\]]*?\]\([^\)]+?\)/g, weight: 0.25, perMatch: 0.04, specific: true, maxMatches: 3 },
@@ -152,23 +165,17 @@ That's all for this sample!`;
       { pattern: /^- \[([ xX])\]\s+.+/gm, weight: 0.25, perMatch: 0.05, specific: true, maxMatches: 5 },
       { pattern: /^(?:---|\*\*\*|___)\s*$/gm, weight: 0.20, perMatch: 0.05, specific: true, maxMatches: 2 },
       { pattern: /^\s*\|(?:[^|\n]+\|)+/gm, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 3 },
-
-      // Common, fairly specific elements
       { pattern: /^\s*>\s+.*/gm, weight: 0.20, perMatch: 0.03, specific: true, maxMatches: 5 },
       { pattern: /^\s*([-*+])\s+(?!\[[ xX]\]).+/gm, weight: 0.20, perMatch: 0.02, specific: true, maxMatches: 10 },
       { pattern: /^\s*\d+\.\s+.*/gm, weight: 0.20, perMatch: 0.02, specific: true, maxMatches: 10 },
-
-      // Inline elements
-      // Corrected bold regex to not be overly greedy with initial/trailing spaces
       { pattern: /\*\*([^\s*].*?[^\s*])\*\*|\_\_([^\s_].*?[^\s_])\_\_/g, weight: 0.15, perMatch: 0.01, specific: true, maxMatches: 10 },
-      // Corrected italic regex
       { pattern: /(?<![\w*_])\*([^\s*].*?[^\s*])\*(?![\w*_])|(?<![\w*_])_([^\s_].*?[^\s_])_(?![\w*_])/g, weight: 0.15, perMatch: 0.01, specific: true, maxMatches: 10 },
       { pattern: /`([^`\n]+?)`/g, weight: 0.10, perMatch: 0.01, specific: true, maxMatches: 10 },
-      { pattern: /<https?:\/\/[^\s>]+>/g, weight: 0.15, perMatch: 0.02, specific: true, maxMatches: 3}, // Made specific
+      { pattern: /<https?:\/\/[^\s>]+>/g, weight: 0.15, perMatch: 0.02, specific: true, maxMatches: 3},
     ];
 
     let specificMarkdownFeaturesFound = 0;
-    if (frontmatterPresent) specificMarkdownFeaturesFound++; // Frontmatter counts as one specific feature
+    if (frontmatterPresent) specificMarkdownFeaturesFound++;
 
     for (const p of markdownPatterns) {
       const matches = content.match(p.pattern);
@@ -186,36 +193,30 @@ That's all for this sample!`;
 
     if (specificMarkdownFeaturesFound > 0) strongMarkdownSignal = true;
 
-    // Adjustments
     if (specificMarkdownFeaturesFound >= MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE) {
         confidenceScore += 0.25;
     } else if (patternsMatched > 0 && specificMarkdownFeaturesFound < MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE && yamlLikePenalty < 0.1 && !frontmatterPresent) {
-        // Only penalize if no frontmatter and low specific features, even if some general patterns matched
         confidenceScore *= 0.7;
     }
 
     const lines = content.split('\n');
-    // If it's many lines but very few MD patterns were found (and not much YAML penalty), it's likely prose.
     if (lines.length > 10 && patternsMatched < 2 && specificMarkdownFeaturesFound === 0 && yamlLikePenalty < 0.1 && !frontmatterPresent) {
         const avgLineLength = trimmedContent.length / lines.length;
-        // Average line length for English prose is around 15-20 words, assume ~5 chars/word + spaces = 75-120 chars
-        if (avgLineLength > 30 && avgLineLength < 150) { // Heuristic for prose-like lines
-            confidenceScore = Math.max(0.05, confidenceScore - 0.25); // More aggressive penalty
+        if (avgLineLength > 30 && avgLineLength < 150) {
+            confidenceScore = Math.max(0.05, confidenceScore - 0.25);
         }
     }
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    const isMatch = (strongMarkdownSignal && confidenceScore >= 0.30 && yamlLikePenalty < 0.4) || // Lowered YAML penalty threshold here
-                    (confidenceScore >= 0.45 && patternsMatched >= 2 && specificMarkdownFeaturesFound >=1 && yamlLikePenalty < 0.3) || // General case
-                    (confidenceScore >= 0.25 && frontmatterPresent && patternsMatched >=1 && yamlLikePenalty < 0.5); // Frontmatter case
-
-    // console.log(`Markdown detect: score=${confidenceScore.toFixed(3)}, patternsMatched=${patternsMatched}, specificFound=${specificMarkdownFeaturesFound}, yamlPenalty=${yamlLikePenalty.toFixed(3)}, isMatch=${isMatch}`);
+    const isMatch = (strongMarkdownSignal && confidenceScore >= 0.30 && yamlLikePenalty < 0.4) ||
+                    (confidenceScore >= 0.45 && patternsMatched >= 2 && specificMarkdownFeaturesFound >=1 && yamlLikePenalty < 0.3) ||
+                    (confidenceScore >= 0.25 && frontmatterPresent && patternsMatched >=1 && yamlLikePenalty < 0.5);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongMarkdownSignal && confidenceScore > 0.55 && yamlLikePenalty < 0.25 // Adjusted definitive
+      matchedDefinitive: isMatch && strongMarkdownSignal && confidenceScore > 0.55 && yamlLikePenalty < 0.25
     };
   }
 
@@ -238,19 +239,12 @@ That's all for this sample!`;
         formatted = formatted.replace(/^- \[( ?[xX]? ?)\]([^\s])/gmi, '- [$1] $2');
         formatted = formatted.replace(/^- \[( ?[xX]? ?)\](\S)/gmi, '- [$1] $2');
         formatted = formatted.replace(/^\s*([-*_])\s*\1\s*\1\s*$/gm, '---');
-        // Ensure single blank line between paragraphs/blocks, no more than one.
-        // More careful: don't add blank lines inside code blocks or list items that might be multi-line.
-        // This is a simple version:
         formatted = formatted.replace(/\n{3,}/g, '\n\n');
-
-        // Add blank lines around fenced code blocks if missing
-        // This should be done carefully to avoid breaking indentation inside the block
-        // Using a function for replacement to check context would be safer, but for simplicity:
-        formatted = formatted.replace(/(\S)\n(```)/g, (match, p1, p2) => {
-            if (p1.match(/^\s*$/)) return match; // If p1 is already whitespace, don't add more
+        formatted = formatted.replace(/(\S)\n(```)/g, (match: string, p1: string, p2: string) => {
+            if (p1.match(/^\s*$/)) return match;
             return `${p1}\n\n${p2}`;
         });
-        formatted = formatted.replace(/(```)\n(\S)/g, (match, p1, p2) => {
+        formatted = formatted.replace(/(```)\n(\S)/g, (match: string, p1: string, p2: string) => {
             if (p2.match(/^\s*$/)) return match;
             return `${p1}\n\n${p2}`;
         });
@@ -279,3 +273,4 @@ languageRegistry.register(markdownDetector);
 export const registerMarkdownProvider = (monaco: any) => {
   markdownDetector.registerProvider(monaco);
 };
+// --- END OF FILE markdown.ts ---
