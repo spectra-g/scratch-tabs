@@ -8,18 +8,18 @@ import { useLanguageDetection } from '../../hooks/useLanguageDetection';
 import { useTabletSelector } from '../../hooks/useTabletSelector';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
-import { StatusBar } from '../StatusBar';
 
 interface EditorInstanceProps {
   side: 'left' | 'right';
   activeTab: Tab;
+  onEditorReady?: (editor: Monaco.editor.IStandaloneCodeEditor | null) => void;
 }
 
 // Global storage for Monaco models and view states per tab
 const tabModels = new Map<string, Monaco.editor.ITextModel>();
 const tabViewStates = new Map<string, Monaco.editor.ICodeEditorViewState>();
 
-export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab}) => {
+export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, onEditorReady}) => {
   const {
     updateTabContent,
     setCursorPosition,
@@ -174,6 +174,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
     editorRef.current = editor;
     monacoRef.current = monaco;
     
+    // Notify parent component that editor is ready
+    onEditorReady?.(editor);
+    
     // Initialize with the current tab's model
     const model = getOrCreateModelForTab(activeTab.id, activeTab.content, activeTab.language);
     editor.setModel(model);
@@ -253,50 +256,44 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab})
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-850">
-      <div className="flex-grow relative overflow-hidden" ref={editorContainerRef}>
-        <div className="w-full h-full absolute inset-0" onClick={handleEditorFocus}>
-          <Editor
-            height="100%"
-            width="100%"
-            theme="vs-dark"
-            onMount={handleEditorDidMount}
-            options={{
-              minimap: {enabled: false},
-              fontSize: 14,
-              wordWrap: 'on',
-              automaticLayout: true,
-              copyWithSyntaxHighlighting: false,
-              scrollBeyondLastLine: true,
-              formatOnPaste: true,
-              formatOnType: true,
-              find: {
-                addExtraSpaceOnTop: false,
-              },
+    <div className="h-full w-full bg-gray-850 relative overflow-hidden" ref={editorContainerRef}>
+      <div className="w-full h-full absolute inset-0" onClick={handleEditorFocus}>
+        <Editor
+          height="100%"
+          width="100%"
+          theme="vs-dark"
+          onMount={handleEditorDidMount}
+          options={{
+            minimap: {enabled: false},
+            fontSize: 14,
+            wordWrap: 'on',
+            automaticLayout: true,
+            copyWithSyntaxHighlighting: false,
+            scrollBeyondLastLine: true,
+            formatOnPaste: true,
+            formatOnType: true,
+            find: {
+              addExtraSpaceOnTop: false,
+            },
+          }}
+        />
+        {showTabletSelector && (
+          <div
+            ref={tabletSelectorContainerRef}
+            style={{
+              position: 'absolute',
+              left: `${selectorPosition.x}px`,
+              top: `${selectorPosition.y}px`,
+              zIndex: 50
             }}
-          />
-          {showTabletSelector && (
-            <div
-              ref={tabletSelectorContainerRef}
-              style={{
-                position: 'absolute',
-                left: `${selectorPosition.x}px`,
-                top: `${selectorPosition.y}px`,
-                zIndex: 50
-              }}
-            >
-              <TabletSelector
-                searchQuery={tabletQuery} // state - current
-                onSelect={handleTabletSelect}
-                onClose={handleTabletSelectorClose}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="flex-shrink-0">
-        {/* Pass the current editor instance and the current activeTab prop */}
-        <StatusBar editor={editorRef.current} activeTab={activeTab} side={side}/>
+          >
+            <TabletSelector
+              searchQuery={tabletQuery} // state - current
+              onSelect={handleTabletSelect}
+              onClose={handleTabletSelectorClose}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
