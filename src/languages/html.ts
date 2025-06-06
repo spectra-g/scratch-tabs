@@ -1,6 +1,8 @@
+import * as React from 'react';
 import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { DetectionResult, LanguageDetector } from './types';
+import { HtmlStatusItem } from '../components/StatusBar/LanguageStatusItems/html';
 
 /**
  * HTML language detector
@@ -168,6 +170,10 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
     return 'html';
   }
 
+  getStatusItem(): React.FC<{ content?: string }> {
+    return HtmlStatusItem;
+  }
+
   registerProvider(monaco: any): void {
     const languageId = this.id; // 'html'
 
@@ -197,7 +203,7 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
 
         const lines = content.split('\n');
 
-        lines.forEach((line, index) => {
+        lines.forEach((line: string, index: number) => {
             const trimmedLine = line.trim();
 
             if (!trimmedLine) {
