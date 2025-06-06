@@ -130,7 +130,8 @@ path.to.something = C:\\Users\\Default\\My Documents
     const antiPatterns = [
       { pattern: /\{|\}|\[(?![^\]]*\]\s*$)/g, weight: -0.4, threshold: 2 }, // Braces, or non-section brackets (allow more if score is high)
       { pattern: /<\w.*?>/g, weight: -0.5, threshold: 1 },
-      { pattern: /\b(function|class|var|let|const|import|export|def|public|private|SELECT|FROM|WHERE|UPDATE|INSERT)\b/i, weight: -0.6, threshold: 1 },
+      { pattern: /\b(function|class|var|let|const|import|export|def|public|private)\b/i, weight: -0.6, threshold: 1 }, // Programming keywords
+      { pattern: /\b(SELECT|FROM|WHERE|UPDATE|INSERT|CREATE|DROP|ALTER|DELETE)\b/i, weight: -0.6, threshold: 2 }, // SQL keywords - require at least 2
       { pattern: /=>|->|#!/g, weight: -0.5, threshold: 1 },
       { pattern: /https?:\/\/[^\s]+/gi, weight: -0.8, threshold: 1 } // URLs should strongly indicate this is not a properties file
     ];
