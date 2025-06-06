@@ -77,11 +77,17 @@ export const useCsvData = (
   // Simple undo/redo
   const [history, setHistory] = useState<CsvState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  
+  // Track if we're in the middle of syncing to prevent circular updates
+  const [isInternalUpdate, setIsInternalUpdate] = useState(false);
 
   // Debounced content sync
   const debouncedSync = useMemo(
     () => debounce((newContent: string) => {
+      setIsInternalUpdate(true);
       onContentChange(newContent);
+      // Reset the flag after a short delay to allow the content change to propagate
+      setTimeout(() => setIsInternalUpdate(false), 500);
     }, 300),
     [onContentChange]
   );
@@ -172,6 +178,11 @@ export const useCsvData = (
 
   // Initialize data from content
   useEffect(() => {
+    // Skip re-parsing if this content change came from our own sync
+    if (isInternalUpdate) {
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -181,7 +192,7 @@ export const useCsvData = (
     setHistoryIndex(0);
     
     setLoading(false);
-  }, [content, parseCsv]);
+  }, [content, parseCsv, isInternalUpdate]);
 
   // Save state to history for undo/redo
   const saveToHistory = useCallback((newState: CsvState) => {
