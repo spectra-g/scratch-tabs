@@ -1,7 +1,10 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { ChevronRight, ChevronDown, Copy, Search, ChevronsUp, ChevronsDown, Route } from 'lucide-react';
+import { ChevronRight, ChevronDown, Copy, Search, ChevronsUp, ChevronsDown, Route, ExternalLink } from 'lucide-react';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
-import { useDebounce } from '../../hooks/useDebounce'; 
+import { useDebounce } from '../../hooks/useDebounce';
+import { useRootStore } from '../../../../stores';
+import { useWorkspaceStore } from '../../../../stores/workspaceStore';
+import { detectLanguage } from '../../../../languages'; 
 
 // --- Interfaces ---
 interface JsonNodeData {
@@ -54,7 +57,7 @@ const buildVisibleNodes = (
     if (isExpandable && isExpanded && nodeData.value) {
         Object.entries(nodeData.value).forEach(([key, value]) => {
             const childKey = nodeData.type === 'array' ? parseInt(key, 10) : key;
-            const childPath = nodeData.path ? (nodeData.type === 'array' ? `${nodeData.path}[${childKey}]` : `${nodeData.path}.${childKey}`) : (nodeData.type === 'array' ? `[${childKey}]` : childKey);
+            const childPath = nodeData.path ? (nodeData.type === 'array' ? `${nodeData.path}[${childKey}]` : `${nodeData.path}.${childKey}`) : (nodeData.type === 'array' ? `[${childKey}]` : String(childKey));
             buildVisibleNodes(buildTree(childKey, value, nodeData.depth + 1, childPath), expandedPaths, visibleNodesList);
         });
     }
@@ -66,7 +69,7 @@ const getAllExpandablePaths = (nodeData: JsonNodeData, paths: Set<string>): void
         if (nodeData.value) {
             Object.entries(nodeData.value).forEach(([key, value]) => {
                 const childKey = nodeData.type === 'array' ? parseInt(key, 10) : key;
-                const childPath = nodeData.path ? (nodeData.type === 'array' ? `${nodeData.path}[${childKey}]` : `${nodeData.path}.${childKey}`) : (nodeData.type === 'array' ? `[${childKey}]` : childKey);
+                const childPath = nodeData.path ? (nodeData.type === 'array' ? `${nodeData.path}[${childKey}]` : `${nodeData.path}.${childKey}`) : (nodeData.type === 'array' ? `[${childKey}]` : String(childKey));
                 getAllExpandablePaths(buildTree(childKey, value, nodeData.depth + 1, childPath), paths);
             });
         }
@@ -123,6 +126,35 @@ const getAncestorPaths = (path: string): Set<string> => {
     return ancestors;
 };
 
+// Helper to find all matching nodes in the entire tree structure (not just visible ones)
+const findAllMatches = (
+    nodeData: JsonNodeData,
+    searchTerm: string,
+    matchedPaths: Set<string>
+): void => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const keyMatch = String(nodeData.key).toLowerCase().includes(lowerSearchTerm);
+    const valueMatch = (nodeData.type !== 'object' && nodeData.type !== 'array') &&
+                       String(nodeData.value).toLowerCase().includes(lowerSearchTerm);
+
+    if (keyMatch || valueMatch) {
+        // Add this node and all its ancestors to the matched paths
+        const ancestors = getAncestorPaths(nodeData.path);
+        ancestors.forEach(ancestorPath => matchedPaths.add(ancestorPath));
+        matchedPaths.add(nodeData.path);
+    }
+
+    // Recursively search in children regardless of expansion state
+    if ((nodeData.type === 'object' || nodeData.type === 'array') && nodeData.value) {
+        Object.entries(nodeData.value).forEach(([key, value]) => {
+            const childKey = nodeData.type === 'array' ? parseInt(key, 10) : key;
+            const childPath = nodeData.path ? (nodeData.type === 'array' ? `${nodeData.path}[${childKey}]` : `${nodeData.path}.${childKey}`) : (nodeData.type === 'array' ? `[${childKey}]` : String(childKey));
+            const childNode = buildTree(childKey, value, nodeData.depth + 1, childPath);
+            findAllMatches(childNode, searchTerm, matchedPaths);
+        });
+    }
+};
+
 // --- Main Component ---
 
 const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
@@ -135,6 +167,11 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
     const [evaluationStatus, setEvaluationStatus] = useState<string | null>(null);
     const listRef = useRef<List>(null);
     const [lastValidEvaluatedPath, setLastValidEvaluatedPath] = useState<string | null>(null);
+    const [openedItemId, setOpenedItemId] = useState<string | null>(null);
+
+    const { addBackgroundTab, splitView } = useRootStore();
+    const { activeWorkspaceId } = useWorkspaceStore();
+    const containerRef = useRef<HTMLDivElement>(null);
 
     // Memoize parsed JSON
     const parsedJson = useMemo(() => {
@@ -187,34 +224,14 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
                 return visibleNodes;
             }
         } else { // keyValue search mode
-            const lowerSearchTerm = searchTerm.toLowerCase();
+            // Find all matches in the entire tree structure (not just visible nodes)
             const matchedPaths = new Set<string>();
-            const result: VisibleJsonNode[] = [];
-            // Find matches and their ancestors
-            visibleNodes.forEach(node => {
-                const keyMatch = String(node.key).toLowerCase().includes(lowerSearchTerm);
-                const valueMatch = (node.type !== 'object' && node.type !== 'array') &&
-                                   String(node.value).toLowerCase().includes(lowerSearchTerm);
-                if (keyMatch || valueMatch) {
-                    let currentPath = node.path;
-                    while (currentPath !== undefined && currentPath !== null) {
-                        matchedPaths.add(currentPath);
-                        if (!currentPath.includes('.') && !currentPath.includes('[')) break;
-                        const lastDot = currentPath.lastIndexOf('.');
-                        const lastBracket = currentPath.lastIndexOf('[');
-                        if (lastDot === -1 && lastBracket === -1) break;
-                        currentPath = currentPath.substring(0, Math.max(lastDot, lastBracket));
-                    }
-                     matchedPaths.add(''); // Include root
-                }
-            });
-            // Filter nodes based on matched paths
-            visibleNodes.forEach(node => {
-                if (matchedPaths.has(node.path)) {
-                    result.push(node);
-                }
-            });
-            return result;
+            if (rootNodeData) {
+                findAllMatches(rootNodeData, searchTerm, matchedPaths);
+            }
+            
+            // Filter visible nodes based on matched paths
+            return visibleNodes.filter(node => matchedPaths.has(node.path));
         }
     }, [visibleNodes, debouncedInputValue, searchMode, lastValidEvaluatedPath]); // Depend on debounced value
 
@@ -267,6 +284,20 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
             setLastValidEvaluatedPath(null);
         }
     }, [filteredNodes, searchMode, lastValidEvaluatedPath]); // Run when filteredNodes changes AFTER a valid path was set
+
+    // --- Effect for Auto-expanding matched nodes in key/value search ---
+    useEffect(() => {
+        if (searchMode === 'keyValue' && debouncedInputValue.trim() && rootNodeData) {
+            const searchTerm = debouncedInputValue.trim();
+            const matchedPaths = new Set<string>();
+            findAllMatches(rootNodeData, searchTerm, matchedPaths);
+            
+            // Auto-expand all paths that contain matches
+            if (matchedPaths.size > 0) {
+                setExpandedPaths(prev => new Set([...prev, ...matchedPaths]));
+            }
+        }
+    }, [debouncedInputValue, searchMode, rootNodeData]);
 
     // --- Callbacks ---
 
@@ -323,6 +354,40 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
             setEvaluationStatus('Error copying paths');
         }
     }, [filteredNodes]);
+
+    const handleOpenInNewTab = useCallback((value: any, path: string) => {
+        setOpenedItemId(path);
+        
+        // Determine pane side via ancestor data attribute
+        const paneElem = containerRef.current?.closest('[data-editor-pane-side]');
+        const sideAttr = paneElem?.getAttribute('data-editor-pane-side');
+        const isRightSideLocal = splitView.isSplit && sideAttr === 'right';
+
+        let content: string;
+        if (typeof value === 'object' && value !== null) {
+            content = JSON.stringify(value, null, 2);
+        } else {
+            content = String(value);
+        }
+
+        const newTabId = crypto.randomUUID();
+        const language = detectLanguage(content);
+        const title = path ? `JSON: ${path}` : 'JSON Value';
+        
+        addBackgroundTab({
+            id: newTabId,
+            title,
+            content,
+            language,
+            languageLocked: language !== 'plaintext',
+            cursorPosition: { lineNumber: 1, column: 1 },
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            workspaceId: activeWorkspaceId || ''
+        }, isRightSideLocal);
+
+        setTimeout(() => setOpenedItemId(null), 1500);
+    }, [addBackgroundTab, splitView.isSplit, activeWorkspaceId]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
@@ -393,10 +458,13 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
                     <button onClick={(e) => { e.stopPropagation(); copyToClipboard(valueStringForCopy, 'value'); }} className="p-0.5 text-gray-500 hover:text-green-400 hover:bg-gray-700/50 rounded" title="Copy Value">
                         <Copy size={14} />
                     </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleOpenInNewTab(valueStringForCopy, node.path); }} className={`p-0.5 rounded transition-colors ${openedItemId === node.path ? 'text-green-400' : 'text-gray-500 hover:text-blue-400 hover:bg-gray-700/50'}`} title="Open in New Tab">
+                        {openedItemId === node.path ? <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg> : <ExternalLink size={14} />}
+                    </button>
                 </div>
             </div>
         );
-    }, [filteredNodes, selectedPath, toggleNode, copyToClipboard]); // Keep dependencies minimal
+    }, [filteredNodes, selectedPath, toggleNode, copyToClipboard, handleOpenInNewTab, openedItemId]); // Keep dependencies minimal
 
 
     if (parseError) {
@@ -413,7 +481,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
     }
 
     return (
-        <div className="flex flex-col h-full bg-gray-900 text-gray-200 overflow-hidden">
+        <div ref={containerRef} className="flex flex-col h-full bg-gray-900 text-gray-200 overflow-hidden">
             {/* Header */}
             <div className="flex-none flex items-center p-2 border-b border-gray-700/50 gap-2 flex-wrap">
                 {/* Mode Selector */}

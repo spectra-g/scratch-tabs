@@ -753,103 +753,72 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
    */
   detect(content: string): DetectionResult {
     const trimmed = content.trim();
-    if (!trimmed) {
+    if (trimmed.length < 2) {
       return this.noMatch();
     }
 
-    let confidenceScore = 0.0;
-    let patternsMatched = 0;
-    let specificJsonPatternsHit = 0;
-
-    // 1. Quick check for starting characters - Strong initial filter
     const startsWithBrace = trimmed.startsWith('{');
     const startsWithBracket = trimmed.startsWith('[');
 
     if (!startsWithBrace && !startsWithBracket) {
-      return { match: false, confidence: 0.0 };
+      return this.noMatch();
     }
-    confidenceScore += 0.2; // Initial boost if it starts correctly
 
-    // 2. Attempt to parse if it looks like complete JSON (most reliable)
     const endsWithBrace = trimmed.endsWith('}');
     const endsWithBracket = trimmed.endsWith(']');
+    const isPotentiallyComplete = (startsWithBrace && endsWithBrace) || (startsWithBracket && endsWithBracket);
 
-    if ((startsWithBrace && endsWithBrace) || (startsWithBracket && endsWithBracket)) {
+    if (isPotentiallyComplete) {
       try {
         JSON.parse(trimmed);
-        // If parsing succeeds, it's definitely JSON.
-        // Give high confidence, but allow for some very simple other formats that might also parse.
-        confidenceScore += 0.7; // Add a large chunk for valid parsing
-        patternsMatched++;
-        specificJsonPatternsHit += 3; // Consider valid parse as multiple specific hits
-        // We can return early with high confidence here if desired.
-        // return { match: true, confidence: Math.min(1.0, confidenceScore) };
+        return { match: true, confidence: 0.98 }; // It's valid JSON.
       } catch (e) {
-        // Parsing failed. It might be partial JSON or invalid.
-        // Reduce confidence slightly if it looked complete but didn't parse.
-        confidenceScore -= 0.1;
+        // Fall through to pattern matching for invalid but JSON-like content.
       }
-    } else if (trimmed.length > 1) {
-      // It starts like JSON but doesn't end with a matching brace/bracket.
-      // This is common during typing. Give it a moderate initial confidence.
-      confidenceScore += 0.15;
-      patternsMatched++;
     }
 
-
-    // 3. Pattern matching for more nuanced scoring and partial JSON
+    let confidenceScore = isPotentiallyComplete ? 0.3 : 0.4;
+    let specificJsonPatternsHit = 0;
+    
     const jsonPatterns = this.getJsonPatterns();
     for (const p of jsonPatterns) {
-      const matches = content.match(p.pattern); // Test on original content for global multi-line matches
+      const matches = trimmed.match(p.pattern);
       if (matches) {
-        confidenceScore += p.weight;
+        confidenceScore += (p.weight / (isPotentiallyComplete ? 1.5 : 1));
         if (p.perMatch) {
-          confidenceScore += Math.min(matches.length, 5) * p.perMatch;
+          confidenceScore += Math.min(matches.length, 5) * (p.perMatch / 2);
         }
-        patternsMatched++;
         if (p.specific) {
           specificJsonPatternsHit++;
         }
       }
     }
 
-    // 4. Anti-patterns (check for syntax that is NOT JSON)
-    // YAML/other config files are the most likely culprits
+    if (/,(\s*)}/g.test(trimmed) || /,(\s*)]/g.test(trimmed)) {
+        confidenceScore -= 0.2;
+    }
+    if (/\/\/|\/\*/.test(trimmed)) {
+        confidenceScore -= 0.15;
+    }
+    if (/'/.test(trimmed)) {
+        confidenceScore -= 0.1;
+    }
+
     const antiPatterns = [
-      { pattern: /^\s*[\w.-]+:(?!\s*")\s*\S+/m, weight: -0.4 }, // key: value (no quotes on key or value is not string/primitive) - common in YAML
-      { pattern: /^\s*-\s+\S+/m, weight: -0.4 },               // YAML list item `- item`
-      { pattern: /^\s*</m, weight: -0.5 },                     // XML/HTML tags at line start
-      { pattern: /\b(function|class|var|let|const)\b/i, weight: -0.3 }, // JS keywords
-      { pattern: /^\s*#.*$/m, weight: -0.1 }, // # comments (JSON has no comments) - small penalty as could be in string
-      { pattern: /'''|"""/, weight: -0.2 } // Python multi-line strings
+      { pattern: /^\s*[\w.-]+:/m, weight: -0.4 },
+      { pattern: /^\s*</m, weight: -0.5 },
+      { pattern: /\b(function|class|var|let|const)\b/i, weight: -0.3 },
     ];
-
-    // Only apply anti-patterns aggressively if initial confidence isn't super high from parsing
-    if (confidenceScore < 0.85) {
-      for (const ap of antiPatterns) {
-        if (ap.pattern.test(content)) {
-          confidenceScore += ap.weight;
+    for (const ap of antiPatterns) {
+        if (ap.pattern.test(trimmed)) {
+            confidenceScore += ap.weight;
         }
-      }
     }
 
+    const confidenceCap = isPotentiallyComplete ? 0.7 : 0.75;
+    confidenceScore = Math.min(confidenceCap, Math.max(0.0, confidenceScore));
 
-    // 5. Final Adjustments and Clamping
-    if (specificJsonPatternsHit >= 3 && patternsMatched >= 2) {
-      confidenceScore += 0.15; // Bonus for multiple specific JSON constructs
-    }
-    // If content is very short and only matches basic brace/bracket
-    if (trimmed.length < 20 && patternsMatched <= 1 && specificJsonPatternsHit < 1) {
-      confidenceScore *= 0.5; // Reduce confidence for very short, non-specific matches
-    }
-
-
-    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
-
-    // Determine match status
-    // If it parsed successfully, confidence will be high.
-    // Otherwise, rely on pattern matches and a reasonable confidence score.
-    const isMatch = confidenceScore >= 0.4; // Tune this threshold
+    const isMatch = confidenceScore >= 0.3;
 
     return {
       match: isMatch,

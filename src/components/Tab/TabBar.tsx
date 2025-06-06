@@ -46,7 +46,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
     const [editingTabId, setEditingTabId] = useState<string | null>(null);
     const [editingTitle, setEditingTitle] = useState('');
     const [contextMenu, setContextMenu] = useState<{ tabId: string; x: number; y: number } | null>(null);
-    const [isShrinkMode, setIsShrinkMode] = useState(false);
     const [showTabletSelector, setShowTabletSelector] = useState(false);
     const [tabletSelectorPosition, setTabletSelectorPosition] = useState({x: 0, y: 0});
     const hasInitializedWidths = useRef(false);
@@ -193,10 +192,6 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
 
         // Check if we need to enter shrink mode
         const needsShrinkMode = totalNaturalWidth > containerWidth;
-        
-        if (needsShrinkMode !== isShrinkMode) {
-            setIsShrinkMode(needsShrinkMode);
-        }
 
         if (needsShrinkMode) {
             const actionButtonsWidth = 0;

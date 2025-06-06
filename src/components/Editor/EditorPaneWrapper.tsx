@@ -14,6 +14,13 @@ const LazyMarkdownPreview = lazy(() => import('../Preview/MarkdownPreview')
   })
 );
 
+const LazyHtmlPreview = lazy(() => import('../Preview/HtmlPreview')
+  .catch(err => {
+    console.error("Failed to load HtmlPreview component:", err);
+    return { default: () => <div className="text-red-500 p-4">Error loading preview.</div> };
+  })
+);
+
 const PreviewLoadingFallback = () => (
   <div className="text-gray-400 p-4 animate-pulse">Loading Preview...</div>
 );
@@ -35,16 +42,18 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
   };
 
   const shouldShowMarkdownPreview = previewMode && activeTab?.language === 'markdown';
+  const shouldShowHtmlPreview = previewMode && activeTab?.language === 'html';
+  const shouldShowPreview = shouldShowMarkdownPreview || shouldShowHtmlPreview;
 
   return (
     // Main container for this pane
     <div
       data-editor-pane-side={side}
-      className={`flex h-full w-full overflow-hidden ${shouldShowMarkdownPreview ? 'flex-row' : 'flex-col'}`}
+      className={`flex h-full w-full overflow-hidden ${shouldShowPreview ? 'flex-row' : 'flex-col'}`}
     >
       {/* Editor/Tablet Container */}
       <div
-        className={`flex-1 overflow-hidden relative ${shouldShowMarkdownPreview ? 'w-1/2' : 'w-full'} h-full`}
+        className={`flex-1 overflow-hidden relative ${shouldShowPreview ? 'w-1/2' : 'w-full'} h-full`}
       >
         {activeTab ? (
           activeTab.isTablet ? (
@@ -66,12 +75,17 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
         )}
       </div>
 
-      {/* Markdown Preview Area (Conditional) */}
-      {shouldShowMarkdownPreview && activeTab && (
+      {/* Preview Area (Conditional) */}
+      {shouldShowPreview && activeTab && (
           <div className="w-1/2 h-full flex-1 flex flex-col overflow-hidden border-l border-gray-700">
-            <div className="flex-1 w-full h-full overflow-auto p-4 custom-scrollbar bg-gray-850">
+            <div className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-gray-850" style={{ padding: shouldShowMarkdownPreview ? '1rem' : '0' }}>
               <Suspense fallback={<PreviewLoadingFallback />}>
-                <LazyMarkdownPreview content={activeTab.content} />
+                {shouldShowMarkdownPreview && (
+                  <LazyMarkdownPreview content={activeTab.content} />
+                )}
+                {shouldShowHtmlPreview && (
+                  <LazyHtmlPreview content={activeTab.content} />
+                )}
               </Suspense>
             </div>
           </div>
