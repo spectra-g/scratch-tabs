@@ -14,13 +14,6 @@ const YAML_DOC_START_REGEX = /^---\s*$/m;
 const YAML_DIRECTIVE_REGEX = /^%YAML\s+[\d.]+\s*$/m;
 
 const MARKDOWN_HEADER_REGEX = /^\s*#{1,6}\s+.+/; // No 'm' flag needed for line-by-line check
-const MARKDOWN_FENCED_CODE_REGEX = /^```(\w*\s*)?$/m;
-const MARKDOWN_BLOCKQUOTE_REGEX = /^\s*>\s*.*/m;
-const MARKDOWN_LINK_IMAGE_REGEX = /!?\[.*?\]\(.*?\)/m;
-const MARKDOWN_TABLE_PIPE_REGEX = /^\s*\|.*\|.*\|/m;
-const MARKDOWN_TASK_LIST_REGEX = /^\s*-\s+\[[ xX]\]\s+.*/m;
-
-const JSON_START_END_REGEX = /^\s*(?:\{[\s\S]*\}|\[[\s\S]*\])\s*$/;
 
 export class MarkdownLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
   id = 'markdown';
