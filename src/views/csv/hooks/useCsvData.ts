@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import * as Papa from 'papaparse';
 import { debounce } from 'lodash-es';
 import { 
@@ -27,6 +27,7 @@ export interface UseCsvDataReturn {
   deleteRow: (rowId: string) => void;
   addColumn: (index?: number, name?: string) => void;
   deleteColumn: (columnId: string) => void;
+  renameColumn: (columnId: string, newName: string) => void;
   
   // Undo/Redo (simplified)
   canUndo: boolean;
@@ -61,7 +62,6 @@ export const useCsvData = (
   options: UseCsvDataOptions = {}
 ): UseCsvDataReturn => {
   const {
-    maxRows = 50000,
     delimiter = ',',
     hasHeader = true,
     skipEmptyLines = true
@@ -77,17 +77,15 @@ export const useCsvData = (
   // Simple undo/redo
   const [history, setHistory] = useState<CsvState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  
-  // Track if we're in the middle of syncing to prevent circular updates
-  const [isInternalUpdate, setIsInternalUpdate] = useState(false);
+
+  // Track the last content we synced to prevent circular updates
+  const lastSyncedContentRef = useRef<string>('');
 
   // Debounced content sync
   const debouncedSync = useMemo(
     () => debounce((newContent: string) => {
-      setIsInternalUpdate(true);
+      lastSyncedContentRef.current = newContent;
       onContentChange(newContent);
-      // Reset the flag after a short delay to allow the content change to propagate
-      setTimeout(() => setIsInternalUpdate(false), 500);
     }, 300),
     [onContentChange]
   );
@@ -179,7 +177,7 @@ export const useCsvData = (
   // Initialize data from content
   useEffect(() => {
     // Skip re-parsing if this content change came from our own sync
-    if (isInternalUpdate) {
+    if (content === lastSyncedContentRef.current) {
       return;
     }
     
@@ -192,23 +190,34 @@ export const useCsvData = (
     setHistoryIndex(0);
     
     setLoading(false);
-  }, [content, parseCsv, isInternalUpdate]);
+  }, [content, parseCsv]);
 
   // Save state to history for undo/redo
   const saveToHistory = useCallback((newState: CsvState) => {
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
-      newHistory.push(newState);
-      return newHistory.slice(-50); // Keep last 50 states
+    setHistoryIndex(currentIndex => {
+      setHistory(prev => {
+        const newHistory = prev.slice(0, currentIndex + 1);
+        newHistory.push(newState);
+        const finalHistory = newHistory.slice(-50);
+        return finalHistory;
+      });
+      const newIndex = Math.min(currentIndex + 1, 49);
+      return newIndex;
     });
-    setHistoryIndex(prev => Math.min(prev + 1, 49));
-  }, [historyIndex]);
+  }, []);
 
   // Sync changes back to content
-  const syncToContent = useCallback(() => {
-    const csvContent = toCsv();
+  const syncToContent = useCallback((currentState?: CsvState) => {
+    const stateToUse = currentState || csvState;
+    
+    // Generate CSV from the provided state
+    const headers = hasHeader ? [stateToUse.columns.map(col => col.name)] : [];
+    const rows = stateToUse.data.map(row => row.cells.map(cell => cell.value));
+    const allRows = [...headers, ...rows];
+    
+    const csvContent = Papa.unparse(allRows, { delimiter });
     debouncedSync(csvContent);
-  }, [debouncedSync]);
+  }, [debouncedSync, hasHeader, delimiter]);
 
   // Data manipulation functions
   const updateCell = useCallback((rowId: string, columnId: string, value: string) => {
@@ -228,24 +237,27 @@ export const useCsvData = (
     };
     setCsvState(newState);
     saveToHistory(newState);
-    syncToContent();
+    syncToContent(newState);
   }, [csvState, saveToHistory, syncToContent]);
 
   const addRow = useCallback((index?: number) => {
     const insertIndex = index ?? csvState.data.length;
+    
     const newRow: CsvRow = {
       id: `row_${Date.now()}_${Math.random()}`,
       cells: csvState.columns.map(() => ({ value: '', isValid: true })),
       originalIndex: insertIndex,
       isValid: true
     };
+    
     const newData = [...csvState.data];
     newData.splice(insertIndex, 0, newRow);
     
     const newState = { ...csvState, data: newData };
     setCsvState(newState);
     saveToHistory(newState);
-    syncToContent();
+    
+    syncToContent(newState);
   }, [csvState, saveToHistory, syncToContent]);
 
   const deleteRow = useCallback((rowId: string) => {
@@ -255,7 +267,7 @@ export const useCsvData = (
     };
     setCsvState(newState);
     saveToHistory(newState);
-    syncToContent();
+    syncToContent(newState);
   }, [csvState, saveToHistory, syncToContent]);
 
   const addColumn = useCallback((index?: number, name?: string) => {
@@ -279,7 +291,7 @@ export const useCsvData = (
     const newState = { columns: newColumns, data: newData };
     setCsvState(newState);
     saveToHistory(newState);
-    syncToContent();
+    syncToContent(newState);
   }, [csvState, saveToHistory, syncToContent]);
 
   const deleteColumn = useCallback((columnId: string) => {
@@ -295,25 +307,38 @@ export const useCsvData = (
     const newState = { columns: newColumns, data: newData };
     setCsvState(newState);
     saveToHistory(newState);
-    syncToContent();
+    syncToContent(newState);
+  }, [csvState, saveToHistory, syncToContent]);
+
+  const renameColumn = useCallback((columnId: string, newName: string) => {
+    const newColumns = csvState.columns.map(col => 
+      col.id === columnId ? { ...col, name: newName } : col
+    );
+    
+    const newState = { ...csvState, columns: newColumns };
+    setCsvState(newState);
+    saveToHistory(newState);
+    syncToContent(newState);
   }, [csvState, saveToHistory, syncToContent]);
 
   // Undo/Redo
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
-      setCsvState(history[newIndex]);
+      const newState = history[newIndex];
+      setCsvState(newState);
       setHistoryIndex(newIndex);
-      syncToContent();
+      syncToContent(newState);
     }
   }, [history, historyIndex, syncToContent]);
 
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
-      setCsvState(history[newIndex]);
+      const newState = history[newIndex];
+      setCsvState(newState);
       setHistoryIndex(newIndex);
-      syncToContent();
+      syncToContent(newState);
     }
   }, [history, historyIndex, syncToContent]);
 
@@ -323,7 +348,8 @@ export const useCsvData = (
     const rows = csvState.data.map(row => row.cells.map(cell => cell.value));
     const allRows = [...headers, ...rows];
     
-    return Papa.unparse(allRows, { delimiter });
+    const result = Papa.unparse(allRows, { delimiter });
+    return result;
   }, [csvState, hasHeader, delimiter]);
 
   const toJson = useCallback((): string => {
@@ -378,7 +404,7 @@ export const useCsvData = (
       const newState = { data: snapshot.data, columns: snapshot.columns };
       setCsvState(newState);
       saveToHistory(newState);
-      syncToContent();
+      syncToContent(newState);
     }
   }, [snapshots, saveToHistory, syncToContent]);
 
@@ -432,6 +458,7 @@ export const useCsvData = (
     deleteRow,
     addColumn,
     deleteColumn,
+    renameColumn,
     
     // Undo/Redo
     canUndo: historyIndex > 0,
