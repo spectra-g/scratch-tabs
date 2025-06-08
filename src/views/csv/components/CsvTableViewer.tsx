@@ -159,7 +159,7 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      title={error || 'Click to select, click pencil or press Enter/F2 to edit'}
+      title={error || 'Click to select. Click pencil or press enter to edit'}
     >
       <span className="text-sm truncate flex-1 text-gray-200 mr-2">
         {value || <span className="text-gray-500 italic">Empty</span>}
