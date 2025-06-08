@@ -55,4 +55,25 @@ export interface CsvColumnStats {
   unique: number;
   empty: number;
   mostCommon: { value: string; count: number } | null;
+  dataType: 'number' | 'string' | 'mixed';
+  
+  // Number-specific stats
+  numericStats?: {
+    min: number;
+    max: number;
+    sum: number;
+    average: number;
+    median: number;
+    standardDeviation: number;
+  };
+  
+  // String-specific stats
+  stringStats?: {
+    minLength: number;
+    maxLength: number;
+    avgLength: number;
+  };
+  
+  // Frequency distribution for top values
+  frequencyDistribution: Array<{ value: string; count: number; percentage: number }>;
 } 

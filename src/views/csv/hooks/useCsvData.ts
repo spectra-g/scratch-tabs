@@ -482,13 +482,22 @@ export const useCsvData = (
   const getColumnStats = useCallback((columnId: string): CsvColumnStats => {
     const columnIndex = csvState.columns.findIndex(col => col.id === columnId);
     if (columnIndex === -1) {
-      return { count: 0, unique: 0, empty: 0, mostCommon: null };
+      return { 
+        count: 0, 
+        unique: 0, 
+        empty: 0, 
+        mostCommon: null, 
+        dataType: 'string', 
+        frequencyDistribution: [] 
+      };
     }
 
     const values = csvState.data.map(row => row.cells[columnIndex]?.value || '');
     const nonEmpty = values.filter(v => v.trim() !== '');
-    const valueCounts = new Map<string, number>();
+    const empty = values.length - nonEmpty.length;
     
+    // Value frequency counting
+    const valueCounts = new Map<string, number>();
     nonEmpty.forEach(value => {
       valueCounts.set(value, (valueCounts.get(value) || 0) + 1);
     });
@@ -497,11 +506,75 @@ export const useCsvData = (
       ? Array.from(valueCounts.entries()).reduce((a, b) => a[1] > b[1] ? a : b)
       : null;
 
+    // Create frequency distribution (top 10 values)
+    const frequencyDistribution = Array.from(valueCounts.entries())
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10)
+      .map(([value, count]) => ({
+        value,
+        count,
+        percentage: (count / nonEmpty.length) * 100
+      }));
+
+    // Data type detection
+    const numericValues: number[] = [];
+    let allNumeric = true;
+    
+    for (const value of nonEmpty) {
+      const num = parseFloat(value);
+      if (!isNaN(num) && isFinite(num)) {
+        numericValues.push(num);
+      } else {
+        allNumeric = false;
+      }
+    }
+    
+    const dataType: 'number' | 'string' | 'mixed' = 
+      allNumeric && numericValues.length > 0 ? 'number' :
+      numericValues.length === 0 ? 'string' : 'mixed';
+
+    // Calculate numeric statistics if applicable
+    let numericStats: CsvColumnStats['numericStats'] | undefined;
+    if (numericValues.length > 0) {
+      const sorted = numericValues.slice().sort((a, b) => a - b);
+      const sum = numericValues.reduce((acc, val) => acc + val, 0);
+      const average = sum / numericValues.length;
+      
+      // Calculate median
+      const median = sorted.length % 2 === 0
+        ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+        : sorted[Math.floor(sorted.length / 2)];
+      
+      // Calculate standard deviation
+      const variance = numericValues.reduce((acc, val) => acc + Math.pow(val - average, 2), 0) / numericValues.length;
+      const standardDeviation = Math.sqrt(variance);
+      
+      numericStats = {
+        min: Math.min(...numericValues),
+        max: Math.max(...numericValues),
+        sum,
+        average,
+        median,
+        standardDeviation
+      };
+    }
+
+    // Calculate string statistics
+    const stringStats = {
+      minLength: Math.min(...nonEmpty.map(v => v.length)),
+      maxLength: Math.max(...nonEmpty.map(v => v.length)),
+      avgLength: nonEmpty.reduce((acc, v) => acc + v.length, 0) / nonEmpty.length || 0
+    };
+
     return {
       count: values.length,
       unique: valueCounts.size,
-      empty: values.length - nonEmpty.length,
-      mostCommon: mostCommon ? { value: mostCommon[0], count: mostCommon[1] } : null
+      empty,
+      mostCommon: mostCommon ? { value: mostCommon[0], count: mostCommon[1] } : null,
+      dataType,
+      numericStats,
+      stringStats,
+      frequencyDistribution
     };
   }, [csvState]);
 

@@ -27,10 +27,12 @@ import {
   History,
   Trash2,
   Clock,
+  BarChart3,
 } from 'lucide-react';
 import { ExtendedViewProps } from '../../registry';
 import { useCsvData } from '../hooks/useCsvData';
 import { CsvRow } from '../types';
+import { ColumnStatsPopover } from './ColumnStatsPopover';
 
 interface EditableCellProps {
   value: string;
@@ -208,9 +210,15 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [showSnapshotsPanel, setShowSnapshotsPanel] = useState(false);
+  
+  // Stats popover state
+  const [statsPopover, setStatsPopover] = useState<{
+    columnId: string;
+    position: { x: number; y: number };
+  } | null>(null);
 
   const csvData = useCsvData(content, onContentChange);
-  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, duplicateRow, addColumn, deleteColumn, duplicateColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot } = csvData;
+  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, duplicateRow, addColumn, deleteColumn, duplicateColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, getColumnStats } = csvData;
 
   // Efficient duplicate detection using hash map - O(n) complexity
   const findDuplicates = useCallback(() => {
@@ -343,6 +351,18 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
                   </div>
                 )}
                 <div className="flex items-center space-x-1 ml-2">
+                  <button 
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setStatsPopover({
+                        columnId: column.id,
+                        position: { x: rect.left, y: rect.bottom + 5 }
+                      });
+                    }} 
+                    title="Column statistics"
+                  >
+                    <BarChart3 size={12} />
+                  </button>
                   <button onClick={() => addColumn(columnIndex + 1)} title="Add column after"><Plus size={12} /></button>
                   <button onClick={() => duplicateColumn(column.id)} title="Duplicate column"><Copy size={12} /></button>
                   <button onClick={() => deleteColumn(column.id)} title="Delete column"><Minus size={12} /></button>
@@ -397,7 +417,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
         ),
       }),
     ];
-  }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, duplicateColumn, addRow, deleteRow, duplicateRow, updateCell, renameColumn, selectedCell, editingCellTrigger]);
+  }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, duplicateColumn, addRow, deleteRow, duplicateRow, updateCell, renameColumn, selectedCell, editingCellTrigger, setStatsPopover]);
 
   const table = useReactTable({
     data: filteredData,
@@ -749,6 +769,23 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
             )}
           </div>
         </div>
+      )}
+
+      {/* Stats Popover */}
+      {statsPopover && (
+        <>
+          {/* Click-outside overlay */}
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setStatsPopover(null)}
+          />
+          <ColumnStatsPopover
+            columnName={columns.find(col => col.id === statsPopover.columnId)?.name || 'Unknown'}
+            stats={getColumnStats(statsPopover.columnId)}
+            onClose={() => setStatsPopover(null)}
+            position={statsPopover.position}
+          />
+        </>
       )}
     </div>
   );
