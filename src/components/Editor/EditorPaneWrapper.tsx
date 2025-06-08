@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { useRootStore } from '../../stores';
 import { EditorInstance } from './EditorInstance';
 import { TabletView } from '../Tab/TabletView';
+import { extendedViewRegistry } from '../../views/registry';
+import { StatusBar } from '../StatusBar';
 
 interface EditorPaneWrapperProps {
   side: 'left' | 'right';
@@ -26,11 +28,14 @@ const PreviewLoadingFallback = () => (
 );
 
 export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
+  const [editorInstance, setEditorInstance] = React.useState<any>(null);
+  
   const {
     tabs,
     previewMode,
     splitView,
-    updateTabState
+    updateTabState,
+    getActiveView
   } = useRootStore();
 
   const activeTabId = side === 'left' ? splitView.activeLeftTabId : splitView.activeRightTabId;
@@ -41,9 +46,22 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
     updateTabState(activeTabId, {tabletState: newState});
   };
 
+  // Check for extended views
+  const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
+  const extendedView = activeTab && activeViewId 
+    ? extendedViewRegistry.getView(activeTab.language, activeViewId)
+    : null;
+
   const shouldShowMarkdownPreview = previewMode && activeTab?.language === 'markdown';
   const shouldShowHtmlPreview = previewMode && activeTab?.language === 'html';
   const shouldShowPreview = shouldShowMarkdownPreview || shouldShowHtmlPreview;
+
+  // Clear editor instance when switching to extended view or tablet
+  React.useEffect(() => {
+    if (extendedView || activeTab?.isTablet) {
+      setEditorInstance(null);
+    }
+  }, [extendedView, activeTab?.isTablet]);
 
   return (
     // Main container for this pane
@@ -51,26 +69,49 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
       data-editor-pane-side={side}
       className={`flex h-full w-full overflow-hidden ${shouldShowPreview ? 'flex-row' : 'flex-col'}`}
     >
-      {/* Editor/Tablet Container */}
+      {/* Editor/Tablet/Extended View Container */}
       <div
-        className={`flex-1 overflow-hidden relative ${shouldShowPreview ? 'w-1/2' : 'w-full'} h-full`}
+        className={`flex-1 overflow-hidden relative ${shouldShowPreview ? 'w-1/2' : 'w-full'} flex flex-col`}
       >
-        {activeTab ? (
-          activeTab.isTablet ? (
-            <TabletView
-              tab={activeTab}
-              onChange={handleTabletStateChange}
-            />
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-hidden">
+          {activeTab ? (
+            extendedView ? (
+              // Render extended view (like CSV table editor)
+              <extendedView.component
+                content={activeTab.content}
+                onContentChange={(newContent) => updateTabState(activeTab.id, { content: newContent })}
+                tabId={activeTab.id}
+                isActive={true}
+              />
+            ) : activeTab.isTablet ? (
+              <TabletView
+                tab={activeTab}
+                onChange={handleTabletStateChange}
+              />
+            ) : (
+              // EditorInstance without its own StatusBar
+              <EditorInstance
+                side={side}
+                activeTab={activeTab}
+                onEditorReady={setEditorInstance}
+              />
+            )
           ) : (
-            // EditorInstance now renders its own StatusBar internally
-            <EditorInstance
+            <div className="h-full flex items-center justify-center text-gray-400">
+              <p>No tab selected</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Status Bar - Always visible */}
+        {activeTab && (
+          <div className="flex-shrink-0">
+            <StatusBar 
+              editor={!extendedView ? editorInstance : null}
+              activeTab={activeTab} 
               side={side}
-              activeTab={activeTab}
             />
-          )
-        ) : (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            <p>No tab selected</p>
           </div>
         )}
       </div>

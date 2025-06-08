@@ -11,6 +11,7 @@ export interface Tab {
   dateCreated: number;
   lastModified: number;
   workspaceId: string;
+  activeViewId?: string | null; // For extended views like CSV table editor
 }
 
 export interface EditorPosition {

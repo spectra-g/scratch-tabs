@@ -34,6 +34,10 @@ class LanguageRegistryImpl implements LanguageRegistry {
   detectLanguage(content: string): string {
     if (!content || !content.trim()) return 'plaintext';
 
+    if (content.length > 1_000_000) {
+      return 'plaintext';
+    }
+
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
 
     for (const detector of this.detectors) {
@@ -68,6 +72,10 @@ class LanguageRegistryImpl implements LanguageRegistry {
    */
   isAmbiguous(content: string): boolean {
     if (!content || !content.trim()) return false;
+    
+    if (content.length > 1_000_000) {
+      return false;
+    }
 
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
     for (const detector of this.detectors) {

@@ -71,6 +71,10 @@ interface RootStore {
   reorderTabs: (side: 'left' | 'right', newOrder: string[]) => void;
   focusedEditorSide: 'left' | 'right' | null;
   saveTabDataById: (tabId: string) => void;
+
+  // Extended view management
+  setActiveView: (tabId: string, viewId: string | null) => void;
+  getActiveView: (tabId: string) => string | null;
 }
 
 export const useRootStore = create<RootStore>((set, get) => {
@@ -399,7 +403,10 @@ export const useRootStore = create<RootStore>((set, get) => {
       }
       else if (splitView.isSplit) {
         const targetList = toRightSide ? splitView.rightTabs : splitView.leftTabs;
-        return targetList.filter(id => isTabEmpty(tabs.find(t => t.id === id))).length < 3;
+        return targetList.filter(id => {
+          const tab = tabs.find(t => t.id === id);
+          return tab && isTabEmpty(tab);
+        }).length < 3;
       } else {
         return countEmptyTabs(tabs) < 3;
       }
@@ -463,6 +470,16 @@ export const useRootStore = create<RootStore>((set, get) => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } catch (error) { console.error(`Save error Tab ID ${tabId}:`, error); }
+    },
+
+    // Extended view management
+    setActiveView: (tabId: string, viewId: string | null) => {
+      useTabsStore.getState().updateTabState(tabId, { activeViewId: viewId });
+    },
+
+    getActiveView: (tabId: string) => {
+      const tab = useTabsStore.getState().tabs.find(t => t.id === tabId);
+      return tab?.activeViewId || null;
     },
   };
 });

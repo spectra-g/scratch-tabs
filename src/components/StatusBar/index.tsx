@@ -11,6 +11,7 @@ import { useSearchStore } from '../../stores/searchStore';
 import { languageRegistry } from '../../languages';
 import { getPotentialLanguageMatches } from '../../languages';
 import { LanguageSelectionPopup } from './LanguageSelectionPopup';
+import { ExtendedViewButtons } from './ExtendedViewButtons';
 import type { PopupMenuItem } from './types';
 
 interface StatusBarProps {
@@ -217,6 +218,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
               {renderLanguageSection()}
               {LanguageStatusItem && <LanguageStatusItem />}
               {LanguageOptionsMenu && editor && <LanguageOptionsMenu editor={editor} />}
+              <ExtendedViewButtons language={activeTab.language} tabId={activeTab.id} />
             </div>
           </>
         )}
