@@ -23,6 +23,9 @@ import {
   Copy,
   Replace,
   X,
+  History,
+  Trash2,
+  Clock,
 } from 'lucide-react';
 import { ExtendedViewProps } from '../../registry';
 import { useCsvData } from '../hooks/useCsvData';
@@ -203,9 +206,10 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
   const [headerEditValue, setHeaderEditValue] = useState('');
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
+  const [showSnapshotsPanel, setShowSnapshotsPanel] = useState(false);
 
   const csvData = useCsvData(content, onContentChange);
-  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, addColumn, deleteColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot } = csvData;
+  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, addColumn, deleteColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot } = csvData;
 
   // Efficient duplicate detection using hash map - O(n) complexity
   const findDuplicates = useCallback(() => {
@@ -479,6 +483,15 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
           >
             <Camera size={16} />
           </button>
+          {snapshots.length > 0 && (
+            <button 
+              onClick={() => setShowSnapshotsPanel(!showSnapshotsPanel)}
+              title="Manage snapshots"
+              className={`p-2 rounded ${showSnapshotsPanel ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-gray-700'}`}
+            >
+              <History size={16} />
+            </button>
+          )}
           <div className="w-px h-6 bg-gray-700 mx-2" />
           {/* Duplicates Controls */}
           {duplicateGroups.length === 0 ? (
@@ -532,6 +545,60 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Snapshots Panel */}
+      {showSnapshotsPanel && snapshots.length > 0 && (
+        <div className="flex-none border-b border-gray-700 bg-gray-800/50 p-3">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-200 flex items-center gap-2">
+              <History size={16} />
+              Snapshots ({snapshots.length})
+            </h3>
+            <button
+              onClick={() => setShowSnapshotsPanel(false)}
+              className="p-1 rounded hover:bg-gray-700 text-gray-400"
+              title="Close snapshots panel"
+            >
+              <X size={14} />
+            </button>
+          </div>
+          <div className="grid gap-2 max-h-32 overflow-y-auto custom-scrollbar">
+            {snapshots.map((snapshot) => (
+              <div
+                key={snapshot.id}
+                className="flex items-center justify-between bg-gray-700/50 rounded-lg p-2 hover:bg-gray-700/70 transition-colors"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Clock size={14} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-gray-200 truncate">{snapshot.name}</div>
+                    <div className="text-xs text-gray-400">
+                      {new Date(snapshot.timestamp).toLocaleString()} • {snapshot.data.length} rows × {snapshot.columns.length} columns
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => restoreSnapshot(snapshot.id)}
+                    className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
+                    title="Restore this snapshot"
+                  >
+                    Restore
+                  </button>
+                  <button
+                    onClick={() => deleteSnapshot(snapshot.id)}
+                    className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                    title="Delete snapshot"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
       {/* Table */}
       <div className="flex-1 overflow-auto custom-scrollbar">
         <table className="w-full border-collapse">
