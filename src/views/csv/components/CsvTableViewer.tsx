@@ -9,6 +9,7 @@ import {
   SortingState,
   getSortedRowModel,
 } from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   Plus,
   Minus,
@@ -405,11 +406,69 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
     getSortedRowModel: getSortedRowModel(),
   });
 
+  // Virtualization setup
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  
+  const rowVirtualizer = useVirtualizer({
+    count: table.getRowModel().rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 35, // Estimated row height in pixels
+    overscan: 10, // Render extra rows outside viewport for smooth scrolling
+  });
+
+  // Calculate column widths based on content sampling
+  const columnWidths = useMemo(() => {
+    const headers = table.getHeaderGroups()[0]?.headers || [];
+    const rows = table.getRowModel().rows;
+    const sampleSize = Math.min(50, rows.length); // Sample first 50 rows for width calculation
+    
+    const widths: string[] = [];
+    
+    headers.forEach((header, colIndex) => {
+      if (colIndex === 0) {
+        // Row number column - calculate based on max row number
+        const maxRowNum = Math.max(rows.length, 999);
+        const width = Math.max(40, maxRowNum.toString().length * 12 + 20);
+        widths.push(`${width}px`);
+      } else if (header.id === 'actions') {
+        // Actions column - fixed width for icons
+        widths.push('80px');
+      } else {
+        // Data columns - sample content to determine width
+        let maxWidth = header.column.columnDef.header?.toString().length || 0;
+        
+        // Sample rows to find max content width
+        for (let i = 0; i < sampleSize; i++) {
+          const row = rows[i];
+          if (row) {
+            const cell = row.getVisibleCells()[colIndex];
+            if (cell) {
+              const cellValue = cell.getValue();
+              const cellText = cellValue?.toString() || '';
+              maxWidth = Math.max(maxWidth, cellText.length);
+            }
+          }
+        }
+        
+        // Convert character count to approximate pixel width
+        // Average character width ~8px + padding
+        const minWidth = 60;
+        const maxWidthPx = 300; // Cap at 300px
+        const calculatedWidth = Math.min(Math.max(minWidth, maxWidth * 8 + 16), maxWidthPx);
+        widths.push(`${calculatedWidth}px`);
+      }
+    });
+    
+    return widths;
+  }, [table, csvData]); // Depend on csvData to recalculate when data changes
+
+  const gridTemplateColumns = columnWidths.join(' ');
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (isAnyCellEditing || editingHeader) return;
     if (!selectedCell) {
-      if (data.length > 0 && columns.length > 0) {
-        setSelectedCell({ rowId: data[0].id, columnId: columns[0].id });
+      if (filteredData.length > 0 && columns.length > 0) {
+        setSelectedCell({ rowId: filteredData[0].id, columnId: columns[0].id });
       }
       return;
     }
@@ -419,14 +478,14 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
       return;
     }
 
-    const currentRowIndex = data.findIndex(row => row.id === selectedCell.rowId);
+    const currentRowIndex = filteredData.findIndex(row => row.id === selectedCell.rowId);
     const currentColumnIndex = columns.findIndex(col => col.id === selectedCell.columnId);
     let newRowIndex = currentRowIndex;
     let newColumnIndex = currentColumnIndex;
 
     switch (e.key) {
       case 'ArrowUp': e.preventDefault(); newRowIndex = Math.max(0, currentRowIndex - 1); break;
-      case 'ArrowDown': e.preventDefault(); newRowIndex = Math.min(data.length - 1, currentRowIndex + 1); break;
+      case 'ArrowDown': e.preventDefault(); newRowIndex = Math.min(filteredData.length - 1, currentRowIndex + 1); break;
       case 'ArrowLeft': e.preventDefault(); newColumnIndex = Math.max(0, currentColumnIndex - 1); break;
       case 'ArrowRight': e.preventDefault(); newColumnIndex = Math.min(columns.length - 1, currentColumnIndex + 1); break;
       case 'Tab': /* Tab logic can be added here */ break;
@@ -434,9 +493,17 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
     }
     
     if (newRowIndex !== currentRowIndex || newColumnIndex !== currentColumnIndex) {
-      setSelectedCell({ rowId: data[newRowIndex].id, columnId: columns[newColumnIndex].id });
+      const newRowId = filteredData[newRowIndex].id;
+      const newColumnId = columns[newColumnIndex].id;
+      setSelectedCell({ rowId: newRowId, columnId: newColumnId });
+      
+      // Scroll to the selected cell if it's not visible
+      rowVirtualizer.scrollToIndex(newRowIndex, {
+        align: 'auto',
+        behavior: 'smooth'
+      });
     }
-  }, [selectedCell, isAnyCellEditing, editingHeader, data, columns]);
+  }, [selectedCell, isAnyCellEditing, editingHeader, filteredData, columns, rowVirtualizer]);
 
   if (loading) {
     return (
@@ -599,38 +666,63 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
         </div>
       )}
       
-      {/* Table */}
-      <div className="flex-1 overflow-auto custom-scrollbar">
-        <table className="w-full border-collapse">
-          <thead className="bg-gray-800 sticky top-0 z-10">
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>{headerGroup.headers.map(header => (
-                <th key={header.id} className="border border-gray-700 p-2 text-left font-medium text-gray-300">
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}</tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => {
-              const isDuplicate = duplicateRowIds.has(row.original.id);
-              return (
-                <tr 
-                  key={row.id} 
-                  className={`hover:bg-gray-800/50 ${
-                    isDuplicate ? 'bg-yellow-500/10 border-yellow-500/30' : ''
-                  }`}
-                >
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className="border border-gray-700 p-0">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Virtualized Table */}
+      <div 
+        ref={tableContainerRef}
+        className="flex-1 overflow-auto custom-scrollbar"
+        style={{ contain: 'strict' }}
+      >
+        {/* Fixed Header */}
+        <div 
+          className="bg-gray-800 sticky top-0 z-10 border-b border-gray-700"
+          style={{
+            display: 'grid',
+            gridTemplateColumns,
+            minWidth: 'fit-content'
+          }}
+        >
+          {table.getHeaderGroups()[0]?.headers.map(header => (
+            <div
+              key={header.id}
+              className="border-r border-gray-700 p-2 text-left font-medium text-gray-300 bg-gray-800"
+            >
+              {flexRender(header.column.columnDef.header, header.getContext())}
+            </div>
+          ))}
+        </div>
+        
+        {/* Virtual Rows Container */}
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+          {rowVirtualizer.getVirtualItems().map(virtualRow => {
+            const row = table.getRowModel().rows[virtualRow.index];
+            const isDuplicate = duplicateRowIds.has(row.original.id);
+            
+            return (
+              <div
+                key={virtualRow.key}
+                className={`absolute inset-x-0 border-b border-gray-700 hover:bg-gray-800/50 ${
+                  isDuplicate ? 'bg-yellow-500/10 border-yellow-500/30' : ''
+                }`}
+                style={{
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                  display: 'grid',
+                  gridTemplateColumns,
+                  minWidth: 'fit-content'
+                }}
+              >
+                {row.getVisibleCells().map(cell => (
+                  <div
+                    key={cell.id}
+                    className="border-r border-gray-700"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
       </div>
       {/* Diagnostics Footer */}
       {diagnostics.length > 0 && (
