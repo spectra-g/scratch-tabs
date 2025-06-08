@@ -21,6 +21,8 @@ import {
   ArrowUpDown,
   Edit3,
   Copy,
+  Replace,
+  X,
 } from 'lucide-react';
 import { ExtendedViewProps } from '../../registry';
 import { useCsvData } from '../hooks/useCsvData';
@@ -183,6 +185,12 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
 });
 
 
+interface DuplicateGroup {
+  rowString: string;
+  rowIds: string[];
+  count: number;
+}
+
 export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
   content,
   onContentChange,
@@ -193,11 +201,82 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
   const [isAnyCellEditing, setIsAnyCellEditing] = useState(false);
   const [editingHeader, setEditingHeader] = useState<string | null>(null);
   const [headerEditValue, setHeaderEditValue] = useState('');
+  const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
 
   const csvData = useCsvData(content, onContentChange);
   const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, addColumn, deleteColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot } = csvData;
 
+  // Efficient duplicate detection using hash map - O(n) complexity
+  const findDuplicates = useCallback(() => {
+    const rowMap = new Map<string, string[]>();
+    
+    // Single pass through data to build hash map
+    data.forEach(row => {
+      // Create row string by joining all cell values
+      const rowString = row.cells.map(cell => cell.value || '').join('|');
+      
+      if (rowMap.has(rowString)) {
+        rowMap.get(rowString)!.push(row.id);
+      } else {
+        rowMap.set(rowString, [row.id]);
+      }
+    });
+    
+    // Filter to only include groups with more than one row (duplicates)
+    const duplicates: DuplicateGroup[] = [];
+    rowMap.forEach((rowIds, rowString) => {
+      if (rowIds.length > 1) {
+        duplicates.push({
+          rowString,
+          rowIds,
+          count: rowIds.length
+        });
+      }
+    });
+    
+    setDuplicateGroups(duplicates);
+    setShowDuplicatesOnly(duplicates.length > 0);
+  }, [data]);
+
+  const clearDuplicates = useCallback(() => {
+    setDuplicateGroups([]);
+    setShowDuplicatesOnly(false);
+  }, []);
+
+  const removeDuplicateRows = useCallback(() => {
+    if (duplicateGroups.length === 0) return;
+    
+    // Collect all duplicate row IDs except the first one in each group
+    const rowsToDelete: string[] = [];
+    duplicateGroups.forEach(group => {
+      // Keep the first row, delete the rest
+      rowsToDelete.push(...group.rowIds.slice(1));
+    });
+    
+    // Delete rows in batch
+    rowsToDelete.forEach(rowId => deleteRow(rowId));
+    
+    // Clear duplicates state
+    clearDuplicates();
+  }, [duplicateGroups, deleteRow, clearDuplicates]);
+
   const columnHelper = createColumnHelper<CsvRow>();
+
+  // Get all duplicate row IDs for highlighting
+  const duplicateRowIds = useMemo(() => {
+    const ids = new Set<string>();
+    duplicateGroups.forEach(group => {
+      group.rowIds.forEach(id => ids.add(id));
+    });
+    return ids;
+  }, [duplicateGroups]);
+
+  // Filter data based on duplicate view mode
+  const filteredData = useMemo(() => {
+    if (!showDuplicatesOnly) return data;
+    return data.filter(row => duplicateRowIds.has(row.id));
+  }, [data, showDuplicatesOnly, duplicateRowIds]);
 
   const tableColumns = useMemo<ColumnDef<CsvRow, any>[]>(() => {
     return [
@@ -314,7 +393,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
   }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, addRow, deleteRow, updateCell, renameColumn, selectedCell, editingCellTrigger]);
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns: tableColumns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -400,9 +479,53 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
           >
             <Camera size={16} />
           </button>
+          <div className="w-px h-6 bg-gray-700 mx-2" />
+          {/* Duplicates Controls */}
+          {duplicateGroups.length === 0 ? (
+            <button 
+              onClick={findDuplicates} 
+              title="Find duplicate rows"
+              className="p-2 rounded hover:bg-gray-700"
+            >
+              <Replace size={16} />
+            </button>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={() => setShowDuplicatesOnly(!showDuplicatesOnly)}
+                title={showDuplicatesOnly ? "Show all rows" : "Show only duplicates"}
+                className={`px-3 py-1 rounded text-sm ${
+                  showDuplicatesOnly 
+                    ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {showDuplicatesOnly ? 'Show All' : 'Duplicates Only'}
+              </button>
+              <button 
+                onClick={removeDuplicateRows}
+                title="Remove duplicate rows (keep first occurrence)"
+                className="px-3 py-1 rounded text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30"
+              >
+                Remove Duplicates
+              </button>
+              <button 
+                onClick={clearDuplicates}
+                title="Clear duplicate analysis"
+                className="p-1 rounded hover:bg-gray-700 text-gray-400"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-4 text-sm text-gray-400">
           <span>{data.length} rows × {columns.length} columns</span>
+          {duplicateGroups.length > 0 && (
+            <span className="text-yellow-400">
+              {duplicateGroups.reduce((sum, group) => sum + group.count, 0)} duplicate rows in {duplicateGroups.length} groups
+            </span>
+          )}
           <div className="flex items-center space-x-1">
             {isValid ? <CheckCircle size={16} className="text-green-400" /> : <AlertTriangle size={16} className="text-yellow-400" />}
             <span className="text-xs">{diagnostics.filter(d=>d.type==='error').length} errors, {diagnostics.filter(d=>d.type==='warning').length} warnings</span>
@@ -422,15 +545,23 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="hover:bg-gray-800/50">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="border border-gray-700 p-0">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {table.getRowModel().rows.map(row => {
+              const isDuplicate = duplicateRowIds.has(row.original.id);
+              return (
+                <tr 
+                  key={row.id} 
+                  className={`hover:bg-gray-800/50 ${
+                    isDuplicate ? 'bg-yellow-500/10 border-yellow-500/30' : ''
+                  }`}
+                >
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="border border-gray-700 p-0">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
