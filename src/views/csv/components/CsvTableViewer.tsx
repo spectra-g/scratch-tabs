@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -58,7 +58,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
   } | null>(null);
 
   const csvData = useCsvData(content, onContentChange);
-  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, duplicateRow, addColumn, deleteColumn, duplicateColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, getColumnStats, toCsv, toJson, toMarkdown, toSql } = csvData;
+  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, deleteRows, duplicateRow, addColumn, deleteColumn, duplicateColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, getColumnStats, toCsv, toJson, toMarkdown, toSql } = csvData;
 
   // Efficient duplicate detection using hash map - O(n) complexity
   const findDuplicates = useCallback(() => {
@@ -107,12 +107,14 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
       rowsToDelete.push(...group.rowIds.slice(1));
     });
     
-    // Delete rows in batch
-    rowsToDelete.forEach(rowId => deleteRow(rowId));
+    // Delete all duplicate rows in a single batch operation
+    if (rowsToDelete.length > 0) {
+      deleteRows(rowsToDelete);
+    }
     
     // Clear duplicates state
     clearDuplicates();
-  }, [duplicateGroups, deleteRow, clearDuplicates]);
+  }, [duplicateGroups, deleteRows, clearDuplicates]);
 
   // Export functions
   const downloadFile = useCallback((content: string, filename: string, mimeType: string) => {

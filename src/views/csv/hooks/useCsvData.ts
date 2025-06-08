@@ -25,6 +25,7 @@ export interface UseCsvDataReturn {
   updateCell: (rowId: string, columnId: string, value: string) => void;
   addRow: (index?: number) => void;
   deleteRow: (rowId: string) => void;
+  deleteRows: (rowIds: string[]) => void;
   duplicateRow: (rowId: string) => void;
   addColumn: (index?: number, name?: string) => void;
   deleteColumn: (columnId: string) => void;
@@ -281,6 +282,17 @@ export const useCsvData = (
     const newState = {
       ...csvState,
       data: csvState.data.filter(row => row.id !== rowId)
+    };
+    setCsvState(newState);
+    saveToHistory(newState);
+    syncToContent(newState);
+  }, [csvState, saveToHistory, syncToContent]);
+
+  const deleteRows = useCallback((rowIds: string[]) => {
+    const rowIdSet = new Set(rowIds);
+    const newState = {
+      ...csvState,
+      data: csvState.data.filter(row => !rowIdSet.has(row.id))
     };
     setCsvState(newState);
     saveToHistory(newState);
@@ -595,6 +607,7 @@ export const useCsvData = (
     updateCell,
     addRow,
     deleteRow,
+    deleteRows,
     duplicateRow,
     addColumn,
     deleteColumn,
