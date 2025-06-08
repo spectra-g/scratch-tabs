@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -19,6 +19,7 @@ import {
   SortAsc,
   SortDesc,
   ArrowUpDown,
+  Edit3,
 } from 'lucide-react';
 import { ExtendedViewProps } from '../../registry';
 import { useCsvData } from '../hooks/useCsvData';
@@ -31,6 +32,7 @@ interface EditableCellProps {
   error?: string;
   startEditing: boolean;
   onSelect: () => void;
+  onStartEdit: () => void;
   onChange: (value: string) => void;
   onEditingChange: (isEditing: boolean) => void;
 }
@@ -42,6 +44,7 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
   error,
   startEditing,
   onSelect,
+  onStartEdit,
   onChange,
   onEditingChange,
 }) => {
@@ -56,18 +59,34 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
   }, [value, isEditing]);
   
   useEffect(() => {
-    if (startEditing) {
+    if (startEditing && !isEditing) {
       setIsEditing(true);
     }
-  }, [startEditing]);
+  }, [startEditing, isEditing, value]);
 
+  // Reset startEditing trigger after it's been processed
   useEffect(() => {
-    onEditingChange(isEditing);
+    if (startEditing && isEditing) {
+      // We don't have access to setEditingCellTrigger here, but the parent should handle this
+    }
+  }, [startEditing, isEditing]);
+
+  // Track previous editing state to avoid unnecessary calls
+  const prevIsEditingRef = useRef(isEditing);
+  
+  useEffect(() => {
+    // Only call onEditingChange when there's an actual state transition
+    if (prevIsEditingRef.current !== isEditing) {
+      onEditingChange(isEditing);
+      prevIsEditingRef.current = isEditing;
+    }
+    
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.select();
+      const length = inputRef.current.value.length;
+      inputRef.current.setSelectionRange(length, length);
     }
-  }, [isEditing, onEditingChange]);
+  }, [isEditing, onEditingChange, value]);
 
   const handleCommitChange = useCallback(() => {
     if (isEditing) {
@@ -96,19 +115,20 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
     onSelect();
   }, [onSelect]);
 
-  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleEditClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onSelect();
-    setIsEditing(true);
-  }, [onSelect]);
+    onStartEdit();
+  }, [onStartEdit]);
 
   if (isEditing) {
     return (
-      <div className="h-full w-full flex items-center bg-gray-800 ring-2 ring-blue-500">
+      <div className="h-full w-full flex items-center bg-gray-800">
         <input
           ref={inputRef}
-          className="w-full h-full bg-transparent border-none outline-none text-sm text-white px-2"
+          className="w-full h-full bg-transparent border-none outline-none text-sm text-white px-2 focus:outline-none focus:ring-0"
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -120,16 +140,26 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
 
   return (
     <div
-      className={`h-full min-h-[35px] flex items-center px-2 cursor-cell transition-colors ${
+      className={`h-full min-h-[35px] flex items-center justify-between px-2 cursor-cell transition-colors relative group ${
         isSelected ? 'bg-blue-900/30 ring-1 ring-blue-500' : 'hover:bg-gray-700/20'
       } ${!isValid ? 'bg-red-900/20' : ''}`}
       onClick={handleClick}
-      onDoubleClick={handleDoubleClick}
-      title={error || 'Click to select, double-click or press Enter/F2 to edit'}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      title={error || 'Click to select, click pencil or press Enter/F2 to edit'}
     >
-      <span className="text-sm truncate w-full text-gray-200">
+      <span className="text-sm truncate flex-1 text-gray-200">
         {value || <span className="text-gray-500 italic">Empty</span>}
       </span>
+      {(isHovered || isSelected) && (
+        <button
+          className="ml-2 p-1 rounded opacity-70 hover:opacity-100 hover:bg-gray-600 transition-all"
+          onClick={handleEditClick}
+          title="Edit cell"
+        >
+          <Edit3 size={12} />
+        </button>
+      )}
     </div>
   );
 });
@@ -228,10 +258,21 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
                     setSelectedCell({ rowId: row.original.id, columnId: column.id });
                     setEditingCellTrigger(null);
                   }}
-                  onChange={(newValue) => updateCell(row.original.id, column.id, newValue)}
+                  onStartEdit={() => {
+                    setSelectedCell({ rowId: row.original.id, columnId: column.id });
+                    setEditingCellTrigger({ rowId: row.original.id, columnId: column.id });
+                  }}
+                  onChange={(newValue) => {
+                    // Clear the editing trigger immediately when data changes
+                    setEditingCellTrigger(null);
+                    updateCell(row.original.id, column.id, newValue);
+                  }}
                   onEditingChange={(isEditing) => {
                     setIsAnyCellEditing(isEditing);
-                    if (!isEditing) setEditingCellTrigger(null);
+                    // Only clear editingCellTrigger if this specific cell was the one being edited
+                    if (!isEditing && editingCellTrigger?.rowId === row.original.id && editingCellTrigger?.columnId === column.id) {
+                      setEditingCellTrigger(null);
+                    }
                   }}
                 />
               );
@@ -252,7 +293,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
         ),
       }),
     ];
-  }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, addRow, deleteRow, updateCell, renameColumn]);
+  }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, addRow, deleteRow, updateCell, renameColumn, selectedCell, editingCellTrigger]);
 
   const table = useReactTable({
     data,
