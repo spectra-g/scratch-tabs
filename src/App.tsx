@@ -4,6 +4,7 @@ import { initializeLanguageProviders } from './languages';
 import { useAIStore } from './stores/aiStore';
 import { broadcastManager } from './stores/broadcastStore';
 import DragDropOverlay from './components/DragDropOverlay';
+import './views/csv';
 
 // Initialize language providers once when the app loads
 initializeLanguageProviders();
