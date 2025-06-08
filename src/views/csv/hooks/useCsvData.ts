@@ -119,12 +119,27 @@ export const useCsvData = (
         const expectedLength = (rawData[0] as string[]).length;
         rawData.forEach((row, index) => {
           if ((row as string[]).length !== expectedLength) {
-            newDiagnostics.push({
-              type: 'warning',
-              message: `Row ${index + 1} has ${(row as string[]).length} columns, expected ${expectedLength}`,
-              line: index + 1,
-              suggestion: 'Check for missing or extra delimiters'
-            });
+            // Calculate data row number (excluding header if present)
+            const dataRowNumber = hasHeader ? index : index + 1;
+            const isHeaderRow = hasHeader && index === 0;
+            
+            if (isHeaderRow) {
+              // Header row validation
+              newDiagnostics.push({
+                type: 'warning',
+                message: `Header has ${(row as string[]).length} columns, expected ${expectedLength}`,
+                line: index + 1,
+                suggestion: 'Check for missing or extra delimiters in header'
+              });
+            } else {
+              // Data row validation
+              newDiagnostics.push({
+                type: 'warning',
+                message: `Row ${dataRowNumber} has ${(row as string[]).length} columns, expected ${expectedLength}`,
+                line: index + 1,
+                suggestion: 'Check for missing or extra delimiters'
+              });
+            }
           }
         });
       }
