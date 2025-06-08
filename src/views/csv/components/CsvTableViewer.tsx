@@ -28,6 +28,11 @@ import {
   Trash2,
   Clock,
   BarChart3,
+  Download,
+  FileText,
+  Database,
+  Code,
+  ChevronDown,
 } from 'lucide-react';
 import { ExtendedViewProps } from '../../registry';
 import { useCsvData } from '../hooks/useCsvData';
@@ -216,9 +221,13 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
     columnId: string;
     position: { x: number; y: number };
   } | null>(null);
+  
+  // Export state
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [sqlTableName, setSqlTableName] = useState('my_table');
 
   const csvData = useCsvData(content, onContentChange);
-  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, duplicateRow, addColumn, deleteColumn, duplicateColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, getColumnStats } = csvData;
+  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, duplicateRow, addColumn, deleteColumn, duplicateColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, getColumnStats, toCsv, toJson, toMarkdown, toSql } = csvData;
 
   // Efficient duplicate detection using hash map - O(n) complexity
   const findDuplicates = useCallback(() => {
@@ -273,6 +282,43 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
     // Clear duplicates state
     clearDuplicates();
   }, [duplicateGroups, deleteRow, clearDuplicates]);
+
+  // Export functions
+  const downloadFile = useCallback((content: string, filename: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, []);
+
+  const handleExportCsv = useCallback(() => {
+    const csvContent = toCsv();
+    downloadFile(csvContent, 'export.csv', 'text/csv');
+    setShowExportMenu(false);
+  }, [toCsv, downloadFile]);
+
+  const handleExportJson = useCallback(() => {
+    const jsonContent = toJson();
+    downloadFile(jsonContent, 'export.json', 'application/json');
+    setShowExportMenu(false);
+  }, [toJson, downloadFile]);
+
+  const handleExportMarkdown = useCallback(() => {
+    const markdownContent = toMarkdown();
+    downloadFile(markdownContent, 'export.md', 'text/markdown');
+    setShowExportMenu(false);
+  }, [toMarkdown, downloadFile]);
+
+  const handleExportSql = useCallback(() => {
+    const sqlContent = toSql(sqlTableName);
+    downloadFile(sqlContent, `${sqlTableName}_inserts.sql`, 'text/sql');
+    setShowExportMenu(false);
+  }, [toSql, sqlTableName, downloadFile]);
 
   const columnHelper = createColumnHelper<CsvRow>();
 
@@ -572,6 +618,87 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
           >
             <Camera size={16} />
           </button>
+          <div className="w-px h-6 bg-gray-700 mx-2" />
+          
+          {/* Export Dropdown */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              title="Export data"
+              className={`flex items-center space-x-1 px-3 py-2 rounded ${showExportMenu ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-gray-700'}`}
+            >
+              <Download size={16} />
+              <span className="text-sm">Export</span>
+              <ChevronDown size={12} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showExportMenu && (
+              <>
+                {/* Click-outside overlay */}
+                <div 
+                  className="fixed inset-0 z-30" 
+                  onClick={() => setShowExportMenu(false)}
+                />
+                <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px]">
+                  <div className="py-1">
+                    <button
+                      onClick={handleExportCsv}
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <FileText size={16} className="text-green-400" />
+                        <span>CSV</span>
+                      </div>
+                      <span className="text-xs text-gray-500">export.csv</span>
+                    </button>
+                    <button
+                      onClick={handleExportJson}
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Code size={16} className="text-blue-400" />
+                        <span>JSON</span>
+                      </div>
+                      <span className="text-xs text-gray-500">export.json</span>
+                    </button>
+                    <button
+                      onClick={handleExportMarkdown}
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <FileText size={16} className="text-purple-400" />
+                        <span>Markdown</span>
+                      </div>
+                      <span className="text-xs text-gray-500">export.md</span>
+                    </button>
+                    <div className="border-t border-gray-700 my-1" />
+                    <div className="px-3 py-2">
+                      <label className="block text-xs text-gray-400 mb-1">SQL Table Name:</label>
+                      <input
+                        type="text"
+                        value={sqlTableName}
+                        onChange={(e) => setSqlTableName(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                        placeholder="table_name"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <button
+                      onClick={handleExportSql}
+                      disabled={!sqlTableName.trim()}
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Database size={16} className="text-orange-400" />
+                        <span>SQL</span>
+                      </div>
+                      <span className="text-xs text-gray-500">{sqlTableName || 'table'}_inserts.sql</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           {snapshots.length > 0 && (
             <button 
               onClick={() => setShowSnapshotsPanel(!showSnapshotsPanel)}
