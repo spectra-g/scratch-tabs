@@ -20,6 +20,7 @@ import {
   SortDesc,
   ArrowUpDown,
   Edit3,
+  Copy,
 } from 'lucide-react';
 import { ExtendedViewProps } from '../../registry';
 import { useCsvData } from '../hooks/useCsvData';
@@ -123,6 +124,12 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
     onStartEdit();
   }, [onStartEdit]);
 
+  const handleCopyClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(value);
+  }, [value]);
+
   if (isEditing) {
     return (
       <div className="h-full w-full flex items-center bg-gray-800">
@@ -140,7 +147,7 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
 
   return (
     <div
-      className={`h-full min-h-[35px] flex items-center justify-between px-2 cursor-cell transition-colors relative group ${
+      className={`h-full min-h-[35px] flex items-center px-2 cursor-cell transition-colors relative group ${
         isSelected ? 'bg-blue-900/30 ring-1 ring-blue-500' : 'hover:bg-gray-700/20'
       } ${!isValid ? 'bg-red-900/20' : ''}`}
       onClick={handleClick}
@@ -148,18 +155,29 @@ const EditableCell: React.FC<EditableCellProps> = React.memo(({
       onMouseLeave={() => setIsHovered(false)}
       title={error || 'Click to select, click pencil or press Enter/F2 to edit'}
     >
-      <span className="text-sm truncate flex-1 text-gray-200">
+      <span className="text-sm truncate flex-1 text-gray-200 mr-2">
         {value || <span className="text-gray-500 italic">Empty</span>}
       </span>
-      {(isHovered || isSelected) && (
+      <div className="flex items-center space-x-1 w-14 justify-end">
         <button
-          className="ml-2 p-1 rounded opacity-70 hover:opacity-100 hover:bg-gray-600 transition-all"
+          className={`p-1 rounded hover:bg-gray-600 transition-all ${
+            (isHovered || isSelected) ? 'opacity-70 hover:opacity-100' : 'opacity-0'
+          }`}
+          onClick={handleCopyClick}
+          title="Copy cell value"
+        >
+          <Copy size={12} />
+        </button>
+        <button
+          className={`p-1 rounded hover:bg-gray-600 transition-all ${
+            (isHovered || isSelected) ? 'opacity-70 hover:opacity-100' : 'opacity-0'
+          }`}
           onClick={handleEditClick}
           title="Edit cell"
         >
           <Edit3 size={12} />
         </button>
-      )}
+      </div>
     </div>
   );
 });
@@ -385,7 +403,6 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
         </div>
         <div className="flex items-center space-x-4 text-sm text-gray-400">
           <span>{data.length} rows × {columns.length} columns</span>
-          <span className="text-xs">Snapshots: {snapshots.length} | canUndo: {canUndo ? 'Y' : 'N'} | canRedo: {canRedo ? 'Y' : 'N'}</span>
           <div className="flex items-center space-x-1">
             {isValid ? <CheckCircle size={16} className="text-green-400" /> : <AlertTriangle size={16} className="text-yellow-400" />}
             <span className="text-xs">{diagnostics.filter(d=>d.type==='error').length} errors, {diagnostics.filter(d=>d.type==='warning').length} warnings</span>
