@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import * as Papa from 'papaparse';
-import { debounce } from 'lodash-es';
+import { debounce } from 'lodash';
 import { 
   CsvRow, 
   CsvColumn, 

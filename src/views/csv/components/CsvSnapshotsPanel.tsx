@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { X, History, Clock, Trash2 } from 'lucide-react';
 import { CsvSnapshot } from '../types';
 

@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import * as React from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Edit3, Copy } from 'lucide-react';
 
 interface EditableCellProps {

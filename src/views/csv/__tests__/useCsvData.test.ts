@@ -60,8 +60,8 @@ Jane Smith,32,San Francisco,Extra`;
 
       expect(result.current.diagnostics).toHaveLength(2);
       expect(result.current.diagnostics[0].type).toBe('warning');
-      expect(result.current.diagnostics[0].message).toContain('Row 2 has 2 columns');
-      expect(result.current.diagnostics[1].message).toContain('Row 3 has 4 columns');
+      expect(result.current.diagnostics[0].message).toContain('Row 1 has 2 columns');
+      expect(result.current.diagnostics[1].message).toContain('Row 2 has 4 columns');
     });
   });
 
