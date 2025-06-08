@@ -25,8 +25,10 @@ export interface UseCsvDataReturn {
   updateCell: (rowId: string, columnId: string, value: string) => void;
   addRow: (index?: number) => void;
   deleteRow: (rowId: string) => void;
+  duplicateRow: (rowId: string) => void;
   addColumn: (index?: number, name?: string) => void;
   deleteColumn: (columnId: string) => void;
+  duplicateColumn: (columnId: string) => void;
   renameColumn: (columnId: string, newName: string) => void;
   
   // Undo/Redo (simplified)
@@ -285,6 +287,27 @@ export const useCsvData = (
     syncToContent(newState);
   }, [csvState, saveToHistory, syncToContent]);
 
+  const duplicateRow = useCallback((rowId: string) => {
+    const rowIndex = csvState.data.findIndex(row => row.id === rowId);
+    if (rowIndex === -1) return;
+
+    const originalRow = csvState.data[rowIndex];
+    const duplicatedRow: CsvRow = {
+      id: `row_${Date.now()}_${Math.random()}`,
+      cells: originalRow.cells.map(cell => ({ ...cell })), // Deep copy cells
+      originalIndex: rowIndex + 1,
+      isValid: originalRow.isValid
+    };
+
+    const newData = [...csvState.data];
+    newData.splice(rowIndex + 1, 0, duplicatedRow); // Insert after original row
+
+    const newState = { ...csvState, data: newData };
+    setCsvState(newState);
+    saveToHistory(newState);
+    syncToContent(newState);
+  }, [csvState, saveToHistory, syncToContent]);
+
   const addColumn = useCallback((index?: number, name?: string) => {
     const insertIndex = index ?? csvState.columns.length;
     const newColumn: CsvColumn = {
@@ -319,6 +342,34 @@ export const useCsvData = (
       cells: row.cells.filter((_, index) => index !== columnIndex)
     }));
     
+    const newState = { columns: newColumns, data: newData };
+    setCsvState(newState);
+    saveToHistory(newState);
+    syncToContent(newState);
+  }, [csvState, saveToHistory, syncToContent]);
+
+  const duplicateColumn = useCallback((columnId: string) => {
+    const columnIndex = csvState.columns.findIndex(col => col.id === columnId);
+    if (columnIndex === -1) return;
+
+    const originalColumn = csvState.columns[columnIndex];
+    const duplicatedColumn: CsvColumn = {
+      id: `col_${Date.now()}_${Math.random()}`,
+      name: `${originalColumn.name} Copy`,
+      type: originalColumn.type,
+      index: columnIndex + 1
+    };
+
+    const newColumns = [...csvState.columns];
+    newColumns.splice(columnIndex + 1, 0, duplicatedColumn); // Insert after original column
+
+    const newData = csvState.data.map(row => {
+      const newCells = [...row.cells];
+      const originalCell = row.cells[columnIndex];
+      newCells.splice(columnIndex + 1, 0, { ...originalCell }); // Duplicate cell content
+      return { ...row, cells: newCells };
+    });
+
     const newState = { columns: newColumns, data: newData };
     setCsvState(newState);
     saveToHistory(newState);
@@ -471,8 +522,10 @@ export const useCsvData = (
     updateCell,
     addRow,
     deleteRow,
+    duplicateRow,
     addColumn,
     deleteColumn,
+    duplicateColumn,
     renameColumn,
     
     // Undo/Redo

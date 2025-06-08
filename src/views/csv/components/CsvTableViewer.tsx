@@ -210,7 +210,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
   const [showSnapshotsPanel, setShowSnapshotsPanel] = useState(false);
 
   const csvData = useCsvData(content, onContentChange);
-  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, addColumn, deleteColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot } = csvData;
+  const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, duplicateRow, addColumn, deleteColumn, duplicateColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot } = csvData;
 
   // Efficient duplicate detection using hash map - O(n) complexity
   const findDuplicates = useCallback(() => {
@@ -344,6 +344,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
                 )}
                 <div className="flex items-center space-x-1 ml-2">
                   <button onClick={() => addColumn(columnIndex + 1)} title="Add column after"><Plus size={12} /></button>
+                  <button onClick={() => duplicateColumn(column.id)} title="Duplicate column"><Copy size={12} /></button>
                   <button onClick={() => deleteColumn(column.id)} title="Delete column"><Minus size={12} /></button>
                 </div>
               </div>
@@ -390,12 +391,13 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
         cell: ({ row }) => (
           <div className="flex items-center justify-center space-x-1">
             <button onClick={() => addRow(row.index + 1)} title="Add row below"><Plus size={14} /></button>
+            <button onClick={() => duplicateRow(row.original.id)} title="Duplicate row"><Copy size={14} /></button>
             <button onClick={() => deleteRow(row.original.id)} title="Delete row"><Minus size={14} /></button>
           </div>
         ),
       }),
     ];
-  }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, addRow, deleteRow, updateCell, renameColumn, selectedCell, editingCellTrigger]);
+  }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, duplicateColumn, addRow, deleteRow, duplicateRow, updateCell, renameColumn, selectedCell, editingCellTrigger]);
 
   const table = useReactTable({
     data: filteredData,
