@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calculator, History, StickyNote, Delete, Percent, Divide, X as MultiplyIcon, Minus, Plus, Equal, Dot } from 'lucide-react';
-import { CalculatorData, CalculatorEngine } from './useCalculatorEngine';
+import { CalculatorEngine } from './useCalculatorEngine';
 
 // --- Button Component (Refined Styling) ---
 const CalculatorButton: React.FC<{

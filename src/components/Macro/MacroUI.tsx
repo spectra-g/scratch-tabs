@@ -37,7 +37,6 @@ export const MacroUI: React.FC<MacroUIProps> = ({ editor, engine }) => {
     handleStopRecording,
     handlePlayRecording,
     handlePlayToEnd,
-    canInteract,
     canPlay,
     canStop,
   } = engine;
