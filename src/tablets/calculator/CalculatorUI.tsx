@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Calculator, History, StickyNote, Delete, Percent, Divide, X as MultiplyIcon, Minus, Plus, Equal, Dot } from 'lucide-react';
 import { CalculatorEngine } from './useCalculatorEngine';
 
@@ -50,9 +50,87 @@ interface CalculatorUIProps {
 
 export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine }) => {
     const { data } = engine;
+    const calculatorRef = useRef<HTMLDivElement>(null);
+
+    // Add keyboard event handler
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Only handle keyboard input if the calculator is focused or if no input elements are focused
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement?.tagName === 'INPUT' || 
+                                 activeElement?.tagName === 'TEXTAREA' || 
+                                 (activeElement as HTMLElement)?.contentEditable === 'true';
+            
+            // Skip if an input field is focused (allow typing in notes)
+            if (isInputFocused) return;
+
+            // Prevent default browser behavior for calculator keys
+            const calculatorKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                                  '+', '-', '*', '/', '=', 'Enter', '.', '%', 'Backspace', 'Delete', 'Escape'];
+            if (calculatorKeys.includes(e.key)) {
+                e.preventDefault();
+            }
+
+            // Handle number inputs
+            if (/^[0-9]$/.test(e.key)) {
+                engine.handleNumber(e.key);
+                return;
+            }
+
+            // Handle operator inputs
+            switch (e.key) {
+                case '+':
+                    engine.handleOperator('+');
+                    break;
+                case '-':
+                    engine.handleOperator('-');
+                    break;
+                case '*':
+                    engine.handleOperator('*');
+                    break;
+                case '/':
+                    engine.handleOperator('/');
+                    break;
+                case '=':
+                case 'Enter':
+                    engine.handleEquals();
+                    break;
+                case '.':
+                    engine.handleDecimal();
+                    break;
+                case '%':
+                    engine.handlePercent();
+                    break;
+                case 'Backspace':
+                    engine.handleBackspace();
+                    break;
+                case 'Delete':
+                case 'Escape':
+                    engine.handleAllClear();
+                    break;
+            }
+        };
+
+        // Add event listener to document
+        document.addEventListener('keydown', handleKeyDown);
+
+        // Focus the calculator container to enable keyboard input
+        if (calculatorRef.current) {
+            calculatorRef.current.focus();
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [engine]);
 
     return (
-        <div className="flex flex-col md:flex-row h-full bg-gray-900 text-gray-200">
+        <div 
+            ref={calculatorRef}
+            className="flex flex-col md:flex-row h-full bg-gray-900 text-gray-200"
+            tabIndex={0}
+            style={{ outline: 'none' }}
+        >
             {/* Calculator Section */}
             <div className="w-full md:w-7/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-gray-700/50">
                 {/* Header */}
