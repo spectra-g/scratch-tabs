@@ -3,7 +3,6 @@ import { DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors } fr
 import { StorageProviderFactory } from '../../../db';
 import { useRootStore, useCacheStore } from '../../../stores';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
-import { useModalStore } from '../../../stores/modalStore';
 import { Tab } from '../../../types';
 import { languageRegistry } from '../../../languages';
 import {
@@ -12,13 +11,13 @@ import {
   useDuplicateTabs,
   useEmptyTabs,
   handleApplyCurrentOrder as applyCurrentOrderHelper,
-  handleSwitchWorkspaceAndKeepModal as switchWorkspaceHelper,
   handleBaseModalClose as closeModalHelper,
   handleDragEnd as dragEndHelper,
   createMoveToWorkspaceWithIdHandler
 } from './TabManagementModalImpl';
 import { useModalClickOutside } from './hooks';
 import { SortOption, GroupOption } from './types';
+import { useActionLock } from '../../../hooks/useActionLock';
 
 interface ConfirmationDialog {
   isOpen: boolean;
@@ -155,8 +154,8 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [draggedTabIds, setDraggedTabIds] = useState<Set<string>>(new Set());
   const [activeDragItemData, setActiveDragItemData] = useState<Tab | null>(null);
-  const { setTabManagementActionInProgress, isTabManagementActionInProgress } = useModalStore();
   const { cacheSplitViewForWorkspace } = useCacheStore();
+  const { isLocked: isTabManagementActionInProgress, withLock: withActionLock } = useActionLock();
 
   // Confirmation dialogs
   const [confirmationDialog, setConfirmationDialog] = useState<ConfirmationDialog>({
@@ -257,6 +256,12 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   useEffect(() => {
     setSelectedTabIds(new Set());
   }, [activeWorkspaceId]);
+
+  // Create a wrapper function that provides the old interface but uses the new action lock
+  const setTabManagementActionInProgress = (value: boolean) => {
+    // This is a no-op since we're using the action lock hook instead
+    // The action lock is managed automatically by withActionLock
+  };
 
   // Create handler for moving tabs to another workspace
   const handleMoveToWorkspaceWithId = createMoveToWorkspaceWithIdHandler(
@@ -539,14 +544,16 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   };
 
   const handleSwitchWorkspaceAndKeepModal = (workspaceId: string, event: React.MouseEvent) => {
-    switchWorkspaceHelper(
-      workspaceId, 
-      event, 
-      activeWorkspaceId, 
-      switchWorkspaceFromStore, 
-      setTabManagementActionInProgress, 
-      setSelectedTabIds
-    );
+    event.stopPropagation();
+    
+    if (workspaceId === activeWorkspaceId) {
+      return;
+    }
+
+    withActionLock(async () => {
+      await switchWorkspaceFromStore(workspaceId);
+      setSelectedTabIds(new Set());
+    });
   };
 
   const handleBaseModalClose = () => {

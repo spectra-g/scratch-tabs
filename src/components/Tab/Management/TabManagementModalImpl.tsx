@@ -4,6 +4,7 @@ import { useRootStore } from '../../../stores';
 import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { moveTabsToWorkspace, applyTabOrder } from './utils';
 import { DragEndEvent } from '@dnd-kit/core';
+import { SORT_OPTIONS, GROUP_OPTIONS } from '../../../constants';
 
 // This file contains implementation details for the TabManagementModal component
 
@@ -38,7 +39,7 @@ export const useFilteredTabs = (
 
     // Sort tabs
     switch (sortOption) {
-      case 'current':
+      case SORT_OPTIONS.CURRENT:
         // Get the current order from the root store
         const { splitView } = useSplitViewStore.getState();
         const currentOrder = [...splitView.leftTabs, ...splitView.rightTabs];
@@ -58,39 +59,39 @@ export const useFilteredTabs = (
           return posA - posB;
         });
         break;
-      case 'title-asc':
+      case SORT_OPTIONS.TITLE_ASC:
         result.sort((a, b) => a.title.localeCompare(b.title));
         break;
-      case 'title-desc':
+      case SORT_OPTIONS.TITLE_DESC:
         result.sort((a, b) => b.title.localeCompare(a.title));
         break;
-      case 'created-asc':
+      case SORT_OPTIONS.CREATED_ASC:
         result.sort((a, b) => a.dateCreated - b.dateCreated);
         break;
-      case 'created-desc':
+      case SORT_OPTIONS.CREATED_DESC:
         result.sort((a, b) => b.dateCreated - a.dateCreated);
         break;
-      case 'modified-asc':
+      case SORT_OPTIONS.MODIFIED_ASC:
         result.sort((a, b) => a.lastModified - b.lastModified);
         break;
-      case 'modified-desc':
+      case SORT_OPTIONS.MODIFIED_DESC:
         result.sort((a, b) => b.lastModified - a.lastModified);
         break;
-      case 'language':
+      case SORT_OPTIONS.LANGUAGE:
         result.sort((a, b) => {
           const aLang = a.isTablet ? 'tablet' : a.language;
           const bLang = b.isTablet ? 'tablet' : b.language;
           return aLang.localeCompare(bLang);
         });
         break;
-      case 'lines-most':
+      case SORT_OPTIONS.LINES_MOST:
         result.sort((a, b) => {
           const aLines = a.isTablet ? 0 : (a.content.split('\n').length);
           const bLines = b.isTablet ? 0 : (b.content.split('\n').length);
           return bLines - aLines; // Descending order (most first)
         });
         break;
-      case 'lines-least':
+      case SORT_OPTIONS.LINES_LEAST:
         result.sort((a, b) => {
           const aLines = a.isTablet ? 0 : (a.content.split('\n').length);
           const bLines = b.isTablet ? 0 : (b.content.split('\n').length);
@@ -111,13 +112,13 @@ export const useGroupedTabs = (
   languageRegistry: any
 ) => {
   return useMemo(() => {
-    if (groupOption === 'none') {
+    if (groupOption === GROUP_OPTIONS.NONE) {
       return { 'All Tabs': filteredTabs };
     }
 
     const groups: Record<string, Tab[]> = {};
 
-    if (groupOption === 'language') {
+    if (groupOption === GROUP_OPTIONS.LANGUAGE) {
       filteredTabs.forEach(tab => {
         const key = tab.isTablet ? 'Tablets' : (languageRegistry.getById(tab.language)?.name || tab.language);
         if (!groups[key]) {
@@ -125,7 +126,7 @@ export const useGroupedTabs = (
         }
         groups[key].push(tab);
       });
-    } else if (groupOption === 'workspace') {
+    } else if (groupOption === GROUP_OPTIONS.WORKSPACE) {
       const workspaceMap = new Map(workspaces.map(w => [w.id, w.name]));
 
       filteredTabs.forEach(tab => {

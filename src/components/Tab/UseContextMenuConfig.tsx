@@ -9,6 +9,7 @@ import { LanguageSelector } from "./LanguageSelector";
 import { languageRegistry } from '../../languages';
 import { MenuItem } from './types';
 import { useState, useCallback } from 'react';
+import { ContextMenuAction, TabSide } from '../../constants';
 
 // Helper function to get the confirmation button text based on action type
 const getConfirmButtonText = (type: string | null): string => {
@@ -35,7 +36,7 @@ export interface UseContextMenuConfigReturn {
 export const useContextMenuConfig = (
   tabId: string, // This is the tab that was right-clicked
   isRightSide: boolean,
-  closeContextMenu: (action?: 'compare' | 'compareSides' | 'summary' | 'compareClipboard', tabId?: string, explicitSide?: 'left' | 'right') => void,
+  closeContextMenu: (action?: ContextMenuAction, tabId?: string, explicitSide?: TabSide) => void,
   handleOpenDownloadAllModal?: () => void,
   startEditingTab?: (tabId: string) => void
 ): UseContextMenuConfigReturn => {

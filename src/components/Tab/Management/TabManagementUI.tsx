@@ -9,6 +9,7 @@ import { languageRegistry } from '../../../languages';
 import { DragOverlay } from '@dnd-kit/core';
 import { TabGroup } from './TabGroup';
 import { GroupOption, SortOption } from './types';
+import { SORT_OPTIONS, GROUP_OPTIONS } from '../../../constants';
 
 export interface TabManagementToolbarProps {
   searchQuery: string;
@@ -119,16 +120,16 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
           onChange={(e) => setSortOption(e.target.value as SortOption)}
           className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
         >
-          <option value="current">Current</option>
-          <option value="title-asc">Title A-Z</option>
-          <option value="title-desc">Title Z-A</option>
-          <option value="created-asc">Oldest First</option>
-          <option value="created-desc">Newest First</option>
-          <option value="modified-asc">Least Recently Modified</option>
-          <option value="modified-desc">Recently Modified</option>
-          <option value="language">Language</option>
-          <option value="lines-most">Most Lines</option>
-          <option value="lines-least">Least Lines</option>
+          <option value={SORT_OPTIONS.CURRENT}>Current</option>
+          <option value={SORT_OPTIONS.TITLE_ASC}>Title A-Z</option>
+          <option value={SORT_OPTIONS.TITLE_DESC}>Title Z-A</option>
+          <option value={SORT_OPTIONS.CREATED_ASC}>Oldest First</option>
+          <option value={SORT_OPTIONS.CREATED_DESC}>Newest First</option>
+          <option value={SORT_OPTIONS.MODIFIED_ASC}>Least Recently Modified</option>
+          <option value={SORT_OPTIONS.MODIFIED_DESC}>Recently Modified</option>
+          <option value={SORT_OPTIONS.LANGUAGE}>Language</option>
+          <option value={SORT_OPTIONS.LINES_MOST}>Most Lines</option>
+          <option value={SORT_OPTIONS.LINES_LEAST}>Least Lines</option>
         </select>
         {sortOption.includes('asc') ? (
           <ArrowDownAZ size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
@@ -144,8 +145,8 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
           onChange={(e) => setGroupOption(e.target.value as GroupOption)}
           className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
         >
-          <option value="none">No Grouping</option>
-          <option value="language">Group by Language</option>
+          <option value={GROUP_OPTIONS.NONE}>No Grouping</option>
+          <option value={GROUP_OPTIONS.LANGUAGE}>Group by Language</option>
         </select>
         <Layers size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
       </div>

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { ChevronRight, ChevronDown, Copy, Search, ChevronsUp, ChevronsDown, Route, ExternalLink } from 'lucide-react';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
-import { useDebounce } from '../../hooks/useDebounce';
+import { useDebounce } from '../../../../hooks/useDebounce';
 import { useRootStore } from '../../../../stores';
 import { useWorkspaceStore } from '../../../../stores/workspaceStore';
 import { detectLanguage } from '../../../../languages'; 
