@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
 import * as monaco from 'monaco-editor';
 
-export const useJsonTransformations = (editor: monaco.editor.IStandaloneCodeEditor) => {
+export const useJsonTransformations = (
+  editor: monaco.editor.IStandaloneCodeEditor | null
+) => {
   const transformKeys = useCallback((obj: any, transform: (key: string) => string): any => {
     if (Array.isArray(obj)) {
       return obj.map(item => transformKeys(item, transform));

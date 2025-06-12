@@ -10,17 +10,15 @@ import { generateCSharpClasses } from '../utils/generateCSharpClasses';
 import { convertToCsv } from '../utils/generateCsv';
 import { convertToYaml } from '../utils/generateYaml';
 import { convertToXml } from '../utils/generateXml';
-import { generateJsonSchema, validateJsonSchema } from '../utils/jsonSchema';
+import { generateJsonSchema } from '../utils/jsonSchema';
 
 export const useJsonConversions = (
-  editor: monaco.editor.IStandaloneCodeEditor,
+  editor: monaco.editor.IStandaloneCodeEditor | null,
   addTab: (tab: Tab) => void
 ) => {
   const {
     openCodeGenerationModal,
     openTreeViewModal,
-    openCsvModal,
-    openConversionModal
   } = useJsonModals();
 
   const handleToJava = useCallback(() => {
