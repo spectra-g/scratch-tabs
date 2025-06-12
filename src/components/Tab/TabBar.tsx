@@ -456,15 +456,15 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
         setContextMenu({tabId, x: e.clientX, y: e.clientY});
     };
 
-    const handleContextMenuClose = (action?: 'compare' | 'compareSides' | 'summary' | 'compareClipboard', tabId?: string, explicitSide?: 'left' | 'right') => {
-        if (action === 'compareSides') {
-            onOpenDiffModal(false, undefined, tabId);
-        } else if (action === 'compare') {
-            onOpenDiffModal(true, explicitSide || side, tabId);
-        } else if (action === 'compareClipboard') {
-            onOpenDiffModal(false, explicitSide || side, tabId);
-        } else if (action === 'summary' && tabId) {
-            onOpenSummaryModal(tabId);
+    const handleContextMenuClose = (payload?: { action: string; tabId?: string; side?: string }) => {
+        if (payload?.action === 'compareSides') {
+            onOpenDiffModal(false, undefined, payload.tabId);
+        } else if (payload?.action === 'compare') {
+            onOpenDiffModal(true, payload.side as 'left' | 'right' || side, payload.tabId);
+        } else if (payload?.action === 'compareClipboard') {
+            onOpenDiffModal(false, payload.side as 'left' | 'right' || side, payload.tabId);
+        } else if (payload?.action === 'summary' && payload.tabId) {
+            onOpenSummaryModal(payload.tabId);
         }
         setContextMenu(null);
     };

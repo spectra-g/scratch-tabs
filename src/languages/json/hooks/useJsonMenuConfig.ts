@@ -13,6 +13,7 @@ import { useJsonTransformations } from './useJsonTransformations';
 import { useJsonValidation } from './useJsonValidation';
 import { MenuItem } from '../../../components/ContextMenu/types';
 import { Tab } from '../../../types';
+import { validateJson } from '../validation';
 
 export const useJsonMenuConfig = (
     editor: monaco.editor.IStandaloneCodeEditor | null,
@@ -42,7 +43,7 @@ export const useJsonMenuConfig = (
 
     const {
         handleFormat, handleMinify, handleSortKeys, handleFlatten,
-        handleUnflatten, handleRemoveEmpty, handleRemoveComments, handleStringify
+        handleUnflatten, handleRemoveEmpty, handleRemoveComments, handleStringify, handleUnstringify
     } = useJsonOperations(editor, handleAddTab); // Pass handleAddTab for tab creation + close
 
     const {
@@ -72,6 +73,7 @@ export const useJsonMenuConfig = (
         const removeEmptyAction = createAction(handleRemoveEmpty);
         const removeCommentsAction = createAction(handleRemoveComments);
         const stringifyAction = createAction(handleStringify);
+        const unstringifyAction = createAction(handleUnstringify);
 
         const toCamelCaseAction = createAction(handleToCamelCase);
         const toSnakeCaseAction = createAction(handleToSnakeCase);
@@ -89,6 +91,16 @@ export const useJsonMenuConfig = (
         const validateSchemaAction = createTabAction(handleValidateSchema);
         const generateSchemaAction = createTabAction(handleGenerateSchema);
 
+        // Determine if current content is valid JSON
+        let isJsonValid = false;
+        let content = '';
+        if (editor) {
+            content = editor.getValue();
+            isJsonValid = validateJson(content).isValid;
+        }
+
+        // Determine if Un-stringify should be enabled
+        let enableUnstringify = true;
 
         return [
             { id: 'treeView', label: 'Tree/Path view', icon: FolderTree, action: treeViewAction },
@@ -102,6 +114,7 @@ export const useJsonMenuConfig = (
             { id: 'removeEmpty', label: 'Remove Null/Empty', icon: Trash2, action: removeEmptyAction },
             { id: 'removeComments', label: 'Remove Comments', icon: MessageSquareOff, action: removeCommentsAction },
             { id: 'stringify', label: 'Stringify', icon: TextQuote, action: stringifyAction },
+            { id: 'unstringify', label: 'Un-stringify', icon: TextQuote, action: unstringifyAction, disabled: !enableUnstringify },
             { id: 'separator2', isSeparator: true, label: 'sep1', icon: Settings2 }, // Icon needed but won't show
 
             // Section 2: Key Transformations
@@ -139,7 +152,7 @@ export const useJsonMenuConfig = (
     }, [
         editor, onClose, handleAddTab, // Include addTab if used directly
         handleFormat, handleMinify, handleSortKeys, handleFlatten, handleUnflatten,
-        handleRemoveEmpty, handleRemoveComments, handleStringify,
+        handleRemoveEmpty, handleRemoveComments, handleStringify, handleUnstringify,
         handleToCamelCase, handleToSnakeCase, handleToKebabCase,
         handleToJava, handleToTypeScript, handleToPython, handleToGo, handleToCSharp,
         handleToCsv, handleToYaml, handleToXml,

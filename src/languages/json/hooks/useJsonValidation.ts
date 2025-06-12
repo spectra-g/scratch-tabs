@@ -5,7 +5,7 @@ import { useJsonModals } from './useJsonModals';
 import { generateJsonSchema } from '../utils/jsonSchema';
 
 export const useJsonValidation = (
-  editor: monaco.editor.IStandaloneCodeEditor,
+  editor: monaco.editor.IStandaloneCodeEditor | null,
   addTab: (tab: Tab) => void
 ) => {
   const { openSchemaValidationModal, openCodeGenerationModal } = useJsonModals();

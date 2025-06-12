@@ -4,12 +4,19 @@ import { UseContextMenuConfigReturn, useContextMenuConfig } from './UseContextMe
 import { ContextMenuItem } from './ContextMenuItem';
 import { DownloadModal } from './DownloadModal';
 import { ConfirmationDialog } from './ConfirmationDialog'; // Import the confirmation dialog
+import { ContextMenuAction, TabSide } from '../../constants';
+
+interface ContextMenuActionPayload {
+  action: ContextMenuAction;
+  tabId?: string;
+  side?: TabSide;
+}
 
 interface TabContextMenuProps {
     tabId: string;
     position: { x: number; y: number };
-    // This onClose is the complex one that can trigger other actions or modals
-    onClose: (action?: 'compare' | 'compareSides' | 'summary' | 'compareClipboard', tabId?: string, side?: 'left' | 'right') => void;
+    // Updated to use object payload instead of multiple optional arguments
+    onClose: (payload?: ContextMenuActionPayload) => void;
     isRightSide: boolean;
     startEditingTab: (tabId: string) => void;
 }
@@ -19,8 +26,12 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({ tabId, position,
     const [showDownloadModal, setShowDownloadModal] = useState(false);
 
     // This is the function that will be called by useContextMenuConfig to simply close this context menu
-    const closeThisContextMenu = (action?: 'compare' | 'compareSides' | 'summary' | 'compareClipboard', tabId?: string, side?: 'left' | 'right') => {
-        onClose(action, tabId, side); // Call the original onClose prop
+    const closeThisContextMenu = (action?: ContextMenuAction, tabId?: string, side?: TabSide) => {
+        if (action) {
+            onClose({ action, tabId, side }); // Call with object payload
+        } else {
+            onClose(); // Call without payload for simple close
+        }
     };
 
     useClickOutside(menuRef, () => {

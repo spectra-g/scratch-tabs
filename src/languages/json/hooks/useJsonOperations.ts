@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import * as monaco from 'monaco-editor'; // Import monaco namespace
 import { Tab } from '../../../types';
 import { useJsonModals } from './useJsonModals';
+import { unstringifyJson } from '../utils/unstringify';
 
 export const useJsonOperations = (
   editor: monaco.editor.IStandaloneCodeEditor | null, // Allow editor to be null initially
@@ -246,6 +247,19 @@ export const useJsonOperations = (
     }
   }, [editor, openStringifyModal, addTab]);
 
+  // --- Unstringify operation ---
+  const handleUnstringify = useCallback(() => {
+    if (!editor) return;
+    try {
+      const content = editor.getValue();
+      // Use the statically imported unstringify utility
+      const unstringified = unstringifyJson(content);
+      applyEdit(unstringified, 'json.unstringify');
+    } catch (error) {
+      console.error('Failed to unstringify JSON:', error);
+    }
+  }, [editor, applyEdit]);
+
   return {
     handleFormat,
     handleMinify,
@@ -254,6 +268,7 @@ export const useJsonOperations = (
     handleUnflatten,
     handleRemoveEmpty,
     handleRemoveComments,
-    handleStringify
+    handleStringify,
+    handleUnstringify
   };
 };
