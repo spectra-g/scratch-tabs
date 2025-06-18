@@ -231,6 +231,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
           let currentValue = originalValue;
           let lastOutput = originalValue;
           if (codegenWorker) {
+            document.body.classList.add('global-cursor-progress');
             const onMessage = (e: MessageEvent) => {
               const data = e.data;
               if (data.modelType === 'codegen') {
@@ -242,6 +243,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
                   }
                 } else if (data.status === 'complete' && typeof data.output === 'string') {
                   ed.setValue(data.output);
+                  document.body.classList.remove('global-cursor-progress');
+                  codegenWorker.removeEventListener('message', onMessage);
+                } else if (data.status === 'error') {
+                  document.body.classList.remove('global-cursor-progress');
                   codegenWorker.removeEventListener('message', onMessage);
                 }
               }
@@ -249,7 +254,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
             codegenWorker.addEventListener('message', onMessage);
             runCodegen({
               text: originalValue,
-              max_new_tokens: 128,
+              max_new_tokens: 256,
               temperature: 0.5,
               top_k: 5,
               do_sample: false,
