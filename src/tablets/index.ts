@@ -13,6 +13,7 @@ import { JwtTablet } from './jwt/JwtTablet';
 import { JsonMapperTablet } from './jsonmapper/JsonMapperTablet';
 import { PomodoroTablet } from './pomodoro/PomodoroTablet';
 import { RegexTablet } from './regex/RegexTablet';
+import { UuidTablet } from './uuid/UuidTablet';
 
 // Register built-in tablets
 tabletRegistry.register(PasswordTablet);
@@ -29,6 +30,7 @@ tabletRegistry.register(JwtTablet);
 tabletRegistry.register(JsonMapperTablet);
 tabletRegistry.register(PomodoroTablet);
 tabletRegistry.register(RegexTablet);
+tabletRegistry.register(UuidTablet);
 
 export { TabletSelector } from './components/TabletSelector';
 export { tabletRegistry } from './registry';
