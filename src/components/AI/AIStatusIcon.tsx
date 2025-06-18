@@ -6,7 +6,7 @@ import { AITooltip } from './AIToolTip';
 export const AIStatusIcon: React.FC = () => {
   const {
     isReady, isLoading, error, progress, progressStatus, files, initializeModel,
-    isCodegenReady, isCodegenLoading, codegenProgress, codegenProgressStatus, codegenError, initializeCodegenModel
+    isCodegenReady, isCodegenLoading, codegenProgress, codegenProgressStatus, codegenError, codegenFiles, initializeCodegenModel
   } = useAIStore(state => ({
       isReady: state.ai.isReady,
       isLoading: state.ai.isLoading, // Use this for pulse/disabled
@@ -20,6 +20,7 @@ export const AIStatusIcon: React.FC = () => {
       codegenProgress: state.ai.codegenProgress,
       codegenProgressStatus: state.ai.codegenProgressStatus,
       codegenError: state.ai.codegenError,
+      codegenFiles: state.ai.codegenFiles,
       initializeCodegenModel: state.initializeCodegenModel,
   }));
 
@@ -29,13 +30,10 @@ export const AIStatusIcon: React.FC = () => {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleClick = useCallback(() => {
-    console.log('[AIStatusIcon] Brain icon clicked. isReady:', isReady, 'isLoading:', isLoading, 'isCodegenReady:', isCodegenReady, 'isCodegenLoading:', isCodegenLoading);
     if (!isReady && !isLoading) {
-      console.log('[AIStatusIcon] Initializing summary model...');
       initializeModel();
     }
     if (!isCodegenReady && !isCodegenLoading) {
-      console.log('[AIStatusIcon] Initializing codegen model...');
       initializeCodegenModel();
     }
   }, [isReady, isLoading, isCodegenReady, isCodegenLoading, initializeModel, initializeCodegenModel]);
@@ -102,6 +100,7 @@ export const AIStatusIcon: React.FC = () => {
         codegenStatus={codegenProgressStatus}
         codegenProgress={codegenProgress}
         codegenError={codegenError}
+        codegenFiles={codegenFiles}
       />
     </div>
   );

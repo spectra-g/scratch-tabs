@@ -28,6 +28,7 @@ interface AIState {
   codegenProgressStatus: string;
   codegenError: string | null;
   codegenWorker: Worker | null;
+  codegenFiles: Record<string, FileProgress>;
 }
 
 export interface AISlice {
@@ -90,6 +91,7 @@ function updateProgressState(ai: AIState, p: any): AIState {
         codegenProgressStatus: ai.codegenProgressStatus,
         codegenError: ai.codegenError,
         codegenWorker: ai.codegenWorker,
+        codegenFiles: ai.codegenFiles,
     };
 }
 
@@ -112,6 +114,7 @@ export const useAIStore = create<AISlice>((set, get) => ({
         codegenProgressStatus: '',
         codegenError: null,
         codegenWorker: null,
+        codegenFiles: {},
     },
 
     initializeModel: async () => {
@@ -217,6 +220,7 @@ export const useAIStore = create<AISlice>((set, get) => ({
             codegenProgressStatus: '',
             codegenError: null,
             codegenWorker: null,
+            codegenFiles: {},
         } });
     },
 
@@ -226,13 +230,59 @@ export const useAIStore = create<AISlice>((set, get) => ({
             const worker = new Worker(new URL('../workers/codegenWorker.js', import.meta.url), { type: 'module' });
             worker.onmessage = (e) => {
                 const data = e.data;
-                console.log('[aiStore] Codegen worker message:', data);
                 if (data.modelType === 'codegen') {
                     if (data.status === 'ready') {
-                        console.log('[aiStore] Codegen model is ready!');
                         set(state => ({ ai: { ...state.ai, isCodegenReady: true, isCodegenLoading: false, codegenProgress: 100, codegenProgressStatus: 'Ready' } }));
-                    } else if (data.status === 'progress') {
-                        set(state => ({ ai: { ...state.ai, codegenProgress: data.progress, codegenProgressStatus: data.file } }));
+                    } else if (data.status === 'progress' && data.file) {
+                        set(state => {
+                            const files = { ...(state.ai.codegenFiles || {}) };
+                            let percent = 0;
+                            if (typeof data.loaded === 'number' && typeof data.total === 'number' && data.total > 0) {
+                                percent = Math.round((data.loaded / data.total) * 100);
+                            }
+                            files[data.file] = {
+                                file: data.file,
+                                loaded: data.loaded,
+                                total: data.total,
+                                percent,
+                                status: 'downloading',
+                                completed: data.total ? data.loaded === data.total : false,
+                                lastUpdateTime: Date.now(),
+                            };
+                            return {
+                                ai: {
+                                    ...state.ai,
+                                    codegenProgressStatus: 'downloading',
+                                    codegenFiles: files,
+                                    codegenProgress: percent,
+                                }
+                            };
+                        });
+                    } else if (typeof data.status === 'string' && (data.status.endsWith('.json') || data.status.endsWith('.safetensors'))) {
+                        set(state => {
+                            const files = { ...(state.ai.codegenFiles || {}) };
+                            let percent = 0;
+                            if (typeof data.loaded === 'number' && typeof data.total === 'number' && data.total > 0) {
+                                percent = Math.round((data.loaded / data.total) * 100);
+                            }
+                            files[data.status] = {
+                                file: data.status,
+                                loaded: data.loaded,
+                                total: data.total,
+                                percent,
+                                status: 'downloading',
+                                completed: data.total ? data.loaded === data.total : false,
+                                lastUpdateTime: Date.now(),
+                            };
+                            return {
+                                ai: {
+                                    ...state.ai,
+                                    codegenProgressStatus: 'downloading',
+                                    codegenFiles: files,
+                                    codegenProgress: percent,
+                                }
+                            };
+                        });
                     } else if (data.status === 'error') {
                         set(state => ({ ai: { ...state.ai, codegenError: data.error, isCodegenLoading: false } }));
                     }

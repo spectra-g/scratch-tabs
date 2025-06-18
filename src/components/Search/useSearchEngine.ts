@@ -284,7 +284,6 @@ export const useSearchEngine = (): SearchEngine => {
       e.preventDefault();
       if (selectedResultIndex !== null && results[selectedResultIndex]) {
         handleResultNavigation(results[selectedResultIndex]);
-        console.log("Navigate to:", results[selectedResultIndex]);
       }
     } else {
       return; // Ignore other keys

@@ -217,11 +217,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
   useEffect(() => {
     const editor = editorRef.current;
     const monaco = monacoRef.current;
-    console.log('[EditorInstance] useEffect for Monaco action. isCodegenReady:', isCodegenReady, 'editor:', !!editor, 'monaco:', !!monaco);
     if (!editor || !monaco) return;
     const actionId = 'ai-generate-code';
     if (isCodegenReady && !editor.getAction(actionId)) {
-      console.log('[EditorInstance] Registering Monaco action for Generate Code');
       editor.addAction({
         id: actionId,
         label: 'Generate Code',
@@ -249,7 +247,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
               }
             };
             codegenWorker.addEventListener('message', onMessage);
-            console.log('[EditorInstance] Triggering runCodegen with text:', originalValue);
             runCodegen({
               text: originalValue,
               max_new_tokens: 128,

@@ -48,13 +48,15 @@ self.addEventListener('message', async (event) => {
             top_k,
             do_sample,
             callback_function: x => {
+                const decoded = generator.tokenizer.decode(x[0].output_token_ids, { skip_special_tokens: true });
                 self.postMessage({
                     status: 'update',
-                    output: generator.tokenizer.decode(x[0].output_token_ids, { skip_special_tokens: true }),
+                    output: decoded,
                     modelType: 'codegen',
                 });
             }
         });
-        self.postMessage({ status: 'complete', output, modelType: 'codegen' });
+        let generated = Array.isArray(output) && output[0]?.generated_text ? output[0].generated_text : '';
+        self.postMessage({ status: 'complete', output: generated, modelType: 'codegen' });
     }
 }); 

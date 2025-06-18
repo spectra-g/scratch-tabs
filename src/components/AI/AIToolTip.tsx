@@ -99,9 +99,11 @@ export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, p
       <>
         {(status === 'initializing' || status === 'progress' || status === 'downloading') &&
           renderProgress('Summary Model', status, progress, files)}
-        {(codegenStatus && (codegenStatus === 'initializing' || codegenStatus === 'progress' || codegenStatus === 'downloading')) &&
-          renderProgress('Codegen Model', codegenStatus, codegenProgress || 0, codegenFiles)}
-        {(!((status === 'initializing' || status === 'progress' || status === 'downloading') || (codegenStatus && (codegenStatus === 'initializing' || codegenStatus === 'progress' || codegenStatus === 'downloading')))) &&
+        {/* Always show codegen progress if codegenFiles has entries */}
+        {codegenFiles && Object.keys(codegenFiles).length > 0 &&
+          (console.log('[AITooltip] Rendering Codegen Model progress', codegenFiles, codegenStatus, codegenProgress),
+          renderProgress('Codegen Model', codegenStatus || 'downloading', codegenProgress || 0, codegenFiles))}
+        {(!((status === 'initializing' || status === 'progress' || status === 'downloading') || (codegenFiles && Object.keys(codegenFiles).length > 0))) &&
           <div className="font-semibold text-gray-400 capitalize">{status || 'Initializing...'}</div>}
       </>
     );
