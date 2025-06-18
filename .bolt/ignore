@@ -5,8 +5,10 @@ node_modules/
 dist/
 build/
 
-src/languages/
-src/tablets/
+src/languages/json/components/JsonTreeView/
+src/languages/json/hooks/
+src/languages/json/utils/
+src/languages/__tests__
 
 src/tablets/password/
 src/tablets/runcode/
