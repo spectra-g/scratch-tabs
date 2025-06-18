@@ -8,6 +8,7 @@ import { useLanguageDetection } from '../../hooks/useLanguageDetection';
 import { useTabletSelector } from '../../hooks/useTabletSelector';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
+import { useAIStore } from '../../stores/aiStore';
 
 interface EditorInstanceProps {
   side: 'left' | 'right';
@@ -36,6 +37,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     updateTabState: state.updateTabState,
     updateTabLanguage: state.updateTabLanguage,
     activeEditorSide: state.splitView.activeSide,
+  }));
+
+  const { isCodegenReady, runCodegen, codegenWorker } = useAIStore(state => ({
+    isCodegenReady: state.ai.isCodegenReady,
+    runCodegen: state.runCodegen,
+    codegenWorker: state.ai.codegenWorker,
   }));
 
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -203,23 +210,59 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       });
     });
 
-    return () => {
-        // Save view state before cleanup
-        if (currentTabIdRef.current) {
-          const viewState = editor.saveViewState();
-          if (viewState) {
-            tabViewStates.set(currentTabIdRef.current, viewState);
-          }
-        }
-        
-        editorRef.current = null;
-        monacoRef.current = null;
-
-        if (cursorListener) {
-            cursorListener.dispose();
-        }
-    };
+    // Register context menu action reactively in a useEffect below
   };
+
+  // Register Monaco context menu action for Generate Code reactively
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    console.log('[EditorInstance] useEffect for Monaco action. isCodegenReady:', isCodegenReady, 'editor:', !!editor, 'monaco:', !!monaco);
+    if (!editor || !monaco) return;
+    const actionId = 'ai-generate-code';
+    if (isCodegenReady && !editor.getAction(actionId)) {
+      console.log('[EditorInstance] Registering Monaco action for Generate Code');
+      editor.addAction({
+        id: actionId,
+        label: 'Generate Code',
+        contextMenuGroupId: 'navigation',
+        contextMenuOrder: 1.5,
+        run: async (ed) => {
+          if (!isCodegenReady) return;
+          const originalValue = ed.getValue();
+          let currentValue = originalValue;
+          let lastOutput = originalValue;
+          if (codegenWorker) {
+            const onMessage = (e: MessageEvent) => {
+              const data = e.data;
+              if (data.modelType === 'codegen') {
+                if (data.status === 'update' && typeof data.output === 'string') {
+                  if (data.output !== lastOutput) {
+                    currentValue = data.output;
+                    ed.setValue(currentValue);
+                    lastOutput = data.output;
+                  }
+                } else if (data.status === 'complete' && typeof data.output === 'string') {
+                  ed.setValue(data.output);
+                  codegenWorker.removeEventListener('message', onMessage);
+                }
+              }
+            };
+            codegenWorker.addEventListener('message', onMessage);
+            console.log('[EditorInstance] Triggering runCodegen with text:', originalValue);
+            runCodegen({
+              text: originalValue,
+              max_new_tokens: 128,
+              temperature: 0.5,
+              top_k: 5,
+              do_sample: false,
+            });
+          }
+        },
+        precondition: isCodegenReady ? undefined : 'false',
+      });
+    }
+  }, [isCodegenReady, codegenWorker, runCodegen]);
 
   const handleEditorFocus = () => {
     if (side === 'left') {

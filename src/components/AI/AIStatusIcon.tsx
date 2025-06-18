@@ -4,7 +4,10 @@ import { useAIStore } from '../../stores/aiStore';
 import { AITooltip } from './AIToolTip';
 
 export const AIStatusIcon: React.FC = () => {
-  const { isReady, isLoading, error, progress, progressStatus, files, initializeModel } = useAIStore(state => ({
+  const {
+    isReady, isLoading, error, progress, progressStatus, files, initializeModel,
+    isCodegenReady, isCodegenLoading, codegenProgress, codegenProgressStatus, codegenError, initializeCodegenModel
+  } = useAIStore(state => ({
       isReady: state.ai.isReady,
       isLoading: state.ai.isLoading, // Use this for pulse/disabled
       error: state.ai.error,
@@ -12,6 +15,12 @@ export const AIStatusIcon: React.FC = () => {
       progressStatus: state.ai.progressStatus,
       files: state.ai.files,
       initializeModel: state.initializeModel,
+      isCodegenReady: state.ai.isCodegenReady,
+      isCodegenLoading: state.ai.isCodegenLoading,
+      codegenProgress: state.ai.codegenProgress,
+      codegenProgressStatus: state.ai.codegenProgressStatus,
+      codegenError: state.ai.codegenError,
+      initializeCodegenModel: state.initializeCodegenModel,
   }));
 
   const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -20,10 +29,16 @@ export const AIStatusIcon: React.FC = () => {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleClick = useCallback(() => {
-    if (!isReady && !isLoading) { // Only allow init if not ready AND not already loading
+    console.log('[AIStatusIcon] Brain icon clicked. isReady:', isReady, 'isLoading:', isLoading, 'isCodegenReady:', isCodegenReady, 'isCodegenLoading:', isCodegenLoading);
+    if (!isReady && !isLoading) {
+      console.log('[AIStatusIcon] Initializing summary model...');
       initializeModel();
     }
-  }, [isReady, isLoading, initializeModel]);
+    if (!isCodegenReady && !isCodegenLoading) {
+      console.log('[AIStatusIcon] Initializing codegen model...');
+      initializeCodegenModel();
+    }
+  }, [isReady, isLoading, isCodegenReady, isCodegenLoading, initializeModel, initializeCodegenModel]);
 
   const handleMouseEnter = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -84,6 +99,9 @@ export const AIStatusIcon: React.FC = () => {
         progress={progress}
         error={error}
         files={files}
+        codegenStatus={codegenProgressStatus}
+        codegenProgress={codegenProgress}
+        codegenError={codegenError}
       />
     </div>
   );

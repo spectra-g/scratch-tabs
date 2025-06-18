@@ -22,6 +22,12 @@ interface AIState {
   progressStatus: string; // e.g., 'idle', 'downloading', 'initializing', 'ready', 'error'
   files: Record<string, FileProgress>;
   summaryResult: string | null; // Add field to store the latest summary result
+  isCodegenReady: boolean;
+  isCodegenLoading: boolean;
+  codegenProgress: number;
+  codegenProgressStatus: string;
+  codegenError: string | null;
+  codegenWorker: Worker | null;
 }
 
 export interface AISlice {
@@ -29,6 +35,8 @@ export interface AISlice {
   initializeModel: () => Promise<void>;
   summarizeText: (text: string) => void; // No longer returns Promise<string>
   terminateWorker: () => void; // Add function to terminate worker
+  initializeCodegenModel: () => Promise<void>;
+  runCodegen: (payload: any) => void;
 }
 
 // Helper function to update progress state for the ai slice only
@@ -76,6 +84,12 @@ function updateProgressState(ai: AIState, p: any): AIState {
         progressStatus: finalOverallStatus,
         files,
         summaryResult: ai.summaryResult,
+        isCodegenReady: ai.isCodegenReady,
+        isCodegenLoading: ai.isCodegenLoading,
+        codegenProgress: ai.codegenProgress,
+        codegenProgressStatus: ai.codegenProgressStatus,
+        codegenError: ai.codegenError,
+        codegenWorker: ai.codegenWorker,
     };
 }
 
@@ -92,6 +106,12 @@ export const useAIStore = create<AISlice>((set, get) => ({
         progressStatus: 'idle',
         files: {},
         summaryResult: null,
+        isCodegenReady: false,
+        isCodegenLoading: false,
+        codegenProgress: 0,
+        codegenProgressStatus: '',
+        codegenError: null,
+        codegenWorker: null,
     },
 
     initializeModel: async () => {
@@ -191,7 +211,46 @@ export const useAIStore = create<AISlice>((set, get) => ({
             progressStatus: 'idle',
             files: {},
             summaryResult: null,
+            isCodegenReady: false,
+            isCodegenLoading: false,
+            codegenProgress: 0,
+            codegenProgressStatus: '',
+            codegenError: null,
+            codegenWorker: null,
         } });
+    },
+
+    initializeCodegenModel: async () => {
+        set(state => ({ ai: { ...state.ai, isCodegenLoading: true, codegenError: null } }));
+        if (!get().ai.codegenWorker) {
+            const worker = new Worker(new URL('../workers/codegenWorker.js', import.meta.url), { type: 'module' });
+            worker.onmessage = (e) => {
+                const data = e.data;
+                console.log('[aiStore] Codegen worker message:', data);
+                if (data.modelType === 'codegen') {
+                    if (data.status === 'ready') {
+                        console.log('[aiStore] Codegen model is ready!');
+                        set(state => ({ ai: { ...state.ai, isCodegenReady: true, isCodegenLoading: false, codegenProgress: 100, codegenProgressStatus: 'Ready' } }));
+                    } else if (data.status === 'progress') {
+                        set(state => ({ ai: { ...state.ai, codegenProgress: data.progress, codegenProgressStatus: data.file } }));
+                    } else if (data.status === 'error') {
+                        set(state => ({ ai: { ...state.ai, codegenError: data.error, isCodegenLoading: false } }));
+                    }
+                }
+            };
+            set(state => ({ ai: { ...state.ai, codegenWorker: worker } }));
+            worker.postMessage({ type: 'init' });
+        } else {
+            get().ai.codegenWorker.postMessage({ type: 'init' });
+        }
+    },
+
+    runCodegen: async (payload) => {
+        set(state => ({ ai: { ...state.ai, codegenError: null } }));
+        const worker = get().ai.codegenWorker;
+        if (!worker) throw new Error('Codegen worker not initialized');
+        worker.postMessage({ type: 'generate', ...payload });
+        // The UI should listen for streaming updates via the worker's onmessage
     }
 }));
 

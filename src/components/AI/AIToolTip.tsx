@@ -17,9 +17,13 @@ interface AITooltipProps {
   position: { x: number; y: number } | null;
   visible: boolean;
   files?: Record<string, FileProgress>;
+  codegenStatus?: string;
+  codegenProgress?: number;
+  codegenError?: string | null;
+  codegenFiles?: Record<string, FileProgress>;
 }
 
-export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, position, visible, files }) => {
+export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, position, visible, files, codegenStatus, codegenProgress, codegenError, codegenFiles }) => {
   if (!visible || !position) {
     return null;
   }
@@ -33,25 +37,15 @@ export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, p
     pointerEvents: 'none',
   };
 
-  let content: React.ReactNode;
-  if (error) {
-    content = (
-        <>
-            <div className="font-semibold text-red-400">Error</div>
-            <div className="text-xs mt-1 text-red-300">{error}</div>
-        </>
-    );
-  } else if (status === 'ready') {
-    content = <div className="text-center font-semibold text-green-200">AI Ready</div>;
-  } else if (status === 'initializing' || status === 'progress' || status === 'downloading') {
+  // Helper to render a progress bar for a model
+  const renderProgress = (label: string, status: string, progress: number, files?: Record<string, FileProgress>) => {
     // Filter files: show only non-completed or recently completed (within 10s)
     const visibleFiles = files ? Object.values(files).filter(file =>
-        !file.completed || (Date.now() - file.lastUpdateTime < 10000)
+      !file.completed || (Date.now() - file.lastUpdateTime < 10000)
     ) : [];
-
-    content = (
-      <>
-        <div className="font-semibold text-blue-300 capitalize">{status}...</div>
+    return (
+      <div className="mb-2 last:mb-0">
+        <div className="font-semibold text-blue-300 capitalize mb-1">{label} {status}...</div>
         {visibleFiles.length > 0 ? (
           <div className="space-y-2 mt-2">
             {visibleFiles.map(file => (
@@ -63,7 +57,7 @@ export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, p
                   ></div>
                 </div>
                 <span className="text-xs text-gray-300 whitespace-nowrap">
-                    {file.percent !== undefined ? `${file.percent}%` : ''}
+                  {file.percent !== undefined ? `${file.percent}%` : ''}
                 </span>
               </div>
             ))}
@@ -79,10 +73,38 @@ export const AITooltip: React.FC<AITooltipProps> = ({ status, progress, error, p
             <div className="text-xs text-center text-gray-400">{progress}%</div>
           </>
         )}
+      </div>
+    );
+  };
+
+  let content: React.ReactNode = null;
+  if (error) {
+    content = (
+      <>
+        <div className="font-semibold text-red-400">Error</div>
+        <div className="text-xs mt-1 text-red-300">{error}</div>
       </>
     );
+  } else if (codegenError) {
+    content = (
+      <>
+        <div className="font-semibold text-red-400">Codegen Error</div>
+        <div className="text-xs mt-1 text-red-300">{codegenError}</div>
+      </>
+    );
+  } else if (status === 'ready' && (!codegenStatus || codegenStatus === 'ready')) {
+    content = <div className="text-center font-semibold text-green-200">AI Ready</div>;
   } else {
-      content = <div className="font-semibold text-gray-400 capitalize">{status || 'Initializing...'}</div>;
+    content = (
+      <>
+        {(status === 'initializing' || status === 'progress' || status === 'downloading') &&
+          renderProgress('Summary Model', status, progress, files)}
+        {(codegenStatus && (codegenStatus === 'initializing' || codegenStatus === 'progress' || codegenStatus === 'downloading')) &&
+          renderProgress('Codegen Model', codegenStatus, codegenProgress || 0, codegenFiles)}
+        {(!((status === 'initializing' || status === 'progress' || status === 'downloading') || (codegenStatus && (codegenStatus === 'initializing' || codegenStatus === 'progress' || codegenStatus === 'downloading')))) &&
+          <div className="font-semibold text-gray-400 capitalize">{status || 'Initializing...'}</div>}
+      </>
+    );
   }
 
   return (
