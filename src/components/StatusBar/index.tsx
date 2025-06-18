@@ -237,7 +237,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
             <button
                 onClick={() => toggleSearch()} // Open search with no initial query
                 className="p-0.5 hover:bg-gray-700 rounded transition-colors"
-                title="Find in Files (Ctrl+Shift+F)"
+                title="Find in Tabs (Ctrl+Shift+F)"
             >
                 <Search size={14} />
             </button> }
