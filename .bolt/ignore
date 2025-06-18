@@ -1,0 +1,22 @@
+# Node.js dependencies
+node_modules/
+
+# Build output directories
+dist/
+build/
+
+src/languages/
+src/tablets/
+
+src/tablets/password/
+src/tablets/runcode/
+src/tablets/email/
+src/tablets/usergen/
+src/tablets/ipdetails/
+src/tablets/converter/
+src/tablets/vault/
+src/tablets/restclient/
+src/tablets/jwt/
+src/tablets/jsonmapper/
+src/tablets/pomodoro/
+src/tablets/regex/
