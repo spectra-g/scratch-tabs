@@ -30,6 +30,9 @@ interface AIState {
   codegenError: string | null;
   codegenWorker: Worker | null;
   codegenFiles: Record<string, FileProgress>;
+  isCodegenGenerating: boolean;
+  codegenResult: string | null;
+  activeCodegenTabId: string | null;
 }
 
 export interface AISlice {
@@ -93,10 +96,15 @@ function updateProgressState(ai: AIState, p: any): AIState {
         codegenError: ai.codegenError,
         codegenWorker: ai.codegenWorker,
         codegenFiles: ai.codegenFiles,
+        isCodegenGenerating: ai.isCodegenGenerating,
+        codegenResult: ai.codegenResult,
+        activeCodegenTabId: ai.activeCodegenTabId,
     };
 }
 
 let workerInstance: Worker | null = null;
+let codegenWorkerInstance: Worker | null = null;
+let codegenListenerAttached = false;
 
 export const useAIStore = create<AISlice>((set, get) => {
     // On store creation, check IndexedDB settings and auto-initialize if needed
@@ -126,6 +134,9 @@ export const useAIStore = create<AISlice>((set, get) => {
             codegenError: null,
             codegenWorker: null,
             codegenFiles: {},
+            isCodegenGenerating: false,
+            codegenResult: null,
+            activeCodegenTabId: null,
         },
 
         initializeModel: async () => {
@@ -238,85 +249,131 @@ export const useAIStore = create<AISlice>((set, get) => {
                 codegenError: null,
                 codegenWorker: null,
                 codegenFiles: {},
+                isCodegenGenerating: false,
+                codegenResult: null,
+                activeCodegenTabId: null,
             } });
         },
 
         initializeCodegenModel: async () => {
-            set(state => ({ ai: { ...state.ai, isCodegenLoading: true, codegenError: null } }));
-            if (!get().ai.codegenWorker) {
-                const worker = new Worker(new URL('../workers/codegenWorker.js', import.meta.url), { type: 'module' });
-                worker.onmessage = (e) => {
+            console.log(`[${Date.now()}] [AI Store] initializeCodegenModel called`);
+            const { isCodegenReady, isCodegenLoading } = get().ai;
+            if (isCodegenReady || isCodegenLoading) {
+                console.log(`[${Date.now()}] [AI Store] Codegen already ready or loading, skipping`);
+                return;
+            }
+            console.log(`[${Date.now()}] [AI Store] Setting codegen loading state`);
+            set(state => ({ ai: { ...state.ai, isCodegenLoading: true, codegenError: null, codegenProgressStatus: 'initializing' } }));
+            if (!codegenWorkerInstance) {
+                console.log(`[${Date.now()}] [AI Store] Creating new codegen worker instance`);
+                codegenWorkerInstance = new Worker(new URL('../workers/codegenWorker.js', import.meta.url), { type: 'module' });
+            }
+            if (!codegenListenerAttached && codegenWorkerInstance) {
+                console.log(`[${Date.now()}] [AI Store] Attaching codegen worker listener`);
+                codegenWorkerInstance.onmessage = (e) => {
                     const data = e.data;
-                    if (data.modelType === 'codegen') {
-                        if (data.status === 'ready') {
-                            set(state => {
-                                setSetting('xenova.codegen.350.mono.downloaded', 'true');
-                                return { ai: { ...state.ai, isCodegenReady: true, isCodegenLoading: false, codegenProgress: 100, codegenProgressStatus: 'ready', codegenFiles: {} } };
-                            });
-                        } else if (data.status === 'progress' && data.file) {
+                    console.log(`[${Date.now()}] [AI Store] Codegen worker message received:`, data.status, data);
+                    if (data.modelType !== 'codegen') return;
+                    switch (data.status) {
+                        case 'ready':
+                            console.log(`[${Date.now()}] [AI Store] Codegen model ready`);
+                            setSetting('xenova.codegen.350.mono.downloaded', 'true');
+                            set(state => ({ ai: { ...state.ai, isCodegenReady: true, isCodegenLoading: false, codegenProgress: 100, codegenProgressStatus: 'ready', codegenFiles: {} } }));
+                            break;
+                        case 'progress': {
+                            console.log(`[${Date.now()}] [AI Store] Codegen progress:`, data.file, data.loaded, data.total);
                             const files = { ...(get().ai.codegenFiles || {}) };
-                            let percent = 0;
-                            if (typeof data.loaded === 'number' && typeof data.total === 'number' && data.total > 0) {
-                                percent = Math.round((data.loaded / data.total) * 100);
-                            }
                             files[data.file] = {
                                 file: data.file,
                                 loaded: data.loaded,
                                 total: data.total,
-                                percent,
-                                status: 'downloading',
+                                percent: data.total ? Math.round((data.loaded / data.total) * 100) : 0,
                                 completed: data.total ? data.loaded === data.total : false,
                                 lastUpdateTime: Date.now(),
+                                status: data.status,
                             };
-                            set(state => ({
-                                ai: {
-                                    ...state.ai,
-                                    codegenProgressStatus: 'downloading',
-                                    codegenFiles: files,
-                                    codegenProgress: percent,
-                                }
-                            }));
-                        } else if (typeof data.status === 'string' && (data.status.endsWith('.json') || data.status.endsWith('.safetensors'))) {
-                            const files = { ...(get().ai.codegenFiles || {}) };
-                            let percent = 0;
-                            if (typeof data.loaded === 'number' && typeof data.total === 'number' && data.total > 0) {
-                                percent = Math.round((data.loaded / data.total) * 100);
-                            }
-                            files[data.status] = {
-                                file: data.status,
-                                loaded: data.loaded,
-                                total: data.total,
-                                percent,
-                                status: 'downloading',
-                                completed: data.total ? data.loaded === data.total : false,
-                                lastUpdateTime: Date.now(),
-                            };
-                            set(state => ({
-                                ai: {
-                                    ...state.ai,
-                                    codegenProgressStatus: 'downloading',
-                                    codegenFiles: files,
-                                    codegenProgress: percent,
-                                }
-                            }));
-                        } else if (data.status === 'error') {
-                            set(state => ({ ai: { ...state.ai, codegenError: data.error, isCodegenLoading: false } }));
+                            set(state => ({ ai: { ...state.ai, codegenFiles: files, codegenProgress: Math.round(data.progress) }}));
+                            break;
                         }
+                        case 'update':
+                            console.log(`[${Date.now()}] [AI Store] Codegen streaming update:`, data.output?.length || 0, 'chars');
+                            set(state => {
+                                console.log(`[${Date.now()}] [AI Store] Updating codegenResult, activeCodegenTabId:`, state.ai.activeCodegenTabId);
+                                return { ai: { ...state.ai, codegenResult: data.output } };
+                            });
+                            break;
+                        case 'complete': {
+                            console.log(`[${Date.now()}] [AI Store] Codegen complete, final output:`, data.output?.length || 0, 'chars');
+                            // Capture the tabId before clearing the state
+                            const { activeCodegenTabId } = get().ai;
+                            console.log(`[${Date.now()}] [AI Store] Active tab ID before clearing:`, activeCodegenTabId);
+                            
+                            set(state => ({
+                                ai: {
+                                    ...state.ai,
+                                    isCodegenGenerating: false,
+                                    codegenResult: data.output,
+                                    activeCodegenTabId: null,
+                                }
+                            }));
+                            
+                            // Commit final result to rootStore
+                            try {
+                                console.log(`[${Date.now()}] [AI Store] Committing final result to tab:`, activeCodegenTabId);
+                                if (activeCodegenTabId && data.output) {
+                                    // Dynamically import to avoid circular deps
+                                    import('../stores/rootStore').then(({ useRootStore }) => {
+                                        console.log(`[${Date.now()}] [AI Store] Updating tab content in rootStore`);
+                                        useRootStore.getState().updateTabContent(activeCodegenTabId, data.output);
+                                        console.log(`[${Date.now()}] [AI Store] Tab content updated successfully`);
+                                    });
+                                } else {
+                                    console.warn(`[${Date.now()}] [AI Store] Cannot commit result:`, { activeCodegenTabId, hasOutput: !!data.output });
+                                }
+                            } catch (err) {
+                                console.error(`[${Date.now()}] [AI Store] Failed to commit codegen result to tab:`, err);
+                            }
+                            document.body.classList.remove('global-cursor-progress');
+                            break;
+                        }
+                        case 'error':
+                            console.error(`[${Date.now()}] [AI Store] Codegen error:`, data.error);
+                            set(state => ({ ai: { ...state.ai, codegenError: data.error, isCodegenLoading: false, isCodegenGenerating: false, activeCodegenTabId: null } }));
+                            document.body.classList.remove('global-cursor-progress');
+                            break;
                     }
                 };
-                set(state => ({ ai: { ...state.ai, codegenWorker: worker } }));
-                worker.postMessage({ type: 'init' });
-            } else {
-                get().ai.codegenWorker.postMessage({ type: 'init' });
+                codegenListenerAttached = true;
             }
+            console.log(`[${Date.now()}] [AI Store] Setting codegen worker and sending init message`);
+            set(state => ({ ai: { ...state.ai, codegenWorker: codegenWorkerInstance } }));
+            codegenWorkerInstance.postMessage({ type: 'init' });
         },
 
-        runCodegen: async (payload) => {
-            set(state => ({ ai: { ...state.ai, codegenError: null } }));
-            const worker = get().ai.codegenWorker;
-            if (!worker) throw new Error('Codegen worker not initialized');
-            worker.postMessage({ type: 'generate', ...payload });
-            // The UI should listen for streaming updates via the worker's onmessage
+        runCodegen: (payload) => {
+            console.log(`[${Date.now()}] [AI Store] runCodegen called with payload:`, payload);
+            const { isCodegenReady, isCodegenGenerating, codegenWorker } = get().ai;
+            console.log(`[${Date.now()}] [AI Store] Codegen state:`, { isCodegenReady, isCodegenGenerating, hasWorker: !!codegenWorker });
+            if (!isCodegenReady || isCodegenGenerating || !codegenWorker) {
+                console.log(`[${Date.now()}] [AI Store] Codegen not ready, returning early`);
+                return;
+            }
+            console.log(`[${Date.now()}] [AI Store] Starting codegen generation`);
+            document.body.classList.add('global-cursor-progress');
+            set(state => {
+                console.log(`[${Date.now()}] [AI Store] Setting codegen state with tabId:`, payload.tabId);
+                return {
+                    ai: {
+                        ...state.ai,
+                        isCodegenGenerating: true,
+                        codegenError: null,
+                        codegenResult: payload.text,
+                        activeCodegenTabId: payload.tabId,
+                    }
+                };
+            });
+            console.log(`[${Date.now()}] [AI Store] Sending generate message to worker`);
+            codegenWorker.postMessage({ type: 'generate', ...payload });
         }
     };
 });

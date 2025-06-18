@@ -39,10 +39,18 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     activeEditorSide: state.splitView.activeSide,
   }));
 
-  const { isCodegenReady, runCodegen, codegenWorker } = useAIStore(state => ({
+  const { 
+    isCodegenReady, 
+    runCodegen, 
+    codegenResult, 
+    activeCodegenTabId,
+    isCodegenGenerating 
+  } = useAIStore(state => ({
     isCodegenReady: state.ai.isCodegenReady,
     runCodegen: state.runCodegen,
-    codegenWorker: state.ai.codegenWorker,
+    codegenResult: state.ai.codegenResult,
+    activeCodegenTabId: state.ai.activeCodegenTabId,
+    isCodegenGenerating: state.ai.isCodegenGenerating,
   }));
 
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -180,19 +188,13 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-    
-    // Notify parent component that editor is ready
     onEditorReady?.(editor);
-    
     // Initialize with the current tab's model
     const model = getOrCreateModelForTab(activeTab.id, activeTab.content, activeTab.language);
     editor.setModel(model);
     currentTabIdRef.current = activeTab.id;
     previousContentRef.current = activeTab.content;
-
     restoreScrollPosition(activeTab.id);
-
-    // --- Add Commands and Listeners ---
     // Ctrl+K (Format)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
        if (!editor.hasTextFocus()) {
@@ -200,17 +202,14 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
        }
        editor.getAction('editor.action.formatDocument')?.run();
     });
-
     // Cursor Position Listener
-    const cursorListener = editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
+    editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
       const currentTabIdForCursor = latestActiveTabRef.current.id;
       setCursorPosition(currentTabIdForCursor, {
         lineNumber: e.position.lineNumber,
         column: e.position.column,
       });
     });
-
-    // Register context menu action reactively in a useEffect below
   };
 
   // Register Monaco context menu action for Generate Code reactively
@@ -219,52 +218,84 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     const monaco = monacoRef.current;
     if (!editor || !monaco) return;
     const actionId = 'ai-generate-code';
-    if (isCodegenReady && !editor.getAction(actionId)) {
-      editor.addAction({
-        id: actionId,
-        label: 'Generate Code',
-        contextMenuGroupId: 'navigation',
-        contextMenuOrder: 1.5,
-        run: async (ed) => {
-          if (!isCodegenReady) return;
-          const originalValue = ed.getValue();
-          let currentValue = originalValue;
-          let lastOutput = originalValue;
-          if (codegenWorker) {
-            document.body.classList.add('global-cursor-progress');
-            const onMessage = (e: MessageEvent) => {
-              const data = e.data;
-              if (data.modelType === 'codegen') {
-                if (data.status === 'update' && typeof data.output === 'string') {
-                  if (data.output !== lastOutput) {
-                    currentValue = data.output;
-                    ed.setValue(currentValue);
-                    lastOutput = data.output;
-                  }
-                } else if (data.status === 'complete' && typeof data.output === 'string') {
-                  ed.setValue(data.output);
-                  document.body.classList.remove('global-cursor-progress');
-                  codegenWorker.removeEventListener('message', onMessage);
-                } else if (data.status === 'error') {
-                  document.body.classList.remove('global-cursor-progress');
-                  codegenWorker.removeEventListener('message', onMessage);
-                }
-              }
-            };
-            codegenWorker.addEventListener('message', onMessage);
-            runCodegen({
-              text: originalValue,
-              max_new_tokens: 256,
-              temperature: 0.5,
-              top_k: 5,
-              do_sample: false,
-            });
-          }
-        },
-        precondition: isCodegenReady ? undefined : 'false',
-      });
+    console.log(`[${Date.now()}] [Editor] Registering context menu action:`, {
+      isCodegenReady,
+      isCodegenGenerating,
+      activeTabId: activeTab.id
+    });
+    const disposableAction = editor.addAction({
+      id: actionId,
+      label: 'Generate Code',
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1.5,
+      precondition: isCodegenReady && !isCodegenGenerating ? undefined : 'false',
+      run: (ed) => {
+        console.log(`[${Date.now()}] [Editor] Context menu action executed`);
+        const originalValue = ed.getValue();
+        console.log(`[${Date.now()}] [Editor] Original value length:`, originalValue.length);
+        if (!isCodegenReady || isCodegenGenerating) {
+          console.log(`[${Date.now()}] [Editor] Codegen not ready or already generating, returning`);
+          return;
+        }
+        console.log(`[${Date.now()}] [Editor] Calling runCodegen`);
+        runCodegen({
+          tabId: activeTab.id,
+          text: originalValue,
+          max_new_tokens: 128,
+          temperature: 0.5,
+          top_k: 5,
+          do_sample: false,
+        });
+      },
+    });
+    return () => {
+      console.log(`[${Date.now()}] [Editor] Disposing context menu action`);
+      disposableAction.dispose();
+    };
+  }, [isCodegenReady, isCodegenGenerating, runCodegen, activeTab.id]);
+
+  // Debug logging for context menu action
+  useEffect(() => {
+    console.log(`[${Date.now()}] [Editor] Context menu action state:`, {
+      isCodegenReady,
+      isCodegenGenerating,
+      activeTabId: activeTab.id
+    });
+  }, [isCodegenReady, isCodegenGenerating, activeTab.id]);
+
+  // --- REACTIVE VALUE FOR STREAMING CODEGEN ---
+  const isStreamingForThisTab = isCodegenGenerating && activeCodegenTabId === activeTab.id;
+  const editorValue = isStreamingForThisTab && codegenResult !== null ? codegenResult : activeTab.content;
+
+  // Debug logging for editor reactivity
+  useEffect(() => {
+    console.log(`[${Date.now()}] [Editor] Tab ${activeTab.id} state:`, {
+      isStreamingForThisTab,
+      isCodegenGenerating,
+      activeCodegenTabId,
+      codegenResultLength: codegenResult?.length || 0,
+      activeTabContentLength: activeTab.content.length,
+      editorValueLength: editorValue.length,
+      isStreamingValue: isStreamingForThisTab && codegenResult !== null
+    });
+  }, [isStreamingForThisTab, isCodegenGenerating, activeCodegenTabId, codegenResult, activeTab.content, editorValue, activeTab.id]);
+
+  // --- onChange handler for editor ---
+  const handleEditorChange = (value: string | undefined) => {
+    console.log(`[${Date.now()}] [Editor] handleEditorChange called:`, {
+      valueLength: value?.length || 0,
+      isStreamingForThisTab,
+      activeTabId: activeTab.id
+    });
+    if (typeof value !== 'string') return;
+    // Only update if not streaming for this tab (otherwise, codegenResult is the source of truth)
+    if (!isStreamingForThisTab) {
+      console.log(`[${Date.now()}] [Editor] Updating tab content (not streaming)`);
+      updateTabContent(activeTab.id, value);
+    } else {
+      console.log(`[${Date.now()}] [Editor] Skipping tab content update (streaming)`);
     }
-  }, [isCodegenReady, codegenWorker, runCodegen]);
+  };
 
   const handleEditorFocus = () => {
     if (side === 'left') {
@@ -307,6 +338,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
           height="100%"
           width="100%"
           theme="vs-dark"
+          value={editorValue}
+          onChange={handleEditorChange}
           onMount={handleEditorDidMount}
           options={{
             minimap: {enabled: false},
