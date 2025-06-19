@@ -1090,22 +1090,26 @@ export const UuidTablet: Tablet = {
             </div>
           ) : (
             <div className={`grid gap-3 ${settings.viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-              {items.map((item) => (
-                <UuidItemComponent
-                  key={item.id + item.timestamp.getTime()}
-                  item={{
-                    ...item,
-                    copied: copiedItemIds.has(
-                      settings.case === 'upper' 
-                        ? (settings.format === 'hyphenated' ? item.id.toUpperCase() : item.id.replace(/-/g, '').toUpperCase())
-                        : (settings.format === 'hyphenated' ? item.id.toLowerCase() : item.id.replace(/-/g, '').toLowerCase())
-                    )
-                  }}
-                  format={settings.format}
-                  casing={settings.case}
-                  onCopy={handleCopy}
-                />
-              ))}
+              {items.map((item) => {
+                const timestamp = item.timestamp instanceof Date ? item.timestamp : new Date(item.timestamp);
+                return (
+                  <UuidItemComponent
+                    key={item.id + timestamp.getTime()}
+                    item={{
+                      ...item,
+                      timestamp,
+                      copied: copiedItemIds.has(
+                        settings.case === 'upper' 
+                          ? (settings.format === 'hyphenated' ? item.id.toUpperCase() : item.id.replace(/-/g, '').toUpperCase())
+                          : (settings.format === 'hyphenated' ? item.id.toLowerCase() : item.id.replace(/-/g, '').toLowerCase())
+                      )
+                    }}
+                    format={settings.format}
+                    casing={settings.case}
+                    onCopy={handleCopy}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

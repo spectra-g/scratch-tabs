@@ -24,3 +24,8 @@
      /* Add styles like text-decoration: underline; */
   }
 }
+
+/* Spinner cursor for codegen */
+.global-cursor-progress, .global-cursor-progress * {
+  cursor: progress !important;
+}

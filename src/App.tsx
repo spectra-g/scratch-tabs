@@ -1,7 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { initializeLanguageProviders } from './languages';
-import { useAIStore } from './stores/aiStore';
 import { broadcastManager } from './stores/broadcastStore';
 import DragDropOverlay from './components/DragDropOverlay';
 import './views/csv';
@@ -21,16 +20,6 @@ const AppLoadingFallback = () => (
 
 function App() {
 
-  const initializeAI = useAIStore(state => state.initializeModel); // Get the initializer action
-
-  useEffect(() => {
-    // Initialize AI model when the App mounts
-    initializeAI().catch(err => {
-        console.error("Failed to initialize AI on app mount:", err);
-        // Optionally show a global error message to the user
-    });
-  }, [initializeAI]); // Dependency array includes the action
-  
   useEffect(() => {
     broadcastManager.initialize();
   
