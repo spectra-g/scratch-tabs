@@ -11,7 +11,8 @@ import {
   calculateBase64Stats,
   processLineByLine,
   isLikelyBase64,
-  downloadAsFile
+  downloadAsFile,
+  handleFileDrop
 } from './utils/base64Utils';
 import { Base64Toolbar } from './components/Base64Toolbar';
 import { Base64Input } from './components/Base64Input';
@@ -136,7 +137,7 @@ export const Base64Tablet: Tablet = {
             ...state.data,
             output: result,
             error: null,
-            history: [historyItem, ...history.slice(0, 99)] // Keep last 100 items
+            history: [historyItem, ...state.data.history.slice(0, 99)] // Keep last 100 items
           }
         });
       } catch (err) {
@@ -148,7 +149,7 @@ export const Base64Tablet: Tablet = {
           }
         });
       }
-    }, [input, mode, selectedFormat, selectedEncoding, wrapOutput, preserveNewlines, history, state, onChange]);
+    }, [input, mode, selectedFormat, selectedEncoding, wrapOutput, preserveNewlines, state, onChange]);
 
     // Validate Base64 input
     useEffect(() => {
@@ -160,12 +161,12 @@ export const Base64Tablet: Tablet = {
       }
     }, [input, mode, selectedFormat]);
 
-    // Process input when relevant state changes
+    // Process input when relevant state changes (excluding processInput from dependencies)
     useEffect(() => {
       if (input) {
         processInput();
       }
-    }, [mode, selectedFormat, selectedEncoding, wrapOutput, preserveNewlines, processInput]);
+    }, [input, mode, selectedFormat, selectedEncoding, wrapOutput, preserveNewlines]);
 
     // Handle keyboard shortcuts
     useEffect(() => {
