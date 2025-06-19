@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-// Remove direct import of pipeline
-// import { pipeline, Pipeline, SummarizationPipeline, PipelineType } from '@huggingface/transformers';
+import { setSetting, getSetting } from '../db';
 
 interface FileProgress {
   file: string;
@@ -22,6 +21,16 @@ interface AIState {
   progressStatus: string; // e.g., 'idle', 'downloading', 'initializing', 'ready', 'error'
   files: Record<string, FileProgress>;
   summaryResult: string | null; // Add field to store the latest summary result
+  isCodegenReady: boolean;
+  isCodegenLoading: boolean;
+  codegenProgress: number;
+  codegenProgressStatus: string;
+  codegenError: string | null;
+  codegenWorker: Worker | null;
+  codegenFiles: Record<string, FileProgress>;
+  isCodegenGenerating: boolean;
+  codegenResult: string | null;
+  activeCodegenTabId: string | null;
 }
 
 export interface AISlice {
@@ -29,6 +38,8 @@ export interface AISlice {
   initializeModel: () => Promise<void>;
   summarizeText: (text: string) => void; // No longer returns Promise<string>
   terminateWorker: () => void; // Add function to terminate worker
+  initializeCodegenModel: () => Promise<void>;
+  runCodegen: (payload: any) => void;
 }
 
 // Helper function to update progress state for the ai slice only
@@ -76,112 +87,58 @@ function updateProgressState(ai: AIState, p: any): AIState {
         progressStatus: finalOverallStatus,
         files,
         summaryResult: ai.summaryResult,
+        isCodegenReady: ai.isCodegenReady,
+        isCodegenLoading: ai.isCodegenLoading,
+        codegenProgress: ai.codegenProgress,
+        codegenProgressStatus: ai.codegenProgressStatus,
+        codegenError: ai.codegenError,
+        codegenWorker: ai.codegenWorker,
+        codegenFiles: ai.codegenFiles,
+        isCodegenGenerating: ai.isCodegenGenerating,
+        codegenResult: ai.codegenResult,
+        activeCodegenTabId: ai.activeCodegenTabId,
     };
 }
 
 let workerInstance: Worker | null = null;
+let codegenWorkerInstance: Worker | null = null;
+let codegenListenerAttached = false;
 
-export const useAIStore = create<AISlice>((set, get) => ({
-    ai: {
-        worker: null,
-        isReady: false,
-        isLoading: false,
-        error: null,
-        isGenerating: false,
-        progress: 0,
-        progressStatus: 'idle',
-        files: {},
-        summaryResult: null,
-    },
+export const useAIStore = create<AISlice>((set, get) => {
+    // Track the current codegen model name for persistence
+    let currentCodegenModelName = 'Xenova/starcoderbase-1b-sft'; // Default fallback
+    let currentSummarizationModelName = 'Xenova/distilbart-cnn-6-6'; // Default fallback
+    
+    // Helper function to get persistence key for codegen model
+    const getCodegenPersistenceKey = () => {
+        return `xenova.${currentCodegenModelName.replace(/[\/\-\.]/g, '_')}.downloaded`;
+    };
 
-    initializeModel: async () => {
-        const currentState = get().ai;
+    // Helper function to get persistence key for summarization model
+    const getSummarizationPersistenceKey = () => {
+        return `xenova.${currentSummarizationModelName.replace(/[\/\-\.]/g, '_')}.downloaded`;
+    };
 
-        if (currentState.isReady || currentState.isLoading || workerInstance) {
-            return;
-        }
-
-        set(state => ({ ai: { ...state.ai, isLoading: true, error: null, progress: 0, progressStatus: 'initializing', files: {}, summaryResult: null } }));
-
-        try {
-            workerInstance = new Worker(new URL('../workers/aiWorker.ts', import.meta.url), {
-                type: 'module'
-            });
-            set(state => ({ ai: { ...state.ai, worker: workerInstance } }));
-
-            workerInstance.onmessage = (event) => {
-                const { type, payload } = event.data;
-
-                switch (type) {
-                    case 'progress':
-                        set((state: AISlice) => ({ ai: updateProgressState(state.ai, { ...payload, type }) }));
-                        break;
-                    case 'init_complete':
-                        set(state => ({ ai: { ...state.ai, isReady: true, isLoading: false, progress: 100, progressStatus: 'ready', error: null } }));
-                        break;
-                    case 'init_error':
-                        set(state => ({ ai: { ...state.ai, error: payload, isLoading: false, isReady: false, progressStatus: 'error' } }));
-                        workerInstance?.terminate(); // Terminate on init error
-                        workerInstance = null;
-                        set(state => ({ ai: { ...state.ai, worker: null } }));
-                        break;
-                    case 'summary_result':
-                        set(state => ({ ai: { ...state.ai, summaryResult: payload.summary, isGenerating: false, error: null } }));
-                        break;
-                    case 'summary_error':
-                        set(state => ({ ai: { ...state.ai, error: payload, isGenerating: false, summaryResult: null } }));
-                        break;
-                    default:
-                         console.warn('[AI Store] Received unknown message type from worker:', type);
-                }
-            };
-
-            workerInstance.onerror = (error) => {
-                console.error('[AI Store] Worker error:', error);
-                set(state => ({ ai: { ...state.ai, error: 'Worker error occurred', isLoading: false, isReady: false, isGenerating: false, progressStatus: 'error' } }));
-                workerInstance?.terminate();
-                workerInstance = null;
-                set(state => ({ ai: { ...state.ai, worker: null } }));
-            };
-
-            // Send init message to worker
-            workerInstance.postMessage({ type: 'init' });
-
-        } catch (error) {
-            console.error('[AI Store] Failed to initialize worker:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to initialize worker';
-            set(state => ({ ai: { ...state.ai, error: errorMessage, isLoading: false, isReady: false, progressStatus: 'error' } }));
-            if (workerInstance) {
-                 workerInstance.terminate();
-                 workerInstance = null;
-                 set(state => ({ ai: { ...state.ai, worker: null } }));
+    // On store creation, check IndexedDB settings and auto-initialize if needed
+    if (typeof window !== 'undefined') {
+        getSetting(getSummarizationPersistenceKey()).then(val => {
+            if (val === 'true') setTimeout(() => get().initializeModel(), 0);
+        });
+        // Try to get the current model name from storage, fallback to default
+        getSetting('current_codegen_model').then(modelName => {
+            if (modelName) {
+                currentCodegenModelName = modelName;
             }
-        }
-    },
-
-    summarizeText: (text: string) => {
-        const { worker, isReady, isGenerating } = get().ai;
-        if (!isReady || !worker) {
-             console.error('[AI Store] Summarize called but worker not ready or not initialized.');
-            // Optionally set an error state here
-             set(state => ({ ai: { ...state.ai, error: 'AI is not ready.' } }));
-             return;
-        }
-        if (isGenerating) {
-            return; // Prevent multiple requests
-        }
-
-        set(state => ({ ai: { ...state.ai, isGenerating: true, error: null, summaryResult: null } })); // Reset summary/error
-        worker.postMessage({ type: 'summarize', payload: { text } });
-        // Result will be handled by onmessage listener
-    },
-
-    terminateWorker: () => {
-        if (workerInstance) {
-            workerInstance.terminate();
-            workerInstance = null;
-        }
-        set({ ai: {
+            const persistenceKey = getCodegenPersistenceKey();
+            getSetting(persistenceKey).then(val => {
+                if (val === 'true') {
+                    setTimeout(() => get().initializeCodegenModel(), 0);
+                }
+            });
+        });
+    }
+    return {
+        ai: {
             worker: null,
             isReady: false,
             isLoading: false,
@@ -191,8 +148,239 @@ export const useAIStore = create<AISlice>((set, get) => ({
             progressStatus: 'idle',
             files: {},
             summaryResult: null,
-        } });
-    }
-}));
+            isCodegenReady: false,
+            isCodegenLoading: false,
+            codegenProgress: 0,
+            codegenProgressStatus: '',
+            codegenError: null,
+            codegenWorker: null,
+            codegenFiles: {},
+            isCodegenGenerating: false,
+            codegenResult: null,
+            activeCodegenTabId: null,
+        },
+
+        initializeModel: async () => {
+            const currentState = get().ai;
+
+            if (currentState.isReady || currentState.isLoading || workerInstance) {
+                return;
+            }
+
+            set(state => ({ ai: { ...state.ai, isLoading: true, error: null, progress: 0, progressStatus: 'initializing', files: {}, summaryResult: null } }));
+
+            try {
+                workerInstance = new Worker(new URL('../workers/aiWorker.ts', import.meta.url), {
+                    type: 'module'
+                });
+                set(state => ({ ai: { ...state.ai, worker: workerInstance } }));
+
+                workerInstance.onmessage = (event) => {
+                    const { type, payload } = event.data;
+
+                    switch (type) {
+                        case 'progress':
+                            set((state: AISlice) => ({ ai: updateProgressState(state.ai, { ...payload, type }) }));
+                            break;
+                        case 'init_complete':
+                            set(state => {
+                                setSetting(getSummarizationPersistenceKey(), 'true');
+                                return { ai: { ...state.ai, isReady: true, isLoading: false, progress: 100, progressStatus: 'ready', error: null } };
+                            });
+                            break;
+                        case 'init_error':
+                            set(state => ({ ai: { ...state.ai, error: payload, isLoading: false, isReady: false, progressStatus: 'error' } }));
+                            workerInstance?.terminate(); // Terminate on init error
+                            workerInstance = null;
+                            set(state => ({ ai: { ...state.ai, worker: null } }));
+                            setSetting(getSummarizationPersistenceKey(), 'false');
+                            break;
+                        case 'summary_result':
+                            set(state => ({ ai: { ...state.ai, summaryResult: payload.summary, isGenerating: false, error: null } }));
+                            break;
+                        case 'summary_error':
+                            set(state => ({ ai: { ...state.ai, error: payload, isGenerating: false, summaryResult: null } }));
+                            break;
+                        default:
+                             console.warn('[AI Store] Received unknown message type from worker:', type);
+                    }
+                };
+
+                workerInstance.onerror = (error) => {
+                    console.error('[AI Store] Worker error:', error);
+                    set(state => ({ ai: { ...state.ai, error: 'Worker error occurred', isLoading: false, isReady: false, isGenerating: false, progressStatus: 'error' } }));
+                    workerInstance?.terminate();
+                    workerInstance = null;
+                    set(state => ({ ai: { ...state.ai, worker: null } }));
+                    setSetting(getSummarizationPersistenceKey(), 'false');
+                };
+
+                // Send init message to worker
+                workerInstance.postMessage({ type: 'init' });
+
+            } catch (error) {
+                console.error('[AI Store] Failed to initialize worker:', error);
+                const errorMessage = error instanceof Error ? error.message : 'Failed to initialize worker';
+                set(state => ({ ai: { ...state.ai, error: errorMessage, isLoading: false, isReady: false, progressStatus: 'error' } }));
+                if (workerInstance) {
+                     workerInstance.terminate();
+                     workerInstance = null;
+                     set(state => ({ ai: { ...state.ai, worker: null } }));
+                }
+                setSetting(getSummarizationPersistenceKey(), 'false');
+            }
+        },
+
+        summarizeText: (text: string) => {
+            const { worker, isReady, isGenerating } = get().ai;
+            if (!isReady || !worker) {
+                 console.error('[AI Store] Summarize called but worker not ready or not initialized.');
+                // Optionally set an error state here
+                 set(state => ({ ai: { ...state.ai, error: 'AI is not ready.' } }));
+                 return;
+            }
+            if (isGenerating) {
+                return; // Prevent multiple requests
+            }
+
+            set(state => ({ ai: { ...state.ai, isGenerating: true, error: null, summaryResult: null } })); // Reset summary/error
+            worker.postMessage({ type: 'summarize', payload: { text } });
+            // Result will be handled by onmessage listener
+        },
+
+        terminateWorker: () => {
+            if (workerInstance) {
+                workerInstance.terminate();
+                workerInstance = null;
+            }
+            set({ ai: {
+                worker: null,
+                isReady: false,
+                isLoading: false,
+                error: null,
+                isGenerating: false,
+                progress: 0,
+                progressStatus: 'idle',
+                files: {},
+                summaryResult: null,
+                isCodegenReady: false,
+                isCodegenLoading: false,
+                codegenProgress: 0,
+                codegenProgressStatus: '',
+                codegenError: null,
+                codegenWorker: null,
+                codegenFiles: {},
+                isCodegenGenerating: false,
+                codegenResult: null,
+                activeCodegenTabId: null,
+            } });
+        },
+
+        initializeCodegenModel: async () => {
+            const { isCodegenReady, isCodegenLoading } = get().ai;
+            if (isCodegenReady || isCodegenLoading) {
+                return;
+            }
+            set(state => ({ ai: { ...state.ai, isCodegenLoading: true, codegenError: null, codegenProgressStatus: 'initializing' } }));
+            if (!codegenWorkerInstance) {
+                codegenWorkerInstance = new Worker(new URL('../workers/codegenWorker.js', import.meta.url), { type: 'module' });
+            }
+            if (!codegenListenerAttached && codegenWorkerInstance) {
+                codegenWorkerInstance.onmessage = (e) => {
+                    const data = e.data;
+                    if (data.modelType !== 'codegen') return;
+                    switch (data.status) {
+                        case 'ready':
+                            // Store the model name for future persistence checks
+                            if (data.modelName) {
+                                currentCodegenModelName = data.modelName;
+                                setSetting('current_codegen_model', data.modelName);
+                            }
+                            setSetting(getCodegenPersistenceKey(), 'true');
+                            set(state => ({ ai: { ...state.ai, isCodegenReady: true, isCodegenLoading: false, codegenProgress: 100, codegenProgressStatus: 'ready', codegenFiles: {} } }));
+                            break;
+                        case 'progress': {
+                            const files = { ...(get().ai.codegenFiles || {}) };
+                            files[data.file] = {
+                                file: data.file,
+                                loaded: data.loaded,
+                                total: data.total,
+                                percent: data.total ? Math.round((data.loaded / data.total) * 100) : 0,
+                                completed: data.total ? data.loaded === data.total : false,
+                                lastUpdateTime: Date.now(),
+                                status: data.status,
+                            };
+                            set(state => ({ ai: { ...state.ai, codegenFiles: files, codegenProgress: Math.round(data.progress) }}));
+                            break;
+                        }
+                        case 'update':
+                            set(state => {
+                                // Append the new tokens to the existing result
+                                const currentResult = state.ai.codegenResult || '';
+                                const newResult = currentResult + data.output;
+                                return { ai: { ...state.ai, codegenResult: newResult } };
+                            });
+                            break;
+                        case 'complete': {
+                            // Capture the tabId before clearing the state
+                            const { activeCodegenTabId } = get().ai;
+
+                            set(state => ({
+                                ai: {
+                                    ...state.ai,
+                                    isCodegenGenerating: false,
+                                    codegenResult: data.output,
+                                    activeCodegenTabId: null,
+                                }
+                            }));
+                            
+                            // Commit final result to rootStore
+                            try {
+                                if (activeCodegenTabId && data.output) {
+                                    // Dynamically import to avoid circular deps
+                                    import('../stores/rootStore').then(({ useRootStore }) => {
+                                        useRootStore.getState().updateTabContent(activeCodegenTabId, data.output);
+                                    });
+                                }
+                            } catch (err) {
+                                console.error(`[${Date.now()}] [AI Store] Failed to commit codegen result to tab:`, err);
+                            }
+                            document.body.classList.remove('global-cursor-progress');
+                            break;
+                        }
+                        case 'error':
+                            console.error(`[${Date.now()}] [AI Store] Codegen error:`, data.error);
+                            set(state => ({ ai: { ...state.ai, codegenError: data.error, isCodegenLoading: false, isCodegenGenerating: false, activeCodegenTabId: null } }));
+                            document.body.classList.remove('global-cursor-progress');
+                            break;
+                    }
+                };
+                codegenListenerAttached = true;
+            }
+            set(state => ({ ai: { ...state.ai, codegenWorker: codegenWorkerInstance } }));
+            codegenWorkerInstance.postMessage({ type: 'init' });
+        },
+
+        runCodegen: (payload) => {
+            const { isCodegenReady, isCodegenGenerating, codegenWorker } = get().ai;
+            if (!isCodegenReady || isCodegenGenerating || !codegenWorker) {
+                return;
+            }
+            document.body.classList.add('global-cursor-progress');
+            set(state => {
+                return {
+                    ai: {
+                        ...state.ai,
+                        isCodegenGenerating: true,
+                        codegenError: null,
+                        codegenResult: payload.text, // Start with the original text
+                        activeCodegenTabId: payload.tabId,
+                    }
+                };
+            });
+            codegenWorker.postMessage({ type: 'generate', ...payload });
+        }
+    };
+});
 
 // Ensure initializeModel is called from App.tsx useEffect

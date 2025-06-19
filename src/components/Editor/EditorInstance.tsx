@@ -8,6 +8,7 @@ import { useLanguageDetection } from '../../hooks/useLanguageDetection';
 import { useTabletSelector } from '../../hooks/useTabletSelector';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
+import { useAIStore } from '../../stores/aiStore';
 
 interface EditorInstanceProps {
   side: 'left' | 'right';
@@ -36,6 +37,20 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     updateTabState: state.updateTabState,
     updateTabLanguage: state.updateTabLanguage,
     activeEditorSide: state.splitView.activeSide,
+  }));
+
+  const { 
+    isCodegenReady, 
+    runCodegen, 
+    codegenResult, 
+    activeCodegenTabId,
+    isCodegenGenerating 
+  } = useAIStore(state => ({
+    isCodegenReady: state.ai.isCodegenReady,
+    runCodegen: state.runCodegen,
+    codegenResult: state.ai.codegenResult,
+    activeCodegenTabId: state.ai.activeCodegenTabId,
+    isCodegenGenerating: state.ai.isCodegenGenerating,
   }));
 
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -173,19 +188,13 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-    
-    // Notify parent component that editor is ready
     onEditorReady?.(editor);
-    
     // Initialize with the current tab's model
     const model = getOrCreateModelForTab(activeTab.id, activeTab.content, activeTab.language);
     editor.setModel(model);
     currentTabIdRef.current = activeTab.id;
     previousContentRef.current = activeTab.content;
-
     restoreScrollPosition(activeTab.id);
-
-    // --- Add Commands and Listeners ---
     // Ctrl+K (Format)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
        if (!editor.hasTextFocus()) {
@@ -193,32 +202,59 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
        }
        editor.getAction('editor.action.formatDocument')?.run();
     });
-
     // Cursor Position Listener
-    const cursorListener = editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
+    editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
       const currentTabIdForCursor = latestActiveTabRef.current.id;
       setCursorPosition(currentTabIdForCursor, {
         lineNumber: e.position.lineNumber,
         column: e.position.column,
       });
     });
+  };
 
+  // Register Monaco context menu action for Generate Code reactively
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco) return;
+    const actionId = 'ai-generate-code';
+    const disposableAction = editor.addAction({
+      id: actionId,
+      label: 'Generate Code',
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1.5,
+      precondition: isCodegenReady && !isCodegenGenerating ? undefined : 'false',
+      run: (ed) => {
+        const originalValue = ed.getValue();
+        if (!isCodegenReady || isCodegenGenerating) {
+          return;
+        }
+        runCodegen({
+          tabId: activeTab.id,
+          text: originalValue,
+          max_new_tokens: 128,
+          temperature: 0.5,
+          top_k: 5,
+          do_sample: false,
+        });
+      },
+    });
     return () => {
-        // Save view state before cleanup
-        if (currentTabIdRef.current) {
-          const viewState = editor.saveViewState();
-          if (viewState) {
-            tabViewStates.set(currentTabIdRef.current, viewState);
-          }
-        }
-        
-        editorRef.current = null;
-        monacoRef.current = null;
-
-        if (cursorListener) {
-            cursorListener.dispose();
-        }
+      disposableAction.dispose();
     };
+  }, [isCodegenReady, isCodegenGenerating, runCodegen, activeTab.id]);
+
+  // --- REACTIVE VALUE FOR STREAMING CODEGEN ---
+  const isStreamingForThisTab = isCodegenGenerating && activeCodegenTabId === activeTab.id;
+  const editorValue = isStreamingForThisTab && codegenResult !== null ? codegenResult : activeTab.content;
+
+  // --- onChange handler for editor ---
+  const handleEditorChange = (value: string | undefined) => {
+    if (typeof value !== 'string') return;
+    // Only update if not streaming for this tab (otherwise, codegenResult is the source of truth)
+    if (!isStreamingForThisTab) {
+      updateTabContent(activeTab.id, value);
+    }
   };
 
   const handleEditorFocus = () => {
@@ -262,6 +298,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
           height="100%"
           width="100%"
           theme="vs-dark"
+          value={editorValue}
+          onChange={handleEditorChange}
           onMount={handleEditorDidMount}
           options={{
             minimap: {enabled: false},

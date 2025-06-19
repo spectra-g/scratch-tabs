@@ -36,10 +36,16 @@ interface WorkspaceRecord {
   lastAccessed: number;
 }
 
+interface SettingsRecord {
+  key: string;
+  value: string;
+}
+
 export class ScratchTabsDB extends Dexie {
   tabs!: Table<TabRecord>;
   splitView!: Table<SplitViewRecord>;
   workspaces!: Table<WorkspaceRecord>;
+  settings!: Table<SettingsRecord>;
 
   constructor() {
     super('ScratchTabsDB');
@@ -54,6 +60,13 @@ export class ScratchTabsDB extends Dexie {
       splitView: 'id, workspaceId, lastModified',
       workspaces: 'id, lastAccessed'
     }).upgrade(tx => this.upgradeToV2(tx));
+
+    this.version(3).stores({
+      tabs: 'id, workspaceId, lastModified',
+      splitView: 'id, workspaceId, lastModified',
+      workspaces: 'id, lastAccessed',
+      settings: 'key'
+    });
   }
 
   private async upgradeToV2(tx: Dexie.Transaction): Promise<void> {
@@ -319,4 +332,13 @@ export class StorageProviderFactory {
         return IndexedDBStorage.getInstance();
     }
   }
+}
+
+export async function setSetting(key: string, value: string) {
+  await db.settings.put({ key, value });
+}
+
+export async function getSetting(key: string): Promise<string | undefined> {
+  const record = await db.settings.get(key);
+  return record?.value;
 }

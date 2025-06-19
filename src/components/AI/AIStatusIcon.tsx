@@ -4,7 +4,10 @@ import { useAIStore } from '../../stores/aiStore';
 import { AITooltip } from './AIToolTip';
 
 export const AIStatusIcon: React.FC = () => {
-  const { isReady, isLoading, error, progress, progressStatus, files, initializeModel } = useAIStore(state => ({
+  const {
+    isReady, isLoading, error, progress, progressStatus, files, initializeModel,
+    isCodegenReady, isCodegenLoading, codegenProgress, codegenProgressStatus, codegenError, codegenFiles, initializeCodegenModel
+  } = useAIStore(state => ({
       isReady: state.ai.isReady,
       isLoading: state.ai.isLoading, // Use this for pulse/disabled
       error: state.ai.error,
@@ -12,6 +15,13 @@ export const AIStatusIcon: React.FC = () => {
       progressStatus: state.ai.progressStatus,
       files: state.ai.files,
       initializeModel: state.initializeModel,
+      isCodegenReady: state.ai.isCodegenReady,
+      isCodegenLoading: state.ai.isCodegenLoading,
+      codegenProgress: state.ai.codegenProgress,
+      codegenProgressStatus: state.ai.codegenProgressStatus,
+      codegenError: state.ai.codegenError,
+      codegenFiles: state.ai.codegenFiles,
+      initializeCodegenModel: state.initializeCodegenModel,
   }));
 
   const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -20,10 +30,15 @@ export const AIStatusIcon: React.FC = () => {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleClick = useCallback(() => {
-    if (!isReady && !isLoading) { // Only allow init if not ready AND not already loading
+    // Always try to initialize both models if they're not ready
+    if (!isReady && !isLoading) {
       initializeModel();
     }
-  }, [isReady, isLoading, initializeModel]);
+    
+    if (!isCodegenReady && !isCodegenLoading) {
+      initializeCodegenModel();
+    }
+  }, [isReady, isLoading, isCodegenReady, isCodegenLoading, initializeModel, initializeCodegenModel]);
 
   const handleMouseEnter = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -47,20 +62,26 @@ export const AIStatusIcon: React.FC = () => {
   let hoverColor = 'hover:text-gray-300';
   let animationClass = '';
   let title = 'Initialize AI Model';
+  let isDisabled = false;
 
   if (error) {
     iconColor = 'text-red-400';
     hoverColor = 'hover:text-red-300';
     title = `AI Error: ${error}`;
-  } else if (isLoading) { // Check isLoading for pulse
+  } else if (isLoading || isCodegenLoading) { // Check both loading states for pulse
     iconColor = 'text-blue-400';
     hoverColor = 'hover:text-blue-300';
-    animationClass = 'animate-pulse'; // Pulse when isLoading is true
+    animationClass = 'animate-pulse'; // Pulse when either model is loading
     title = `AI Initializing (${progressStatus})... ${progress}%`;
-  } else if (isReady) { // Check isReady only if not loading/errored
-    iconColor = 'text-green-100'; // Green when ready
+  } else if (isReady && isCodegenReady) { // Both models ready
+    iconColor = 'text-green-100'; // Green when both ready
     hoverColor = 'hover:text-green-300';
     title = 'AI Ready';
+    isDisabled = true; // Only disable when both models are ready
+  } else if (isReady && !isCodegenReady) { // Summary ready, codegen not ready
+    iconColor = 'text-yellow-400'; // Yellow to indicate partial readiness
+    hoverColor = 'hover:text-yellow-300';
+    title = 'Summary Ready - Click to Initialize Codegen';
   }
   // If !isReady and !isLoading and !error, it stays gray (initial state)
 
@@ -69,7 +90,7 @@ export const AIStatusIcon: React.FC = () => {
       <button
         ref={buttonRef}
         onClick={handleClick}
-        disabled={isLoading || isReady} // Disable click if loading or already ready
+        disabled={isDisabled} // Only disable when both models are ready
         className={`p-1 rounded transition-colors disabled:opacity-70 disabled:cursor-not-allowed ${iconColor} ${hoverColor}`}
         title={title}
         aria-describedby={tooltipVisible ? "ai-tooltip-content" : undefined}
@@ -84,6 +105,10 @@ export const AIStatusIcon: React.FC = () => {
         progress={progress}
         error={error}
         files={files}
+        codegenStatus={codegenProgressStatus}
+        codegenProgress={codegenProgress}
+        codegenError={codegenError}
+        codegenFiles={codegenFiles}
       />
     </div>
   );
