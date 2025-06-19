@@ -1,4 +1,4 @@
-import { pipeline, SummarizationPipeline } from '@huggingface/transformers';
+import { pipeline, SummarizationPipeline } from '@xenova/transformers';
 
 // Worker scope variable to hold the pipeline instance
 let pipelineInstance: SummarizationPipeline | null = null;

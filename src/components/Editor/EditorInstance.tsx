@@ -218,11 +218,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     const monaco = monacoRef.current;
     if (!editor || !monaco) return;
     const actionId = 'ai-generate-code';
-    console.log(`[${Date.now()}] [Editor] Registering context menu action:`, {
-      isCodegenReady,
-      isCodegenGenerating,
-      activeTabId: activeTab.id
-    });
     const disposableAction = editor.addAction({
       id: actionId,
       label: 'Generate Code',
@@ -230,14 +225,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       contextMenuOrder: 1.5,
       precondition: isCodegenReady && !isCodegenGenerating ? undefined : 'false',
       run: (ed) => {
-        console.log(`[${Date.now()}] [Editor] Context menu action executed`);
         const originalValue = ed.getValue();
-        console.log(`[${Date.now()}] [Editor] Original value length:`, originalValue.length);
         if (!isCodegenReady || isCodegenGenerating) {
-          console.log(`[${Date.now()}] [Editor] Codegen not ready or already generating, returning`);
           return;
         }
-        console.log(`[${Date.now()}] [Editor] Calling runCodegen`);
         runCodegen({
           tabId: activeTab.id,
           text: originalValue,
@@ -249,51 +240,20 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       },
     });
     return () => {
-      console.log(`[${Date.now()}] [Editor] Disposing context menu action`);
       disposableAction.dispose();
     };
   }, [isCodegenReady, isCodegenGenerating, runCodegen, activeTab.id]);
-
-  // Debug logging for context menu action
-  useEffect(() => {
-    console.log(`[${Date.now()}] [Editor] Context menu action state:`, {
-      isCodegenReady,
-      isCodegenGenerating,
-      activeTabId: activeTab.id
-    });
-  }, [isCodegenReady, isCodegenGenerating, activeTab.id]);
 
   // --- REACTIVE VALUE FOR STREAMING CODEGEN ---
   const isStreamingForThisTab = isCodegenGenerating && activeCodegenTabId === activeTab.id;
   const editorValue = isStreamingForThisTab && codegenResult !== null ? codegenResult : activeTab.content;
 
-  // Debug logging for editor reactivity
-  useEffect(() => {
-    console.log(`[${Date.now()}] [Editor] Tab ${activeTab.id} state:`, {
-      isStreamingForThisTab,
-      isCodegenGenerating,
-      activeCodegenTabId,
-      codegenResultLength: codegenResult?.length || 0,
-      activeTabContentLength: activeTab.content.length,
-      editorValueLength: editorValue.length,
-      isStreamingValue: isStreamingForThisTab && codegenResult !== null
-    });
-  }, [isStreamingForThisTab, isCodegenGenerating, activeCodegenTabId, codegenResult, activeTab.content, editorValue, activeTab.id]);
-
   // --- onChange handler for editor ---
   const handleEditorChange = (value: string | undefined) => {
-    console.log(`[${Date.now()}] [Editor] handleEditorChange called:`, {
-      valueLength: value?.length || 0,
-      isStreamingForThisTab,
-      activeTabId: activeTab.id
-    });
     if (typeof value !== 'string') return;
     // Only update if not streaming for this tab (otherwise, codegenResult is the source of truth)
     if (!isStreamingForThisTab) {
-      console.log(`[${Date.now()}] [Editor] Updating tab content (not streaming)`);
       updateTabContent(activeTab.id, value);
-    } else {
-      console.log(`[${Date.now()}] [Editor] Skipping tab content update (streaming)`);
     }
   };
 
