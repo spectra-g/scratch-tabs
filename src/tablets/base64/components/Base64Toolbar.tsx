@@ -1,20 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  RotateCcw, 
-  RotateCw, 
-  ArrowDownUp, 
-  Download, 
-  Upload, 
-  Copy, 
-  Clipboard, 
-  Settings, 
-  X, 
-  Check, 
-  Info, 
-  Layers, 
-  LayoutHorizontal, 
-  LayoutVertical
-} from 'lucide-react';
+import { RotateCcw, RotateCw, ArrowDownUp, Download, Upload, Copy, Clipboard, Settings, X, Check, Info, Layers, FlipHorizontal as LayoutHorizontal, FlipVertical as LayoutVertical } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Base64Format, EncodingOption } from '../types';
 
