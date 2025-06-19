@@ -36,7 +36,7 @@ export const PromptList: React.FC<PromptListProps> = ({
   tags
 }) => {
   const [showSortOptions, setShowSortOptions] = useState(false);
-  
+
   const handleCreatePrompt = () => {
     const newPrompt = onCreatePrompt({
       title: 'New Prompt',
@@ -44,8 +44,6 @@ export const PromptList: React.FC<PromptListProps> = ({
       tags: [],
       isFavorite: false
     });
-    
-    onSelectPrompt(newPrompt.id);
   };
   
   const formatDate = (timestamp: number) => {
