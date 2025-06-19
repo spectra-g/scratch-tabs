@@ -31,17 +31,12 @@ self.addEventListener('message', async (event) => {
         do_sample,
     } = event.data;
 
-    console.log(`[${Date.now()}] [CodegenWorker] Received message:`, type, { text: text?.length || 0, max_new_tokens, temperature, top_k, do_sample });
-
     if (type === 'init') {
-        console.log(`[${Date.now()}] [CodegenWorker] Initializing model`);
         // Just trigger model loading
         await CodeCompletionPipeline.getInstance(x => {
-            console.log(`[${Date.now()}] [CodegenWorker] Progress callback:`, x);
             self.postMessage({ ...x, modelType: 'codegen' });
         });
-        console.log(`[${Date.now()}] [CodegenWorker] Model ready`);
-        self.postMessage({ 
+        self.postMessage({
             status: 'ready', 
             modelType: 'codegen',
             modelName: CodeCompletionPipeline.model // Send the model name
@@ -50,18 +45,13 @@ self.addEventListener('message', async (event) => {
     }
 
     if (type === 'generate') {
-        console.log(`[${Date.now()}] [CodegenWorker] Starting generation`);
-        
         // Retrieve the code-completion pipeline. When called for the first time,
         // this will load the pipeline and save it for future use.
         let generator = await CodeCompletionPipeline.getInstance(x => {
             // We also add a progress callback to the pipeline so that we can
             // track model loading.
-            console.log(`[${Date.now()}] [CodegenWorker] Progress during generation:`, x);
             self.postMessage({ ...x, modelType: 'codegen' });
         });
-
-        console.log(`[${Date.now()}] [CodegenWorker] Generator ready, starting generation`);
 
         // Validate input text
         if (!text || text.trim().length === 0) {
@@ -76,8 +66,6 @@ self.addEventListener('message', async (event) => {
 
         // Preprocess input text
         const processedText = text.trim();
-        console.log(`[${Date.now()}] [CodegenWorker] Input text length:`, processedText.length);
-        console.log(`[${Date.now()}] [CodegenWorker] Input text preview:`, processedText.substring(0, 100) + (processedText.length > 100 ? '...' : ''));
 
         // Track the input text length to extract only generated tokens
         const inputTextLength = processedText.length;
@@ -96,18 +84,13 @@ self.addEventListener('message', async (event) => {
 
                 // Allows for partial output - this is the key difference!
                 callback_function: x => {
-                    console.log(`[${Date.now()}] [CodegenWorker] Callback called with:`, x);
-                    
                     // Get the current cumulative output (includes input text + generated text)
                     const currentOutput = generator.tokenizer.decode(x[0].output_token_ids, { skip_special_tokens: true });
-                    console.log(`[${Date.now()}] [CodegenWorker] Current cumulative output:`, currentOutput?.length || 0, 'chars');
-                    
+
                     // Extract only the generated tokens by removing input text and previous generated tokens
                     const generatedText = currentOutput.slice(inputTextLength);
                     const newTokens = generatedText.slice(previousGeneratedLength);
-                    console.log(`[${Date.now()}] [CodegenWorker] Generated text:`, generatedText?.length || 0, 'chars');
-                    console.log(`[${Date.now()}] [CodegenWorker] New tokens:`, newTokens?.length || 0, 'chars');
-                    
+
                     // Update the previous generated length for next iteration
                     previousGeneratedLength = generatedText.length;
                     
@@ -123,9 +106,6 @@ self.addEventListener('message', async (event) => {
                 }
             });
 
-            console.log(`[${Date.now()}] [CodegenWorker] Generation complete, output:`, output);
-            console.log(`[${Date.now()}] [CodegenWorker] Final generated text:`, finalGeneratedText?.length || 0, 'chars');
-
             // Use the tracked final generated text for the complete result
             const completeResult = processedText + finalGeneratedText;
             
@@ -139,7 +119,6 @@ self.addEventListener('message', async (event) => {
             
             // Try a simpler approach without callback_function if the first attempt fails
             if (error.message.includes('offset is out of bounds')) {
-                console.log(`[${Date.now()}] [CodegenWorker] Trying simpler generation approach without callback`);
                 try {
                     const simpleOutput = await generator(processedText, {
                         max_new_tokens: Math.min(max_new_tokens, 256),
@@ -149,8 +128,6 @@ self.addEventListener('message', async (event) => {
                         pad_token_id: generator.tokenizer.eos_token_id,
                         eos_token_id: generator.tokenizer.eos_token_id,
                     });
-                    
-                    console.log(`[${Date.now()}] [CodegenWorker] Simple generation successful:`, simpleOutput);
                     
                     self.postMessage({
                         status: 'complete',

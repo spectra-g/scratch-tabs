@@ -107,15 +107,21 @@ let codegenListenerAttached = false;
 export const useAIStore = create<AISlice>((set, get) => {
     // Track the current codegen model name for persistence
     let currentCodegenModelName = 'Xenova/starcoderbase-1b-sft'; // Default fallback
+    let currentSummarizationModelName = 'Xenova/distilbart-cnn-6-6'; // Default fallback
     
     // Helper function to get persistence key for codegen model
     const getCodegenPersistenceKey = () => {
         return `xenova.${currentCodegenModelName.replace(/[\/\-\.]/g, '_')}.downloaded`;
     };
 
+    // Helper function to get persistence key for summarization model
+    const getSummarizationPersistenceKey = () => {
+        return `xenova.${currentSummarizationModelName.replace(/[\/\-\.]/g, '_')}.downloaded`;
+    };
+
     // On store creation, check IndexedDB settings and auto-initialize if needed
     if (typeof window !== 'undefined') {
-        getSetting('xenova.summarization.downloaded').then(val => {
+        getSetting(getSummarizationPersistenceKey()).then(val => {
             if (val === 'true') setTimeout(() => get().initializeModel(), 0);
         });
         // Try to get the current model name from storage, fallback to default
@@ -124,14 +130,9 @@ export const useAIStore = create<AISlice>((set, get) => {
                 currentCodegenModelName = modelName;
             }
             const persistenceKey = getCodegenPersistenceKey();
-            console.log(`[${Date.now()}] [AI Store] Using persistence key:`, persistenceKey);
             getSetting(persistenceKey).then(val => {
-                console.log(`[${Date.now()}] [AI Store] Codegen persistence check:`, val);
                 if (val === 'true') {
-                    console.log(`[${Date.now()}] [AI Store] Auto-initializing codegen model`);
                     setTimeout(() => get().initializeCodegenModel(), 0);
-                } else {
-                    console.log(`[${Date.now()}] [AI Store] Codegen model not previously downloaded, will need manual initialization`);
                 }
             });
         });
@@ -183,7 +184,7 @@ export const useAIStore = create<AISlice>((set, get) => {
                             break;
                         case 'init_complete':
                             set(state => {
-                                setSetting('xenova.summarization.downloaded', 'true');
+                                setSetting(getSummarizationPersistenceKey(), 'true');
                                 return { ai: { ...state.ai, isReady: true, isLoading: false, progress: 100, progressStatus: 'ready', error: null } };
                             });
                             break;
@@ -192,7 +193,7 @@ export const useAIStore = create<AISlice>((set, get) => {
                             workerInstance?.terminate(); // Terminate on init error
                             workerInstance = null;
                             set(state => ({ ai: { ...state.ai, worker: null } }));
-                            setSetting('xenova.summarization.downloaded', 'false');
+                            setSetting(getSummarizationPersistenceKey(), 'false');
                             break;
                         case 'summary_result':
                             set(state => ({ ai: { ...state.ai, summaryResult: payload.summary, isGenerating: false, error: null } }));
@@ -211,7 +212,7 @@ export const useAIStore = create<AISlice>((set, get) => {
                     workerInstance?.terminate();
                     workerInstance = null;
                     set(state => ({ ai: { ...state.ai, worker: null } }));
-                    setSetting('xenova.summarization.downloaded', 'false');
+                    setSetting(getSummarizationPersistenceKey(), 'false');
                 };
 
                 // Send init message to worker
@@ -226,7 +227,7 @@ export const useAIStore = create<AISlice>((set, get) => {
                      workerInstance = null;
                      set(state => ({ ai: { ...state.ai, worker: null } }));
                 }
-                setSetting('xenova.summarization.downloaded', 'false');
+                setSetting(getSummarizationPersistenceKey(), 'false');
             }
         },
 
@@ -276,38 +277,29 @@ export const useAIStore = create<AISlice>((set, get) => {
         },
 
         initializeCodegenModel: async () => {
-            console.log(`[${Date.now()}] [AI Store] initializeCodegenModel called`);
             const { isCodegenReady, isCodegenLoading } = get().ai;
             if (isCodegenReady || isCodegenLoading) {
-                console.log(`[${Date.now()}] [AI Store] Codegen already ready or loading, skipping`);
                 return;
             }
-            console.log(`[${Date.now()}] [AI Store] Setting codegen loading state`);
             set(state => ({ ai: { ...state.ai, isCodegenLoading: true, codegenError: null, codegenProgressStatus: 'initializing' } }));
             if (!codegenWorkerInstance) {
-                console.log(`[${Date.now()}] [AI Store] Creating new codegen worker instance`);
                 codegenWorkerInstance = new Worker(new URL('../workers/codegenWorker.js', import.meta.url), { type: 'module' });
             }
             if (!codegenListenerAttached && codegenWorkerInstance) {
-                console.log(`[${Date.now()}] [AI Store] Attaching codegen worker listener`);
                 codegenWorkerInstance.onmessage = (e) => {
                     const data = e.data;
-                    console.log(`[${Date.now()}] [AI Store] Codegen worker message received:`, data.status, data);
                     if (data.modelType !== 'codegen') return;
                     switch (data.status) {
                         case 'ready':
-                            console.log(`[${Date.now()}] [AI Store] Codegen model ready`);
                             // Store the model name for future persistence checks
                             if (data.modelName) {
                                 currentCodegenModelName = data.modelName;
                                 setSetting('current_codegen_model', data.modelName);
-                                console.log(`[${Date.now()}] [AI Store] Stored model name:`, data.modelName);
                             }
                             setSetting(getCodegenPersistenceKey(), 'true');
                             set(state => ({ ai: { ...state.ai, isCodegenReady: true, isCodegenLoading: false, codegenProgress: 100, codegenProgressStatus: 'ready', codegenFiles: {} } }));
                             break;
                         case 'progress': {
-                            console.log(`[${Date.now()}] [AI Store] Codegen progress:`, data.file, data.loaded, data.total);
                             const files = { ...(get().ai.codegenFiles || {}) };
                             files[data.file] = {
                                 file: data.file,
@@ -322,9 +314,7 @@ export const useAIStore = create<AISlice>((set, get) => {
                             break;
                         }
                         case 'update':
-                            console.log(`[${Date.now()}] [AI Store] Codegen streaming update:`, data.output?.length || 0, 'chars');
                             set(state => {
-                                console.log(`[${Date.now()}] [AI Store] Updating codegenResult, activeCodegenTabId:`, state.ai.activeCodegenTabId);
                                 // Append the new tokens to the existing result
                                 const currentResult = state.ai.codegenResult || '';
                                 const newResult = currentResult + data.output;
@@ -332,11 +322,9 @@ export const useAIStore = create<AISlice>((set, get) => {
                             });
                             break;
                         case 'complete': {
-                            console.log(`[${Date.now()}] [AI Store] Codegen complete, final output:`, data.output?.length || 0, 'chars');
                             // Capture the tabId before clearing the state
                             const { activeCodegenTabId } = get().ai;
-                            console.log(`[${Date.now()}] [AI Store] Active tab ID before clearing:`, activeCodegenTabId);
-                            
+
                             set(state => ({
                                 ai: {
                                     ...state.ai,
@@ -348,16 +336,11 @@ export const useAIStore = create<AISlice>((set, get) => {
                             
                             // Commit final result to rootStore
                             try {
-                                console.log(`[${Date.now()}] [AI Store] Committing final result to tab:`, activeCodegenTabId);
                                 if (activeCodegenTabId && data.output) {
                                     // Dynamically import to avoid circular deps
                                     import('../stores/rootStore').then(({ useRootStore }) => {
-                                        console.log(`[${Date.now()}] [AI Store] Updating tab content in rootStore`);
                                         useRootStore.getState().updateTabContent(activeCodegenTabId, data.output);
-                                        console.log(`[${Date.now()}] [AI Store] Tab content updated successfully`);
                                     });
-                                } else {
-                                    console.warn(`[${Date.now()}] [AI Store] Cannot commit result:`, { activeCodegenTabId, hasOutput: !!data.output });
                                 }
                             } catch (err) {
                                 console.error(`[${Date.now()}] [AI Store] Failed to commit codegen result to tab:`, err);
@@ -374,23 +357,17 @@ export const useAIStore = create<AISlice>((set, get) => {
                 };
                 codegenListenerAttached = true;
             }
-            console.log(`[${Date.now()}] [AI Store] Setting codegen worker and sending init message`);
             set(state => ({ ai: { ...state.ai, codegenWorker: codegenWorkerInstance } }));
             codegenWorkerInstance.postMessage({ type: 'init' });
         },
 
         runCodegen: (payload) => {
-            console.log(`[${Date.now()}] [AI Store] runCodegen called with payload:`, payload);
             const { isCodegenReady, isCodegenGenerating, codegenWorker } = get().ai;
-            console.log(`[${Date.now()}] [AI Store] Codegen state:`, { isCodegenReady, isCodegenGenerating, hasWorker: !!codegenWorker });
             if (!isCodegenReady || isCodegenGenerating || !codegenWorker) {
-                console.log(`[${Date.now()}] [AI Store] Codegen not ready, returning early`);
                 return;
             }
-            console.log(`[${Date.now()}] [AI Store] Starting codegen generation`);
             document.body.classList.add('global-cursor-progress');
             set(state => {
-                console.log(`[${Date.now()}] [AI Store] Setting codegen state with tabId:`, payload.tabId);
                 return {
                     ai: {
                         ...state.ai,
@@ -401,7 +378,6 @@ export const useAIStore = create<AISlice>((set, get) => {
                     }
                 };
             });
-            console.log(`[${Date.now()}] [AI Store] Sending generate message to worker`);
             codegenWorker.postMessage({ type: 'generate', ...payload });
         }
     };
