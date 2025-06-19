@@ -27,6 +27,7 @@
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
     "dexie": "^3.2.6",
+    "framer-motion": "^11.0.8",
     "jose": "^5.2.3",
     "js-yaml": "^4.1.0",
     "jsonpath-plus": "^10.3.0",

@@ -14,6 +14,8 @@ import { JsonMapperTablet } from './jsonmapper/JsonMapperTablet';
 import { PomodoroTablet } from './pomodoro/PomodoroTablet';
 import { RegexTablet } from './regex/RegexTablet';
 import { UuidTablet } from './uuid/UuidTablet';
+import { Base64Tablet } from './base64/Base64Tablet';
+import { PromptManagerTablet } from './promptmanager/PromptManagerTablet';
 
 // Register built-in tablets
 tabletRegistry.register(PasswordTablet);
@@ -31,6 +33,8 @@ tabletRegistry.register(JsonMapperTablet);
 tabletRegistry.register(PomodoroTablet);
 tabletRegistry.register(RegexTablet);
 tabletRegistry.register(UuidTablet);
+tabletRegistry.register(Base64Tablet);
+tabletRegistry.register(PromptManagerTablet);
 
 export { TabletSelector } from './components/TabletSelector';
 export { tabletRegistry } from './registry';

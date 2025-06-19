@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { setSetting, getSetting } from '../db';
 
+// Hard-coded switch to disable codegen worker (set to false to disable)
+const ENABLE_CODEGEN_WORKER = false;
+
 interface FileProgress {
   file: string;
   loaded: number;
@@ -124,18 +127,22 @@ export const useAIStore = create<AISlice>((set, get) => {
         getSetting(getSummarizationPersistenceKey()).then(val => {
             if (val === 'true') setTimeout(() => get().initializeModel(), 0);
         });
-        // Try to get the current model name from storage, fallback to default
-        getSetting('current_codegen_model').then(modelName => {
-            if (modelName) {
-                currentCodegenModelName = modelName;
-            }
-            const persistenceKey = getCodegenPersistenceKey();
-            getSetting(persistenceKey).then(val => {
-                if (val === 'true') {
-                    setTimeout(() => get().initializeCodegenModel(), 0);
+        
+        // Only initialize codegen if enabled
+        if (ENABLE_CODEGEN_WORKER) {
+            // Try to get the current model name from storage, fallback to default
+            getSetting('current_codegen_model').then(modelName => {
+                if (modelName) {
+                    currentCodegenModelName = modelName;
                 }
+                const persistenceKey = getCodegenPersistenceKey();
+                getSetting(persistenceKey).then(val => {
+                    if (val === 'true') {
+                        setTimeout(() => get().initializeCodegenModel(), 0);
+                    }
+                });
             });
-        });
+        }
     }
     return {
         ai: {
@@ -277,6 +284,12 @@ export const useAIStore = create<AISlice>((set, get) => {
         },
 
         initializeCodegenModel: async () => {
+            // Early return if codegen is disabled
+            if (!ENABLE_CODEGEN_WORKER) {
+                console.log('[AI Store] Codegen worker is disabled');
+                return;
+            }
+            
             const { isCodegenReady, isCodegenLoading } = get().ai;
             if (isCodegenReady || isCodegenLoading) {
                 return;
@@ -362,6 +375,12 @@ export const useAIStore = create<AISlice>((set, get) => {
         },
 
         runCodegen: (payload) => {
+            // Early return if codegen is disabled
+            if (!ENABLE_CODEGEN_WORKER) {
+                console.log('[AI Store] Codegen worker is disabled');
+                return;
+            }
+            
             const { isCodegenReady, isCodegenGenerating, codegenWorker } = get().ai;
             if (!isCodegenReady || isCodegenGenerating || !codegenWorker) {
                 return;

@@ -12,7 +12,6 @@ class CodeCompletionPipeline {
 
     static async getInstance(progress_callback = null) {
         if (this.instance === null) {
-            console.log(`[${Date.now()}] [CodegenWorker] Creating pipeline instance`);
             this.instance = pipeline(this.task, this.model, { progress_callback });
         }
 
