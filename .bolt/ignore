@@ -24,3 +24,5 @@ src/tablets/jwt/
 src/tablets/jsonmapper/
 src/tablets/pomodoro/
 src/tablets/regex/
+
+*.md

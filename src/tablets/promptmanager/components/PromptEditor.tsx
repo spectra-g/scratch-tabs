@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Copy, Eye, EyeOff, Tag as TagIcon, Check, X } from 'lucide-react';
+import { Copy, Eye, EyeOff, Tag as TagIcon, Check, X, Plus } from 'lucide-react';
 import { Prompt, Tag, Snippet } from '../types';
 import { MarkdownPreview } from './MarkdownPreview';
 import { SnippetSelector } from './SnippetSelector';
@@ -36,7 +36,14 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   useEffect(() => {
     setTitle(prompt.title);
     setContent(prompt.content);
-    setIsEditing(false);
+    
+    // Auto-enter edit mode for new prompts (empty content and default title)
+    const isNewPrompt = prompt.content === '' && (prompt.title === 'Untitled Prompt' || prompt.title === 'New Prompt');
+    if (isNewPrompt) {
+      setIsEditing(true);
+    } else {
+      setIsEditing(false);
+    }
   }, [prompt.id, prompt.title, prompt.content]);
   
   // Focus title input when editing starts
@@ -151,7 +158,9 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
               </button>
               <button
                 className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md"
-                onClick={() => setIsEditing(true)}
+                onClick={() => {
+                  setIsEditing(true);
+                }}
                 title="Edit prompt"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
