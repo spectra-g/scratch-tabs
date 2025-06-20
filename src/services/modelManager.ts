@@ -14,7 +14,6 @@ class ModelManager {
   public initialize(monacoInstance: typeof Monaco, onModelCreatedCallback: (model: Monaco.editor.ITextModel, tabId: string) => void) {
     this.monaco = monacoInstance;
     this.onModelCreated = onModelCreatedCallback;
-    console.log(`[ModelManager] Initialized with max cache size: ${MAX_MODELS}`);
   }
 
   /**
@@ -47,7 +46,6 @@ class ModelManager {
           this.monaco.editor.setModelLanguage(model, tab.language);
         }
 
-        console.log(`[ModelManager] Retrieved cached model for tab: ${tab.id} (cache size: ${this.models.size})`);
         return model;
       }
     }
@@ -65,7 +63,6 @@ class ModelManager {
     // Attach listeners or other setup via the callback
     this.onModelCreated?.(newModel, tab.id);
 
-    console.log(`[ModelManager] Created new model for tab: ${tab.id} (cache size: ${this.models.size})`);
     return newModel;
   }
   
@@ -77,7 +74,6 @@ class ModelManager {
     const lruKey = this.models.keys().next().value;
     if (lruKey) {
       const modelToDispose = this.models.get(lruKey);
-      console.log(`[ModelManager] Evicting model for tab: ${lruKey} (cache size: ${this.models.size})`);
       modelToDispose?.dispose(); // This is the crucial memory-freeing step!
       this.models.delete(lruKey);
     }
@@ -90,7 +86,6 @@ class ModelManager {
     if (this.models.has(tabId)) {
       const model = this.models.get(tabId);
       if (model && !model.isDisposed()) {
-        console.log(`[ModelManager] Disposing model for tab: ${tabId} (cache size: ${this.models.size - 1})`);
         model.dispose();
       }
       this.models.delete(tabId);
@@ -109,7 +104,6 @@ class ModelManager {
    * Disposes all models. Called on application shutdown.
    */
   public disposeAll() {
-    console.log(`[ModelManager] Disposing all ${this.models.size} models`);
     this.models.forEach((model) => {
       if (!model.isDisposed()) {
         model.dispose();
@@ -132,15 +126,6 @@ class ModelManager {
     return MAX_MODELS;
   }
 
-  /**
-   * Debug method to log cache status
-   */
-  public logCacheStatus() {
-    console.log(`[ModelManager] Cache status: ${this.models.size}/${MAX_MODELS} models`);
-    this.models.forEach((model, tabId) => {
-      console.log(`  - Tab ${tabId}: ${model.isDisposed() ? 'DISPOSED' : 'ACTIVE'}`);
-    });
-  }
 }
 
 // Export a singleton instance

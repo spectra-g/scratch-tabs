@@ -72,6 +72,33 @@ removeTab: (id: string) => {
 }
 ```
 
+### Integration with Workspace Store
+
+The workspace store automatically clears the cache when switching workspaces:
+
+```typescript
+switchWorkspace: async (workspaceId: string) => {
+  // Clear the model cache when switching workspaces
+  modelManager.disposeAll();
+  
+  // ... load new workspace data
+}
+```
+
+## Workspace Switching Behavior
+
+The ModelManager automatically clears its cache when:
+
+1. **Switching workspaces** - All models are disposed when switching to a different workspace
+2. **Loading workspaces** - Cache is cleared when the app starts or workspaces are reloaded
+3. **Creating new workspaces** - Cache is cleared when creating a fresh workspace
+
+This ensures that:
+- ✅ **Memory is freed** when switching between workspaces
+- ✅ **No stale models** from previous workspaces remain in memory
+- ✅ **Fresh start** for each workspace's tabs
+- ✅ **Consistent behavior** across all workspace operations
+
 ## Configuration
 
 ### Cache Size
@@ -96,19 +123,18 @@ const MAX_MODELS = 5; // Adjust this value as needed
 - ✅ **Preserves undo/redo** for active tabs
 - ✅ **Seamless UX** for recently used tabs
 - ✅ **Automatic cleanup** prevents memory leaks
+- ✅ **Workspace isolation** - no cross-workspace model pollution
 
 ### Trade-offs
 - ⚠️ **Lost undo/redo history** for evicted tabs
 - ⚠️ **Slight delay** when switching to evicted tabs (model recreation)
+- ⚠️ **Lost undo/redo history** when switching workspaces (by design)
 
 ## Monitoring
 
 The ModelManager includes debug logging to monitor cache behavior:
 
 ```typescript
-// Log current cache status
-modelManager.logCacheStatus();
-
 // Get cache statistics
 const currentSize = modelManager.getCacheSize();
 const maxSize = modelManager.getMaxCacheSize();
@@ -125,4 +151,5 @@ const maxSize = modelManager.getMaxCacheSize();
 1. **Always dispose models** when tabs are closed
 2. **Monitor cache size** in development
 3. **Adjust MAX_MODELS** based on your use case
-4. **Test with many tabs** to ensure smooth operation 
+4. **Test with many tabs** to ensure smooth operation
+5. **Test workspace switching** to ensure proper cache clearing 

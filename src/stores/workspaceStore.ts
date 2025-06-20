@@ -5,6 +5,7 @@ import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { usePersistenceStore } from './persistenceStore';
 import { useCacheStore } from './cacheStore';
+import { modelManager } from '../services/modelManager';
 
 interface WorkspaceStore {
   workspaces: Workspace[];
@@ -12,7 +13,7 @@ interface WorkspaceStore {
   isLoading: boolean;
   error: string | null;
 
-  loadWorkspaces: (options?: { preventAutoSwitch?: boolean }) => Promise<void>;
+  loadWorkspaces: () => Promise<void>;
   ensureWorkspace: () => Promise<string | null>;
   createWorkspace: (name: string) => Promise<string | null>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
@@ -33,9 +34,12 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     isLoading: false,
     error: null,
 
-    loadWorkspaces: async (options?: { preventAutoSwitch?: boolean }) => {
+    loadWorkspaces: async () => {
       set({ isLoading: true, error: null });
       try {
+        // Clear the model cache when loading workspaces
+        modelManager.disposeAll();
+
         const workspacesFromDB = await storage.getWorkspaces();
         let newActiveWorkspaceId: string | null = null;
         let tabsToLoad: Tab[] = [];
@@ -99,8 +103,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
       lockTransactions();
       try {
-        let currentWorkspaces = get().workspaces;
-        let currentActiveId = get().activeWorkspaceId;
+        const currentWorkspaces = get().workspaces;
+        const currentActiveId = get().activeWorkspaceId;
 
         if (currentWorkspaces.length === 0 || !currentActiveId) {
           const defaultWorkspace: Workspace = {
@@ -160,7 +164,10 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           await persistCurrentState();
         }
 
-        // 2. Load data for the target workspace
+        // 2. Clear the model cache when switching workspaces
+        modelManager.disposeAll();
+
+        // 3. Load data for the target workspace
         const cachedData = useCacheStore.getState().cachedSplitView;
         let splitViewToLoad: SplitViewRecord | null = null;
 
@@ -178,11 +185,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           return;
         }
 
-        // 3. Update lastAccessed timestamp for the target workspace
+        // 4. Update lastAccessed timestamp for the target workspace
         const updatedTargetWorkspace = { ...targetWorkspace, lastAccessed: Date.now() };
         await storage.saveWorkspace(updatedTargetWorkspace);
 
-        // 4. Update Zustand stores
+        // 5. Update Zustand stores
         set(state => ({
           workspaces: state.workspaces.map(w =>
             w.id === workspaceId ? updatedTargetWorkspace : w
@@ -219,6 +226,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
       lockTransactions();
       try {
+        // Clear the model cache when creating a new workspace
+        modelManager.disposeAll();
+
         const newWorkspace: Workspace = {
           id: crypto.randomUUID(),
           name,

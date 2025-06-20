@@ -156,7 +156,7 @@ export class ImportExportService {
 
       const workspaceTabsFromImportFile = importedTabs.filter(t => t.workspaceId === originalImportedWorkspaceId);
 
-      for (let impTab of workspaceTabsFromImportFile) {
+      for (const impTab of workspaceTabsFromImportFile) {
         const originalTabId = impTab.id;
         let finalTabId = impTab.id;
         if (idRemap[originalImportedWorkspaceId] || existingTabIds.has(originalTabId)) { 
@@ -222,7 +222,7 @@ export class ImportExportService {
         })); 
         if (recordsToSaveToDb.length > 0) await db.splitView.bulkPut(recordsToSaveToDb);
       });
-      await useWorkspaceStore.getState().loadWorkspaces({ preventAutoSwitch: true }); 
+      await useWorkspaceStore.getState().loadWorkspaces();
     } catch (dbError) {
       summary.errors.push(`Failed to save imported data to the database: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
     }
