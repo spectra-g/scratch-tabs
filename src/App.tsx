@@ -2,6 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { initializeLanguageProviders } from './languages';
 import { broadcastManager } from './stores/broadcastStore';
+import { modelManager } from './services/modelManager';
 import DragDropOverlay from './components/DragDropOverlay';
 import './views/csv';
 
@@ -24,6 +25,8 @@ function App() {
     broadcastManager.initialize();
   
     return () => {
+      // Clean up all Monaco models when the app unmounts
+      modelManager.disposeAll();
       // Optional: broadcastManager.cleanup(); if you want to close the channel
       // when the main app component unmounts, though usually not necessary
       // as channel closes when the browser tab closes.

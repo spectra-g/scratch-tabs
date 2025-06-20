@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { Tablet, TabletState } from '../types';
 import { PromptManagerData, Prompt, Template, Snippet, Tag } from './types';
 import { PromptManagerUI } from './components/PromptManagerUI';
@@ -93,7 +93,7 @@ export const PromptManagerTablet: Tablet = {
     const { data } = state;
     
     // Helper to update state immutably
-    const updateData = useCallback((newData: Partial<PromptManagerData>) => {
+    const updateData = (newData: Partial<PromptManagerData>) => {
       onChange({
         ...state,
         data: {
@@ -101,10 +101,10 @@ export const PromptManagerTablet: Tablet = {
           ...newData
         }
       });
-    }, [state, data, onChange]);
+    };
     
     // Helper to update UI state immutably
-    const updateUI = useCallback((newUI: Partial<PromptManagerData['ui']>) => {
+    const updateUI = (newUI: Partial<PromptManagerData['ui']>) => {
       onChange({
         ...state,
         data: {
@@ -115,10 +115,10 @@ export const PromptManagerTablet: Tablet = {
           }
         }
       });
-    }, [state, data, onChange]);
+    };
     
     // Helper to update settings immutably
-    const updateSettings = useCallback((newSettings: Partial<PromptManagerData['settings']>) => {
+    const updateSettings = (newSettings: Partial<PromptManagerData['settings']>) => {
       onChange({
         ...state,
         data: {
@@ -129,10 +129,10 @@ export const PromptManagerTablet: Tablet = {
           }
         }
       });
-    }, [state, data, onChange]);
+    };
     
     // Prompt CRUD operations
-    const createPrompt = useCallback((prompt: Omit<Prompt, 'id' | 'createdAt' | 'lastModified' | 'usageCount'>) => {
+    const createPrompt = (prompt: Omit<Prompt, 'id' | 'createdAt' | 'lastModified' | 'usageCount'>) => {
       const newPrompt: Prompt = {
         id: crypto.randomUUID(),
         createdAt: Date.now(),
@@ -150,9 +150,9 @@ export const PromptManagerTablet: Tablet = {
       });
       
       return newPrompt;
-    }, [data, updateData]);
+    };
     
-    const updatePrompt = useCallback((id: string, updates: Partial<Omit<Prompt, 'id' | 'createdAt'>>) => {
+    const updatePrompt = (id: string, updates: Partial<Omit<Prompt, 'id' | 'createdAt'>>) => {
       const updatedPrompts = data.prompts.map(prompt => 
         prompt.id === id 
           ? { 
@@ -164,9 +164,9 @@ export const PromptManagerTablet: Tablet = {
       );
       
       updateData({ prompts: updatedPrompts });
-    }, [data, updateData]);
+    };
     
-    const deletePrompt = useCallback((id: string) => {
+    const deletePrompt = (id: string) => {
       const updatedPrompts = data.prompts.filter(prompt => prompt.id !== id);
       
       // If the deleted prompt was selected, clear selection
@@ -181,9 +181,9 @@ export const PromptManagerTablet: Tablet = {
           ...newUI
         }
       });
-    }, [data, updateData]);
+    };
     
-    const clonePrompt = useCallback((id: string) => {
+    const clonePrompt = (id: string) => {
       const promptToClone = data.prompts.find(p => p.id === id);
       if (!promptToClone) return;
       
@@ -205,9 +205,9 @@ export const PromptManagerTablet: Tablet = {
       });
       
       return newPrompt;
-    }, [data, updateData]);
+    };
     
-    const incrementPromptUsage = useCallback((id: string) => {
+    const incrementPromptUsage = (id: string) => {
       const updatedPrompts = data.prompts.map(prompt => 
         prompt.id === id 
           ? { ...prompt, usageCount: prompt.usageCount + 1 } 
@@ -215,9 +215,9 @@ export const PromptManagerTablet: Tablet = {
       );
       
       updateData({ prompts: updatedPrompts });
-    }, [data, updateData]);
+    };
     
-    const toggleFavorite = useCallback((id: string) => {
+    const toggleFavorite = (id: string) => {
       const updatedPrompts = data.prompts.map(prompt => 
         prompt.id === id 
           ? { ...prompt, isFavorite: !prompt.isFavorite } 
@@ -225,10 +225,10 @@ export const PromptManagerTablet: Tablet = {
       );
       
       updateData({ prompts: updatedPrompts });
-    }, [data, updateData]);
+    };
     
     // Template operations
-    const createTemplate = useCallback((template: Omit<Template, 'id'>) => {
+    const createTemplate = (template: Omit<Template, 'id'>) => {
       const newTemplate: Template = {
         id: crypto.randomUUID(),
         ...template
@@ -243,9 +243,9 @@ export const PromptManagerTablet: Tablet = {
       });
       
       return newTemplate;
-    }, [data, updateData]);
+    };
     
-    const updateTemplate = useCallback((id: string, updates: Partial<Omit<Template, 'id'>>) => {
+    const updateTemplate = (id: string, updates: Partial<Omit<Template, 'id'>>) => {
       const updatedTemplates = data.templates.map(template => 
         template.id === id 
           ? { ...template, ...updates } 
@@ -253,9 +253,9 @@ export const PromptManagerTablet: Tablet = {
       );
       
       updateData({ templates: updatedTemplates });
-    }, [data, updateData]);
+    };
     
-    const deleteTemplate = useCallback((id: string) => {
+    const deleteTemplate = (id: string) => {
       // Don't allow deleting built-in templates
       const templateToDelete = data.templates.find(t => t.id === id);
       if (templateToDelete?.isBuiltIn) return;
@@ -274,10 +274,10 @@ export const PromptManagerTablet: Tablet = {
           ...newUI
         }
       });
-    }, [data, updateData]);
+    };
     
     // Snippet operations
-    const createSnippet = useCallback((snippet: Omit<Snippet, 'id'>) => {
+    const createSnippet = (snippet: Omit<Snippet, 'id'>) => {
       const newSnippet: Snippet = {
         id: crypto.randomUUID(),
         ...snippet
@@ -292,9 +292,9 @@ export const PromptManagerTablet: Tablet = {
       });
       
       return newSnippet;
-    }, [data, updateData]);
+    };
     
-    const updateSnippet = useCallback((id: string, updates: Partial<Omit<Snippet, 'id'>>) => {
+    const updateSnippet = (id: string, updates: Partial<Omit<Snippet, 'id'>>) => {
       const updatedSnippets = data.snippets.map(snippet => 
         snippet.id === id 
           ? { ...snippet, ...updates } 
@@ -302,9 +302,9 @@ export const PromptManagerTablet: Tablet = {
       );
       
       updateData({ snippets: updatedSnippets });
-    }, [data, updateData]);
+    };
     
-    const deleteSnippet = useCallback((id: string) => {
+    const deleteSnippet = (id: string) => {
       // Don't allow deleting built-in snippets
       const snippetToDelete = data.snippets.find(s => s.id === id);
       if (snippetToDelete?.isBuiltIn) return;
@@ -323,10 +323,10 @@ export const PromptManagerTablet: Tablet = {
           ...newUI
         }
       });
-    }, [data, updateData]);
+    };
     
     // Tag operations
-    const createTag = useCallback((tag: Omit<Tag, 'id'>) => {
+    const createTag = (tag: Omit<Tag, 'id'>) => {
       const newTag: Tag = {
         id: crypto.randomUUID(),
         ...tag
@@ -334,9 +334,9 @@ export const PromptManagerTablet: Tablet = {
       
       updateData({ tags: [...data.tags, newTag] });
       return newTag;
-    }, [data, updateData]);
+    };
     
-    const updateTag = useCallback((id: string, updates: Partial<Omit<Tag, 'id'>>) => {
+    const updateTag = (id: string, updates: Partial<Omit<Tag, 'id'>>) => {
       const updatedTags = data.tags.map(tag => 
         tag.id === id 
           ? { ...tag, ...updates } 
@@ -355,9 +355,9 @@ export const PromptManagerTablet: Tablet = {
         tags: updatedTags,
         prompts: updatedPrompts
       });
-    }, [data, updateData]);
+    };
     
-    const deleteTag = useCallback((id: string) => {
+    const deleteTag = (id: string) => {
       // Don't allow deleting built-in tags
       const tagToDelete = data.tags.find(t => t.id === id);
       if (tagToDelete?.isBuiltIn) return;
@@ -381,10 +381,10 @@ export const PromptManagerTablet: Tablet = {
           selectedTags: updatedSelectedTags
         }
       });
-    }, [data, updateData]);
+    };
     
     // Import/Export
-    const importData = useCallback((importedData: Partial<PromptManagerData>) => {
+    const importData = (importedData: Partial<PromptManagerData>) => {
       // Merge imported data with existing data
       const mergedData: PromptManagerData = {
         prompts: [...(importedData.prompts || []), ...data.prompts],
@@ -418,9 +418,9 @@ export const PromptManagerTablet: Tablet = {
         snippets: uniqueSnippets,
         tags: uniqueTags
       });
-    }, [data, updateData]);
+    };
     
-    const exportData = useCallback(() => {
+    const exportData = () => {
       const exportData: Partial<PromptManagerData> = {
         prompts: data.prompts,
         templates: data.templates.filter(t => !t.isBuiltIn), // Only export user templates
@@ -429,10 +429,10 @@ export const PromptManagerTablet: Tablet = {
       };
       
       return exportData;
-    }, [data]);
+    };
     
     // Create prompt from template
-    const createPromptFromTemplate = useCallback((templateId: string) => {
+    const createPromptFromTemplate = (templateId: string) => {
       const template = data.templates.find(t => t.id === templateId);
       if (!template) return;
       
@@ -457,7 +457,7 @@ export const PromptManagerTablet: Tablet = {
       });
       
       return newPrompt;
-    }, [data, updateData]);
+    };
     
     return (
       <PromptManagerUI

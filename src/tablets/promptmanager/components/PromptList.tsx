@@ -39,7 +39,7 @@ export const PromptList: React.FC<PromptListProps> = ({
 
   const handleCreatePrompt = () => {
     const newPrompt = onCreatePrompt({
-      title: 'New Prompt',
+      title: 'Untitled Prompt',
       content: '',
       tags: [],
       isFavorite: false
