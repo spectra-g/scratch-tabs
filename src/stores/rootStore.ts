@@ -5,6 +5,7 @@ import { useEditorStore } from './editorStore';
 import { useWorkspaceStore } from './workspaceStore';
 import { EditorPosition, Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
+import { modelManager } from '../services/modelManager';
 
 import {
   isTabEmpty,
@@ -228,6 +229,8 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tabToRemove = tabs.find(t => t.id === id);
       if (!tabToRemove) return;
 
+      modelManager.dispose(id);
+
       // 1. Remove from splitViewStore
       useSplitViewStore.getState().removeTabFromSide(id);
       // 2. Remove from tabsStore
@@ -276,7 +279,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       if (isPinned) {
         const side = splitView.leftTabs.includes(id) ? 'left' : 'right';
         let currentList = side === 'left' ? [...splitView.leftTabs] : [...splitView.rightTabs];
-        let allCurrentTabs = useTabsStore.getState().tabs; // Get latest tabs state
+        const allCurrentTabs = useTabsStore.getState().tabs; // Get latest tabs state
 
         // Find the index of the first unpinned tab
         let firstUnpinnedIndex = -1;
