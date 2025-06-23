@@ -8,6 +8,33 @@ interface CalculatorTabletState extends TabletState {
     data: CalculatorData;
 }
 
+// Separate React component for Calculator tablet UI
+const CalculatorTabletUI: React.FC<{
+    state: CalculatorTabletState;
+    onChange: (state: CalculatorTabletState) => void;
+    tabletId: string;
+}> = ({ state, onChange, tabletId }) => {
+    const { data } = state;
+
+    // Helper to update state immutably
+    const updateData = (newData: CalculatorData) => {
+        onChange({ ...state, data: newData });
+    };
+
+    const engine = useCalculatorEngine(data, updateData);
+
+    return <CalculatorUI engine={engine} tabletId={tabletId} />;
+};
+
+// Wrapper component to handle stable ID generation
+const CalculatorTabletWrapper: React.FC<{
+    state: CalculatorTabletState;
+    onChange: (state: CalculatorTabletState) => void;
+}> = ({ state, onChange }) => {
+    const tabletInstanceId = React.useMemo(() => `calculator-${crypto.randomUUID()}`, []);
+    return <CalculatorTabletUI state={state} onChange={onChange} tabletId={tabletInstanceId} />;
+};
+
 // --- Main Tablet Logic ---
 export const CalculatorTablet: Tablet = {
     id: 'calculator',
@@ -40,9 +67,22 @@ export const CalculatorTablet: Tablet = {
             const parsed = JSON.parse(json);
             // Add basic validation/migration if needed in the future
             if (parsed.type === 'calculator' && parsed.data) {
-                 parsed.data.lastOperationForRepeat = parsed.data.lastOperationForRepeat || null;
-                 parsed.data.lastOperandForRepeat = parsed.data.lastOperandForRepeat || null;
-                 return parsed;
+                // Ensure all required properties exist with proper defaults
+                const data = parsed.data;
+                return {
+                    type: 'calculator',
+                    data: {
+                        display: data.display || '0',
+                        currentOperand: data.currentOperand || '0',
+                        previousOperand: data.previousOperand || null,
+                        operation: data.operation || null,
+                        overwrite: data.overwrite || false,
+                        history: Array.isArray(data.history) ? data.history : [],
+                        notes: data.notes || '',
+                        lastOperationForRepeat: data.lastOperationForRepeat || null,
+                        lastOperandForRepeat: data.lastOperandForRepeat || null,
+                    }
+                };
             }
         } catch (e) {
             console.error("Failed to deserialize calculator state:", e);
@@ -52,15 +92,6 @@ export const CalculatorTablet: Tablet = {
     },
 
     render(state: CalculatorTabletState, onChange) {
-        const { data } = state;
-
-        // Helper to update state immutably
-        const updateData = (newData: CalculatorData) => {
-            onChange({ ...state, data: newData });
-        };
-
-        const engine = useCalculatorEngine(data, updateData);
-
-        return <CalculatorUI engine={engine} />;
+        return <CalculatorTabletWrapper state={state} onChange={onChange} />;
     },
 };

@@ -1,41 +1,17 @@
-import { tabletRegistry } from './registry';
-import { PasswordTablet } from './password/PasswordTablet';
-import { CalculatorTablet } from './calculator/CalculatorTablet';
-import { RunCodeTablet } from './runcode/RunCodeTablet';
-import { TempEmailTablet } from './email/TempEmailTablet';
-import { RandomUserTablet } from './usergen/RandomUserTablet';
-import { IPDetailsTablet } from './ipdetails/IPDetailsTablet';
-import { ClipboardTablet } from './clipboard/ClipboardTablet';
-import { ConverterTablet } from './converter/ConverterTablet';
-import { VaultTablet } from './vault/VaultTablet';
-import { RestClientTablet } from './restclient/RestClientTablet';
-import { JwtTablet } from './jwt/JwtTablet';
-import { JsonMapperTablet } from './jsonmapper/JsonMapperTablet';
-import { PomodoroTablet } from './pomodoro/PomodoroTablet';
-import { RegexTablet } from './regex/RegexTablet';
-import { UuidTablet } from './uuid/UuidTablet';
-import { Base64Tablet } from './base64/Base64Tablet';
-import { PromptManagerTablet } from './promptmanager/PromptManagerTablet';
+import { dynamicTabletRegistry } from './dynamicRegistry';
 
-// Register built-in tablets
-tabletRegistry.register(PasswordTablet);
-tabletRegistry.register(CalculatorTablet);
-tabletRegistry.register(RunCodeTablet);
-tabletRegistry.register(TempEmailTablet);
-tabletRegistry.register(RandomUserTablet);
-tabletRegistry.register(IPDetailsTablet);
-tabletRegistry.register(ClipboardTablet);
-tabletRegistry.register(ConverterTablet);
-tabletRegistry.register(VaultTablet);
-tabletRegistry.register(RestClientTablet);
-tabletRegistry.register(JwtTablet);
-tabletRegistry.register(JsonMapperTablet);
-tabletRegistry.register(PomodoroTablet);
-tabletRegistry.register(RegexTablet);
-tabletRegistry.register(UuidTablet);
-tabletRegistry.register(Base64Tablet);
-tabletRegistry.register(PromptManagerTablet);
+// For backward compatibility, we can still manually register tablets if needed
+// But the dynamic system will handle most cases automatically
 
+// Export the new metadata-based registry
+export { dynamicTabletRegistry as tabletRegistry } from './dynamicRegistry';
+
+// Export types
+export type { Tablet, TabletState, TabletRegistry } from './types';
+export type { TabletMetadata } from './tabletMetadata';
+
+// Export metadata for direct access if needed
+export { tabletMetadata } from './tabletMetadata';
+
+// Export the tablet selector component
 export { TabletSelector } from './components/TabletSelector';
-export { tabletRegistry } from './registry';
-export type { Tablet, TabletState } from './types';

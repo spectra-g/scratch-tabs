@@ -202,7 +202,7 @@ export const PasswordTablet: Tablet = {
     };
 
     const handleExport = () => {
-         if (data.history.length === 0) return;
+         if (!data.history || data.history.length === 0) return;
           const csvContent = data.history
             .map(entry => {
                 const escapeCsv = (field: string) => {
@@ -326,7 +326,7 @@ export const PasswordTablet: Tablet = {
             </h3>
             <button
               onClick={handleExport}
-              disabled={data.history.length === 0}
+              disabled={!data.history || data.history.length === 0}
               className="flex items-center space-x-1.5 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
             >
               <Download size={14} />
@@ -335,7 +335,7 @@ export const PasswordTablet: Tablet = {
           </div>
 
           <div className="overflow-y-auto custom-scrollbar border border-gray-700/50 rounded-lg bg-gray-800/30 flex-grow">
-            {data.history.length === 0 ? (
+            {(!data.history || data.history.length === 0) ? (
               <div className="text-center text-gray-500 italic py-10">No passwords saved yet. Click Copy above to save.</div>
             ) : (
               <table className="w-full text-sm text-left text-gray-300">

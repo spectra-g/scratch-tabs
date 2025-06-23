@@ -46,15 +46,22 @@ const CalculatorButton: React.FC<{
 
 interface CalculatorUIProps {
     engine: CalculatorEngine;
+    tabletId: string; // Add tablet ID for unique identification
 }
 
-export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine }) => {
+export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine, tabletId }) => {
     const { data } = engine;
     const calculatorRef = useRef<HTMLDivElement>(null);
 
-    // Add keyboard event handler
+    // Add keyboard event handler - make it specific to this calculator instance
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Check if this calculator is the active one by looking for the calculator container
+            const calculatorContainer = document.querySelector(`[data-calculator-id="${tabletId}"]`);
+            if (!calculatorContainer || !calculatorContainer.contains(e.target as Node)) {
+                return;
+            }
+
             // Only handle keyboard input if the calculator is focused or if no input elements are focused
             const activeElement = document.activeElement;
             const isInputFocused = activeElement?.tagName === 'INPUT' || 
@@ -122,7 +129,7 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine }) => {
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [engine]);
+    }, [engine, tabletId]);
 
     return (
         <div 
@@ -130,6 +137,7 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine }) => {
             className="flex flex-col md:flex-row h-full bg-gray-900 text-gray-200"
             tabIndex={0}
             style={{ outline: 'none' }}
+            data-calculator-id={tabletId}
         >
             {/* Calculator Section */}
             <div className="w-full md:w-7/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-gray-700/50">
@@ -200,7 +208,7 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine }) => {
                         <h3 className="text-base font-medium text-gray-200">History</h3>
                     </div>
                     <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 h-40 overflow-y-auto custom-scrollbar">
-                        {data.history.length === 0 ? (
+                        {(!data.history || data.history.length === 0) ? (
                             <div className="text-gray-500 text-sm italic text-center mt-4">No history yet</div>
                         ) : (
                             <div className="space-y-1.5" aria-live="polite"> {/* Announce history changes */}
