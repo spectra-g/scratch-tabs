@@ -4,8 +4,15 @@ import { Tab } from '../types';
 // The maximum number of models to keep in memory. Adjust as needed.
 const MAX_MODELS = 5;
 
+interface ModelMetadata {
+  model: Monaco.editor.ITextModel;
+  lastAccessed: number;
+  lastEdited: number;
+  hasBeenEdited: boolean;
+}
+
 class ModelManager {
-  private models: Map<string, Monaco.editor.ITextModel> = new Map();
+  private models: Map<string, ModelMetadata> = new Map();
   private monaco: typeof Monaco | null = null;
   private visibleTabIds: Set<string> = new Set();
   
@@ -26,7 +33,7 @@ class ModelManager {
 
   /**
    * Gets a model from the cache or creates it if it doesn't exist.
-   * Manages the LRU cache eviction policy.
+   * Manages the Modified LRU cache eviction policy.
    */
   public get(tab: Tab, visibleTabIds?: string[]): Monaco.editor.ITextModel {
     if (!this.monaco) {
@@ -38,18 +45,25 @@ class ModelManager {
       this.setVisibleTabIds(visibleTabIds);
     }
     
+    const now = Date.now();
+    
     // 1. Check if model is already in the cache
     if (this.models.has(tab.id)) {
-      const model = this.models.get(tab.id)!;
+      const metadata = this.models.get(tab.id)!;
+      const model = metadata.model;
+      
       // If the model is disposed, remove it and create a new one
       if (model.isDisposed()) {
         console.warn(`[ModelManager] Model for tab ${tab.id} was disposed, recreating.`);
         this.models.delete(tab.id);
         // Proceed to create a new model below
       } else {
+        // Update last accessed time
+        metadata.lastAccessed = now;
+        
         // Move it to the end to mark it as most recently used
         this.models.delete(tab.id);
-        this.models.set(tab.id, model);
+        this.models.set(tab.id, metadata);
 
         // Ensure content and language are up-to-date
         if (model.getValue() !== tab.content) {
@@ -71,42 +85,79 @@ class ModelManager {
     
     // Create new model
     const newModel = this.monaco.editor.createModel(tab.content, tab.language);
-    this.models.set(tab.id, newModel);
+    
+    // Create metadata with initial state
+    const metadata: ModelMetadata = {
+      model: newModel,
+      lastAccessed: now,
+      lastEdited: tab.lastModified, // Use tab's lastModified as initial edit time
+      hasBeenEdited: tab.lastModified > tab.dateCreated, // Check if tab was modified after creation
+    };
+    
+    this.models.set(tab.id, metadata);
 
     // Attach listeners or other setup via the callback
     this.onModelCreated?.(newModel, tab.id);
 
     return newModel;
   }
+
+  /**
+   * Marks a model as having been edited
+   */
+  public markAsEdited(tabId: string) {
+    const metadata = this.models.get(tabId);
+    if (metadata) {
+      metadata.lastEdited = Date.now();
+      metadata.hasBeenEdited = true;
+    }
+  }
   
   /**
    * Evicts the least recently used model from the cache.
-   * Avoids evicting models for currently visible tabs.
+   * Uses Modified LRU: prioritizes keeping edited tabs over viewed-only tabs.
    */
   private evict() {
-    // Find the first model that is not currently visible
-    let lruKey: string | undefined;
+    let candidateForEviction: string | undefined;
+    let candidateScore = -1; // Lower score = higher priority for eviction
     
-    for (const [tabId, model] of this.models) {
+    for (const [tabId, metadata] of this.models) {
       // Skip if this tab is currently visible
       if (this.visibleTabIds.has(tabId)) {
         continue;
       }
       
-      // Found a non-visible model, this is our candidate for eviction
-      lruKey = tabId;
-      break;
+      // Calculate eviction score
+      // Priority order:
+      // 1. Non-edited tabs (score: 0)
+      // 2. Edited tabs (score: 1 + time factor)
+      let score = 0;
+      
+      if (metadata.hasBeenEdited) {
+        // For edited tabs, score based on how long ago they were edited
+        // More recent edits = higher score = lower priority for eviction
+        const hoursSinceEdit = (Date.now() - metadata.lastEdited) / (1000 * 60 * 60);
+        score = 1 + Math.max(0, 24 - hoursSinceEdit); // Max 24 hours of "protection"
+      }
+      
+      // If this candidate has a lower score (higher eviction priority), select it
+      if (score < candidateScore || candidateScore === -1) {
+        candidateScore = score;
+        candidateForEviction = tabId;
+      }
     }
     
     // If all models are visible, we have to evict the oldest one anyway
-    if (!lruKey) {
-      lruKey = this.models.keys().next().value;
+    if (!candidateForEviction) {
+      candidateForEviction = this.models.keys().next().value;
     }
     
-    if (lruKey) {
-      const modelToDispose = this.models.get(lruKey);
-      modelToDispose?.dispose(); // This is the crucial memory-freeing step!
-      this.models.delete(lruKey);
+    if (candidateForEviction) {
+      const metadata = this.models.get(candidateForEviction);
+      if (metadata) {
+        metadata.model.dispose(); // This is the crucial memory-freeing step!
+        this.models.delete(candidateForEviction);
+      }
     }
   }
 
@@ -115,9 +166,9 @@ class ModelManager {
    */
   public dispose(tabId: string) {
     if (this.models.has(tabId)) {
-      const model = this.models.get(tabId);
-      if (model && !model.isDisposed()) {
-        model.dispose();
+      const metadata = this.models.get(tabId);
+      if (metadata && !metadata.model.isDisposed()) {
+        metadata.model.dispose();
       }
       this.models.delete(tabId);
     }
@@ -135,9 +186,9 @@ class ModelManager {
    * Disposes all models. Called on application shutdown.
    */
   public disposeAll() {
-    this.models.forEach((model) => {
-      if (!model.isDisposed()) {
-        model.dispose();
+    this.models.forEach((metadata) => {
+      if (!metadata.model.isDisposed()) {
+        metadata.model.dispose();
       }
     });
     this.models.clear();
@@ -158,6 +209,24 @@ class ModelManager {
     return MAX_MODELS;
   }
 
+  /**
+   * Gets debug information about the cache state
+   */
+  public getDebugInfo() {
+    const info = Array.from(this.models.entries()).map(([tabId, metadata]) => ({
+      tabId,
+      hasBeenEdited: metadata.hasBeenEdited,
+      lastEdited: new Date(metadata.lastEdited).toISOString(),
+      lastAccessed: new Date(metadata.lastAccessed).toISOString(),
+      isVisible: this.visibleTabIds.has(tabId),
+    }));
+    
+    return {
+      cacheSize: this.models.size,
+      maxSize: MAX_MODELS,
+      models: info,
+    };
+  }
 }
 
 // Export a singleton instance

@@ -214,6 +214,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
         const newContent = model!.getValue();
         updateTabContent(tabId, newContent);
         
+        // Mark the model as edited for cache prioritization
+        modelManager.markAsEdited(tabId);
+        
         // Use latestActiveTabRef inside listener to avoid stale state
         if (!latestActiveTabRef.current.isTablet && !useAIStore.getState().ai.isCodegenGenerating) {
           detectAndSetLanguage(tabId, newContent, previousContentRef.current, latestActiveTabRef.current.language, latestActiveTabRef.current.languageLocked);
