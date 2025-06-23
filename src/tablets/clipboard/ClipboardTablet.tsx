@@ -393,11 +393,7 @@ export const ClipboardTablet: Tablet = {
                     {selectedItems.size > 0 && <button onClick={() => handleDelete(Array.from(selectedItems))} className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-red-500/15 text-red-400 rounded-md hover:bg-red-500/25 text-xs"><Trash2 size={14}/><span>Delete ({selectedItems.size})</span></button>}
                 </div>
             </div>
-            <div 
-                ref={listRef} 
-                className="flex-1 overflow-y-auto p-4 custom-scrollbar"
-                onClick={() => setActiveIndex(-1)}
-            >
+            <div ref={listRef} className="flex-1 overflow-y-auto p-4 custom-scrollbar" onClick={() => setActiveIndex(-1)}>
               {filteredItems.length === 0 ? (
                  <div className="text-center text-gray-400 mt-8"><Filter size={40} className="mx-auto mb-3 opacity-50" /><p className="text-base">No items match your filters</p><p className="text-sm mt-1">Try adjusting your search or filters</p></div>
               ) : (
