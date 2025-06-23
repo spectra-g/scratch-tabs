@@ -2,22 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Tablet, TabletState } from '../types';
 import { motion } from 'framer-motion';
 import { Copy, Trash2, Check, History as HistoryIcon, KeyRound, RefreshCw, Sparkles, Languages } from 'lucide-react';
+import { wordlist } from './wordlist';
 
 // --- Types ---
 type PasswordMode = 'password' | 'passphrase';
 type Capitalization = 'none' | 'title' | 'random';
-
-// Simple wordlist for passphrase generation
-const wordlist = [
-  'correct', 'horse', 'battery', 'staple', 'elephant', 'giraffe', 'penguin', 'dolphin',
-  'butterfly', 'rainbow', 'mountain', 'ocean', 'forest', 'desert', 'river', 'lake',
-  'sunshine', 'moonlight', 'starlight', 'thunder', 'lightning', 'rainbow', 'cloud',
-  'breeze', 'whisper', 'silence', 'harmony', 'melody', 'rhythm', 'dance', 'song',
-  'poetry', 'story', 'adventure', 'journey', 'discovery', 'wonder', 'magic', 'dream',
-  'hope', 'love', 'peace', 'joy', 'laughter', 'smile', 'happiness', 'freedom',
-  'wisdom', 'knowledge', 'learning', 'growth', 'change', 'progress', 'success',
-  'victory', 'triumph', 'achievement', 'accomplishment', 'excellence', 'perfection'
-];
 
 interface PasswordSettings {
   length: number;
