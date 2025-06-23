@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { EditorPosition, Tab } from '../types';
 import { duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
 import { useWorkspaceStore } from './workspaceStore';
+import { incrementSetting } from '../db';
 
 interface TabsStore {
   tabs: Tab[];
@@ -119,6 +120,11 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       tabs: [...state.tabs, newTab],
       activeTabId: newTab.id,
     }));
+
+    // Increment the total tabs created counter
+    incrementSetting('tabs.created.total').catch(err => 
+      console.error("Failed to increment tab counter:", err)
+    );
 
     return newTab.id;
   },
