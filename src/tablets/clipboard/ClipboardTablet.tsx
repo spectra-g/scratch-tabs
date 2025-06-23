@@ -400,7 +400,10 @@ export const ClipboardTablet: Tablet = {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {filteredItems.map((item, index) => (
                       <motion.div key={item.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}>
-                          <div className={`bg-gray-800/50 border rounded-lg overflow-hidden transition-all duration-200 group ${selectedItems.has(item.id) ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-gray-700/50 hover:border-gray-600/50'} ${activeIndex === index ? 'ring-2 ring-blue-400' : ''}`}>
+                          <div 
+                              className={`bg-gray-800/50 border rounded-lg overflow-hidden transition-all duration-200 group ${selectedItems.has(item.id) ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-gray-700/50 hover:border-gray-600/50'} ${activeIndex === index ? 'ring-2 ring-blue-400' : ''}`}
+                              onClick={() => setActiveIndex(index)}
+                          >
                               <div className="p-3">
                                   <div className="flex items-center justify-between mb-2">
                                       <div className="flex items-center space-x-2">
