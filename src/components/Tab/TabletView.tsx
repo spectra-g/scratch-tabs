@@ -51,11 +51,9 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
       return parsedState;
     } catch (e) {
       console.error('Failed to parse tablet state:', e);
-      console.log('TabletView: Invalid tablet state:', tab.tabletState);
       
       // Try to create a default state for the tablet type
       if (tabletType) {
-        console.log('TabletView: Attempting to create default state for tablet type:', tabletType);
         // We'll handle this in the loading logic
         return null;
       }

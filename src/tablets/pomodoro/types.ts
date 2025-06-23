@@ -1,3 +1,5 @@
+// src/tablets/pomodoro/types.ts
+
 export type TimerStatus = 'idle' | 'running' | 'paused';
 export type SessionType = 'focus' | 'shortBreak' | 'longBreak';
 
@@ -15,6 +17,7 @@ export interface PomodoroSession {
   startTime: number; // timestamp
   endTime: number; // timestamp
   completed: boolean;
+  goal: string;
 }
 
 export interface CurrentSession {
@@ -22,8 +25,9 @@ export interface CurrentSession {
   duration: number; // in seconds
   timeRemaining: number; // in seconds
   startTime: number; // timestamp when started
-  pauseTime: number; // timestamp when paused
-  totalPausedTime: number; // total time spent paused in ms
+  pauseTime: number; // timestamp when paused (not currently used, but good for future enhancements)
+  totalPausedTime: number; // total time spent paused in ms (not currently used)
+  goal: string;
 }
 
 export interface TodayStats {

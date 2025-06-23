@@ -10,7 +10,6 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
 
   constructor() {
     this.lazyModules = this.createLazyModuleMap();
-    console.log(`📊 DynamicRegistry: Registered ${this.lazyModules.size} lazy modules.`);
   }
 
   // Creates a direct map from tablet ID to its dynamic import function.
@@ -24,7 +23,6 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
       if (match && match[1]) {
         const tabletId = match[1];
         moduleMap.set(tabletId, modules[path]);
-        console.log(`✅ DynamicRegistry: Mapped ID '${tabletId}' to module '${path}'`);
       } else {
         console.warn(`⚠️ DynamicRegistry: Could not extract tablet ID from path: ${path}`);
       }
@@ -39,7 +37,6 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
   async getById(id: string): Promise<Tablet | undefined> {
     // 1. Check cache first
     if (this.loadedTablets.has(id)) {
-      console.log(`✅ DynamicRegistry: Tablet ${id} already loaded from cache`);
       return this.loadedTablets.get(id);
     }
 
@@ -52,7 +49,6 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
 
     // 3. Load ONLY the required module
     try {
-      console.log(`🔄 DynamicRegistry: Lazily loading tablet '${id}'...`);
       const module = await lazyLoadFn();
       
       // Try to find the tablet export - it could be default or named
@@ -72,7 +68,6 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
       
       if (tablet && tablet.id === id) {
         this.loadedTablets.set(id, tablet); // Cache it
-        console.log(`✅ DynamicRegistry: Successfully loaded tablet ${id}`);
         return tablet;
       } else {
         console.error(`❌ DynamicRegistry: Module for '${id}' did not export a matching tablet.`);

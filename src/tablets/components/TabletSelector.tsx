@@ -112,13 +112,11 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
 
   // Handle tablet selection (loads implementation on demand)
   const handleTabletSelect = async (tabletMetadata: TabletMetadata) => {
-    console.log(`🎯 TabletSelector: Attempting to load tablet: ${tabletMetadata.id}`);
     try {
       setIsLoading(true);
       // Load the full tablet implementation
       const tablet = await tabletRegistry.getById(tabletMetadata.id);
       if (tablet) {
-        console.log(`✅ TabletSelector: Successfully loaded tablet: ${tablet.id}`);
         onSelect(tablet);
       } else {
         console.error(`❌ TabletSelector: Failed to load tablet: ${tabletMetadata.id}`);
