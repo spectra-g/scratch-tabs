@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Tablet, TabletState } from '../types';
 import { Timer, Settings, BarChart2, Play, Pause, RotateCcw, SkipForward, Volume2, VolumeX, Coffee, Brain, ListChecks } from 'lucide-react';
 import { PomodoroTimer } from './components/PomodoroTimer';
 import { PomodoroSettings } from './components/PomodoroSettings';
 import { PomodoroStats } from './components/PomodoroStats';
 import { PomodoroQuote } from './components/PomodoroQuote';
-import { PomodoroState, PomodoroSettings as PomodoroSettingsType } from './types';
+import { PomodoroState } from './types';
 import { DEFAULT_SETTINGS, DEFAULT_QUOTES } from './constants';
 import { usePomodoroEngine } from './usePomodoroEngine';
 

@@ -151,7 +151,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       )}
 
       {/* Tablet List */}
-      <div ref={listRef} className="max-h-80 overflow-y-auto">
+      <div ref={listRef} className="max-h-80 overflow-y-auto custom-scrollbar">
         {isLoading ? (
           <div className="p-4 text-center text-gray-400">
             Loading tablets...

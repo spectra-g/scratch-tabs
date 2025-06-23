@@ -21,15 +21,6 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
       
       // Preload the audio
       audioRef.current.load();
-      
-      // Add event listeners for debugging
-      audioRef.current.addEventListener('canplaythrough', () => {
-        console.log('Pomodoro audio loaded successfully');
-      });
-      
-      audioRef.current.addEventListener('error', (e) => {
-        console.error('Pomodoro audio failed to load:', e);
-      });
     }
   }, []);
 
@@ -126,11 +117,10 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
             if (playPromise !== undefined) {
               playPromise
                 .then(() => {
-                  console.log('Pomodoro session completed - sound played successfully');
+                  // Sound played successfully
                 })
                 .catch(err => {
                   console.error('Audio play failed:', err);
-                  console.log('This might be due to browser autoplay restrictions. Try clicking the sound toggle button first.');
                 });
             }
           }
@@ -161,7 +151,7 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
       if (timerRef.current) clearInterval(timerRef.current);
       document.title = 'DevToolbox';
     };
-  }, [state.status, state.currentSession.startTime, startNextSession, state.soundEnabled]);
+  }, [state.status, state.currentSession.startTime, state.currentSession.duration, state.currentSession.type, state.soundEnabled]);
 
   const handleStart = () => {
     const now = Date.now();

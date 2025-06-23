@@ -1,5 +1,3 @@
-import { dynamicTabletRegistry } from './dynamicRegistry';
-
 // For backward compatibility, we can still manually register tablets if needed
 // But the dynamic system will handle most cases automatically
 
@@ -14,4 +12,4 @@ export type { TabletMetadata } from './tabletMetadata';
 export { tabletMetadata } from './tabletMetadata';
 
 // Export the tablet selector component
-export { TabletSelector } from './components/TabletSelector';
+export { TabletSelector } from './components';

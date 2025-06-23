@@ -1,7 +1,6 @@
 import React, { memo, useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { tabletRegistry } from '../../tablets';
 import { Tab } from '../../types.ts';
-import { Tablet } from '../../tablets/types';
 import { TabletErrorBoundary } from '../Tablet/TabletErrorBoundary';
 import { useRootStore } from '../../stores';
 
@@ -100,9 +99,6 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
           return;
         }
 
-        // Only log when actually loading a new tablet
-        console.log(`TabletView: Loading new tablet ${tabletType} for tab ${tab.id}`);
-
         const loadedTablet = await tabletRegistry.getById(tabletType);
         
         if (isMounted && loadedTablet) {
@@ -145,7 +141,6 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
           
           // If we have invalid state, create a new default state
           if (!state && loadedTablet.createInitialState) {
-            console.log('TabletView: Creating new default state for tablet:', tabletType);
             const newState = loadedTablet.createInitialState();
             const serializedState = loadedTablet.serializeState(newState);
             onChangeRef.current(serializedState);
