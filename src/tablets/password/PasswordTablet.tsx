@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Tablet, TabletState } from '../types';
 import { motion } from 'framer-motion';
-import { Copy, Trash2, Check, History as HistoryIcon, KeyRound, RefreshCw, Sparkles, Languages } from 'lucide-react';
+import { Copy, Trash2, Check, History as HistoryIcon, KeyRound, RefreshCw, Sparkles } from 'lucide-react';
 import { wordlist } from './wordlist';
 
 // --- Types ---
@@ -60,10 +60,11 @@ const CHARSETS = {
   special: '!@#$%^&*()_+-=[]{}|;:,.<>?',
 };
 
+// --- Generation & Strength Logic ---
+
 function generateSecurePassword(settings: PasswordSettings): string {
   let charset = '';
   const requiredChars: string[] = [];
-
   const addCharset = (base: string, shouldExclude: boolean, excludeChars: string) => {
     const chars = shouldExclude ? base.replace(new RegExp(`[${excludeChars}]`, 'g'), '') : base;
     if (chars) {
@@ -73,17 +74,13 @@ function generateSecurePassword(settings: PasswordSettings): string {
       requiredChars.push(chars[randomBytes[0] % chars.length]);
     }
   };
-
   if (settings.useUppercase) addCharset(CHARSETS.upper, settings.excludeAmbiguous, 'IO');
   if (settings.useLowercase) addCharset(CHARSETS.lower, settings.excludeAmbiguous, 'il');
   if (settings.useNumbers) addCharset(CHARSETS.numbers, settings.excludeAmbiguous, '10');
   if (settings.useSpecial) addCharset(CHARSETS.special, false, '');
-
   if (charset === '') charset = CHARSETS.lower;
-
   const passwordArray: string[] = [...requiredChars];
   const remainingLength = settings.length - passwordArray.length;
-
   if (remainingLength > 0) {
     const randomBytes = new Uint8Array(remainingLength);
     crypto.getRandomValues(randomBytes);
@@ -91,12 +88,10 @@ function generateSecurePassword(settings: PasswordSettings): string {
       passwordArray.push(charset[randomBytes[i] % charset.length]);
     }
   }
-  
   for (let i = passwordArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
   }
-
   return passwordArray.slice(0, settings.length).join('');
 }
 
@@ -104,11 +99,9 @@ function generateSecurePassphrase(settings: PassphraseSettings): string {
   const words: string[] = [];
   const randomValues = new Uint32Array(settings.wordCount);
   crypto.getRandomValues(randomValues);
-
   for (let i = 0; i < settings.wordCount; i++) {
     words.push(wordlist[randomValues[i] % wordlist.length]);
   }
-
   return words.map(word => {
     if (settings.capitalize === 'title') return word.charAt(0).toUpperCase() + word.slice(1);
     if (settings.capitalize === 'random' && Math.random() > 0.5) return word.toUpperCase();
@@ -116,44 +109,52 @@ function generateSecurePassphrase(settings: PassphraseSettings): string {
   }).join(settings.separator);
 }
 
-function calculateStrength(data: PasswordGeneratorData | LegacyPasswordData) {
-  if (!data.currentPassword) return { entropy: 0, strength: 'Very Weak', color: 'text-red-500' };
+function estimateTimeToCrack(entropy: number): string {
+    const guessesPerSecond = 1e12; // 1 trillion guesses per second (very generous for an attacker)
+    const combinations = Math.pow(2, entropy);
+    const seconds = combinations / guessesPerSecond;
+
+    if (seconds < 60) return "instantly";
+    if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+    if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+    if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+    if (seconds < 31536000 * 100) return `${Math.round(seconds / 31536000)} years`;
+    return "centuries";
+}
+
+function calculateStrength(data: PasswordGeneratorData) {
+  if (!data.currentPassword) return { entropy: 0, strength: 'Very Weak', color: 'text-red-500', timeToCrack: 'instantly' };
 
   let poolSize = 0;
-  let length = data.currentPassword.length;
-
-  // Check if this is the new format
-  if ('mode' in data && data.mode === 'password') {
-    const settings = data.passwordSettings;
-    if (settings) {
-      if (settings.useUppercase) poolSize += settings.excludeAmbiguous ? 24 : 26;
-      if (settings.useLowercase) poolSize += settings.excludeAmbiguous ? 24 : 26;
-      if (settings.useNumbers) poolSize += settings.excludeAmbiguous ? 8 : 10;
-      if (settings.useSpecial) poolSize += CHARSETS.special.length;
-    }
+  let length = 0;
+  
+  if (data.mode === 'password') {
+    const passwordSettings = data.passwordSettings || {
+      length: 16, useUppercase: true, useLowercase: true, useNumbers: true, useSpecial: true, excludeAmbiguous: false
+    };
+    length = passwordSettings.length;
+    if (passwordSettings.useUppercase) poolSize += passwordSettings.excludeAmbiguous ? 24 : 26;
+    if (passwordSettings.useLowercase) poolSize += passwordSettings.excludeAmbiguous ? 24 : 26;
+    if (passwordSettings.useNumbers) poolSize += passwordSettings.excludeAmbiguous ? 8 : 10;
+    if (passwordSettings.useSpecial) poolSize += CHARSETS.special.length;
     if (poolSize === 0) poolSize = 1;
-  } else if ('mode' in data && data.mode === 'passphrase') {
+  } else { // Passphrase mode
+    const passphraseSettings = data.passphraseSettings || { wordCount: 4, separator: '-', capitalize: 'title' as Capitalization };
     poolSize = wordlist.length;
-    length = data.passphraseSettings?.wordCount || 4;
-  } else {
-    // Legacy format
-    const settings = (data as LegacyPasswordData).settings;
-    if (settings) {
-      if (settings.useUppercase) poolSize += settings.excludeAmbiguous ? 24 : 26;
-      if (settings.useLowercase) poolSize += settings.excludeAmbiguous ? 24 : 26;
-      if (settings.useNumbers) poolSize += settings.excludeAmbiguous ? 8 : 10;
-      if (settings.useSpecial) poolSize += CHARSETS.special.length;
-    }
-    if (poolSize === 0) poolSize = 1;
+    length = passphraseSettings.wordCount;
+    // Add a bit of entropy for capitalization and separator if used
+    if (passphraseSettings.capitalize !== 'none') poolSize += 1;
+    if (passphraseSettings.separator) poolSize += 1;
   }
   
   const entropy = Math.log2(Math.pow(poolSize, length));
-  
-  if (entropy < 40) return { entropy: Math.round(entropy), strength: 'Very Weak', color: 'text-red-500' };
-  if (entropy < 60) return { entropy: Math.round(entropy), strength: 'Weak', color: 'text-orange-500' };
-  if (entropy < 80) return { entropy: Math.round(entropy), strength: 'Moderate', color: 'text-yellow-500' };
-  if (entropy < 100) return { entropy: Math.round(entropy), strength: 'Strong', color: 'text-green-500' };
-  return { entropy: Math.round(entropy), strength: 'Very Strong', color: 'text-emerald-400' };
+  const timeToCrack = estimateTimeToCrack(entropy);
+
+  if (entropy < 40) return { entropy: Math.round(entropy), strength: 'Very Weak', color: 'text-red-500', timeToCrack };
+  if (entropy < 60) return { entropy: Math.round(entropy), strength: 'Weak', color: 'text-orange-500', timeToCrack };
+  if (entropy < 80) return { entropy: Math.round(entropy), strength: 'Moderate', color: 'text-yellow-500', timeToCrack };
+  if (entropy < 100) return { entropy: Math.round(entropy), strength: 'Strong', color: 'text-green-500', timeToCrack };
+  return { entropy: Math.round(entropy), strength: 'Very Strong', color: 'text-emerald-400', timeToCrack };
 }
 
 
@@ -163,8 +164,8 @@ const PasswordGeneratorUI: React.FC<{
   onChange: (newState: PasswordTabletState) => void;
 }> = ({ state, onChange }) => {
   const { data } = state;
-  // Handle both old and new state formats
-  const passwordSettings = data.passwordSettings || (data as any).settings || {
+  // Add fallbacks for undefined settings
+  const passwordSettings = data.passwordSettings || {
     length: 16, useUppercase: true, useLowercase: true, useNumbers: true, useSpecial: true, excludeAmbiguous: false
   };
   const passphraseSettings = data.passphraseSettings || { wordCount: 4, separator: '-', capitalize: 'title' as Capitalization };
@@ -177,10 +178,6 @@ const PasswordGeneratorUI: React.FC<{
 
   const passwordStrength = useMemo(() => calculateStrength(data), [data]);
 
-  const updateData = (newData: Partial<PasswordGeneratorData>) => {
-    onChange({ ...state, data: { ...data, ...newData } });
-  };
-
   const regenerate = useCallback(() => {
     const newPassword = mode === 'password'
       ? generateSecurePassword(passwordSettings)
@@ -188,7 +185,7 @@ const PasswordGeneratorUI: React.FC<{
     onChange({ ...state, data: { ...data, currentPassword: newPassword }});
   }, [mode, passwordSettings, passphraseSettings, state, data, onChange]);
   
-  // Only regenerate on initial mount or when mode changes
+  // Only regenerate on initial mount
   useEffect(() => {
     if (!isInitialized.current) {
       regenerate();
@@ -202,9 +199,13 @@ const PasswordGeneratorUI: React.FC<{
       regenerate();
     }
   }, [mode]);
-
-  const updatePasswordSettings = (updates: Partial<PasswordSettings>) => updateData({ passwordSettings: { ...passwordSettings, ...updates } });
-  const updatePassphraseSettings = (updates: Partial<PassphraseSettings>) => updateData({ passphraseSettings: { ...passphraseSettings, ...updates } });
+  
+  const updateSettings = (updates: Partial<PasswordSettings>) => {
+    onChange({ ...state, data: { ...data, passwordSettings: { ...passwordSettings, ...updates } } });
+  };
+  const updatePassphraseSettings = (updates: Partial<PassphraseSettings>) => {
+    onChange({ ...state, data: { ...data, passphraseSettings: { ...passphraseSettings, ...updates } } });
+  };
   
   const handleCopyToHistory = () => {
     const passwordToSave = currentPassword;
@@ -214,11 +215,16 @@ const PasswordGeneratorUI: React.FC<{
     navigator.clipboard.writeText(passwordToSave);
     setCopiedId('current');
     setTimeout(() => setCopiedId(null), 1500);
-    onChange({...state, data: {...data, history: [newEntry, ...history.slice(0, 49)], currentPassword: ''}}); // Clear password to trigger regen
+    regenerate();
+    onChange({ ...state, data: { ...data, history: [newEntry, ...history.slice(0, 49)] } });
   };
 
-  const handleHistoryChange = (id: string, field: 'identifier' | 'purpose', value: string) => updateData({ history: history.map(entry => entry.id === id ? { ...entry, [field]: value } : entry) });
-  const deleteHistoryEntry = (id: string) => updateData({ history: history.filter(entry => entry.id !== id) });
+  const handleHistoryChange = (id: string, field: 'identifier' | 'purpose', value: string) => {
+    onChange({ ...state, data: { ...data, history: history.map(entry => entry.id === id ? { ...entry, [field]: value } : entry) } });
+  };
+  const deleteHistoryEntry = (id: string) => {
+    onChange({ ...state, data: { ...data, history: history.filter(entry => entry.id !== id) } });
+  };
   const handleCopyField = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
@@ -234,8 +240,8 @@ const PasswordGeneratorUI: React.FC<{
         
         {/* Mode Toggle */}
         <div className="flex bg-gray-800/50 rounded-lg p-0.5 self-start">
-          <button onClick={() => updateData({mode: 'password'})} className={`px-3 py-1.5 rounded-md text-sm transition-colors w-1/2 ${mode === 'password' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-gray-300'}`}>Password</button>
-          <button onClick={() => updateData({mode: 'passphrase'})} className={`px-3 py-1.5 rounded-md text-sm transition-colors w-1/2 ${mode === 'passphrase' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-gray-300'}`}>Passphrase</button>
+          <button onClick={() => onChange({...state, data: {...data, mode: 'password'}})} className={`px-3 py-1.5 rounded-md text-sm transition-colors w-1/2 ${mode === 'password' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-gray-300'}`}>Password</button>
+          <button onClick={() => onChange({...state, data: {...data, mode: 'passphrase'}})} className={`px-3 py-1.5 rounded-md text-sm transition-colors w-1/2 ${mode === 'passphrase' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-gray-300'}`}>Passphrase</button>
         </div>
 
         <div className="flex items-center space-x-3">
@@ -256,9 +262,10 @@ const PasswordGeneratorUI: React.FC<{
         {/* Strength Meter */}
         <div className="flex items-center space-x-3 pt-1">
           <div className="flex-1 bg-gray-700/50 rounded-full h-1.5">
-            <motion.div className={`h-1.5 rounded-full ${passwordStrength.color.replace('text-', 'bg-')}`} initial={{ width: 0 }} animate={{ width: `${passwordStrength.entropy / 128 * 100}%` }} transition={{ duration: 0.5, ease: 'easeOut' }} />
+            <motion.div className={`h-1.5 rounded-full ${passwordStrength.color.replace('text-', 'bg-')}`} initial={{ width: 0 }} animate={{ width: `${Math.min(100, passwordStrength.entropy / 128 * 100)}%` }} transition={{ duration: 0.5, ease: 'easeOut' }} />
           </div>
           <div className={`text-sm font-medium ${passwordStrength.color}`}>{passwordStrength.strength} ({passwordStrength.entropy} bits)</div>
+          <div className="text-xs text-gray-500">(Est. crack time: {passwordStrength.timeToCrack})</div>
         </div>
 
         {/* Settings */}
@@ -267,13 +274,13 @@ const PasswordGeneratorUI: React.FC<{
             <>
               <div className="flex items-center space-x-3">
                 <label htmlFor="length" className="text-sm font-medium text-gray-300 w-28 flex-shrink-0">Length:</label>
-                <input type="range" id="length" min="6" max="128" value={passwordSettings.length} onChange={(e) => updatePasswordSettings({ length: parseInt(e.target.value) })} className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg accent-blue-500"/>
+                <input type="range" id="length" min="6" max="128" value={passwordSettings.length} onChange={(e) => updateSettings({ length: parseInt(e.target.value) })} className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg accent-blue-500"/>
                 <span className="text-sm font-mono bg-gray-700/60 px-2 py-0.5 rounded w-12 text-center flex-shrink-0">{passwordSettings.length}</span>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2">
                 {[ 'useUppercase', 'useLowercase', 'useNumbers', 'useSpecial', 'excludeAmbiguous' ].map(key => (
                   <label key={key} className="flex items-center space-x-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={!!passwordSettings[key as keyof PasswordSettings]} onChange={(e) => updatePasswordSettings({ [key]: e.target.checked })} className="h-4 w-4 rounded border-gray-600 text-blue-500 focus:ring-blue-500/50 bg-gray-700 accent-blue-500" />
+                    <input type="checkbox" checked={!!passwordSettings[key as keyof PasswordSettings]} onChange={(e) => updateSettings({ [key]: e.target.checked })} className="h-4 w-4 rounded border-gray-600 text-blue-500 focus:ring-blue-500/50 bg-gray-700 accent-blue-500" />
                     <span className="text-gray-300">{ { 'useUppercase': 'Uppercase (A-Z)', 'useLowercase': 'Lowercase (a-z)', 'useNumbers': 'Numbers (0-9)', 'useSpecial': 'Special (!@#...)', 'excludeAmbiguous': 'Exclude Ambiguous (I,l,1,O,0)' }[key] }</span>
                   </label>
                 ))}
@@ -344,6 +351,7 @@ const PasswordGeneratorUI: React.FC<{
   );
 };
 
+
 // --- Tablet Definition ---
 export const PasswordTablet: Tablet = {
   id: 'password',
@@ -374,7 +382,6 @@ export const PasswordTablet: Tablet = {
     const defaultState = this.createInitialState();
     try {
       const parsed = JSON.parse(json);
-
       if (parsed.type === 'password' && parsed.data) {
         const loadedData = parsed.data;
         const finalData: PasswordGeneratorData = {
