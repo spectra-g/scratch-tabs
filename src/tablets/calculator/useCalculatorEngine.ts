@@ -1,6 +1,6 @@
 // src/tablets/calculator/useCalculatorEngine.ts
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { evaluate } from 'mathjs';
 
 // --- State Interface ---
@@ -29,7 +29,6 @@ export interface CalculatorEngine {
 
 const formatDisplay = (value: any): string => {
     if (typeof value === 'number') {
-        // Use toPrecision to avoid floating point inaccuracies and limit length
         return parseFloat(value.toPrecision(14)).toString();
     }
     return String(value);
@@ -44,25 +43,32 @@ export const useCalculatorEngine = (
     }, [initialData, onChange]);
 
     const handleInput = useCallback((input: string) => {
-        let newExpression = initialData.expression === '0' ? '' : initialData.expression;
-        newExpression += input;
+        // Don't add operators to an error state
+        if (initialData.display === 'Error' && isNaN(Number(input))) return;
+
+        let currentExpression = (initialData.expression === '0' || initialData.display === 'Error')
+            ? ''
+            : initialData.expression;
+            
+        const newExpression = currentExpression + input;
         updateData({ expression: newExpression, display: newExpression });
-    }, [initialData.expression, updateData]);
+    }, [initialData.expression, initialData.display, updateData]);
 
     const handleClear = useCallback(() => {
         updateData({ expression: '0', display: '0' });
     }, [updateData]);
 
     const handleBackspace = useCallback(() => {
-        if (initialData.expression.length <= 1) {
+        if (initialData.expression.length <= 1 || initialData.display === 'Error') {
             updateData({ expression: '0', display: '0' });
         } else {
             const newExpression = initialData.expression.slice(0, -1);
             updateData({ expression: newExpression, display: newExpression });
         }
-    }, [initialData.expression, updateData]);
+    }, [initialData.expression, initialData.display, updateData]);
 
     const handleEquals = useCallback(() => {
+        if (initialData.display === 'Error') return;
         try {
             const result = evaluate(initialData.expression);
             const formattedResult = formatDisplay(result);
@@ -70,16 +76,16 @@ export const useCalculatorEngine = (
             
             updateData({
                 display: formattedResult,
-                expression: formattedResult, // The result becomes the new expression
+                expression: formattedResult,
                 history: [newHistoryEntry, ...initialData.history].slice(0, 50),
             });
         } catch (error) {
             updateData({ display: 'Error', expression: '0' });
         }
-    }, [initialData.expression, initialData.history, updateData]);
+    }, [initialData.expression, initialData.history, initialData.display, updateData]);
 
     const handleModeChange = useCallback((mode: CalculatorMode) => {
-        updateData({ mode, expression: '0', display: '0' }); // Reset on mode change
+        updateData({ mode, expression: '0', display: '0' });
     }, [updateData]);
     
     const handleBaseChange = useCallback((base: 'HEX' | 'DEC' | 'OCT' | 'BIN') => {

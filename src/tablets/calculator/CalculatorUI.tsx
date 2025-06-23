@@ -34,11 +34,23 @@ interface CalculatorUIProps {
     tabletId: string;
 }
 
+const getDisplayFontSize = (text: string): string => {
+    const length = text?.length || 1;
+    if (length > 24) return 'text-xl';
+    if (length > 16) return 'text-2xl';
+    return 'text-3xl';
+};
+
 export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine, tabletId }) => {
     const { data } = engine;
     const calculatorRef = useRef<HTMLDivElement>(null);
 
-    // Keyboard handling remains largely the same but simplified for the new engine
+    // Effect to set initial focus ONCE on mount
+    useEffect(() => {
+        calculatorRef.current?.focus();
+    }, []);
+    
+    // Effect to handle keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const calculatorContainer = document.querySelector(`[data-calculator-id="${tabletId}"]`);
@@ -60,19 +72,11 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine, tabletId }) 
             }
         };
         document.addEventListener('keydown', handleKeyDown);
-        calculatorRef.current?.focus();
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [engine, tabletId]);
-    
-    const getDisplayFontSize = (text: string): string => {
-        const length = text?.length || 1;
-        if (length > 24) return 'text-xl';
-        if (length > 16) return 'text-2xl';
-        return 'text-3xl';
-    };
+    }, [engine, tabletId]); // This effect is stable and won't cause re-focusing
 
     return (
-        <div ref={calculatorRef} className="flex flex-col md:flex-row h-full bg-gray-900 text-gray-200" tabIndex={0} style={{ outline: 'none' }} data-calculator-id={tabletId}>
+        <div ref={calculatorRef} className="flex flex-col md:flex-row h-full bg-gray-900 text-gray-200" tabIndex={-1} style={{ outline: 'none' }} data-calculator-id={tabletId}>
             <div className="w-full md:w-8/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-gray-700/50">
                 <div className="flex items-center justify-between mb-4 px-2">
                     <div className="flex items-center space-x-2">

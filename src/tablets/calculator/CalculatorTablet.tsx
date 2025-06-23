@@ -58,7 +58,8 @@ export const CalculatorTablet: Tablet = {
         return defaultState;
     },
 
-    render(state: CalculatorTabletState, onChange) {
-        return <CalculatorTabletUIWrapper state={state} onChange={onChange} />;
+    render(state: TabletState, onChange: (state: TabletState) => void) {
+        const calculatorState = state as CalculatorTabletState;
+        return <CalculatorTabletUIWrapper state={calculatorState} onChange={onChange as (newState: CalculatorTabletState) => void} />;
     },
 };
