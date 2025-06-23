@@ -128,8 +128,6 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
           {/* Only show action buttons when not in delete confirmation mode */}
           {!showDeleteConfirm && (
             <>
-              {renderActionButton()}
-              
               <button
                 onClick={onCopy}
                 className={`p-1.5 transition-colors ${
@@ -143,6 +141,14 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
               </button>
               
               <button
+                onClick={onEdit}
+                className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                title="Edit item"
+              >
+                <Edit size={16} />
+              </button>
+              
+              <button
                 onClick={onDuplicate}
                 className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
                 title="Duplicate item"
@@ -150,13 +156,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
                 <CopyPlus size={16} />
               </button>
               
-              <button
-                onClick={onEdit}
-                className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
-                title="Edit item"
-              >
-                <Edit size={16} />
-              </button>
+              {renderActionButton()}
               
               <button
                 onClick={() => setShowDeleteConfirm(true)}

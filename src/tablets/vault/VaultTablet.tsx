@@ -582,7 +582,7 @@ export const VaultTablet: Tablet = {
           onClick={() => handleCopyContent(item.id)}
         >
           {/* Icon + Count Section */}
-          <div className="flex items-center gap-1 mr-3">
+          <div className="flex items-center gap-1 mr-3 flex-shrink-0">
             {/* Pin icon or spacer */}
             <div className="w-4 flex justify-center">
               {item.isPinned && <Pin size={14} className="text-yellow-400" />}
@@ -592,19 +592,15 @@ export const VaultTablet: Tablet = {
             <div className="w-8 text-left text-gray-400 text-sm">{item.usageCount}</div>
           </div>
 
-          {/* Main Content */}
-          <div className="flex-1 min-w-0 mr-4 font-mono text-sm text-gray-200">
-            {item.content.length > 100
-              ? `${item.content.substring(0, 100)}...`
-              : item.content}
+          {/* Main Content - Use flex-1 and min-w-0 to allow proper truncation */}
+          <div className="flex-1 min-w-0 mr-4 font-mono text-sm text-gray-200 truncate">
+            {item.content}
           </div>
 
           {/* Actions - Hidden by default, visible on hover */}
-          <div className="flex items-center space-x-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center space-x-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             {!isShowingDeleteConfirm ? (
               <>
-                {renderPrimaryAction()}
-
                 <button
                   onClick={() => handleCopyContent(item.id)}
                   className={`p-1.5 transition-colors ${copiedItemId === item.id
@@ -617,12 +613,22 @@ export const VaultTablet: Tablet = {
                 </button>
 
                 <button
+                  onClick={() => handleEditItem(item)}
+                  className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                  title="Edit item"
+                >
+                  <Edit size={16} />
+                </button>
+
+                <button
                   onClick={() => handleDuplicateItem(item.id)}
                   className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
                   title="Duplicate item"
                 >
                   <CopyPlus size={16} />
                 </button>
+
+                {renderPrimaryAction()}
 
                 <button
                   onClick={() => handleTogglePin(item.id)}
@@ -633,14 +639,6 @@ export const VaultTablet: Tablet = {
                   title={item.isPinned ? "Unpin item" : "Pin item"}
                 >
                   <Pin size={16} />
-                </button>
-
-                <button
-                  onClick={() => handleEditItem(item)}
-                  className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
-                  title="Edit item"
-                >
-                  <Edit size={16} />
                 </button>
 
                 <button
