@@ -92,8 +92,14 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       }
     }
 
-    // Get or create model from our manager
-    const newModel = modelManager.get(activeTab);
+    // Get currently visible tab IDs from split view state
+    const splitView = useRootStore.getState().splitView;
+    const visibleTabIds = splitView.isSplit 
+      ? [splitView.activeLeftTabId, splitView.activeRightTabId].filter((id): id is string => id !== null)
+      : [splitView.activeLeftTabId].filter((id): id is string => id !== null);
+
+    // Get or create model from our manager, passing visible tab IDs
+    const newModel = modelManager.get(activeTab, visibleTabIds);
     
     // Switch to the new model
     editor.setModel(newModel);
@@ -193,6 +199,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     // Notify parent component that editor is ready
     onEditorReady?.(editor);
     
+    // Get currently visible tab IDs from split view state and set them in ModelManager
+    const splitView = useRootStore.getState().splitView;
+    const visibleTabIds = splitView.isSplit 
+      ? [splitView.activeLeftTabId, splitView.activeRightTabId].filter((id): id is string => id !== null)
+      : [splitView.activeLeftTabId].filter((id): id is string => id !== null);
+
+    // Set visible tab IDs in ModelManager to prevent eviction
+    modelManager.setVisibleTabIds(visibleTabIds);
+    
     // Initialize the model manager with the monaco instance and a callback
     modelManager.initialize(monaco, (model, tabId) => {
       model.onDidChangeContent(() => {
@@ -208,7 +223,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     });
 
     // Initialize with the current tab's model
-    const model = modelManager.get(activeTab);
+    const model = modelManager.get(activeTab, visibleTabIds);
     editor.setModel(model);
     currentTabIdRef.current = activeTab.id;
     previousContentRef.current = activeTab.content;

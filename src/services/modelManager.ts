@@ -7,6 +7,7 @@ const MAX_MODELS = 5;
 class ModelManager {
   private models: Map<string, Monaco.editor.ITextModel> = new Map();
   private monaco: typeof Monaco | null = null;
+  private visibleTabIds: Set<string> = new Set();
   
   // Callback functions to be provided by the store or component
   private onModelCreated: ((model: Monaco.editor.ITextModel, tabId: string) => void) | null = null;
@@ -17,12 +18,24 @@ class ModelManager {
   }
 
   /**
+   * Sets the currently visible tab IDs to prevent them from being evicted
+   */
+  public setVisibleTabIds(visibleTabIds: string[]) {
+    this.visibleTabIds = new Set(visibleTabIds);
+  }
+
+  /**
    * Gets a model from the cache or creates it if it doesn't exist.
    * Manages the LRU cache eviction policy.
    */
-  public get(tab: Tab): Monaco.editor.ITextModel {
+  public get(tab: Tab, visibleTabIds?: string[]): Monaco.editor.ITextModel {
     if (!this.monaco) {
       throw new Error("ModelManager not initialized. Call initialize() first.");
+    }
+
+    // Update visible tab IDs if provided
+    if (visibleTabIds) {
+      this.setVisibleTabIds(visibleTabIds);
     }
     
     // 1. Check if model is already in the cache
@@ -59,7 +72,7 @@ class ModelManager {
     // Create new model
     const newModel = this.monaco.editor.createModel(tab.content, tab.language);
     this.models.set(tab.id, newModel);
-    
+
     // Attach listeners or other setup via the callback
     this.onModelCreated?.(newModel, tab.id);
 
@@ -68,10 +81,28 @@ class ModelManager {
   
   /**
    * Evicts the least recently used model from the cache.
+   * Avoids evicting models for currently visible tabs.
    */
   private evict() {
-    // A Map iterates in insertion order, so the first key is the oldest.
-    const lruKey = this.models.keys().next().value;
+    // Find the first model that is not currently visible
+    let lruKey: string | undefined;
+    
+    for (const [tabId, model] of this.models) {
+      // Skip if this tab is currently visible
+      if (this.visibleTabIds.has(tabId)) {
+        continue;
+      }
+      
+      // Found a non-visible model, this is our candidate for eviction
+      lruKey = tabId;
+      break;
+    }
+    
+    // If all models are visible, we have to evict the oldest one anyway
+    if (!lruKey) {
+      lruKey = this.models.keys().next().value;
+    }
+    
     if (lruKey) {
       const modelToDispose = this.models.get(lruKey);
       modelToDispose?.dispose(); // This is the crucial memory-freeing step!
@@ -110,6 +141,7 @@ class ModelManager {
       }
     });
     this.models.clear();
+    this.visibleTabIds.clear();
   }
 
   /**
