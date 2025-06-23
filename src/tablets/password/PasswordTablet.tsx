@@ -84,7 +84,8 @@ function calculatePasswordStrength(password: string, settings: PasswordSettings)
   if (entropy < 60) return { entropy: Math.round(entropy), strength: 'Weak', color: 'text-orange-500' };
   if (entropy < 80) return { entropy: Math.round(entropy), strength: 'Moderate', color: 'text-yellow-500' };
   if (entropy < 100) return { entropy: Math.round(entropy), strength: 'Strong', color: 'text-green-500' };
-  return { entropy: Math.round(entropy), strength: 'Very Strong', color: 'text-emerald-400' };
+  // Use green-500 for Very Strong for visibility
+  return { entropy: Math.round(entropy), strength: 'Very Strong', color: 'text-green-500' };
 }
 
 
@@ -233,7 +234,7 @@ const PasswordGeneratorUI: React.FC<{
             <motion.div
               className={`h-1.5 rounded-full ${passwordStrength.color.replace('text-', 'bg-')}`}
               initial={{ width: 0 }}
-              animate={{ width: `${Math.min(100, passwordStrength.entropy)}%` }}
+              animate={{ width: `${passwordStrength.strength === 'Very Strong' ? 100 : Math.min(100, passwordStrength.entropy)}%` }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             />
           </div>
