@@ -13,12 +13,12 @@ interface CalculatorTabletState extends TabletState {
 const CalculatorTabletUIWrapper: React.FC<{
     state: CalculatorTabletState;
     onChange: (state: CalculatorTabletState) => void;
-}> = ({ state, onChange }) => {
-    const tabletInstanceId = React.useMemo(() => `calculator-${crypto.randomUUID()}`, []);
+}> = React.memo(({ state, onChange }) => {
+    const tabletInstanceIdRef = React.useRef(`calculator-${crypto.randomUUID()}`);
     const engine = useCalculatorEngine(state.data, (newData) => onChange({ ...state, data: newData }));
 
-    return <CalculatorUI engine={engine} tabletId={tabletInstanceId} />;
-};
+    return <CalculatorUI engine={engine} tabletId={tabletInstanceIdRef.current} />;
+});
 
 export const CalculatorTablet: Tablet = {
     id: 'calculator',

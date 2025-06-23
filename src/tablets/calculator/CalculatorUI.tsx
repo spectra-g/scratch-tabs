@@ -210,7 +210,13 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({ engine, tabletId }) 
                         <StickyNote className="text-gray-400" size={18} />
                         <h3 className="text-base font-medium text-gray-200">Notes</h3>
                     </div>
-                    <textarea value={data.notes} onChange={(e) => engine.handleNotesChange(e.target.value)} className="w-full flex-grow bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none custom-scrollbar text-sm" placeholder="Add notes..." />
+                    <textarea 
+                        key={`notes-${tabletId}`}
+                        value={data.notes} 
+                        onChange={(e) => engine.handleNotesChange(e.target.value)} 
+                        className="w-full flex-grow bg-gray-800/50 border border-gray-700/50 p-3 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors resize-none custom-scrollbar text-sm" 
+                        placeholder="Add notes..." 
+                    />
                 </div>
             </div>
         </div>

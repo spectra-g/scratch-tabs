@@ -39,30 +39,30 @@ export const useCalculatorEngine = (
     initialData: CalculatorData,
     onChange: (newData: CalculatorData) => void
 ): CalculatorEngine => {
-    const updateData = (newData: Partial<CalculatorData>) => {
+    const updateData = useCallback((newData: Partial<CalculatorData>) => {
         onChange({ ...initialData, ...newData });
-    };
+    }, [initialData, onChange]);
 
-    const handleInput = (input: string) => {
+    const handleInput = useCallback((input: string) => {
         let newExpression = initialData.expression === '0' ? '' : initialData.expression;
         newExpression += input;
         updateData({ expression: newExpression, display: newExpression });
-    };
+    }, [initialData.expression, updateData]);
 
-    const handleClear = () => {
+    const handleClear = useCallback(() => {
         updateData({ expression: '0', display: '0' });
-    };
+    }, [updateData]);
 
-    const handleBackspace = () => {
+    const handleBackspace = useCallback(() => {
         if (initialData.expression.length <= 1) {
             updateData({ expression: '0', display: '0' });
         } else {
             const newExpression = initialData.expression.slice(0, -1);
             updateData({ expression: newExpression, display: newExpression });
         }
-    };
+    }, [initialData.expression, updateData]);
 
-    const handleEquals = () => {
+    const handleEquals = useCallback(() => {
         try {
             const result = evaluate(initialData.expression);
             const formattedResult = formatDisplay(result);
@@ -76,23 +76,23 @@ export const useCalculatorEngine = (
         } catch (error) {
             updateData({ display: 'Error', expression: '0' });
         }
-    };
+    }, [initialData.expression, initialData.history, updateData]);
 
-    const handleModeChange = (mode: CalculatorMode) => {
+    const handleModeChange = useCallback((mode: CalculatorMode) => {
         updateData({ mode, expression: '0', display: '0' }); // Reset on mode change
-    };
+    }, [updateData]);
     
-    const handleBaseChange = (base: 'HEX' | 'DEC' | 'OCT' | 'BIN') => {
+    const handleBaseChange = useCallback((base: 'HEX' | 'DEC' | 'OCT' | 'BIN') => {
         updateData({ base });
-    };
+    }, [updateData]);
 
-    const handleHistoryClick = (entry: { expression: string; result: string }) => {
+    const handleHistoryClick = useCallback((entry: { expression: string; result: string }) => {
         updateData({ expression: entry.expression, display: entry.expression });
-    };
+    }, [updateData]);
 
-    const handleNotesChange = (notes: string) => {
+    const handleNotesChange = useCallback((notes: string) => {
         updateData({ notes });
-    };
+    }, [updateData]);
 
     return {
         data: initialData,
