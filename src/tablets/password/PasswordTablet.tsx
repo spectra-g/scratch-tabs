@@ -154,7 +154,8 @@ function calculateStrength(data: PasswordGeneratorData) {
   if (entropy < 60) return { entropy: Math.round(entropy), strength: 'Weak', color: 'text-orange-500', timeToCrack };
   if (entropy < 80) return { entropy: Math.round(entropy), strength: 'Moderate', color: 'text-yellow-500', timeToCrack };
   if (entropy < 100) return { entropy: Math.round(entropy), strength: 'Strong', color: 'text-green-500', timeToCrack };
-  return { entropy: Math.round(entropy), strength: 'Very Strong', color: 'text-emerald-400', timeToCrack };
+  // Use green-500 for Very Strong to ensure visibility
+  return { entropy: Math.round(entropy), strength: 'Very Strong', color: 'text-green-500', timeToCrack };
 }
 
 
@@ -199,6 +200,13 @@ const PasswordGeneratorUI: React.FC<{
       regenerate();
     }
   }, [mode]);
+
+  // Regenerate when settings change (but avoid infinite loop by using JSON.stringify)
+  useEffect(() => {
+    if (isInitialized.current) {
+      regenerate();
+    }
+  }, [JSON.stringify(passwordSettings), JSON.stringify(passphraseSettings)]);
   
   const updateSettings = (updates: Partial<PasswordSettings>) => {
     onChange({ ...state, data: { ...data, passwordSettings: { ...passwordSettings, ...updates } } });
