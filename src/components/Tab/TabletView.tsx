@@ -11,6 +11,7 @@ interface TabletViewProps {
 }
 
 // Cache for created React Components - outside the component to persist across renders
+// Make it tab-specific to prevent state sharing between tabs
 const tabletComponentCache = new Map<string, React.FC<any>>();
 
 // Memoized wrapper to prevent unnecessary re-renders
@@ -46,13 +47,8 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     }
     
     try {
-      // Check if the state is already an object (invalid state)
-      if (typeof tab.tabletState === 'object') {
-        console.warn('TabletView: tabletState is already an object, this indicates invalid state storage');
-        return tab.tabletState;
-      }
-      
-      return JSON.parse(tab.tabletState || '{}');
+      const parsedState = JSON.parse(tab.tabletState || '{}');
+      return parsedState;
     } catch (e) {
       console.error('Failed to parse tablet state:', e);
       console.log('TabletView: Invalid tablet state:', tab.tabletState);
@@ -65,7 +61,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
       }
       return null;
     }
-  }, [tab.tabletState, tab.isTablet, tabletType]);
+  }, [tab.tabletState, tab.isTablet, tabletType, tab.id]);
 
   // Create a wrapper for onChange that serializes the tablet state
   const handleTabletStateChange = useCallback((newState: any) => {
@@ -78,7 +74,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     } catch (error) {
       console.error('Failed to serialize tablet state:', error);
     }
-  }, []); // No dependencies needed since we use the ref
+  }, [tab.id]);
 
   // Load tablet and create stable component - only when tablet type changes
   useEffect(() => {
@@ -97,9 +93,10 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
         setError(null);
         
         // Check cache first
-        if (tabletComponentCache.has(tabletType)) {
+        const cacheKey = `${tabletType}-${tab.id}`;
+        if (tabletComponentCache.has(cacheKey)) {
           if (isMounted) {
-            setActiveTabletComponent(() => tabletComponentCache.get(tabletType)!);
+            setActiveTabletComponent(() => tabletComponentCache.get(cacheKey)!);
             setIsLoading(false);
           }
           return;
@@ -145,7 +142,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
           NewComponent.displayName = `Tablet_${loadedTablet.id}`;
           
           // Cache the component for future use
-          tabletComponentCache.set(tabletType, NewComponent);
+          tabletComponentCache.set(cacheKey, NewComponent);
           setActiveTabletComponent(() => NewComponent);
           
           // If we have invalid state, create a new default state
@@ -175,7 +172,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     return () => {
       isMounted = false;
     };
-  }, [tabletType, tab.id]); // Removed onChange dependency, now only depends on tabletType and tab.id
+  }, [tabletType, tab.id, tab.tabletState]); // Added tab.tabletState back to ensure re-renders when state changes
 
   // Error boundary recovery functions
   const handleCloseTab = () => {
@@ -185,7 +182,8 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
   const handleRetry = () => {
     // Clear the component cache for this tablet type and retry
     if (tabletType) {
-      tabletComponentCache.delete(tabletType);
+      const cacheKey = `${tabletType}-${tab.id}`;
+      tabletComponentCache.delete(cacheKey);
     }
     setActiveTabletComponent(null);
     setError(null);
@@ -237,7 +235,6 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
 
   return (
     <TabletErrorBoundary
-      key={`${tab.id}-${tabletType}`} // Using a key is crucial for proper mounting/unmounting
       tabletType={tabletType || 'unknown'}
       tabletId={tab.id}
       tabletState={tab.tabletState}
@@ -245,7 +242,10 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
       onRetry={handleRetry}
     >
       <div className="h-full">
-        <ActiveTabletComponent state={state} onChange={handleTabletStateChange} />
+        <ActiveTabletComponent 
+          state={state} 
+          onChange={handleTabletStateChange} 
+        />
       </div>
     </TabletErrorBoundary>
   );
