@@ -1,4 +1,4 @@
-export type ShapeType = 'line' | 'rectangle' | 'circle' | 'diamond' | 'arrow' | 'text';
+export type ShapeType = 'line' | 'rectangle' | 'circle' | 'diamond' | 'arrow' | 'text' | 'triangle' | 'square';
 export type ShapeSnapMode = 'dark' | 'light';
 export type ShapeSnapTool = 'draw' | 'select' | 'text' | 'eraser';
 
@@ -63,7 +63,23 @@ export interface TextShape extends BaseShape {
   fontSize?: number;
 }
 
-export type Shape = LineShape | RectangleShape | CircleShape | DiamondShape | ArrowShape | TextShape;
+export interface SquareShape extends BaseShape {
+  type: 'square';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface TriangleShape extends BaseShape {
+  type: 'triangle';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export type Shape = LineShape | RectangleShape | CircleShape | DiamondShape | ArrowShape | TextShape | SquareShape | TriangleShape;
 
 export interface CanvasSettings {
   background: string;

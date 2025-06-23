@@ -32,6 +32,19 @@ const createDiamondPath = (x: number, y: number, width: number, height: number):
   `;
 };
 
+// Create a triangle path
+const createTrianglePath = (x: number, y: number, width: number, height: number): string => {
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
+  
+  return `
+    M ${x}, ${y - halfHeight}
+    L ${x - halfWidth}, ${y + halfHeight}
+    L ${x + halfWidth}, ${y + halfHeight}
+    Z
+  `;
+};
+
 // Render a shape based on its type
 export const renderShape = (shape: Shape): React.ReactNode => {
   switch (shape.type) {
@@ -56,6 +69,31 @@ export const renderShape = (shape: Shape): React.ReactNode => {
           y={shape.y}
           width={shape.width}
           height={shape.height}
+          stroke={shape.style.stroke}
+          fill={shape.style.fill || 'transparent'}
+          strokeWidth={shape.style.strokeWidth || 2}
+        />
+      );
+      
+    case 'square':
+      return (
+        <rect
+          key={shape.id}
+          x={shape.x}
+          y={shape.y}
+          width={shape.width}
+          height={shape.height}
+          stroke={shape.style.stroke}
+          fill={shape.style.fill || 'transparent'}
+          strokeWidth={shape.style.strokeWidth || 2}
+        />
+      );
+      
+    case 'triangle':
+      return (
+        <path
+          key={shape.id}
+          d={createTrianglePath(shape.x, shape.y, shape.width, shape.height)}
           stroke={shape.style.stroke}
           fill={shape.style.fill || 'transparent'}
           strokeWidth={shape.style.strokeWidth || 2}
