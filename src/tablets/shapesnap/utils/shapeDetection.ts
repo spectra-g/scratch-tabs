@@ -409,104 +409,56 @@ function getCircleCenter(points: Point[]) {
   return { x: sum.x / n, y: sum.y / n };
 }
 
-// --- FINAL DECISION-TREE SHAPE DETECTION ENGINE ---
-
-export const detectShape = (points: Point[]): Shape | null => {
-  if (points.length < 20) {
-    console.log('🎯 [Shape Detection] Canceled: Not enough points.');
-    return null;
-  }
-  console.log(`🎯 [Shape Detection] Started with ${points.length} points.`);
-
-  // --- 1. Calculate Common Metrics ---
+// Returns only geometry, not style/id/zIndex
+export const detectShape = (points: Point[]): any | null => {
+  if (points.length < 20) return null;
   const box = getBoundingBox(points);
   const width = box.maxX - box.minX;
   const height = box.maxY - box.minY;
   const pathLength = getPathLength(points);
-  
-  if (width < 15 || height < 15 || pathLength < 30) {
-    console.log('🎯 [Shape Detection] Canceled: Drawing is too small.');
-    return null;
-  }
-
-  // --- 2. Check for an Open Shape (Line) ---
+  if (width < 15 || height < 15 || pathLength < 30) return null;
   const endpointDistance = distance(points[0], points[points.length - 1]);
   const straightness = endpointDistance / pathLength;
   if (!isClosed(points, box) && straightness > 0.95) {
-      console.log(`🎯 [Shape Detection] Detected: LINE (straightness: ${straightness.toFixed(2)})`);
-      return { id: generateId(), type: 'line', points: [points[0], points[points.length-1]], style: { stroke: '#ffffff', strokeWidth: 2 }, zIndex: Date.now() };
+    return { type: 'line', points: [points[0], points[points.length-1]] };
   }
-
-  // --- 3. Decision Tree for Closed Shapes ---
   const aspectRatio = width / height;
   const boxPerimeter = 2 * (width + height);
   const perimeterRatio = pathLength / boxPerimeter;
-
-  const IDEAL_CIRCLE_RATIO = Math.PI / 4; // ≈ 0.785
+  const IDEAL_CIRCLE_RATIO = Math.PI / 4;
   const IDEAL_RECT_RATIO = 1.0;
-
   const circleError = Math.abs(perimeterRatio - IDEAL_CIRCLE_RATIO);
   const rectangleError = Math.abs(perimeterRatio - IDEAL_RECT_RATIO);
-  
-  console.log(`...Details: aspectRatio=${aspectRatio.toFixed(2)}, perimeterRatio=${perimeterRatio.toFixed(2)}`);
-  console.log(`...Errors: circleError=${circleError.toFixed(3)}, rectangleError=${rectangleError.toFixed(3)}`);
-
-  let detectedType: 'circle' | 'rectangle' | 'square' | 'unknown' = 'unknown';
-
-  // Primary Decision: Is it more like a circle or a rectangle?
-  // We check if the circleError is smaller, giving a slight edge to rectangles if it's very close.
-  if (circleError < rectangleError * 0.9) { 
-    // It's likely a circle. Now confirm.
-    // A circle should have a reasonably square aspect ratio.
+  let detectedType: 'circle' | 'rectangle' | 'square' = 'rectangle';
+  if (circleError < rectangleError) {
     if (aspectRatio > 0.7 && aspectRatio < 1.4) {
       detectedType = 'circle';
     } else {
-      // It's shaped like a circle but stretched like an ellipse. Default to rectangle for now.
       detectedType = 'rectangle';
     }
   } else {
-    // It's likely a rectangle. Now confirm.
-    // A rectangle should have a perimeter ratio close to 1.
-    if (perimeterRatio > 0.85) { // Threshold to avoid misclassifying bad circles
-        // Check if it's a square
-        if(aspectRatio > 0.85 && aspectRatio < 1.15) {
-            detectedType = 'square';
-        } else {
-            detectedType = 'rectangle';
-        }
+    if(aspectRatio > 0.85 && aspectRatio < 1.15) {
+      detectedType = 'square';
     } else {
-        // The perimeter ratio is too low, doesn't fit a rectangle well.
-        detectedType = 'unknown';
+      detectedType = 'rectangle';
     }
   }
-
-  // --- 4. Create and Return the Shape Object ---
-  console.log(`🏆 Final decision: ${detectedType.toUpperCase()}`);
-  
-  if (detectedType === 'unknown') {
-    // It's not a good fit for any shape, so we can treat it as a freeform line.
-    return { id: generateId(), type: 'line', points: points, style: { stroke: '#ffffff', strokeWidth: 2 }, zIndex: Date.now() };
-  }
-
-  const style = { stroke: '#ffffff', fill: 'transparent', strokeWidth: 2 };
-  const zIndex = Date.now();
-
   switch (detectedType) {
     case 'circle': {
       const center = getCircleCenter(points);
-      const radius = (width + height) / 4; // Average radius from bounding box
-      return { id: generateId(), type: 'circle', x: center.x, y: center.y, radius: radius, style, zIndex };
+      const radius = (width + height) / 4;
+      return { type: 'circle', x: center.x, y: center.y, radius };
     }
     case 'square': {
       const size = Math.max(width, height);
       const centerX = box.minX + width / 2;
       const centerY = box.minY + height / 2;
-      return { id: generateId(), type: 'square', x: centerX - size / 2, y: centerY - size / 2, width: size, height: size, style, zIndex };
+      return { type: 'square', x: centerX - size / 2, y: centerY - size / 2, width: size, height: size };
     }
     case 'rectangle': {
-      return { id: generateId(), type: 'rectangle', x: box.minX, y: box.minY, width: width, height: height, style, zIndex };
+      return { type: 'rectangle', x: box.minX, y: box.minY, width, height };
     }
     default:
-      return null;
+      return { type: 'line', points };
   }
 };

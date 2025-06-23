@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
-import { ShapeSnapData, Point, Shape, ShapeSnapTool, ShapeType } from '../types';
+import { ShapeSnapData, Point, Shape, ShapeSnapTool } from '../types';
 import { detectShape } from '../utils/shapeDetection';
+
+const generateId = (): string => `shape-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
 export const useShapeSnapEngine = (
   state: ShapeSnapData,
@@ -9,11 +11,8 @@ export const useShapeSnapEngine = (
   // Add a new shape to the canvas
   const addShape = useCallback((shape: Shape) => {
     const newShapes = [...state.shapes, shape];
-    
-    // Create a new history entry
     const newHistory = state.history.slice(0, state.historyIndex + 1);
     newHistory.push(newShapes);
-    
     onChange({
       ...state,
       shapes: newShapes,
@@ -25,12 +24,22 @@ export const useShapeSnapEngine = (
   // Detect and add a shape based on drawn points
   const detectAndAddShape = useCallback((points: Point[]) => {
     if (points.length < 2) return;
-    
-    const detectedShape = detectShape(points);
-    if (detectedShape) {
-      addShape(detectedShape);
+    const detectedGeometry = detectShape(points);
+    if (detectedGeometry) {
+      const strokeColor = state.canvas.mode === 'dark' ? '#ffffff' : '#000000';
+      const newShape: Shape = {
+        ...detectedGeometry,
+        id: generateId(),
+        style: {
+          stroke: strokeColor,
+          fill: 'transparent',
+          strokeWidth: 2,
+        },
+        zIndex: Date.now(),
+      } as Shape;
+      addShape(newShape);
     }
-  }, [addShape]);
+  }, [addShape, state.canvas.mode]);
   
   // Set the current drawing tool
   const setTool = useCallback((tool: ShapeSnapTool) => {
@@ -40,13 +49,31 @@ export const useShapeSnapEngine = (
     });
   }, [state, onChange]);
   
-  // Toggle between dark and light mode
+  // Toggle canvas mode and update all shapes' colors
   const toggleCanvasMode = useCallback(() => {
     const newMode = state.canvas.mode === 'dark' ? 'light' : 'dark';
     const newBackground = newMode === 'dark' ? '#1e1e1e' : '#ffffff';
-    
+    const newStrokeColor = newMode === 'dark' ? '#ffffff' : '#000000';
+    const updatedShapes = state.shapes.map(shape => ({
+      ...shape,
+      style: {
+        ...shape.style,
+        stroke: newStrokeColor,
+      }
+    }));
+    const newHistory = state.history.map(historyState =>
+      historyState.map(shape => ({
+        ...shape,
+        style: {
+          ...shape.style,
+          stroke: newStrokeColor,
+        }
+      }))
+    );
     onChange({
       ...state,
+      shapes: updatedShapes,
+      history: newHistory,
       canvas: {
         ...state.canvas,
         mode: newMode,
@@ -81,10 +108,8 @@ export const useShapeSnapEngine = (
   
   // Clear the canvas
   const clearCanvas = useCallback(() => {
-    // Create a new history entry with empty shapes
     const newHistory = state.history.slice(0, state.historyIndex + 1);
     newHistory.push([]);
-    
     onChange({
       ...state,
       shapes: [],
@@ -97,37 +122,25 @@ export const useShapeSnapEngine = (
   const exportToImage = useCallback(() => {
     const svgElement = document.querySelector('svg');
     if (!svgElement) return;
-    
-    // Create a canvas element
     const canvas = document.createElement('canvas');
     canvas.width = svgElement.clientWidth;
     canvas.height = svgElement.clientHeight;
-    
-    // Convert SVG to data URL
     const svgData = new XMLSerializer().serializeToString(svgElement);
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
-    
-    // Draw SVG on canvas
     const ctx = canvas.getContext('2d');
     const img = new Image();
-    
     img.onload = () => {
       if (ctx) {
         ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
-        
-        // Convert canvas to PNG
         const pngUrl = canvas.toDataURL('image/png');
-        
-        // Create download link
         const link = document.createElement('a');
         link.download = 'shapesnap-export.png';
         link.href = pngUrl;
         link.click();
       }
     };
-    
     img.src = url;
   }, []);
   
