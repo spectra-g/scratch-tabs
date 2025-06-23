@@ -188,7 +188,7 @@ const PomodoroTabletUI: React.FC<{
         }
       });
     }
-  }, []);
+  }, [data.sessions]);
   
   // Keyboard shortcuts - make them specific to this pomodoro instance
   useEffect(() => {

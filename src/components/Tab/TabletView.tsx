@@ -1,6 +1,7 @@
 import React, { memo, useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { tabletRegistry } from '../../tablets';
 import { Tab } from '../../types.ts';
+import { Tablet } from '../../tablets/types';
 import { TabletErrorBoundary } from '../Tablet/TabletErrorBoundary';
 import { useRootStore } from '../../stores';
 
@@ -9,17 +10,19 @@ interface TabletViewProps {
   onChange: (tabletState: string) => void;
 }
 
+// Cache for created React Components - outside the component to persist across renders
+const tabletComponentCache = new Map<string, React.FC<any>>();
+
 // Memoized wrapper to prevent unnecessary re-renders
 const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
   const { removeTab } = useRootStore();
-  const [tablet, setTablet] = useState<any>(null);
+  const [ActiveTabletComponent, setActiveTabletComponent] = useState<React.FC<any> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Use tab-specific refs to prevent state sharing between tabs
-  const loadingRef = useRef<boolean>(false);
-  const lastLoadedType = useRef<string | null>(null);
-  const lastTabId = useRef<string | null>(null);
+  // Use a ref to store the onChange function to prevent infinite re-renders
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   
   // Extract tablet type more efficiently - only parse if needed
   const tabletType = useMemo(() => {
@@ -64,104 +67,115 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     }
   }, [tab.tabletState, tab.isTablet, tabletType]);
 
-  // Reset state when tab changes
-  useEffect(() => {
-    if (lastTabId.current !== tab.id) {
-      console.log(`TabletView: Tab changed from ${lastTabId.current} to ${tab.id}, resetting state`);
-      lastTabId.current = tab.id;
-      lastLoadedType.current = null;
-      setTablet(null);
-      setError(null);
-      setIsLoading(true);
-      loadingRef.current = false;
+  // Create a wrapper for onChange that serializes the tablet state
+  const handleTabletStateChange = useCallback((newState: any) => {
+    // We need to get the tablet to serialize the state
+    // Since we don't have direct access to the tablet object here,
+    // we'll use a fallback serialization
+    try {
+      const serializedState = JSON.stringify(newState);
+      onChangeRef.current(serializedState);
+    } catch (error) {
+      console.error('Failed to serialize tablet state:', error);
     }
-  }, [tab.id]);
+  }, []); // No dependencies needed since we use the ref
 
-  // Load tablet asynchronously - only when tablet type changes
+  // Load tablet and create stable component - only when tablet type changes
   useEffect(() => {
     // Don't load if not a tablet or no state
     if (!tab.isTablet || !tab.tabletState || !tabletType) {
       setIsLoading(false);
+      setActiveTabletComponent(null);
       return;
     }
 
-    // Don't reload if we already have this tablet type loaded for this tab
-    if (lastLoadedType.current === tabletType && tablet && lastTabId.current === tab.id) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Prevent multiple simultaneous loads
-    if (loadingRef.current) {
-      return;
-    }
-
-    loadingRef.current = true;
     let isMounted = true;
     
-    const loadTablet = async () => {
+    const loadAndCreateComponent = async () => {
       try {
         setIsLoading(true);
         setError(null);
         
-        console.log(`TabletView: Loading tablet ${tabletType} for tab ${tab.id}`);
+        // Check cache first
+        if (tabletComponentCache.has(tabletType)) {
+          if (isMounted) {
+            setActiveTabletComponent(() => tabletComponentCache.get(tabletType)!);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // Only log when actually loading a new tablet
+        console.log(`TabletView: Loading new tablet ${tabletType} for tab ${tab.id}`);
+
         const loadedTablet = await tabletRegistry.getById(tabletType);
         
-        if (isMounted && lastTabId.current === tab.id) {
-          if (loadedTablet) {
-            setTablet(loadedTablet);
-            lastLoadedType.current = tabletType;
-            
-            // If we have invalid state, create a new default state
-            if (!state && loadedTablet.createInitialState) {
-              console.log('TabletView: Creating new default state for tablet:', tabletType);
-              const newState = loadedTablet.createInitialState();
-              const serializedState = loadedTablet.serializeState(newState);
-              onChange(serializedState);
+        if (isMounted && loadedTablet) {
+          // Create a new, stable component for this tablet type with proper serialization
+          // Each component is created with a unique key to ensure proper mounting/unmounting
+          const NewComponent: React.FC<{ state: any; onChange: (state: any) => void }> = (props) => {
+            // Validate that we have the correct state type for this tablet
+            if (!props.state || props.state.type !== tabletType) {
+              console.warn(`TabletView: Invalid state type for tablet ${tabletType}`, props.state);
+              return (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-red-500">Invalid tablet state</div>
+                </div>
+              );
             }
-          } else {
-            setError(`Tablet not found: ${tabletType}`);
+            
+            const handleChange = (newState: any) => {
+              if (loadedTablet.serializeState) {
+                const serializedState = loadedTablet.serializeState(newState);
+                onChangeRef.current(serializedState);
+              } else {
+                // Fallback serialization
+                try {
+                  const serializedState = JSON.stringify(newState);
+                  onChangeRef.current(serializedState);
+                } catch (error) {
+                  console.error('Failed to serialize tablet state:', error);
+                }
+              }
+            };
+            
+            return loadedTablet.render(props.state, handleChange);
+          };
+          
+          NewComponent.displayName = `Tablet_${loadedTablet.id}`;
+          
+          // Cache the component for future use
+          tabletComponentCache.set(tabletType, NewComponent);
+          setActiveTabletComponent(() => NewComponent);
+          
+          // If we have invalid state, create a new default state
+          if (!state && loadedTablet.createInitialState) {
+            console.log('TabletView: Creating new default state for tablet:', tabletType);
+            const newState = loadedTablet.createInitialState();
+            const serializedState = loadedTablet.serializeState(newState);
+            onChangeRef.current(serializedState);
           }
-          setIsLoading(false);
+        } else if (isMounted) {
+          setError(`Tablet not found: ${tabletType}`);
         }
       } catch (err) {
-        if (isMounted && lastTabId.current === tab.id) {
+        if (isMounted) {
           console.error(`TabletView: Error loading tablet ${tabletType}:`, err);
           setError(err instanceof Error ? err.message : 'Failed to load tablet');
-          setIsLoading(false);
         }
       } finally {
-        if (isMounted && lastTabId.current === tab.id) {
-          loadingRef.current = false;
+        if (isMounted) {
+          setIsLoading(false);
         }
       }
     };
 
-    loadTablet();
+    loadAndCreateComponent();
 
     return () => {
       isMounted = false;
-      if (lastTabId.current === tab.id) {
-        loadingRef.current = false;
-      }
     };
-  }, [tabletType, tab.id]); // Removed state and onChange from dependencies
-
-  // Create a wrapper for onChange that serializes the tablet state
-  const handleTabletStateChange = useCallback((newState: any) => {
-    if (tablet && tablet.serializeState) {
-      const serializedState = tablet.serializeState(newState);
-      onChange(serializedState);
-    } else {
-      // Fallback: try to serialize manually
-      try {
-        const serializedState = JSON.stringify(newState);
-        onChange(serializedState);
-      } catch (error) {
-        console.error('Failed to serialize tablet state:', error);
-      }
-    }
-  }, [tablet, onChange]);
+  }, [tabletType, tab.id]); // Removed onChange dependency, now only depends on tabletType and tab.id
 
   // Error boundary recovery functions
   const handleCloseTab = () => {
@@ -169,10 +183,11 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
   };
 
   const handleRetry = () => {
-    // Reset loading state and try again
-    loadingRef.current = false;
-    lastLoadedType.current = null;
-    setTablet(null);
+    // Clear the component cache for this tablet type and retry
+    if (tabletType) {
+      tabletComponentCache.delete(tabletType);
+    }
+    setActiveTabletComponent(null);
     setError(null);
     setIsLoading(true);
   };
@@ -212,7 +227,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     );
   }
 
-  if (!tablet) {
+  if (!ActiveTabletComponent) {
     return (
       <div className="p-4 text-red-500">
         Unknown tablet type: {tabletType}
@@ -222,7 +237,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
 
   return (
     <TabletErrorBoundary
-      key={`${tab.id}-${tabletType}`}
+      key={`${tab.id}-${tabletType}`} // Using a key is crucial for proper mounting/unmounting
       tabletType={tabletType || 'unknown'}
       tabletId={tab.id}
       tabletState={tab.tabletState}
@@ -230,7 +245,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
       onRetry={handleRetry}
     >
       <div className="h-full">
-        {tablet.render(state, handleTabletStateChange)}
+        <ActiveTabletComponent state={state} onChange={handleTabletStateChange} />
       </div>
     </TabletErrorBoundary>
   );

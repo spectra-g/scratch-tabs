@@ -7,6 +7,8 @@ type LazyTabletModule = () => Promise<{ default: Tablet }>;
 class DynamicTabletRegistryImpl implements TabletRegistry {
   private loadedTablets: Map<string, Tablet> = new Map();
   private lazyModules: Map<string, LazyTabletModule> = new Map();
+  private tabletIdToModulePath: Map<string, string> = new Map();
+  private mappingPromise: Promise<void> | null = null;
   
   constructor() {
     // Register lazy modules for all tablets
@@ -43,35 +45,15 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
     }
     
     console.log(`📊 DynamicRegistry: Registered ${this.lazyModules.size} lazy modules`);
-  }
-
-  private extractTabletId(modulePath: string): string | null {
-    // Extract tablet ID from module path like './converter/ConverterTablet.tsx'
-    const match = modulePath.match(/\.\/([^\/]+)\/[^\/]+Tablet\.tsx$/);
-    return match ? match[1] : null;
-  }
-
-  // Get all available tablet metadata (eager loading)
-  getAllMetadata(): TabletMetadata[] {
-    return tabletMetadata;
-  }
-
-  // Get tablet by ID (lazy loading)
-  async getById(id: string): Promise<Tablet | undefined> {
-    console.log(`🔍 DynamicRegistry: Looking for tablet with ID: ${id}`);
     
-    // Check if already loaded
-    if (this.loadedTablets.has(id)) {
-      console.log(`✅ DynamicRegistry: Tablet ${id} already loaded from cache`);
-      return this.loadedTablets.get(id);
-    }
+    // Build the mapping from tablet ID to module path
+    this.mappingPromise = this.buildTabletIdMapping();
+  }
 
-    console.log(`📁 DynamicRegistry: Available modules:`, Array.from(this.lazyModules.keys()));
-
-    // Find the module that contains this tablet ID
-    let targetModule: string | null = null;
+  private async buildTabletIdMapping(): Promise<void> {
+    console.log('🔍 DynamicRegistry: Building tablet ID to module path mapping...');
+    
     for (const [modulePath, lazyModule] of this.lazyModules.entries()) {
-      console.log(`🔍 DynamicRegistry: Checking module: ${modulePath}`);
       try {
         // Load the module to check its ID
         const module = await lazyModule();
@@ -91,34 +73,63 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
           }
         }
         
-        console.log(`📱 DynamicRegistry: Module ${modulePath} exports tablet with ID: ${tablet?.id}`);
-        
-        if (tablet && tablet.id === id) {
-          targetModule = modulePath;
-          console.log(`✅ DynamicRegistry: Found target module: ${targetModule}`);
-          break;
+        if (tablet && tablet.id) {
+          console.log(`📱 DynamicRegistry: Mapped tablet ID ${tablet.id} to module ${modulePath}`);
+          this.tabletIdToModulePath.set(tablet.id, modulePath);
         }
       } catch (error) {
         console.warn(`⚠️ DynamicRegistry: Failed to check module ${modulePath}:`, error);
         continue;
       }
     }
+    
+    console.log(`📊 DynamicRegistry: Built mapping for ${this.tabletIdToModulePath.size} tablets`);
+  }
 
-    if (!targetModule) {
-      console.error(`❌ DynamicRegistry: No module found for tablet: ${id}`);
-      console.log(`📋 DynamicRegistry: Available tablet IDs in metadata:`, tabletMetadata.map(t => t.id));
+  private extractTabletId(modulePath: string): string | null {
+    // Extract tablet ID from module path like './converter/ConverterTablet.tsx'
+    const match = modulePath.match(/\.\/([^\/]+)\/[^\/]+Tablet\.tsx$/);
+    return match ? match[1] : null;
+  }
+
+  // Get all available tablet metadata (eager loading)
+  getAllMetadata(): TabletMetadata[] {
+    return tabletMetadata;
+  }
+
+  // Get tablet by ID (lazy loading) - now much more efficient
+  async getById(id: string): Promise<Tablet | undefined> {
+    console.log(`🔍 DynamicRegistry: Looking for tablet with ID: ${id}`);
+    
+    // Wait for the mapping to be built if it's still in progress
+    if (this.mappingPromise) {
+      console.log('⏳ DynamicRegistry: Waiting for tablet mapping to complete...');
+      await this.mappingPromise;
+      this.mappingPromise = null; // Clear the promise after it's resolved
+    }
+    
+    // Check if already loaded
+    if (this.loadedTablets.has(id)) {
+      console.log(`✅ DynamicRegistry: Tablet ${id} already loaded from cache`);
+      return this.loadedTablets.get(id);
+    }
+
+    // Check if we have a direct mapping to the module path
+    const modulePath = this.tabletIdToModulePath.get(id);
+    if (!modulePath) {
+      console.error(`❌ DynamicRegistry: No module path found for tablet: ${id}`);
+      console.log(`📋 DynamicRegistry: Available tablet IDs in mapping:`, Array.from(this.tabletIdToModulePath.keys()));
+      return undefined;
+    }
+
+    const lazyModule = this.lazyModules.get(modulePath);
+    if (!lazyModule) {
+      console.error(`❌ DynamicRegistry: Lazy module not found for ${modulePath}`);
       return undefined;
     }
 
     try {
-      // Load the tablet implementation
-      const lazyModule = this.lazyModules.get(targetModule);
-      if (!lazyModule) {
-        console.error(`❌ DynamicRegistry: Lazy module not found for ${targetModule}`);
-        return undefined;
-      }
-
-      console.log(`🔄 DynamicRegistry: Loading tablet from module: ${targetModule}`);
+      console.log(`🔄 DynamicRegistry: Loading tablet from module: ${modulePath}`);
       const module = await lazyModule();
       
       // Try to find the tablet export - it could be default or named
@@ -141,7 +152,7 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
         return undefined;
       }
       
-      console.log(`✅ DynamicRegistry: Successfully loaded tablet ${tablet.id} from ${targetModule}`);
+      console.log(`✅ DynamicRegistry: Successfully loaded tablet ${tablet.id} from ${modulePath}`);
       
       // Cache the loaded tablet
       this.loadedTablets.set(id, tablet);
