@@ -6,6 +6,7 @@ import { useSplitViewStore } from './splitViewStore';
 import { usePersistenceStore } from './persistenceStore';
 import { useCacheStore } from './cacheStore';
 import { modelManager } from '../services/modelManager';
+import { incrementSetting } from '../db';
 
 interface WorkspaceStore {
   workspaces: Workspace[];
@@ -265,6 +266,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           await storage.saveTabNow(initialTab);
           await storage.saveSplitViewNow(initialSplitViewRecord);
         });
+
+        // Increment the total tabs created counter
+        incrementSetting('tabs.created.total').catch(err => 
+          console.error("Failed to increment tab counter:", err)
+        );
 
         // Update Zustand state AFTER successful DB transaction
         set(state => ({

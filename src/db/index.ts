@@ -342,3 +342,11 @@ export async function getSetting(key: string): Promise<string | undefined> {
   const record = await db.settings.get(key);
   return record?.value;
 }
+
+export async function incrementSetting(key: string, increment: number = 1): Promise<number> {
+  const currentValue = await getSetting(key);
+  const currentNumber = currentValue ? parseInt(currentValue, 10) : 0;
+  const newValue = currentNumber + increment;
+  await setSetting(key, newValue.toString());
+  return newValue;
+}

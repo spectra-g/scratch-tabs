@@ -286,7 +286,6 @@ export const useAIStore = create<AISlice>((set, get) => {
         initializeCodegenModel: async () => {
             // Early return if codegen is disabled
             if (!ENABLE_CODEGEN_WORKER) {
-                console.log('[AI Store] Codegen worker is disabled');
                 return;
             }
             
@@ -377,7 +376,6 @@ export const useAIStore = create<AISlice>((set, get) => {
         runCodegen: (payload) => {
             // Early return if codegen is disabled
             if (!ENABLE_CODEGEN_WORKER) {
-                console.log('[AI Store] Codegen worker is disabled');
                 return;
             }
             

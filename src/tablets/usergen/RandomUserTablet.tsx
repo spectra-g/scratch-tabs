@@ -12,7 +12,7 @@ interface GenerationResult {
 }
 
 interface RandomUserState extends TabletState {
-  type: 'randomuser';
+  type: 'usergen';
   data: {
     results: GenerationResult[];
     selectedResult: number;
@@ -53,13 +53,13 @@ const FORMATS = [
 ];
 
 export const RandomUserTablet: Tablet = {
-  id: 'randomuser',
+  id: 'usergen',
   label: 'Random User Generator',
   keywords: ['user', 'random', 'generator', 'fake data', 'test data'],
 
   createInitialState(): RandomUserState {
     return {
-      type: 'randomuser',
+      type: 'usergen',
       data: {
         results: [],
         selectedResult: -1,

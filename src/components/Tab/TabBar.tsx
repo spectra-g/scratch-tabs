@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect, useMemo } from 'react';
 import { useRootStore } from '../../stores';
 import { TabletSelector } from '../../tablets';
 import { TabContextMenu } from "./TabContextMenu";
@@ -8,8 +8,8 @@ import { Tab } from '../../types';
 import { languageRegistry } from '../../languages';
 import { WorkspaceSwitcher } from '../Workspace/WorkspaceSwitcher';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
-import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
+import { arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { KeyboardSensor } from '@dnd-kit/core';
 import { SortableTabList } from './SortableTabList';

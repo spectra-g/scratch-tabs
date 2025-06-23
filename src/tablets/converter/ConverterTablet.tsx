@@ -27,6 +27,77 @@ const sections = [
   { id: 'networking', label: 'Networking', component: NetworkingConversion },
 ];
 
+// Separate React component for the converter UI
+const ConverterUI: React.FC<{ state: ConverterState; onChange: (state: ConverterState) => void }> = ({ state, onChange }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSectionChange = (sectionId: string) => {
+    onChange({
+      ...state,
+      data: {
+        ...state.data,
+        activeSection: sectionId
+      }
+    });
+  };
+
+  const activeSection = sections.find(section => section.id === state.data.activeSection);
+  const ActiveComponent = activeSection?.component;
+
+  return (
+    <div className="h-full bg-gray-900 flex">
+      {/* Left Sidebar - Section Navigation */}
+      <div className="w-64 border-r border-gray-700/50 flex flex-col">
+        <div className="p-4 border-b border-gray-700/50">
+          <div className="flex items-center space-x-3 mb-4">
+            <ArrowUpDown className="text-gray-400" size={24} />
+            <h2 className="text-xl font-semibold text-gray-100">Converter</h2>
+          </div>
+
+          {/* Search */}
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+            placeholder="Search converters..."
+            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500"
+          />
+        </div>
+
+        {/* Section List */}
+        <div className="flex-1 overflow-auto custom-scrollbar">
+          <div className="p-2">
+            {sections.map(section => (
+              <button
+                key={section.id}
+                onClick={() => handleSectionChange(section.id)}
+                className={`
+                  w-full text-left px-3 py-2 rounded-md text-sm transition-colors
+                  ${state.data.activeSection === section.id
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'text-gray-300 hover:bg-gray-800/50'
+                  }
+                `}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-auto custom-scrollbar">
+        {ActiveComponent && (
+          <ConverterSection>
+            <ActiveComponent searchQuery={searchQuery} />
+          </ConverterSection>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const ConverterTablet: Tablet = {
   id: 'converter',
   label: 'Converter',
@@ -50,72 +121,6 @@ export const ConverterTablet: Tablet = {
   },
 
   render(state: ConverterState, onChange) {
-    const [searchQuery, setSearchQuery] = useState('');
-
-    const handleSectionChange = (sectionId: string) => {
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          activeSection: sectionId
-        }
-      });
-    };
-
-    const activeSection = sections.find(section => section.id === state.data.activeSection);
-    const ActiveComponent = activeSection?.component;
-
-    return (
-      <div className="h-full bg-gray-900 flex">
-        {/* Left Sidebar - Section Navigation */}
-        <div className="w-64 border-r border-gray-700/50 flex flex-col">
-          <div className="p-4 border-b border-gray-700/50">
-            <div className="flex items-center space-x-3 mb-4">
-              <ArrowUpDown className="text-gray-400" size={24} />
-              <h2 className="text-xl font-semibold text-gray-100">Converter</h2>
-            </div>
-
-            {/* Search */}
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
-              placeholder="Search converters..."
-              className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500"
-            />
-          </div>
-
-          {/* Section List */}
-          <div className="flex-1 overflow-auto custom-scrollbar">
-            <div className="p-2">
-              {sections.map(section => (
-                <button
-                  key={section.id}
-                  onClick={() => handleSectionChange(section.id)}
-                  className={`
-                    w-full text-left px-3 py-2 rounded-md text-sm transition-colors
-                    ${state.data.activeSection === section.id
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : 'text-gray-300 hover:bg-gray-800/50'
-                    }
-                  `}
-                >
-                  {section.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="flex-1 overflow-auto custom-scrollbar">
-          {ActiveComponent && (
-            <ConverterSection>
-              <ActiveComponent searchQuery={searchQuery} />
-            </ConverterSection>
-          )}
-        </div>
-      </div>
-    );
+    return <ConverterUI state={state} onChange={onChange} />;
   }
 };

@@ -6,6 +6,7 @@ import { useWorkspaceStore } from './workspaceStore';
 import { EditorPosition, Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
 import { modelManager } from '../services/modelManager';
+import { incrementSetting } from '../db';
 
 import {
   isTabEmpty,
@@ -159,6 +160,11 @@ export const useRootStore = create<RootStore>((set, get) => {
         tabs: useTabsStore.getState().tabs,
         splitView: useSplitViewStore.getState().splitView,
       });
+      
+      // Increment the total tabs created counter
+      incrementSetting('tabs.created.total').catch(err => 
+        console.error("Failed to increment tab counter:", err)
+      );
     },
 
     addBackgroundTab: (tab, toRightSide = false) => {
