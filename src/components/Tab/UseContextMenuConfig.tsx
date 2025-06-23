@@ -438,7 +438,7 @@ Add any other context about the problem here.
       ),
       condition: canCloseToRight,
     },
-    { id: 'sep3', isSeparator: true },
+    { id: 'sep4', isSeparator: true },
     {
       id: 'reportIssue',
       label: 'Report issue',

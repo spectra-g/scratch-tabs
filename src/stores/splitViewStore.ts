@@ -53,7 +53,13 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
 
   splitScreen: (leftTabIds, rightTabId) => set((state) => {
     if (state.splitView.isSplit) return state;
-    const newActiveLeftTabId = leftTabIds[0] || null;
+    
+    // Use the existing tab history to determine which tab should be active on the left side
+    // Filter the current history to only include tabs that will be on the left side
+    const filteredHistory = (state.splitView.leftTabHistory || []).filter(id => leftTabIds.includes(id));
+    
+    const newActiveLeftTabId = getPreviousActiveTab(filteredHistory, leftTabIds);
+    
     return {
       splitView: {
         ...state.splitView,
