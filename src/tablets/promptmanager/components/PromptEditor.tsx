@@ -32,19 +32,33 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   
+  // Track if we're currently editing to prevent exiting edit mode during user edits
+  const isCurrentlyEditingRef = useRef(false);
+  
   // Update local state when prompt changes
   useEffect(() => {
-    setTitle(prompt.title);
-    setContent(prompt.content);
-    
-    // Auto-enter edit mode for new prompts (empty content and default title)
-    const isNewPrompt = prompt.content === '' && (prompt.title === 'Untitled Prompt' || prompt.title === 'New Prompt');
-    if (isNewPrompt) {
-      setIsEditing(true);
-    } else {
-      setIsEditing(false);
+    // Only update local state if we're not currently editing
+    // This prevents the effect from overriding user changes during editing
+    if (!isCurrentlyEditingRef.current) {
+      setTitle(prompt.title);
+      setContent(prompt.content);
+      
+      // Auto-enter edit mode for new prompts (empty content and default title)
+      const isNewPrompt = prompt.content === '' && (prompt.title === 'Untitled Prompt' || prompt.title === 'New Prompt');
+      if (isNewPrompt) {
+        setIsEditing(true);
+        isCurrentlyEditingRef.current = true;
+      } else {
+        setIsEditing(false);
+        isCurrentlyEditingRef.current = false;
+      }
     }
   }, [prompt.id, prompt.title, prompt.content]);
+  
+  // Update the ref when editing state changes
+  useEffect(() => {
+    isCurrentlyEditingRef.current = isEditing;
+  }, [isEditing]);
   
   // Focus title input when editing starts
   useEffect(() => {
