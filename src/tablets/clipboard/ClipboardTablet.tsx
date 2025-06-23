@@ -393,7 +393,11 @@ export const ClipboardTablet: Tablet = {
                     {selectedItems.size > 0 && <button onClick={() => handleDelete(Array.from(selectedItems))} className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-red-500/15 text-red-400 rounded-md hover:bg-red-500/25 text-xs"><Trash2 size={14}/><span>Delete ({selectedItems.size})</span></button>}
                 </div>
             </div>
-            <div ref={listRef} className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+            <div 
+                ref={listRef} 
+                className="flex-1 overflow-y-auto p-4 custom-scrollbar"
+                onClick={() => setActiveIndex(-1)}
+            >
               {filteredItems.length === 0 ? (
                  <div className="text-center text-gray-400 mt-8"><Filter size={40} className="mx-auto mb-3 opacity-50" /><p className="text-base">No items match your filters</p><p className="text-sm mt-1">Try adjusting your search or filters</p></div>
               ) : (
@@ -402,7 +406,10 @@ export const ClipboardTablet: Tablet = {
                       <motion.div key={item.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}>
                           <div 
                               className={`bg-gray-800/50 border rounded-lg overflow-hidden transition-all duration-200 group ${selectedItems.has(item.id) ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-gray-700/50 hover:border-gray-600/50'} ${activeIndex === index ? 'ring-2 ring-blue-400' : ''}`}
-                              onClick={() => setActiveIndex(index)}
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveIndex(index);
+                              }}
                           >
                               <div className="p-3">
                                   <div className="flex items-center justify-between mb-2">
