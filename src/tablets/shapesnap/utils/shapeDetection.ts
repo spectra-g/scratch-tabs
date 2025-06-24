@@ -1,463 +1,261 @@
 import { Point, Shape } from '../types';
 
-// Generate a unique ID for shapes
-const generateId = (): string => {
-  return `shape-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-};
-
-// Calculate the distance between two points
-const distance = (p1: Point, p2: Point): number => {
-  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-};
-
-// Calculate the bounding box of a set of points
+// --- CORE HELPER FUNCTIONS ---
 const getBoundingBox = (points: Point[]): { minX: number; minY: number; maxX: number; maxY: number } => {
   const xs = points.map(p => p.x);
   const ys = points.map(p => p.y);
-  
-  return {
-    minX: Math.min(...xs),
-    minY: Math.min(...ys),
-    maxX: Math.max(...xs),
-    maxY: Math.max(...ys)
-  };
+  return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) };
 };
-
-// Calculate the path length
+const distance = (p1: Point, p2: Point): number => Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 const getPathLength = (points: Point[]): number => {
   let length = 0;
-  
   for (let i = 1; i < points.length; i++) {
     length += distance(points[i - 1], points[i]);
   }
-  
   return length;
 };
-
-// Check if a shape is closed (start and end points are close or path crosses itself near the start)
 const isClosed = (points: Point[], box: { minX: number; minY: number; maxX: number; maxY: number }): boolean => {
   if (points.length < 3) return false;
-  
   const start = points[0];
   const end = points[points.length - 1];
   const diagonal = Math.sqrt(Math.pow(box.maxX - box.minX, 2) + Math.pow(box.maxY - box.minY, 2));
-  
-  // A shape is closed if the start and end points are closer than 30% of the bounding box diagonal.
-  const threshold = diagonal * 0.30; 
-  const isClose = distance(start, end) < threshold;
-
-  console.log(`🔍 isClosed check: distance=${distance(start, end).toFixed(2)}, threshold=${threshold.toFixed(2)}, closed=${isClose}`);
-  return isClose;
+  const threshold = diagonal * 0.25;
+  return distance(start, end) < threshold;
 };
-
-// Calculate the aspect ratio of a bounding box
-const getAspectRatio = (box: { minX: number; minY: number; maxX: number; maxY: number }): number => {
-  const width = box.maxX - box.minX;
-  const height = box.maxY - box.minY;
-  
-  return width / height;
-};
-
-// Calculate the perimeter of the bounding box
-const getBoundingBoxPerimeter = (box: { minX: number; minY: number; maxX: number; maxY: number }): number => {
-  const width = box.maxX - box.minX;
-  const height = box.maxY - box.minY;
-  
-  return 2 * (width + height);
-};
-
-// Helper to count sharp corners
-const countCorners = (points: Point[], angleThreshold = Math.PI / 4) => {
-  let cornerCount = 0;
-  for (let i = 1; i < points.length - 1; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const next = points[i + 1];
-    const angle1 = Math.atan2(curr.y - prev.y, curr.x - prev.x);
-    const angle2 = Math.atan2(next.y - curr.y, next.x - curr.x);
-    const angleDiff = Math.abs(angle1 - angle2);
-    const normalizedAngleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
-    if (normalizedAngleDiff > angleThreshold) {
-      cornerCount++;
-    }
-  }
-  return cornerCount;
-};
-
-// Detect if points form a line
-const isLine = (points: Point[]): boolean => {
-  if (points.length < 2) return false;
-  
-  const box = getBoundingBox(points);
-  const width = box.maxX - box.minX;
-  const height = box.maxY - box.minY;
-  
-  // Check if the points are roughly in a straight line
-  // by comparing the path length to the distance between endpoints
-  const pathLength = getPathLength(points);
-  const endpointDistance = distance(points[0], points[points.length - 1]);
-  
-  // If the path is close to a straight line, the ratio will be close to 1
-  const straightness = endpointDistance / pathLength;
-  
-  // Check if the shape is very narrow in one dimension
-  const isNarrow = width < 10 || height < 10;
-  
-  const result = straightness > 0.9 || isNarrow;
-  
-  console.log('📏 isLine check:', {
-    pointsLength: points.length,
-    width,
-    height,
-    pathLength,
-    endpointDistance,
-    straightness,
-    isNarrow,
-    result
-  });
-  
-  return result;
-};
-
-// Detect if points form a rectangle
-const isRectangle = (points: Point[]): boolean => {
-  if (points.length < 4) return false;
-  // Check if the shape is closed
-  const box = getBoundingBox(points);
-  if (!isClosed(points, box)) return false;
-  const width = box.maxX - box.minX;
-  const height = box.maxY - box.minY;
-  // Calculate the ratio of the path length to the bounding box perimeter
-  const pathLength = getPathLength(points);
-  const boxPerimeter = getBoundingBoxPerimeter(box);
-  const perimeterRatio = pathLength / boxPerimeter;
-  // Count sharp corners
-  const cornerCount = countCorners(points);
-  // Check if the shape is roughly rectangular
-  const result = perimeterRatio < 1.2 && perimeterRatio > 0.8 && cornerCount >= 3;
-  console.log('⬜ isRectangle check:', {
-    pointsLength: points.length,
-    width,
-    height,
-    pathLength,
-    boxPerimeter,
-    perimeterRatio,
-    cornerCount,
-    result
-  });
-  return result;
-};
-
-// Detect if points form a square
-const isSquare = (points: Point[]): boolean => {
-  if (!isRectangle(points)) {
-    console.log('🔲 isSquare check: Failed rectangle check');
-    return false;
-  }
-  const box = getBoundingBox(points);
-  const aspectRatio = getAspectRatio(box);
-  const width = box.maxX - box.minX;
-  const height = box.maxY - box.minY;
-  // Count sharp corners
-  const cornerCount = countCorners(points);
-  // Check if the aspect ratio is close to 1 (square) and has at least 4 corners
-  const result = aspectRatio > 0.8 && aspectRatio < 1.2 && cornerCount >= 4;
-  console.log('🔲 isSquare check:', {
-    width,
-    height,
-    aspectRatio,
-    cornerCount,
-    result
-  });
-  return result;
-};
-
-// Detect if points form a triangle
-const isTriangle = (points: Point[]): boolean => {
-  if (points.length < 3) return false;
-  
-  // Check if the shape is closed
-  const box = getBoundingBox(points);
-  if (!isClosed(points, box)) return false;
-  
-  const width = box.maxX - box.minX;
-  const height = box.maxY - box.minY;
-  
-  // Calculate the path length and compare to a theoretical triangle
-  const pathLength = getPathLength(points);
-  
-  // For a triangle, we expect roughly 3 sides
-  // Calculate the theoretical perimeter of a triangle with the same bounding box
-  const theoreticalPerimeter = width + height + Math.sqrt(width * width + height * height);
-  
-  const perimeterRatio = pathLength / theoreticalPerimeter;
-  
-  // Check if the shape has roughly 3 corners by looking for significant direction changes
-  let cornerCount = 0;
-  const angleThreshold = Math.PI / 4; // 45 degrees
-  
-  for (let i = 1; i < points.length - 1; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const next = points[i + 1];
-    
-    const angle1 = Math.atan2(curr.y - prev.y, curr.x - prev.x);
-    const angle2 = Math.atan2(next.y - curr.y, next.x - curr.x);
-    
-    const angleDiff = Math.abs(angle1 - angle2);
-    const normalizedAngleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
-    
-    if (normalizedAngleDiff > angleThreshold) {
-      cornerCount++;
-    }
-  }
-  
-  const result = perimeterRatio > 0.7 && perimeterRatio < 1.3 && cornerCount >= 2 && cornerCount <= 4;
-  
-  console.log('🔺 isTriangle check:', {
-    pointsLength: points.length,
-    width,
-    height,
-    pathLength,
-    theoreticalPerimeter,
-    perimeterRatio,
-    cornerCount,
-    result
-  });
-  
-  return result;
-};
-
-// Detect if points form a circle
-const isCircle = (points: Point[]): boolean => {
-  if (points.length < 5) return false;
-  
-  // Check if the shape is closed
-  const box = getBoundingBox(points);
-  if (!isClosed(points, box)) return false;
-  
-  const width = box.maxX - box.minX;
-  const height = box.maxY - box.minY;
-  
-  // Calculate the center of the bounding box
-  const centerX = (box.minX + box.maxX) / 2;
-  const centerY = (box.minY + box.maxY) / 2;
-  
-  // Calculate the average radius
-  const radius = (width + height) / 4;
-  
-  // Check if points are roughly equidistant from the center
-  let radiusDeviation = 0;
-  
-  for (const point of points) {
-    const pointRadius = distance({ x: centerX, y: centerY }, point);
-    radiusDeviation += Math.abs(pointRadius - radius);
-  }
-  
-  // Calculate the average deviation as a percentage of the radius
-  const avgDeviation = radiusDeviation / points.length / radius;
-
-  // Count sharp corners: if there are 3 or more, it's not a circle
-  let cornerCount = 0;
-  const angleThreshold = Math.PI / 4; // 45 degrees
-  for (let i = 1; i < points.length - 1; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const next = points[i + 1];
-    const angle1 = Math.atan2(curr.y - prev.y, curr.x - prev.x);
-    const angle2 = Math.atan2(next.y - curr.y, next.x - curr.x);
-    const angleDiff = Math.abs(angle1 - angle2);
-    const normalizedAngleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
-    if (normalizedAngleDiff > angleThreshold) {
-      cornerCount++;
-    }
-  }
-  if (cornerCount >= 3) {
-    console.log('⭕ isCircle check: too many corners, not a circle', {cornerCount});
-    return false;
-  }
-
-  // Check if the shape is roughly circular
-  const result = avgDeviation < 0.2;
-  
-  console.log('⭕ isCircle check:', {
-    pointsLength: points.length,
-    width,
-    height,
-    centerX,
-    centerY,
-    radius,
-    radiusDeviation,
-    avgDeviation,
-    cornerCount,
-    result
-  });
-  
-  return result;
-};
-
-// Detect if points form a diamond (rhombus)
-const isDiamond = (points: Point[]): boolean => {
-  if (points.length < 4) return false;
-  
-  // Check if the shape is closed
-  const box = getBoundingBox(points);
-  if (!isClosed(points, box)) return false;
-  
-  // Check if the shape has 4 corners
-  // This is a simplified approach - in a real app, you'd use a more robust corner detection algorithm
-  
-  const width = box.maxX - box.minX;
-  const height = box.maxY - box.minY;
-  
-  // Calculate the center of the bounding box
-  const centerX = (box.minX + box.maxX) / 2;
-  const centerY = (box.minY + box.maxY) / 2;
-  
-  // Check if the shape is roughly diamond-shaped
-  // by checking if points are distributed in 4 quadrants around the center
-  let topLeft = false;
-  let topRight = false;
-  let bottomLeft = false;
-  let bottomRight = false;
-  
-  for (const point of points) {
-    if (point.x < centerX && point.y < centerY) topLeft = true;
-    if (point.x > centerX && point.y < centerY) topRight = true;
-    if (point.x < centerX && point.y > centerY) bottomLeft = true;
-    if (point.x > centerX && point.y > centerY) bottomRight = true;
-  }
-  
-  const result = topLeft && topRight && bottomLeft && bottomRight;
-  
-  console.log('💎 isDiamond check:', {
-    pointsLength: points.length,
-    width,
-    height,
-    centerX,
-    centerY,
-    topLeft,
-    topRight,
-    bottomLeft,
-    bottomRight,
-    result
-  });
-  
-  return result;
-};
-
-// Detect if points form an arrow
-const isArrow = (points: Point[]): boolean => {
-  if (points.length < 5) return false;
-  
-  // Check if the shape is roughly a line
-  if (!isLine(points)) return false;
-  
-  // Get the main direction of the line
-  const start = points[0];
-  const end = points[points.length - 1];
-  
-  // Calculate the angle of the line
-  const angle = Math.atan2(end.y - start.y, end.x - start.x);
-  
-  // Check if there are points that deviate significantly from the main line
-  // which could indicate the arrowhead
-  let hasArrowhead = false;
-  
-  for (let i = 1; i < points.length - 1; i++) {
-    const point = points[i];
-    
-    // Calculate the expected position on the line
-    const t = (point.x - start.x) / (end.x - start.x);
-    const expectedY = start.y + t * (end.y - start.y);
-    
-    // Check if the point deviates significantly from the line
-    const deviation = Math.abs(point.y - expectedY);
-    
-    if (deviation > 10) {
-      hasArrowhead = true;
-      break;
-    }
-  }
-  
-  console.log('➡️ isArrow check:', {
-    pointsLength: points.length,
-    angle,
-    hasArrowhead,
-    result: hasArrowhead
-  });
-  
-  return hasArrowhead;
-};
-
-// Fit a circle to the points and calculate its properties
-function getCircleProperties(points: Point[]) {
-  const n = points.length;
-  const sum = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
-  const center = { x: sum.x / n, y: sum.y / n };
-  const radii = points.map(p => distance(center, p));
-  const avgRadius = radii.reduce((acc, r) => acc + r, 0) / n;
-  const variance = radii.reduce((acc, r) => acc + Math.pow(r - avgRadius, 2), 0) / n;
-  const stdDev = Math.sqrt(variance);
-  const normalizedStdDev = avgRadius > 1 ? stdDev / avgRadius : stdDev;
-  return { center, radius: avgRadius, normalizedStdDev };
+function getCentroid(points: Point[]): Point {
+    const n = points.length;
+    if (n === 0) return { x: 0, y: 0 };
+    const sum = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+    return { x: sum.x / n, y: sum.y / n };
 }
 
-function getCircleCenter(points: Point[]) {
-  const n = points.length;
-  const sum = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
-  return { x: sum.x / n, y: sum.y / n };
+
+// --- $1 GESTURE RECOGNIZER IMPLEMENTATION (for non-box shapes) ---
+
+const NUM_POINTS = 64;
+const SQUARE_SIZE = 250.0;
+const ANGLE_RANGE = 45.0; 
+const ANGLE_PRECISION = 2.0;
+const PHI = 0.5 * (-1.0 + Math.sqrt(5.0)); // Golden Ratio
+
+class DollarRecognizer {
+    private templates: { name: string, points: Point[] }[] = [];
+
+    constructor() {
+        this.addTemplate("triangle", [{"x":125,"y":23.2},{"x":22.2,"y":226.8},{"x":227.8,"y":226.8},{"x":125,"y":23.2}]);
+        this.addTemplate("circle", [{"x":137.2,"y":30.2},{"x":89.4,"y":32.4},{"x":50.2,"y":51.8},{"x":25.2,"y":84.8},{"x":12.6,"y":127.8},{"x":17.6,"y":174},{"x":37.4,"y":208.6},{"x":71.4,"y":231.8},{"x":113.6,"y":241.8},{"x":156.8,"y":238.4},{"x":195.4,"y":220.6},{"x":221.2,"y":190.4},{"x":235.2,"y":153.4},{"x":235.8,"y":112.6},{"x":223.8,"y":72},{"x":198.8,"y":42.2},{"x":166.4,"y":27.2},{"x":137.2,"y":30.2}]);
+        this.addTemplate("diamond", [{"x":126,"y":16},{"x":236,"y":125},{"x":126,"y":235},{"x":16,"y":125},{"x":126,"y":16}]);
+    }
+
+    public recognize(points: Point[]): { name: string; score: number } {
+        const processedPoints = this.processPoints(points);
+        if (processedPoints.length === 0) return { name: 'unknown', score: 0.0 };
+
+        let b = +Infinity;
+        let t = -1;
+
+        for (let i = 0; i < this.templates.length; i++) {
+            const d = this.distanceAtBestAngle(processedPoints, this.templates[i]);
+            if (d < b) {
+                b = d;
+                t = i;
+            }
+        }
+        
+        const score = t === -1 ? 0.0 : 1.0 - b / (0.5 * Math.sqrt(SQUARE_SIZE * SQUARE_SIZE + SQUARE_SIZE * SQUARE_SIZE));
+        return { name: t === -1 ? 'unknown' : this.templates[t].name, score };
+    }
+
+    private addTemplate(name: string, points: Point[]): void {
+        this.templates.push({ name, points: this.processPoints(points) });
+    }
+
+    private processPoints(points: Point[]): Point[] {
+        let resampled = this.resample(points, NUM_POINTS);
+        if (resampled.length === 0) return [];
+        const radians = this.indicativeAngle(resampled);
+        resampled = this.rotateBy(resampled, -radians);
+        resampled = this.scaleTo(resampled, SQUARE_SIZE);
+        resampled = this.translateTo(resampled, { x: 0, y: 0 });
+        return resampled;
+    }
+    
+    private resample(points: Point[], n: number): Point[] {
+        const pathLen = getPathLength(points);
+        if (pathLen === 0) return [];
+
+        const I = pathLen / (n - 1);
+        let D = 0.0;
+        const newPoints: Point[] = [points[0]];
+        for (let i = 1; i < points.length && newPoints.length < n; i++) {
+            const d = distance(points[i - 1], points[i]);
+            if ((D + d) >= I) {
+                const qx = points[i - 1].x + ((I - D) / d) * (points[i].x - points[i - 1].x);
+                const qy = points[i - 1].y + ((I - D) / d) * (points[i].y - points[i - 1].y);
+                const q = { x: qx, y: qy };
+                newPoints.push(q);
+                points.splice(i, 0, q);
+                D = 0.0;
+            } else {
+                D += d;
+            }
+        }
+        if (newPoints.length < n) {
+             newPoints.push(points[points.length-1]);
+        }
+        return newPoints.slice(0, n);
+    }
+    
+    private indicativeAngle(points: Point[]): number {
+        const centroid = getCentroid(points);
+        return Math.atan2(centroid.y - points[0].y, centroid.x - points[0].x);
+    }
+
+    private rotateBy(points: Point[], radians: number): Point[] {
+        const centroid = getCentroid(points);
+        const cos = Math.cos(radians);
+        const sin = Math.sin(radians);
+        const newPoints: Point[] = [];
+        for (let i = 0; i < points.length; i++) {
+            const qx = (points[i].x - centroid.x) * cos - (points[i].y - centroid.y) * sin + centroid.x;
+            const qy = (points[i].x - centroid.x) * sin + (points[i].y - centroid.y) * cos + centroid.y;
+            newPoints.push({ x: qx, y: qy });
+        }
+        return newPoints;
+    }
+
+    private scaleTo(points: Point[], size: number): Point[] {
+        const B = getBoundingBox(points);
+        const newPoints: Point[] = [];
+        const scale = size / Math.max(B.maxX - B.minX, B.maxY - B.minY);
+        for (let i = 0; i < points.length; i++) {
+            const qx = points[i].x * scale;
+            const qy = points[i].y * scale;
+            newPoints.push({ x: qx, y: qy });
+        }
+        return newPoints;
+    }
+
+    private translateTo(points: Point[], pt: Point): Point[] {
+        const centroid = getCentroid(points);
+        const newPoints: Point[] = [];
+        for (let i = 0; i < points.length; i++) {
+            const qx = points[i].x + pt.x - centroid.x;
+            const qy = points[i].y + pt.y - centroid.y;
+            newPoints.push({ x: qx, y: qy });
+        }
+        return newPoints;
+    }
+
+    private distanceAtBestAngle(points: Point[], template: { points: Point[] }): number {
+        let a = -ANGLE_RANGE;
+        let b = ANGLE_RANGE;
+        const threshold = ANGLE_PRECISION;
+        let x1 = PHI * a + (1.0 - PHI) * b;
+        let f1 = this.distanceAtAngle(points, template, x1);
+        let x2 = (1.0 - PHI) * a + PHI * b;
+        let f2 = this.distanceAtAngle(points, template, x2);
+        while (Math.abs(b - a) > threshold) {
+            if (f1 < f2) {
+                b = x2;
+                x2 = x1;
+                f2 = f1;
+                x1 = PHI * a + (1.0 - PHI) * b;
+                f1 = this.distanceAtAngle(points, template, x1);
+            } else {
+                a = x1;
+                x1 = x2;
+                f1 = f2;
+                x2 = (1.0 - PHI) * a + PHI * b;
+                f2 = this.distanceAtAngle(points, template, x2);
+            }
+        }
+        return Math.min(f1, f2);
+    }
+
+    private distanceAtAngle(points: Point[], template: { points: Point[] }, radians: number): number {
+        const newPoints = this.rotateBy(points, radians);
+        return this.pathDistance(newPoints, template.points);
+    }
+
+    private pathDistance(pts1: Point[], pts2: Point[]): number {
+        let d = 0.0;
+        for (let i = 0; i < pts1.length; i++) {
+            d += distance(pts1[i], pts2[i]);
+        }
+        return d / pts1.length;
+    }
 }
 
-// Returns only geometry, not style/id/zIndex
+const recognizer = new DollarRecognizer();
+
+// --- SHAPE DETECTION ENGINE ---
+
 export const detectShape = (points: Point[]): any | null => {
-  if (points.length < 20) return null;
+  if (points.length < 10) return null;
+
   const box = getBoundingBox(points);
   const width = box.maxX - box.minX;
   const height = box.maxY - box.minY;
-  const pathLength = getPathLength(points);
-  if (width < 15 || height < 15 || pathLength < 30) return null;
-  const endpointDistance = distance(points[0], points[points.length - 1]);
-  const straightness = endpointDistance / pathLength;
-  if (!isClosed(points, box) && straightness > 0.95) {
-    return { type: 'line', points: [points[0], points[points.length-1]] };
+  
+  if (width < 20 || height < 20) return null;
+
+  if (!isClosed(points, box)) {
+    const straightness = distance(points[0], points[points.length - 1]) / getPathLength(points);
+    if (straightness > 0.95) return { type: 'line', points: [points[0], points[points.length-1]] };
+    return { type: 'line', points };
   }
-  const aspectRatio = width / height;
+
+  let detectedType: Shape['type'] | 'unknown' = 'unknown';
+
+  // ** HIERARCHICAL DETECTION LOGIC **
+
+  // Step 1: Check for box-like shapes using a strong heuristic FIRST.
+  const pathLength = getPathLength(points);
   const boxPerimeter = 2 * (width + height);
   const perimeterRatio = pathLength / boxPerimeter;
-  const IDEAL_CIRCLE_RATIO = Math.PI / 4;
-  const IDEAL_RECT_RATIO = 1.0;
-  const circleError = Math.abs(perimeterRatio - IDEAL_CIRCLE_RATIO);
-  const rectangleError = Math.abs(perimeterRatio - IDEAL_RECT_RATIO);
-  let detectedType: 'circle' | 'rectangle' | 'square' = 'rectangle';
-  if (circleError < rectangleError) {
-    if (aspectRatio > 0.7 && aspectRatio < 1.4) {
-      detectedType = 'circle';
-    } else {
-      detectedType = 'rectangle';
-    }
+  
+  // *** THE FINAL TUNED THRESHOLD ***
+  if (perimeterRatio > 0.89) { 
+      console.log(`...High perimeter ratio detected (${perimeterRatio.toFixed(2)}). Classifying as box.`);
+      const aspectRatio = Math.max(width, height) / Math.min(width, height);
+      if(aspectRatio > 1.4) {
+          detectedType = 'rectangle';
+      } else {
+          detectedType = 'square';
+      }
   } else {
-    if(aspectRatio > 0.85 && aspectRatio < 1.15) {
-      detectedType = 'square';
-    } else {
-      detectedType = 'rectangle';
-    }
+      // Step 2: If not a box, use the $1 recognizer for more complex shapes.
+      const result = recognizer.recognize(points);
+      console.log(`...Recognized ${result.name} with score ${result.score.toFixed(2)}`);
+
+      const SCORE_THRESHOLD = 0.75; 
+      if (result.name !== 'unknown' && result.score >= SCORE_THRESHOLD) {
+          detectedType = result.name as Shape['type'];
+      }
   }
+  
+  if (detectedType === 'unknown') {
+      console.log(`🏆 Final decision: UNKNOWN`);
+      return { type: 'line', points };
+  }
+
+  console.log(`🏆 Final decision: ${detectedType.toUpperCase()}`);
+
+  const centroid = getCentroid(points);
+
   switch (detectedType) {
-    case 'circle': {
-      const center = getCircleCenter(points);
-      const radius = (width + height) / 4;
-      return { type: 'circle', x: center.x, y: center.y, radius };
-    }
-    case 'square': {
+    case 'circle':
+      return { type: 'circle', x: centroid.x, y: centroid.y, radius: (width + height) / 4 };
+    case 'triangle':
+      return { type: 'triangle', x: centroid.x, y: centroid.y, width, height };
+    case 'diamond':
+      return { type: 'diamond', x: centroid.x, y: centroid.y, width, height };
+    case 'square':
       const size = Math.max(width, height);
-      const centerX = box.minX + width / 2;
-      const centerY = box.minY + height / 2;
-      return { type: 'square', x: centerX - size / 2, y: centerY - size / 2, width: size, height: size };
-    }
-    case 'rectangle': {
+      return { type: 'square', x: box.minX + (width - size) / 2, y: box.minY + (height - size) / 2, width: size, height: size };
+    case 'rectangle':
       return { type: 'rectangle', x: box.minX, y: box.minY, width, height };
-    }
     default:
       return { type: 'line', points };
   }
