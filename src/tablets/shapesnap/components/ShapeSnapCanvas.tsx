@@ -13,7 +13,7 @@ interface ShapeSnapCanvasProps {
   currentTool: ShapeSnapTool;
   onShapeClick?: (shape: Shape, position: Point) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
-  onUpdateShape?: (shapeId: string, updates: any) => void;
+  onUpdateShape?: (shapeId: string, updates: Partial<Shape>) => void;
   onDeleteShape?: (shapeId: string) => void;
   onDrawEnd?: (points: Point[]) => Shape | null;
   gridSnappingEnabled?: boolean;
@@ -34,11 +34,12 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 }) => {
   const [selectedShapeId, setSelectedShapeId] = useState<string | undefined>(undefined);
   const [editingShape, setEditingShape] = useState<Shape | null>(null);
-  const [editorPosition, setEditorPosition] = useState<Point>({ x: 0, y: 0 });
   const [draggingShapeId, setDraggingShapeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [draggedShape, setDraggedShape] = useState<Shape | null>(null);
   const [dragTimeout, setDragTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [lineDragMode, setLineDragMode] = useState<'move' | 'resize-start' | 'resize-end' | null>(null);
+  const [lineDragPoint, setLineDragPoint] = useState<Point | null>(null);
   
   // Sort shapes by zIndex for proper rendering order
   const sortedShapes = [...shapes].sort((a, b) => a.zIndex - b.zIndex);
@@ -54,6 +55,49 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   // Helper: snap a value to the nearest grid
   const snapToGrid = (value: number, grid: number) => gridSnappingEnabled ? Math.round(value / grid) * grid : value;
 
+  // Helper function to calculate distance between two points
+  const distance = (p1: Point, p2: Point): number => 
+    Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+
+  // Helper function to detect line drag mode
+  const detectLineDragMode = (shape: Shape, mousePoint: Point): 'move' | 'resize-start' | 'resize-end' => {
+    if (shape.type !== 'line') return 'move';
+    
+    const lineShape = shape as Shape & { points: Point[] };
+    if (!lineShape.points || lineShape.points.length < 2) return 'move';
+    
+    const startPoint = lineShape.points[0];
+    const endPoint = lineShape.points[lineShape.points.length - 1];
+    const lineLength = distance(startPoint, endPoint);
+    
+    // Threshold for endpoint detection (15px or 10% of line length, whichever is smaller)
+    const threshold = Math.min(15, lineLength * 0.1);
+    
+    const distanceToStart = distance(mousePoint, startPoint);
+    const distanceToEnd = distance(mousePoint, endPoint);
+    
+    if (distanceToStart <= threshold) {
+      return 'resize-start';
+    } else if (distanceToEnd <= threshold) {
+      return 'resize-end';
+    } else {
+      return 'move';
+    }
+  };
+
+  // Helper function to get editor rectangle for label editing
+  const getEditorRect = (shape: Shape) => {
+    const center = getShapeCenter(shape);
+    const width = 120;
+    const height = 60;
+    return {
+      x: center.x - width / 2,
+      y: center.y - height / 2,
+      width,
+      height
+    };
+  };
+
   const handleShapeClick = (shape: Shape, position: Point) => {
     if (onShapeClick) {
       onShapeClick(shape, position);
@@ -66,7 +110,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         if (selectedShapeId === shape.id) {
           // If already selected, open label editor
           setEditingShape(shape);
-          setEditorPosition(position);
         } else {
           // Select the shape
           setSelectedShapeId(shape.id);
@@ -106,7 +149,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   };
   
   // Double-click handler for shapes (works in any mode)
-  const handleShapeDoubleClick = (shape: Shape, _position: Point) => {
+  const handleShapeDoubleClick = (shape: Shape) => {
     console.log('🖱️ Double-click detected, canceling drag timeout');
     // Cancel the drag timeout to prevent drag from starting
     if (dragTimeout) {
@@ -114,31 +157,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       setDragTimeout(null);
     }
     setEditingShape(shape);
-  };
-  
-  // Helper to get editor size for a shape
-  const getEditorRect = (shape: Shape) => {
-    switch (shape.type) {
-      case 'rectangle':
-      case 'square':
-      case 'diamond':
-      case 'triangle':
-        return { x: shape.x + shape.width / 2, y: shape.y + shape.height / 2, width: Math.max(80, shape.width * 0.8), height: Math.max(40, shape.height * 0.4) };
-      case 'circle':
-        return { x: shape.x, y: shape.y, width: Math.max(80, shape.radius * 1.5), height: Math.max(40, shape.radius * 0.8) };
-      case 'line': {
-        const center = getShapeCenter(shape);
-        return { x: center.x, y: center.y, width: 100, height: 40 };
-      }
-      case 'arrow': {
-        const center = getShapeCenter(shape);
-        return { x: center.x, y: center.y, width: 100, height: 40 };
-      }
-      case 'text':
-        return { x: shape.x, y: shape.y, width: 120, height: 40 };
-      default:
-        return { x: 0, y: 0, width: 100, height: 40 };
-    }
   };
   
   // Mouse down on shape: start dragging
@@ -153,6 +171,23 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     
     const mouseX = e.nativeEvent.offsetX;
     const mouseY = e.nativeEvent.offsetY;
+    const mousePoint = { x: mouseX, y: mouseY };
+    
+    // For lines, detect drag mode immediately
+    if (shape.type === 'line') {
+      const dragMode = detectLineDragMode(shape, mousePoint);
+      console.log('📏 Line drag mode detected:', dragMode);
+      setLineDragMode(dragMode);
+      
+      if (dragMode === 'resize-start' || dragMode === 'resize-end') {
+        // For resizing, store the fixed point (the endpoint we're NOT dragging)
+        const lineShape = shape as Shape & { points: Point[] };
+        const fixedPoint = dragMode === 'resize-start' ? lineShape.points[lineShape.points.length - 1] : lineShape.points[0];
+        setLineDragPoint(fixedPoint);
+        console.log('📍 Fixed point for resizing:', fixedPoint);
+      }
+    }
+    
     const center = getShapeCenter(shape);
     console.log('📍 Mouse position:', { mouseX, mouseY });
     console.log('🎯 Shape center:', center);
@@ -183,52 +218,98 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       return;
     }
     const shape = shapes[idx];
-    const newCenterX = snapToGrid(mouseX - dragOffset.x, 20);
-    const newCenterY = snapToGrid(mouseY - dragOffset.y, 20);
-    console.log('🎯 New center position:', { newCenterX, newCenterY });
     
     // Create updated shape for visual feedback
     const updatedShape = cloneDeep(shape);
-    switch (shape.type) {
-      case 'rectangle':
-      case 'square':
-      case 'diamond':
-      case 'triangle':
-        (updatedShape as any).x = newCenterX - (shape as any).width / 2;
-        (updatedShape as any).y = newCenterY - (shape as any).height / 2;
-        console.log('📦 Updated box shape position:', { x: (updatedShape as any).x, y: (updatedShape as any).y });
-        break;
-      case 'circle':
-        (updatedShape as any).x = newCenterX;
-        (updatedShape as any).y = newCenterY;
-        console.log('⭕ Updated circle position:', { x: (updatedShape as any).x, y: (updatedShape as any).y });
-        break;
-      case 'line': {
-        // Move all points by the delta
+    
+    if (shape.type === 'line' && lineDragMode && lineDragPoint) {
+      // Handle line resizing
+      const snappedX = snapToGrid(mouseX, 20);
+      const snappedY = snapToGrid(mouseY, 20);
+      
+      if (lineDragMode === 'resize-start') {
+        // Move start point to mouse position, keep end point fixed
+        (updatedShape as Shape & { points: Point[] }).points = [
+          { x: snappedX, y: snappedY },
+          lineDragPoint
+        ];
+        console.log('📏 Resizing line start:', { start: { x: snappedX, y: snappedY }, end: lineDragPoint });
+      } else if (lineDragMode === 'resize-end') {
+        // Move end point to mouse position, keep start point fixed
+        (updatedShape as Shape & { points: Point[] }).points = [
+          lineDragPoint,
+          { x: snappedX, y: snappedY }
+        ];
+        console.log('📏 Resizing line end:', { start: lineDragPoint, end: { x: snappedX, y: snappedY } });
+      } else {
+        // Move entire line
         const center = getShapeCenter(shape);
+        const newCenterX = snapToGrid(mouseX - dragOffset.x, 20);
+        const newCenterY = snapToGrid(mouseY - dragOffset.y, 20);
         const dx = newCenterX - center.x;
         const dy = newCenterY - center.y;
-        (updatedShape as any).points = (shape as any).points.map((p: any) => ({ x: p.x + dx, y: p.y + dy }));
-        console.log('📏 Updated line points:', (updatedShape as any).points);
-        break;
+        const lineShape = shape as Shape & { points: Point[] };
+        (updatedShape as Shape & { points: Point[] }).points = lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+        console.log('📏 Moving entire line:', (updatedShape as Shape & { points: Point[] }).points);
       }
-      case 'arrow': {
-        const center = getShapeCenter(shape);
-        const dx = newCenterX - center.x;
-        const dy = newCenterY - center.y;
-        (updatedShape as any).from = { x: (shape as any).from.x + dx, y: (shape as any).from.y + dy };
-        (updatedShape as any).to = { x: (shape as any).to.x + dx, y: (shape as any).to.y + dy };
-        console.log('➡️ Updated arrow position:', { from: (updatedShape as any).from, to: (updatedShape as any).to });
-        break;
+    } else {
+      // Handle other shapes (normal dragging)
+      const newCenterX = snapToGrid(mouseX - dragOffset.x, 20);
+      const newCenterY = snapToGrid(mouseY - dragOffset.y, 20);
+      console.log('🎯 New center position:', { newCenterX, newCenterY });
+      
+      // Defensive: ensure shape is valid
+      if (!shape || typeof (shape as any).type !== 'string') {
+        console.log('❓ Invalid shape for switch');
+        return;
       }
-      case 'text':
-        (updatedShape as any).x = newCenterX;
-        (updatedShape as any).y = newCenterY;
-        console.log('📝 Updated text position:', { x: (updatedShape as any).x, y: (updatedShape as any).y });
-        break;
-      default:
-        console.log('❓ Unknown shape type:', shape.type);
-        break;
+      switch ((shape as Shape).type) {
+        case 'rectangle':
+        case 'square':
+        case 'diamond':
+        case 'triangle': {
+          const boxShape = shape as Shape & { x: number; y: number; width: number; height: number };
+          (updatedShape as Shape & { x: number; y: number }).x = newCenterX - boxShape.width / 2;
+          (updatedShape as Shape & { x: number; y: number }).y = newCenterY - boxShape.height / 2;
+          console.log('📦 Updated box shape position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
+          break;
+        }
+        case 'circle': {
+          (updatedShape as Shape & { x: number; y: number }).x = newCenterX;
+          (updatedShape as Shape & { x: number; y: number }).y = newCenterY;
+          console.log('⭕ Updated circle position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
+          break;
+        }
+        case 'arrow': {
+          const center = getShapeCenter(shape);
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const arrowShape = shape as Shape & { from: Point; to: Point };
+          (updatedShape as Shape & { from: Point; to: Point }).from = { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy };
+          (updatedShape as Shape & { from: Point; to: Point }).to = { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy };
+          console.log('➡️ Updated arrow position:', { from: (updatedShape as Shape & { from: Point; to: Point }).from, to: (updatedShape as Shape & { from: Point; to: Point }).to });
+          break;
+        }
+        case 'text': {
+          (updatedShape as Shape & { x: number; y: number }).x = newCenterX;
+          (updatedShape as Shape & { x: number; y: number }).y = newCenterY;
+          console.log('📝 Updated text position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
+          break;
+        }
+        case 'line': {
+          // Move all points by the delta
+          const center = getShapeCenter(shape);
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const lineShape = shape as Shape & { points: Point[] };
+          (updatedShape as Shape & { points: Point[] }).points = lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+          console.log('📏 Updated line points (move):', (updatedShape as Shape & { points: Point[] }).points);
+          break;
+        }
+        default:
+          console.log('❓ Unknown shape type:', (shape as Shape).type);
+          break;
+      }
     }
     
     // Update the dragged shape for visual feedback
@@ -250,60 +331,111 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       return;
     }
     const shape = shapes[idx];
-    const center = getShapeCenter(shape);
-    const newCenterX = snapToGrid(mouseX - dragOffset.x, 20);
-    const newCenterY = snapToGrid(mouseY - dragOffset.y, 20);
-    console.log('🎯 Final position:', { newCenterX, newCenterY });
     
-    // Prepare updates based on shape type
-    let updates: any = {};
-    switch (shape.type) {
-      case 'rectangle':
-      case 'square':
-      case 'diamond':
-      case 'triangle':
+    // Prepare updates based on shape type and drag mode
+    let updates: Partial<Shape> = {};
+    
+    if (shape.type === 'line' && lineDragMode && lineDragPoint) {
+      // Handle line resizing updates
+      const snappedX = snapToGrid(mouseX, 20);
+      const snappedY = snapToGrid(mouseY, 20);
+      
+      if (lineDragMode === 'resize-start') {
         updates = {
-          x: newCenterX - (shape as any).width / 2,
-          y: newCenterY - (shape as any).height / 2
-        };
-        console.log('📦 Box shape updates:', updates);
-        break;
-      case 'circle':
+          points: [
+            { x: snappedX, y: snappedY },
+            lineDragPoint
+          ]
+        } as Partial<Shape & { points: Point[] }>;
+        console.log('📏 Line resize-start updates:', updates);
+      } else if (lineDragMode === 'resize-end') {
         updates = {
-          x: newCenterX,
-          y: newCenterY
-        };
-        console.log('⭕ Circle updates:', updates);
-        break;
-      case 'line': {
+          points: [
+            lineDragPoint,
+            { x: snappedX, y: snappedY }
+          ]
+        } as Partial<Shape & { points: Point[] }>;
+        console.log('📏 Line resize-end updates:', updates);
+      } else {
+        // Move entire line
+        const center = getShapeCenter(shape);
+        const newCenterX = snapToGrid(mouseX - dragOffset.x, 20);
+        const newCenterY = snapToGrid(mouseY - dragOffset.y, 20);
         const dx = newCenterX - center.x;
         const dy = newCenterY - center.y;
+        const lineShape = shape as Shape & { points: Point[] };
         updates = {
-          points: (shape as any).points.map((p: any) => ({ x: p.x + dx, y: p.y + dy }))
-        };
-        console.log('📏 Line updates:', updates);
-        break;
+          points: lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
+        } as Partial<Shape & { points: Point[] }>;
+        console.log('📏 Line move updates:', updates);
       }
-      case 'arrow': {
-        const dx = newCenterX - center.x;
-        const dy = newCenterY - center.y;
-        updates = {
-          from: { x: (shape as any).from.x + dx, y: (shape as any).from.y + dy },
-          to: { x: (shape as any).to.x + dx, y: (shape as any).to.y + dy }
-        };
-        console.log('➡️ Arrow updates:', updates);
-        break;
+    } else {
+      // Handle other shapes (normal dragging)
+      const center = getShapeCenter(shape);
+      const newCenterX = snapToGrid(mouseX - dragOffset.x, 20);
+      const newCenterY = snapToGrid(mouseY - dragOffset.y, 20);
+      console.log('🎯 Final position:', { newCenterX, newCenterY });
+      
+      // Defensive: ensure shape is valid
+      if (!shape || typeof (shape as any).type !== 'string') {
+        console.log('❓ Invalid shape for switch');
+        return;
       }
-      case 'text':
-        updates = {
-          x: newCenterX,
-          y: newCenterY
-        };
-        console.log('📝 Text updates:', updates);
-        break;
-      default:
-        console.log('❓ Unknown shape type for updates:', shape.type);
-        break;
+      switch ((shape as Shape).type) {
+        case 'rectangle':
+        case 'square':
+        case 'diamond':
+        case 'triangle': {
+          const boxShape = shape as Shape & { x: number; y: number; width: number; height: number };
+          updates = {
+            x: newCenterX - boxShape.width / 2,
+            y: newCenterY - boxShape.height / 2
+          } as Partial<Shape & { x: number; y: number }>;
+          console.log('📦 Box shape updates:', updates);
+          break;
+        }
+        case 'circle': {
+          updates = {
+            x: newCenterX,
+            y: newCenterY
+          } as Partial<Shape & { x: number; y: number }>;
+          console.log('⭕ Circle updates:', updates);
+          break;
+        }
+        case 'arrow': {
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const arrowShape = shape as Shape & { from: Point; to: Point };
+          updates = {
+            from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
+            to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy }
+          } as Partial<Shape & { from: Point; to: Point }>;
+          console.log('➡️ Arrow updates:', updates);
+          break;
+        }
+        case 'text': {
+          updates = {
+            x: newCenterX,
+            y: newCenterY
+          } as Partial<Shape & { x: number; y: number }>;
+          console.log('📝 Text updates:', updates);
+          break;
+        }
+        case 'line': {
+          // Move all points by the delta
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const lineShape = shape as Shape & { points: Point[] };
+          updates = {
+            points: lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
+          } as Partial<Shape & { points: Point[] }>;
+          console.log('📏 Line updates (move):', updates);
+          break;
+        }
+        default:
+          console.log('❓ Unknown shape type for updates:', (shape as Shape).type);
+          break;
+      }
     }
     
     // Update the shape in global state
@@ -317,6 +449,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     setDraggingShapeId(null);
     setDragOffset(null);
     setDraggedShape(null);
+    setLineDragMode(null);
+    setLineDragPoint(null);
     
     // Clear any pending drag timeout
     if (dragTimeout) {
