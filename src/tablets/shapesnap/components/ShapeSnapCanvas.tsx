@@ -14,6 +14,7 @@ interface ShapeSnapCanvasProps {
   onShapeClick?: (shape: Shape, position: Point) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onUpdateShape?: (shapeId: string, updates: any) => void;
+  onDeleteShape?: (shapeId: string) => void;
   onDrawEnd?: (points: Point[]) => Shape | null;
   gridSnappingEnabled?: boolean;
 }
@@ -28,7 +29,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onShapeClick,
   onUpdateLabel,
   onUpdateShape,
-  onDrawEnd,
+  onDeleteShape,
   gridSnappingEnabled
 }) => {
   const [selectedShapeId, setSelectedShapeId] = useState<string | undefined>(undefined);
@@ -57,16 +58,30 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       onShapeClick(shape, position);
     }
     
-    // Only allow editing when in select mode
-    if (currentTool === 'select') {
-      if (selectedShapeId === shape.id) {
-        // If already selected, open label editor
-        setEditingShape(shape);
-        setEditorPosition(position);
-      } else {
-        // Select the shape
+    // Handle different tools
+    switch (currentTool) {
+      case 'select':
+        // Only allow editing when in select mode
+        if (selectedShapeId === shape.id) {
+          // If already selected, open label editor
+          setEditingShape(shape);
+          setEditorPosition(position);
+        } else {
+          // Select the shape
+          setSelectedShapeId(shape.id);
+        }
+        break;
+      case 'eraser':
+        // Delete the shape when in eraser mode
+        if (onDeleteShape) {
+          console.log('🗑️ Deleting shape in eraser mode:', shape.id);
+          onDeleteShape(shape.id);
+        }
+        break;
+      default:
+        // For other tools (draw, text), just select the shape
         setSelectedShapeId(shape.id);
-      }
+        break;
     }
   };
   
@@ -92,16 +107,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   // Double-click handler for shapes (works in any mode)
   const handleShapeDoubleClick = (shape: Shape, _position: Point) => {
     setEditingShape(shape);
-  };
-
-  // After drawing, open label editor if not a line
-  const handleDrawEnd = (points: Point[]) => {
-    if (typeof onDrawEnd === 'function') {
-      const newShape = onDrawEnd(points);
-      if (newShape && newShape.type !== 'line') {
-        setEditingShape(newShape);
-      }
-    }
   };
   
   // Helper to get editor size for a shape
@@ -315,7 +320,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           selectedShapeId,
           editingShape ? editingShape.id : undefined,
           handleShapeDoubleClick,
-          handleShapeMouseDown
+          handleShapeMouseDown,
+          currentTool
         ))}
         
         {/* Render current drawing stroke */}

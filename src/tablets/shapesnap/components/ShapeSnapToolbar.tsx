@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Pencil, 
-  Square, 
-  Circle, 
   MousePointer, 
   Type, 
   Eraser, 

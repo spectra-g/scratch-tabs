@@ -78,7 +78,8 @@ export const renderShape = (
   selectedShapeId?: string,
   editingShapeId?: string,
   onDoubleClick?: (shape: Shape, position: Point) => void,
-  onMouseDown?: (shape: Shape, e: React.MouseEvent) => void
+  onMouseDown?: (shape: Shape, e: React.MouseEvent) => void,
+  currentTool?: string
 ): React.ReactNode => {
   const isSelected = selectedShapeId === shape.id;
   const isEditing = editingShapeId === shape.id;
@@ -124,7 +125,7 @@ export const renderShape = (
     onDoubleClick: handleDoubleClick,
     onMouseDown: handleMouseDown,
     style: {
-      cursor: 'pointer',
+      cursor: currentTool === 'eraser' ? 'crosshair' : 'pointer',
       ...(isSelected && {
         filter: 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.5))'
       })

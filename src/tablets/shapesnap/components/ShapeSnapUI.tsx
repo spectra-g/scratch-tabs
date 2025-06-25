@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShapeSnapData, DrawState, Point, Shape } from '../types';
+import { ShapeSnapData, DrawState } from '../types';
 import { useShapeSnapEngine } from '../hooks/useShapeSnapEngine';
 import { ShapeSnapCanvas } from './ShapeSnapCanvas';
 import { ShapeSnapToolbar } from './ShapeSnapToolbar';
@@ -157,6 +157,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           currentTool={state.currentTool}
           onUpdateLabel={engine.updateShapeLabel}
           onUpdateShape={engine.updateShape}
+          onDeleteShape={engine.deleteShape}
           onDrawEnd={engine.detectAndAddShape}
           gridSnappingEnabled={gridSnappingEnabled}
         />

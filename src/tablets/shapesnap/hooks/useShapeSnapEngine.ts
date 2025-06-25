@@ -66,6 +66,28 @@ export const useShapeSnapEngine = (
     console.log('💾 State updated via onChange');
   }, [state, onChange]);
   
+  // Delete a shape by ID
+  const deleteShape = useCallback((shapeId: string) => {
+    console.log('🗑️ deleteShape called:', shapeId);
+    console.log('📊 Current shapes count:', state.shapes.length);
+    
+    const updatedShapes = state.shapes.filter(shape => shape.id !== shapeId);
+    
+    console.log('✅ Shape deleted, new count:', updatedShapes.length);
+    
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(updatedShapes);
+    
+    onChange({
+      ...state,
+      shapes: updatedShapes,
+      history: newHistory,
+      historyIndex: newHistory.length - 1
+    });
+    
+    console.log('💾 State updated via onChange');
+  }, [state, onChange]);
+  
   // Detect and add a shape based on drawn points
   const detectAndAddShape = useCallback((points: Point[]) => {
     if (points.length < 2) return null;
@@ -195,6 +217,7 @@ export const useShapeSnapEngine = (
     addShape,
     updateShapeLabel,
     updateShape,
+    deleteShape,
     detectAndAddShape,
     setTool,
     toggleCanvasMode,
