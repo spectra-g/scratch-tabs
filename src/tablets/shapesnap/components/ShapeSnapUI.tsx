@@ -94,8 +94,10 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
     
     const finalPoints = [...drawState.currentPoints, point];
     
-    // Detect and add shape
-    engine.detectAndAddShape(finalPoints);
+    // Instead of detecting and adding shape here, call onDrawEnd
+    if (typeof engine.detectAndAddShape === 'function') {
+      engine.detectAndAddShape(finalPoints);
+    }
     
     // Reset drawing state
     setDrawState({
@@ -108,7 +110,9 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   const handleMouseLeave = () => {
     if (drawState.isDrawing && drawState.currentPoints.length > 1) {
       // Finish the drawing if mouse leaves canvas
-      engine.detectAndAddShape(drawState.currentPoints);
+      if (typeof engine.detectAndAddShape === 'function') {
+        engine.detectAndAddShape(drawState.currentPoints);
+      }
     }
     
     setDrawState({
@@ -149,6 +153,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           height={canvasSize.height}
           currentTool={state.currentTool}
           onUpdateLabel={engine.updateShapeLabel}
+          onDrawEnd={engine.detectAndAddShape}
         />
       </div>
       

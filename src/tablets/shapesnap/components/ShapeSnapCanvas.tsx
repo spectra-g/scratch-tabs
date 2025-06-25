@@ -12,6 +12,7 @@ interface ShapeSnapCanvasProps {
   currentTool: ShapeSnapTool;
   onShapeClick?: (shape: Shape, position: Point) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
+  onDrawEnd?: (points: Point[]) => Shape | null;
 }
 
 export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
@@ -22,7 +23,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   height,
   currentTool,
   onShapeClick,
-  onUpdateLabel
+  onUpdateLabel,
+  onDrawEnd
 }) => {
   const [selectedShapeId, setSelectedShapeId] = useState<string | undefined>(undefined);
   const [editingShape, setEditingShape] = useState<Shape | null>(null);
@@ -71,6 +73,21 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     }
   };
   
+  // Double-click handler for shapes (works in any mode)
+  const handleShapeDoubleClick = (shape: Shape, _position: Point) => {
+    setEditingShape(shape);
+  };
+
+  // After drawing, open label editor if not a line
+  const handleDrawEnd = (points: Point[]) => {
+    if (typeof onDrawEnd === 'function') {
+      const newShape = onDrawEnd(points);
+      if (newShape && newShape.type !== 'line') {
+        setEditingShape(newShape);
+      }
+    }
+  };
+  
   // Helper to get editor size for a shape
   const getEditorRect = (shape: Shape) => {
     switch (shape.type) {
@@ -112,7 +129,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           shape, 
           currentTool === 'select' ? handleShapeClick : undefined, 
           selectedShapeId,
-          editingShape ? editingShape.id : undefined
+          editingShape ? editingShape.id : undefined,
+          handleShapeDoubleClick
         ))}
         
         {/* Render current drawing stroke */}

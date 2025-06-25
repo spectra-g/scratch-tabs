@@ -42,7 +42,7 @@ export const useShapeSnapEngine = (
   
   // Detect and add a shape based on drawn points
   const detectAndAddShape = useCallback((points: Point[]) => {
-    if (points.length < 2) return;
+    if (points.length < 2) return null;
     const detectedGeometry = detectShape(points);
     if (detectedGeometry) {
       const strokeColor = state.canvas.mode === 'dark' ? '#ffffff' : '#000000';
@@ -57,7 +57,9 @@ export const useShapeSnapEngine = (
         zIndex: Date.now(),
       } as Shape;
       addShape(newShape);
+      return newShape;
     }
+    return null;
   }, [addShape, state.canvas.mode]);
   
   // Set the current drawing tool

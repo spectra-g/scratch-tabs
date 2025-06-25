@@ -76,7 +76,8 @@ export const renderShape = (
   shape: Shape, 
   onShapeClick?: (shape: Shape, position: Point) => void,
   selectedShapeId?: string,
-  editingShapeId?: string
+  editingShapeId?: string,
+  onDoubleClick?: (shape: Shape, position: Point) => void
 ): React.ReactNode => {
   const isSelected = selectedShapeId === shape.id;
   const isEditing = editingShapeId === shape.id;
@@ -93,9 +94,22 @@ export const renderShape = (
       onShapeClick(shape, position);
     }
   };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDoubleClick) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const position = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      onDoubleClick(shape, position);
+    }
+  };
   
   const baseProps = {
     onClick: handleClick,
+    onDoubleClick: handleDoubleClick,
     style: {
       cursor: 'pointer',
       ...(isSelected && {
