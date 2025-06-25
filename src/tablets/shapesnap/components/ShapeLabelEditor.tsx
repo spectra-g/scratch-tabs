@@ -109,4 +109,4 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
       />
     </foreignObject>
   );
-}; 
+};
