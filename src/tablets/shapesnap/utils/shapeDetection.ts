@@ -400,10 +400,6 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
       return { type: 'line', points };
   }
 
-  if (config.dataCollectionMode) {
-    const roundedPoints = points.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) }));
-  }
-
   const centroid = getCentroid(points);
 
   switch (detectedType) {

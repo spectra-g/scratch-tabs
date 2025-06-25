@@ -260,6 +260,7 @@ const renderArrowTip = (
       return (
         <g {...clickHandlers}>
           <circle
+            key="cross-circle"
             cx={endPoint.x}
             cy={endPoint.y}
             r={crossRadius}
@@ -268,6 +269,7 @@ const renderArrowTip = (
             strokeWidth={strokeWidth}
           />
           <line
+            key="cross-line1"
             x1={endPoint.x - crossSize}
             y1={endPoint.y - crossSize}
             x2={endPoint.x + crossSize}
@@ -277,6 +279,7 @@ const renderArrowTip = (
             strokeLinecap="round"
           />
           <line
+            key="cross-line2"
             x1={endPoint.x - crossSize}
             y1={endPoint.y + crossSize}
             x2={endPoint.x + crossSize}
@@ -305,6 +308,7 @@ const renderArrowTip = (
       return (
         <g {...clickHandlers}>
           <path
+            key="arrowhead-path"
             d={`M ${p5.x},${p5.y} L ${endPoint.x},${endPoint.y} L ${p6.x},${p6.y}`}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
@@ -313,6 +317,7 @@ const renderArrowTip = (
             strokeLinejoin="round"
           />
           <polygon
+            key="arrowhead-fill"
             points={`${endPoint.x},${endPoint.y} ${p5.x},${p5.y} ${p6.x},${p6.y}`}
             fill={strokeColor}
             stroke="none"
@@ -326,6 +331,7 @@ const renderArrowTip = (
       return (
         <g {...clickHandlers}>
           <path
+            key="double-line-outer"
             d={`M ${p7.x},${p7.y} L ${endPoint.x},${endPoint.y} L ${p8.x},${p8.y}`}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
@@ -334,6 +340,7 @@ const renderArrowTip = (
             strokeLinejoin="round"
           />
           <path
+            key="double-line-inner"
             d={`M ${p9.x},${p9.y} L ${endPoint.x},${endPoint.y} L ${p10.x},${p10.y}`}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
@@ -464,6 +471,7 @@ export const renderShape = (
           return (
             <g key={shape.id}>
               <path
+                key={`${shape.id}-path`}
                 {...baseProps}
                 d={`M ${lineShape.points.map(p => `${p.x},${p.y}`).join(' L ')}`}
                 stroke={shape.style.stroke}
@@ -472,7 +480,11 @@ export const renderShape = (
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-              {arrowTips}
+              {arrowTips.map((tip, index) => (
+                <React.Fragment key={`${shape.id}-arrow-${index}`}>
+                  {tip}
+                </React.Fragment>
+              ))}
             </g>
           );
         } else {
@@ -557,6 +569,7 @@ export const renderShape = (
         return (
           <g key={shape.id} {...baseProps}>
             <line
+              key={`${shape.id}-line`}
               x1={shape.from.x}
               y1={shape.from.y}
               x2={shape.to.x}
@@ -566,6 +579,7 @@ export const renderShape = (
               strokeLinecap="round"
             />
             <polyline
+              key={`${shape.id}-arrowhead`}
               points={`${shape.to.x},${shape.to.y} ${arrowPoint1.x},${arrowPoint1.y} ${arrowPoint2.x},${arrowPoint2.y} ${shape.to.x},${shape.to.y}`}
               fill={shape.style.stroke}
               stroke={shape.style.stroke}
@@ -742,7 +756,6 @@ export function renderRoughShapeSVG(svgRef: SVGSVGElement | null, type: string, 
 
 export const renderShapeOverlay = (
   shape: Shape,
-  selectedShapeId?: string,
   editingShapeId?: string,
   sketchFont?: boolean
 ): React.ReactNode => {
@@ -824,7 +837,14 @@ export const renderShapeOverlay = (
         renderArrowTip(endPoint, directionPoint, lineShape.arrowTipEnd!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
       );
     }
-    return <g key={shape.id + '-overlay'}>{arrowTips}{labelElement}</g>;
+    return <g key={shape.id + '-overlay'}>
+      {arrowTips.map((tip, index) => (
+        <React.Fragment key={`${shape.id}-arrow-tip-${index}`}>
+          {tip}
+        </React.Fragment>
+      ))}
+      {labelElement}
+    </g>;
   }
   return labelElement;
 };

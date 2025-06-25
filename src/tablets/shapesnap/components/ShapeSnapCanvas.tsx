@@ -703,7 +703,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                         currentTool,
                         sketchModeEnabled
                       )}
-                      {renderShapeOverlay(shape, selectedShapeId, editingShape ? editingShape.id : undefined, sketchModeEnabled)}
+                      {renderShapeOverlay(shape, editingShape ? editingShape.id : undefined, sketchModeEnabled)}
                     </g>
                   ) : null;
                 }
@@ -762,6 +762,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           <g>
             {/* Vertical guides */}
             <line
+              key="drag-guide-left"
               x1={dragGuides.left}
               y1={0}
               x2={dragGuides.left}
@@ -772,6 +773,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
               opacity={0.3}
             />
             <line
+              key="drag-guide-right"
               x1={dragGuides.right}
               y1={0}
               x2={dragGuides.right}
@@ -783,6 +785,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             />
             {/* Horizontal guides */}
             <line
+              key="drag-guide-top"
               x1={0}
               y1={dragGuides.top}
               x2={width}
@@ -793,6 +796,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
               opacity={0.3}
             />
             <line
+              key="drag-guide-bottom"
               x1={0}
               y1={dragGuides.bottom}
               x2={width}
