@@ -631,9 +631,21 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                     fillStyle: 'hachure',
                     seed: hashCode(shape.id),
                   });
+                  // Render roughjs shape for visuals, then the normal SVG shape (with event handlers) on top, but invisible
                   return roughMarkup ? (
                     <g key={shape.id}>
                       <g dangerouslySetInnerHTML={{ __html: roughMarkup }} />
+                      {/* Invisible hit area for interactivity */}
+                      {renderShape(
+                        // Clone the shape and override style for hit area
+                        { ...shape, style: { ...shape.style, stroke: 'transparent', fill: 'transparent' } },
+                        (s, pos) => { handleShapeClick(s, pos); },
+                        selectedShapeId,
+                        editingShape ? editingShape.id : undefined,
+                        handleShapeDoubleClick,
+                        handleShapeMouseDown,
+                        currentTool
+                      )}
                       {renderShapeOverlay(shape, selectedShapeId, editingShape ? editingShape.id : undefined, sketchModeEnabled)}
                     </g>
                   ) : null;
