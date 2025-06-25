@@ -308,7 +308,7 @@ export const defaultConfig: DetectionConfig = {
     diamondScoreThreshold: 0.3,
     dataCollectionMode: true,
     straightSegmentAngleThreshold: 20,
-    diamondConfidenceThreshold: 0.6,
+    diamondConfidenceThreshold: 0.3,
 };
 
 // --- MAIN SHAPE DETECTION ENGINE ---
@@ -352,14 +352,20 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
       const diamondConfidence = calculateDiamondConfidence(points, box, config);
       console.log(`...Diamond confidence: ${diamondConfidence.toFixed(3)}`);
       
-      const confidenceThreshold = (config as any).diamondConfidenceThreshold ?? 0.6;
+      // Lower threshold for real-world drawings - be more lenient
+      const confidenceThreshold = (config as any).diamondConfidenceThreshold ?? 0.3; // Reduced from 0.4
       if (diamondConfidence > confidenceThreshold) { // Use configurable threshold
           console.log(`...High diamond confidence (${diamondConfidence.toFixed(3)}). Classifying as diamond.`);
           detectedType = 'diamond';
       } else {
           const circleScore = getCircleScore(points, box);
           const circleScoreThreshold = (config as any).circleScoreThreshold ?? 0.15;
-          if (circleScore < circleScoreThreshold) {
+          
+          // Additional check: if we have 3-5 segments and moderate diamond confidence, prefer diamond over circle
+          if (straightSegments >= 3 && straightSegments <= 5 && diamondConfidence > 0.2 && circleScore > 0.1) {
+              console.log(`...Moderate diamond confidence with ${straightSegments} segments. Preferring diamond over circle.`);
+              detectedType = 'diamond';
+          } else if (circleScore < circleScoreThreshold) {
               console.log(`...Circle score detected (${circleScore.toFixed(3)}). Classifying as circle.`);
               detectedType = 'circle';
           } else {
