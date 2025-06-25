@@ -40,6 +40,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const [dragTimeout, setDragTimeout] = useState<NodeJS.Timeout | null>(null);
   const [lineDragMode, setLineDragMode] = useState<'move' | 'resize-start' | 'resize-end' | null>(null);
   const [lineDragPoint, setLineDragPoint] = useState<Point | null>(null);
+  const [mouseDownShape, setMouseDownShape] = useState<{ shape: Shape; initialPos: Point; center: Point } | null>(null);
+  const [hasMoved, setHasMoved] = useState(false);
   
   // Sort shapes by zIndex for proper rendering order
   const sortedShapes = [...shapes].sort((a, b) => a.zIndex - b.zIndex);
@@ -159,7 +161,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     setEditingShape(shape);
   };
   
-  // Mouse down on shape: start dragging
+  // Mouse down on shape: prepare for potential dragging
   const handleShapeMouseDown = (shape: Shape, e: React.MouseEvent) => {
     console.log('🔍 Shape mouse down:', shape.id, shape.type);
     e.stopPropagation();
@@ -167,51 +169,73 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     // Clear any existing timeout
     if (dragTimeout) {
       clearTimeout(dragTimeout);
+      setDragTimeout(null);
     }
     
     const mouseX = e.nativeEvent.offsetX;
     const mouseY = e.nativeEvent.offsetY;
     const mousePoint = { x: mouseX, y: mouseY };
     
-    // For lines, detect drag mode immediately
-    if (shape.type === 'line') {
-      const dragMode = detectLineDragMode(shape, mousePoint);
-      console.log('📏 Line drag mode detected:', dragMode);
-      setLineDragMode(dragMode);
-      
-      if (dragMode === 'resize-start' || dragMode === 'resize-end') {
-        // For resizing, store the fixed point (the endpoint we're NOT dragging)
-        const lineShape = shape as Shape & { points: Point[] };
-        const fixedPoint = dragMode === 'resize-start' ? lineShape.points[lineShape.points.length - 1] : lineShape.points[0];
-        setLineDragPoint(fixedPoint);
-        console.log('📍 Fixed point for resizing:', fixedPoint);
-      }
-    }
-    
+    // Store the initial mouse position and shape info for potential dragging
     const center = getShapeCenter(shape);
+    setMouseDownShape({ shape, initialPos: mousePoint, center });
+    setHasMoved(false);
+    
     console.log('📍 Mouse position:', { mouseX, mouseY });
     console.log('🎯 Shape center:', center);
-    
-    // Delay drag start to allow double-click detection
-    const timeout = setTimeout(() => {
-      console.log('⏰ Starting drag after timeout');
-      setDraggingShapeId(shape.id);
-      setDragOffset({ x: mouseX - center.x, y: mouseY - center.y });
-      console.log('📏 Drag offset set:', { x: mouseX - center.x, y: mouseY - center.y });
-    }, 200); // 200ms delay to allow double-click
-    
-    setDragTimeout(timeout);
   };
 
   // Mouse move: if dragging, update shape position
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!draggingShapeId || !dragOffset) {
-      console.log('❌ Not dragging or no offset:', { draggingShapeId, dragOffset });
-      return;
-    }
-    console.log('🔄 Mouse move while dragging:', draggingShapeId);
     const mouseX = e.nativeEvent.offsetX;
     const mouseY = e.nativeEvent.offsetY;
+    const mousePoint = { x: mouseX, y: mouseY };
+    
+    // Check if we should start dragging (mouse moved from initial position)
+    if (mouseDownShape && !draggingShapeId && !hasMoved) {
+      const distance = Math.sqrt(
+        Math.pow(mousePoint.x - mouseDownShape.initialPos.x, 2) + 
+        Math.pow(mousePoint.y - mouseDownShape.initialPos.y, 2)
+      );
+      
+      // Start dragging if mouse moved more than 5 pixels
+      if (distance > 5) {
+        console.log('🔄 Starting drag due to mouse movement');
+        const shape = mouseDownShape.shape;
+        
+        // For lines, detect drag mode
+        if (shape.type === 'line') {
+          const dragMode = detectLineDragMode(shape, mouseDownShape.initialPos);
+          console.log('📏 Line drag mode detected:', dragMode);
+          setLineDragMode(dragMode);
+          
+          if (dragMode === 'resize-start' || dragMode === 'resize-end') {
+            // For resizing, store the fixed point (the endpoint we're NOT dragging)
+            const lineShape = shape as Shape & { points: Point[] };
+            const fixedPoint = dragMode === 'resize-start' ? lineShape.points[lineShape.points.length - 1] : lineShape.points[0];
+            setLineDragPoint(fixedPoint);
+            console.log('📍 Fixed point for resizing:', fixedPoint);
+          }
+        }
+        
+        setDraggingShapeId(shape.id);
+        setDragOffset({ 
+          x: mouseDownShape.initialPos.x - mouseDownShape.center.x, 
+          y: mouseDownShape.initialPos.y - mouseDownShape.center.y 
+        });
+        setHasMoved(true);
+        console.log('📏 Drag offset set:', { 
+          x: mouseDownShape.initialPos.x - mouseDownShape.center.x, 
+          y: mouseDownShape.initialPos.y - mouseDownShape.center.y 
+        });
+      }
+    }
+    
+    if (!draggingShapeId || !dragOffset) {
+      return;
+    }
+    
+    console.log('🔄 Mouse move while dragging:', draggingShapeId);
     const idx = shapes.findIndex(s => s.id === draggingShapeId);
     if (idx === -1) {
       console.log('❌ Shape not found:', draggingShapeId);
@@ -324,10 +348,22 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 
   // Mouse up: stop dragging and update shape in state
   const handleMouseUp = (e: React.MouseEvent) => {
+    // If we have a mouse down shape but no dragging occurred, treat it as a click
+    if (mouseDownShape && !draggingShapeId) {
+      console.log('🖱️ Mouse up without dragging - treating as click');
+      handleShapeClick(mouseDownShape.shape, mouseDownShape.initialPos);
+      
+      // Clean up mouse down state
+      setMouseDownShape(null);
+      setHasMoved(false);
+      return;
+    }
+    
     if (!draggingShapeId || !dragOffset) {
       console.log('❌ Mouse up but not dragging:', { draggingShapeId, dragOffset });
       return;
     }
+    
     console.log('🛑 Mouse up - finishing drag for:', draggingShapeId);
     const mouseX = e.nativeEvent.offsetX;
     const mouseY = e.nativeEvent.offsetY;
@@ -465,6 +501,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     setDraggedShape(null);
     setLineDragMode(null);
     setLineDragPoint(null);
+    setMouseDownShape(null);
+    setHasMoved(false);
     
     // Clear any pending drag timeout
     if (dragTimeout) {
