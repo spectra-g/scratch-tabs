@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool, ArrowTipStyle } from '../types';
-import { renderShape, getShapeCenter, renderRoughShape, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
+import { renderShape, getShapeCenter, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { cloneDeep } from 'lodash';
 
@@ -47,7 +47,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onUpdateLabel,
   onUpdateShape,
   onDeleteShape,
-  onDrawEnd,
   gridSnappingEnabled,
   sketchModeEnabled
 }) => {
@@ -635,7 +634,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                   return roughMarkup ? (
                     <g key={shape.id}>
                       <g dangerouslySetInnerHTML={{ __html: roughMarkup }} />
-                      {renderShapeOverlay(shape, selectedShapeId, editingShape ? editingShape.id : undefined)}
+                      {renderShapeOverlay(shape, selectedShapeId, editingShape ? editingShape.id : undefined, sketchModeEnabled)}
                     </g>
                   ) : null;
                 }

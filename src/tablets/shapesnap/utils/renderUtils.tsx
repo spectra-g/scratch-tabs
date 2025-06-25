@@ -743,14 +743,15 @@ export function renderRoughShapeSVG(svgRef: SVGSVGElement | null, type: string, 
 export const renderShapeOverlay = (
   shape: Shape,
   selectedShapeId?: string,
-  editingShapeId?: string
+  editingShapeId?: string,
+  sketchFont?: boolean
 ): React.ReactNode => {
-  const isSelected = selectedShapeId === shape.id;
   const isEditing = editingShapeId === shape.id;
   const center = getShapeCenter(shape);
 
   // Render label if it exists and not editing
   const labelElement = (!isEditing && shape.label) ? (() => {
+    const fontFamily = sketchFont ? '"Architects Daughter", Arial, sans-serif' : undefined;
     if (shape.type === 'line') {
       // Use special positioning for lines based on orientation
       const labelPos = getLineLabelPosition(shape as Shape & { points: Point[] });
@@ -766,7 +767,8 @@ export const renderShapeOverlay = (
           style={{
             pointerEvents: 'none',
             userSelect: 'none',
-            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+            textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+            fontFamily
           }}
         >
           {shape.label}
@@ -786,7 +788,8 @@ export const renderShapeOverlay = (
           style={{
             pointerEvents: 'none',
             userSelect: 'none',
-            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+            textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+            fontFamily
           }}
         >
           {shape.label}

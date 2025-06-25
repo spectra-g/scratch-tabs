@@ -10,7 +10,8 @@ import {
   Download, 
   Sun, 
   Moon, 
-  Magnet
+  Magnet,
+  Signature
 } from 'lucide-react';
 import { ShapeSnapTool, ShapeSnapMode } from '../types';
 
@@ -116,7 +117,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           onClick={onToggleSketchMode}
           title={sketchModeEnabled ? 'Disable Sketch Mode' : 'Enable Sketch Mode'}
         >
-          <Pencil size={18} />
+          <Signature size={18} />
         </button>
         
         <button

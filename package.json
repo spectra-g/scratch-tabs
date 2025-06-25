@@ -35,7 +35,7 @@
     "jwt-decode": "^4.0.0",
     "lodash-es": "^4.17.21",
     "lodash.debounce": "^4.0.8",
-    "lucide-react": "^0.344.0",
+    "lucide-react": "^0.523.0",
     "mathjs": "^14.5.2",
     "papaparse": "^5.5.3",
     "punycode": "^2.3.1",
