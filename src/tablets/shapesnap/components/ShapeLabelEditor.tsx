@@ -22,7 +22,14 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
   height,
   canvasMode
 }) => {
-  const [label, setLabel] = useState(shape.label || '');
+  const [label, setLabel] = useState(() => {
+    // For text shapes, use the 'text' property; for others, use the 'label' property
+    if (shape.type === 'text') {
+      return (shape as any).text || '';
+    } else {
+      return shape.label || '';
+    }
+  });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Auto-focus and select text on mount

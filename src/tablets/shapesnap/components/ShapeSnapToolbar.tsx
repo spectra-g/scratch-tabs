@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   Pencil, 
   MousePointer, 
-  Type, 
   Eraser, 
   RotateCcw, 
   RotateCw, 
@@ -50,30 +49,43 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
 }) => {
   const [showExportOptions, setShowExportOptions] = useState(false);
   
-  const tools = [
-    { id: 'draw' as ShapeSnapTool, icon: Pencil, label: 'Draw' },
-    { id: 'select' as ShapeSnapTool, icon: MousePointer, label: 'Select' },
-    { id: 'text' as ShapeSnapTool, icon: Type, label: 'Text' },
-    { id: 'eraser' as ShapeSnapTool, icon: Eraser, label: 'Eraser' }
-  ];
+  const handleDrawToggle = () => {
+    // Toggle between 'draw' and 'select' modes
+    const newTool = currentTool === 'draw' ? 'select' : 'draw';
+    onToolChange(newTool);
+  };
   
   return (
     <div className="flex items-center justify-between p-2 border-b border-gray-700 bg-gray-800">
       <div className="flex items-center space-x-1">
-        {tools.map(tool => (
-          <button
-            key={tool.id}
-            className={`p-2 rounded-md transition-colors ${
-              currentTool === tool.id 
-                ? 'bg-blue-500/20 text-blue-400' 
-                : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
-            }`}
-            onClick={() => onToolChange(tool.id)}
-            title={tool.label}
-          >
-            <tool.icon size={18} />
-          </button>
-        ))}
+        {/* Draw/Select toggle button */}
+        <button
+          className={`p-2 rounded-md transition-colors ${
+            currentTool === 'draw' 
+              ? 'bg-blue-500/20 text-blue-400' 
+              : currentTool === 'select'
+              ? 'bg-green-500/20 text-green-400'
+              : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+          }`}
+          onClick={handleDrawToggle}
+          title={currentTool === 'draw' ? 'Draw Mode (Click to switch to Select)' : 'Select Mode (Click to switch to Draw)'}
+        >
+          {currentTool === 'draw' ? <Pencil size={18} /> : <MousePointer size={18} />}
+        </button>
+        
+        {/* Eraser tool */}
+        <button
+          className={`p-2 rounded-md transition-colors ${
+            currentTool === 'eraser' 
+              ? 'bg-red-500/20 text-red-400' 
+              : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+          }`}
+          onClick={() => onToolChange('eraser')}
+          title="Eraser"
+        >
+          <Eraser size={18} />
+        </button>
+        
         <button
           className={`p-2 rounded-md transition-colors ${
             gridSnappingEnabled ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'

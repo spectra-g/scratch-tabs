@@ -161,6 +161,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           onUpdateLabel={engine.updateShapeLabel}
           onUpdateShape={engine.updateShape}
           onDeleteShape={engine.deleteShape}
+          onAddShape={engine.addShape}
           onDrawEnd={engine.detectAndAddShape}
           gridSnappingEnabled={gridSnappingEnabled}
           sketchModeEnabled={sketchModeEnabled}

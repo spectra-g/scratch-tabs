@@ -357,7 +357,8 @@ export const renderShape = (
   editingShapeId?: string,
   onDoubleClick?: (shape: Shape, position: Point) => void,
   onMouseDown?: (shape: Shape, e: React.MouseEvent) => void,
-  currentTool?: string
+  currentTool?: string,
+  sketchFont?: boolean
 ): React.ReactNode => {
   const isSelected = selectedShapeId === shape.id;
   const isEditing = editingShapeId === shape.id;
@@ -588,6 +589,9 @@ export const renderShape = (
             fontSize={shape.fontSize || 16}
             dominantBaseline="middle"
             textAnchor="middle"
+            style={{
+              fontFamily: sketchFont ? '"Architects Daughter", Arial, sans-serif' : undefined
+            }}
           >
             {shape.text}
           </text>

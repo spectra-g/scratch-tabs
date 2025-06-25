@@ -31,6 +31,7 @@ interface ShapeSnapCanvasProps {
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onUpdateShape?: (shapeId: string, updates: Partial<Shape>) => void;
   onDeleteShape?: (shapeId: string) => void;
+  onAddShape?: (shape: Shape) => void;
   onDrawEnd?: (points: Point[]) => Shape | null;
   gridSnappingEnabled?: boolean;
   sketchModeEnabled?: boolean;
@@ -47,6 +48,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onUpdateLabel,
   onUpdateShape,
   onDeleteShape,
+  onAddShape,
   gridSnappingEnabled,
   sketchModeEnabled
 }) => {
@@ -132,6 +134,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     };
   };
 
+  const generateId = (): string => `shape-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
   const handleShapeClick = (shape: Shape, position: Point) => {
     console.log('🖱️ handleShapeClick called:', { shapeId: shape.id, shapeType: shape.type, position });
     
@@ -140,7 +144,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     }
     
     // Check if this is a click on a line endpoint (for arrow tip cycling)
-    if (shape.type === 'line' && currentTool === 'select') {
+    if (shape.type === 'line' && (currentTool === 'select' || currentTool === 'draw')) {
       console.log('📏 Checking if click is near line endpoint...');
       const lineShape = shape as Shape & { 
         points: Point[]; 
@@ -210,8 +214,19 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   };
   
   const handleLabelSave = (shapeId: string, label: string) => {
-    if (onUpdateLabel) {
-      onUpdateLabel(shapeId, label);
+    // Find the shape to determine its type
+    const shape = shapes.find(s => s.id === shapeId);
+    
+    if (shape && shape.type === 'text') {
+      // For text shapes, update the 'text' property
+      if (onUpdateShape) {
+        onUpdateShape(shapeId, { text: label });
+      }
+    } else {
+      // For all other shapes, update the 'label' property
+      if (onUpdateLabel) {
+        onUpdateLabel(shapeId, label);
+      }
     }
     setEditingShape(null);
   };
@@ -223,8 +238,34 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const handleCanvasClick = (e: React.MouseEvent) => {
     // Only handle canvas clicks if we're not clicking on a shape
     if (e.target === e.currentTarget) {
-      setSelectedShapeId(undefined);
-      setEditingShape(null);
+      // If already editing a label, do nothing
+      if (editingShape) return;
+      // Get click position relative to SVG
+      const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+      const x = snapToGrid(e.clientX - rect.left, 20);
+      const y = snapToGrid(e.clientY - rect.top, 20);
+      // Create a new text shape
+      const newTextShape: Shape = {
+        id: generateId(),
+        type: 'text',
+        x,
+        y,
+        text: '',
+        fontSize: 20,
+        style: {
+          stroke: strokeColor,
+          fill: 'transparent',
+          strokeWidth: 2,
+        },
+        zIndex: Date.now(),
+      };
+      // Add the new shape
+      if (onAddShape) {
+        onAddShape(newTextShape);
+      }
+      // Enter label editing mode for the new shape
+      setEditingShape(newTextShape);
+      setSelectedShapeId(newTextShape.id);
     }
   };
   
@@ -644,14 +685,15 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                         editingShape ? editingShape.id : undefined,
                         handleShapeDoubleClick,
                         handleShapeMouseDown,
-                        currentTool
+                        currentTool,
+                        sketchModeEnabled
                       )}
                       {renderShapeOverlay(shape, selectedShapeId, editingShape ? editingShape.id : undefined, sketchModeEnabled)}
                     </g>
                   ) : null;
                 }
                 default:
-                  return renderShape(shape, (s, pos) => { handleShapeClick(s, pos); }, selectedShapeId, editingShape ? editingShape.id : undefined, handleShapeDoubleClick, handleShapeMouseDown, currentTool);
+                  return renderShape(shape, (s, pos) => { handleShapeClick(s, pos); }, selectedShapeId, editingShape ? editingShape.id : undefined, handleShapeDoubleClick, handleShapeMouseDown, currentTool, sketchModeEnabled);
               }
             })()
           ) : (
@@ -662,7 +704,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
               editingShape ? editingShape.id : undefined,
               handleShapeDoubleClick,
               handleShapeMouseDown,
-              currentTool
+              currentTool,
+              sketchModeEnabled
             )
           )
         ))}
