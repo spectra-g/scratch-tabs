@@ -38,6 +38,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const [draggingShapeId, setDraggingShapeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [draggedShape, setDraggedShape] = useState<Shape | null>(null);
+  const [dragTimeout, setDragTimeout] = useState<NodeJS.Timeout | null>(null);
   
   // Sort shapes by zIndex for proper rendering order
   const sortedShapes = [...shapes].sort((a, b) => a.zIndex - b.zIndex);
@@ -106,6 +107,12 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   
   // Double-click handler for shapes (works in any mode)
   const handleShapeDoubleClick = (shape: Shape, _position: Point) => {
+    console.log('🖱️ Double-click detected, canceling drag timeout');
+    // Cancel the drag timeout to prevent drag from starting
+    if (dragTimeout) {
+      clearTimeout(dragTimeout);
+      setDragTimeout(null);
+    }
     setEditingShape(shape);
   };
   
@@ -138,14 +145,27 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const handleShapeMouseDown = (shape: Shape, e: React.MouseEvent) => {
     console.log('🔍 Shape mouse down:', shape.id, shape.type);
     e.stopPropagation();
+    
+    // Clear any existing timeout
+    if (dragTimeout) {
+      clearTimeout(dragTimeout);
+    }
+    
     const mouseX = e.nativeEvent.offsetX;
     const mouseY = e.nativeEvent.offsetY;
     const center = getShapeCenter(shape);
     console.log('📍 Mouse position:', { mouseX, mouseY });
     console.log('🎯 Shape center:', center);
-    setDraggingShapeId(shape.id);
-    setDragOffset({ x: mouseX - center.x, y: mouseY - center.y });
-    console.log('📏 Drag offset set:', { x: mouseX - center.x, y: mouseY - center.y });
+    
+    // Delay drag start to allow double-click detection
+    const timeout = setTimeout(() => {
+      console.log('⏰ Starting drag after timeout');
+      setDraggingShapeId(shape.id);
+      setDragOffset({ x: mouseX - center.x, y: mouseY - center.y });
+      console.log('📏 Drag offset set:', { x: mouseX - center.x, y: mouseY - center.y });
+    }, 200); // 200ms delay to allow double-click
+    
+    setDragTimeout(timeout);
   };
 
   // Mouse move: if dragging, update shape position
@@ -297,6 +317,13 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     setDraggingShapeId(null);
     setDragOffset(null);
     setDraggedShape(null);
+    
+    // Clear any pending drag timeout
+    if (dragTimeout) {
+      clearTimeout(dragTimeout);
+      setDragTimeout(null);
+    }
+    
     console.log('✅ Drag finished, state reset');
   };
 
