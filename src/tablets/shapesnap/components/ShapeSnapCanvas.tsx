@@ -63,6 +63,14 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const [mouseDownShape, setMouseDownShape] = useState<{ shape: Shape; initialPos: Point; center: Point } | null>(null);
   const [hasMoved, setHasMoved] = useState(false);
   
+  // Drag guides state
+  const [dragGuides, setDragGuides] = useState<{
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  } | null>(null);
+  
   const svgRef = useRef<SVGSVGElement>(null);
   
   // Sort shapes by zIndex for proper rendering order
@@ -132,6 +140,72 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       width,
       height
     };
+  };
+
+  // Helper function to calculate bounding box of a shape
+  const getShapeBoundingBox = (shape: Shape): { left: number; right: number; top: number; bottom: number } => {
+    switch (shape.type) {
+      case 'rectangle':
+      case 'square': {
+        const rectShape = shape as Shape & { x: number; y: number; width: number; height: number };
+        return {
+          left: rectShape.x,
+          right: rectShape.x + rectShape.width,
+          top: rectShape.y,
+          bottom: rectShape.y + rectShape.height
+        };
+      }
+      case 'circle': {
+        const circleShape = shape as Shape & { x: number; y: number; radius: number };
+        const radius = circleShape.radius || 20;
+        return {
+          left: circleShape.x - radius,
+          right: circleShape.x + radius,
+          top: circleShape.y - radius,
+          bottom: circleShape.y + radius
+        };
+      }
+      case 'diamond':
+      case 'triangle': {
+        const polyShape = shape as Shape & { x: number; y: number; width: number; height: number };
+        const halfWidth = (polyShape.width || 40) / 2;
+        const halfHeight = (polyShape.height || 40) / 2;
+        return {
+          left: polyShape.x - halfWidth,
+          right: polyShape.x + halfWidth,
+          top: polyShape.y - halfHeight,
+          bottom: polyShape.y + halfHeight
+        };
+      }
+      case 'text': {
+        const textShape = shape as Shape & { x: number; y: number; fontSize?: number };
+        const fontSize = textShape.fontSize || 16;
+        const textWidth = (textShape as any).text ? (textShape as any).text.length * fontSize * 0.6 : 50; // rough estimate
+        const textHeight = fontSize;
+        return {
+          left: textShape.x - textWidth / 2,
+          right: textShape.x + textWidth / 2,
+          top: textShape.y - textHeight / 2,
+          bottom: textShape.y + textHeight / 2
+        };
+      }
+      case 'line': {
+        const lineShape = shape as Shape & { points: Point[] };
+        if (!lineShape.points || lineShape.points.length === 0) {
+          return { left: 0, right: 0, top: 0, bottom: 0 };
+        }
+        const xCoords = lineShape.points.map(p => p.x);
+        const yCoords = lineShape.points.map(p => p.y);
+        return {
+          left: Math.min(...xCoords),
+          right: Math.max(...xCoords),
+          top: Math.min(...yCoords),
+          bottom: Math.max(...yCoords)
+        };
+      }
+      default:
+        return { left: 0, right: 0, top: 0, bottom: 0 };
+    }
   };
 
   const generateId = (): string => `shape-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -463,6 +537,10 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     
     // Update the dragged shape for visual feedback
     setDraggedShape(updatedShape);
+    
+    // Calculate and update drag guides
+    const boundingBox = getShapeBoundingBox(updatedShape);
+    setDragGuides(boundingBox);
   };
 
   // Mouse up: stop dragging and update shape in state
@@ -629,6 +707,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     setLineDragPoint(null);
     setMouseDownShape(null);
     setHasMoved(false);
+    setDragGuides(null);
     
     // Clear any pending drag timeout
     if (dragTimeout) {
@@ -740,6 +819,54 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
               />
             );
           })()
+        )}
+
+        {/* Render drag guides */}
+        {dragGuides && (
+          <g>
+            {/* Vertical guides */}
+            <line
+              x1={dragGuides.left}
+              y1={0}
+              x2={dragGuides.left}
+              y2={height}
+              stroke={canvasSettings.mode === 'dark' ? '#ffffff' : '#000000'}
+              strokeWidth={1}
+              strokeDasharray="5,5"
+              opacity={0.3}
+            />
+            <line
+              x1={dragGuides.right}
+              y1={0}
+              x2={dragGuides.right}
+              y2={height}
+              stroke={canvasSettings.mode === 'dark' ? '#ffffff' : '#000000'}
+              strokeWidth={1}
+              strokeDasharray="5,5"
+              opacity={0.3}
+            />
+            {/* Horizontal guides */}
+            <line
+              x1={0}
+              y1={dragGuides.top}
+              x2={width}
+              y2={dragGuides.top}
+              stroke={canvasSettings.mode === 'dark' ? '#ffffff' : '#000000'}
+              strokeWidth={1}
+              strokeDasharray="5,5"
+              opacity={0.3}
+            />
+            <line
+              x1={0}
+              y1={dragGuides.bottom}
+              x2={width}
+              y2={dragGuides.bottom}
+              stroke={canvasSettings.mode === 'dark' ? '#ffffff' : '#000000'}
+              strokeWidth={1}
+              strokeDasharray="5,5"
+              opacity={0.3}
+            />
+          </g>
         )}
       </svg>
     </div>

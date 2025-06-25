@@ -196,29 +196,95 @@ export const useShapeSnapEngine = (
   
   // Export the canvas to an image
   const exportToImage = useCallback(() => {
-    const svgElement = document.querySelector('svg');
-    if (!svgElement) return;
+    console.log('📸 Starting PNG export...');
+    
+    // Try multiple selectors to find the SVG element
+    let svgElement = document.querySelector('.relative.w-full.h-full svg') as SVGSVGElement;
+    
+    if (!svgElement) {
+      // Fallback: look for any SVG in the current viewport
+      const allSvgs = document.querySelectorAll('svg');
+      console.log('🔍 Found SVGs on page:', allSvgs.length);
+      
+      for (let i = 0; i < allSvgs.length; i++) {
+        const svg = allSvgs[i] as SVGSVGElement;
+        console.log(`SVG ${i}:`, {
+          width: svg.clientWidth,
+          height: svg.clientHeight,
+          className: svg.className,
+          parentClass: svg.parentElement?.className
+        });
+        
+        // Look for the one that's likely our canvas (has reasonable dimensions)
+        if (svg.clientWidth > 100 && svg.clientHeight > 100) {
+          svgElement = svg;
+          console.log('✅ Found likely canvas SVG:', svgElement);
+          break;
+        }
+      }
+    }
+    
+    if (!svgElement) {
+      console.error('❌ SVG element not found for export');
+      alert('Could not find the canvas to export. Please try again.');
+      return;
+    }
+    
+    console.log('📐 SVG dimensions:', { width: svgElement.clientWidth, height: svgElement.clientHeight });
+    
     const canvas = document.createElement('canvas');
-    canvas.width = svgElement.clientWidth;
-    canvas.height = svgElement.clientHeight;
+    const width = svgElement.clientWidth || 800; // fallback width
+    const height = svgElement.clientHeight || 600; // fallback height
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('❌ Could not get canvas context');
+      return;
+    }
+    
+    // Set background color based on canvas mode
+    const backgroundColor = state.canvas.mode === 'dark' ? '#1e1e1e' : '#ffffff';
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, width, height);
+    
+    // Serialize the SVG
     const svgData = new XMLSerializer().serializeToString(svgElement);
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
-    const ctx = canvas.getContext('2d');
+    
     const img = new Image();
     img.onload = () => {
-      if (ctx) {
+      try {
         ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
+        
+        // Convert to PNG and download
         const pngUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
-        link.download = 'shapesnap-export.png';
+        link.download = `shapesnap-export-${Date.now()}.png`;
         link.href = pngUrl;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        
+        console.log('✅ PNG export completed successfully');
+      } catch (error) {
+        console.error('❌ Error during PNG export:', error);
+        alert('Error during export. Please try again.');
       }
     };
+    
+    img.onerror = (error) => {
+      console.error('❌ Error loading SVG for export:', error);
+      URL.revokeObjectURL(url);
+      alert('Error loading canvas for export. Please try again.');
+    };
+    
     img.src = url;
-  }, []);
+  }, [state.canvas.mode]);
   
   return {
     addShape,
