@@ -183,7 +183,6 @@ function sweepCircleThreshold(testCases: TestSample[]) {
     // @ts-ignore
     config.circleScoreThreshold = t;
     // Patch detectShape to use this threshold for this run
-    const originalDetectShape = detectShape;
     (global as any)._circleScoreThreshold = t;
     const results = testConfig(config, testCases);
     const circleAcc = parseFloat(results.results.circle.accuracy);
@@ -200,16 +199,6 @@ function sweepCircleThreshold(testCases: TestSample[]) {
   }
   console.log(`\n🔬 Best circle threshold: ${bestThreshold.toFixed(2)} | Circle acc: ${bestCircle}% | Diamond acc: ${bestDiamond}%`);
   return bestThreshold;
-}
-
-// Patch detectShape to use global _circleScoreThreshold if set
-const origDetectShape = detectShape;
-function detectShapePatched(points: any, config: any) {
-  const threshold = (global as any)._circleScoreThreshold ?? 0.15;
-  (global as any)._circleScoreThreshold = undefined;
-  // Patch the function body to use this threshold
-  // (We can't easily inject, so just set a global and use it in the main file)
-  return origDetectShape(points, { ...config, circleScoreThreshold: threshold });
 }
 
 // --- TEST SUITE ---

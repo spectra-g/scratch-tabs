@@ -21,6 +21,25 @@ export const useShapeSnapEngine = (
     });
   }, [state, onChange]);
   
+  // Update a shape's label
+  const updateShapeLabel = useCallback((shapeId: string, label: string) => {
+    const updatedShapes = state.shapes.map(shape => 
+      shape.id === shapeId 
+        ? { ...shape, label: label || undefined }
+        : shape
+    );
+    
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(updatedShapes);
+    
+    onChange({
+      ...state,
+      shapes: updatedShapes,
+      history: newHistory,
+      historyIndex: newHistory.length - 1
+    });
+  }, [state, onChange]);
+  
   // Detect and add a shape based on drawn points
   const detectAndAddShape = useCallback((points: Point[]) => {
     if (points.length < 2) return;
@@ -146,6 +165,7 @@ export const useShapeSnapEngine = (
   
   return {
     addShape,
+    updateShapeLabel,
     detectAndAddShape,
     setTool,
     toggleCanvasMode,

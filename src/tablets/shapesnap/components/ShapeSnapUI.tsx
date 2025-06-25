@@ -147,6 +147,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           currentPoints={drawState.currentPoints}
           width={canvasSize.width}
           height={canvasSize.height}
+          currentTool={state.currentTool}
+          onUpdateLabel={engine.updateShapeLabel}
         />
       </div>
       
