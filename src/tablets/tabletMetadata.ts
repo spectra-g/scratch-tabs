@@ -19,6 +19,7 @@ export const tabletMetadata: TabletMetadata[] = [
   { id: 'regex', label: 'Regex Tester', keywords: ['regex', 'regexp', 'pattern', 'match', 'test', 'validate', 'expression'] },
   { id: 'restclient', label: 'REST Client', keywords: ['rest', 'api', 'http', 'client', 'request', 'curl'] },
   { id: 'runcode', label: 'Run Code', keywords: ['code', 'run', 'execute', 'programming', 'language'] },
+  { id: 'shapesnap', label: 'Shape Snap', keywords: ['draw', 'diagram', 'shapes', 'sketch', 'flowchart', 'whiteboard'] },
   { id: 'usergen', label: 'User Generator', keywords: ['user', 'generator', 'random', 'profile', 'data'] },
   { id: 'uuid', label: 'UUID Generator', keywords: ['uuid', 'guid', 'identifier', 'unique', 'generate'] },
   { id: 'vault', label: 'Vault', keywords: ['vault', 'secure', 'store', 'password', 'credentials', 'secrets'] }

@@ -11,7 +11,8 @@ export default {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       useESM: true,
       tsconfig: {
-        jsx: 'react-jsx'
+        jsx: 'react-jsx',
+        resolveJsonModule: true
       }
     }]
   },
