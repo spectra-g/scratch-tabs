@@ -77,7 +77,8 @@ export const renderShape = (
   onShapeClick?: (shape: Shape, position: Point) => void,
   selectedShapeId?: string,
   editingShapeId?: string,
-  onDoubleClick?: (shape: Shape, position: Point) => void
+  onDoubleClick?: (shape: Shape, position: Point) => void,
+  onMouseDown?: (shape: Shape, e: React.MouseEvent) => void
 ): React.ReactNode => {
   const isSelected = selectedShapeId === shape.id;
   const isEditing = editingShapeId === shape.id;
@@ -106,10 +107,22 @@ export const renderShape = (
       onDoubleClick(shape, position);
     }
   };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    console.log('🖱️ Shape mouse down triggered:', shape.id, shape.type);
+    e.stopPropagation();
+    if (onMouseDown) {
+      console.log('📞 Calling onMouseDown for shape:', shape.id);
+      onMouseDown(shape, e);
+    } else {
+      console.log('❌ No onMouseDown handler provided');
+    }
+  };
   
   const baseProps = {
     onClick: handleClick,
     onDoubleClick: handleDoubleClick,
+    onMouseDown: handleMouseDown,
     style: {
       cursor: 'pointer',
       ...(isSelected && {

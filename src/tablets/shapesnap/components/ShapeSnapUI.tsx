@@ -16,6 +16,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
     currentPoints: [],
     startPoint: null
   });
+  const [gridSnappingEnabled, setGridSnappingEnabled] = useState(false);
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -135,6 +136,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
         onRedo={engine.redo}
         onClear={engine.clearCanvas}
         onExport={engine.exportToImage}
+        gridSnappingEnabled={gridSnappingEnabled}
+        onToggleGridSnapping={() => setGridSnappingEnabled(s => !s)}
       />
       
       <div 
@@ -153,7 +156,9 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           height={canvasSize.height}
           currentTool={state.currentTool}
           onUpdateLabel={engine.updateShapeLabel}
+          onUpdateShape={engine.updateShape}
           onDrawEnd={engine.detectAndAddShape}
+          gridSnappingEnabled={gridSnappingEnabled}
         />
       </div>
       

@@ -11,7 +11,8 @@ import {
   Trash2, 
   Download, 
   Sun, 
-  Moon 
+  Moon, 
+  Magnet
 } from 'lucide-react';
 import { ShapeSnapTool, ShapeSnapMode } from '../types';
 
@@ -26,6 +27,8 @@ interface ShapeSnapToolbarProps {
   onRedo: () => void;
   onClear: () => void;
   onExport: () => void;
+  gridSnappingEnabled: boolean;
+  onToggleGridSnapping: () => void;
 }
 
 export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
@@ -38,7 +41,9 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
   onUndo,
   onRedo,
   onClear,
-  onExport
+  onExport,
+  gridSnappingEnabled,
+  onToggleGridSnapping
 }) => {
   const [showExportOptions, setShowExportOptions] = useState(false);
   
@@ -66,6 +71,15 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
             <tool.icon size={18} />
           </button>
         ))}
+        <button
+          className={`p-2 rounded-md transition-colors ${
+            gridSnappingEnabled ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+          }`}
+          onClick={onToggleGridSnapping}
+          title={gridSnappingEnabled ? 'Disable Grid Snapping' : 'Enable Grid Snapping'}
+        >
+          <Magnet size={18} />
+        </button>
       </div>
       
       <div className="flex items-center space-x-1">

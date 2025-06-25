@@ -140,7 +140,7 @@ function findOptimalConfigFast(testCases: TestSample[]): { config: DetectionConf
   console.log(`\nTesting ${quickTests.length} targeted configurations...`);
   
   quickTests.forEach((configParams, index) => {
-    const results = testConfig(configParams, testCases);
+    const results = testConfig({ ...defaultConfig, ...configParams }, testCases);
     
     // Weighted score prioritizing circle and square improvements
     const weightedScore = (
@@ -152,7 +152,7 @@ function findOptimalConfigFast(testCases: TestSample[]): { config: DetectionConf
     
     if (weightedScore > bestScore) {
       bestScore = weightedScore;
-      bestConfig = configParams;
+      bestConfig = { ...defaultConfig, ...configParams };
       bestResults = results;
       
       console.log(`\n🎯 Better config found (${index + 1}/${quickTests.length}):`);
