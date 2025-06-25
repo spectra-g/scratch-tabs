@@ -309,37 +309,44 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     setEditingShape(null);
   };
   
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    // Only handle canvas clicks if we're not clicking on a shape
+  const handleCanvasDoubleClick = (e: React.MouseEvent) => {
+    // Only handle canvas double clicks if we're not clicking on a shape
     if (e.target === e.currentTarget) {
       // If already editing a label, do nothing
       if (editingShape) return;
+      
       // Get click position relative to SVG
-      const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-      const x = snapToGrid(e.clientX - rect.left, 20);
-      const y = snapToGrid(e.clientY - rect.top, 20);
-      // Create a new text shape
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Snap to grid if enabled
+      const snappedX = snapToGrid(x, 20);
+      const snappedY = snapToGrid(y, 20);
+      
+      // Create new text shape
       const newTextShape: Shape = {
         id: generateId(),
         type: 'text',
-        x,
-        y,
+        x: snappedX,
+        y: snappedY,
         text: '',
-        fontSize: 20,
+        fontSize: 16,
         style: {
           stroke: strokeColor,
           fill: 'transparent',
-          strokeWidth: 2,
+          strokeWidth: 1,
         },
         zIndex: Date.now(),
       };
-      // Add the new shape
+      
+      console.log('📝 Creating new text shape at:', { x: snappedX, y: snappedY });
+      
+      // Add the shape and immediately start editing
       if (onAddShape) {
         onAddShape(newTextShape);
+        setEditingShape(newTextShape);
       }
-      // Enter label editing mode for the new shape
-      setEditingShape(newTextShape);
-      setSelectedShapeId(newTextShape.id);
     }
   };
   
@@ -728,7 +735,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           backgroundColor: canvasSettings.background,
           touchAction: 'none'
         }}
-        onClick={handleCanvasClick}
+        onDoubleClick={handleCanvasDoubleClick}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
