@@ -58,6 +58,7 @@ export const getShapeCenter = (shape: Shape): Point => {
       return { x: shape.x, y: shape.y };
     case 'diamond':
     case 'triangle':
+      // For diamond and triangle, x and y represent the center, not top-left corner
       return { x: shape.x, y: shape.y };
     case 'arrow':
       return { 
@@ -68,6 +69,45 @@ export const getShapeCenter = (shape: Shape): Point => {
       return { x: shape.x, y: shape.y };
     default:
       return { x: 0, y: 0 };
+  }
+};
+
+// Helper function to calculate line label position based on orientation
+const getLineLabelPosition = (shape: Shape & { points: Point[] }): { x: number; y: number; textAnchor: string; dominantBaseline: string } => {
+  if (!shape.points || shape.points.length < 2) {
+    return { x: 0, y: 0, textAnchor: 'middle', dominantBaseline: 'middle' };
+  }
+  
+  const start = shape.points[0];
+  const end = shape.points[shape.points.length - 1];
+  
+  // Calculate the middle point of the line
+  const midX = (start.x + end.x) / 2;
+  const midY = (start.y + end.y) / 2;
+  
+  // Calculate the angle of the line
+  const deltaX = end.x - start.x;
+  const deltaY = end.y - start.y;
+  
+  // Determine if the line is more horizontal or vertical
+  const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+  
+  if (isHorizontal) {
+    // For horizontal lines, place label above the line
+    return {
+      x: midX,
+      y: midY - 15, // 15 pixels above the line
+      textAnchor: 'middle',
+      dominantBaseline: 'bottom'
+    };
+  } else {
+    // For vertical lines, place label to the right of the line
+    return {
+      x: midX + 15, // 15 pixels to the right of the line
+      y: midY,
+      textAnchor: 'start',
+      dominantBaseline: 'middle'
+    };
   }
 };
 
@@ -253,24 +293,50 @@ export const renderShape = (
   })();
 
   // Render label if it exists and not editing
-  const labelElement = (!isEditing && shape.label) ? (
-    <text
-      key={`${shape.id}-label`}
-      x={center.x}
-      y={center.y + (shape.type === 'line' ? 20 : 0)}
-      fill={shape.style.stroke}
-      fontSize="12"
-      dominantBaseline="middle"
-      textAnchor="middle"
-      style={{
-        pointerEvents: 'none',
-        userSelect: 'none',
-        textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-      }}
-    >
-      {shape.label}
-    </text>
-  ) : null;
+  const labelElement = (!isEditing && shape.label) ? (() => {
+    if (shape.type === 'line') {
+      // Use special positioning for lines based on orientation
+      const labelPos = getLineLabelPosition(shape as Shape & { points: Point[] });
+      return (
+        <text
+          key={`${shape.id}-label`}
+          x={labelPos.x}
+          y={labelPos.y}
+          fill={shape.style.stroke}
+          fontSize="12"
+          dominantBaseline={labelPos.dominantBaseline}
+          textAnchor={labelPos.textAnchor}
+          style={{
+            pointerEvents: 'none',
+            userSelect: 'none',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+          }}
+        >
+          {shape.label}
+        </text>
+      );
+    } else {
+      // Use standard center positioning for other shapes
+      return (
+        <text
+          key={`${shape.id}-label`}
+          x={center.x}
+          y={center.y}
+          fill={shape.style.stroke}
+          fontSize="12"
+          dominantBaseline="middle"
+          textAnchor="middle"
+          style={{
+            pointerEvents: 'none',
+            userSelect: 'none',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+          }}
+        >
+          {shape.label}
+        </text>
+      );
+    }
+  })() : null;
 
   return (
     <g key={shape.id}>
