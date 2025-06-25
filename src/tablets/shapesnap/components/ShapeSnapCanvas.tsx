@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool, ArrowTipStyle } from '../types';
-import { renderShape, getShapeCenter } from '../utils/renderUtils';
+import { renderShape, getShapeCenter, renderRoughShape, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { cloneDeep } from 'lodash';
 
@@ -33,6 +33,7 @@ interface ShapeSnapCanvasProps {
   onDeleteShape?: (shapeId: string) => void;
   onDrawEnd?: (points: Point[]) => Shape | null;
   gridSnappingEnabled?: boolean;
+  sketchModeEnabled?: boolean;
 }
 
 export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
@@ -46,7 +47,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onUpdateLabel,
   onUpdateShape,
   onDeleteShape,
-  gridSnappingEnabled
+  onDrawEnd,
+  gridSnappingEnabled,
+  sketchModeEnabled
 }) => {
   const [selectedShapeId, setSelectedShapeId] = useState<string | undefined>(undefined);
   const [editingShape, setEditingShape] = useState<Shape | null>(null);
@@ -58,6 +61,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const [lineDragPoint, setLineDragPoint] = useState<Point | null>(null);
   const [mouseDownShape, setMouseDownShape] = useState<{ shape: Shape; initialPos: Point; center: Point } | null>(null);
   const [hasMoved, setHasMoved] = useState(false);
+  
+  const svgRef = useRef<SVGSVGElement>(null);
   
   // Sort shapes by zIndex for proper rendering order
   const sortedShapes = [...shapes].sort((a, b) => a.zIndex - b.zIndex);
@@ -136,7 +141,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     }
     
     // Check if this is a click on a line endpoint (for arrow tip cycling)
-    if (shape.type === 'line') {
+    if (shape.type === 'line' && currentTool === 'select') {
       console.log('📏 Checking if click is near line endpoint...');
       const lineShape = shape as Shape & { 
         points: Point[]; 
@@ -597,6 +602,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   return (
     <div className="relative w-full h-full">
       <svg 
+        ref={svgRef}
         width={width} 
         height={height}
         style={{ 
@@ -608,14 +614,46 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         onMouseUp={handleMouseUp}
       >
         {/* Render all shapes */}
-        {shapesToRender.map(shape => renderShape(
-          shape, 
-          (s, pos) => { handleShapeClick(s, pos); },
-          selectedShapeId,
-          editingShape ? editingShape.id : undefined,
-          handleShapeDoubleClick,
-          handleShapeMouseDown,
-          currentTool
+        {shapesToRender.map(shape => (
+          sketchModeEnabled && svgRef.current ? (
+            (() => {
+              switch (shape.type) {
+                case 'rectangle':
+                case 'square':
+                case 'circle':
+                case 'diamond':
+                case 'triangle':
+                case 'line': {
+                  const roughMarkup = renderRoughShapeSVG(svgRef.current, shape.type, shape, {
+                    roughness: 2.2,
+                    stroke: shape.style?.stroke || '#000',
+                    strokeWidth: shape.style?.strokeWidth || 2,
+                    fill: shape.style?.fill || undefined,
+                    fillStyle: 'hachure',
+                    seed: hashCode(shape.id),
+                  });
+                  return roughMarkup ? (
+                    <g key={shape.id}>
+                      <g dangerouslySetInnerHTML={{ __html: roughMarkup }} />
+                      {renderShapeOverlay(shape, selectedShapeId, editingShape ? editingShape.id : undefined)}
+                    </g>
+                  ) : null;
+                }
+                default:
+                  return renderShape(shape, (s, pos) => { handleShapeClick(s, pos); }, selectedShapeId, editingShape ? editingShape.id : undefined, handleShapeDoubleClick, handleShapeMouseDown, currentTool);
+              }
+            })()
+          ) : (
+            renderShape(
+              shape, 
+              (s, pos) => { handleShapeClick(s, pos); },
+              selectedShapeId,
+              editingShape ? editingShape.id : undefined,
+              handleShapeDoubleClick,
+              handleShapeMouseDown,
+              currentTool
+            )
+          )
         ))}
         
         {/* Render current drawing stroke */}

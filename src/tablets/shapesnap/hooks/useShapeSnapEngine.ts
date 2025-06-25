@@ -105,8 +105,8 @@ export const useShapeSnapEngine = (
         zIndex: Date.now(),
       } as Shape;
       
-      // Add default arrow tip to lines
-      if (newShape.type === 'line') {
+      // Add default arrow tip to straight lines only
+      if (newShape.type === 'line' && newShape.points && newShape.points.length === 2) {
         (newShape as any).arrowTipEnd = 'simple';
         (newShape as any).arrowTipSize = 10;
       }

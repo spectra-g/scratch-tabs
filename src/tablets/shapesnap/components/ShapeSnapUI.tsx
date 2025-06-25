@@ -17,6 +17,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
     startPoint: null
   });
   const [gridSnappingEnabled, setGridSnappingEnabled] = useState(false);
+  const [sketchModeEnabled, setSketchModeEnabled] = useState(false);
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -138,6 +139,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
         onExport={engine.exportToImage}
         gridSnappingEnabled={gridSnappingEnabled}
         onToggleGridSnapping={() => setGridSnappingEnabled(s => !s)}
+        sketchModeEnabled={sketchModeEnabled}
+        onToggleSketchMode={() => setSketchModeEnabled(s => !s)}
       />
       
       <div 
@@ -160,6 +163,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           onDeleteShape={engine.deleteShape}
           onDrawEnd={engine.detectAndAddShape}
           gridSnappingEnabled={gridSnappingEnabled}
+          sketchModeEnabled={sketchModeEnabled}
         />
       </div>
       

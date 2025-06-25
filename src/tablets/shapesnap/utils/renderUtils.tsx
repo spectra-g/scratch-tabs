@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shape, Point, ArrowTipStyle } from '../types';
+import rough from 'roughjs/bin/rough';
 
 // Calculate the arrowhead points
 const calculateArrowhead = (from: Point, to: Point, headSize = 10): [Point, Point] => {
@@ -649,3 +650,190 @@ export const renderShape = (
     </g>
   );
 };
+
+// Helper to render a shape in sketch mode using roughjs
+export function renderRoughShape(svgRef: SVGSVGElement | null, type: string, props: any, roughOptions: any) {
+  if (!svgRef) return null;
+  const rc = rough.svg(svgRef);
+  switch (type) {
+    case 'rectangle':
+      return rc.rectangle(props.x, props.y, props.width, props.height, roughOptions);
+    case 'square':
+      return rc.rectangle(props.x, props.y, props.width, props.height, roughOptions);
+    case 'circle':
+      return rc.circle(props.x, props.y, props.radius * 2, roughOptions);
+    case 'diamond': {
+      // Draw as polygon
+      const halfW = props.width / 2, halfH = props.height / 2;
+      const points: [number, number][] = [
+        [props.x, props.y - halfH],
+        [props.x + halfW, props.y],
+        [props.x, props.y + halfH],
+        [props.x - halfW, props.y]
+      ];
+      return rc.polygon(points, roughOptions);
+    }
+    case 'triangle': {
+      const halfW = props.width / 2, halfH = props.height / 2;
+      const points: [number, number][] = [
+        [props.x, props.y - halfH],
+        [props.x - halfW, props.y + halfH],
+        [props.x + halfW, props.y + halfH]
+      ];
+      return rc.polygon(points, roughOptions);
+    }
+    case 'line': {
+      const { points } = props;
+      if (points.length < 2) return null;
+      return rc.linearPath(points.map((p: {x: number, y: number}) => [p.x, p.y] as [number, number]), roughOptions);
+    }
+    default:
+      return null;
+  }
+}
+
+// Helper to render a shape in sketch mode using roughjs and return SVG markup as a string
+export function renderRoughShapeSVG(svgRef: SVGSVGElement | null, type: string, props: any, roughOptions: any): string | null {
+  if (!svgRef) return null;
+  const rc = rough.svg(svgRef);
+  let node: SVGElement | null = null;
+  switch (type) {
+    case 'rectangle':
+      node = rc.rectangle(props.x, props.y, props.width, props.height, roughOptions);
+      break;
+    case 'square':
+      node = rc.rectangle(props.x, props.y, props.width, props.height, roughOptions);
+      break;
+    case 'circle':
+      node = rc.circle(props.x, props.y, props.radius * 2, roughOptions);
+      break;
+    case 'diamond': {
+      const halfW = props.width / 2, halfH = props.height / 2;
+      const points: [number, number][] = [
+        [props.x, props.y - halfH],
+        [props.x + halfW, props.y],
+        [props.x, props.y + halfH],
+        [props.x - halfW, props.y]
+      ];
+      node = rc.polygon(points, roughOptions);
+      break;
+    }
+    case 'triangle': {
+      const halfW = props.width / 2, halfH = props.height / 2;
+      const points: [number, number][] = [
+        [props.x, props.y - halfH],
+        [props.x - halfW, props.y + halfH],
+        [props.x + halfW, props.y + halfH]
+      ];
+      node = rc.polygon(points, roughOptions);
+      break;
+    }
+    case 'line': {
+      const { points } = props;
+      if (points.length < 2) return null;
+      node = rc.linearPath(points.map((p: {x: number, y: number}) => [p.x, p.y] as [number, number]), roughOptions);
+      break;
+    }
+    default:
+      return null;
+  }
+  return node ? node.outerHTML : null;
+}
+
+export const renderShapeOverlay = (
+  shape: Shape,
+  selectedShapeId?: string,
+  editingShapeId?: string
+): React.ReactNode => {
+  const isSelected = selectedShapeId === shape.id;
+  const isEditing = editingShapeId === shape.id;
+  const center = getShapeCenter(shape);
+
+  // Render label if it exists and not editing
+  const labelElement = (!isEditing && shape.label) ? (() => {
+    if (shape.type === 'line') {
+      // Use special positioning for lines based on orientation
+      const labelPos = getLineLabelPosition(shape as Shape & { points: Point[] });
+      return (
+        <text
+          key={`${shape.id}-label`}
+          x={labelPos.x}
+          y={labelPos.y}
+          fill={shape.style.stroke}
+          fontSize="12"
+          dominantBaseline={labelPos.dominantBaseline}
+          textAnchor={labelPos.textAnchor}
+          style={{
+            pointerEvents: 'none',
+            userSelect: 'none',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+          }}
+        >
+          {shape.label}
+        </text>
+      );
+    } else {
+      // For circles and all other shapes, label is centered
+      return (
+        <text
+          key={`${shape.id}-label`}
+          x={center.x}
+          y={center.y}
+          fill={shape.style.stroke}
+          fontSize="12"
+          dominantBaseline="middle"
+          textAnchor="middle"
+          style={{
+            pointerEvents: 'none',
+            userSelect: 'none',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+          }}
+        >
+          {shape.label}
+        </text>
+      );
+    }
+  })() : null;
+
+  // Render arrow tips for lines
+  if (shape.type === 'line') {
+    const lineShape = shape as Shape & { 
+      points: Point[]; 
+      arrowTipStart?: ArrowTipStyle; 
+      arrowTipEnd?: ArrowTipStyle; 
+      arrowTipSize?: number 
+    };
+    const hasStartArrow = lineShape.arrowTipStart && lineShape.arrowTipStart !== 'none' && lineShape.points.length >= 2;
+    const hasEndArrow = lineShape.arrowTipEnd && lineShape.arrowTipEnd !== 'none' && lineShape.points.length >= 2;
+    const arrowTipSize = lineShape.arrowTipSize || 10;
+    const arrowTips = [];
+    if (hasStartArrow) {
+      const startPoint = lineShape.points[0];
+      const directionPoint = lineShape.points[1];
+      arrowTips.push(
+        renderArrowTip(startPoint, directionPoint, lineShape.arrowTipStart!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
+      );
+    }
+    if (hasEndArrow) {
+      const endPoint = lineShape.points[lineShape.points.length - 1];
+      const directionPoint = lineShape.points[lineShape.points.length - 2];
+      arrowTips.push(
+        renderArrowTip(endPoint, directionPoint, lineShape.arrowTipEnd!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
+      );
+    }
+    return <g key={shape.id + '-overlay'}>{arrowTips}{labelElement}</g>;
+  }
+  return labelElement;
+};
+
+// Stable hash function for string ids
+export function hashCode(str: string): number {
+  let hash = 0, i, chr;
+  if (str.length === 0) return hash;
+  for (i = 0; i < str.length; i++) {
+    chr = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}

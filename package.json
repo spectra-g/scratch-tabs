@@ -46,6 +46,7 @@
     "react-router-dom": "^6.22.3",
     "react-window": "^1.8.11",
     "remark-gfm": "^4.0.1",
+    "roughjs": "^4.6.6",
     "string-similarity": "^4.0.4",
     "use-undo": "^1.1.1",
     "uuid": "^11.1.0",
