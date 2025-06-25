@@ -42,17 +42,13 @@ export const useShapeSnapEngine = (
   
   // Update a shape with new properties
   const updateShape = useCallback((shapeId: string, updates: any) => {
-    console.log('🚀 updateShape called:', { shapeId, updates });
-    console.log('📊 Current shapes count:', state.shapes.length);
-    
+
     const updatedShapes = state.shapes.map(shape => 
       shape.id === shapeId 
         ? { ...shape, ...updates }
         : shape
     );
-    
-    console.log('✅ Shapes updated, new count:', updatedShapes.length);
-    
+
     const newHistory = state.history.slice(0, state.historyIndex + 1);
     newHistory.push(updatedShapes);
     
@@ -63,17 +59,11 @@ export const useShapeSnapEngine = (
       historyIndex: newHistory.length - 1
     });
     
-    console.log('💾 State updated via onChange');
   }, [state, onChange]);
   
   // Delete a shape by ID
   const deleteShape = useCallback((shapeId: string) => {
-    console.log('🗑️ deleteShape called:', shapeId);
-    console.log('📊 Current shapes count:', state.shapes.length);
-    
     const updatedShapes = state.shapes.filter(shape => shape.id !== shapeId);
-    
-    console.log('✅ Shape deleted, new count:', updatedShapes.length);
     
     const newHistory = state.history.slice(0, state.historyIndex + 1);
     newHistory.push(updatedShapes);
@@ -84,8 +74,6 @@ export const useShapeSnapEngine = (
       history: newHistory,
       historyIndex: newHistory.length - 1
     });
-    
-    console.log('💾 State updated via onChange');
   }, [state, onChange]);
   
   // Detect and add a shape based on drawn points
@@ -196,29 +184,19 @@ export const useShapeSnapEngine = (
   
   // Export the canvas to an image
   const exportToImage = useCallback(() => {
-    console.log('📸 Starting PNG export...');
-    
     // Try multiple selectors to find the SVG element
     let svgElement = document.querySelector('.relative.w-full.h-full svg') as SVGSVGElement;
     
     if (!svgElement) {
       // Fallback: look for any SVG in the current viewport
       const allSvgs = document.querySelectorAll('svg');
-      console.log('🔍 Found SVGs on page:', allSvgs.length);
       
       for (let i = 0; i < allSvgs.length; i++) {
         const svg = allSvgs[i] as SVGSVGElement;
-        console.log(`SVG ${i}:`, {
-          width: svg.clientWidth,
-          height: svg.clientHeight,
-          className: svg.className,
-          parentClass: svg.parentElement?.className
-        });
         
         // Look for the one that's likely our canvas (has reasonable dimensions)
         if (svg.clientWidth > 100 && svg.clientHeight > 100) {
           svgElement = svg;
-          console.log('✅ Found likely canvas SVG:', svgElement);
           break;
         }
       }
@@ -229,8 +207,6 @@ export const useShapeSnapEngine = (
       alert('Could not find the canvas to export. Please try again.');
       return;
     }
-    
-    console.log('📐 SVG dimensions:', { width: svgElement.clientWidth, height: svgElement.clientHeight });
     
     const canvas = document.createElement('canvas');
     const width = svgElement.clientWidth || 800; // fallback width
@@ -269,8 +245,6 @@ export const useShapeSnapEngine = (
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        console.log('✅ PNG export completed successfully');
       } catch (error) {
         console.error('❌ Error during PNG export:', error);
         alert('Error during export. Please try again.');

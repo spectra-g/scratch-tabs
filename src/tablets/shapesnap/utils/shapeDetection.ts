@@ -349,17 +349,13 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
   const dollarResult = recognizer.recognize(points);
   const diamondConfidence = calculateDiamondConfidence(points, box, config);
 
-  console.log(`Heuristics: circleScore=${circleScore.toFixed(3)}, perimeterRatio=${perimeterRatio.toFixed(2)}, segments=${straightSegments}, diamondConfidence=${diamondConfidence.toFixed(3)}, $1=${dollarResult.name}@${dollarResult.score.toFixed(2)}`);
-
   // --- REVISED DECISION LOGIC ---
 
   // 1. Box-like shapes (Squares/Rectangles)
   if (perimeterRatio > config.perimeterRatioThreshold && straightSegments >= 3 && straightSegments <= 5) {
-      console.log(`...Decision: Candidate is a box-like shape.`);
       const orientationScore = getOrientationScore(points);
       
       if (orientationScore > config.orientationScoreThreshold && diamondConfidence > 0.70) {
-          console.log(`...Override: High orientation score (${orientationScore.toFixed(1)}°) and confidence. Classifying as DIAMOND.`);
           detectedType = 'diamond';
       } else {
           const aspectRatio = Math.max(width, height) / Math.min(width, height);
@@ -378,25 +374,18 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
       ].filter(Boolean) as { type: Shape['type'], score: number }[];
 
       if (candidates.length === 1) {
-          console.log(`...Decision: Strong ${candidates[0].type.toUpperCase()} candidate.`);
           detectedType = candidates[0].type;
       } else if (candidates.length > 1) {
-          console.log(`...Ambiguous case. Candidates: ${candidates.map(c => c.type).join(', ')}`);
-          
           if (isCircleCandidate && isDiamondCandidate) {
               if (circleScore < config.circleScoreThreshold * 0.6) {
-                  console.log(`...Resolving Ambiguity: Exceptionally low circleScore, favoring CIRCLE.`);
                   detectedType = 'circle';
               } else if (straightSegments >= 3 && straightSegments <= 5) {
-                  console.log(`...Resolving Ambiguity: Has ~4 segments, favoring DIAMOND over CIRCLE.`);
                   detectedType = 'diamond';
               } else {
-                  console.log(`...Resolving Ambiguity: Does not have ~4 segments, favoring CIRCLE over DIAMOND.`);
                   detectedType = 'circle';
               }
           } else {
               candidates.sort((a, b) => b.score - a.score);
-              console.log(`...Resolving Ambiguity: Defaulting to best score: ${candidates[0].type.toUpperCase()}`);
               detectedType = candidates[0].type;
           }
       }
@@ -404,20 +393,15 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
   
   // 3. Final Fallback.
   if (detectedType === 'unknown' && dollarResult.score > config.scoreThreshold) {
-      console.log(`...Decision: Fallback to $1 recognizer (${dollarResult.name}).`);
       detectedType = dollarResult.name as Shape['type'];
   }
   
   if (detectedType === 'unknown') {
-      console.log(`🏆 Final decision: UNKNOWN`);
       return { type: 'line', points };
   }
 
-  console.log(`🏆 Final decision: ${detectedType.toUpperCase()}`);
-
   if (config.dataCollectionMode) {
     const roundedPoints = points.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) }));
-    console.log(`📊 TEST_DATA: ${JSON.stringify({ expected: "RENAME_TO_EXPECTED_SHAPE", points: roundedPoints })}`);
   }
 
   const centroid = getCentroid(points);

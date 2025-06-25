@@ -211,53 +211,35 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const generateId = (): string => `shape-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   const handleShapeClick = (shape: Shape, position: Point) => {
-    console.log('🖱️ handleShapeClick called:', { shapeId: shape.id, shapeType: shape.type, position });
-    
     if (onShapeClick) {
       onShapeClick(shape, position);
     }
     
     // Check if this is a click on a line endpoint (for arrow tip cycling)
     if (shape.type === 'line' && (currentTool === 'select' || currentTool === 'draw')) {
-      console.log('📏 Checking if click is near line endpoint...');
       const lineShape = shape as Shape & { 
         points: Point[]; 
         arrowTipStart?: ArrowTipStyle; 
         arrowTipEnd?: ArrowTipStyle; 
       };
-      console.log('📏 Line points:', lineShape.points.map(p => ({ x: p.x, y: p.y })));
-      console.log('📏 Start point:', lineShape.points[0]);
-      console.log('📏 End point:', lineShape.points[lineShape.points.length - 1]);
-      console.log('📏 Current arrow tips:', { start: lineShape.arrowTipStart, end: lineShape.arrowTipEnd });
-      
+
       // Use the same logic as drag detection to check if we're near an endpoint
       const dragMode = detectLineDragMode(shape, position);
-      console.log('📏 Drag mode detected:', dragMode);
-      
+
       if (dragMode === 'resize-end') {
-        console.log('🎯 Click detected on line end point, cycling end arrow tip');
         const newArrowTipEnd = cycleArrowTip(lineShape.arrowTipEnd);
-        console.log('🔄 Cycling end arrow tip from', lineShape.arrowTipEnd, 'to', newArrowTipEnd);
-        
+
         if (onUpdateShape) {
           onUpdateShape(shape.id, { arrowTipEnd: newArrowTipEnd });
-        } else {
-          console.log('❌ No onUpdateShape function available');
         }
         return; // Don't proceed with other click handling
       } else if (dragMode === 'resize-start') {
-        console.log('🎯 Click detected on line start point, cycling start arrow tip');
         const newArrowTipStart = cycleArrowTip(lineShape.arrowTipStart);
-        console.log('🔄 Cycling start arrow tip from', lineShape.arrowTipStart, 'to', newArrowTipStart);
-        
+
         if (onUpdateShape) {
           onUpdateShape(shape.id, { arrowTipStart: newArrowTipStart });
-        } else {
-          console.log('❌ No onUpdateShape function available');
         }
         return; // Don't proceed with other click handling
-      } else {
-        console.log('❌ Click not near line endpoint (drag mode:', dragMode, ')');
       }
     }
     
@@ -276,7 +258,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       case 'eraser':
         // Delete the shape when in eraser mode
         if (onDeleteShape) {
-          console.log('🗑️ Deleting shape in eraser mode:', shape.id);
           onDeleteShape(shape.id);
         }
         break;
@@ -340,8 +321,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         zIndex: Date.now(),
       };
       
-      console.log('📝 Creating new text shape at:', { x: snappedX, y: snappedY });
-      
       // Add the shape and immediately start editing
       if (onAddShape) {
         onAddShape(newTextShape);
@@ -352,7 +331,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   
   // Double-click handler for shapes (works in any mode)
   const handleShapeDoubleClick = (shape: Shape) => {
-    console.log('🖱️ Double-click detected, canceling drag timeout');
     // Cancel the drag timeout to prevent drag from starting
     if (dragTimeout) {
       clearTimeout(dragTimeout);
@@ -363,7 +341,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   
   // Mouse down on shape: prepare for potential dragging
   const handleShapeMouseDown = (shape: Shape, e: React.MouseEvent) => {
-    console.log('🔍 Shape mouse down:', shape.id, shape.type);
     e.stopPropagation();
     
     // Clear any existing timeout
@@ -380,9 +357,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     const center = getShapeCenter(shape);
     setMouseDownShape({ shape, initialPos: mousePoint, center });
     setHasMoved(false);
-    
-    console.log('📍 Mouse position:', { mouseX, mouseY });
-    console.log('🎯 Shape center:', center);
   };
 
   // Mouse move: if dragging, update shape position
@@ -400,13 +374,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       
       // Start dragging if mouse moved more than 5 pixels
       if (distance > 5) {
-        console.log('🔄 Starting drag due to mouse movement');
         const shape = mouseDownShape.shape;
         
         // For lines, detect drag mode
         if (shape.type === 'line') {
           const dragMode = detectLineDragMode(shape, mouseDownShape.initialPos);
-          console.log('📏 Line drag mode detected:', dragMode);
           setLineDragMode(dragMode);
           
           if (dragMode === 'resize-start' || dragMode === 'resize-end') {
@@ -414,7 +386,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             const lineShape = shape as Shape & { points: Point[] };
             const fixedPoint = dragMode === 'resize-start' ? lineShape.points[lineShape.points.length - 1] : lineShape.points[0];
             setLineDragPoint(fixedPoint);
-            console.log('📍 Fixed point for resizing:', fixedPoint);
           }
         }
         
@@ -424,10 +395,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           y: mouseDownShape.initialPos.y - mouseDownShape.center.y 
         });
         setHasMoved(true);
-        console.log('📏 Drag offset set:', { 
-          x: mouseDownShape.initialPos.x - mouseDownShape.center.x, 
-          y: mouseDownShape.initialPos.y - mouseDownShape.center.y 
-        });
       }
     }
     
@@ -435,10 +402,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       return;
     }
     
-    console.log('🔄 Mouse move while dragging:', draggingShapeId);
     const idx = shapes.findIndex(s => s.id === draggingShapeId);
     if (idx === -1) {
-      console.log('❌ Shape not found:', draggingShapeId);
       return;
     }
     const shape = shapes[idx];
@@ -457,14 +422,12 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           { x: snappedX, y: snappedY },
           lineDragPoint
         ];
-        console.log('📏 Resizing line start:', { start: { x: snappedX, y: snappedY }, end: lineDragPoint });
       } else if (lineDragMode === 'resize-end') {
         // Move end point to mouse position, keep start point fixed
         (updatedShape as Shape & { points: Point[] }).points = [
           lineDragPoint,
           { x: snappedX, y: snappedY }
         ];
-        console.log('📏 Resizing line end:', { start: lineDragPoint, end: { x: snappedX, y: snappedY } });
       } else {
         // Move entire line
         const center = getShapeCenter(shape);
@@ -474,17 +437,14 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         const dy = newCenterY - center.y;
         const lineShape = shape as Shape & { points: Point[] };
         (updatedShape as Shape & { points: Point[] }).points = lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
-        console.log('📏 Moving entire line:', (updatedShape as Shape & { points: Point[] }).points);
       }
     } else {
       // Handle other shapes (normal dragging)
       const newCenterX = snapToGrid(mouseX - dragOffset.x, 20);
       const newCenterY = snapToGrid(mouseY - dragOffset.y, 20);
-      console.log('🎯 New center position:', { newCenterX, newCenterY });
       
       // Defensive: ensure shape is valid
       if (!shape || typeof (shape as any).type !== 'string') {
-        console.log('❓ Invalid shape for switch');
         return;
       }
       switch ((shape as Shape).type) {
@@ -493,7 +453,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           const boxShape = shape as Shape & { x: number; y: number; width: number; height: number };
           (updatedShape as Shape & { x: number; y: number }).x = newCenterX - boxShape.width / 2;
           (updatedShape as Shape & { x: number; y: number }).y = newCenterY - boxShape.height / 2;
-          console.log('📦 Updated box shape position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
           break;
         }
         case 'diamond':
@@ -501,13 +460,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           // For diamond and triangle, x and y represent the center, not top-left corner
           (updatedShape as Shape & { x: number; y: number }).x = newCenterX;
           (updatedShape as Shape & { x: number; y: number }).y = newCenterY;
-          console.log('🔷 Updated diamond/triangle position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
           break;
         }
         case 'circle': {
           (updatedShape as Shape & { x: number; y: number }).x = newCenterX;
           (updatedShape as Shape & { x: number; y: number }).y = newCenterY;
-          console.log('⭕ Updated circle position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
           break;
         }
         case 'arrow': {
@@ -517,13 +474,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           const arrowShape = shape as Shape & { from: Point; to: Point };
           (updatedShape as Shape & { from: Point; to: Point }).from = { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy };
           (updatedShape as Shape & { from: Point; to: Point }).to = { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy };
-          console.log('➡️ Updated arrow position:', { from: (updatedShape as Shape & { from: Point; to: Point }).from, to: (updatedShape as Shape & { from: Point; to: Point }).to });
           break;
         }
         case 'text': {
           (updatedShape as Shape & { x: number; y: number }).x = newCenterX;
           (updatedShape as Shape & { x: number; y: number }).y = newCenterY;
-          console.log('📝 Updated text position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
           break;
         }
         case 'line': {
@@ -533,11 +488,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           const dy = newCenterY - center.y;
           const lineShape = shape as Shape & { points: Point[] };
           (updatedShape as Shape & { points: Point[] }).points = lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
-          console.log('📏 Updated line points (move):', (updatedShape as Shape & { points: Point[] }).points);
           break;
         }
         default:
-          console.log('❓ Unknown shape type:', (shape as Shape).type);
           break;
       }
     }
@@ -554,14 +507,10 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const handleMouseUp = (e: React.MouseEvent) => {
     // If we have a mouse down shape but no dragging occurred, treat it as a click
     if (mouseDownShape && !draggingShapeId) {
-      console.log('🖱️ Mouse up without dragging - treating as click');
-      console.log('📍 Mouse down shape:', mouseDownShape.shape.id, mouseDownShape.shape.type);
-      console.log('📍 Initial position:', mouseDownShape.initialPos);
       const currentMousePos = {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY
       };
-      console.log('📍 Current mouse position:', currentMousePos);
       handleShapeClick(mouseDownShape.shape, currentMousePos);
       
       // Clean up mouse down state
@@ -571,16 +520,13 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     }
     
     if (!draggingShapeId || !dragOffset) {
-      console.log('❌ Mouse up but not dragging:', { draggingShapeId, dragOffset });
       return;
     }
     
-    console.log('🛑 Mouse up - finishing drag for:', draggingShapeId);
     const mouseX = e.nativeEvent.offsetX;
     const mouseY = e.nativeEvent.offsetY;
     const idx = shapes.findIndex(s => s.id === draggingShapeId);
     if (idx === -1) {
-      console.log('❌ Shape not found in original shapes:', draggingShapeId);
       return;
     }
     const shape = shapes[idx];
@@ -600,7 +546,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             lineDragPoint
           ]
         } as Partial<Shape & { points: Point[] }>;
-        console.log('📏 Line resize-start updates:', updates);
       } else if (lineDragMode === 'resize-end') {
         updates = {
           points: [
@@ -608,7 +553,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             { x: snappedX, y: snappedY }
           ]
         } as Partial<Shape & { points: Point[] }>;
-        console.log('📏 Line resize-end updates:', updates);
       } else {
         // Move entire line
         const center = getShapeCenter(shape);
@@ -620,18 +564,15 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         updates = {
           points: lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
         } as Partial<Shape & { points: Point[] }>;
-        console.log('📏 Line move updates:', updates);
       }
     } else {
       // Handle other shapes (normal dragging)
       const center = getShapeCenter(shape);
       const newCenterX = snapToGrid(mouseX - dragOffset.x, 20);
       const newCenterY = snapToGrid(mouseY - dragOffset.y, 20);
-      console.log('🎯 Final position:', { newCenterX, newCenterY });
       
       // Defensive: ensure shape is valid
       if (!shape || typeof (shape as any).type !== 'string') {
-        console.log('❓ Invalid shape for switch');
         return;
       }
       switch ((shape as Shape).type) {
@@ -642,7 +583,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             x: newCenterX - boxShape.width / 2,
             y: newCenterY - boxShape.height / 2
           } as Partial<Shape & { x: number; y: number }>;
-          console.log('📦 Box shape updates:', updates);
           break;
         }
         case 'diamond':
@@ -652,7 +592,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             x: newCenterX,
             y: newCenterY
           } as Partial<Shape & { x: number; y: number }>;
-          console.log('🔷 Diamond/triangle updates:', updates);
           break;
         }
         case 'circle': {
@@ -660,7 +599,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             x: newCenterX,
             y: newCenterY
           } as Partial<Shape & { x: number; y: number }>;
-          console.log('⭕ Circle updates:', updates);
           break;
         }
         case 'arrow': {
@@ -671,7 +609,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
             to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy }
           } as Partial<Shape & { from: Point; to: Point }>;
-          console.log('➡️ Arrow updates:', updates);
           break;
         }
         case 'text': {
@@ -679,7 +616,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             x: newCenterX,
             y: newCenterY
           } as Partial<Shape & { x: number; y: number }>;
-          console.log('📝 Text updates:', updates);
           break;
         }
         case 'line': {
@@ -690,21 +626,16 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           updates = {
             points: lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
           } as Partial<Shape & { points: Point[] }>;
-          console.log('📏 Line updates (move):', updates);
           break;
         }
         default:
-          console.log('❓ Unknown shape type for updates:', (shape as Shape).type);
           break;
       }
     }
     
     // Update the shape in global state
     if (onUpdateShape && Object.keys(updates).length > 0) {
-      console.log('💾 Calling onUpdateShape with:', { shapeId: draggingShapeId, updates });
       onUpdateShape(draggingShapeId, updates);
-    } else {
-      console.log('❌ No onUpdateShape function or no updates to apply');
     }
     
     setDraggingShapeId(null);
@@ -721,8 +652,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       clearTimeout(dragTimeout);
       setDragTimeout(null);
     }
-    
-    console.log('✅ Drag finished, state reset');
   };
 
   return (
