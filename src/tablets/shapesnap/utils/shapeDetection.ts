@@ -329,13 +329,14 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
   const width = box.maxX - box.minX;
   const height = box.maxY - box.minY;
   
-  if (width < 20 || height < 20) return null;
-
   if (!isClosed(points, box)) {
+    if (Math.max(width, height) < 20) return null;
     const straightness = distance(points[0], points[points.length - 1]) / getPathLength(points);
     if (straightness > 0.95) return { type: 'line', points: [points[0], points[points.length-1]] };
     return { type: 'line', points };
   }
+
+  if (width < 20 || height < 20) return null;
 
   let detectedType: Shape['type'] | 'unknown' = 'unknown';
 
