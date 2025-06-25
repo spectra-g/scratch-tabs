@@ -265,13 +265,19 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       }
       switch ((shape as Shape).type) {
         case 'rectangle':
-        case 'square':
-        case 'diamond':
-        case 'triangle': {
+        case 'square': {
           const boxShape = shape as Shape & { x: number; y: number; width: number; height: number };
           (updatedShape as Shape & { x: number; y: number }).x = newCenterX - boxShape.width / 2;
           (updatedShape as Shape & { x: number; y: number }).y = newCenterY - boxShape.height / 2;
           console.log('📦 Updated box shape position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
+          break;
+        }
+        case 'diamond':
+        case 'triangle': {
+          // For diamond and triangle, x and y represent the center, not top-left corner
+          (updatedShape as Shape & { x: number; y: number }).x = newCenterX;
+          (updatedShape as Shape & { x: number; y: number }).y = newCenterY;
+          console.log('🔷 Updated diamond/triangle position:', { x: (updatedShape as Shape & { x: number; y: number }).x, y: (updatedShape as Shape & { x: number; y: number }).y });
           break;
         }
         case 'circle': {
@@ -383,15 +389,23 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       }
       switch ((shape as Shape).type) {
         case 'rectangle':
-        case 'square':
-        case 'diamond':
-        case 'triangle': {
+        case 'square': {
           const boxShape = shape as Shape & { x: number; y: number; width: number; height: number };
           updates = {
             x: newCenterX - boxShape.width / 2,
             y: newCenterY - boxShape.height / 2
           } as Partial<Shape & { x: number; y: number }>;
           console.log('📦 Box shape updates:', updates);
+          break;
+        }
+        case 'diamond':
+        case 'triangle': {
+          // For diamond and triangle, x and y represent the center, not top-left corner
+          updates = {
+            x: newCenterX,
+            y: newCenterY
+          } as Partial<Shape & { x: number; y: number }>;
+          console.log('🔷 Diamond/triangle updates:', updates);
           break;
         }
         case 'circle': {
