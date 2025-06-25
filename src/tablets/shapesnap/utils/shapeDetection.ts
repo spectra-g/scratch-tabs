@@ -1,6 +1,6 @@
 import { Point, Shape } from '../types';
 
-// --- CORE HELPER FUNCTIONS --- (No changes)
+// --- CORE HELPER FUNCTIONS ---
 const getBoundingBox = (points: Point[]): { minX: number; minY: number; maxX: number; maxY: number } => {
   const xs = points.map(p => p.x);
   const ys = points.map(p => p.y);
@@ -29,7 +29,7 @@ function getCentroid(points: Point[]): Point {
     return { x: sum.x / n, y: sum.y / n };
 }
 
-// --- HEURISTIC CALCULATOR --- (No changes)
+// --- HEURISTIC CALCULATORS ---
 function getDiamondScore(points: Point[], box: { minX: number; minY: number; maxX: number; maxY: number }): number {
     const width = box.maxX - box.minX;
     const height = box.maxY - box.minY;
@@ -60,19 +60,15 @@ function getCircleScore(points: Point[], box: { minX: number; minY: number; maxX
     return avgDeviation / radius;
 }
 
-// --- STRAIGHT SEGMENT DETECTION --- (No changes)
-function countStraightSegmentsAndLengths(points: Point[], angleThresholdDeg = 20): { count: number, lengths: number[] } {
-    if (points.length < 3) return { count: 0, lengths: [] };
+// --- STRAIGHT SEGMENT & ORIENTATION DETECTION ---
+function getCorners(points: Point[], angleThresholdDeg: number): Point[] {
+    if (points.length < 3) return [];
     
-    const simplified = simplifyPoints(points, 8.0);
-    if (simplified.length < 3) return { count: 0, lengths: [] };
-    
-    let corners: number[] = [];
-    
-    for (let i = 1; i < simplified.length - 1; i++) {
-        const p0 = simplified[i - 1];
-        const p1 = simplified[i];
-        const p2 = simplified[i + 1];
+    const corners: Point[] = [];
+    for (let i = 1; i < points.length - 1; i++) {
+        const p0 = points[i - 1];
+        const p1 = points[i];
+        const p2 = points[i + 1];
         
         const v1 = { x: p1.x - p0.x, y: p1.y - p0.y };
         const v2 = { x: p2.x - p1.x, y: p2.y - p1.y };
@@ -86,34 +82,63 @@ function countStraightSegmentsAndLengths(points: Point[], angleThresholdDeg = 20
         const cosAngle = dot / (mag1 * mag2);
         const angle = Math.acos(Math.max(-1, Math.min(1, cosAngle))) * 180 / Math.PI;
         
-        if (angle < (180 - angleThresholdDeg * 0.6)) {
-            corners.push(i);
+        if (angle < (180 - angleThresholdDeg)) {
+            corners.push(p1);
         }
     }
+    return corners;
+}
+
+function getOrientationScore(points: Point[]): number {
+    const simplified = simplifyPoints(points, 8.0);
+    const corners = getCorners(simplified, 30);
     
-    const mergedCorners: number[] = [];
+    if (corners.length < 3) return 45;
+
+    const segments = [];
+    for (let i = 0; i < corners.length; i++) {
+        const p1 = corners[i];
+        const p2 = corners[(i + 1) % corners.length];
+        segments.push({p1, p2});
+    }
+
+    let totalDeviation = 0;
+    for (const seg of segments) {
+        const angleRad = Math.atan2(seg.p2.y - seg.p1.y, seg.p2.x - seg.p1.x);
+        let angleDeg = Math.abs(angleRad * 180 / Math.PI);
+        angleDeg = angleDeg % 90;
+        const deviation = Math.min(angleDeg, 90 - angleDeg);
+        totalDeviation += deviation;
+    }
+    
+    return totalDeviation / segments.length;
+}
+
+function countStraightSegmentsAndLengths(points: Point[], angleThresholdDeg = 20): { count: number, lengths: number[] } {
+    if (points.length < 3) return { count: 0, lengths: [] };
+    
+    const simplified = simplifyPoints(points, 8.0);
+    if (simplified.length < 3) return { count: 0, lengths: [] };
+    
+    const corners = getCorners(simplified, angleThresholdDeg * 0.6);
+    
+    const mergedCorners: Point[] = [];
     const minSegmentLength = 20;
     
     for (let i = 0; i < corners.length; i++) {
         const currentCorner = corners[i];
-        
         if (mergedCorners.length > 0) {
             const lastCorner = mergedCorners[mergedCorners.length - 1];
-            const segmentLength = distance(simplified[currentCorner], simplified[lastCorner]);
-            
-            if (segmentLength < minSegmentLength) {
-                continue;
-            }
+            if (distance(currentCorner, lastCorner) < minSegmentLength) continue;
         }
-        
         mergedCorners.push(currentCorner);
     }
     
     let lengths: number[] = [];
     if (mergedCorners.length > 1) {
         for (let i = 0; i < mergedCorners.length; i++) {
-            const a = simplified[mergedCorners[i]];
-            const b = simplified[mergedCorners[(i + 1) % mergedCorners.length]];
+            const a = mergedCorners[i];
+            const b = mergedCorners[(i + 1) % mergedCorners.length];
             lengths.push(distance(a, b));
         }
     }
@@ -145,16 +170,9 @@ function simplifyPoints(points: Point[], tolerance: number): Point[] {
         const param = dot / lenSq;
         let xx, yy;
         
-        if (param < 0) {
-            xx = lineStart.x;
-            yy = lineStart.y;
-        } else if (param > 1) {
-            xx = lineEnd.x;
-            yy = lineEnd.y;
-        } else {
-            xx = lineStart.x + param * C;
-            yy = lineStart.y + param * D;
-        }
+        if (param < 0) { xx = lineStart.x; yy = lineStart.y; }
+        else if (param > 1) { xx = lineEnd.x; yy = lineEnd.y; }
+        else { xx = lineStart.x + param * C; yy = lineStart.y + param * D; }
         
         const dx = point.x - xx;
         const dy = point.y - yy;
@@ -166,10 +184,7 @@ function simplifyPoints(points: Point[], tolerance: number): Point[] {
     
     for (let i = 1; i < points.length - 1; i++) {
         const distance = findPerpendicularDistance(points[i], points[0], points[points.length - 1]);
-        if (distance > maxDistance) {
-            index = i;
-            maxDistance = distance;
-        }
+        if (distance > maxDistance) { index = i; maxDistance = distance; }
     }
     
     if (maxDistance > tolerance) {
@@ -181,7 +196,7 @@ function simplifyPoints(points: Point[], tolerance: number): Point[] {
     }
 }
 
-// --- $1 GESTURE RECOGNIZER IMPLEMENTATION --- (No changes)
+// --- $1 GESTURE RECOGNIZER IMPLEMENTATION ---
 const NUM_POINTS = 64;
 const SQUARE_SIZE = 250.0;
 const ANGLE_RANGE = 45.0; 
@@ -286,6 +301,7 @@ export interface DetectionConfig {
     perimeterRatioThreshold: number;
     diamondScoreThreshold: number;
     circleScoreThreshold: number;
+    orientationScoreThreshold: number;
     dataCollectionMode?: boolean;
     straightSegmentAngleThreshold?: number;
     diamondConfidenceThreshold?: number;
@@ -295,9 +311,10 @@ export interface DetectionConfig {
 export const defaultConfig: DetectionConfig = {
     scoreThreshold: 0.80,
     aspectRatioThreshold: 1.4,
-    perimeterRatioThreshold: 0.85, // CHANGED: Relaxed from 0.90 to catch more hand-drawn squares
+    perimeterRatioThreshold: 0.85,
     diamondScoreThreshold: 0.3,
     circleScoreThreshold: 0.13,
+    orientationScoreThreshold: 25,
     dataCollectionMode: true,
     straightSegmentAngleThreshold: 20,
     diamondConfidenceThreshold: 0.4,
@@ -322,26 +339,26 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
 
   let detectedType: Shape['type'] | 'unknown' = 'unknown';
 
-  // --- Calculate all heuristics first ---
   const pathLength = getPathLength(points);
   const boxPerimeter = 2 * (width + height);
   const perimeterRatio = pathLength / boxPerimeter;
-  
   const angleThreshold = config.straightSegmentAngleThreshold ?? 20;
   const { count: straightSegments } = countStraightSegmentsAndLengths(points, angleThreshold);
-
   const circleScore = getCircleScore(points, box);
   const dollarResult = recognizer.recognize(points);
   const diamondConfidence = calculateDiamondConfidence(points, box, config);
 
   console.log(`Heuristics: circleScore=${circleScore.toFixed(3)}, perimeterRatio=${perimeterRatio.toFixed(2)}, segments=${straightSegments}, diamondConfidence=${diamondConfidence.toFixed(3)}, $1=${dollarResult.name}@${dollarResult.score.toFixed(2)}`);
 
-  // --- NEW DECISION LOGIC ---
+  // --- REVISED DECISION LOGIC ---
 
-  // 1. Box-like shapes (Squares/Rectangles) have a strong signature.
+  // 1. Box-like shapes (Squares/Rectangles)
   if (perimeterRatio > config.perimeterRatioThreshold && straightSegments >= 3 && straightSegments <= 5) {
       console.log(`...Decision: Candidate is a box-like shape.`);
-      if (diamondConfidence > 0.70) {
+      const orientationScore = getOrientationScore(points);
+      
+      if (orientationScore > config.orientationScoreThreshold && diamondConfidence > 0.70) {
+          console.log(`...Override: High orientation score (${orientationScore.toFixed(1)}°) and confidence. Classifying as DIAMOND.`);
           detectedType = 'diamond';
       } else {
           const aspectRatio = Math.max(width, height) / Math.min(width, height);
@@ -366,7 +383,7 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
           console.log(`...Ambiguous case. Candidates: ${candidates.map(c => c.type).join(', ')}`);
           
           if (isCircleCandidate && isDiamondCandidate) {
-              if (circleScore < config.circleScoreThreshold * 0.6) { // Exceptionally good circle
+              if (circleScore < config.circleScoreThreshold * 0.6) {
                   console.log(`...Resolving Ambiguity: Exceptionally low circleScore, favoring CIRCLE.`);
                   detectedType = 'circle';
               } else if (straightSegments >= 3 && straightSegments <= 5) {
@@ -384,7 +401,7 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
       }
   }
   
-  // 3. Final Fallback. If still undecided, use the best score from the $1 recognizer.
+  // 3. Final Fallback.
   if (detectedType === 'unknown' && dollarResult.score > config.scoreThreshold) {
       console.log(`...Decision: Fallback to $1 recognizer (${dollarResult.name}).`);
       detectedType = dollarResult.name as Shape['type'];
@@ -421,7 +438,7 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
   }
 };
 
-// --- INTELLIGENT HEURISTIC COMBINATION --- (No changes)
+// --- INTELLIGENT HEURISTIC COMBINATION ---
 function calculateDiamondConfidence(points: Point[], box: { minX: number; minY: number; maxX: number; maxY: number }, config: DetectionConfig): number {
     const angleThreshold = config.straightSegmentAngleThreshold ?? 20;
     const { count: straightSegments, lengths: segmentLengths } = countStraightSegmentsAndLengths(points, angleThreshold);
