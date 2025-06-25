@@ -1,6 +1,6 @@
 import { Point, Shape } from '../types';
 
-// --- CORE HELPER FUNCTIONS ---
+// --- CORE HELPER FUNCTIONS --- (No changes)
 const getBoundingBox = (points: Point[]): { minX: number; minY: number; maxX: number; maxY: number } => {
   const xs = points.map(p => p.x);
   const ys = points.map(p => p.y);
@@ -29,7 +29,7 @@ function getCentroid(points: Point[]): Point {
     return { x: sum.x / n, y: sum.y / n };
 }
 
-// --- HEURISTIC CALCULATOR ---
+// --- HEURISTIC CALCULATOR --- (No changes)
 function getDiamondScore(points: Point[], box: { minX: number; minY: number; maxX: number; maxY: number }): number {
     const width = box.maxX - box.minX;
     const height = box.maxY - box.minY;
@@ -54,25 +54,21 @@ function getCircleScore(points: Point[], box: { minX: number; minY: number; maxX
     
     if (radius === 0) return 1.0;
     
-    // Calculate how well the points fit a circle
     const distances = points.map(p => Math.abs(distance(p, center) - radius));
     const avgDeviation = distances.reduce((a, b) => a + b, 0) / distances.length;
     
-    // Lower score means more circular
     return avgDeviation / radius;
 }
 
-// --- STRAIGHT SEGMENT DETECTION ---
+// --- STRAIGHT SEGMENT DETECTION --- (No changes)
 function countStraightSegmentsAndLengths(points: Point[], angleThresholdDeg = 20): { count: number, lengths: number[] } {
     if (points.length < 3) return { count: 0, lengths: [] };
     
-    // Even more aggressive simplification to reduce noise
-    const simplified = simplifyPoints(points, 8.0); // Increased from 5.0
+    const simplified = simplifyPoints(points, 8.0);
     if (simplified.length < 3) return { count: 0, lengths: [] };
     
     let corners: number[] = [];
     
-    // First pass: detect potential corners with a more lenient threshold
     for (let i = 1; i < simplified.length - 1; i++) {
         const p0 = simplified[i - 1];
         const p1 = simplified[i];
@@ -90,26 +86,22 @@ function countStraightSegmentsAndLengths(points: Point[], angleThresholdDeg = 20
         const cosAngle = dot / (mag1 * mag2);
         const angle = Math.acos(Math.max(-1, Math.min(1, cosAngle))) * 180 / Math.PI;
         
-        // More lenient angle threshold for initial detection
-        if (angle < (180 - angleThresholdDeg * 0.6)) { // Reduced from 0.7
+        if (angle < (180 - angleThresholdDeg * 0.6)) {
             corners.push(i);
         }
     }
     
-    // Post-process: merge very close corners and filter by minimum segment length
     const mergedCorners: number[] = [];
-    const minSegmentLength = 20; // Increased from 15
+    const minSegmentLength = 20;
     
     for (let i = 0; i < corners.length; i++) {
         const currentCorner = corners[i];
         
-        // Check if this corner is too close to the previous one
         if (mergedCorners.length > 0) {
             const lastCorner = mergedCorners[mergedCorners.length - 1];
             const segmentLength = distance(simplified[currentCorner], simplified[lastCorner]);
             
             if (segmentLength < minSegmentLength) {
-                // Skip this corner - too close to previous
                 continue;
             }
         }
@@ -117,7 +109,6 @@ function countStraightSegmentsAndLengths(points: Point[], angleThresholdDeg = 20
         mergedCorners.push(currentCorner);
     }
     
-    // Calculate segment lengths between merged corners
     let lengths: number[] = [];
     if (mergedCorners.length > 1) {
         for (let i = 0; i < mergedCorners.length; i++) {
@@ -138,7 +129,6 @@ function segmentsAreRoughlyEqual(lengths: number[], tolerance: number = 0.3): bo
     return (maxLen / minLen) < (1 + tolerance);
 }
 
-// Helper function to simplify points using Douglas-Peucker algorithm
 function simplifyPoints(points: Point[], tolerance: number): Point[] {
     if (points.length <= 2) return points;
     
@@ -191,7 +181,7 @@ function simplifyPoints(points: Point[], tolerance: number): Point[] {
     }
 }
 
-// --- $1 GESTURE RECOGNIZER IMPLEMENTATION ---
+// --- $1 GESTURE RECOGNIZER IMPLEMENTATION --- (No changes)
 const NUM_POINTS = 64;
 const SQUARE_SIZE = 250.0;
 const ANGLE_RANGE = 45.0; 
@@ -295,20 +285,23 @@ export interface DetectionConfig {
     aspectRatioThreshold: number;
     perimeterRatioThreshold: number;
     diamondScoreThreshold: number;
+    circleScoreThreshold: number;
     dataCollectionMode?: boolean;
-    expectedShape?: string;
     straightSegmentAngleThreshold?: number;
     diamondConfidenceThreshold?: number;
+    diamondWeights?: { segment: number; length: number; score: number };
 }
 
 export const defaultConfig: DetectionConfig = {
     scoreThreshold: 0.80,
     aspectRatioThreshold: 1.4,
-    perimeterRatioThreshold: 0.90,
+    perimeterRatioThreshold: 0.85, // CHANGED: Relaxed from 0.90 to catch more hand-drawn squares
     diamondScoreThreshold: 0.3,
+    circleScoreThreshold: 0.13,
     dataCollectionMode: true,
     straightSegmentAngleThreshold: 20,
-    diamondConfidenceThreshold: 0.3,
+    diamondConfidenceThreshold: 0.4,
+    diamondWeights: { segment: 0.4, length: 0.3, score: 0.3 },
 };
 
 // --- MAIN SHAPE DETECTION ENGINE ---
@@ -329,61 +322,72 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
 
   let detectedType: Shape['type'] | 'unknown' = 'unknown';
 
+  // --- Calculate all heuristics first ---
   const pathLength = getPathLength(points);
   const boxPerimeter = 2 * (width + height);
   const perimeterRatio = pathLength / boxPerimeter;
   
-  // Step 1: Check for box-like shapes using perimeter ratio heuristic
-  if (perimeterRatio > config.perimeterRatioThreshold) { 
-      console.log(`...High perimeter ratio detected (${perimeterRatio.toFixed(2)}). Classifying as box.`);
-      const aspectRatio = Math.max(width, height) / Math.min(width, height);
-      if(aspectRatio > config.aspectRatioThreshold) {
-          detectedType = 'rectangle';
-      } else {
-          detectedType = 'square';
-      }
-  } else {
-      // Step 2: Check for circles and diamonds using intelligent confidence scoring
-      const angleThreshold = (config as any).straightSegmentAngleThreshold ?? 20;
-      const { count: straightSegments, lengths: segmentLengths } = countStraightSegmentsAndLengths(points, angleThreshold);
-      console.log(`...Straight segments detected: ${straightSegments} (threshold: ${angleThreshold}°), segment lengths: [${segmentLengths.map(l => l.toFixed(1)).join(', ')}]`);
-      
-      // Calculate diamond confidence using multiple heuristics
-      const diamondConfidence = calculateDiamondConfidence(points, box, config);
-      console.log(`...Diamond confidence: ${diamondConfidence.toFixed(3)}`);
-      
-      // Lower threshold for real-world drawings - be more lenient
-      const confidenceThreshold = (config as any).diamondConfidenceThreshold ?? 0.3; // Reduced from 0.4
-      if (diamondConfidence > confidenceThreshold) { // Use configurable threshold
-          console.log(`...High diamond confidence (${diamondConfidence.toFixed(3)}). Classifying as diamond.`);
+  const angleThreshold = config.straightSegmentAngleThreshold ?? 20;
+  const { count: straightSegments } = countStraightSegmentsAndLengths(points, angleThreshold);
+
+  const circleScore = getCircleScore(points, box);
+  const dollarResult = recognizer.recognize(points);
+  const diamondConfidence = calculateDiamondConfidence(points, box, config);
+
+  console.log(`Heuristics: circleScore=${circleScore.toFixed(3)}, perimeterRatio=${perimeterRatio.toFixed(2)}, segments=${straightSegments}, diamondConfidence=${diamondConfidence.toFixed(3)}, $1=${dollarResult.name}@${dollarResult.score.toFixed(2)}`);
+
+  // --- NEW DECISION LOGIC ---
+
+  // 1. Box-like shapes (Squares/Rectangles) have a strong signature.
+  if (perimeterRatio > config.perimeterRatioThreshold && straightSegments >= 3 && straightSegments <= 5) {
+      console.log(`...Decision: Candidate is a box-like shape.`);
+      if (diamondConfidence > 0.70) {
           detectedType = 'diamond';
       } else {
-          const circleScore = getCircleScore(points, box);
-          const circleScoreThreshold = (config as any).circleScoreThreshold ?? 0.15;
-          
-          // Additional check: if we have 3-5 segments and moderate diamond confidence, prefer diamond over circle
-          if (straightSegments >= 3 && straightSegments <= 5 && diamondConfidence > 0.2 && circleScore > 0.1) {
-              console.log(`...Moderate diamond confidence with ${straightSegments} segments. Preferring diamond over circle.`);
-              detectedType = 'diamond';
-          } else if (circleScore < circleScoreThreshold) {
-              console.log(`...Circle score detected (${circleScore.toFixed(3)}). Classifying as circle.`);
-              detectedType = 'circle';
-          } else {
-              // Step 3: Use the $1 recognizer for triangles and other shapes
-              const result = recognizer.recognize(points);
-              console.log(`...Recognized ${result.name} with score ${result.score.toFixed(2)}`);
+          const aspectRatio = Math.max(width, height) / Math.min(width, height);
+          detectedType = aspectRatio > config.aspectRatioThreshold ? 'rectangle' : 'square';
+      }
+  } else {
+      // 2. Not a box. Evaluate other candidates.
+      const isCircleCandidate = circleScore < config.circleScoreThreshold;
+      const isTriangleCandidate = dollarResult.name === 'triangle' && dollarResult.score > 0.85;
+      const isDiamondCandidate = diamondConfidence > (config.diamondConfidenceThreshold ?? 0.4);
 
-              // Special case: if $1 recognizer says triangle but we have moderate diamond confidence, prefer diamond
-              if (result.name === 'triangle' && diamondConfidence > 0.4) {
-                  console.log(`...Overriding triangle classification with diamond (confidence: ${diamondConfidence.toFixed(3)})`);
+      const candidates = [
+          isCircleCandidate && { type: 'circle', score: 1 - (circleScore / config.circleScoreThreshold) },
+          isDiamondCandidate && { type: 'diamond', score: diamondConfidence },
+          isTriangleCandidate && { type: 'triangle', score: dollarResult.score }
+      ].filter(Boolean) as { type: Shape['type'], score: number }[];
+
+      if (candidates.length === 1) {
+          console.log(`...Decision: Strong ${candidates[0].type.toUpperCase()} candidate.`);
+          detectedType = candidates[0].type;
+      } else if (candidates.length > 1) {
+          console.log(`...Ambiguous case. Candidates: ${candidates.map(c => c.type).join(', ')}`);
+          
+          if (isCircleCandidate && isDiamondCandidate) {
+              if (circleScore < config.circleScoreThreshold * 0.6) { // Exceptionally good circle
+                  console.log(`...Resolving Ambiguity: Exceptionally low circleScore, favoring CIRCLE.`);
+                  detectedType = 'circle';
+              } else if (straightSegments >= 3 && straightSegments <= 5) {
+                  console.log(`...Resolving Ambiguity: Has ~4 segments, favoring DIAMOND over CIRCLE.`);
                   detectedType = 'diamond';
-              } else if (result.name !== 'unknown' && result.score >= config.scoreThreshold) {
-                  detectedType = result.name as Shape['type'];
               } else {
-                  detectedType = 'unknown';
+                  console.log(`...Resolving Ambiguity: Does not have ~4 segments, favoring CIRCLE over DIAMOND.`);
+                  detectedType = 'circle';
               }
+          } else {
+              candidates.sort((a, b) => b.score - a.score);
+              console.log(`...Resolving Ambiguity: Defaulting to best score: ${candidates[0].type.toUpperCase()}`);
+              detectedType = candidates[0].type;
           }
       }
+  }
+  
+  // 3. Final Fallback. If still undecided, use the best score from the $1 recognizer.
+  if (detectedType === 'unknown' && dollarResult.score > config.scoreThreshold) {
+      console.log(`...Decision: Fallback to $1 recognizer (${dollarResult.name}).`);
+      detectedType = dollarResult.name as Shape['type'];
   }
   
   if (detectedType === 'unknown') {
@@ -393,7 +397,6 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
 
   console.log(`🏆 Final decision: ${detectedType.toUpperCase()}`);
 
-  // Data collection mode - output points in test data format
   if (config.dataCollectionMode) {
     const roundedPoints = points.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) }));
     console.log(`📊 TEST_DATA: ${JSON.stringify({ expected: "RENAME_TO_EXPECTED_SHAPE", points: roundedPoints })}`);
@@ -418,29 +421,25 @@ export const detectShape = (points: Point[], config: DetectionConfig = defaultCo
   }
 };
 
-// --- INTELLIGENT HEURISTIC COMBINATION ---
+// --- INTELLIGENT HEURISTIC COMBINATION --- (No changes)
 function calculateDiamondConfidence(points: Point[], box: { minX: number; minY: number; maxX: number; maxY: number }, config: DetectionConfig): number {
-    const angleThreshold = (config as any).straightSegmentAngleThreshold ?? 20;
+    const angleThreshold = config.straightSegmentAngleThreshold ?? 20;
     const { count: straightSegments, lengths: segmentLengths } = countStraightSegmentsAndLengths(points, angleThreshold);
     const diamondScore = getDiamondScore(points, box);
     
-    // Use configurable weights or defaults
-    const weights = (config as any).diamondWeights ?? { segment: 0.4, length: 0.3, score: 0.3 };
+    const weights = config.diamondWeights ?? { segment: 0.4, length: 0.3, score: 0.3 };
     
     let confidence = 0;
     
-    // Factor 1: Straight segment count (configurable weight)
     if (straightSegments >= 3 && straightSegments <= 6) {
-        const segmentScore = 1.0 - Math.abs(straightSegments - 4) / 4; // 4 segments = perfect score
+        const segmentScore = 1.0 - Math.abs(straightSegments - 4) / 4;
         confidence += segmentScore * weights.segment;
     }
     
-    // Factor 2: Segment length similarity (configurable weight)
-    if (segmentsAreRoughlyEqual(segmentLengths, 0.7)) { // More lenient tolerance
+    if (segmentsAreRoughlyEqual(segmentLengths, 0.7)) {
         confidence += weights.length;
     }
     
-    // Factor 3: Diamond score heuristic (configurable weight)
     const normalizedDiamondScore = Math.max(0, 1 - diamondScore / config.diamondScoreThreshold);
     confidence += normalizedDiamondScore * weights.score;
     

@@ -1,6 +1,7 @@
 import { detectShape, defaultConfig, DetectionConfig } from '../utils/shapeDetection';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Point } from '../types';
 
 // Read the formatted results data
 const formattedResultsPath = path.join(__dirname, 'formattedResults.json');
@@ -490,5 +491,153 @@ describe('Shape Detection Algorithm Refinement (Fast)', () => {
       // Assert that we found a good configuration
       expect(bestScore).toBeGreaterThan(50);
     });
+  });
+});
+
+// Helper function to normalize shape type for comparison
+function normalizeShapeType(type: string): string {
+  if (!type) return 'unknown';
+  return type.toLowerCase();
+}
+
+// Helper function to get the detected shape type from detectShape result
+function getDetectedShapeType(result: any): string {
+  if (!result) return 'unknown';
+  return normalizeShapeType(result.type);
+}
+
+// Create individual test cases for each data item
+describe('Shape Detection Accuracy Tests', () => {
+  formattedResults.detailedResults.forEach((testCase: any, index: number) => {
+    const testName = `should detect ${testCase.expected} correctly (test ${index + 1})`;
+    
+    test(testName, () => {
+      const points: Point[] = testCase.points;
+      const expectedShape = testCase.expected;
+      
+      // Call detectShape with default config
+      const result = detectShape(points);
+      const detectedShape = getDetectedShapeType(result);
+      
+      // Assert that the detected shape matches the expected shape
+      expect(detectedShape).toBe(expectedShape);
+    });
+  });
+});
+
+// Additional test suite for config optimization
+describe('Shape Detection with Custom Config', () => {
+  // Test with different configs to find optimal parameters
+  const testConfigs = [
+    {
+      name: 'default',
+      config: {
+        scoreThreshold: 0.80,
+        aspectRatioThreshold: 1.4,
+        perimeterRatioThreshold: 0.90,
+        diamondScoreThreshold: 0.3,
+        dataCollectionMode: false,
+        straightSegmentAngleThreshold: 20,
+        diamondConfidenceThreshold: 0.3,
+      }
+    },
+    {
+      name: 'lenient',
+      config: {
+        scoreThreshold: 0.70,
+        aspectRatioThreshold: 1.6,
+        perimeterRatioThreshold: 0.85,
+        diamondScoreThreshold: 0.4,
+        dataCollectionMode: false,
+        straightSegmentAngleThreshold: 25,
+        diamondConfidenceThreshold: 0.25,
+      }
+    },
+    {
+      name: 'strict',
+      config: {
+        scoreThreshold: 0.85,
+        aspectRatioThreshold: 1.2,
+        perimeterRatioThreshold: 0.95,
+        diamondScoreThreshold: 0.25,
+        dataCollectionMode: false,
+        straightSegmentAngleThreshold: 15,
+        diamondConfidenceThreshold: 0.35,
+      }
+    }
+  ];
+
+  testConfigs.forEach(({ name, config }) => {
+    describe(`Config: ${name}`, () => {
+      let correctCount = 0;
+      let totalCount = 0;
+      const shapeStats: { [key: string]: { correct: number; total: number } } = {};
+
+      formattedResults.detailedResults.forEach((testCase: any, index: number) => {
+        const testName = `should detect ${testCase.expected} with ${name} config (test ${index + 1})`;
+        
+        test(testName, () => {
+          const points: Point[] = testCase.points;
+          const expectedShape = testCase.expected;
+          
+          // Call detectShape with custom config
+          const result = detectShape(points, config as DetectionConfig);
+          const detectedShape = getDetectedShapeType(result);
+          
+          // Track statistics
+          totalCount++;
+          if (!shapeStats[expectedShape]) {
+            shapeStats[expectedShape] = { correct: 0, total: 0 };
+          }
+          shapeStats[expectedShape].total++;
+          
+          if (detectedShape === expectedShape) {
+            correctCount++;
+            shapeStats[expectedShape].correct++;
+          }
+          
+          // Assert that the detected shape matches the expected shape
+          expect(detectedShape).toBe(expectedShape);
+        });
+      });
+
+      // After all tests in this config, log the statistics
+      afterAll(() => {
+        const accuracy = totalCount > 0 ? (correctCount / totalCount * 100).toFixed(2) : '0.00';
+        console.log(`\n📊 Config "${name}" Results:`);
+        console.log(`   Overall Accuracy: ${correctCount}/${totalCount} (${accuracy}%)`);
+        
+        Object.entries(shapeStats).forEach(([shape, stats]) => {
+          const shapeAccuracy = stats.total > 0 ? (stats.correct / stats.total * 100).toFixed(2) : '0.00';
+          console.log(`   ${shape}: ${stats.correct}/${stats.total} (${shapeAccuracy}%)`);
+        });
+      });
+    });
+  });
+});
+
+// Performance test to ensure detectShape doesn't take too long
+describe('Shape Detection Performance', () => {
+  test('should process all test cases within reasonable time', () => {
+    const startTime = Date.now();
+    let processedCount = 0;
+    
+    formattedResults.detailedResults.forEach((testCase: any) => {
+      const points: Point[] = testCase.points;
+      detectShape(points);
+      processedCount++;
+    });
+    
+    const endTime = Date.now();
+    const totalTime = endTime - startTime;
+    const avgTime = totalTime / processedCount;
+    
+    console.log(`\n⚡ Performance Results:`);
+    console.log(`   Total time: ${totalTime}ms`);
+    console.log(`   Average time per shape: ${avgTime.toFixed(2)}ms`);
+    console.log(`   Processed ${processedCount} shapes`);
+    
+    // Assert that average processing time is reasonable (less than 10ms per shape)
+    expect(avgTime).toBeLessThan(10);
   });
 });
