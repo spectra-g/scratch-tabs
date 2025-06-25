@@ -104,6 +104,13 @@ export const useShapeSnapEngine = (
         },
         zIndex: Date.now(),
       } as Shape;
+      
+      // Add default arrow tip to lines
+      if (newShape.type === 'line') {
+        (newShape as any).arrowTipEnd = 'simple';
+        (newShape as any).arrowTipSize = 10;
+      }
+      
       addShape(newShape);
       return newShape;
     }

@@ -1,8 +1,24 @@
 import React, { useState } from 'react';
-import { CanvasSettings, Shape, Point, ShapeSnapTool } from '../types';
+import { CanvasSettings, Shape, Point, ShapeSnapTool, ArrowTipStyle } from '../types';
 import { renderShape, getShapeCenter } from '../utils/renderUtils';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { cloneDeep } from 'lodash';
+
+// Arrow tip styles in cycling order
+const ARROW_TIP_STYLES: ArrowTipStyle[] = [
+  'none',
+  'simple',
+  'filled-triangle',
+  'outline-triangle',
+  'filled-circle',
+  'outline-circle',
+  'filled-diamond',
+  'outline-diamond',
+  'cross-circle',
+  'dot',
+  'arrowhead',
+  'double-line'
+];
 
 interface ShapeSnapCanvasProps {
   shapes: Shape[];
@@ -61,6 +77,18 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const distance = (p1: Point, p2: Point): number => 
     Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 
+  // Helper function to cycle through arrow tip styles
+  const cycleArrowTip = (currentTip: ArrowTipStyle | undefined): ArrowTipStyle => {
+    // If no current tip, start with 'simple' instead of 'none'
+    if (!currentTip) {
+      return 'simple';
+    }
+    
+    const currentIndex = ARROW_TIP_STYLES.indexOf(currentTip);
+    const nextIndex = (currentIndex + 1) % ARROW_TIP_STYLES.length;
+    return ARROW_TIP_STYLES[nextIndex];
+  };
+
   // Helper function to detect line drag mode
   const detectLineDragMode = (shape: Shape, mousePoint: Point): 'move' | 'resize-start' | 'resize-end' => {
     if (shape.type !== 'line') return 'move';
@@ -101,8 +129,54 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   };
 
   const handleShapeClick = (shape: Shape, position: Point) => {
+    console.log('🖱️ handleShapeClick called:', { shapeId: shape.id, shapeType: shape.type, position });
+    
     if (onShapeClick) {
       onShapeClick(shape, position);
+    }
+    
+    // Check if this is a click on a line endpoint (for arrow tip cycling)
+    if (shape.type === 'line') {
+      console.log('📏 Checking if click is near line endpoint...');
+      const lineShape = shape as Shape & { 
+        points: Point[]; 
+        arrowTipStart?: ArrowTipStyle; 
+        arrowTipEnd?: ArrowTipStyle; 
+      };
+      console.log('📏 Line points:', lineShape.points.map(p => ({ x: p.x, y: p.y })));
+      console.log('📏 Start point:', lineShape.points[0]);
+      console.log('📏 End point:', lineShape.points[lineShape.points.length - 1]);
+      console.log('📏 Current arrow tips:', { start: lineShape.arrowTipStart, end: lineShape.arrowTipEnd });
+      
+      // Use the same logic as drag detection to check if we're near an endpoint
+      const dragMode = detectLineDragMode(shape, position);
+      console.log('📏 Drag mode detected:', dragMode);
+      
+      if (dragMode === 'resize-end') {
+        console.log('🎯 Click detected on line end point, cycling end arrow tip');
+        const newArrowTipEnd = cycleArrowTip(lineShape.arrowTipEnd);
+        console.log('🔄 Cycling end arrow tip from', lineShape.arrowTipEnd, 'to', newArrowTipEnd);
+        
+        if (onUpdateShape) {
+          onUpdateShape(shape.id, { arrowTipEnd: newArrowTipEnd });
+        } else {
+          console.log('❌ No onUpdateShape function available');
+        }
+        return; // Don't proceed with other click handling
+      } else if (dragMode === 'resize-start') {
+        console.log('🎯 Click detected on line start point, cycling start arrow tip');
+        const newArrowTipStart = cycleArrowTip(lineShape.arrowTipStart);
+        console.log('🔄 Cycling start arrow tip from', lineShape.arrowTipStart, 'to', newArrowTipStart);
+        
+        if (onUpdateShape) {
+          onUpdateShape(shape.id, { arrowTipStart: newArrowTipStart });
+        } else {
+          console.log('❌ No onUpdateShape function available');
+        }
+        return; // Don't proceed with other click handling
+      } else {
+        console.log('❌ Click not near line endpoint (drag mode:', dragMode, ')');
+      }
     }
     
     // Handle different tools
@@ -351,7 +425,14 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     // If we have a mouse down shape but no dragging occurred, treat it as a click
     if (mouseDownShape && !draggingShapeId) {
       console.log('🖱️ Mouse up without dragging - treating as click');
-      handleShapeClick(mouseDownShape.shape, mouseDownShape.initialPos);
+      console.log('📍 Mouse down shape:', mouseDownShape.shape.id, mouseDownShape.shape.type);
+      console.log('📍 Initial position:', mouseDownShape.initialPos);
+      const currentMousePos = {
+        x: e.nativeEvent.offsetX,
+        y: e.nativeEvent.offsetY
+      };
+      console.log('📍 Current mouse position:', currentMousePos);
+      handleShapeClick(mouseDownShape.shape, currentMousePos);
       
       // Clean up mouse down state
       setMouseDownShape(null);

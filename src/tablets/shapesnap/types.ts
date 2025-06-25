@@ -2,6 +2,21 @@ export type ShapeType = 'line' | 'rectangle' | 'circle' | 'diamond' | 'arrow' | 
 export type ShapeSnapMode = 'dark' | 'light';
 export type ShapeSnapTool = 'draw' | 'select' | 'text' | 'eraser';
 
+// Arrow tip styles for lines
+export type ArrowTipStyle = 
+  | 'none'           // No arrow tip
+  | 'simple'         // Two angled lines forming an arrow
+  | 'filled-triangle' // Filled triangle
+  | 'outline-triangle' // Non-filled triangle
+  | 'filled-circle'  // Filled circle
+  | 'outline-circle' // Non-filled circle
+  | 'filled-diamond' // Filled diamond
+  | 'outline-diamond' // Non-filled diamond
+  | 'cross-circle'   // Circle with cross inside
+  | 'dot'            // Simple dot
+  | 'arrowhead'      // Classic arrowhead
+  | 'double-line';   // Double line arrow
+
 export interface Point {
   x: number;
   y: number;
@@ -24,6 +39,9 @@ export interface BaseShape {
 export interface LineShape extends BaseShape {
   type: 'line';
   points: Point[];
+  arrowTipStart?: ArrowTipStyle; // Arrow tip style for the start of the line
+  arrowTipEnd?: ArrowTipStyle;   // Arrow tip style for the end of the line
+  arrowTipSize?: number;         // Size of the arrow tips (default: 10)
 }
 
 export interface RectangleShape extends BaseShape {

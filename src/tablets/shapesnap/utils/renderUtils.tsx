@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shape, Point } from '../types';
+import { Shape, Point, ArrowTipStyle } from '../types';
 
 // Calculate the arrowhead points
 const calculateArrowhead = (from: Point, to: Point, headSize = 10): [Point, Point] => {
@@ -111,6 +111,243 @@ const getLineLabelPosition = (shape: Shape & { points: Point[] }): { x: number; 
   }
 };
 
+// Helper function to detect if mouse is near line endpoint (start or end)
+const isNearLineEndpoint = (shape: Shape & { points: Point[] }, mousePos: Point, threshold: number = 15): 'start' | 'end' | null => {
+  if (shape.type !== 'line' || shape.points.length < 2) {
+    return null;
+  }
+  
+  const startPoint = shape.points[0];
+  const endPoint = shape.points[shape.points.length - 1];
+  
+  const startDistance = Math.sqrt(
+    Math.pow(mousePos.x - startPoint.x, 2) + 
+    Math.pow(mousePos.y - startPoint.y, 2)
+  );
+  
+  const endDistance = Math.sqrt(
+    Math.pow(mousePos.x - endPoint.x, 2) + 
+    Math.pow(mousePos.y - endPoint.y, 2)
+  );
+  
+  if (startDistance <= threshold) {
+    return 'start';
+  } else if (endDistance <= threshold) {
+    return 'end';
+  }
+  
+  return null;
+};
+
+// Render arrow tip based on style
+const renderArrowTip = (
+  endPoint: Point, 
+  fromPoint: Point, 
+  style: ArrowTipStyle, 
+  size: number = 10, 
+  strokeColor: string, 
+  strokeWidth: number = 2,
+  clickHandlers?: any
+) => {
+  switch (style) {
+    case 'none':
+      return null;
+      
+    case 'simple':
+      const [point1, point2] = calculateArrowhead(fromPoint, endPoint, size);
+      return (
+        <path
+          {...clickHandlers}
+          d={`M ${point1.x},${point1.y} L ${endPoint.x},${endPoint.y} L ${point2.x},${point2.y}`}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      );
+      
+    case 'filled-triangle':
+      const [p1, p2] = calculateArrowhead(fromPoint, endPoint, size);
+      return (
+        <polygon
+          {...clickHandlers}
+          points={`${endPoint.x},${endPoint.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`}
+          fill={strokeColor}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      );
+      
+    case 'outline-triangle':
+      const [p3, p4] = calculateArrowhead(fromPoint, endPoint, size);
+      return (
+        <polygon
+          {...clickHandlers}
+          points={`${endPoint.x},${endPoint.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      );
+      
+    case 'filled-circle':
+      return (
+        <circle
+          {...clickHandlers}
+          cx={endPoint.x}
+          cy={endPoint.y}
+          r={size / 2}
+          fill={strokeColor}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      );
+      
+    case 'outline-circle':
+      return (
+        <circle
+          {...clickHandlers}
+          cx={endPoint.x}
+          cy={endPoint.y}
+          r={size / 2}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      );
+      
+    case 'filled-diamond':
+      const diamondSize = size / 2;
+      const diamondPoints = [
+        { x: endPoint.x, y: endPoint.y - diamondSize },
+        { x: endPoint.x + diamondSize, y: endPoint.y },
+        { x: endPoint.x, y: endPoint.y + diamondSize },
+        { x: endPoint.x - diamondSize, y: endPoint.y }
+      ];
+      return (
+        <polygon
+          {...clickHandlers}
+          points={diamondPoints.map(p => `${p.x},${p.y}`).join(' ')}
+          fill={strokeColor}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      );
+      
+    case 'outline-diamond':
+      const diamondSize2 = size / 2;
+      const diamondPoints2 = [
+        { x: endPoint.x, y: endPoint.y - diamondSize2 },
+        { x: endPoint.x + diamondSize2, y: endPoint.y },
+        { x: endPoint.x, y: endPoint.y + diamondSize2 },
+        { x: endPoint.x - diamondSize2, y: endPoint.y }
+      ];
+      return (
+        <polygon
+          {...clickHandlers}
+          points={diamondPoints2.map(p => `${p.x},${p.y}`).join(' ')}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+        />
+      );
+      
+    case 'cross-circle':
+      const crossRadius = size / 2;
+      const crossSize = size / 3;
+      return (
+        <g {...clickHandlers}>
+          <circle
+            cx={endPoint.x}
+            cy={endPoint.y}
+            r={crossRadius}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+          <line
+            x1={endPoint.x - crossSize}
+            y1={endPoint.y - crossSize}
+            x2={endPoint.x + crossSize}
+            y2={endPoint.y + crossSize}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+          />
+          <line
+            x1={endPoint.x - crossSize}
+            y1={endPoint.y + crossSize}
+            x2={endPoint.x + crossSize}
+            y2={endPoint.y - crossSize}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+          />
+        </g>
+      );
+      
+    case 'dot':
+      return (
+        <circle
+          {...clickHandlers}
+          cx={endPoint.x}
+          cy={endPoint.y}
+          r={size / 4}
+          fill={strokeColor}
+          stroke="none"
+        />
+      );
+      
+    case 'arrowhead':
+      const [p5, p6] = calculateArrowhead(fromPoint, endPoint, size);
+      return (
+        <g {...clickHandlers}>
+          <path
+            d={`M ${p5.x},${p5.y} L ${endPoint.x},${endPoint.y} L ${p6.x},${p6.y}`}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points={`${endPoint.x},${endPoint.y} ${p5.x},${p5.y} ${p6.x},${p6.y}`}
+            fill={strokeColor}
+            stroke="none"
+          />
+        </g>
+      );
+      
+    case 'double-line':
+      const [p7, p8] = calculateArrowhead(fromPoint, endPoint, size);
+      const [p9, p10] = calculateArrowhead(fromPoint, endPoint, size * 0.7);
+      return (
+        <g {...clickHandlers}>
+          <path
+            d={`M ${p7.x},${p7.y} L ${endPoint.x},${endPoint.y} L ${p8.x},${p8.y}`}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d={`M ${p9.x},${p9.y} L ${endPoint.x},${endPoint.y} L ${p10.x},${p10.y}`}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </g>
+      );
+      
+    default:
+      return null;
+  }
+};
+
 // Render a shape with label and click handlers
 export const renderShape = (
   shape: Shape, 
@@ -159,11 +396,31 @@ export const renderShape = (
       console.log('❌ No onMouseDown handler provided');
     }
   };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    // Update cursor based on position relative to line endpoints
+    if (shape.type === 'line') {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const position = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      
+      const lineShape = shape as Shape & { points: Point[] };
+      const element = e.currentTarget as HTMLElement;
+      if (isNearLineEndpoint(lineShape, position)) {
+        element.style.cursor = 'pointer';
+      } else {
+        element.style.cursor = currentTool === 'eraser' ? 'crosshair' : 'pointer';
+      }
+    }
+  };
   
   const baseProps = {
     onClick: handleClick,
     onDoubleClick: handleDoubleClick,
     onMouseDown: handleMouseDown,
+    onMouseMove: handleMouseMove,
     style: {
       cursor: currentTool === 'eraser' ? 'crosshair' : 'pointer',
       ...(isSelected && {
@@ -175,18 +432,65 @@ export const renderShape = (
   const shapeElement = (() => {
     switch (shape.type) {
       case 'line':
-        return (
-          <path
-            key={shape.id}
-            {...baseProps}
-            d={`M ${shape.points.map(p => `${p.x},${p.y}`).join(' L ')}`}
-            stroke={shape.style.stroke}
-            strokeWidth={shape.style.strokeWidth || 2}
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        );
+        const lineShape = shape as Shape & { 
+          points: Point[]; 
+          arrowTipStart?: ArrowTipStyle; 
+          arrowTipEnd?: ArrowTipStyle; 
+          arrowTipSize?: number 
+        };
+        const hasStartArrow = lineShape.arrowTipStart && lineShape.arrowTipStart !== 'none' && lineShape.points.length >= 2;
+        const hasEndArrow = lineShape.arrowTipEnd && lineShape.arrowTipEnd !== 'none' && lineShape.points.length >= 2;
+        
+        if (hasStartArrow || hasEndArrow) {
+          const arrowTipSize = lineShape.arrowTipSize || 10;
+          const arrowTips = [];
+          
+          // Render start arrow tip
+          if (hasStartArrow) {
+            const startPoint = lineShape.points[0];
+            const directionPoint = lineShape.points[1];
+            arrowTips.push(
+              renderArrowTip(startPoint, directionPoint, lineShape.arrowTipStart!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2, baseProps)
+            );
+          }
+          
+          // Render end arrow tip
+          if (hasEndArrow) {
+            const endPoint = lineShape.points[lineShape.points.length - 1];
+            const directionPoint = lineShape.points[lineShape.points.length - 2];
+            arrowTips.push(
+              renderArrowTip(endPoint, directionPoint, lineShape.arrowTipEnd!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2, baseProps)
+            );
+          }
+          
+          return (
+            <g key={shape.id}>
+              <path
+                {...baseProps}
+                d={`M ${lineShape.points.map(p => `${p.x},${p.y}`).join(' L ')}`}
+                stroke={shape.style.stroke}
+                strokeWidth={shape.style.strokeWidth || 2}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {arrowTips}
+            </g>
+          );
+        } else {
+          return (
+            <path
+              key={shape.id}
+              {...baseProps}
+              d={`M ${lineShape.points.map(p => `${p.x},${p.y}`).join(' L ')}`}
+              stroke={shape.style.stroke}
+              strokeWidth={shape.style.strokeWidth || 2}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          );
+        }
       case 'rectangle':
         return (
           <rect
