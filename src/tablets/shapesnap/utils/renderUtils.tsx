@@ -75,9 +75,11 @@ export const getShapeCenter = (shape: Shape): Point => {
 export const renderShape = (
   shape: Shape, 
   onShapeClick?: (shape: Shape, position: Point) => void,
-  selectedShapeId?: string
+  selectedShapeId?: string,
+  editingShapeId?: string
 ): React.ReactNode => {
   const isSelected = selectedShapeId === shape.id;
+  const isEditing = editingShapeId === shape.id;
   const center = getShapeCenter(shape);
   
   const handleClick = (e: React.MouseEvent) => {
@@ -93,7 +95,6 @@ export const renderShape = (
   };
   
   const baseProps = {
-    key: shape.id,
     onClick: handleClick,
     style: {
       cursor: 'pointer',
@@ -108,6 +109,7 @@ export const renderShape = (
       case 'line':
         return (
           <path
+            key={shape.id}
             {...baseProps}
             d={`M ${shape.points.map(p => `${p.x},${p.y}`).join(' L ')}`}
             stroke={shape.style.stroke}
@@ -117,10 +119,10 @@ export const renderShape = (
             strokeLinejoin="round"
           />
         );
-        
       case 'rectangle':
         return (
           <rect
+            key={shape.id}
             {...baseProps}
             x={shape.x}
             y={shape.y}
@@ -131,10 +133,10 @@ export const renderShape = (
             strokeWidth={shape.style.strokeWidth || 2}
           />
         );
-        
       case 'square':
         return (
           <rect
+            key={shape.id}
             {...baseProps}
             x={shape.x}
             y={shape.y}
@@ -145,10 +147,10 @@ export const renderShape = (
             strokeWidth={shape.style.strokeWidth || 2}
           />
         );
-        
       case 'triangle':
         return (
           <path
+            key={shape.id}
             {...baseProps}
             d={createTrianglePath(shape.x, shape.y, shape.width, shape.height)}
             stroke={shape.style.stroke}
@@ -156,10 +158,10 @@ export const renderShape = (
             strokeWidth={shape.style.strokeWidth || 2}
           />
         );
-        
       case 'circle':
         return (
           <circle
+            key={shape.id}
             {...baseProps}
             cx={shape.x}
             cy={shape.y}
@@ -169,10 +171,10 @@ export const renderShape = (
             strokeWidth={shape.style.strokeWidth || 2}
           />
         );
-        
       case 'diamond':
         return (
           <path
+            key={shape.id}
             {...baseProps}
             d={createDiamondPath(shape.x, shape.y, shape.width, shape.height)}
             stroke={shape.style.stroke}
@@ -180,12 +182,10 @@ export const renderShape = (
             strokeWidth={shape.style.strokeWidth || 2}
           />
         );
-        
       case 'arrow':
         const [arrowPoint1, arrowPoint2] = calculateArrowhead(shape.from, shape.to);
-        
         return (
-          <g {...baseProps}>
+          <g key={shape.id} {...baseProps}>
             <line
               x1={shape.from.x}
               y1={shape.from.y}
@@ -204,10 +204,10 @@ export const renderShape = (
             />
           </g>
         );
-        
       case 'text':
         return (
           <text
+            key={shape.id}
             {...baseProps}
             x={shape.x}
             y={shape.y}
@@ -219,14 +219,13 @@ export const renderShape = (
             {shape.text}
           </text>
         );
-        
       default:
         return null;
     }
   })();
 
-  // Render label if it exists
-  const labelElement = shape.label ? (
+  // Render label if it exists and not editing
+  const labelElement = (!isEditing && shape.label) ? (
     <text
       key={`${shape.id}-label`}
       x={center.x}

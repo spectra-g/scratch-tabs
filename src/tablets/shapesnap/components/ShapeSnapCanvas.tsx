@@ -111,7 +111,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         {sortedShapes.map(shape => renderShape(
           shape, 
           currentTool === 'select' ? handleShapeClick : undefined, 
-          selectedShapeId
+          selectedShapeId,
+          editingShape ? editingShape.id : undefined
         ))}
         
         {/* Render current drawing stroke */}
@@ -126,26 +127,26 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             opacity={0.8}
           />
         )}
+
+        {/* Render label editor INSIDE the SVG */}
+        {editingShape && (
+          (() => {
+            const { x, y, width, height } = getEditorRect(editingShape);
+            return (
+              <ShapeLabelEditor
+                shape={editingShape}
+                onSave={handleLabelSave}
+                onCancel={handleLabelCancel}
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                canvasMode={canvasSettings.mode}
+              />
+            );
+          })()
+        )}
       </svg>
-      
-      {/* Render label editor */}
-      {editingShape && (
-        (() => {
-          const { x, y, width, height } = getEditorRect(editingShape);
-          return (
-            <ShapeLabelEditor
-              shape={editingShape}
-              onSave={handleLabelSave}
-              onCancel={handleLabelCancel}
-              x={x}
-              y={y}
-              width={width}
-              height={height}
-              canvasMode={canvasSettings.mode}
-            />
-          );
-        })()
-      )}
     </div>
   );
 };

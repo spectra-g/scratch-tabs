@@ -99,7 +99,7 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
           textAlign: 'center',
           outline: 'none',
           boxSizing: 'border-box',
-          overflowY: 'auto',
+          overflow: 'hidden',
           wordWrap: 'break-word',
           whiteSpace: 'pre-wrap',
           fontWeight: 500,
