@@ -52,7 +52,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     dragGuides,
     resizeHandle,
     setSelectedShapeId,
-    setEditingShape,
     handleShapeClick,
     handleLabelSave,
     handleLabelCancel,
@@ -61,9 +60,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     handleShapeMouseDown,
     handleMouseMove,
     handleMouseUp,
-    detectResizeHandle,
-    calculateResizeBounds,
-    generateId
+    detectResizeHandle
   } = useShapeSnapCanvasEvents({
     shapes,
     canvasSettings,
@@ -132,7 +129,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       { name: 'w', x: bounds.left, y: (bounds.top + bounds.bottom) / 2 }
     ];
     
-    const handleMouseDown = (e: React.MouseEvent, handleName: string) => {
+    const handleMouseDown = (e: React.MouseEvent) => {
       e.stopPropagation();
       
       const mouseX = e.nativeEvent.offsetX;
@@ -166,7 +163,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             stroke={strokeColor}
             strokeWidth={1}
             style={{ cursor: getResizeCursor(handle.name) }}
-            onMouseDown={(e) => handleMouseDown(e, handle.name)}
+            onMouseDown={handleMouseDown}
           />
         ))}
       </g>

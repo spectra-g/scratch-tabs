@@ -1,4 +1,3 @@
-import React from 'react';
 import { Tablet, TabletState } from '../types';
 import { ShapeSnapData } from './types';
 import { ShapeSnapUI } from './components/ShapeSnapUI';

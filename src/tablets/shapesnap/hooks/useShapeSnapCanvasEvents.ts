@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { Shape, Point, CanvasSettings, ShapeSnapTool, ArrowTipStyle } from '../types';
-import { getShapeCenter, getShapeBoundingBox, snapToGrid } from '../utils/geometryUtils';
-import { cycleArrowTip, ARROW_TIP_STYLES } from '../utils/arrowTipUtils';
+import { getShapeCenter, getShapeBoundingBox } from '../utils/geometryUtils';
+import { cycleArrowTip } from '../utils/arrowTipUtils';
 import { cloneDeep } from 'lodash';
 
 export interface UseShapeSnapCanvasEventsProps {
@@ -403,12 +403,6 @@ export const useShapeSnapCanvasEvents = ({
     
     // Special handling for line shapes - check if clicking on arrow tip
     if (shape.type === 'line' && (currentTool === 'select' || currentTool === 'draw')) {
-      const lineShape = shape as Shape & { 
-        points: Point[]; 
-        arrowTipStart?: ArrowTipStyle; 
-        arrowTipEnd?: ArrowTipStyle; 
-      };
-
       // Use the same logic as drag detection to check if we're near an endpoint
       const dragMode = detectLineDragMode(shape, mousePoint);
 
