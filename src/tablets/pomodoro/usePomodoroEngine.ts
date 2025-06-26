@@ -149,7 +149,7 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      document.title = 'DevToolbox';
+      document.title = 'Scratch Tabs';
     };
   }, [state.status, state.currentSession.startTime, state.currentSession.duration, state.currentSession.type, state.soundEnabled]);
 
