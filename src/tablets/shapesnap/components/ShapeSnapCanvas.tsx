@@ -150,6 +150,34 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       }
     };
     
+    const handleTouchStart = (e: React.TouchEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const rect = e.currentTarget.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      const touchY = touch.clientY - rect.top;
+      const touchPoint = { x: touchX, y: touchY };
+      
+      // Use the hook's detectResizeHandle function
+      const handle = detectResizeHandle(shape, touchPoint);
+      if (handle) {
+        // Select the shape if it's not already selected
+        if (selectedShapeId !== shape.id) {
+          setSelectedShapeId(shape.id);
+        }
+        
+        // Convert touch to mouse event for compatibility with existing logic
+        const mouseEvent = new MouseEvent('mousedown', {
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          bubbles: true
+        });
+        handleShapeMouseDown(shape, mouseEvent as any);
+      }
+    };
+    
     return (
       <g key={`${shape.id}-resize-handles`}>
         {handles.map(handle => (
@@ -164,6 +192,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             strokeWidth={1}
             style={{ cursor: getResizeCursor(handle.name) }}
             onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
           />
         ))}
       </g>
@@ -218,6 +247,39 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           if (e.target === e.currentTarget) {
             setSelectedShapeId(undefined);
           }
+        }}
+        onTouchStart={(e) => {
+          // Prevent default to avoid scrolling
+          e.preventDefault();
+          // Convert touch to mouse event for compatibility
+          const touch = e.touches[0];
+          const mouseEvent = new MouseEvent('mousedown', {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            bubbles: true
+          });
+          e.currentTarget.dispatchEvent(mouseEvent);
+        }}
+        onTouchMove={(e) => {
+          // Prevent default to avoid scrolling
+          e.preventDefault();
+          // Convert touch to mouse event for compatibility
+          const touch = e.touches[0];
+          const mouseEvent = new MouseEvent('mousemove', {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            bubbles: true
+          });
+          e.currentTarget.dispatchEvent(mouseEvent);
+        }}
+        onTouchEnd={(e) => {
+          // Prevent default to avoid any unwanted behavior
+          e.preventDefault();
+          // Convert touch to mouse event for compatibility
+          const mouseEvent = new MouseEvent('mouseup', {
+            bubbles: true
+          });
+          e.currentTarget.dispatchEvent(mouseEvent);
         }}
       >
         {/* Render all shapes */}

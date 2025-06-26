@@ -422,11 +422,56 @@ export const renderShape = (
     }
   };
   
+  // Touch event handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (onMouseDown) {
+      // Convert touch to mouse event for compatibility
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        bubbles: true
+      });
+      onMouseDown(shape, mouseEvent as any);
+    }
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    // Convert touch to mouse event for compatibility
+    const touch = e.touches[0];
+    const mouseEvent = new MouseEvent('mousemove', {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      bubbles: true
+    });
+    handleMouseMove(mouseEvent as any);
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    // For touch end, we'll handle it as a click if no dragging occurred
+    if (onShapeClick) {
+      const touch = e.changedTouches[0];
+      const rect = e.currentTarget.getBoundingClientRect();
+      const position = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+      onShapeClick(shape, position);
+    }
+  };
+  
   const baseProps = {
     onClick: handleClick,
     onDoubleClick: handleDoubleClick,
     onMouseDown: handleMouseDown,
     onMouseMove: handleMouseMove,
+    onTouchStart: handleTouchStart,
+    onTouchMove: handleTouchMove,
+    onTouchEnd: handleTouchEnd,
     style: {
       cursor: currentTool === 'eraser' ? 'crosshair' : 'pointer',
       ...(isSelected && {

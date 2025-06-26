@@ -47,17 +47,36 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
     };
   }, []);
   
+  // Helper function to get point from event (mouse or touch)
+  const getPointFromEvent = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    
+    let clientX: number, clientY: number;
+    
+    if ('touches' in e) {
+      // Touch event
+      if (e.touches.length === 0) return null;
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  };
+  
   // Mouse event handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (state.currentTool !== 'draw') return;
     
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    const point = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
+    const point = getPointFromEvent(e);
+    if (!point) return;
     
     setDrawState({
       isDrawing: true,
@@ -69,13 +88,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!drawState.isDrawing || state.currentTool !== 'draw') return;
     
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    const point = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
+    const point = getPointFromEvent(e);
+    if (!point) return;
     
     setDrawState(prev => ({
       ...prev,
@@ -86,13 +100,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!drawState.isDrawing || state.currentTool !== 'draw') return;
     
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    const point = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
+    const point = getPointFromEvent(e);
+    if (!point) return;
     
     const finalPoints = [...drawState.currentPoints, point];
     
@@ -112,6 +121,75 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   const handleMouseLeave = () => {
     if (drawState.isDrawing && drawState.currentPoints.length > 1) {
       // Finish the drawing if mouse leaves canvas
+      if (typeof engine.detectAndAddShape === 'function') {
+        engine.detectAndAddShape(drawState.currentPoints);
+      }
+    }
+    
+    setDrawState({
+      isDrawing: false,
+      currentPoints: [],
+      startPoint: null
+    });
+  };
+  
+  // Touch event handlers
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (state.currentTool !== 'draw') return;
+    
+    // Prevent default to avoid scrolling while drawing
+    e.preventDefault();
+    
+    const point = getPointFromEvent(e);
+    if (!point) return;
+    
+    setDrawState({
+      isDrawing: true,
+      currentPoints: [point],
+      startPoint: point
+    });
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!drawState.isDrawing || state.currentTool !== 'draw') return;
+    
+    // Prevent default to avoid scrolling while drawing
+    e.preventDefault();
+    
+    const point = getPointFromEvent(e);
+    if (!point) return;
+    
+    setDrawState(prev => ({
+      ...prev,
+      currentPoints: [...prev.currentPoints, point]
+    }));
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!drawState.isDrawing || state.currentTool !== 'draw') return;
+    
+    // Prevent default to avoid any unwanted behavior
+    e.preventDefault();
+    
+    // For touch end, we don't add a final point since the last touch move already captured it
+    const finalPoints = [...drawState.currentPoints];
+    
+    // Instead of detecting and adding shape here, call onDrawEnd
+    if (typeof engine.detectAndAddShape === 'function') {
+      engine.detectAndAddShape(finalPoints);
+    }
+    
+    // Reset drawing state
+    setDrawState({
+      isDrawing: false,
+      currentPoints: [],
+      startPoint: null
+    });
+  };
+  
+  const handleTouchCancel = () => {
+    if (drawState.isDrawing && drawState.currentPoints.length > 1) {
+      // Finish the drawing if touch is cancelled
       if (typeof engine.detectAndAddShape === 'function') {
         engine.detectAndAddShape(drawState.currentPoints);
       }
@@ -152,6 +230,11 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
+        style={{ touchAction: 'none' }} // Prevent default touch behaviors like scrolling
       >
         <ShapeSnapCanvas 
           shapes={state.shapes}
