@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { getLanguageStatusItem, getLanguageOptionsMenu } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
@@ -24,23 +24,34 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
   const { splitView, updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
+  const [tabletLabel, setTabletLabel] = useState('');
   const languageLabelRef = useRef<HTMLDivElement>(null);
 
   const showAIIcon = (!splitView.isSplit && side === 'left') || (splitView.isSplit && side === 'right');
 
   // Get the tablet if this is a tablet tab
-  let tabletLabel = '';
-  if (activeTab?.isTablet && activeTab.tabletState) {
-    try {
-      const state = JSON.parse(activeTab.tabletState);
-      const tablet = tabletRegistry.getById(state.type);
-      if (tablet) {
-        tabletLabel = tablet.label;
+  useEffect(() => {
+    const getTabletLabel = async () => {
+      if (activeTab?.isTablet && activeTab.tabletState) {
+        try {
+          const state = JSON.parse(activeTab.tabletState);
+          const tablet = await tabletRegistry.getById(state.type);
+          if (tablet) {
+            setTabletLabel(tablet.label);
+          } else {
+            setTabletLabel('');
+          }
+        } catch (e) {
+          console.error('Error parsing tablet state:', e);
+          setTabletLabel('');
+        }
+      } else {
+        setTabletLabel('');
       }
-    } catch (e) {
-      console.error('Error parsing tablet state:', e);
-    }
-  }
+    };
+
+    getTabletLabel();
+  }, [activeTab]);
 
   const LanguageStatusItem = activeTab && !activeTab.isTablet ? 
     getLanguageStatusItem(activeTab.language, activeTab.content) : null;
@@ -211,9 +222,11 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     <div className="flex items-center space-x-4">
         {activeTab && (
           <>
-            <span>
-              Ln {activeTab.cursorPosition.lineNumber}, Col {activeTab.cursorPosition.column}
-            </span>
+            {!activeTab.isTablet && (
+              <span>
+                Ln {activeTab.cursorPosition.lineNumber}, Col {activeTab.cursorPosition.column}
+              </span>
+            )}
             <div className="p-0.5 flex items-center space-x-2">
               {renderLanguageSection()}
               {LanguageStatusItem && <LanguageStatusItem />}
