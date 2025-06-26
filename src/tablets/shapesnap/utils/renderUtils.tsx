@@ -814,42 +814,103 @@ export const renderShapeOverlay = (
     }
   })() : null;
 
-  // Render arrow tips for lines
-  if (shape.type === 'line') {
-    const lineShape = shape as Shape & { 
-      points: Point[]; 
-      arrowTipStart?: ArrowTipStyle; 
-      arrowTipEnd?: ArrowTipStyle; 
-      arrowTipSize?: number 
-    };
-    const hasStartArrow = lineShape.arrowTipStart && lineShape.arrowTipStart !== 'none' && lineShape.points.length >= 2;
-    const hasEndArrow = lineShape.arrowTipEnd && lineShape.arrowTipEnd !== 'none' && lineShape.points.length >= 2;
-    const arrowTipSize = lineShape.arrowTipSize || 10;
-    const arrowTips = [];
-    if (hasStartArrow) {
-      const startPoint = lineShape.points[0];
-      const directionPoint = lineShape.points[1];
-      arrowTips.push(
-        renderArrowTip(startPoint, directionPoint, lineShape.arrowTipStart!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
-      );
-    }
-    if (hasEndArrow) {
-      const endPoint = lineShape.points[lineShape.points.length - 1];
-      const directionPoint = lineShape.points[lineShape.points.length - 2];
-      arrowTips.push(
-        renderArrowTip(endPoint, directionPoint, lineShape.arrowTipEnd!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
-      );
-    }
-    return <g key={shape.id + '-overlay'}>
-      {arrowTips.map((tip, index) => (
-        <React.Fragment key={`${shape.id}-arrow-tip-${index}`}>
-          {tip}
-        </React.Fragment>
-      ))}
-      {labelElement}
-    </g>;
-  }
   return labelElement;
+};
+
+// Helper function to render resize handles for selected shapes
+export const renderResizeHandles = (
+  shape: Shape,
+  selectedShapeId?: string,
+  canvasMode: 'light' | 'dark' = 'dark'
+): React.ReactNode => {
+  if (shape.type === 'line' || selectedShapeId !== shape.id) {
+    return null;
+  }
+  
+  // Helper function to calculate bounding box of a shape
+  const getShapeBoundingBox = (shape: Shape): { left: number; right: number; top: number; bottom: number } => {
+    switch (shape.type) {
+      case 'rectangle':
+      case 'square': {
+        const rectShape = shape as Shape & { x: number; y: number; width: number; height: number };
+        return {
+          left: rectShape.x,
+          right: rectShape.x + rectShape.width,
+          top: rectShape.y,
+          bottom: rectShape.y + rectShape.height
+        };
+      }
+      case 'circle': {
+        const circleShape = shape as Shape & { x: number; y: number; radius: number };
+        const radius = circleShape.radius || 20;
+        return {
+          left: circleShape.x - radius,
+          right: circleShape.x + radius,
+          top: circleShape.y - radius,
+          bottom: circleShape.y + radius
+        };
+      }
+      case 'diamond':
+      case 'triangle': {
+        const polyShape = shape as Shape & { x: number; y: number; width: number; height: number };
+        const halfWidth = (polyShape.width || 40) / 2;
+        const halfHeight = (polyShape.height || 40) / 2;
+        return {
+          left: polyShape.x - halfWidth,
+          right: polyShape.x + halfWidth,
+          top: polyShape.y - halfHeight,
+          bottom: polyShape.y + halfHeight
+        };
+      }
+      case 'text': {
+        const textShape = shape as Shape & { x: number; y: number; fontSize?: number };
+        const fontSize = textShape.fontSize || 16;
+        const textWidth = (textShape as any).text ? (textShape as any).text.length * fontSize * 0.6 : 50; // rough estimate
+        const textHeight = fontSize;
+        return {
+          left: textShape.x - textWidth / 2,
+          right: textShape.x + textWidth / 2,
+          top: textShape.y - textHeight / 2,
+          bottom: textShape.y + textHeight / 2
+        };
+      }
+      default:
+        return { left: 0, right: 0, top: 0, bottom: 0 };
+    }
+  };
+  
+  const bounds = getShapeBoundingBox(shape);
+  const handleSize = 8;
+  const strokeColor = canvasMode === 'dark' ? '#ffffff' : '#000000';
+  const fillColor = canvasMode === 'dark' ? '#1e1e1e' : '#ffffff';
+  
+  const handles = [
+    { name: 'nw', x: bounds.left, y: bounds.top },
+    { name: 'ne', x: bounds.right, y: bounds.top },
+    { name: 'se', x: bounds.right, y: bounds.bottom },
+    { name: 'sw', x: bounds.left, y: bounds.bottom },
+    { name: 'n', x: (bounds.left + bounds.right) / 2, y: bounds.top },
+    { name: 'e', x: bounds.right, y: (bounds.top + bounds.bottom) / 2 },
+    { name: 's', x: (bounds.left + bounds.right) / 2, y: bounds.bottom },
+    { name: 'w', x: bounds.left, y: (bounds.top + bounds.bottom) / 2 }
+  ];
+  
+  return (
+    <g key={`${shape.id}-resize-handles`}>
+      {handles.map(handle => (
+        <rect
+          key={`${shape.id}-handle-${handle.name}`}
+          x={handle.x - handleSize / 2}
+          y={handle.y - handleSize / 2}
+          width={handleSize}
+          height={handleSize}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth={1}
+        />
+      ))}
+    </g>
+  );
 };
 
 // Stable hash function for string ids

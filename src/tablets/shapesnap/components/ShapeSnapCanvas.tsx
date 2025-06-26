@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool, ArrowTipStyle } from '../types';
-import { renderShape, getShapeCenter, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
+import { renderShape, getShapeCenter, renderRoughShapeSVG, renderShapeOverlay, renderResizeHandles, hashCode } from '../utils/renderUtils';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { ShapeSnapInfoModal } from './ShapeSnapInfoModal';
 import { cloneDeep } from 'lodash';
@@ -66,6 +66,13 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const [mouseDownShape, setMouseDownShape] = useState<{ shape: Shape; initialPos: Point; center: Point } | null>(null);
   const [hasMoved, setHasMoved] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [resizeMode, setResizeMode] = useState<'none' | 'resize' | null>(null);
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
+  const [resizeStartData, setResizeStartData] = useState<{
+    shape: Shape;
+    startPoint: Point;
+    originalBounds: { x: number; y: number; width: number; height: number; radius?: number };
+  } | null>(null);
   
   // Drag guides state
   const [dragGuides, setDragGuides] = useState<{
@@ -131,6 +138,116 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     } else {
       return 'move';
     }
+  };
+
+  // Helper function to detect resize handle for non-line shapes
+  const detectResizeHandle = (shape: Shape, mousePoint: Point): string | null => {
+    if (shape.type === 'line') return null;
+    
+    const bounds = getShapeBoundingBox(shape);
+    const handleSize = 12; // Increased from 8
+    const threshold = handleSize / 2;
+    
+    // Check corners first
+    const corners = [
+      { name: 'nw', x: bounds.left, y: bounds.top },
+      { name: 'ne', x: bounds.right, y: bounds.top },
+      { name: 'se', x: bounds.right, y: bounds.bottom },
+      { name: 'sw', x: bounds.left, y: bounds.bottom }
+    ];
+    
+    for (const corner of corners) {
+      if (Math.abs(mousePoint.x - corner.x) <= threshold && Math.abs(mousePoint.y - corner.y) <= threshold) {
+        return corner.name;
+      }
+    }
+    
+    // Check edges
+    const edges = [
+      { name: 'n', x: (bounds.left + bounds.right) / 2, y: bounds.top },
+      { name: 'e', x: bounds.right, y: (bounds.top + bounds.bottom) / 2 },
+      { name: 's', x: (bounds.left + bounds.right) / 2, y: bounds.bottom },
+      { name: 'w', x: bounds.left, y: (bounds.top + bounds.bottom) / 2 }
+    ];
+    
+    for (const edge of edges) {
+      if (Math.abs(mousePoint.x - edge.x) <= threshold && Math.abs(mousePoint.y - edge.y) <= threshold) {
+        return edge.name;
+      }
+    }
+    
+    return null;
+  };
+
+  // Helper function to calculate new bounds during resize
+  const calculateResizeBounds = (
+    originalBounds: { x: number; y: number; width: number; height: number; radius?: number },
+    handle: string,
+    deltaX: number,
+    deltaY: number,
+    shapeType: string
+  ): { x: number; y: number; width: number; height: number; radius?: number } => {
+    const { x, y, width, height, radius } = originalBounds;
+    let newX = x;
+    let newY = y;
+    let newWidth = width;
+    let newHeight = height;
+    let newRadius = radius;
+    
+    // Snap to grid
+    const snappedDeltaX = snapToGrid(deltaX, 20);
+    const snappedDeltaY = snapToGrid(deltaY, 20);
+    
+    switch (handle) {
+      case 'nw':
+        newX = x + snappedDeltaX;
+        newY = y + snappedDeltaY;
+        newWidth = Math.max(20, width - snappedDeltaX);
+        newHeight = Math.max(20, height - snappedDeltaY);
+        break;
+      case 'ne':
+        newY = y + snappedDeltaY;
+        newWidth = Math.max(20, width + snappedDeltaX);
+        newHeight = Math.max(20, height - snappedDeltaY);
+        break;
+      case 'se':
+        newWidth = Math.max(20, width + snappedDeltaX);
+        newHeight = Math.max(20, height + snappedDeltaY);
+        break;
+      case 'sw':
+        newX = x + snappedDeltaX;
+        newWidth = Math.max(20, width - snappedDeltaX);
+        newHeight = Math.max(20, height + snappedDeltaY);
+        break;
+      case 'n':
+        newY = y + snappedDeltaY;
+        newHeight = Math.max(20, height - snappedDeltaY);
+        break;
+      case 'e':
+        newWidth = Math.max(20, width + snappedDeltaX);
+        break;
+      case 's':
+        newHeight = Math.max(20, height + snappedDeltaY);
+        break;
+      case 'w':
+        newX = x + snappedDeltaX;
+        newWidth = Math.max(20, width - snappedDeltaX);
+        break;
+    }
+    
+    // For circles, maintain aspect ratio and use radius
+    if (shapeType === 'circle') {
+      const newRadius = Math.max(10, Math.min(newWidth, newHeight) / 2);
+      return {
+        x: newX + newRadius,
+        y: newY + newRadius,
+        width: newRadius * 2,
+        height: newRadius * 2,
+        radius: newRadius
+      };
+    }
+    
+    return { x: newX, y: newY, width: newWidth, height: newHeight, radius: newRadius };
   };
 
   // Helper function to get editor rectangle for label editing
@@ -209,6 +326,132 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       }
       default:
         return { left: 0, right: 0, top: 0, bottom: 0 };
+    }
+  };
+
+  // Helper function to render resize indicators
+  const renderResizeIndicators = (shape: Shape): React.ReactNode => {
+    if (shape.type === 'line' || selectedShapeId !== shape.id) {
+      return null;
+    }
+    
+    const bounds = getShapeBoundingBox(shape);
+    const handleSize = 12;
+    const strokeColor = canvasSettings.mode === 'dark' ? '#ffffff' : '#000000';
+    const fillColor = canvasSettings.mode === 'dark' ? '#1e1e1e' : '#ffffff';
+    
+    const handles = [
+      { name: 'nw', x: bounds.left, y: bounds.top },
+      { name: 'ne', x: bounds.right, y: bounds.top },
+      { name: 'se', x: bounds.right, y: bounds.bottom },
+      { name: 'sw', x: bounds.left, y: bounds.bottom },
+      { name: 'n', x: (bounds.left + bounds.right) / 2, y: bounds.top },
+      { name: 'e', x: bounds.right, y: (bounds.top + bounds.bottom) / 2 },
+      { name: 's', x: (bounds.left + bounds.right) / 2, y: bounds.bottom },
+      { name: 'w', x: bounds.left, y: (bounds.top + bounds.bottom) / 2 }
+    ];
+    
+    const handleMouseDown = (e: React.MouseEvent, handleName: string) => {
+      e.stopPropagation();
+      
+      const mouseX = e.nativeEvent.offsetX;
+      const mouseY = e.nativeEvent.offsetY;
+      const mousePoint = { x: mouseX, y: mouseY };
+      
+      setResizeMode('resize');
+      setResizeHandle(handleName);
+      
+      // Get original bounds for the shape
+      let originalBounds;
+      switch (shape.type) {
+        case 'rectangle':
+        case 'square':
+        case 'diamond':
+        case 'triangle': {
+          const rectShape = shape as Shape & { x: number; y: number; width: number; height: number };
+          originalBounds = {
+            x: rectShape.x,
+            y: rectShape.y,
+            width: rectShape.width || 40,
+            height: rectShape.height || 40
+          };
+          break;
+        }
+        case 'circle': {
+          const circleShape = shape as Shape & { x: number; y: number; radius: number };
+          const radius = circleShape.radius || 20;
+          originalBounds = {
+            x: circleShape.x - radius,
+            y: circleShape.y - radius,
+            width: radius * 2,
+            height: radius * 2,
+            radius: radius
+          };
+          break;
+        }
+        case 'text': {
+          const textShape = shape as Shape & { x: number; y: number; fontSize?: number };
+          const fontSize = textShape.fontSize || 16;
+          const textWidth = (textShape as any).text ? (textShape as any).text.length * fontSize * 0.6 : 50;
+          const textHeight = fontSize;
+          originalBounds = {
+            x: textShape.x - textWidth / 2,
+            y: textShape.y - textHeight / 2,
+            width: textWidth,
+            height: textHeight
+          };
+          break;
+        }
+        default:
+          return;
+      }
+      
+      setResizeStartData({
+        shape,
+        startPoint: mousePoint,
+        originalBounds
+      });
+    };
+    
+    return (
+      <g key={`${shape.id}-resize-handles`}>
+        {handles.map(handle => (
+          <rect
+            key={`${shape.id}-handle-${handle.name}`}
+            x={handle.x - handleSize / 2}
+            y={handle.y - handleSize / 2}
+            width={handleSize}
+            height={handleSize}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={1}
+            style={{ cursor: getResizeCursor(handle.name) }}
+            onMouseDown={(e) => handleMouseDown(e, handle.name)}
+          />
+        ))}
+      </g>
+    );
+  };
+
+  // Helper function to get cursor style for resize handles
+  const getResizeCursor = (handle: string | null): string => {
+    if (!handle) return 'default';
+    
+    switch (handle) {
+      case 'nw':
+      case 'se':
+        return 'nw-resize';
+      case 'ne':
+      case 'sw':
+        return 'ne-resize';
+      case 'n':
+      case 's':
+        return 'ns-resize';
+      case 'e':
+      case 'w':
+        return 'ew-resize';
+      default:
+        return 'default';
     }
   };
 
@@ -357,6 +600,72 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     const mouseY = e.nativeEvent.offsetY;
     const mousePoint = { x: mouseX, y: mouseY };
     
+    // Check for resize handle first (for non-line shapes)
+    if (shape.type !== 'line') {
+      const handle = detectResizeHandle(shape, mousePoint);
+      if (handle) {
+        // Select the shape if it's not already selected
+        if (selectedShapeId !== shape.id) {
+          setSelectedShapeId(shape.id);
+        }
+        
+        setResizeMode('resize');
+        setResizeHandle(handle);
+        
+        // Get original bounds for the shape
+        let originalBounds;
+        switch (shape.type) {
+          case 'rectangle':
+          case 'square':
+          case 'diamond':
+          case 'triangle': {
+            const rectShape = shape as Shape & { x: number; y: number; width: number; height: number };
+            originalBounds = {
+              x: rectShape.x,
+              y: rectShape.y,
+              width: rectShape.width || 40,
+              height: rectShape.height || 40
+            };
+            break;
+          }
+          case 'circle': {
+            const circleShape = shape as Shape & { x: number; y: number; radius: number };
+            const radius = circleShape.radius || 20;
+            originalBounds = {
+              x: circleShape.x - radius,
+              y: circleShape.y - radius,
+              width: radius * 2,
+              height: radius * 2,
+              radius: radius
+            };
+            break;
+          }
+          case 'text': {
+            const textShape = shape as Shape & { x: number; y: number; fontSize?: number };
+            const fontSize = textShape.fontSize || 16;
+            const textWidth = (textShape as any).text ? (textShape as any).text.length * fontSize * 0.6 : 50;
+            const textHeight = fontSize;
+            originalBounds = {
+              x: textShape.x - textWidth / 2,
+              y: textShape.y - textHeight / 2,
+              width: textWidth,
+              height: textHeight
+            };
+            break;
+          }
+          default:
+            return;
+        }
+        
+        setResizeStartData({
+          shape,
+          startPoint: mousePoint,
+          originalBounds
+        });
+        return;
+      }
+    }
+    
     // Store the initial mouse position and shape info for potential dragging
     const center = getShapeCenter(shape);
     setMouseDownShape({ shape, initialPos: mousePoint, center });
@@ -368,6 +677,54 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     const mouseX = e.nativeEvent.offsetX;
     const mouseY = e.nativeEvent.offsetY;
     const mousePoint = { x: mouseX, y: mouseY };
+    
+    // Handle resize operations
+    if (resizeMode === 'resize' && resizeHandle && resizeStartData) {
+      const deltaX = mouseX - resizeStartData.startPoint.x;
+      const deltaY = mouseY - resizeStartData.startPoint.y;
+      
+      const newBounds = calculateResizeBounds(
+        resizeStartData.originalBounds,
+        resizeHandle,
+        deltaX,
+        deltaY,
+        resizeStartData.shape.type
+      );
+      
+      // Create updated shape for visual feedback
+      const updatedShape = cloneDeep(resizeStartData.shape);
+      
+      switch (updatedShape.type) {
+        case 'rectangle':
+        case 'square':
+        case 'diamond':
+        case 'triangle': {
+          (updatedShape as Shape & { x: number; y: number; width: number; height: number }).x = newBounds.x;
+          (updatedShape as Shape & { x: number; y: number; width: number; height: number }).y = newBounds.y;
+          (updatedShape as Shape & { x: number; y: number; width: number; height: number }).width = newBounds.width;
+          (updatedShape as Shape & { x: number; y: number; width: number; height: number }).height = newBounds.height;
+          break;
+        }
+        case 'circle': {
+          (updatedShape as Shape & { x: number; y: number; radius: number }).x = newBounds.x;
+          (updatedShape as Shape & { x: number; y: number; radius: number }).y = newBounds.y;
+          (updatedShape as Shape & { x: number; y: number; radius: number }).radius = newBounds.radius || 20;
+          break;
+        }
+        case 'text': {
+          (updatedShape as Shape & { x: number; y: number }).x = newBounds.x + newBounds.width / 2;
+          (updatedShape as Shape & { x: number; y: number }).y = newBounds.y + newBounds.height / 2;
+          break;
+        }
+      }
+      
+      setDraggedShape(updatedShape);
+      
+      // Calculate and update drag guides
+      const boundingBox = getShapeBoundingBox(updatedShape);
+      setDragGuides(boundingBox);
+      return;
+    }
     
     // Check if we should start dragging (mouse moved from initial position)
     if (mouseDownShape && !draggingShapeId && !hasMoved) {
@@ -509,6 +866,68 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 
   // Mouse up: stop dragging and update shape in state
   const handleMouseUp = (e: React.MouseEvent) => {
+    // Handle resize operations
+    if (resizeMode === 'resize' && resizeHandle && resizeStartData) {
+      const mouseX = e.nativeEvent.offsetX;
+      const mouseY = e.nativeEvent.offsetY;
+      const deltaX = mouseX - resizeStartData.startPoint.x;
+      const deltaY = mouseY - resizeStartData.startPoint.y;
+      
+      const newBounds = calculateResizeBounds(
+        resizeStartData.originalBounds,
+        resizeHandle,
+        deltaX,
+        deltaY,
+        resizeStartData.shape.type
+      );
+      
+      // Prepare updates based on shape type
+      let updates: Partial<Shape> = {};
+      
+      switch (resizeStartData.shape.type) {
+        case 'rectangle':
+        case 'square':
+        case 'diamond':
+        case 'triangle': {
+          updates = {
+            x: newBounds.x,
+            y: newBounds.y,
+            width: newBounds.width,
+            height: newBounds.height
+          } as Partial<Shape & { x: number; y: number; width: number; height: number }>;
+          break;
+        }
+        case 'circle': {
+          updates = {
+            x: newBounds.x,
+            y: newBounds.y,
+            radius: newBounds.radius || 20
+          } as Partial<Shape & { x: number; y: number; radius: number }>;
+          break;
+        }
+        case 'text': {
+          updates = {
+            x: newBounds.x + newBounds.width / 2,
+            y: newBounds.y + newBounds.height / 2
+          } as Partial<Shape & { x: number; y: number }>;
+          break;
+        }
+      }
+      
+      // Update the shape in global state
+      if (onUpdateShape && Object.keys(updates).length > 0) {
+        onUpdateShape(resizeStartData.shape.id, updates);
+      }
+      
+      // Reset resize state
+      setResizeMode(null);
+      setResizeHandle(null);
+      setResizeStartData(null);
+      setDraggedShape(null);
+      setDragGuides(null);
+      return;
+    }
+    
     // If we have a mouse down shape but no dragging occurred, treat it as a click
     if (mouseDownShape && !draggingShapeId) {
       const currentMousePos = {
@@ -681,7 +1100,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         height={height}
         style={{ 
           backgroundColor: canvasSettings.background,
-          touchAction: 'none'
+          touchAction: 'none',
+          cursor: getResizeCursor(resizeHandle)
         }}
         onDoubleClick={handleCanvasDoubleClick}
         onMouseMove={handleMouseMove}
@@ -829,6 +1249,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             />
           </g>
         )}
+
+        {/* Render resize indicators */}
+        {shapesToRender.map(shape => renderResizeIndicators(shape))}
       </svg>
 
       {/* Information Modal */}
