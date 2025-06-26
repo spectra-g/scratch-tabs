@@ -184,26 +184,11 @@ export const useShapeSnapEngine = (
   
   // Export the canvas to an image
   const exportToImage = useCallback(() => {
-    // Try multiple selectors to find the SVG element
-    let svgElement = document.querySelector('.relative.w-full.h-full svg') as SVGSVGElement;
+    // Use the specific data attribute to find the canvas SVG
+    const svgElement = document.querySelector('[data-shapesnap-canvas="true"]') as SVGSVGElement;
     
     if (!svgElement) {
-      // Fallback: look for any SVG in the current viewport
-      const allSvgs = document.querySelectorAll('svg');
-      
-      for (let i = 0; i < allSvgs.length; i++) {
-        const svg = allSvgs[i] as SVGSVGElement;
-        
-        // Look for the one that's likely our canvas (has reasonable dimensions)
-        if (svg.clientWidth > 100 && svg.clientHeight > 100) {
-          svgElement = svg;
-          break;
-        }
-      }
-    }
-    
-    if (!svgElement) {
-      console.error('❌ SVG element not found for export');
+      console.error('❌ Canvas SVG element not found for export');
       alert('Could not find the canvas to export. Please try again.');
       return;
     }

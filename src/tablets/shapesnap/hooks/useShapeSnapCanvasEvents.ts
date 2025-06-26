@@ -238,10 +238,13 @@ export const useShapeSnapCanvasEvents = ({
         if (onDeleteShape) {
           onDeleteShape(shape.id);
         }
+        // Clear selection after deleting
+        setSelectedShapeId(undefined);
         break;
       default:
-        // For other tools (draw, text), just select the shape
-        setSelectedShapeId(shape.id);
+        // For other tools (draw, text), don't select the shape
+        // Just clear any existing selection
+        setSelectedShapeId(undefined);
         break;
     }
   };

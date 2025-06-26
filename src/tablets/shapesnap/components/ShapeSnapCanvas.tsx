@@ -205,6 +205,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 
       <svg 
         ref={svgRef}
+        data-shapesnap-canvas="true"
         width={width} 
         height={height}
         style={{ 
@@ -215,6 +216,12 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         onDoubleClick={handleCanvasDoubleClick}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onClick={(e) => {
+          // Clear selection when clicking on empty canvas area
+          if (e.target === e.currentTarget) {
+            setSelectedShapeId(undefined);
+          }
+        }}
       >
         {/* Render all shapes */}
         {shapesToRender.map(shape => (
