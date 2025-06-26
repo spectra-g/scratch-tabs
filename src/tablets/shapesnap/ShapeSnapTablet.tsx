@@ -1,6 +1,5 @@
-import React from 'react';
 import { Tablet, TabletState } from '../types';
-import { ShapeSnapData, ShapeSnapMode } from './types';
+import { ShapeSnapData } from './types';
 import { ShapeSnapUI } from './components/ShapeSnapUI';
 
 interface ShapeSnapTabletState extends TabletState {
@@ -24,7 +23,8 @@ export const ShapeSnapTablet: Tablet = {
         },
         currentTool: 'draw',
         history: [],
-        historyIndex: -1
+        historyIndex: -1,
+        currentFontSize: 16
       }
     };
   },

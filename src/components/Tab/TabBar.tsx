@@ -429,10 +429,16 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
 
     const handleCreateNewTab = () => {
         if (!canAddNewTab(isRightSide)) return;
+        
+        // Count tabs excluding the Welcome tab for proper numbering (same logic as handleNewTab)
+        const currentTabs = tabs.filter(t => t.workspaceId === activeWorkspaceId);
+        const nonWelcomeTabs = currentTabs.filter(tab => tab.title !== 'Welcome to Scratch Tabs');
+        const defaultTitle = `new ${nonWelcomeTabs.length + 1}`;
+        
         const newTabId = crypto.randomUUID();
         addTab({
             id: newTabId,
-            title: `new ${tabs.length + 1}`,
+            title: defaultTitle,
             content: '',
             language: 'plaintext',
             languageLocked: false,

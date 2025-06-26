@@ -110,6 +110,7 @@ export interface ShapeSnapData {
   currentTool: ShapeSnapTool;
   history: Shape[][];
   historyIndex: number;
+  currentFontSize: number;
 }
 
 export interface DrawState {

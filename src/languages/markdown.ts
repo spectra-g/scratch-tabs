@@ -4,6 +4,7 @@ import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { DetectionResult, LanguageDetector } from './types';
 import { MarkdownStatusItem } from "../components/StatusBar/LanguageStatusItems/markdown";
+import { StatusItemProps } from "../components/StatusBar/types";
 
 const MAX_LINES_TO_ANALYZE_MD_FOR_YAML = 20;
 const MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE = 2;
@@ -255,7 +256,7 @@ That's all for this sample!`;
     });
   }
 
-  getStatusItem(): React.FC<{ content?: string }> {
+  getStatusItem(): React.FC<StatusItemProps> {
     return MarkdownStatusItem;
   }
 }

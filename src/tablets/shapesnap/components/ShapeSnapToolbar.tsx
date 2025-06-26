@@ -10,7 +10,8 @@ import {
   Sun, 
   Moon, 
   Magnet,
-  Signature
+  Signature,
+  Type
 } from 'lucide-react';
 import { ShapeSnapTool, ShapeSnapMode } from '../types';
 
@@ -19,12 +20,14 @@ interface ShapeSnapToolbarProps {
   canvasMode: ShapeSnapMode;
   canUndo: boolean;
   canRedo: boolean;
+  currentFontSize: number;
   onToolChange: (tool: ShapeSnapTool) => void;
   onModeChange: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onClear: () => void;
   onExport: () => void;
+  onCycleFontSize: () => void;
   gridSnappingEnabled: boolean;
   onToggleGridSnapping: () => void;
   sketchModeEnabled: boolean;
@@ -36,12 +39,14 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
   canvasMode,
   canUndo,
   canRedo,
+  currentFontSize,
   onToolChange,
   onModeChange,
   onUndo,
   onRedo,
   onClear,
   onExport,
+  onCycleFontSize,
   gridSnappingEnabled,
   onToggleGridSnapping,
   sketchModeEnabled,
@@ -94,6 +99,16 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           title={gridSnappingEnabled ? 'Disable Grid Snapping' : 'Enable Grid Snapping'}
         >
           <Magnet size={18} />
+        </button>
+
+        {/* Font Size Button */}
+        <button
+          className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300 flex items-center gap-1"
+          onClick={onCycleFontSize}
+          title={`Font Size: ${currentFontSize}px (Click to cycle)`}
+        >
+          <Type size={16} />
+          <span className="text-xs font-mono">{currentFontSize}</span>
         </button>
       </div>
       

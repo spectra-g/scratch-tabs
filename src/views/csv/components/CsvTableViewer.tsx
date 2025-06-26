@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -18,6 +18,8 @@ import {
   ArrowUpDown,
   Copy,
   BarChart3,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { ExtendedViewProps } from '../../registry';
 import { useCsvData } from '../hooks/useCsvData';
@@ -27,6 +29,8 @@ import { CsvToolbar } from './CsvToolbar';
 import { CsvSnapshotsPanel } from './CsvSnapshotsPanel';
 import { CsvDiagnosticsFooter } from './CsvDiagnosticsFooter';
 import { EditableCell } from './EditableCell';
+import { MaskedCell } from './MaskedCell';
+import { isSensitiveHeader } from '../utils/sensitiveUtils';
 
 
 
@@ -57,8 +61,41 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
     position: { x: number; y: number };
   } | null>(null);
 
+  // Masking state
+  const [maskedColumns, setMaskedColumns] = useState<Set<string>>(new Set());
+
   const csvData = useCsvData(content, onContentChange);
   const { data, columns, loading, error, diagnostics, isValid, updateCell, addRow, deleteRow, deleteRows, duplicateRow, addColumn, deleteColumn, duplicateColumn, renameColumn, canUndo, canRedo, undo, redo, snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, getColumnStats, toCsv, toJson, toMarkdown, toSql } = csvData;
+
+  // Auto-detect and mask sensitive columns
+  useEffect(() => {
+    if (columns.length > 0) {
+      const newMaskedColumns = new Set<string>();
+      columns.forEach(column => {
+        if (isSensitiveHeader(column.name)) {
+          newMaskedColumns.add(column.id);
+        }
+      });
+      setMaskedColumns(newMaskedColumns);
+    }
+  }, [columns]);
+
+  // Masking functions
+  const toggleColumnMask = useCallback((columnId: string) => {
+    setMaskedColumns(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(columnId)) {
+        newSet.delete(columnId);
+      } else {
+        newSet.add(columnId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const isColumnMasked = useCallback((columnId: string) => {
+    return maskedColumns.has(columnId);
+  }, [maskedColumns]);
 
   // Efficient duplicate detection using hash map - O(n) complexity
   const findDuplicates = useCallback(() => {
@@ -226,6 +263,18 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
                   </div>
                 )}
                 <div className="flex items-center space-x-1 ml-2">
+                  {/* Mask toggle button for sensitive columns */}
+                  {isSensitiveHeader(column.name) && (
+                    <button
+                      onClick={() => toggleColumnMask(column.id)}
+                      className={`p-1 rounded hover:bg-gray-600 transition-all ${
+                        isColumnMasked(column.id) ? 'text-blue-400' : 'text-gray-400'
+                      }`}
+                      title={isColumnMasked(column.id) ? "Unmask sensitive column" : "Mask sensitive column"}
+                    >
+                      {isColumnMasked(column.id) ? <Eye size={12} /> : <EyeOff size={12} />}
+                    </button>
+                  )}
                   <button 
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect();
@@ -245,6 +294,42 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
               </div>
             ),
             cell: ({ row, getValue }) => {
+              const isMasked = isColumnMasked(column.id);
+              
+              if (isMasked) {
+                return (
+                  <MaskedCell
+                    value={getValue() as string}
+                    isSelected={selectedCell?.rowId === row.original.id && selectedCell?.columnId === column.id}
+                    isValid={row.original.cells[columnIndex]?.isValid ?? true}
+                    error={row.original.cells[columnIndex]?.error}
+                    startEditing={editingCellTrigger?.rowId === row.original.id && editingCellTrigger?.columnId === column.id}
+                    isMasked={isMasked}
+                    onSelect={() => {
+                      setSelectedCell({ rowId: row.original.id, columnId: column.id });
+                      setEditingCellTrigger(null);
+                    }}
+                    onStartEdit={() => {
+                      setSelectedCell({ rowId: row.original.id, columnId: column.id });
+                      setEditingCellTrigger({ rowId: row.original.id, columnId: column.id });
+                    }}
+                    onChange={(newValue) => {
+                      // Clear the editing trigger immediately when data changes
+                      setEditingCellTrigger(null);
+                      updateCell(row.original.id, column.id, newValue);
+                    }}
+                    onEditingChange={(isEditing) => {
+                      setIsAnyCellEditing(isEditing);
+                      // Only clear editingCellTrigger if this specific cell was the one being edited
+                      if (!isEditing && editingCellTrigger?.rowId === row.original.id && editingCellTrigger?.columnId === column.id) {
+                        setEditingCellTrigger(null);
+                      }
+                    }}
+                    onToggleMask={() => toggleColumnMask(column.id)}
+                  />
+                );
+              }
+              
               return (
                 <EditableCell
                   value={getValue() as string}
@@ -292,7 +377,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
         ),
       }),
     ];
-  }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, duplicateColumn, addRow, deleteRow, duplicateRow, updateCell, renameColumn, selectedCell, editingCellTrigger, setStatsPopover]);
+  }, [columns, editingHeader, headerEditValue, addColumn, deleteColumn, duplicateColumn, addRow, deleteRow, duplicateRow, updateCell, renameColumn, selectedCell, editingCellTrigger, setStatsPopover, isColumnMasked, toggleColumnMask]);
 
   const table = useReactTable({
     data: filteredData,

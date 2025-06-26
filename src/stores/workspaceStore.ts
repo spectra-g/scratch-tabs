@@ -1,12 +1,27 @@
 import { create } from 'zustand';
 import { StorageProviderFactory, db } from '../db';
-import { Workspace, Tab, SplitViewState, SplitViewRecord } from '../types';
+import { Workspace, Tab, SplitViewState } from '../types';
 import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { usePersistenceStore } from './persistenceStore';
 import { useCacheStore } from './cacheStore';
 import { modelManager } from '../services/modelManager';
 import { incrementSetting } from '../db';
+import { WELCOME_TAB_CONTENT } from '../constants';
+
+// Import the db-specific SplitViewRecord type
+type SplitViewRecord = {
+  id: string;
+  isSplit: boolean;
+  leftTabs: string[];
+  rightTabs: string[];
+  activeLeftTabId: string | null;
+  activeRightTabId: string | null;
+  activeSide: string | null;
+  splitRatio: number;
+  workspaceId: string;
+  lastModified: number;
+};
 
 interface WorkspaceStore {
   workspaces: Workspace[];
@@ -115,19 +130,52 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             createdAt: Date.now(),
             lastAccessed: Date.now(),
           };
+
+          // Create a comprehensive Welcome tab for new users
+          const welcomeTab: Tab = {
+            id: crypto.randomUUID(),
+            title: 'Welcome to Scratch Tabs',
+            content: WELCOME_TAB_CONTENT,
+            language: 'markdown',
+            languageLocked: true,
+            workspaceId: defaultWorkspace.id,
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+            previewMode: true, // Show markdown preview by default
+          };
+
           const initialSplitViewState = useSplitViewStore.getState().createDefaultSplitViewState(defaultWorkspace.id);
+          initialSplitViewState.leftTabs = [welcomeTab.id];
+          initialSplitViewState.activeLeftTabId = welcomeTab.id;
+          initialSplitViewState.leftTabHistory = [welcomeTab.id];
+
           const initialSplitViewRecord: SplitViewRecord = {
-            ...initialSplitViewState,
+            id: initialSplitViewState.id,
+            isSplit: initialSplitViewState.isSplit,
+            leftTabs: initialSplitViewState.leftTabs,
+            rightTabs: initialSplitViewState.rightTabs,
+            activeLeftTabId: initialSplitViewState.activeLeftTabId,
+            activeRightTabId: initialSplitViewState.activeRightTabId,
+            activeSide: initialSplitViewState.activeSide as string | null,
+            splitRatio: initialSplitViewState.splitRatio,
+            workspaceId: initialSplitViewState.workspaceId,
             lastModified: Date.now()
           };
 
-          await db.transaction('rw', db.workspaces, db.splitView, async () => {
+          await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
             await storage.saveWorkspace(defaultWorkspace);
+            await storage.saveTabNow(welcomeTab);
             await storage.saveSplitViewNow(initialSplitViewRecord);
           });
 
+          // Increment the total tabs created counter
+          incrementSetting('tabs.created.total').catch(err => 
+            console.error("Failed to increment tab counter:", err)
+          );
+
           set({ workspaces: [defaultWorkspace], activeWorkspaceId: defaultWorkspace.id });
-          useTabsStore.setState({ tabs: [] }); // Default workspace starts with no tabs
+          useTabsStore.setState({ tabs: [welcomeTab], activeTabId: welcomeTab.id });
           useSplitViewStore.setState({ splitView: initialSplitViewState });
           return defaultWorkspace.id;
         }
@@ -240,20 +288,35 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
         const initialTab: Tab = {
           id: crypto.randomUUID(),
-          title: 'Welcome',
-          content: `# ${name}\n\nStart your new workspace here!`,
+          title: 'Welcome to Scratch Tabs',
+          content: WELCOME_TAB_CONTENT,
           language: 'markdown',
+          languageLocked: true,
+          workspaceId: newWorkspace.id,
+          dateCreated: Date.now(),
+          lastModified: Date.now(),
+          cursorPosition: { lineNumber: 1, column: 1 },
+          previewMode: true, // Show markdown preview by default
+        };
+
+        // Create a "new 1" tab as well
+        const newTab: Tab = {
+          id: crypto.randomUUID(),
+          title: 'new 1',
+          content: '',
+          language: 'plaintext',
           languageLocked: false,
           workspaceId: newWorkspace.id,
           dateCreated: Date.now(),
           lastModified: Date.now(),
-          cursorPosition: { lineNumber: 1, column: 1 }
+          cursorPosition: { lineNumber: 1, column: 1 },
+          previewMode: false,
         };
 
         const initialSplitViewState = useSplitViewStore.getState().createDefaultSplitViewState(newWorkspace.id);
-        initialSplitViewState.leftTabs = [initialTab.id];
-        initialSplitViewState.activeLeftTabId = initialTab.id;
-        initialSplitViewState.leftTabHistory = [initialTab.id];
+        initialSplitViewState.leftTabs = [initialTab.id, newTab.id];
+        initialSplitViewState.activeLeftTabId = newTab.id; // Make the new tab active
+        initialSplitViewState.leftTabHistory = [initialTab.id, newTab.id];
 
         const initialSplitViewRecord: SplitViewRecord = {
           ...initialSplitViewState,
@@ -264,6 +327,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
           await storage.saveWorkspace(newWorkspace);
           await storage.saveTabNow(initialTab);
+          await storage.saveTabNow(newTab);
           await storage.saveSplitViewNow(initialSplitViewRecord);
         });
 
@@ -280,7 +344,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         }));
 
         // Directly update other stores with the new workspace's initial state
-        useTabsStore.setState({ tabs: [initialTab], activeTabId: initialTab.id });
+        useTabsStore.setState({ tabs: [initialTab, newTab], activeTabId: newTab.id });
         useSplitViewStore.setState({ splitView: initialSplitViewState });
 
         return newWorkspace.id;

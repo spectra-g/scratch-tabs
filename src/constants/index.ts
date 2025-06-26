@@ -69,6 +69,9 @@ export const TAB_SIDES = {
   RIGHT: 'right'
 } as const;
 
+// Welcome Content
+export { WELCOME_TAB_CONTENT } from './welcomeContent';
+
 // Derived Types for Type Safety
 export type SortOption = typeof SORT_OPTIONS[keyof typeof SORT_OPTIONS];
 export type GroupOption = typeof GROUP_OPTIONS[keyof typeof GROUP_OPTIONS];

@@ -32,7 +32,6 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
   
   const {
     tabs,
-    previewMode,
     splitView,
     updateTabState,
     getActiveView
@@ -52,8 +51,9 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
     ? extendedViewRegistry.getView(activeTab.language, activeViewId)
     : null;
 
-  const shouldShowMarkdownPreview = previewMode && activeTab?.language === 'markdown';
-  const shouldShowHtmlPreview = previewMode && activeTab?.language === 'html';
+  // Use per-tab preview mode instead of global preview mode
+  const shouldShowMarkdownPreview = activeTab?.previewMode && activeTab?.language === 'markdown';
+  const shouldShowHtmlPreview = activeTab?.previewMode && activeTab?.language === 'html';
   const shouldShowPreview = shouldShowMarkdownPreview || shouldShowHtmlPreview;
 
   // Clear editor instance when switching to extended view or tablet
@@ -92,6 +92,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
             ) : (
               // EditorInstance without its own StatusBar
               <EditorInstance
+                key={activeTab.id}
                 side={side}
                 activeTab={activeTab}
                 onEditorReady={setEditorInstance}
