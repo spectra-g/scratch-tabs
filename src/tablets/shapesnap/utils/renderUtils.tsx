@@ -816,6 +816,51 @@ export const renderShapeOverlay = (
   const isEditing = editingShapeId === shape.id;
   const center = getShapeCenter(shape);
 
+  // Render arrow tips for line shapes
+  const arrowTipsElement = (shape.type === 'line') ? (() => {
+    const lineShape = shape as Shape & { 
+      points: Point[]; 
+      arrowTipStart?: ArrowTipStyle; 
+      arrowTipEnd?: ArrowTipStyle; 
+      arrowTipSize?: number 
+    };
+    const hasStartArrow = lineShape.arrowTipStart && lineShape.arrowTipStart !== 'none' && lineShape.points.length >= 2;
+    const hasEndArrow = lineShape.arrowTipEnd && lineShape.arrowTipEnd !== 'none' && lineShape.points.length >= 2;
+    
+    if (!hasStartArrow && !hasEndArrow) return null;
+    
+    const arrowTipSize = lineShape.arrowTipSize || 10;
+    const arrowTips = [];
+    
+    // Render start arrow tip
+    if (hasStartArrow) {
+      const startPoint = lineShape.points[0];
+      const directionPoint = lineShape.points[1];
+      arrowTips.push(
+        renderArrowTip(startPoint, directionPoint, lineShape.arrowTipStart!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
+      );
+    }
+    
+    // Render end arrow tip
+    if (hasEndArrow) {
+      const endPoint = lineShape.points[lineShape.points.length - 1];
+      const directionPoint = lineShape.points[lineShape.points.length - 2];
+      arrowTips.push(
+        renderArrowTip(endPoint, directionPoint, lineShape.arrowTipEnd!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
+      );
+    }
+    
+    return (
+      <g key={`${shape.id}-arrow-tips`}>
+        {arrowTips.map((tip, index) => (
+          <React.Fragment key={`${shape.id}-arrow-tip-${index}`}>
+            {tip}
+          </React.Fragment>
+        ))}
+      </g>
+    );
+  })() : null;
+
   // Render label if it exists and not editing
   const labelElement = (!isEditing && shape.label) ? (() => {
     const fontFamily = sketchFont ? '"Architects Daughter", Arial, sans-serif' : undefined;
@@ -865,7 +910,12 @@ export const renderShapeOverlay = (
     }
   })() : null;
 
-  return labelElement;
+  return (
+    <g key={`${shape.id}-overlay`}>
+      {arrowTipsElement}
+      {labelElement}
+    </g>
+  );
 };
 
 // Helper function to render resize handles for selected shapes
