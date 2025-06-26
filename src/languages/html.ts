@@ -3,6 +3,7 @@ import { BaseLanguageDetector } from './baseDetector';
 import { languageRegistry } from './registry';
 import { DetectionResult, LanguageDetector } from './types';
 import { HtmlStatusItem } from '../components/StatusBar/LanguageStatusItems/html';
+import { StatusItemProps } from "../components/StatusBar/types";
 
 /**
  * HTML language detector
@@ -170,7 +171,7 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
     return 'html';
   }
 
-  getStatusItem(): React.FC<{ content?: string }> {
+  getStatusItem(): React.FC<StatusItemProps> {
     return HtmlStatusItem;
   }
 

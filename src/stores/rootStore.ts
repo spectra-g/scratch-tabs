@@ -133,6 +133,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       isPinned: partialInputTab.isPinned || false,
       isTablet: partialInputTab.isTablet || false,
       tabletState: partialInputTab.tabletState || '',
+      previewMode: partialInputTab.previewMode || false,
     };
     return finalTab;
   };
@@ -148,14 +149,10 @@ export const useRootStore = create<RootStore>((set, get) => {
     // Tab management functions
     addTab: (tab, toRightSide = false) => {
       useTabsStore.getState().addTab(tab);
-      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide);
-      // Ensure active tab is set correctly after adding
-      const { setActiveLeftTab, setActiveRightTab } = useSplitViewStore.getState();
-      if (toRightSide) {
-        setActiveRightTab(tab.id);
-      } else {
-        setActiveLeftTab(tab.id);
-      }
+      
+      // Always make the new tab active
+      useSplitViewStore.getState().addTabToSide(tab.id, toRightSide, tab.id);
+      
       broadcastManager.broadcastWorkspaceState(useSplitViewStore.getState().splitView.workspaceId, {
         tabs: useTabsStore.getState().tabs,
         splitView: useSplitViewStore.getState().splitView,
@@ -186,8 +183,10 @@ export const useRootStore = create<RootStore>((set, get) => {
         return;
       }
 
-      const currentTabsCount = useTabsStore.getState().tabs.filter(t => t.workspaceId === ensuredWorkspaceId).length;
-      const defaultTitle = `new ${currentTabsCount + 1}`;
+      // Count tabs excluding the Welcome tab for proper numbering
+      const currentTabs = useTabsStore.getState().tabs.filter(t => t.workspaceId === ensuredWorkspaceId);
+      const nonWelcomeTabs = currentTabs.filter(tab => tab.title !== 'Welcome to Scratch Tabs');
+      const defaultTitle = `new ${nonWelcomeTabs.length + 1}`;
 
       const newTabObject = _createFinalTabObject(
         {},

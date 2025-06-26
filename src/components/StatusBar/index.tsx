@@ -54,7 +54,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
   }, [activeTab]);
 
   const LanguageStatusItem = activeTab && !activeTab.isTablet ? 
-    getLanguageStatusItem(activeTab.language, activeTab.content) : null;
+    getLanguageStatusItem(activeTab.language, activeTab.content, activeTab) : null;
 
   const LanguageOptionsMenu = activeTab && !activeTab.isTablet ? 
     getLanguageOptionsMenu(activeTab.language, editor) : null;

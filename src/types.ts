@@ -12,6 +12,7 @@ export interface Tab {
   lastModified: number;
   workspaceId: string;
   activeViewId?: string | null; // For extended views like CSV table editor
+  previewMode?: boolean; // Per-tab preview mode for markdown/html
 }
 
 export interface EditorPosition {
