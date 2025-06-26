@@ -260,6 +260,38 @@ export const useShapeSnapEngine = (
     img.src = url;
   }, [state.canvas.mode]);
   
+  // Cycle through font sizes
+  const cycleFontSize = useCallback(() => {
+    const fontSizes = [12, 14, 16, 18, 20, 24, 28, 32, 36, 48];
+    const currentIndex = fontSizes.indexOf(state.currentFontSize || 16);
+    const nextIndex = (currentIndex + 1) % fontSizes.length;
+    const newFontSize = fontSizes[nextIndex];
+    
+    // Update all text shapes with the new font size
+    const updatedShapes = state.shapes.map(shape => {
+      if (shape.type === 'text') {
+        // Ensure the fontSize property exists and is updated
+        return {
+          ...shape,
+          fontSize: newFontSize
+        };
+      }
+      return shape;
+    });
+    
+    // Update history with the new shapes
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(updatedShapes);
+    
+    onChange({
+      ...state,
+      shapes: updatedShapes,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      currentFontSize: newFontSize
+    });
+  }, [state, onChange]);
+  
   return {
     addShape,
     updateShapeLabel,
@@ -272,6 +304,7 @@ export const useShapeSnapEngine = (
     redo,
     clearCanvas,
     exportToImage,
+    cycleFontSize,
     canUndo: state.historyIndex > 0,
     canRedo: state.historyIndex < state.history.length - 1
   };

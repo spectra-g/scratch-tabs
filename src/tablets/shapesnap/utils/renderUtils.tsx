@@ -365,7 +365,8 @@ export const renderShape = (
   onDoubleClick?: (shape: Shape, position: Point) => void,
   onMouseDown?: (shape: Shape, e: React.MouseEvent) => void,
   currentTool?: string,
-  sketchFont?: boolean
+  sketchFont?: boolean,
+  currentFontSize?: number
 ): React.ReactNode => {
   const isSelected = selectedShapeId === shape.id;
   const isEditing = editingShapeId === shape.id;
@@ -591,7 +592,7 @@ export const renderShape = (
       case 'text':
         return (
           <text
-            key={shape.id}
+            key={`${shape.id}-${shape.fontSize || 16}`}
             {...baseProps}
             x={shape.x}
             y={shape.y}
@@ -600,7 +601,8 @@ export const renderShape = (
             dominantBaseline="middle"
             textAnchor="middle"
             style={{
-              fontFamily: sketchFont ? '"Architects Daughter", Arial, sans-serif' : undefined
+              fontFamily: sketchFont ? '"Architects Daughter", Arial, sans-serif' : undefined,
+              fontSize: `${shape.fontSize || 16}px !important`
             }}
           >
             {shape.text}
@@ -622,7 +624,7 @@ export const renderShape = (
           x={labelPos.x}
           y={labelPos.y}
           fill={shape.style.stroke}
-          fontSize="12"
+          fontSize={currentFontSize || 12}
           dominantBaseline={labelPos.dominantBaseline}
           textAnchor={labelPos.textAnchor}
           style={{
@@ -642,7 +644,7 @@ export const renderShape = (
           x={center.x}
           y={center.y}
           fill={shape.style.stroke}
-          fontSize="12"
+          fontSize={currentFontSize || 12}
           dominantBaseline="middle"
           textAnchor="middle"
           style={{
@@ -757,7 +759,8 @@ export function renderRoughShapeSVG(svgRef: SVGSVGElement | null, type: string, 
 export const renderShapeOverlay = (
   shape: Shape,
   editingShapeId?: string,
-  sketchFont?: boolean
+  sketchFont?: boolean,
+  currentFontSize?: number
 ): React.ReactNode => {
   const isEditing = editingShapeId === shape.id;
   const center = getShapeCenter(shape);
@@ -774,7 +777,7 @@ export const renderShapeOverlay = (
           x={labelPos.x}
           y={labelPos.y}
           fill={shape.style.stroke}
-          fontSize="12"
+          fontSize={currentFontSize || 12}
           dominantBaseline={labelPos.dominantBaseline}
           textAnchor={labelPos.textAnchor}
           style={{
@@ -795,7 +798,7 @@ export const renderShapeOverlay = (
           x={center.x}
           y={center.y}
           fill={shape.style.stroke}
-          fontSize="12"
+          fontSize={currentFontSize || 12}
           dominantBaseline="middle"
           textAnchor="middle"
           style={{

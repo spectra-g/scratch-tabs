@@ -28,6 +28,7 @@ interface ShapeSnapCanvasProps {
   width: number;
   height: number;
   currentTool: ShapeSnapTool;
+  currentFontSize?: number;
   onShapeClick?: (shape: Shape, position: Point) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onUpdateShape?: (shapeId: string, updates: Partial<Shape>) => void;
@@ -45,6 +46,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   width,
   height,
   currentTool,
+  currentFontSize,
   onShapeClick,
   onUpdateLabel,
   onUpdateShape,
@@ -314,7 +316,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         x: snappedX,
         y: snappedY,
         text: '',
-        fontSize: 16,
+        fontSize: currentFontSize || 16,
         style: {
           stroke: strokeColor,
           fill: 'transparent',
@@ -718,14 +720,15 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                         handleShapeDoubleClick,
                         handleShapeMouseDown,
                         currentTool,
-                        sketchModeEnabled
+                        sketchModeEnabled,
+                        currentFontSize
                       )}
-                      {renderShapeOverlay(shape, editingShape ? editingShape.id : undefined, sketchModeEnabled)}
+                      {renderShapeOverlay(shape, editingShape ? editingShape.id : undefined, sketchModeEnabled, currentFontSize)}
                     </g>
                   ) : null;
                 }
                 default:
-                  return renderShape(shape, (s, pos) => { handleShapeClick(s, pos); }, selectedShapeId, editingShape ? editingShape.id : undefined, handleShapeDoubleClick, handleShapeMouseDown, currentTool, sketchModeEnabled);
+                  return renderShape(shape, (s, pos) => { handleShapeClick(s, pos); }, selectedShapeId, editingShape ? editingShape.id : undefined, handleShapeDoubleClick, handleShapeMouseDown, currentTool, sketchModeEnabled, currentFontSize);
               }
             })()
           ) : (
@@ -737,7 +740,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
               handleShapeDoubleClick,
               handleShapeMouseDown,
               currentTool,
-              sketchModeEnabled
+              sketchModeEnabled,
+              currentFontSize
             )
           )
         ))}

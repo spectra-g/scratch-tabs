@@ -131,12 +131,14 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
         canvasMode={state.canvas.mode}
         canUndo={engine.canUndo}
         canRedo={engine.canRedo}
+        currentFontSize={state.currentFontSize || 16}
         onToolChange={engine.setTool}
         onModeChange={engine.toggleCanvasMode}
         onUndo={engine.undo}
         onRedo={engine.redo}
         onClear={engine.clearCanvas}
         onExport={engine.exportToImage}
+        onCycleFontSize={engine.cycleFontSize}
         gridSnappingEnabled={gridSnappingEnabled}
         onToggleGridSnapping={() => setGridSnappingEnabled(s => !s)}
         sketchModeEnabled={sketchModeEnabled}
@@ -158,6 +160,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           width={canvasSize.width}
           height={canvasSize.height}
           currentTool={state.currentTool}
+          currentFontSize={state.currentFontSize || 16}
           onUpdateLabel={engine.updateShapeLabel}
           onUpdateShape={engine.updateShape}
           onDeleteShape={engine.deleteShape}
