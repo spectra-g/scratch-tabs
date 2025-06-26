@@ -1,25 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool, ArrowTipStyle } from '../types';
-import { renderShape, getShapeCenter, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
+import { renderShape, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
+import { distance, getShapeCenter, getShapeBoundingBox, snapToGrid } from '../utils/geometryUtils';
+import { cycleArrowTip, ARROW_TIP_STYLES } from '../utils/arrowTipUtils';
+import { useMouseEventHandlers } from '../hooks/useMouseEventHandlers';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { ShapeSnapInfoModal } from './ShapeSnapInfoModal';
 import { cloneDeep } from 'lodash';
-
-// Arrow tip styles in cycling order
-const ARROW_TIP_STYLES: ArrowTipStyle[] = [
-  'none',
-  'simple',
-  'filled-triangle',
-  'outline-triangle',
-  'filled-circle',
-  'outline-circle',
-  'filled-diamond',
-  'outline-diamond',
-  'cross-circle',
-  'dot',
-  'arrowhead',
-  'double-line'
-];
 
 interface ShapeSnapCanvasProps {
   shapes: Shape[];
@@ -98,9 +85,131 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   // Helper: snap a value to the nearest grid
   const snapToGrid = (value: number, grid: number) => gridSnappingEnabled ? Math.round(value / grid) * grid : value;
 
-  // Helper function to calculate distance between two points
-  const distance = (p1: Point, p2: Point): number => 
-    Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+  // Helper function to get cursor style for resize handles
+  const getResizeCursor = (handle: string | null): string => {
+    if (!handle) return 'default';
+    
+    switch (handle) {
+      case 'nw':
+      case 'se':
+        return 'nw-resize';
+      case 'ne':
+      case 'sw':
+        return 'ne-resize';
+      case 'n':
+      case 's':
+        return 'ns-resize';
+      case 'e':
+      case 'w':
+        return 'ew-resize';
+      default:
+        return 'default';
+    }
+  };
+
+  // Helper function to render resize indicators
+  const renderResizeIndicators = (shape: Shape): React.ReactNode => {
+    if (shape.type === 'line' || selectedShapeId !== shape.id) {
+      return null;
+    }
+    
+    const bounds = getShapeBoundingBox(shape);
+    const handleSize = 12;
+    const strokeColor = canvasSettings.mode === 'dark' ? '#ffffff' : '#000000';
+    const fillColor = canvasSettings.mode === 'dark' ? '#1e1e1e' : '#ffffff';
+    
+    const handles = [
+      { name: 'nw', x: bounds.left, y: bounds.top },
+      { name: 'ne', x: bounds.right, y: bounds.top },
+      { name: 'se', x: bounds.right, y: bounds.bottom },
+      { name: 'sw', x: bounds.left, y: bounds.bottom },
+      { name: 'n', x: (bounds.left + bounds.right) / 2, y: bounds.top },
+      { name: 'e', x: bounds.right, y: (bounds.top + bounds.bottom) / 2 },
+      { name: 's', x: (bounds.left + bounds.right) / 2, y: bounds.bottom },
+      { name: 'w', x: bounds.left, y: (bounds.top + bounds.bottom) / 2 }
+    ];
+    
+    const handleMouseDown = (e: React.MouseEvent, handleName: string) => {
+      e.stopPropagation();
+      
+      const mouseX = e.nativeEvent.offsetX;
+      const mouseY = e.nativeEvent.offsetY;
+      const mousePoint = { x: mouseX, y: mouseY };
+      
+      setResizeMode('resize');
+      setResizeHandle(handleName);
+      
+      // Get original bounds for the shape
+      let originalBounds;
+      switch (shape.type) {
+        case 'rectangle':
+        case 'square':
+        case 'diamond':
+        case 'triangle': {
+          const rectShape = shape as Shape & { x: number; y: number; width: number; height: number };
+          originalBounds = {
+            x: rectShape.x,
+            y: rectShape.y,
+            width: rectShape.width || 40,
+            height: rectShape.height || 40
+          };
+          break;
+        }
+        case 'circle': {
+          const circleShape = shape as Shape & { x: number; y: number; radius: number };
+          const radius = circleShape.radius || 20;
+          originalBounds = {
+            x: circleShape.x - radius,
+            y: circleShape.y - radius,
+            width: radius * 2,
+            height: radius * 2,
+            radius: radius
+          };
+          break;
+        }
+        case 'text': {
+          const textShape = shape as Shape & { x: number; y: number; fontSize?: number };
+          const fontSize = textShape.fontSize || 16;
+          const textWidth = (textShape as any).text ? (textShape as any).text.length * fontSize * 0.6 : 50;
+          const textHeight = fontSize;
+          originalBounds = {
+            x: textShape.x - textWidth / 2,
+            y: textShape.y - textHeight / 2,
+            width: textWidth,
+            height: textHeight
+          };
+          break;
+        }
+        default:
+          return;
+      }
+      
+      setResizeStartData({
+        shape,
+        startPoint: mousePoint,
+        originalBounds
+      });
+    };
+    
+    return (
+      <g key={`${shape.id}-resize-handles`}>
+        {handles.map(handle => (
+          <rect
+            key={`${shape.id}-handle-${handle.name}`}
+            x={handle.x - handleSize / 2}
+            y={handle.y - handleSize / 2}
+            width={handleSize}
+            height={handleSize}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={1}
+            style={{ cursor: getResizeCursor(handle.name) }}
+            onMouseDown={(e) => handleMouseDown(e, handle.name)}
+          />
+        ))}
+      </g>
+    );
+  };
 
   // Helper function to cycle through arrow tip styles
   const cycleArrowTip = (currentTip: ArrowTipStyle | undefined): ArrowTipStyle => {
@@ -274,198 +383,6 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       width,
       height
     };
-  };
-
-  // Helper function to calculate bounding box of a shape
-  const getShapeBoundingBox = (shape: Shape): { left: number; right: number; top: number; bottom: number } => {
-    switch (shape.type) {
-      case 'rectangle':
-      case 'square': {
-        const rectShape = shape as Shape & { x: number; y: number; width: number; height: number };
-        return {
-          left: rectShape.x,
-          right: rectShape.x + rectShape.width,
-          top: rectShape.y,
-          bottom: rectShape.y + rectShape.height
-        };
-      }
-      case 'circle': {
-        const circleShape = shape as Shape & { x: number; y: number; radius: number };
-        const radius = circleShape.radius || 20;
-        return {
-          left: circleShape.x - radius,
-          right: circleShape.x + radius,
-          top: circleShape.y - radius,
-          bottom: circleShape.y + radius
-        };
-      }
-      case 'diamond':
-      case 'triangle': {
-        const polyShape = shape as Shape & { x: number; y: number; width: number; height: number };
-        const halfWidth = (polyShape.width || 40) / 2;
-        const halfHeight = (polyShape.height || 40) / 2;
-        return {
-          left: polyShape.x - halfWidth,
-          right: polyShape.x + halfWidth,
-          top: polyShape.y - halfHeight,
-          bottom: polyShape.y + halfHeight
-        };
-      }
-      case 'text': {
-        const textShape = shape as Shape & { x: number; y: number; fontSize?: number };
-        const fontSize = textShape.fontSize || 16;
-        const textWidth = (textShape as any).text ? (textShape as any).text.length * fontSize * 0.6 : 50; // rough estimate
-        const textHeight = fontSize;
-        return {
-          left: textShape.x - textWidth / 2,
-          right: textShape.x + textWidth / 2,
-          top: textShape.y - textHeight / 2,
-          bottom: textShape.y + textHeight / 2
-        };
-      }
-      case 'line': {
-        const lineShape = shape as Shape & { points: Point[] };
-        if (!lineShape.points || lineShape.points.length === 0) {
-          return { left: 0, right: 0, top: 0, bottom: 0 };
-        }
-        const xCoords = lineShape.points.map(p => p.x);
-        const yCoords = lineShape.points.map(p => p.y);
-        return {
-          left: Math.min(...xCoords),
-          right: Math.max(...xCoords),
-          top: Math.min(...yCoords),
-          bottom: Math.max(...yCoords)
-        };
-      }
-      default:
-        return { left: 0, right: 0, top: 0, bottom: 0 };
-    }
-  };
-
-  // Helper function to render resize indicators
-  const renderResizeIndicators = (shape: Shape): React.ReactNode => {
-    if (shape.type === 'line' || selectedShapeId !== shape.id) {
-      return null;
-    }
-    
-    const bounds = getShapeBoundingBox(shape);
-    const handleSize = 12;
-    const strokeColor = canvasSettings.mode === 'dark' ? '#ffffff' : '#000000';
-    const fillColor = canvasSettings.mode === 'dark' ? '#1e1e1e' : '#ffffff';
-    
-    const handles = [
-      { name: 'nw', x: bounds.left, y: bounds.top },
-      { name: 'ne', x: bounds.right, y: bounds.top },
-      { name: 'se', x: bounds.right, y: bounds.bottom },
-      { name: 'sw', x: bounds.left, y: bounds.bottom },
-      { name: 'n', x: (bounds.left + bounds.right) / 2, y: bounds.top },
-      { name: 'e', x: bounds.right, y: (bounds.top + bounds.bottom) / 2 },
-      { name: 's', x: (bounds.left + bounds.right) / 2, y: bounds.bottom },
-      { name: 'w', x: bounds.left, y: (bounds.top + bounds.bottom) / 2 }
-    ];
-    
-    const handleMouseDown = (e: React.MouseEvent, handleName: string) => {
-      e.stopPropagation();
-      
-      const mouseX = e.nativeEvent.offsetX;
-      const mouseY = e.nativeEvent.offsetY;
-      const mousePoint = { x: mouseX, y: mouseY };
-      
-      setResizeMode('resize');
-      setResizeHandle(handleName);
-      
-      // Get original bounds for the shape
-      let originalBounds;
-      switch (shape.type) {
-        case 'rectangle':
-        case 'square':
-        case 'diamond':
-        case 'triangle': {
-          const rectShape = shape as Shape & { x: number; y: number; width: number; height: number };
-          originalBounds = {
-            x: rectShape.x,
-            y: rectShape.y,
-            width: rectShape.width || 40,
-            height: rectShape.height || 40
-          };
-          break;
-        }
-        case 'circle': {
-          const circleShape = shape as Shape & { x: number; y: number; radius: number };
-          const radius = circleShape.radius || 20;
-          originalBounds = {
-            x: circleShape.x - radius,
-            y: circleShape.y - radius,
-            width: radius * 2,
-            height: radius * 2,
-            radius: radius
-          };
-          break;
-        }
-        case 'text': {
-          const textShape = shape as Shape & { x: number; y: number; fontSize?: number };
-          const fontSize = textShape.fontSize || 16;
-          const textWidth = (textShape as any).text ? (textShape as any).text.length * fontSize * 0.6 : 50;
-          const textHeight = fontSize;
-          originalBounds = {
-            x: textShape.x - textWidth / 2,
-            y: textShape.y - textHeight / 2,
-            width: textWidth,
-            height: textHeight
-          };
-          break;
-        }
-        default:
-          return;
-      }
-      
-      setResizeStartData({
-        shape,
-        startPoint: mousePoint,
-        originalBounds
-      });
-    };
-    
-    return (
-      <g key={`${shape.id}-resize-handles`}>
-        {handles.map(handle => (
-          <rect
-            key={`${shape.id}-handle-${handle.name}`}
-            x={handle.x - handleSize / 2}
-            y={handle.y - handleSize / 2}
-            width={handleSize}
-            height={handleSize}
-            fill={fillColor}
-            stroke={strokeColor}
-            strokeWidth={1}
-            style={{ cursor: getResizeCursor(handle.name) }}
-            onMouseDown={(e) => handleMouseDown(e, handle.name)}
-          />
-        ))}
-      </g>
-    );
-  };
-
-  // Helper function to get cursor style for resize handles
-  const getResizeCursor = (handle: string | null): string => {
-    if (!handle) return 'default';
-    
-    switch (handle) {
-      case 'nw':
-      case 'se':
-        return 'nw-resize';
-      case 'ne':
-      case 'sw':
-        return 'ne-resize';
-      case 'n':
-      case 's':
-        return 'ns-resize';
-      case 'e':
-      case 'w':
-        return 'ew-resize';
-      default:
-        return 'default';
-    }
   };
 
   const generateId = (): string => `shape-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
