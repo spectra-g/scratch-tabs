@@ -78,7 +78,9 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
                   <span>Diamonds</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-current transform rotate-45"></div>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2L2 20h20L12 2z" />
+                  </svg>
                   <span>Triangles</span>
                 </div>
                 <div className="flex items-center gap-2 col-span-2">

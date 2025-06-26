@@ -2,6 +2,11 @@ import React from 'react';
 import { Shape, Point, ArrowTipStyle } from '../types';
 import rough from 'roughjs/bin/rough';
 
+// Utility function to create modal-aware event handlers
+const createModalAwareHandler = (handler: (e: any) => void, modalOpen?: boolean) => {
+  return modalOpen ? () => {} : handler;
+};
+
 // Calculate the arrowhead points
 const calculateArrowhead = (from: Point, to: Point, headSize = 10): [Point, Point] => {
   const angle = Math.atan2(to.y - from.y, to.x - from.x);
@@ -366,7 +371,8 @@ export const renderShape = (
   onMouseDown?: (shape: Shape, e: React.MouseEvent) => void,
   currentTool?: string,
   sketchFont?: boolean,
-  currentFontSize?: number
+  currentFontSize?: number,
+  modalOpen?: boolean
 ): React.ReactNode => {
   const isSelected = selectedShapeId === shape.id;
   const isEditing = editingShapeId === shape.id;
@@ -465,15 +471,15 @@ export const renderShape = (
   };
   
   const baseProps = {
-    onClick: handleClick,
-    onDoubleClick: handleDoubleClick,
-    onMouseDown: handleMouseDown,
-    onMouseMove: handleMouseMove,
-    onTouchStart: handleTouchStart,
-    onTouchMove: handleTouchMove,
-    onTouchEnd: handleTouchEnd,
+    onClick: createModalAwareHandler(handleClick, modalOpen),
+    onDoubleClick: createModalAwareHandler(handleDoubleClick, modalOpen),
+    onMouseDown: createModalAwareHandler(handleMouseDown, modalOpen),
+    onMouseMove: createModalAwareHandler(handleMouseMove, modalOpen),
+    onTouchStart: createModalAwareHandler(handleTouchStart, modalOpen),
+    onTouchMove: createModalAwareHandler(handleTouchMove, modalOpen),
+    onTouchEnd: createModalAwareHandler(handleTouchEnd, modalOpen),
     style: {
-      cursor: currentTool === 'eraser' ? 'crosshair' : 'pointer',
+      cursor: modalOpen ? 'default' : (currentTool === 'eraser' ? 'crosshair' : 'pointer'),
       ...(isSelected && {
         filter: 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.5))'
       })

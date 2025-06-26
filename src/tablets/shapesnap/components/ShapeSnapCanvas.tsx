@@ -6,6 +6,15 @@ import { useShapeSnapCanvasEvents } from '../hooks/useShapeSnapCanvasEvents';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { ShapeSnapInfoModal } from './ShapeSnapInfoModal';
 
+// Custom hook to create modal-aware event handlers
+const useModalAwareHandlers = (isModalOpen: boolean) => {
+  const createEventHandler = (handler: (e: any) => void) => {
+    return isModalOpen ? () => {} : handler;
+  };
+  
+  return { createEventHandler };
+};
+
 interface ShapeSnapCanvasProps {
   shapes: Shape[];
   canvasSettings: CanvasSettings;
@@ -22,6 +31,8 @@ interface ShapeSnapCanvasProps {
   onDrawEnd?: (points: Point[]) => Shape | null;
   gridSnappingEnabled?: boolean;
   sketchModeEnabled?: boolean;
+  showInfoModal: boolean;
+  onShowInfoModal: (show: boolean) => void;
 }
 
 export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
@@ -38,9 +49,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onDeleteShape,
   onAddShape,
   gridSnappingEnabled,
-  sketchModeEnabled
+  sketchModeEnabled,
+  showInfoModal,
+  onShowInfoModal
 }) => {
-  const [showInfoModal, setShowInfoModal] = useState(false);
+  const { createEventHandler } = useModalAwareHandlers(showInfoModal);
   
   const svgRef = useRef<SVGSVGElement>(null);
   
@@ -190,9 +203,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             fill={fillColor}
             stroke={strokeColor}
             strokeWidth={1}
-            style={{ cursor: getResizeCursor(handle.name) }}
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
+            style={{ cursor: showInfoModal ? 'default' : getResizeCursor(handle.name) }}
+            onMouseDown={createEventHandler(handleMouseDown)}
+            onTouchStart={createEventHandler(handleTouchStart)}
           />
         ))}
       </g>
@@ -216,7 +229,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     <div className="relative w-full h-full">
       {/* Information Icon */}
       <button
-        onClick={() => setShowInfoModal(true)}
+        onClick={() => onShowInfoModal(true)}
         className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${
           canvasSettings.mode === 'dark' 
             ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
@@ -237,50 +250,53 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         style={{ 
           backgroundColor: canvasSettings.background,
           touchAction: 'none',
-          cursor: getResizeCursor(resizeHandle)
+          cursor: getResizeCursor(resizeHandle),
+          pointerEvents: showInfoModal ? 'none' : 'auto'
         }}
-        onDoubleClick={handleCanvasDoubleClick}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onClick={(e) => {
-          // Clear selection when clicking on empty canvas area
-          if (e.target === e.currentTarget) {
-            setSelectedShapeId(undefined);
+        {...(showInfoModal ? {} : {
+          onDoubleClick: handleCanvasDoubleClick,
+          onMouseMove: handleMouseMove,
+          onMouseUp: handleMouseUp,
+          onClick: (e) => {
+            // Clear selection when clicking on empty canvas area
+            if (e.target === e.currentTarget) {
+              setSelectedShapeId(undefined);
+            }
+          },
+          onTouchStart: (e) => {
+            // Prevent default to avoid scrolling
+            e.preventDefault();
+            // Convert touch to mouse event for compatibility
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+              clientX: touch.clientX,
+              clientY: touch.clientY,
+              bubbles: true
+            });
+            e.currentTarget.dispatchEvent(mouseEvent);
+          },
+          onTouchMove: (e) => {
+            // Prevent default to avoid scrolling
+            e.preventDefault();
+            // Convert touch to mouse event for compatibility
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+              clientX: touch.clientX,
+              clientY: touch.clientY,
+              bubbles: true
+            });
+            e.currentTarget.dispatchEvent(mouseEvent);
+          },
+          onTouchEnd: (e) => {
+            // Prevent default to avoid any unwanted behavior
+            e.preventDefault();
+            // Convert touch to mouse event for compatibility
+            const mouseEvent = new MouseEvent('mouseup', {
+              bubbles: true
+            });
+            e.currentTarget.dispatchEvent(mouseEvent);
           }
-        }}
-        onTouchStart={(e) => {
-          // Prevent default to avoid scrolling
-          e.preventDefault();
-          // Convert touch to mouse event for compatibility
-          const touch = e.touches[0];
-          const mouseEvent = new MouseEvent('mousedown', {
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-            bubbles: true
-          });
-          e.currentTarget.dispatchEvent(mouseEvent);
-        }}
-        onTouchMove={(e) => {
-          // Prevent default to avoid scrolling
-          e.preventDefault();
-          // Convert touch to mouse event for compatibility
-          const touch = e.touches[0];
-          const mouseEvent = new MouseEvent('mousemove', {
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-            bubbles: true
-          });
-          e.currentTarget.dispatchEvent(mouseEvent);
-        }}
-        onTouchEnd={(e) => {
-          // Prevent default to avoid any unwanted behavior
-          e.preventDefault();
-          // Convert touch to mouse event for compatibility
-          const mouseEvent = new MouseEvent('mouseup', {
-            bubbles: true
-          });
-          e.currentTarget.dispatchEvent(mouseEvent);
-        }}
+        })}
       >
         {/* Render all shapes */}
         {shapesToRender.map(shape => (
@@ -316,14 +332,15 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                         handleShapeMouseDown,
                         currentTool,
                         sketchModeEnabled,
-                        currentFontSize
+                        currentFontSize,
+                        showInfoModal
                       )}
                       {renderShapeOverlay(shape, editingShape ? editingShape.id : undefined, sketchModeEnabled, currentFontSize)}
                     </g>
                   ) : null;
                 }
                 default:
-                  return renderShape(shape, (s, pos) => { handleShapeClick(s, pos); }, selectedShapeId, editingShape ? editingShape.id : undefined, handleShapeDoubleClick, handleShapeMouseDown, currentTool, sketchModeEnabled, currentFontSize);
+                  return renderShape(shape, (s, pos) => { handleShapeClick(s, pos); }, selectedShapeId, editingShape ? editingShape.id : undefined, handleShapeDoubleClick, handleShapeMouseDown, currentTool, sketchModeEnabled, currentFontSize, showInfoModal);
               }
             })()
           ) : (
@@ -336,7 +353,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
               handleShapeMouseDown,
               currentTool,
               sketchModeEnabled,
-              currentFontSize
+              currentFontSize,
+              showInfoModal
             )
           )
         ))}
@@ -432,7 +450,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       {/* Information Modal */}
       <ShapeSnapInfoModal
         isOpen={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
+        onClose={() => onShowInfoModal(false)}
         canvasMode={canvasSettings.mode}
       />
     </div>
