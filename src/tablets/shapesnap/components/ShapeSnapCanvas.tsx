@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool, ArrowTipStyle } from '../types';
 import { renderShape, getShapeCenter, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
+import { ShapeSnapInfoModal } from './ShapeSnapInfoModal';
 import { cloneDeep } from 'lodash';
 
 // Arrow tip styles in cycling order
@@ -62,6 +63,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const [lineDragPoint, setLineDragPoint] = useState<Point | null>(null);
   const [mouseDownShape, setMouseDownShape] = useState<{ shape: Shape; initialPos: Point; center: Point } | null>(null);
   const [hasMoved, setHasMoved] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   
   // Drag guides state
   const [dragGuides, setDragGuides] = useState<{
@@ -656,6 +658,21 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 
   return (
     <div className="relative w-full h-full">
+      {/* Information Icon */}
+      <button
+        onClick={() => setShowInfoModal(true)}
+        className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${
+          canvasSettings.mode === 'dark' 
+            ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
+            : 'bg-white hover:bg-gray-100 text-gray-700'
+        }`}
+        title="Shape Snap Help"
+      >
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+        </svg>
+      </button>
+
       <svg 
         ref={svgRef}
         width={width} 
@@ -809,6 +826,13 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           </g>
         )}
       </svg>
+
+      {/* Information Modal */}
+      <ShapeSnapInfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        canvasMode={canvasSettings.mode}
+      />
     </div>
   );
 };
