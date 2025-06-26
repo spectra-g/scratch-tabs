@@ -118,6 +118,8 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       const tablet = await tabletRegistry.getById(tabletMetadata.id);
       if (tablet) {
         onSelect(tablet);
+        // Close the selector immediately after selection
+        onClose();
       } else {
         console.error(`❌ TabletSelector: Failed to load tablet: ${tabletMetadata.id}`);
       }

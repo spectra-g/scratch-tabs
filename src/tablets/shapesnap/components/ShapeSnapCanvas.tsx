@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool, ArrowTipStyle } from '../types';
-import { renderShape, getShapeCenter, renderRoughShapeSVG, renderShapeOverlay, renderResizeHandles, hashCode } from '../utils/renderUtils';
+import { renderShape, getShapeCenter, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { ShapeSnapInfoModal } from './ShapeSnapInfoModal';
 import { cloneDeep } from 'lodash';
