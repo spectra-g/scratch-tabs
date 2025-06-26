@@ -237,7 +237,20 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     
     // For circles, maintain aspect ratio and use radius
     if (shapeType === 'circle') {
-      const newRadius = Math.max(10, Math.min(newWidth, newHeight) / 2);
+      let newRadius;
+      
+      // For edge handles, use the dimension that's actually changing
+      if (handle === 'n' || handle === 's') {
+        // Vertical resize - use height
+        newRadius = Math.max(10, newHeight / 2);
+      } else if (handle === 'e' || handle === 'w') {
+        // Horizontal resize - use width
+        newRadius = Math.max(10, newWidth / 2);
+      } else {
+        // Corner handles - use the smaller dimension to maintain aspect ratio
+        newRadius = Math.max(10, Math.min(newWidth, newHeight) / 2);
+      }
+      
       return {
         x: newX + newRadius,
         y: newY + newRadius,
