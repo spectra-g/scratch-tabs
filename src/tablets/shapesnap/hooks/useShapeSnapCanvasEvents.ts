@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Shape, Point, CanvasSettings, ShapeSnapTool, ArrowTipStyle } from '../types';
 import { getShapeCenter, getShapeBoundingBox } from '../utils/geometryUtils';
 import { cycleArrowTip } from '../utils/arrowTipUtils';
@@ -448,6 +448,17 @@ export const useShapeSnapCanvasEvents = ({
       // Create updated shape for visual feedback
       const updatedShape = cloneDeep(resizeStartData.shape);
       
+      // Ensure the stroke color matches the current canvas mode
+      const correctStrokeColor = canvasSettings.mode === 'dark' ? '#ffffff' : '#000000';
+      if (!updatedShape.style) {
+        updatedShape.style = {
+          stroke: correctStrokeColor,
+          strokeWidth: 2
+        };
+      } else {
+        updatedShape.style.stroke = correctStrokeColor;
+      }
+      
       switch (updatedShape.type) {
         case 'rectangle':
         case 'square':
@@ -531,6 +542,17 @@ export const useShapeSnapCanvasEvents = ({
     
     // Create updated shape for visual feedback
     const updatedShape = cloneDeep(shape);
+    
+    // Ensure the stroke color matches the current canvas mode
+    const correctStrokeColor = canvasSettings.mode === 'dark' ? '#ffffff' : '#000000';
+    if (!updatedShape.style) {
+      updatedShape.style = {
+        stroke: correctStrokeColor,
+        strokeWidth: 2
+      };
+    } else {
+      updatedShape.style.stroke = correctStrokeColor;
+    }
     
     if (shape.type === 'line' && lineDragMode && lineDragPoint) {
       // Handle line resizing
