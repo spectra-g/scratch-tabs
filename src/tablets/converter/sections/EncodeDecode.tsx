@@ -95,10 +95,12 @@ const converters: Converter[] = [
 
 interface Props {
   searchQuery: string;
+  data?: { inputs: Record<string, string> };
+  onDataChange?: (data: { inputs: Record<string, string> }) => void;
 }
 
-export const EncodeDecode: React.FC<Props> = ({ searchQuery }) => {
-  const [inputs, setInputs] = useState<Record<string, string>>({});
+export const EncodeDecode: React.FC<Props> = ({ searchQuery, data, onDataChange }) => {
+  const [inputs, setInputs] = useState<Record<string, string>>(data?.inputs || {});
   const [results, setResults] = useState<Record<string, string>>({});
 
   const filteredConverters = converters.filter(converter =>
@@ -107,7 +109,9 @@ export const EncodeDecode: React.FC<Props> = ({ searchQuery }) => {
   );
 
   const handleInputChange = (converterId: string, value: string) => {
-    setInputs(prev => ({ ...prev, [converterId]: value }));
+    const newInputs = { ...inputs, [converterId]: value };
+    setInputs(newInputs);
+    onDataChange?.({ inputs: newInputs });
   };
 
   useEffect(() => {

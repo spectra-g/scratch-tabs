@@ -107,7 +107,6 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
           const NewComponent: React.FC<{ state: any; onChange: (state: any) => void }> = (props) => {
             // Validate that we have the correct state type for this tablet
             if (!props.state || props.state.type !== tabletType) {
-              console.warn(`TabletView: Invalid state type for tablet ${tabletType}`, props.state);
               return (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-red-500">Invalid tablet state</div>

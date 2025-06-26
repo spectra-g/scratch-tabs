@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool } from '../types';
 import { renderShape, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
 import { getShapeCenter, getShapeBoundingBox } from '../utils/geometryUtils';
