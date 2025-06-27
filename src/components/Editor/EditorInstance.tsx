@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { useRootStore } from '../../stores';
@@ -64,9 +64,36 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     latestActiveTabRef.current = activeTab;
   }, [activeTab]);
 
+  // Add a ref to track pending format operations to avoid duplicate formatting
+  const pendingFormatRef = useRef<Set<string>>(new Set());
+
+  // Handler for auto-format when language is detected on significant change
+  const handleLanguageDetectedOnSignificantChange = useCallback((tabId: string, language: string) => {
+    const editor = editorRef.current;
+    if (!editor || tabId !== activeTab.id) return;
+
+    // Prevent duplicate format operations
+    const formatKey = `${tabId}-${language}`;
+    if (pendingFormatRef.current.has(formatKey)) return;
+    
+    pendingFormatRef.current.add(formatKey);
+
+    // Auto-format the document
+    const formatAction = editor.getAction('editor.action.formatDocument');
+    if (formatAction) {
+      formatAction.run().finally(() => {
+        // Clean up the pending format tracking
+        pendingFormatRef.current.delete(formatKey);
+      });
+    } else {
+      // Clean up even if format action fails
+      pendingFormatRef.current.delete(formatKey);
+    }
+  }, [activeTab.id]);
+
   // --- Custom Hooks ---
   const {restoreScrollPosition} = useEditorScrollManager(editorRef, activeTab.id);
-  const {detectAndSetLanguage} = useLanguageDetection(updateTabLanguage);
+  const {detectAndSetLanguage} = useLanguageDetection(updateTabLanguage, handleLanguageDetectedOnSignificantChange);
   const {
     showTabletSelector,
     tabletQuery,
