@@ -168,6 +168,9 @@ export function requestToPostman(request: HttpRequest): string {
       ]
     };
   } else if (unmaskedAuth.type === 'apikey') {
+    // Default to header if addTo is not set, for consistency with UI
+    const addTo = unmaskedAuth.params.addTo || 'header';
+    
     postmanRequest.request.auth = {
       type: 'apikey',
       apikey: [
@@ -183,7 +186,7 @@ export function requestToPostman(request: HttpRequest): string {
         },
         {
           key: 'in',
-          value: unmaskedAuth.params.addTo || 'header',
+          value: addTo,
           type: 'string'
         }
       ]

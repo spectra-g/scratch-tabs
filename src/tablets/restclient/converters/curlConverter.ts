@@ -74,14 +74,26 @@ export function requestToCurl(request: HttpRequest): string {
   
   // Build the URL with query parameters
   let fullUrl = url;
-  if (params.length > 0) {
+  if (params.length > 0 || (unmaskedAuth.type === 'apikey' && unmaskedAuth.params.addTo === 'query')) {
     const urlObj = new URL(url.startsWith('http') ? url : `http://${url}`);
+    
+    // Add regular query parameters
     params.filter(p => p.enabled).forEach(param => {
       urlObj.searchParams.append(
         param.key, 
         resolveVariables(param.value, unmaskedVariables)
       );
     });
+    
+    // Add API key as query parameter if specified
+    if (unmaskedAuth.type === 'apikey' && unmaskedAuth.params.addTo === 'query') {
+      const key = unmaskedAuth.params.key || '';
+      const value = resolveVariables(unmaskedAuth.params.value || '', unmaskedVariables);
+      if (key && value) {
+        urlObj.searchParams.append(key, value);
+      }
+    }
+    
     fullUrl = urlObj.toString();
   }
   
@@ -108,12 +120,13 @@ export function requestToCurl(request: HttpRequest): string {
     const key = unmaskedAuth.params.key || '';
     const value = resolveVariables(unmaskedAuth.params.value || '', unmaskedVariables);
     
-    if (unmaskedAuth.params.addTo === 'header') {
+    // Default to header if addTo is not set, for consistency with UI
+    const addTo = unmaskedAuth.params.addTo || 'header';
+    
+    if (addTo === 'header' && key && value) {
       curlCommand += ` -H ${escapeShellArg(`${key}: ${value}`)}`;
-    } else if (unmaskedAuth.params.addTo === 'query') {
-      // For query params, we need to add it to the URL
-      // This is already handled in the URL building above
     }
+    // Query parameter case is handled in URL building above
   }
   
   // Add body

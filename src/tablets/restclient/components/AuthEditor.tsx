@@ -15,10 +15,17 @@ export const AuthEditor: React.FC<AuthEditorProps> = ({
   const [showSecrets, setShowSecrets] = useState(false);
   
   const handleTypeChange = (type: AuthType) => {
-    onChange({
+    const newAuth = {
       type,
       params: type === auth.type ? auth.params : {}
-    });
+    };
+    
+    // Set default values for API key auth
+    if (type === 'apikey' && !newAuth.params.addTo) {
+      newAuth.params.addTo = 'header';
+    }
+    
+    onChange(newAuth);
   };
   
   const handleParamChange = (key: string, value: string) => {

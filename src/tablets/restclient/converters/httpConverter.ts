@@ -58,14 +58,26 @@ export function requestToHttp(request: HttpRequest): string {
   
   // Build the URL with query parameters
   let fullUrl = url;
-  if (params.length > 0) {
+  if (params.length > 0 || (unmaskedAuth.type === 'apikey' && unmaskedAuth.params.addTo === 'query')) {
     const urlObj = new URL(url.startsWith('http') ? url : `http://${url}`);
+    
+    // Add regular query parameters
     params.filter(p => p.enabled).forEach(param => {
       urlObj.searchParams.append(
         param.key, 
         resolveVariables(param.value, unmaskedVariables)
       );
     });
+    
+    // Add API key as query parameter if specified
+    if (unmaskedAuth.type === 'apikey' && unmaskedAuth.params.addTo === 'query') {
+      const key = unmaskedAuth.params.key || '';
+      const value = resolveVariables(unmaskedAuth.params.value || '', unmaskedVariables);
+      if (key && value) {
+        urlObj.searchParams.append(key, value);
+      }
+    }
+    
     fullUrl = urlObj.toString();
   }
   
@@ -106,10 +118,17 @@ export function requestToHttp(request: HttpRequest): string {
   } else if (unmaskedAuth.type === 'bearer') {
     const token = resolveVariables(unmaskedAuth.params.token || '', unmaskedVariables);
     headersMap['Authorization'] = `Bearer ${token}`;
-  } else if (unmaskedAuth.type === 'apikey' && unmaskedAuth.params.addTo === 'header') {
+  } else if (unmaskedAuth.type === 'apikey') {
     const key = unmaskedAuth.params.key || '';
     const value = resolveVariables(unmaskedAuth.params.value || '', unmaskedVariables);
-    headersMap[key] = value;
+    
+    // Default to header if addTo is not set, for consistency with UI
+    const addTo = unmaskedAuth.params.addTo || 'header';
+    
+    if (addTo === 'header' && key && value) {
+      headersMap[key] = value;
+    }
+    // Query parameter case is handled in URL building above
   }
   
   // Add headers to request
