@@ -21,7 +21,6 @@ const MainLayout: React.FC = () => {
     saveTabDataById,
     splitView,
     setSplitRatio,
-    activeSide,
   } = useRootStore(state => ({
     tabs: state.tabs,
     activeLeftTabId: state.splitView?.activeLeftTabId,
@@ -29,7 +28,6 @@ const MainLayout: React.FC = () => {
     saveTabDataById: state.saveTabDataById,
     splitView: state.splitView,
     setSplitRatio: state.setSplitRatio,
-    activeSide: state.splitView?.activeSide,
   }));
 
   const { loadWorkspaces, workspaces } = useWorkspaceStore();

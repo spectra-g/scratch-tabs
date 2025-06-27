@@ -44,7 +44,7 @@ export const useJsonMenuConfig = (
     const {
         handleFormat, handleMinify, handleSortKeys, handleFlatten,
         handleUnflatten, handleRemoveEmpty, handleRemoveComments, handleStringify, handleUnstringify
-    } = useJsonOperations(editor, handleAddTab); // Pass handleAddTab for tab creation + close
+    } = useJsonOperations(editor); // Operations that modify the current tab directly
 
     const {
         handleToCamelCase, handleToSnakeCase, handleToKebabCase
@@ -150,7 +150,7 @@ export const useJsonMenuConfig = (
             { id: 'generateSchema', label: 'Generate Schema', icon: FileSymlink, action: generateSchemaAction },
         ];
     }, [
-        editor, onClose, handleAddTab, // Include addTab if used directly
+        editor, onClose,
         handleFormat, handleMinify, handleSortKeys, handleFlatten, handleUnflatten,
         handleRemoveEmpty, handleRemoveComments, handleStringify, handleUnstringify,
         handleToCamelCase, handleToSnakeCase, handleToKebabCase,

@@ -1,11 +1,9 @@
 import { useCallback } from 'react';
 import * as monaco from 'monaco-editor'; // Import monaco namespace
-import { Tab } from '../../../types';
 import { unstringifyJson } from '../utils/unstringify';
 
 export const useJsonOperations = (
-  editor: monaco.editor.IStandaloneCodeEditor | null, // Allow editor to be null initially
-  addTab: (tab: Tab) => void
+  editor: monaco.editor.IStandaloneCodeEditor | null // Allow editor to be null initially
 ) => {
 
   // Helper function to apply edits while preserving undo stack

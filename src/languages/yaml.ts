@@ -85,7 +85,8 @@ features:
   private docEndLineRegex = /^\.\.\.\s*$/m;
   // Key: unquoted, or quoted. Value: can be empty, or start with indicators, or be a plain scalar.
   // Crucially, ensure there's a space after the colon for common YAML, or it's the end of the line.
-  private keyValueLineRegex = /^\s*(?:[\w.-]+|"[^"]*"|'[^']*')\s*:\s*(?:\||>|&|\*|\S.*|$)?$/m;
+  // Updated to be more restrictive and avoid matching JSON patterns
+  private keyValueLineRegex = /^\s*(?:[\w.-]+|"[^"]*"|'[^']*')\s*:\s*(?:\||>|&|\*|[^{[\]},].*|$)$/m;
   private listItemLineRegex = /^\s*-\s+(?:.+)?$/m; // Requires something after "- " or just "- "
   private commentLineRegex = /^\s*#/;
   private emptyLineRegex = /^\s*$/m;
@@ -151,8 +152,17 @@ features:
       } else if (this.keyValueLineRegex.test(currentLineTrimmed)) {
         // Ensure it's not a Markdown header with a colon, or a URL
         if (!currentLineTrimmed.startsWith('#') && !/https?:\/\//.test(currentLineTrimmed)) {
-          confidenceScore += 0.20; lineIsStructuralYAML = true; patternsMatchedCount++; keyValueCount++;
-          if (currentLineTrimmed.includes(': ')) strongYAMLSignal = true; // Space after colon is common
+          // Additional check: exclude JSON-specific patterns
+          const isJsonPattern = currentLineTrimmed.match(/^"[^"]*":\s*[{[\]},]/) || // "key": { or [ or } or ,
+                               currentLineTrimmed.match(/^"[^"]*":\s*\d+\.?\d*,?\s*$/) || // "key": number (with optional comma)
+                               currentLineTrimmed.match(/^"[^"]*":\s*(true|false|null),?\s*$/) || // "key": boolean/null
+                               currentLineTrimmed.match(/^"[^"]*":\s*"[^"]*",?\s*$/) || // "key": "string value" (with optional comma)
+                               currentLineTrimmed.match(/^"[^"]*":\s*"[^"]*"$/); // "key": "string value" (no comma)
+          
+          if (!isJsonPattern) {
+            confidenceScore += 0.20; lineIsStructuralYAML = true; patternsMatchedCount++; keyValueCount++;
+            if (currentLineTrimmed.includes(': ')) strongYAMLSignal = true; // Space after colon is common
+          }
         }
       } else if (this.listItemLineRegex.test(currentLineTrimmed)) {
         // Ensure it's not a Markdown task list item or other MD list-like structures
@@ -173,7 +183,9 @@ features:
     if (JSON_START_END_REGEX.test(trimmedContent)) {
       try {
         JSON.parse(trimmedContent); // Check if it's valid JSON
-        if (!strongYAMLSignal || keyValueCount < 1) confidenceScore -= 0.7; // Strong penalty if it's valid JSON and not clearly YAML
+        // Strong penalty if it's valid JSON - this should take precedence over YAML signals
+        confidenceScore -= 1.5; // Increased penalty to ensure JSON always wins
+        strongYAMLSignal = false; // Always reset YAML signal for valid JSON
       } catch (e) { /* Not valid JSON, no penalty from this rule */ }
     }
 
