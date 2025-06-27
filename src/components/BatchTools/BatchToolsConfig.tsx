@@ -135,6 +135,131 @@ const Select: React.FC<SelectProps> = ({ label, value, onChange, options, descri
 export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onChange }) => {
   return (
     <div className="space-y-4">
+      {/* Condition */}
+      <ConfigSection title={<div className="flex items-center space-x-2"><Search className="w-4 h-4 text-yellow-400" /><span>Apply When (Optional)</span></div>}>
+        <div className="space-y-3">
+          <Select
+            label="Condition type"
+            value={config.condition?.type || 'none'}
+            onChange={(value) => {
+              if (value === 'none') {
+                onChange({ condition: false });
+              } else {
+                onChange({
+                  condition: {
+                    type: value as any,
+                    value: '',
+                    lineNumber: 1,
+                    startLine: 1,
+                    endLine: 10,
+                    nthInterval: 2,
+                  },
+                });
+              }
+            }}
+            options={[
+              { value: 'none', label: 'Apply to all lines' },
+              { value: 'contains', label: 'Line contains text' },
+              { value: 'not-contains', label: 'Line does not contain text' },
+              { value: 'starts-with', label: 'Line starts with text' },
+              { value: 'ends-with', label: 'Line ends with text' },
+              { value: 'regex', label: 'Line matches regex' },
+              { value: 'blank', label: 'Line is blank' },
+              { value: 'not-blank', label: 'Line is not blank' },
+              { value: 'line-number', label: 'Specific line number' },
+              { value: 'line-range', label: 'Line number range' },
+              { value: 'every-nth', label: 'Every Nth line' },
+            ]}
+            description="Choose when to apply the transformations below"
+          />
+
+          {config.condition && ['contains', 'not-contains', 'starts-with', 'ends-with', 'regex'].includes(config.condition.type) && (
+            <TextInput
+              label={config.condition.type === 'regex' ? 'Regular expression' : 'Text to match'}
+              value={config.condition.value || ''}
+              onChange={(value) =>
+                onChange({
+                  condition: { ...config.condition!, value },
+                })
+              }
+              placeholder={
+                config.condition.type === 'regex'
+                  ? 'Enter regex pattern...'
+                  : config.condition.type === 'contains' || config.condition.type === 'not-contains'
+                    ? 'Enter text to search for...'
+                    : config.condition.type === 'starts-with'
+                      ? 'Enter starting text...'
+                      : 'Enter ending text...'
+              }
+              description={
+                config.condition.type === 'regex'
+                  ? 'JavaScript regex pattern (case-insensitive)'
+                  : 'Text matching is case-sensitive'
+              }
+            />
+          )}
+
+          {config.condition && config.condition.type === 'line-number' && (
+            <NumberInput
+              label="Line number"
+              value={config.condition.lineNumber || 1}
+              onChange={(lineNumber) =>
+                onChange({
+                  condition: { ...config.condition!, lineNumber },
+                })
+              }
+              min={1}
+              max={10000}
+              description="Apply to this specific line number"
+            />
+          )}
+
+          {config.condition && config.condition.type === 'line-range' && (
+            <>
+              <NumberInput
+                label="Start line"
+                value={config.condition.startLine || 1}
+                onChange={(startLine) =>
+                  onChange({
+                    condition: { ...config.condition!, startLine },
+                  })
+                }
+                min={1}
+                max={10000}
+                description="First line in the range"
+              />
+              <NumberInput
+                label="End line"
+                value={config.condition.endLine || 10}
+                onChange={(endLine) =>
+                  onChange({
+                    condition: { ...config.condition!, endLine },
+                  })
+                }
+                min={1}
+                max={10000}
+                description="Last line in the range"
+              />
+            </>
+          )}
+
+          {config.condition && config.condition.type === 'every-nth' && (
+            <NumberInput
+              label="Every Nth line"
+              value={config.condition.nthInterval || 2}
+              onChange={(nthInterval) =>
+                onChange({
+                  condition: { ...config.condition!, nthInterval },
+                })
+              }
+              min={1}
+              max={100}
+              description="Apply to every Nth line (e.g., 2 = every 2nd line)"
+            />
+          )}
+        </div>
+      </ConfigSection>
+
       {/* Whitespace & Cleanup */}
       <ConfigSection title={<div className="flex items-center space-x-2"><Sparkles className="w-4 h-4 text-blue-400" /><span>Whitespace & Cleanup</span></div>} defaultExpanded>
         <Checkbox
@@ -143,7 +268,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
           onChange={(checked) => onChange({ trim: checked })}
           description="Remove leading and trailing whitespace from each line"
         />
-        
+
         <Select
           label="Remove extra whitespace"
           value={config.removeExtraWhitespace || 'false'}
@@ -161,7 +286,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
           onChange={(checked) => onChange({ removeExtraBlankLines: checked })}
           description="Collapse multiple consecutive blank lines into one"
         />
-        
+
         <Checkbox
           label="Remove all blank lines"
           checked={!!config.removeAllBlankLines}

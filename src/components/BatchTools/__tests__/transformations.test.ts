@@ -362,4 +362,138 @@ describe('Text Transformations', () => {
     });
   });
 
+  // Condition Tests
+  describe('Conditional Transformations', () => {
+    it('should apply transformation only to lines containing text', () => {
+      const input = 'apple\nbanana\ncherry\napricot';
+      const config = {
+        condition: { type: 'contains' as const, value: 'ap' },
+        caseTransform: 'upper' as const
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('APPLE\nbanana\ncherry\nAPRICOT');
+    });
+
+    it('should apply transformation only to lines not containing text', () => {
+      const input = 'error: failed\ninfo: success\nerror: timeout';
+      const config = {
+        condition: { type: 'not-contains' as const, value: 'error' },
+        addPrefix: '[LOG] '
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('error: failed\n[LOG] info: success\nerror: timeout');
+    });
+
+    it('should apply transformation to lines starting with text', () => {
+      const input = 'DEBUG: message\nINFO: message\nDEBUG: another';
+      const config = {
+        condition: { type: 'starts-with' as const, value: 'DEBUG' },
+        addPrefix: '🐛 '
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('🐛 DEBUG: message\nINFO: message\n🐛 DEBUG: another');
+    });
+
+    it('should apply transformation to lines ending with text', () => {
+      const input = 'file.txt\nimage.png\ndoc.pdf\nscript.js';
+      const config = {
+        condition: { type: 'ends-with' as const, value: '.js' },
+        addPrefix: '📜 '
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('file.txt\nimage.png\ndoc.pdf\n📜 script.js');
+    });
+
+    it('should apply transformation to specific line number', () => {
+      const input = 'line1\nline2\nline3\nline4';
+      const config = {
+        condition: { type: 'line-number' as const, lineNumber: 2 },
+        caseTransform: 'upper' as const
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('line1\nLINE2\nline3\nline4');
+    });
+
+    it('should apply transformation to line range', () => {
+      const input = 'line1\nline2\nline3\nline4\nline5';
+      const config = {
+        condition: { type: 'line-range' as const, startLine: 2, endLine: 4 },
+        addPrefix: '> '
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('line1\n> line2\n> line3\n> line4\nline5');
+    });
+
+    it('should apply transformation to every nth line', () => {
+      const input = 'line1\nline2\nline3\nline4\nline5\nline6';
+      const config = {
+        condition: { type: 'every-nth' as const, nthInterval: 2 },
+        caseTransform: 'upper' as const
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('line1\nLINE2\nline3\nLINE4\nline5\nLINE6');
+    });
+
+    it('should apply transformation to blank lines only', () => {
+      const input = 'line1\n\nline3\n\nline5';
+      const config = {
+        condition: { type: 'blank' as const },
+        addPrefix: '[EMPTY]'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('line1\n[EMPTY]\nline3\n[EMPTY]\nline5');
+    });
+
+    it('should apply transformation to non-blank lines only', () => {
+      const input = 'line1\n\nline3\n\nline5';
+      const config = {
+        condition: { type: 'not-blank' as const },
+        addSuffix: ' [CONTENT]'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('line1 [CONTENT]\n\nline3 [CONTENT]\n\nline5 [CONTENT]');
+    });
+
+    it('should work with regex conditions', () => {
+      const input = 'test123\nabc456\nxyz789\ntest000';
+      const config = {
+        condition: { type: 'regex' as const, value: 'test\\d+' },
+        addSuffix: ' [MATCHED]'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('test123 [MATCHED]\nabc456\nxyz789\ntest000 [MATCHED]');
+    });
+
+    it('should handle invalid regex in conditions gracefully', () => {
+      const input = 'line1\nline2\nline3';
+      const config = {
+        condition: { type: 'regex' as const, value: '[' },
+        caseTransform: 'upper' as const
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe(input); // Should return original when regex is invalid
+    });
+
+    it('should work without conditions (apply to all lines)', () => {
+      const input = 'line1\nline2\nline3';
+      const config = {
+        caseTransform: 'upper' as const
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('LINE1\nLINE2\nLINE3');
+    });
+
+    it('should combine conditions with multiple transformations', () => {
+      const input = 'error: failed\ninfo: success\nerror: timeout\nwarn: slow';
+      const config = {
+        condition: { type: 'contains' as const, value: 'error' },
+        caseTransform: 'upper' as const,
+        addPrefix: '🚨 ',
+        addSuffix: ' 🚨'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('🚨 ERROR: FAILED 🚨\ninfo: success\n🚨 ERROR: TIMEOUT 🚨\nwarn: slow');
+    });
+  });
+
 }); 

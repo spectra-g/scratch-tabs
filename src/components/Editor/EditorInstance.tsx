@@ -299,7 +299,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     // Add Batch Tools context menu action
     batchToolsDisposableRef.current = editor.addAction({
       id: 'batch-tools',
-      label: 'Batch Tools',
+      label: 'Transformations',
       contextMenuGroupId: 'navigation',
       contextMenuOrder: 2.5,
       run: () => {

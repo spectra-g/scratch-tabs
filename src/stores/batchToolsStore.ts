@@ -1,6 +1,18 @@
 import { create } from 'zustand';
 
 export interface TransformationConfig {
+  // Condition (applies to all transformations below)
+  condition?: {
+    type: 'contains' | 'not-contains' | 'starts-with' | 'ends-with' |
+    'regex' | 'blank' | 'not-blank' | 'line-number' |
+    'line-range' | 'every-nth';
+    value?: string; // For text-based conditions
+    lineNumber?: number; // For line number conditions
+    startLine?: number; // For range conditions
+    endLine?: number;
+    nthInterval?: number; // For every-nth conditions
+  } | false;
+
   // Whitespace & Cleanup
   trim?: boolean;
   removeExtraWhitespace?: 'preserve-single' | 'remove-all' | false;
@@ -56,7 +68,7 @@ interface BatchToolsState {
   selectedText: string;
   config: TransformationConfig;
   previewMode: 'unified' | 'side-by-side';
-  
+
   // Actions
   openModal: (content: string, selectedText?: string) => void;
   closeModal: () => void;
@@ -97,29 +109,4 @@ export const useBatchToolsStore = create<BatchToolsState>((set) => ({
 
   setPreviewMode: (mode: 'unified' | 'side-by-side') =>
     set({ previewMode: mode }),
-}));
-
-// Helper functions
-function toRoman(num: number): string {
-  const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
-  const symbols = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
-  let result = '';
-  
-  for (let i = 0; i < values.length; i++) {
-    while (num >= values[i]) {
-      result += symbols[i];
-      num -= values[i];
-    }
-  }
-  return result;
-}
-
-function toAlpha(num: number): string {
-  let result = '';
-  while (num > 0) {
-    num--;
-    result = String.fromCharCode(65 + (num % 26)) + result;
-    num = Math.floor(num / 26);
-  }
-  return result;
-} 
+})); 
