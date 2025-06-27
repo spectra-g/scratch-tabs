@@ -1,5 +1,6 @@
 import { HttpRequest, RequestConverter } from '../types';
 import { resolveVariables } from '../utils/requestUtils';
+import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
 
 /**
  * Escapes a string for use in a shell command
@@ -10,10 +11,58 @@ function escapeShellArg(arg: string): string {
 }
 
 /**
+ * Helper function to unmask sensitive data in auth parameters
+ */
+function unmaskAuthParams(auth: HttpRequest['auth']) {
+  if (auth.type === 'none') return auth;
+  
+  const unmaskedParams: Record<string, string> = {};
+  const sensitiveFields = ['password', 'token', 'value', 'secret'];
+  
+  Object.entries(auth.params).forEach(([key, value]) => {
+    if (typeof value === 'string' && sensitiveFields.includes(key)) {
+      unmaskedParams[key] = SensitiveDataManager.unmask(value);
+    } else {
+      unmaskedParams[key] = value;
+    }
+  });
+  
+  return {
+    ...auth,
+    params: unmaskedParams
+  };
+}
+
+/**
+ * Helper function to unmask sensitive data in variables
+ */
+function unmaskVariables(variables: HttpRequest['variables']) {
+  return variables.map(variable => {
+    const sensitiveKeys = ['token', 'password', 'secret', 'key', 'auth', 'api', 'access'];
+    const isSensitive = sensitiveKeys.some(sensitiveKey => 
+      variable.key.toLowerCase().includes(sensitiveKey)
+    );
+    
+    if (isSensitive && SensitiveDataManager.isMasked(variable.value)) {
+      return {
+        ...variable,
+        value: SensitiveDataManager.unmask(variable.value)
+      };
+    }
+    
+    return variable;
+  });
+}
+
+/**
  * Converts an HTTP request to a cURL command
  */
 export function requestToCurl(request: HttpRequest): string {
-  const { method, url, headers, auth, params, body, variables } = request;
+  // Unmask sensitive data before conversion
+  const unmaskedAuth = unmaskAuthParams(request.auth);
+  const unmaskedVariables = unmaskVariables(request.variables);
+  
+  const { method, url, headers, params, body } = request;
   
   // Start with the basic curl command
   let curlCommand = 'curl';
@@ -30,38 +79,38 @@ export function requestToCurl(request: HttpRequest): string {
     params.filter(p => p.enabled).forEach(param => {
       urlObj.searchParams.append(
         param.key, 
-        resolveVariables(param.value, variables)
+        resolveVariables(param.value, unmaskedVariables)
       );
     });
     fullUrl = urlObj.toString();
   }
   
   // Resolve variables in the URL
-  fullUrl = resolveVariables(fullUrl, variables);
+  fullUrl = resolveVariables(fullUrl, unmaskedVariables);
   
   // Add the URL
   curlCommand += ` ${escapeShellArg(fullUrl)}`;
   
   // Add headers
   headers.filter(h => h.enabled).forEach(header => {
-    curlCommand += ` -H ${escapeShellArg(`${header.key}: ${resolveVariables(header.value, variables)}`)}`;
+    curlCommand += ` -H ${escapeShellArg(`${header.key}: ${resolveVariables(header.value, unmaskedVariables)}`)}`;
   });
   
   // Add authentication
-  if (auth.type === 'basic') {
-    const username = resolveVariables(auth.params.username || '', variables);
-    const password = resolveVariables(auth.params.password || '', variables);
+  if (unmaskedAuth.type === 'basic') {
+    const username = resolveVariables(unmaskedAuth.params.username || '', unmaskedVariables);
+    const password = resolveVariables(unmaskedAuth.params.password || '', unmaskedVariables);
     curlCommand += ` -u ${escapeShellArg(`${username}:${password}`)}`;
-  } else if (auth.type === 'bearer') {
-    const token = resolveVariables(auth.params.token || '', variables);
+  } else if (unmaskedAuth.type === 'bearer') {
+    const token = resolveVariables(unmaskedAuth.params.token || '', unmaskedVariables);
     curlCommand += ` -H ${escapeShellArg(`Authorization: Bearer ${token}`)}`;
-  } else if (auth.type === 'apikey') {
-    const key = auth.params.key || '';
-    const value = resolveVariables(auth.params.value || '', variables);
+  } else if (unmaskedAuth.type === 'apikey') {
+    const key = unmaskedAuth.params.key || '';
+    const value = resolveVariables(unmaskedAuth.params.value || '', unmaskedVariables);
     
-    if (auth.params.addTo === 'header') {
+    if (unmaskedAuth.params.addTo === 'header') {
       curlCommand += ` -H ${escapeShellArg(`${key}: ${value}`)}`;
-    } else if (auth.params.addTo === 'query') {
+    } else if (unmaskedAuth.params.addTo === 'query') {
       // For query params, we need to add it to the URL
       // This is already handled in the URL building above
     }
@@ -69,7 +118,7 @@ export function requestToCurl(request: HttpRequest): string {
   
   // Add body
   if (body.type === 'raw' && body.content) {
-    const resolvedContent = resolveVariables(body.content, variables);
+    const resolvedContent = resolveVariables(body.content, unmaskedVariables);
     curlCommand += ` -d ${escapeShellArg(resolvedContent)}`;
     
     // Add content type header if not already present
@@ -98,12 +147,12 @@ export function requestToCurl(request: HttpRequest): string {
     }
   } else if (body.type === 'form-data') {
     body.params.filter(p => p.enabled).forEach(param => {
-      const resolvedValue = resolveVariables(param.value, variables);
+      const resolvedValue = resolveVariables(param.value, unmaskedVariables);
       curlCommand += ` -F ${escapeShellArg(`${param.key}=${resolvedValue}`)}`;
     });
   } else if (body.type === 'x-www-form-urlencoded') {
     body.params.filter(p => p.enabled).forEach(param => {
-      const resolvedValue = resolveVariables(param.value, variables);
+      const resolvedValue = resolveVariables(param.value, unmaskedVariables);
       curlCommand += ` -d ${escapeShellArg(`${param.key}=${resolvedValue}`)}`;
     });
     

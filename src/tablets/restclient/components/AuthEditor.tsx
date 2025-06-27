@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { AuthType, HttpRequest } from '../types';
+import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
 
 interface AuthEditorProps {
   auth: HttpRequest['auth'];
@@ -21,13 +22,25 @@ export const AuthEditor: React.FC<AuthEditorProps> = ({
   };
   
   const handleParamChange = (key: string, value: string) => {
+    // Mask sensitive auth parameters
+    const sensitiveFields = ['password', 'token', 'value', 'secret'];
+    const maskedValue = sensitiveFields.includes(key) ? SensitiveDataManager.mask(value) : value;
+    
     onChange({
       ...auth,
       params: {
         ...auth.params,
-        [key]: value
+        [key]: maskedValue
       }
     });
+  };
+  
+  const getDisplayValue = (key: string, value: string): string => {
+    const sensitiveFields = ['password', 'token', 'value', 'secret'];
+    if (sensitiveFields.includes(key) && SensitiveDataManager.isMasked(value)) {
+      return SensitiveDataManager.unmask(value);
+    }
+    return value || '';
   };
   
   return (
@@ -98,7 +111,7 @@ export const AuthEditor: React.FC<AuthEditorProps> = ({
             </label>
             <input
               type="text"
-              value={auth.params.username || ''}
+              value={getDisplayValue('username', auth.params.username)}
               onChange={(e) => handleParamChange('username', e.target.value)}
               className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
               placeholder="Username"
@@ -112,7 +125,7 @@ export const AuthEditor: React.FC<AuthEditorProps> = ({
             <div className="relative">
               <input
                 type={showSecrets ? 'text' : 'password'}
-                value={auth.params.password || ''}
+                value={getDisplayValue('password', auth.params.password)}
                 onChange={(e) => handleParamChange('password', e.target.value)}
                 className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors pr-10"
                 placeholder="Password"
@@ -137,7 +150,7 @@ export const AuthEditor: React.FC<AuthEditorProps> = ({
           <div className="relative">
             <input
               type={showSecrets ? 'text' : 'password'}
-              value={auth.params.token || ''}
+              value={getDisplayValue('token', auth.params.token)}
               onChange={(e) => handleParamChange('token', e.target.value)}
               className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors pr-10"
               placeholder="Bearer token"
@@ -161,7 +174,7 @@ export const AuthEditor: React.FC<AuthEditorProps> = ({
             </label>
             <input
               type="text"
-              value={auth.params.key || ''}
+              value={getDisplayValue('key', auth.params.key)}
               onChange={(e) => handleParamChange('key', e.target.value)}
               className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
               placeholder="API key name"
@@ -175,7 +188,7 @@ export const AuthEditor: React.FC<AuthEditorProps> = ({
             <div className="relative">
               <input
                 type={showSecrets ? 'text' : 'password'}
-                value={auth.params.value || ''}
+                value={getDisplayValue('value', auth.params.value)}
                 onChange={(e) => handleParamChange('value', e.target.value)}
                 className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors pr-10"
                 placeholder="API key value"

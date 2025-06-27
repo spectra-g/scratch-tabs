@@ -1,11 +1,60 @@
 import { HttpRequest, RequestConverter } from '../types';
 import { resolveVariables } from '../utils/requestUtils';
+import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
+
+/**
+ * Helper function to unmask sensitive data in auth parameters
+ */
+function unmaskAuthParams(auth: HttpRequest['auth']) {
+  if (auth.type === 'none') return auth;
+  
+  const unmaskedParams: Record<string, string> = {};
+  const sensitiveFields = ['password', 'token', 'value', 'secret'];
+  
+  Object.entries(auth.params).forEach(([key, value]) => {
+    if (typeof value === 'string' && sensitiveFields.includes(key)) {
+      unmaskedParams[key] = SensitiveDataManager.unmask(value);
+    } else {
+      unmaskedParams[key] = value;
+    }
+  });
+  
+  return {
+    ...auth,
+    params: unmaskedParams
+  };
+}
+
+/**
+ * Helper function to unmask sensitive data in variables
+ */
+function unmaskVariables(variables: HttpRequest['variables']) {
+  return variables.map(variable => {
+    const sensitiveKeys = ['token', 'password', 'secret', 'key', 'auth', 'api', 'access'];
+    const isSensitive = sensitiveKeys.some(sensitiveKey => 
+      variable.key.toLowerCase().includes(sensitiveKey)
+    );
+    
+    if (isSensitive && SensitiveDataManager.isMasked(variable.value)) {
+      return {
+        ...variable,
+        value: SensitiveDataManager.unmask(variable.value)
+      };
+    }
+    
+    return variable;
+  });
+}
 
 /**
  * Converts an HTTP request to a raw HTTP request string
  */
 export function requestToHttp(request: HttpRequest): string {
-  const { method, url, headers, auth, params, body, variables } = request;
+  // Unmask sensitive data before conversion
+  const unmaskedAuth = unmaskAuthParams(request.auth);
+  const unmaskedVariables = unmaskVariables(request.variables);
+  
+  const { method, url, headers, params, body } = request;
   
   // Build the URL with query parameters
   let fullUrl = url;
@@ -14,14 +63,14 @@ export function requestToHttp(request: HttpRequest): string {
     params.filter(p => p.enabled).forEach(param => {
       urlObj.searchParams.append(
         param.key, 
-        resolveVariables(param.value, variables)
+        resolveVariables(param.value, unmaskedVariables)
       );
     });
     fullUrl = urlObj.toString();
   }
   
   // Resolve variables in the URL
-  fullUrl = resolveVariables(fullUrl, variables);
+  fullUrl = resolveVariables(fullUrl, unmaskedVariables);
   
   // Extract path and host from URL
   let path = '/';
@@ -45,21 +94,21 @@ export function requestToHttp(request: HttpRequest): string {
   
   // Add regular headers
   headers.filter(h => h.enabled).forEach(header => {
-    headersMap[header.key] = resolveVariables(header.value, variables);
+    headersMap[header.key] = resolveVariables(header.value, unmaskedVariables);
   });
   
   // Add auth headers
-  if (auth.type === 'basic') {
-    const username = resolveVariables(auth.params.username || '', variables);
-    const password = resolveVariables(auth.params.password || '', variables);
+  if (unmaskedAuth.type === 'basic') {
+    const username = resolveVariables(unmaskedAuth.params.username || '', unmaskedVariables);
+    const password = resolveVariables(unmaskedAuth.params.password || '', unmaskedVariables);
     const credentials = btoa(`${username}:${password}`);
     headersMap['Authorization'] = `Basic ${credentials}`;
-  } else if (auth.type === 'bearer') {
-    const token = resolveVariables(auth.params.token || '', variables);
+  } else if (unmaskedAuth.type === 'bearer') {
+    const token = resolveVariables(unmaskedAuth.params.token || '', unmaskedVariables);
     headersMap['Authorization'] = `Bearer ${token}`;
-  } else if (auth.type === 'apikey' && auth.params.addTo === 'header') {
-    const key = auth.params.key || '';
-    const value = resolveVariables(auth.params.value || '', variables);
+  } else if (unmaskedAuth.type === 'apikey' && unmaskedAuth.params.addTo === 'header') {
+    const key = unmaskedAuth.params.key || '';
+    const value = resolveVariables(unmaskedAuth.params.value || '', unmaskedVariables);
     headersMap[key] = value;
   }
   
@@ -72,7 +121,7 @@ export function requestToHttp(request: HttpRequest): string {
   let bodyContent = '';
   
   if (body.type === 'raw' && body.content) {
-    bodyContent = resolveVariables(body.content, variables);
+    bodyContent = resolveVariables(body.content, unmaskedVariables);
     
     // Add content type header if not already present
     if (!headersMap['Content-Type'] && body.format) {
@@ -100,7 +149,7 @@ export function requestToHttp(request: HttpRequest): string {
     
     bodyContent = '';
     body.params.filter(p => p.enabled).forEach(param => {
-      const resolvedValue = resolveVariables(param.value, variables);
+      const resolvedValue = resolveVariables(param.value, unmaskedVariables);
       bodyContent += `--${boundary}\r\n`;
       bodyContent += `Content-Disposition: form-data; name="${param.key}"\r\n\r\n`;
       bodyContent += `${resolvedValue}\r\n`;
@@ -111,7 +160,7 @@ export function requestToHttp(request: HttpRequest): string {
     httpRequest += 'Content-Type: application/x-www-form-urlencoded\r\n';
     
     const params = body.params.filter(p => p.enabled).map(param => {
-      const resolvedValue = resolveVariables(param.value, variables);
+      const resolvedValue = resolveVariables(param.value, unmaskedVariables);
       return `${encodeURIComponent(param.key)}=${encodeURIComponent(resolvedValue)}`;
     });
     
