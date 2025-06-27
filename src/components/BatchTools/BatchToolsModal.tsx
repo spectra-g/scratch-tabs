@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useEffect } from 'react';
-import { X, RotateCcw, Check, Eye, EyeOff } from 'lucide-react';
+import { X, RotateCcw, Check, Eye, EyeOff, Wrench, CheckCircle } from 'lucide-react';
 import { useBatchToolsStore } from '../../stores/batchToolsStore';
 import { BatchToolsConfig } from './BatchToolsConfig';
 import { BatchToolsPreview } from './BatchToolsPreview';
@@ -75,12 +75,15 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-gray-850 rounded-lg shadow-2xl w-[95vw] h-[90vh] max-w-7xl flex flex-col border border-gray-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-gray-850 rounded-lg shadow-2xl w-[95vw] h-[90vh] max-w-7xl flex flex-col border border-gray-700/60">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700/60 bg-gradient-to-b from-gray-800 to-gray-850">
           <div className="flex items-center space-x-3">
-            <h2 className="text-xl font-semibold text-gray-100">🧰 Batch Tools</h2>
+            <div className="flex items-center space-x-2">
+              <Wrench className="w-5 h-5 text-blue-400" />
+              <h2 className="text-lg font-medium text-gray-100">Batch Tools</h2>
+            </div>
             {selectedText && (
               <span className="text-sm text-blue-400 bg-blue-900/30 px-2 py-1 rounded">
                 Selection Mode
@@ -92,7 +95,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
             {/* Preview Mode Toggle */}
             <button
               onClick={() => setPreviewMode(previewMode === 'side-by-side' ? 'unified' : 'side-by-side')}
-              className="flex items-center space-x-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm text-gray-300 transition-colors"
+              className="flex items-center space-x-1 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-600/50 rounded text-sm text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-850"
               title={`Switch to ${previewMode === 'side-by-side' ? 'unified' : 'side-by-side'} view`}
             >
               {previewMode === 'side-by-side' ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -102,7 +105,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
             {/* Reset Button */}
             <button
               onClick={handleReset}
-              className="flex items-center space-x-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm text-gray-300 transition-colors"
+              className="flex items-center space-x-1 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-600/50 rounded text-sm text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-850"
               title="Reset all transformations"
             >
               <RotateCcw className="w-4 h-4" />
@@ -112,8 +115,9 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
             {/* Close Button */}
             <button
               onClick={closeModal}
-              className="p-2 hover:bg-gray-700 rounded text-gray-400 hover:text-gray-200 transition-colors"
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/70 rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-850"
               title="Close modal"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
@@ -123,8 +127,8 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
         {/* Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Configuration */}
-          <div className="w-80 bg-gray-900 border-r border-gray-700 flex flex-col">
-            <div className="p-4 border-b border-gray-700">
+          <div className="w-80 bg-gray-900 border-r border-gray-700/60 flex flex-col">
+            <div className="p-4 border-b border-gray-700/60">
               <h3 className="text-lg font-medium text-gray-200">Transformations</h3>
               <p className="text-sm text-gray-400 mt-1">
                 {contentToTransform.split('\n').length} lines • {contentToTransform.length} chars
@@ -138,13 +142,14 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
 
           {/* Right Panel - Preview */}
           <div className="flex-1 flex flex-col">
-            <div className="p-4 border-b border-gray-700">
+            <div className="p-4 border-b border-gray-700/60">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-200">Preview</h3>
                 <div className="flex items-center space-x-4">
                   {hasChanges && (
-                    <span className="text-sm text-green-400">
-                      ✓ Changes detected
+                    <span className="flex items-center space-x-1 text-sm text-green-400">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Changes detected</span>
                     </span>
                   )}
                   <span className="text-sm text-gray-400">
@@ -166,7 +171,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-gray-700 bg-gray-900">
+        <div className="flex items-center justify-between p-4 border-t border-gray-700/60 bg-gray-900">
           <div className="text-sm text-gray-400">
             {selectedText ? 'Transformations will be applied to selected text' : 'Transformations will be applied to entire content'}
           </div>
@@ -174,7 +179,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
           <div className="flex items-center space-x-3">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-gray-300 hover:text-gray-100 hover:bg-gray-700 rounded transition-colors"
+              className="px-4 py-2 text-gray-300 hover:text-gray-100 hover:bg-gray-700/50 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
             >
               Cancel
             </button>
@@ -182,7 +187,14 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
             <button
               onClick={handleApply}
               disabled={!hasChanges || isProcessing}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors"
+              className={`
+                flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+                ${!hasChanges || isProcessing
+                  ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                }
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900
+              `}
             >
               <Check className="w-4 h-4" />
               <span>Apply Changes</span>
