@@ -3,6 +3,7 @@ import { Tablet, TabletState } from '../types';
 import { motion } from 'framer-motion';
 import { Copy, Trash2, Check, History as HistoryIcon, KeyRound, RefreshCw, Sparkles } from 'lucide-react';
 import { wordlist } from './wordlist';
+import { SensitiveDataManager } from '../../utils/sensitiveDataManager';
 
 // --- Types ---
 type PasswordMode = 'password' | 'passphrase';
@@ -42,15 +43,6 @@ interface PasswordGeneratorData {
 interface PasswordTabletState extends TabletState {
   type: 'password';
   data: PasswordGeneratorData;
-}
-
-// Handle legacy state format
-interface LegacyPasswordData {
-  settings?: PasswordSettings;
-  currentPassword?: string;
-  history?: PasswordHistoryEntry[];
-  length?: number;
-  complexity?: string;
 }
 
 const CHARSETS = {
@@ -183,7 +175,7 @@ const PasswordGeneratorUI: React.FC<{
     const newPassword = mode === 'password'
       ? generateSecurePassword(passwordSettings)
       : generateSecurePassphrase(passphraseSettings);
-    onChange({ ...state, data: { ...data, currentPassword: newPassword }});
+    onChange({ ...state, data: { ...data, currentPassword: SensitiveDataManager.mask(newPassword) }});
   }, [mode, passwordSettings, passphraseSettings, state, data, onChange]);
   
   // Only regenerate on initial mount
@@ -216,11 +208,11 @@ const PasswordGeneratorUI: React.FC<{
   };
   
   const handleCopyToHistory = () => {
-    const passwordToSave = currentPassword;
+    const passwordToSave = SensitiveDataManager.mask(SensitiveDataManager.unmask(currentPassword));
     const newEntry: PasswordHistoryEntry = {
       id: crypto.randomUUID(), password: passwordToSave, identifier: '', purpose: '', timestamp: Date.now(),
     };
-    navigator.clipboard.writeText(passwordToSave);
+    navigator.clipboard.writeText(SensitiveDataManager.unmask(passwordToSave));
     setCopiedId('current');
     setTimeout(() => setCopiedId(null), 1500);
     regenerate();
@@ -234,7 +226,7 @@ const PasswordGeneratorUI: React.FC<{
     onChange({ ...state, data: { ...data, history: history.filter(entry => entry.id !== id) } });
   };
   const handleCopyField = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(SensitiveDataManager.unmask(text));
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 1500);
   };
@@ -255,7 +247,7 @@ const PasswordGeneratorUI: React.FC<{
         <div className="flex items-center space-x-3">
           <input
             type="text"
-            value={currentPassword}
+            value={SensitiveDataManager.unmask(currentPassword)}
             readOnly
             className="flex-1 font-mono text-lg text-gray-100 bg-gray-900/50 px-3 py-2 rounded-md border border-gray-700/50 focus:border-blue-500/50 focus:outline-none transition-colors"
           />
@@ -339,7 +331,7 @@ const PasswordGeneratorUI: React.FC<{
               <tbody>
                 {history.map(entry => (
                   <tr key={entry.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                    <td className="px-4 py-2 font-mono"><span className="blur-[3px] select-none hover:blur-none transition duration-150" title="Hover to reveal">{entry.password}</span></td>
+                    <td className="px-4 py-2 font-mono"><span className="blur-[3px] select-none hover:blur-none transition duration-150" title="Hover to reveal">{SensitiveDataManager.unmask(entry.password)}</span></td>
                     <td><input type="text" value={entry.identifier} onChange={(e) => handleHistoryChange(entry.id, 'identifier', e.target.value)} placeholder="e.g., Google" className="w-full bg-transparent focus:bg-gray-700/50 border-0 border-b border-gray-600/50 focus:border-blue-500 focus:ring-0 px-1 py-0.5 text-xs text-gray-100 placeholder-gray-500 transition" /></td>
                     <td><input type="text" value={entry.purpose} onChange={(e) => handleHistoryChange(entry.id, 'purpose', e.target.value)} placeholder="e.g., Primary Login" className="w-full bg-transparent focus:bg-gray-700/50 border-0 border-b border-gray-600/50 focus:border-blue-500 focus:ring-0 px-1 py-0.5 text-xs text-gray-100 placeholder-gray-500 transition" /></td>
                     <td className="px-4 py-2 text-center">
@@ -392,12 +384,17 @@ export const PasswordTablet: Tablet = {
       const parsed = JSON.parse(json);
       if (parsed.type === 'password' && parsed.data) {
         const loadedData = parsed.data;
+        
+        // Migrate sensitive data (history passwords and current password)
+        let migratedHistory = Array.isArray(loadedData.history) ? loadedData.history : [];
+        migratedHistory = SensitiveDataManager.migrateObjectArray(migratedHistory, ['password']);
+        
         const finalData: PasswordGeneratorData = {
           mode: loadedData.mode || 'password',
           passwordSettings: { ...defaultState.data.passwordSettings, ...loadedData.passwordSettings },
           passphraseSettings: { ...defaultState.data.passphraseSettings, ...loadedData.passphraseSettings },
-          currentPassword: loadedData.currentPassword || '',
-          history: Array.isArray(loadedData.history) ? loadedData.history : [],
+          currentPassword: SensitiveDataManager.migrateField(loadedData.currentPassword || ''),
+          history: migratedHistory,
         };
         
         // --- MIGRATION LOGIC for old states ---
@@ -419,6 +416,9 @@ export const PasswordTablet: Tablet = {
       state && state.type === 'password'
         ? (state as PasswordTabletState)
         : this.createInitialState();
-    return <PasswordGeneratorUI state={passwordState} onChange={onChange as (newState: PasswordTabletState) => void} />;
+    return <PasswordGeneratorUI 
+      state={passwordState} 
+      onChange={(newState: PasswordTabletState) => onChange(newState)} 
+    />;
   },
 };

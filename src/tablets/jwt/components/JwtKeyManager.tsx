@@ -4,6 +4,7 @@ import { generateKeyPair, generateSecret, isPemFormat, isBase64 } from '../utils
 import { Button } from './ui/Button';
 import { Alert } from './ui/Alert';
 import { StoredKey, KeyType, SUPPORTED_ALGORITHMS } from '../types';
+import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
 
 interface JwtKeyManagerProps {
   storedKeys: StoredKey[];
@@ -97,7 +98,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
 
     const newKey: StoredKey = {
       name: keyName.trim(),
-      value: keyValue.trim(),
+      value: SensitiveDataManager.mask(keyValue.trim()),
       type: keyType,
       algorithm: keyAlgorithm || undefined,
       isPublic,
@@ -122,7 +123,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
     // Create and add a new key directly
     const newKey: StoredKey = {
       name: `${generationAlgorithm} ${isKeyPublic ? 'Public' : 'Private'} Key`,
-      value: key,
+      value: SensitiveDataManager.mask(key),
       type: 'pem',
       algorithm: generationAlgorithm,
       isPublic: isKeyPublic,
@@ -147,7 +148,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
     // Create and add a new key directly
     const newKey: StoredKey = {
       name: `${generationAlgorithm} Secret`,
-      value: generatedSecret,
+      value: SensitiveDataManager.mask(generatedSecret),
       type: 'base64',
       algorithm: generationAlgorithm,
       isPublic: false,
@@ -164,7 +165,8 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
   // Copy key to clipboard
   const handleCopyKey = async (key: string) => {
     try {
-      await navigator.clipboard.writeText(key);
+      const unmaskedKey = SensitiveDataManager.unmask(key);
+      await navigator.clipboard.writeText(unmaskedKey);
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(null), 2000);
     } catch (error) {
@@ -174,7 +176,8 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
 
   // Download key as file
   const handleDownloadKey = (key: string, filename: string) => {
-    const blob = new Blob([key], { type: 'text/plain' });
+    const unmaskedKey = SensitiveDataManager.unmask(key);
+    const blob = new Blob([unmaskedKey], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -196,7 +199,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
   // Use a generated key in the form
   const handleUseKeyInForm = (key: string, isKeyPublic: boolean) => {
     setKeyName(`${generationAlgorithm} ${isKeyPublic ? 'Public' : 'Private'} Key`);
-    setKeyValue(key);
+    setKeyValue(SensitiveDataManager.unmask(key));
     setKeyType('pem');
     setKeyAlgorithm(generationAlgorithm);
     setIsPublic(isKeyPublic);

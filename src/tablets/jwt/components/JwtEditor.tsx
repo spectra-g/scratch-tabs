@@ -7,6 +7,7 @@ import { Button } from './ui/Button';
 import { CopyButton } from './ui/CopyButton';
 import { Alert } from './ui/Alert';
 import { KeyType, StoredKey, STANDARD_CLAIMS, SUPPORTED_ALGORITHMS, JWT_TEMPLATES } from '../types';
+import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
 
 interface JwtEditorProps {
   header: Record<string, any>;
@@ -111,7 +112,8 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
       const headerWithAlg = { ...header, alg: signingAlgorithm };
       
       // Sign the token
-      const result = await signJwt(headerWithAlg, payload, signingKey, signingKeyType);
+      const unmaskedKey = SensitiveDataManager.unmask(signingKey);
+      const result = await signJwt(headerWithAlg, payload, unmaskedKey, signingKeyType);
       
       if (result.error) {
         setSigningError(result.error);
