@@ -1,16 +1,12 @@
 import { useCallback } from 'react';
 import * as monaco from 'monaco-editor'; // Import monaco namespace
 import { Tab } from '../../../types';
-import { useJsonModals } from './useJsonModals';
 import { unstringifyJson } from '../utils/unstringify';
 
 export const useJsonOperations = (
   editor: monaco.editor.IStandaloneCodeEditor | null, // Allow editor to be null initially
   addTab: (tab: Tab) => void
 ) => {
-  const {
-    openStringifyModal
-  } = useJsonModals();
 
   // Helper function to apply edits while preserving undo stack
   const applyEdit = useCallback((newContent: string, source: string) => {
@@ -205,26 +201,90 @@ export const useJsonOperations = (
     try {
       const content = editor.getValue();
       
-      // Remove single line comments
-      const noSingleLineComments = content.replace(/\/\/[^\n]*/g, '');
+      // Remove comments while respecting JSON string boundaries
+      const removeJsonComments = (text: string): string => {
+        let result = '';
+        let inString = false;
+        let escaped = false;
+        let i = 0;
+        
+        while (i < text.length) {
+          const current = text[i];
+          const next = text[i + 1];
+          
+          if (escaped) {
+            // Handle escaped characters
+            result += current;
+            escaped = false;
+            i++;
+            continue;
+          }
+          
+          if (current === '\\' && inString) {
+            // Handle escape sequences inside strings
+            escaped = true;
+            result += current;
+            i++;
+            continue;
+          }
+          
+          if (current === '"') {
+            // Toggle string state
+            inString = !inString;
+            result += current;
+            i++;
+            continue;
+          }
+          
+          if (!inString) {
+            // Check for comments only when outside strings
+            if (current === '/' && next === '/') {
+              // Single line comment - skip until end of line
+              while (i < text.length && text[i] !== '\n') {
+                i++;
+              }
+              // Keep the newline character
+              if (i < text.length && text[i] === '\n') {
+                result += text[i];
+                i++;
+              }
+              continue;
+            }
+            
+            if (current === '/' && next === '*') {
+              // Multi-line comment - skip until */
+              i += 2; // Skip /*
+              while (i < text.length - 1) {
+                if (text[i] === '*' && text[i + 1] === '/') {
+                  i += 2; // Skip */
+                  break;
+                }
+                i++;
+              }
+              continue;
+            }
+          }
+          
+          // Regular character - add to result
+          result += current;
+          i++;
+        }
+        
+        return result;
+      };
       
-      // Remove multi-line comments
-      const noComments = noSingleLineComments.replace(/\/\*[\s\S]*?\*\//g, '');
+      const noComments = removeJsonComments(content);
       
       // Remove empty lines that might be left after comment removal
       const noEmptyLines = noComments.split('\n')
         .filter(line => line.trim())
         .join('\n');
 
-      editor.executeEdits('json.removeComments', [{
-        range: editor.getModel()!.getFullModelRange(),
-        text: noEmptyLines,
-        forceMoveMarkers: true
-      }]);
+      applyEdit(noEmptyLines, 'json.removeComments');
     } catch (error) {
       console.error('Failed to remove comments:', error);
     }
-  }, [editor]);
+  }, [editor, applyEdit]);
   
   // --- Operations that DON'T modify the editor directly ---
   // --- These don't need the applyEdit helper ---
@@ -241,11 +301,11 @@ export const useJsonOperations = (
       }
 
       const stringifiedRepresentation = JSON.stringify(content);
-      openStringifyModal(stringifiedRepresentation, addTab);
+      applyEdit(stringifiedRepresentation, 'json.stringify'); // Use applyEdit to directly update editor
     } catch (error) {
       console.error('Failed during stringify operation:', error);
     }
-  }, [editor, openStringifyModal, addTab]);
+  }, [editor, applyEdit]);
 
   // --- Unstringify operation ---
   const handleUnstringify = useCallback(() => {
