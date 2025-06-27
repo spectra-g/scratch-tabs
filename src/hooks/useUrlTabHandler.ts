@@ -27,12 +27,7 @@ const generateUrlIdentifier = (tab: Tab | undefined): string => {
         }
     }
 
-    // For language tabs, use the language name
-    if (tab.language && tab.language !== 'plaintext') {
-        return tab.language.toLowerCase();
-    }
-
-    // For other tabs, use a slugified version of the title
+    // For all other tabs (including language tabs), use a slugified version of the title
     return tab.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 };
 
