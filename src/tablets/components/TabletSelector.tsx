@@ -130,7 +130,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   return (
     <div
       ref={selectorRef}
-      className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg w-80 max-h-96 overflow-hidden"
+      className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg w-96 md:w-[600px] lg:w-[700px] max-h-96 md:max-h-[500px] lg:max-h-[600px] overflow-hidden"
     >
       {/* Search Input */}
       {showSearch && (
@@ -150,7 +150,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       )}
 
       {/* Tablet List */}
-      <div ref={listRef} className="max-h-80 overflow-y-auto custom-scrollbar">
+      <div ref={listRef} className="max-h-80 md:max-h-[420px] lg:max-h-[520px] overflow-y-auto custom-scrollbar">
         {isLoading ? (
           <div className="p-4 text-center text-gray-400">
             Loading tablets...
@@ -163,16 +163,18 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
           tablets.map((tablet, index) => (
             <div
               key={tablet.id}
-              className={`px-4 py-3 cursor-pointer transition-colors ${
+              className={`px-4 py-4 cursor-pointer transition-colors ${
                 index === selectedIndex
                   ? 'bg-blue-500/20 text-blue-200'
                   : 'text-gray-200 hover:bg-gray-700/50'
               }`}
               onClick={() => handleTabletSelect(tablet)}
             >
-              <div className="font-medium">{tablet.label}</div>
-              <div className="text-sm text-gray-400 mt-1">
-                {tablet.keywords.join(', ')}
+              <div className="flex flex-col">
+                <div className="font-medium text-base">{tablet.label}</div>
+                <div className="text-sm text-gray-400 mt-2">
+                  {tablet.keywords.join(' • ')}
+                </div>
               </div>
             </div>
           ))

@@ -64,14 +64,16 @@ export const WelcomeScreen: React.FC = () => {
   }, [handleNewTab]);
 
   const handleOpenTabletSelector = useCallback(() => {
-    if (welcomeRef.current) {
-      const rect = welcomeRef.current.getBoundingClientRect();
-      const position = {
-        x: rect.left + rect.width / 2 - 150,
-        y: rect.top + 150,
-      };
-      openTabletSelector(position);
-    }
+    // Center the tablet selector on the screen for welcome screen
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const selectorWidth = window.innerWidth >= 1024 ? 700 : window.innerWidth >= 768 ? 600 : 384;
+    const selectorHeight = window.innerHeight >= 1024 ? 600 : window.innerHeight >= 768 ? 500 : 384;
+    
+    const centerX = (viewportWidth - selectorWidth) / 2;
+    const centerY = (viewportHeight - selectorHeight) / 2;
+    
+    openTabletSelector({ x: centerX, y: centerY });
   }, [openTabletSelector]);
 
   const handleImportFromClipboard = useCallback(async () => {
@@ -179,10 +181,16 @@ export const WelcomeScreen: React.FC = () => {
       <div className="flex justify-end bg-gray-800 h-8">
         <TabActions
           onShowTabletSelector={() => {
-            if (tabletButtonRef.current) {
-              const rect = tabletButtonRef.current.getBoundingClientRect();
-              openTabletSelector({ x: rect.left, y: rect.bottom + 4 });
-            }
+            // Center the tablet selector on the screen for welcome screen
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const selectorWidth = window.innerWidth >= 1024 ? 700 : window.innerWidth >= 768 ? 600 : 384;
+            const selectorHeight = window.innerHeight >= 1024 ? 600 : window.innerHeight >= 768 ? 500 : 384;
+            
+            const centerX = (viewportWidth - selectorWidth) / 2;
+            const centerY = (viewportHeight - selectorHeight) / 2;
+            
+            openTabletSelector({ x: centerX, y: centerY });
           }}
           tabletButtonRef={tabletButtonRef}
         />
@@ -197,16 +205,16 @@ export const WelcomeScreen: React.FC = () => {
         tabIndex={-1}
       >
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex">
+        <div className="text-center mb-12 w-full">
+                          <div className="flex items-center justify-center w-full">
               <img
                 src="/favicon-gray.svg"
                 alt="Scratch Tabs Logo"
-                className="w-7 h-7 mr-4 mt-1 mx-auto "
+                className="w-7 h-7 mr-4 flex-shrink-0"
               />
-              <h1 className="text-3xl font-light mb-2 text-gray-100">Scratch Tabs</h1>
+              <h1 className="text-3xl font-light text-gray-100">Scratch Tabs</h1>
           </div>
-          <p className="text-gray-400 text-sm">Version 1.0</p>
+          <p className="text-gray-400 text-sm mt-2">Version 1.0</p>
         </div>
 
         {/* Actions Grid */}

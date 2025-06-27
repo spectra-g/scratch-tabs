@@ -210,14 +210,14 @@ const MainLayout: React.FC = () => {
     <div className="h-screen flex flex-col bg-gray-900 text-white">
       <div
         ref={containerRef}
-        className="flex w-full h-full overflow-hidden"
+        className="flex w-full h-full min-w-0 overflow-hidden"
       >
         {tabs.length === 0 && workspaces.length === 0 ? (
           <WelcomeScreen/>
         ) : (
           <>
             <div
-              className="flex flex-col h-full overflow-hidden"
+              className="flex flex-col h-full overflow-hidden min-w-0"
               style={leftPaneStyle}
             >
               <div className="w-full flex-shrink-0">
@@ -241,7 +241,7 @@ const MainLayout: React.FC = () => {
                 />
 
                 <div
-                  className="flex flex-col h-full overflow-hidden"
+                  className="flex flex-col h-full overflow-hidden min-w-0"
                   style={rightPaneStyle}
                 >
                   <div className="w-full flex-shrink-0">
