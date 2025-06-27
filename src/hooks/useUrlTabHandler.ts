@@ -50,7 +50,6 @@ export const useUrlTabHandler = () => {
         setActiveRightTab,
         setActiveSide,
         splitView,
-        // MODIFIED: We now get the new state from the store.
         initialUrlProcessed,
     } = useRootStore(state => ({
         tabs: state.tabs,
@@ -145,18 +144,7 @@ export const useUrlTabHandler = () => {
             return;
         }
 
-        console.log('[URL Effect 1] State → URL triggered', {
-            isProcessingUrlChange: isProcessingUrlChange.current,
-            activeLeftTabId,
-            activeRightTabId,
-            isSplit,
-            activeSide,
-            tabsCount: tabs.length,
-            currentPath: location.pathname
-        });
-
         if (isProcessingUrlChange.current) {
-            console.log('[URL Effect 1] Skipping - URL change in progress');
             return; // Don't run if the other effect is actively processing a URL change
         }
 
@@ -167,17 +155,7 @@ export const useUrlTabHandler = () => {
             const currentPath = location.pathname;
             const targetPath = getTargetPath(); // Calculates path based on current state (active tab or '/')
 
-            console.log('[URL Effect 1] Debounced execution', {
-                currentPath,
-                targetPath,
-                isUserNavigation: isUserNavigation.current,
-                activeLeftTabId,
-                activeRightTabId,
-                activeSide
-            });
-
             if (targetPath !== currentPath) {
-                console.log('[URL Effect 1] Navigating to', targetPath, 'from', currentPath);
                 isUserNavigation.current = false; // Mark as app navigation BEFORE navigating
                 navigate(targetPath, { replace: true });
             }
@@ -194,17 +172,8 @@ export const useUrlTabHandler = () => {
             return;
         }
 
-        console.log('[URL Effect 2] URL → State triggered', {
-            urlIdentifierParam,
-            prevUrlIdentifierParam: prevUrlIdentifierParamRef.current,
-            isUserNavigation: isUserNavigation.current,
-            initialRender: initialRender.current,
-            currentPath: location.pathname
-        });
-
         // If it's the initial render, just update the ref and return
         if (initialRender.current) {
-            console.log('[URL Effect 2] Initial render, updating ref only');
             initialRender.current = false;
             prevUrlIdentifierParamRef.current = urlIdentifierParam;
             return;
@@ -212,68 +181,38 @@ export const useUrlTabHandler = () => {
 
         // If the URL param hasn't actually changed, do nothing
         if (urlIdentifierParam === prevUrlIdentifierParamRef.current) {
-            console.log('[URL Effect 2] URL param unchanged, skipping');
             return;
         }
 
-        // --- This is the crucial part ---
         // If isUserNavigation is false, it means the state effect just caused the navigation.
         // We should only update the prev ref and reset the flag.
         if (!isUserNavigation.current) {
-            console.log('[URL Effect 2] App navigation detected, updating refs only');
             prevUrlIdentifierParamRef.current = urlIdentifierParam;
             isUserNavigation.current = true; // Reset for next potential user navigation
             return; // DO NOT proceed to find/create tab
         }
 
         // --- If we reach here, it's a USER navigation to a NEW URL ---
-        console.log('[URL Effect 2] User navigation detected, processing URL change');
         isProcessingUrlChange.current = true; // Prevent state effect from interfering
         if (stateUpdateTimeout.current) {
-            console.log('[URL Effect 2] Cancelling pending state update');
             clearTimeout(stateUpdateTimeout.current); // Cancel pending state updates
             stateUpdateTimeout.current = null;
         }
 
         // 1. Try to find existing tab matching the new URL
         const { tab, side } = findTabByUrlIdentifier(urlIdentifierParam);
-        console.log('[URL Effect 2] Tab lookup result', { tab: tab?.title, side, urlIdentifierParam });
 
         if (tab) {
-            console.log('[URL Effect 2] Activating existing tab', tab.title);
             activateTab(tab, side);
-        } else if (urlIdentifierParam) {
-            // Prevent creation if no tabs exist (e.g., after closing last tab and URL is '/')
-            if (tabs.length === 0 && !urlIdentifierParam) {
-                console.log('[URL Effect 2] No tabs exist and URL is root, doing nothing.');
-            } else {
-                // Tab creation is now handled by MainLayout
-                console.log('[URL Effect 2] Tab creation handled by MainLayout, skipping');
-            }
-        } else {
-            console.log('[URL Effect 2] Handling navigation to root');
-            // This handles navigation to '/'
         }
 
         prevUrlIdentifierParamRef.current = urlIdentifierParam; // Update prev ref
         // Use a shorter timeout here just to release the lock
         setTimeout(() => {
-            console.log('[URL Effect 2] Releasing processing lock');
             isProcessingUrlChange.current = false;
         }, 50);
 
     }, [urlIdentifierParam, isLoading, initialUrlProcessed]); // Add the new flag to the dependency array.
-
-    // Monitor active tab changes
-    useEffect(() => {
-        console.log('[URL Monitor] Active tab changed', {
-            activeLeftTabId,
-            activeRightTabId,
-            activeSide,
-            isProcessingUrlChange: isProcessingUrlChange.current,
-            currentPath: location.pathname
-        });
-    }, [activeLeftTabId, activeRightTabId, activeSide]);
 
     // Cleanup
     useEffect(() => {

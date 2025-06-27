@@ -45,14 +45,13 @@ const MainLayout: React.FC = () => {
     loadWorkspaces().then(() => {
       setIsAppInitialized(true);
       
-      // CHANGE: The logic is replaced by a single, clean function call.
       handleInitialUrl();
 
     }).catch(error => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
       setIsAppInitialized(true);
     });
-  }, [loadWorkspaces]); // The dependency array is now correct.
+  }, [loadWorkspaces]);
 
      useEffect(() => {
        const saveInterval = setInterval(() => {
