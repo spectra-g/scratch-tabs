@@ -546,6 +546,111 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
           description="Set to 0 for no wrapping"
         />
       </ConfigSection>
+
+      {/* Advanced Transformations */}
+      <ConfigSection title={<div className="flex items-center space-x-2"><Settings className="w-4 h-4 text-purple-400" /><span>Advanced Transformations</span></div>}>
+        <div className="space-y-3">
+          <Checkbox
+            label="Find & Replace with Regex"
+            checked={!!config.findReplaceRegex}
+            onChange={(checked) => {
+              if (checked) {
+                onChange({
+                  findReplaceRegex: {
+                    find: '',
+                    replace: '',
+                    flags: 'g',
+                  },
+                });
+              } else {
+                onChange({ findReplaceRegex: false });
+              }
+            }}
+            description="Use regex capture groups ($1, $2) in replacement"
+          />
+
+          {config.findReplaceRegex && (
+            <>
+              <TextInput
+                label="Find (RegEx)"
+                value={config.findReplaceRegex.find}
+                onChange={(find) =>
+                  onChange({
+                    findReplaceRegex: { ...config.findReplaceRegex!, find },
+                  })
+                }
+                placeholder="(\w+):\s*(\d+)"
+                description="Use parentheses () to create capture groups"
+              />
+
+              <TextInput
+                label="Replace"
+                value={config.findReplaceRegex.replace}
+                onChange={(replace) =>
+                  onChange({
+                    findReplaceRegex: { ...config.findReplaceRegex!, replace },
+                  })
+                }
+                placeholder="Value: $2, Key: $1"
+                description="Use $1, $2, etc. to reference capture groups"
+              />
+
+              <TextInput
+                label="Flags"
+                value={config.findReplaceRegex.flags || 'g'}
+                onChange={(flags) =>
+                  onChange({
+                    findReplaceRegex: { ...config.findReplaceRegex!, flags },
+                  })
+                }
+                placeholder="g"
+                description="Regex flags (g=global, i=case-insensitive, m=multiline)"
+              />
+            </>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Checkbox
+            label="JavaScript Snippet"
+            checked={!!config.javascriptSnippet}
+            onChange={(checked) => {
+              if (checked) {
+                onChange({
+                  javascriptSnippet: 'return lines.filter(line => line.length > 10).join("\\n");',
+                });
+              } else {
+                onChange({ javascriptSnippet: false });
+              }
+            }}
+            description="Write custom JavaScript to transform text"
+          />
+
+          {config.javascriptSnippet && (
+            <>
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">JavaScript Code</label>
+                <textarea
+                  value={config.javascriptSnippet}
+                  onChange={(e) => onChange({ javascriptSnippet: e.target.value })}
+                  placeholder="return lines.filter(line => line.length > 10).join('\\n');"
+                  className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-500 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors font-mono"
+                  rows={4}
+                />
+                <div className="mt-1 text-xs text-gray-400">
+                  <p className="mb-1">Available variables:</p>
+                  <ul className="list-disc list-inside space-y-0.5 text-gray-500">
+                    <li><code className="text-blue-400">text</code> - full text content</li>
+                    <li><code className="text-blue-400">lines</code> - array of lines</li>
+                    <li><code className="text-blue-400">selection</code> - selected text</li>
+                  </ul>
+                  <p className="mt-1">Return a string or array of lines</p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </ConfigSection>
     </div>
   );
 };

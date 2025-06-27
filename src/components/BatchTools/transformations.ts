@@ -201,6 +201,15 @@ export function applyTransformations(content: string, config: TransformationConf
   if (config.wrapLines && config.wrapLines > 0) {
     result = wrapText(result, config.wrapLines);
   }
+
+  // 13. Advanced Transformations
+  if (config.findReplaceRegex) {
+    result = applyRegexFindReplace(result, config.findReplaceRegex);
+  }
+
+  if (config.javascriptSnippet) {
+    result = applyJavaScriptSnippet(result, config.javascriptSnippet);
+  }
   
   // Apply join lines last
   if (config.joinLines) {
@@ -296,4 +305,55 @@ function toAlpha(num: number): string {
     num = Math.floor(num / 26);
   }
   return result;
+}
+
+function applyRegexFindReplace(text: string, config: { find: string; replace: string; flags?: string }): string {
+  try {
+    const flags = config.flags || 'g';
+    const regex = new RegExp(config.find, flags);
+    return text.replace(regex, config.replace);
+  } catch (error) {
+    console.error('Regex find/replace error:', error);
+    return text; // Return original text if regex is invalid
+  }
+}
+
+function applyJavaScriptSnippet(text: string, snippet: string): string {
+  try {
+    // Create a safe execution context
+    const lines = text.split('\n');
+    const selection = text; // For now, treat entire content as selection
+    
+    // Create the function wrapper
+    const functionBody = `
+      try {
+        const text = arguments[0];
+        const lines = arguments[1];
+        const selection = arguments[2];
+        
+        // User's code goes here
+        ${snippet}
+      } catch (error) {
+        throw new Error('JavaScript execution error: ' + error.message);
+      }
+    `;
+    
+    // Create and execute the function
+    const userFunction = new Function(functionBody);
+    const result = userFunction(text, lines, selection);
+    
+    // Handle different return types
+    if (typeof result === 'string') {
+      return result;
+    } else if (Array.isArray(result)) {
+      return result.join('\n');
+    } else if (result !== undefined && result !== null) {
+      return String(result);
+    } else {
+      return text; // Return original if no valid result
+    }
+  } catch (error) {
+    console.error('JavaScript snippet error:', error);
+    throw new Error(`JavaScript execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }

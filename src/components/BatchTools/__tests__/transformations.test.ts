@@ -213,4 +213,153 @@ describe('Text Transformations', () => {
     expect(result).toBe('1. first\n2. first\n3. second\n4. second\n5. third\n6. third');
   });
 
+  // Advanced Transformations Tests
+  describe('Advanced Transformations', () => {
+    it('should apply regex find and replace with capture groups', () => {
+      const input = 'name: John\nage: 30\ncity: NYC';
+      const config = {
+        findReplaceRegex: {
+          find: '(\\w+):\\s*(\\w+)',
+          replace: '$2 is the $1',
+          flags: 'g'
+        }
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('John is the name\n30 is the age\nNYC is the city');
+    });
+
+    it('should handle regex find and replace with different flags', () => {
+      const input = 'Hello WORLD\nHello world';
+      const config = {
+        findReplaceRegex: {
+          find: 'hello',
+          replace: 'Hi',
+          flags: 'gi' // global, case-insensitive
+        }
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('Hi WORLD\nHi world');
+    });
+
+    it('should handle invalid regex in find/replace gracefully', () => {
+      const input = 'test line';
+      const config = {
+        findReplaceRegex: {
+          find: '[',
+          replace: 'replacement',
+          flags: 'g'
+        }
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe(input); // Should return original on error
+    });
+
+    it('should execute JavaScript snippet returning string', () => {
+      const input = 'line1\nline2\nline3';
+      const config = {
+        javascriptSnippet: 'return text.toUpperCase();'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('LINE1\nLINE2\nLINE3');
+    });
+
+    it('should execute JavaScript snippet returning array', () => {
+      const input = 'apple\nbanana\ncherry\ndate';
+      const config = {
+        javascriptSnippet: 'return lines.filter(line => line.length > 5);'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('banana\ncherry');
+    });
+
+    it('should execute JavaScript snippet with line manipulation', () => {
+      const input = 'first\nsecond\nthird';
+      const config = {
+        javascriptSnippet: 'return lines.map((line, index) => `${index + 1}: ${line}`);'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('1: first\n2: second\n3: third');
+    });
+
+    it('should handle JavaScript snippet returning non-string values', () => {
+      const input = 'test';
+      const config = {
+        javascriptSnippet: 'return 42;'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('42');
+    });
+
+    it('should handle JavaScript snippet returning null/undefined', () => {
+      const input = 'test';
+      const config = {
+        javascriptSnippet: 'return null;'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe(input); // Should return original
+    });
+
+    it('should handle JavaScript snippet with syntax errors', () => {
+      const input = 'test line';
+      const config = {
+        javascriptSnippet: 'return lines.filter(line => line.length > 0'
+      };
+      
+      expect(() => {
+        applyTransformations(input, config);
+      }).toThrow('JavaScript execution failed');
+    });
+
+    it('should handle JavaScript snippet with runtime errors', () => {
+      const input = 'test line';
+      const config = {
+        javascriptSnippet: 'return undefinedVariable.someMethod();'
+      };
+      
+      expect(() => {
+        applyTransformations(input, config);
+      }).toThrow('JavaScript execution failed');
+    });
+
+    it('should provide correct variables to JavaScript snippet', () => {
+      const input = 'line1\nline2\nline3';
+      const config = {
+        javascriptSnippet: `
+          // Test that all variables are available
+          if (typeof text !== 'string') throw new Error('text not available');
+          if (!Array.isArray(lines)) throw new Error('lines not available');
+          if (typeof selection !== 'string') throw new Error('selection not available');
+          
+          return 'variables available: ' + lines.length + ' lines';
+        `
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('variables available: 3 lines');
+    });
+
+    it('should combine advanced transformations with regular ones', () => {
+      const input = 'name: john\nage: 30\ncity: nyc';
+      const config = {
+        caseTransform: 'title' as const,
+        findReplaceRegex: {
+          find: '(\\w+):\\s*(\\w+)',
+          replace: '$1 = $2',
+          flags: 'g'
+        }
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('Name = John\nAge = 30\nCity = Nyc');
+    });
+
+    it('should execute JavaScript snippet after other transformations', () => {
+      const input = 'apple\nbanana\ncherry';
+      const config = {
+        caseTransform: 'upper' as const,
+        javascriptSnippet: 'return lines.map(line => `Item: ${line}`);'
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe('Item: APPLE\nItem: BANANA\nItem: CHERRY');
+    });
+  });
+
 }); 

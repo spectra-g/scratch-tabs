@@ -44,6 +44,10 @@ export interface TransformationConfig {
   convertTabsSpaces?: 'tabs-to-spaces' | 'spaces-to-tabs' | false;
   normalizeLineEndings?: 'lf' | 'crlf' | false;
   wrapLines?: number | false; // width
+
+  // Advanced Transformations
+  findReplaceRegex?: { find: string; replace: string; flags?: string } | false;
+  javascriptSnippet?: string | false;
 }
 
 interface BatchToolsState {
