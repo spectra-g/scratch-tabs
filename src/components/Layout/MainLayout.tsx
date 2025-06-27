@@ -91,34 +91,62 @@ const MainLayout: React.FC = () => {
   const handleOpenDiffModal = (fromHistory?: boolean, explicitSide?: 'left' | 'right', explicitTabId?: string) => {
     const currentSplitView = useRootStore.getState().splitView;
     
-    // If we have an explicit tab ID, use it on the appropriate side
-    let leftTabId = currentSplitView.activeLeftTabId;
-    let rightTabId = currentSplitView.activeRightTabId;
-    
-    if (explicitTabId) {
-      // If explicit side provided, use it on that side
-      if (explicitSide === 'left') {
-        leftTabId = explicitTabId;
-      } else if (explicitSide === 'right') {
-        rightTabId = explicitTabId;
-      } else {
-        // No side specified - determine based on which side contains the tab
-        const isInLeftSide = currentSplitView.leftTabs.includes(explicitTabId);
-        const isInRightSide = currentSplitView.rightTabs.includes(explicitTabId);
+    if (fromHistory) {
+      // Determine which side we're on based on explicit side or current state
+      const isRightSide = explicitSide ? explicitSide === 'right' : currentSplitView.rightTabs.includes(currentSplitView.activeRightTabId || '');
+      const history = isRightSide ? currentSplitView.rightTabHistory : currentSplitView.leftTabHistory;
 
-        if (isInLeftSide) {
-          leftTabId = explicitTabId;
-        } else if (isInRightSide) {
-          rightTabId = explicitTabId;
+      // Always use the explicit tab ID when provided
+      const currentTabId = explicitTabId || (isRightSide ? currentSplitView.activeRightTabId : currentSplitView.activeLeftTabId);
+
+      if (history && history.length >= 2 && currentTabId) {
+        // Get the previous tab from history that isn't the current tab
+        let previousTabId = null;
+        for (let i = 0; i < history.length; i++) {
+          if (history[i] !== currentTabId) {
+            previousTabId = history[i];
+            break;
+          }
+        }
+
+        if (previousTabId) {
+          setDiffModal({
+            leftTabId: isRightSide ? previousTabId : currentTabId,
+            rightTabId: isRightSide ? currentTabId : previousTabId,
+            fromHistory: true
+          });
         }
       }
+    } else {
+      // If we have an explicit tab ID, use it on the appropriate side
+      let leftTabId = currentSplitView.activeLeftTabId;
+      let rightTabId = currentSplitView.activeRightTabId;
+
+      if (explicitTabId) {
+        // If explicit side provided, use it on that side
+        if (explicitSide === 'left') {
+          leftTabId = explicitTabId;
+        } else if (explicitSide === 'right') {
+          rightTabId = explicitTabId;
+        } else {
+          // No side specified - determine based on which side contains the tab
+          const isInLeftSide = currentSplitView.leftTabs.includes(explicitTabId);
+          const isInRightSide = currentSplitView.rightTabs.includes(explicitTabId);
+
+          if (isInLeftSide) {
+            leftTabId = explicitTabId;
+          } else if (isInRightSide) {
+            rightTabId = explicitTabId;
+          }
+        }
+      }
+
+      setDiffModal({
+        leftTabId: leftTabId,
+        rightTabId: rightTabId,
+        fromHistory: false
+      });
     }
-    
-    setDiffModal({
-      leftTabId: leftTabId,
-      rightTabId: rightTabId,
-      fromHistory: false
-    });
   };
 
   const handleCloseDiffModal = () => {
