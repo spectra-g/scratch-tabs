@@ -54,7 +54,6 @@ class ModelManager {
       
       // If the model is disposed, remove it and create a new one
       if (model.isDisposed()) {
-        console.warn(`[ModelManager] Model for tab ${tab.id} was disposed, recreating.`);
         this.models.delete(tab.id);
         // Proceed to create a new model below
       } else {

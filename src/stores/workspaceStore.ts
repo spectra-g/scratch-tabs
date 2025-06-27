@@ -99,7 +99,43 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             sortedWorkspaces[activeWsIndex] = updatedActiveWs;
           }
           set({ workspaces: sortedWorkspaces.sort((a, b) => a.name.localeCompare(b.name)), activeWorkspaceId: newActiveWorkspaceId });
-          useTabsStore.setState({ tabs: tabsToLoad });
+          
+          // Check if there are existing tabs that should be preserved (e.g., created by URL handler)
+          const currentTabs = useTabsStore.getState().tabs;
+          const currentSplitView = useSplitViewStore.getState().splitView;
+          const currentActiveLeftTabId = currentSplitView?.activeLeftTabId;
+          
+          const existingTabIds = new Set(tabsToLoad.map(tab => tab.id));
+          const newTabsToPreserve = currentTabs.filter(tab => !existingTabIds.has(tab.id));
+          
+          if (newTabsToPreserve.length > 0) {
+            // Merge loaded tabs with newly created tabs
+            const mergedTabs = [...tabsToLoad, ...newTabsToPreserve];
+            useTabsStore.setState({ tabs: mergedTabs });
+            
+            // Update split view to include the new tabs in the left pane
+            const newTabIds = newTabsToPreserve.map(tab => tab.id);
+            workspaceSplitView.leftTabs = [...workspaceSplitView.leftTabs, ...newTabIds];
+          } else {
+            useTabsStore.setState({ tabs: tabsToLoad });
+          }
+          
+          // Always check if we should preserve the current active tab (for both new and existing tabs)
+          if (currentActiveLeftTabId && currentActiveLeftTabId !== workspaceSplitView?.activeLeftTabId) {
+            // Check if the current active tab exists in our final tab list
+            const finalTabs = newTabsToPreserve.length > 0 ? [...tabsToLoad, ...newTabsToPreserve] : tabsToLoad;
+            const activeTabExists = finalTabs.some(tab => tab.id === currentActiveLeftTabId);
+            
+            if (activeTabExists && workspaceSplitView) {
+              workspaceSplitView.activeLeftTabId = currentActiveLeftTabId;
+              
+              // Also ensure the active tab is in the left pane
+              if (!workspaceSplitView.leftTabs.includes(currentActiveLeftTabId)) {
+                workspaceSplitView.leftTabs = [...workspaceSplitView.leftTabs, currentActiveLeftTabId];
+              }
+            }
+          }
+          
           useSplitViewStore.setState({ splitView: workspaceSplitView });
 
         } else {

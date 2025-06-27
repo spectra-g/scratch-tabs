@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { useRootStore } from '../../stores';
@@ -9,6 +9,8 @@ import { useTabletSelector } from '../../hooks/useTabletSelector';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
 import { useAIStore } from '../../stores/aiStore';
+import { useBatchToolsStore } from '../../stores/batchToolsStore';
+import { BatchToolsModal } from '../BatchTools/BatchToolsModal';
 import { modelManager } from '../../services/modelManager';
 
 interface EditorInstanceProps {
@@ -53,7 +55,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     isCodegenGenerating: state.ai.isCodegenGenerating,
   }));
 
+  const { openModal: openBatchToolsModal } = useBatchToolsStore();
+
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const batchToolsDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const currentTabIdRef = useRef<string>(activeTab.id);
@@ -64,9 +69,36 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     latestActiveTabRef.current = activeTab;
   }, [activeTab]);
 
+  // Add a ref to track pending format operations to avoid duplicate formatting
+  const pendingFormatRef = useRef<Set<string>>(new Set());
+
+  // Handler for auto-format when language is detected on significant change
+  const handleLanguageDetectedOnSignificantChange = useCallback((tabId: string, language: string) => {
+    const editor = editorRef.current;
+    if (!editor || tabId !== activeTab.id) return;
+
+    // Prevent duplicate format operations
+    const formatKey = `${tabId}-${language}`;
+    if (pendingFormatRef.current.has(formatKey)) return;
+    
+    pendingFormatRef.current.add(formatKey);
+
+    // Auto-format the document
+    const formatAction = editor.getAction('editor.action.formatDocument');
+    if (formatAction) {
+      formatAction.run().finally(() => {
+        // Clean up the pending format tracking
+        pendingFormatRef.current.delete(formatKey);
+      });
+    } else {
+      // Clean up even if format action fails
+      pendingFormatRef.current.delete(formatKey);
+    }
+  }, [activeTab.id]);
+
   // --- Custom Hooks ---
   const {restoreScrollPosition} = useEditorScrollManager(editorRef, activeTab.id);
-  const {detectAndSetLanguage} = useLanguageDetection(updateTabLanguage);
+  const {detectAndSetLanguage} = useLanguageDetection(updateTabLanguage, handleLanguageDetectedOnSignificantChange);
   const {
     showTabletSelector,
     tabletQuery,
@@ -149,6 +181,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       disposableAction.dispose();
     };
   }, [isCodegenReady, isCodegenGenerating, runCodegen]);
+
+  // Cleanup batch tools disposable on unmount
+  useEffect(() => {
+    return () => {
+      if (batchToolsDisposableRef.current) {
+        batchToolsDisposableRef.current.dispose();
+      }
+    };
+  }, []);
 
   useEffect(() => {
       previousContentRef.current = activeTab.content;
@@ -249,6 +290,24 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
         column: e.position.column,
       });
     });
+
+    // Clean up previous batch tools action if it exists
+    if (batchToolsDisposableRef.current) {
+      batchToolsDisposableRef.current.dispose();
+    }
+
+    // Add Batch Tools context menu action
+    batchToolsDisposableRef.current = editor.addAction({
+      id: 'batch-tools',
+      label: 'Transformations',
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 2.5,
+      run: () => {
+        const selectedText = editor.getModel()?.getValueInRange(editor.getSelection()!) || '';
+        const fullContent = editor.getValue();
+        openBatchToolsModal(fullContent, selectedText);
+      }
+    });
   };
 
   const handleEditorFocus = () => {
@@ -280,6 +339,33 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
   const handleTabletSelectorClose = () => {
     closeTabletSelector(true);
   };
+
+  const handleBatchToolsApply = useCallback((content: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const selection = editor.getSelection();
+    const selectedText = selection && !selection.isEmpty() 
+      ? editor.getModel()?.getValueInRange(selection) || ''
+      : '';
+
+    if (selectedText) {
+      // Replace only the selected text
+      editor.executeEdits('batch-tools', [{
+        range: selection!,
+        text: content
+      }]);
+    } else {
+      // Replace entire content
+      const model = editor.getModel();
+      if (model) {
+        editor.executeEdits('batch-tools', [{
+          range: model.getFullModelRange(),
+          text: content
+        }]);
+      }
+    }
+  }, []);
 
   return (
     <div className="h-full w-full bg-gray-850 relative overflow-hidden" ref={editorContainerRef}>
@@ -321,6 +407,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
           </div>
         )}
       </div>
+      <BatchToolsModal onApply={handleBatchToolsApply} />
     </div>
   );
 };

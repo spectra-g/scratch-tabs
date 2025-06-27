@@ -163,10 +163,12 @@ const converters: TextConverter[] = [
 
 interface Props {
   searchQuery: string;
+  data?: { inputs: Record<string, string> };
+  onDataChange?: (data: { inputs: Record<string, string> }) => void;
 }
 
-export const TextConversion: React.FC<Props> = ({ searchQuery }) => {
-  const [inputs, setInputs] = useState<Record<string, string>>({});
+export const TextConversion: React.FC<Props> = ({ searchQuery, data, onDataChange }) => {
+  const [inputs, setInputs] = useState<Record<string, string>>(data?.inputs || {});
   // Results structure remains the same: Record<converterId, Record<label, value>>
   const [results, setResults] = useState<Record<string, Record<string, string>>>({});
 
@@ -178,7 +180,9 @@ export const TextConversion: React.FC<Props> = ({ searchQuery }) => {
   );
 
   const handleInputChange = (converterId: string, value: string) => {
-    setInputs(prev => ({ ...prev, [converterId]: value }));
+    const newInputs = { ...inputs, [converterId]: value };
+    setInputs(newInputs);
+    onDataChange?.({ inputs: newInputs });
   };
 
   // Debounce effect for performance
@@ -223,7 +227,6 @@ export const TextConversion: React.FC<Props> = ({ searchQuery }) => {
             onChange={(value) => handleInputChange(converter.id, value)}
             placeholder="Enter text to convert..."
             rows={3}
-            className="mb-4"
           />
           {Object.keys(results[converter.id] || {}).length > 0 ? (
             <div className="space-y-3">

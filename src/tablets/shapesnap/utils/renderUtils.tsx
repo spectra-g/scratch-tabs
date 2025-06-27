@@ -2,6 +2,11 @@ import React from 'react';
 import { Shape, Point, ArrowTipStyle } from '../types';
 import rough from 'roughjs/bin/rough';
 
+// Utility function to create modal-aware event handlers
+const createModalAwareHandler = (handler: (e: any) => void, modalOpen?: boolean) => {
+  return modalOpen ? () => {} : handler;
+};
+
 // Calculate the arrowhead points
 const calculateArrowhead = (from: Point, to: Point, headSize = 10): [Point, Point] => {
   const angle = Math.atan2(to.y - from.y, to.x - from.x);
@@ -366,7 +371,8 @@ export const renderShape = (
   onMouseDown?: (shape: Shape, e: React.MouseEvent) => void,
   currentTool?: string,
   sketchFont?: boolean,
-  currentFontSize?: number
+  currentFontSize?: number,
+  modalOpen?: boolean
 ): React.ReactNode => {
   const isSelected = selectedShapeId === shape.id;
   const isEditing = editingShapeId === shape.id;
@@ -465,15 +471,15 @@ export const renderShape = (
   };
   
   const baseProps = {
-    onClick: handleClick,
-    onDoubleClick: handleDoubleClick,
-    onMouseDown: handleMouseDown,
-    onMouseMove: handleMouseMove,
-    onTouchStart: handleTouchStart,
-    onTouchMove: handleTouchMove,
-    onTouchEnd: handleTouchEnd,
+    onClick: createModalAwareHandler(handleClick, modalOpen),
+    onDoubleClick: createModalAwareHandler(handleDoubleClick, modalOpen),
+    onMouseDown: createModalAwareHandler(handleMouseDown, modalOpen),
+    onMouseMove: createModalAwareHandler(handleMouseMove, modalOpen),
+    onTouchStart: createModalAwareHandler(handleTouchStart, modalOpen),
+    onTouchMove: createModalAwareHandler(handleTouchMove, modalOpen),
+    onTouchEnd: createModalAwareHandler(handleTouchEnd, modalOpen),
     style: {
-      cursor: currentTool === 'eraser' ? 'crosshair' : 'pointer',
+      cursor: modalOpen ? 'default' : (currentTool === 'eraser' ? 'crosshair' : 'pointer'),
       ...(isSelected && {
         filter: 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.5))'
       })
@@ -810,6 +816,51 @@ export const renderShapeOverlay = (
   const isEditing = editingShapeId === shape.id;
   const center = getShapeCenter(shape);
 
+  // Render arrow tips for line shapes
+  const arrowTipsElement = (shape.type === 'line') ? (() => {
+    const lineShape = shape as Shape & { 
+      points: Point[]; 
+      arrowTipStart?: ArrowTipStyle; 
+      arrowTipEnd?: ArrowTipStyle; 
+      arrowTipSize?: number 
+    };
+    const hasStartArrow = lineShape.arrowTipStart && lineShape.arrowTipStart !== 'none' && lineShape.points.length >= 2;
+    const hasEndArrow = lineShape.arrowTipEnd && lineShape.arrowTipEnd !== 'none' && lineShape.points.length >= 2;
+    
+    if (!hasStartArrow && !hasEndArrow) return null;
+    
+    const arrowTipSize = lineShape.arrowTipSize || 10;
+    const arrowTips = [];
+    
+    // Render start arrow tip
+    if (hasStartArrow) {
+      const startPoint = lineShape.points[0];
+      const directionPoint = lineShape.points[1];
+      arrowTips.push(
+        renderArrowTip(startPoint, directionPoint, lineShape.arrowTipStart!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
+      );
+    }
+    
+    // Render end arrow tip
+    if (hasEndArrow) {
+      const endPoint = lineShape.points[lineShape.points.length - 1];
+      const directionPoint = lineShape.points[lineShape.points.length - 2];
+      arrowTips.push(
+        renderArrowTip(endPoint, directionPoint, lineShape.arrowTipEnd!, arrowTipSize, shape.style.stroke, shape.style.strokeWidth || 2)
+      );
+    }
+    
+    return (
+      <g key={`${shape.id}-arrow-tips`}>
+        {arrowTips.map((tip, index) => (
+          <React.Fragment key={`${shape.id}-arrow-tip-${index}`}>
+            {tip}
+          </React.Fragment>
+        ))}
+      </g>
+    );
+  })() : null;
+
   // Render label if it exists and not editing
   const labelElement = (!isEditing && shape.label) ? (() => {
     const fontFamily = sketchFont ? '"Architects Daughter", Arial, sans-serif' : undefined;
@@ -859,7 +910,12 @@ export const renderShapeOverlay = (
     }
   })() : null;
 
-  return labelElement;
+  return (
+    <g key={`${shape.id}-overlay`}>
+      {arrowTipsElement}
+      {labelElement}
+    </g>
+  );
 };
 
 // Helper function to render resize handles for selected shapes

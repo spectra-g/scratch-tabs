@@ -12,7 +12,10 @@ const SIGNIFICANT_LENGTH_DIFFERENCE = 30;
 // How many lines difference suggests a non-trivial change?
 const SIGNIFICANT_LINE_DIFFERENCE = 5;
 
-export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => {
+export const useLanguageDetection = (
+  updateTabLanguage: UpdateTabLanguageFn,
+  onLanguageDetectedOnSignificantChange?: (tabId: string, language: string) => void
+) => {
   // useRef to hold the latest debounced function instance.
   // This ensures we always call the most recent version if updateTabLanguage changes,
   // while still debouncing the execution.
@@ -66,12 +69,14 @@ export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => 
 
     // --- 5. Decide Whether to Update the Tab's Language ---
     let shouldUpdate = false;
+    let shouldTriggerAutoFormat = false;
 
     if (isSignificantChange) {
       // On significant changes, ALWAYS update if the detected language is different from current.
       // This forces re-evaluation after pastes/replaces.
       if (newDetectedLanguage !== currentLanguage) {
         shouldUpdate = true;
+        shouldTriggerAutoFormat = true; // This is the key addition - trigger auto-format on significant language changes
       }
     } else {
       // For normal typing (non-significant change):
@@ -81,6 +86,7 @@ export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => 
       if (newDetectedLanguage !== currentLanguage) {
         if (currentLanguage === 'plaintext' || !newDetectionIsAmbiguous) {
           shouldUpdate = true;
+          // Don't trigger auto-format for regular typing-induced language changes
         }
       }
     }
@@ -89,9 +95,17 @@ export const useLanguageDetection = (updateTabLanguage: UpdateTabLanguageFn) => 
     if (shouldUpdate) {
       // Update the language with the lock parameter set to false to ensure user can override
       updateTabLanguage(tabId, newDetectedLanguage, false);
+      
+      // Trigger auto-format if this was a significant change that resulted in language detection
+      if (shouldTriggerAutoFormat) {
+        // Use setTimeout to ensure the language change is processed first
+        setTimeout(() => {
+          onLanguageDetectedOnSignificantChange?.(tabId, newDetectedLanguage);
+        }, 50); // Small delay to ensure language is set before formatting
+      }
     }
 
-  }, [updateTabLanguage]); // Dependency: The store update function
+  }, [updateTabLanguage, onLanguageDetectedOnSignificantChange]); // Add callback to dependencies
 
   // Effect to setup/update the debounced function when the callback changes
   useEffect(() => {

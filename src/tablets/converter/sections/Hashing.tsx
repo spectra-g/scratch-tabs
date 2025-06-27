@@ -45,23 +45,27 @@ const hashFunctions: HashFunction[] = [
     title: 'CRC32',
     description: 'Calculate CRC32 checksum of input text',
     hash: (input: string) => {
-      // 1. Calculate CRC32 - it returns a number
-      const crcValue: number = CryptoJS.CRC32(input);
-      // 2. Convert the number to unsigned 32-bit integer representation
-      //    using the unsigned right shift operator (>>> 0).
-      // 3. Convert that unsigned integer to its hexadecimal string representation.
-      // 4. Pad the start with '0's to ensure it's always 8 characters long.
-      return (crcValue >>> 0).toString(16).padStart(8, '0');
+      // Simple CRC32 implementation since CryptoJS.CRC32 might not be available
+      let crc = 0xFFFFFFFF;
+      for (let i = 0; i < input.length; i++) {
+        crc = crc ^ input.charCodeAt(i);
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 1) ? (0xEDB88320 ^ (crc >>> 1)) : (crc >>> 1);
+        }
+      }
+      return (crc ^ 0xFFFFFFFF >>> 0).toString(16).padStart(8, '0');
     }
   }
 ];
 
 interface Props {
   searchQuery: string;
+  data?: { input: string };
+  onDataChange?: (data: { input: string }) => void;
 }
 
-export const Hashing: React.FC<Props> = ({ searchQuery }) => {
-  const [input, setInput] = useState('');
+export const Hashing: React.FC<Props> = ({ searchQuery, data, onDataChange }) => {
+  const [input, setInput] = useState(data?.input || '');
   const [hashes, setHashes] = useState<Record<string, string>>({});
 
   // Ensure search query is lowercased for case-insensitive comparison
@@ -70,6 +74,11 @@ export const Hashing: React.FC<Props> = ({ searchQuery }) => {
     fn.title.toLowerCase().includes(lowerCaseSearchQuery) ||
     fn.description.toLowerCase().includes(lowerCaseSearchQuery)
   );
+
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    onDataChange?.({ input: value });
+  };
 
   useEffect(() => {
     // Debounce calculation slightly to avoid excessive computation on fast typing
@@ -109,7 +118,7 @@ export const Hashing: React.FC<Props> = ({ searchQuery }) => {
         >
           <ConversionInput
             value={input}
-            onChange={setInput}
+            onChange={handleInputChange}
             placeholder="Enter text to hash..."
             rows={3}
           />
@@ -126,10 +135,10 @@ export const Hashing: React.FC<Props> = ({ searchQuery }) => {
             key={fn.id}
             title={fn.title}
             description={fn.description}
-            // Provide a consistent placeholder when no result is available
             result={hashes[fn.id] || (input ? 'Calculating...' : 'No result')}
-            isLoading={input && !hashes[fn.id]} // Indicate loading state
-          />
+          >
+            <div></div>
+          </ConversionPanel>
         ))}
 
         {/* Message if filtering hides all panels */}

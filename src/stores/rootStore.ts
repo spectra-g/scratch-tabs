@@ -77,6 +77,8 @@ interface RootStore {
   // Extended view management
   setActiveView: (tabId: string, viewId: string | null) => void;
   getActiveView: (tabId: string) => string | null;
+  initialUrlProcessed: boolean;
+  setInitialUrlProcessed: (status: boolean) => void;
 }
 
 export const useRootStore = create<RootStore>((set, get) => {
@@ -489,5 +491,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tab = useTabsStore.getState().tabs.find(t => t.id === tabId);
       return tab?.activeViewId || null;
     },
+    initialUrlProcessed: false,
+    setInitialUrlProcessed: (status) => set({ initialUrlProcessed: status }),
   };
 });

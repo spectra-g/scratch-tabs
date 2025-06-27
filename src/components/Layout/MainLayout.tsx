@@ -1,35 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { useRootStore } from '../../stores';
-import { useSearchStore } from '../../stores/searchStore';
-import { WelcomeScreen } from '../Welcome/WelcomeScreen';
-import { EditorPaneWrapper } from '../Editor/EditorPaneWrapper';
-import { TabBar } from '../Tab/TabBar';
-import { DiffModal } from '../DiffModal';
-import { SummarizeModal } from '../AI/SummarizeModal';
-import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
-import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
-import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
+import { useRootStore } from '../../stores/rootStore';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { usePersistenceStore } from '../../stores/persistenceStore';
+import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
+import { useUrlTabHandler, handleInitialUrl } from '../../hooks/useUrlTabHandler';
+import { useSearchStore } from '../../stores/searchStore';
+import { WelcomeScreen } from '../Welcome/WelcomeScreen';
+import { TabBar } from '../Tab/TabBar';
+import { EditorPaneWrapper } from '../Editor/EditorPaneWrapper';
+import { SplitViewDivider } from '../SplitView/SplitViewDivider';
+import { DiffModal } from '../DiffModal';
+import { SummarizeModal } from '../AI/SummarizeModal';
 import { SearchModal } from '../Search/SearchModal';
 
 const MainLayout: React.FC = () => {
   const {
     tabs,
-    splitView,
-    setSplitRatio,
     activeLeftTabId,
     activeRightTabId,
     saveTabDataById,
+    splitView,
+    setSplitRatio,
   } = useRootStore(state => ({
-      tabs: state.tabs,
-      splitView: state.splitView,
-      setSplitRatio: state.setSplitRatio,
-      activeLeftTabId: state.splitView?.activeLeftTabId,
-      activeRightTabId: state.splitView?.activeRightTabId,
-      saveTabDataById: state.saveTabDataById,
+    tabs: state.tabs,
+    activeLeftTabId: state.splitView?.activeLeftTabId,
+    activeRightTabId: state.splitView?.activeRightTabId,
+    saveTabDataById: state.saveTabDataById,
+    splitView: state.splitView,
+    setSplitRatio: state.setSplitRatio,
   }));
 
+  const { loadWorkspaces, workspaces } = useWorkspaceStore();
+  const { saveState } = usePersistenceStore(); // Get saveState function
+  const [isAppInitialized, setIsAppInitialized] = useState(false);
 
   function setRealHeight() {
     document.documentElement.style.setProperty('--real-vh', `${window.innerHeight * 0.01}px`);
@@ -37,19 +40,16 @@ const MainLayout: React.FC = () => {
   window.addEventListener('resize', setRealHeight);
   setRealHeight();
 
-  const { loadWorkspaces } = useWorkspaceStore();
-  const { saveState } = usePersistenceStore(); // Get saveState function
-  const [isAppInitialized, setIsAppInitialized] = useState(false);
-
   // Initialize workspace store
   useEffect(() => {
-    loadWorkspaces().then(() => {
+    loadWorkspaces().then(async () => {
+      await handleInitialUrl();
       setIsAppInitialized(true);
     }).catch(error => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
-      setIsAppInitialized(true); // Still mark as initialized to allow rendering (even if error state)
+      setIsAppInitialized(true);
     });
-  }, [loadWorkspaces]);
+  }, []);
 
      useEffect(() => {
        const saveInterval = setInterval(() => {
@@ -121,7 +121,7 @@ const MainLayout: React.FC = () => {
       // If we have an explicit tab ID, use it on the appropriate side
       let leftTabId = currentSplitView.activeLeftTabId;
       let rightTabId = currentSplitView.activeRightTabId;
-      
+
       if (explicitTabId) {
         // If explicit side provided, use it on that side
         if (explicitSide === 'left') {
@@ -140,7 +140,7 @@ const MainLayout: React.FC = () => {
           }
         }
       }
-      
+
       setDiffModal({
         leftTabId: leftTabId,
         rightTabId: rightTabId,
@@ -236,14 +236,14 @@ const MainLayout: React.FC = () => {
     <div className="h-screen flex flex-col bg-gray-900 text-white">
       <div
         ref={containerRef}
-        className="flex w-full h-full overflow-hidden"
+        className="flex w-full h-full min-w-0 overflow-hidden"
       >
-        {tabs.length === 0 ? (
+        {tabs.length === 0 && workspaces.length === 0 ? (
           <WelcomeScreen/>
         ) : (
           <>
             <div
-              className="flex flex-col h-full overflow-hidden"
+              className="flex flex-col h-full overflow-hidden min-w-0"
               style={leftPaneStyle}
             >
               <div className="w-full flex-shrink-0">
@@ -267,7 +267,7 @@ const MainLayout: React.FC = () => {
                 />
 
                 <div
-                  className="flex flex-col h-full overflow-hidden"
+                  className="flex flex-col h-full overflow-hidden min-w-0"
                   style={rightPaneStyle}
                 >
                   <div className="w-full flex-shrink-0">

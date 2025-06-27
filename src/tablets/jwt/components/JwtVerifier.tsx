@@ -5,6 +5,7 @@ import { KeyInput } from './ui/KeyInput';
 import { Alert } from './ui/Alert';
 import { Button } from './ui/Button';
 import { KeyType, StoredKey } from '../types';
+import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
 
 interface JwtVerifierProps {
   token: string;
@@ -75,7 +76,8 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
       setVerificationError(null);
       setVerificationWarning(null);
       try {
-        const result = await verifyJwt(token, verificationKey, verificationKeyType);
+        const unmaskedKey = SensitiveDataManager.unmask(verificationKey);
+        const result = await verifyJwt(token, unmaskedKey, verificationKeyType);
         onVerificationResultRef.current(result.isValid, result.error, result.warning);
         setVerificationError(result.error || null);
         setVerificationWarning(result.warning || null);

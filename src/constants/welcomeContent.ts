@@ -1,122 +1,68 @@
 export const WELCOME_TAB_CONTENT = `# Welcome to Scratch Tabs! 🎉
 
-## What is Scratch Tabs?
-Scratch Tabs is a powerful, privacy-first client-side data editor and toolkit. Everything runs locally in your browser - your data never leaves your device.
+> **Your private, powerful, browser-based toolkit for code, data, and ideas.**
+> Everything runs 100% in your browser. Your data is yours, always.
 
-## What can you do here?
+## Get Started in 30 Seconds
 
-### 📝 **Code & Text Editing**
-- Write and edit code in 50+ programming languages
-- Syntax highlighting and intelligent language detection
-- Split-screen editing for comparing files
-- Real-time preview for HTML, Markdown, and more
+1.  **📝 Create a Tab**
+    *   **Double-click** the empty space on the tab bar.
+    *   **Drag & drop** a file or folder onto the page.
+    *   **Paste** content directly from your clipboard.
 
-### 🛠️ **Specialized Tools (Tablets)**
-Click the tablet button (top-right) to access:
+2.  **🚀 Launch a Tablet**
+    *   Click the **Tablet icon** to open a menu of specialized tools.
 
-#### **Data & Encoding**
-- **Base64** - Encode/decode binary data
-- **Converter** - Convert between formats (colors, dates, encoding)
-- **UUID Generator** - Generate unique identifiers
-- **Temp Email** - Create disposable email addresses
+3.  **🗂️ Organize Your Work**
+    *   Use **Workspaces** to keep different projects separate.
+    *   **Split the view** to compare tabs side-by-side.
+    *   **Pin** important tabs to keep them handy.
 
-#### **Development Tools**
-- **JSON Mapper** - Transform and map JSON data from one format to another
-- **JWT** - Decode and inspect JWT tokens
-- **Regex Tester** - Test and debug regular expressions
-- **REST Client** - Make HTTP requests and test APIs, verify and correct curl commands
+## What's Inside?
 
-#### **Productivity & Security**
-- **Calculator** - Advanced mathematical operations
-- **Password Generator** - Create secure passwords
-- **Pomodoro Timer** - Focus and productivity timer
-- **Vault** - Knowledgebase of regularly used commands or information
+Scratch Tabs is more than just a text editor. It's a collection of powerful, integrated "Tablets" for common developer tasks.
 
-#### **Content & Utilities**
-- **Clipboard** - Manage copy/paste history
-- **Prompt Manager** - Organize AI prompts and templates
-- **Shape Snap** - Create diagrams and flowcharts
-- **User Generator** - Generate random user profiles
-- **IP Details** - Get network and location information
+| Category          | Featured Tools                                   | Use For...                                         |
+|-------------------|--------------------------------------------------|----------------------------------------------------|
+| **Code & Text**   | 50+ Language Editor, Diff Viewer, AI Summarizer  | Writing code, comparing changes, understanding text. |
+| **Data & APIs**   | CSV Editor, JSON Mapper, REST Client, JWT Debugger | Analyzing data, transforming JSON, testing APIs.   |
+| **Utilities**     | Regex Tester, Base64, Converters, UUID Generator | Validating patterns, encoding data, generating IDs.  |
+| **Productivity**  | Prompt Manager, Clipboard History, Shape Snap      | Organizing prompts, managing history, creating diagrams. |
 
-### 📊 **Data Visualization**
-- CSV data viewer with statistics and analysis
-- JSON tree viewer and formatter
-- Data validation and transformation tools
+## Pro-Tips & Shortcuts
 
-### 🔒 **Privacy Features**
-- 100% client-side - no data sent to servers
-- Local storage with export/import capabilities
-- Workspace organization for different projects
-- No registration required
+- **Global Search:** Press **\`Ctrl+Shift+F\`** to search across all tabs in your workspace.
+- **Download Tab:** Press **\`Ctrl+S\`** to quickly download the content of your current tab as a file.
+- **AI Summary (Experimental):** Right-click a tab with text and select "Summarize" for an in-browser AI summary.
+- **Automatic Saving:** No need to worry about saving! Your work is automatically persisted to your browser's local storage as you go.
 
-## Quick Start Guide
+## Workflow Spotlight: From Clipboard to Diff in Seconds
 
-### 1. **Create Your First Tab**
-- **Double-click** the tab bar or click the plus icon (top-right)
-- **Paste** content from your clipboard
-- **Drag & drop** files to open them
-- Open as many tabs as you want
+Scratch Tabs excels at the small, everyday tasks that feel clunky in a full IDE. Consider comparing two JSON objects from different systems:
 
-### 2. **Explore Specialized Tools**
-- Click the tablet button (top-right) to open the tablet selector
-- Browse through available tools
-- Click any tool to open it in a new tab
+#### The Old Way (In Your IDE)
+1.  Open your IDE.
+2.  Create a new file (\`Untitled-1.json\`).
+3.  Paste the first JSON. It's probably unformatted.
+4.  Run the "Format Document" command.
+5.  Save the file somewhere on your desktop.
+6.  Repeat steps 2-5 for the second JSON (\`Untitled-2.json\`).
+7.  Find and run the "Compare Active File With..." command.
+8.  Navigate your file system to find and select \`Untitled-1.json\`.
+9.  *Finally*, see the diff.
+10. Remember to delete the temporary files later.
 
-### 3. **Organize Your Work**
-- Use **workspaces** to group related projects
-- **Split screen** to work with multiple files
-- **Pin tabs** for frequently used content
+#### The Scratch Tabs Way
+1.  Copy your first JSON.
+2.  Click the **"New from Paste"** icon (📋⁺). *A new, formatted JSON tab appears instantly.*
+3.  Copy your second JSON.
+4.  Right-click the tab and select **"Compare with Clipboard."**
 
-### 4. **Keyboard Shortcuts**
-- **Ctrl+S** - Save content
-- **Ctrl+Shift+S** - Save as
-
-## Tips & Best Practices
-
-### 💡 **Getting Started**
-- Start with a simple text file to get familiar with the editor
-- Try the **Markdown** language for formatted text
-- Use **split screen** to compare different versions of your code, or open multiple tabs side by side
-
-### 🛠️ **Using Tablets Effectively**
-- **Regex Tester**: Perfect for validating patterns
-- **JSON Mapper**: Great for data transformation tasks
-- **REST Client**: Test APIs without leaving the app (borwser CORS limitations apply)
-- **Calculator**: Handle complex mathematical operations
-- **Shape Snap**: Create diagrams and flowcharts, get mouse drawn shapes autocorrected
-
-### 📁 **Workspace Management**
-- Create separate workspaces for different projects
-- Use descriptive workspace names
-- Export workspaces to backup your data or share with others
-- Import workspaces
-
-### 🔒 **Security & Privacy**
-- All data stays on your device
-- Export important data regularly
-- Workspaces are isolated from each other
-- All tab and worksapce data is stored securely in your browser
-
-## Supported Languages
-
-The editor supports syntax highlighting for:
-- **Web**: HTML, CSS, JavaScript, TypeScript, React, Vue
-- **Programming**: Python, Java, C++, C#, Go, Rust, PHP, Ruby
-- **Data**: JSON, XML, YAML, CSV, SQL
-- **Markup**: Markdown, LaTeX, GraphQL
-- **Config**: Dockerfile, Properties, HCL, Groovy
-- **And many more!**
-
-## Need Help?
-
-- **Language Detection**: The app automatically detects file types
-- **Auto-save**: Your work is saved automatically
-- **Export**: Save your work to your computer
-- **Import**: Bring in files from your system
+That's it. You're viewing a side-by-side diff. No temporary files, no project context, no hassle. This is the core philosophy of Scratch Tabs.
 
 ---
-*Your data stays private and local. Happy coding! 🚀*
+
+*Found a bug or have a feature idea? [Open an issue on GitHub!](https://github.com/spectra-g/scratch-tabs-feedback/issues)*
 
 *Built with ❤️ for developers who value privacy and productivity.*
 `; 

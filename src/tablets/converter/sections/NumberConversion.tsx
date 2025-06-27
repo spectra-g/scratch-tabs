@@ -14,9 +14,9 @@ const converters: NumberConverter[] = [
     id: 'base',
     title: 'Number Base Converter',
     description: 'Convert between different number bases',
-    convert: (input: string) => {
+    convert: (input: string): Record<string, string> => {
       const num = parseInt(input);
-      if (isNaN(num)) return {};
+      if (isNaN(num)) return { 'Error': 'Invalid number' };
       return {
         'Decimal': num.toString(10),
         'Hexadecimal': num.toString(16).toUpperCase(),
@@ -29,7 +29,7 @@ const converters: NumberConverter[] = [
     id: 'roman',
     title: 'Roman Numeral Converter',
     description: 'Convert between numbers and Roman numerals',
-    convert: (input: string) => {
+    convert: (input: string): Record<string, string> => {
       const romanToInt = (roman: string): number => {
         const values: Record<string, number> = {
           'I': 1, 'V': 5, 'X': 10, 'L': 50,
@@ -98,7 +98,7 @@ const converters: NumberConverter[] = [
     id: 'datasize',
     title: 'Data Size Converter',
     description: 'Convert between different data size units',
-    convert: (input: string) => {
+    convert: (input: string): Record<string, string> => {
       const match = input.match(/^(\d+(?:\.\d+)?)\s*([KMGTP]i?B)?$/i);
       if (!match) return { 'Error': 'Invalid input format' };
 
@@ -142,10 +142,12 @@ const converters: NumberConverter[] = [
 
 interface Props {
   searchQuery: string;
+  data?: { inputs: Record<string, string> };
+  onDataChange?: (data: { inputs: Record<string, string> }) => void;
 }
 
-export const NumberConversion: React.FC<Props> = ({ searchQuery }) => {
-  const [inputs, setInputs] = useState<Record<string, string>>({});
+export const NumberConversion: React.FC<Props> = ({ searchQuery, data, onDataChange }) => {
+  const [inputs, setInputs] = useState<Record<string, string>>(data?.inputs || {});
   const [results, setResults] = useState<Record<string, Record<string, string>>>({});
 
   const filteredConverters = converters.filter(converter =>
@@ -154,7 +156,9 @@ export const NumberConversion: React.FC<Props> = ({ searchQuery }) => {
   );
 
   const handleInputChange = (converterId: string, value: string) => {
-    setInputs(prev => ({ ...prev, [converterId]: value }));
+    const newInputs = { ...inputs, [converterId]: value };
+    setInputs(newInputs);
+    onDataChange?.({ inputs: newInputs });
   };
 
   useEffect(() => {

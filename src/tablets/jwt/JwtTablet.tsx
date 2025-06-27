@@ -7,6 +7,7 @@ import { JwtKeyManager } from './components/JwtKeyManager';
 import { Tabs } from './components/ui/Tabs';
 import { JwtHistory } from './components/JwtHistory';
 import { JwtState, JwtHistoryItem, StoredKey } from './types';
+import { SensitiveDataManager } from '../../utils/sensitiveDataManager';
 
 interface JwtTabletState extends TabletState {
   type: 'jwt';
@@ -49,6 +50,10 @@ export const JwtTablet: Tablet = {
     try {
       const parsed = JSON.parse(json);
       if (parsed.type === 'jwt' && parsed.data) {
+        // Migrate stored keys
+        let migratedStoredKeys = Array.isArray(parsed.data.storedKeys) ? parsed.data.storedKeys : [];
+        migratedStoredKeys = SensitiveDataManager.migrateObjectArray(migratedStoredKeys, ['value']);
+        
         // Ensure all required properties exist for the main data
         const deserializedData: JwtState = {
           token: parsed.data.token || '',
@@ -60,19 +65,17 @@ export const JwtTablet: Tablet = {
           warning: parsed.data.warning || null,
           activeTab: parsed.data.activeTab || 'decode',
           history: [], // Initialize, will be populated next
-          storedKeys: Array.isArray(parsed.data.storedKeys)
-            ? parsed.data.storedKeys.map((k: any) => ({ // Sanitize stored keys too
-              name: k?.name || 'Unnamed Key',
-              value: k?.value || '',
-              type: ['text', 'base64', 'pem'].includes(k?.type) ? k.type : 'text',
-              algorithm: k?.algorithm || undefined,
-              isPublic: typeof k?.isPublic === 'boolean' ? k.isPublic : false,
-              createdAt: typeof k?.createdAt === 'number' ? k.createdAt : Date.now(),
-            }))
-            : [],
-          verificationKey: parsed.data.verificationKey || '',
+          storedKeys: migratedStoredKeys.map((k: any) => ({ // Sanitize stored keys too
+            name: k?.name || 'Unnamed Key',
+            value: k?.value || '', // Already migrated above
+            type: ['text', 'base64', 'pem'].includes(k?.type) ? k.type : 'text',
+            algorithm: k?.algorithm || undefined,
+            isPublic: typeof k?.isPublic === 'boolean' ? k.isPublic : false,
+            createdAt: typeof k?.createdAt === 'number' ? k.createdAt : Date.now(),
+          })),
+          verificationKey: SensitiveDataManager.migrateField(parsed.data.verificationKey || ''),
           verificationKeyType: ['text', 'base64', 'pem'].includes(parsed.data.verificationKeyType) ? parsed.data.verificationKeyType : 'text',
-          signingKey: parsed.data.signingKey || '',
+          signingKey: SensitiveDataManager.migrateField(parsed.data.signingKey || ''),
           signingKeyType: ['text', 'base64', 'pem'].includes(parsed.data.signingKeyType) ? parsed.data.signingKeyType : 'text',
           signingAlgorithm: parsed.data.signingAlgorithm || 'HS256'
         };

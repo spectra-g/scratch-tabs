@@ -18,6 +18,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   });
   const [gridSnappingEnabled, setGridSnappingEnabled] = useState(false);
   const [sketchModeEnabled, setSketchModeEnabled] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -73,7 +74,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   
   // Mouse event handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (state.currentTool !== 'draw') return;
+    if (showInfoModal || state.currentTool !== 'draw') return;
     
     const point = getPointFromEvent(e);
     if (!point) return;
@@ -86,7 +87,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   };
   
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!drawState.isDrawing || state.currentTool !== 'draw') return;
+    if (showInfoModal || !drawState.isDrawing || state.currentTool !== 'draw') return;
     
     const point = getPointFromEvent(e);
     if (!point) return;
@@ -98,7 +99,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   };
   
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!drawState.isDrawing || state.currentTool !== 'draw') return;
+    if (showInfoModal || !drawState.isDrawing || state.currentTool !== 'draw') return;
     
     const point = getPointFromEvent(e);
     if (!point) return;
@@ -119,11 +120,11 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   };
   
   const handleMouseLeave = () => {
-    if (drawState.isDrawing && drawState.currentPoints.length > 1) {
-      // Finish the drawing if mouse leaves canvas
-      if (typeof engine.detectAndAddShape === 'function') {
-        engine.detectAndAddShape(drawState.currentPoints);
-      }
+    if (showInfoModal || !drawState.isDrawing || drawState.currentPoints.length <= 1) return;
+    
+    // Finish the drawing if mouse leaves canvas
+    if (typeof engine.detectAndAddShape === 'function') {
+      engine.detectAndAddShape(drawState.currentPoints);
     }
     
     setDrawState({
@@ -135,7 +136,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   
   // Touch event handlers
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (state.currentTool !== 'draw') return;
+    if (showInfoModal || state.currentTool !== 'draw') return;
     
     // Prevent default to avoid scrolling while drawing
     e.preventDefault();
@@ -151,7 +152,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   };
   
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!drawState.isDrawing || state.currentTool !== 'draw') return;
+    if (showInfoModal || !drawState.isDrawing || state.currentTool !== 'draw') return;
     
     // Prevent default to avoid scrolling while drawing
     e.preventDefault();
@@ -166,7 +167,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   };
   
   const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!drawState.isDrawing || state.currentTool !== 'draw') return;
+    if (showInfoModal || !drawState.isDrawing || state.currentTool !== 'draw') return;
     
     // Prevent default to avoid any unwanted behavior
     e.preventDefault();
@@ -188,11 +189,11 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   };
   
   const handleTouchCancel = () => {
-    if (drawState.isDrawing && drawState.currentPoints.length > 1) {
-      // Finish the drawing if touch is cancelled
-      if (typeof engine.detectAndAddShape === 'function') {
-        engine.detectAndAddShape(drawState.currentPoints);
-      }
+    if (showInfoModal || !drawState.isDrawing || drawState.currentPoints.length <= 1) return;
+    
+    // Finish the drawing if touch is cancelled
+    if (typeof engine.detectAndAddShape === 'function') {
+      engine.detectAndAddShape(drawState.currentPoints);
     }
     
     setDrawState({
@@ -226,6 +227,9 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
       <div 
         ref={canvasRef}
         className="flex-1 relative overflow-hidden"
+        style={{ 
+          touchAction: 'none' // Prevent default touch behaviors like scrolling
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -234,7 +238,6 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchCancel}
-        style={{ touchAction: 'none' }} // Prevent default touch behaviors like scrolling
       >
         <ShapeSnapCanvas 
           shapes={state.shapes}
@@ -251,6 +254,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           onDrawEnd={engine.detectAndAddShape}
           gridSnappingEnabled={gridSnappingEnabled}
           sketchModeEnabled={sketchModeEnabled}
+          showInfoModal={showInfoModal}
+          onShowInfoModal={setShowInfoModal}
         />
       </div>
       

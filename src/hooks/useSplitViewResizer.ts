@@ -132,17 +132,42 @@ export const useSplitViewResizer = (
 
   // Calculate pane styles based on the currentRatio STATE (for visual feedback)
   const paneStyles = useMemo(() => {
-    const ratioPercent = `${currentRatio * 100}%`;
-    const inverseRatioPercent = `${(1 - currentRatio) * 100}%`;
     if (!isSplitEnabled) {
       return {
-        leftPaneStyle: {width: '100%', flexShrink: '0'},
-        rightPaneStyle: {width: '0%', display: 'none'},
+        leftPaneStyle: { 
+          flex: '1 1 auto', 
+          minWidth: 0,
+          width: '100%',
+          maxWidth: '100%'
+        },
+        rightPaneStyle: { 
+          flex: '0 0 0', 
+          display: 'none',
+          minWidth: 0,
+          width: '0%'
+        },
       };
     }
+    const leftPercent = Math.max(15, Math.min(85, currentRatio * 100));
+    const rightPercent = 100 - leftPercent;
+    
+
+    
     return {
-      leftPaneStyle: {width: ratioPercent, flexShrink: '0'},
-      rightPaneStyle: {width: inverseRatioPercent, flexShrink: '0'},
+      leftPaneStyle: { 
+        flex: `0 0 ${leftPercent}%`, 
+        minWidth: 0,
+        width: `${leftPercent}%`,
+        maxWidth: `${leftPercent}%`,
+        boxSizing: 'border-box' as const
+      },
+      rightPaneStyle: { 
+        flex: `0 0 ${rightPercent}%`, 
+        minWidth: 0,
+        width: `${rightPercent}%`,
+        maxWidth: `${rightPercent}%`,
+        boxSizing: 'border-box' as const
+      },
     };
   }, [currentRatio, isSplitEnabled]);
 

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Plus, Trash2, Check, X } from 'lucide-react';
 import { KeyValuePair } from '../types';
+import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
 
 interface KeyValueEditorProps {
   pairs: KeyValuePair[];
@@ -43,11 +44,41 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
   
   const handleChangePair = (index: number, field: 'key' | 'value', value: string) => {
     const newPairs = [...pairs];
-    newPairs[index] = {
-      ...newPairs[index],
-      [field]: value
-    };
+    const currentPair = newPairs[index];
+    
+    if (field === 'value') {
+      // Check if this is a sensitive variable based on the key
+      const sensitiveKeys = ['token', 'password', 'secret', 'key', 'auth', 'api', 'access'];
+      const isSensitive = sensitiveKeys.some(sensitiveKey => 
+        currentPair.key.toLowerCase().includes(sensitiveKey)
+      );
+      
+      // Mask the value if it's sensitive
+      const maskedValue = isSensitive ? SensitiveDataManager.mask(value) : value;
+      newPairs[index] = {
+        ...currentPair,
+        [field]: maskedValue
+      };
+    } else {
+      newPairs[index] = {
+        ...currentPair,
+        [field]: value
+      };
+    }
+    
     onChange(newPairs);
+  };
+  
+  const getDisplayValue = (pair: KeyValuePair): string => {
+    const sensitiveKeys = ['token', 'password', 'secret', 'key', 'auth', 'api', 'access'];
+    const isSensitive = sensitiveKeys.some(sensitiveKey => 
+      pair.key.toLowerCase().includes(sensitiveKey)
+    );
+    
+    if (isSensitive && SensitiveDataManager.isMasked(pair.value)) {
+      return SensitiveDataManager.unmask(pair.value);
+    }
+    return pair.value || '';
   };
   
   // Determine if a value should be masked (for sensitive data)
@@ -97,7 +128,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
               
               <input
                 type={shouldMaskValue(pair.key) ? 'password' : 'text'}
-                value={pair.value}
+                value={getDisplayValue(pair)}
                 onChange={(e) => handleChangePair(index, 'value', e.target.value)}
                 placeholder={valuePlaceholder}
                 className={`

@@ -1,11 +1,60 @@
 import { HttpRequest, RequestConverter } from '../types';
 import { resolveVariables } from '../utils/requestUtils';
+import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
+
+/**
+ * Helper function to unmask sensitive data in auth parameters
+ */
+function unmaskAuthParams(auth: HttpRequest['auth']) {
+  if (auth.type === 'none') return auth;
+  
+  const unmaskedParams: Record<string, string> = {};
+  const sensitiveFields = ['password', 'token', 'value', 'secret'];
+  
+  Object.entries(auth.params).forEach(([key, value]) => {
+    if (typeof value === 'string' && sensitiveFields.includes(key)) {
+      unmaskedParams[key] = SensitiveDataManager.unmask(value);
+    } else {
+      unmaskedParams[key] = value;
+    }
+  });
+  
+  return {
+    ...auth,
+    params: unmaskedParams
+  };
+}
+
+/**
+ * Helper function to unmask sensitive data in variables
+ */
+function unmaskVariables(variables: HttpRequest['variables']) {
+  return variables.map(variable => {
+    const sensitiveKeys = ['token', 'password', 'secret', 'key', 'auth', 'api', 'access'];
+    const isSensitive = sensitiveKeys.some(sensitiveKey => 
+      variable.key.toLowerCase().includes(sensitiveKey)
+    );
+    
+    if (isSensitive && SensitiveDataManager.isMasked(variable.value)) {
+      return {
+        ...variable,
+        value: SensitiveDataManager.unmask(variable.value)
+      };
+    }
+    
+    return variable;
+  });
+}
 
 /**
  * Converts an HTTP request to a Postman Collection format
  */
 export function requestToPostman(request: HttpRequest): string {
-  const { method, url, headers, auth, params, body, variables } = request;
+  // Unmask sensitive data before conversion
+  const unmaskedAuth = unmaskAuthParams(request.auth);
+  const unmaskedVariables = unmaskVariables(request.variables);
+  
+  const { method, url, headers, params, body } = request;
   
   // Build the URL with query parameters
   let fullUrl = url;
@@ -22,7 +71,7 @@ export function requestToPostman(request: HttpRequest): string {
     params.filter(p => p.enabled).forEach(param => {
       urlParams.push({
         key: param.key,
-        value: resolveVariables(param.value, variables),
+        value: resolveVariables(param.value, unmaskedVariables),
         disabled: false
       });
     });
@@ -34,30 +83,10 @@ export function requestToPostman(request: HttpRequest): string {
   headers.filter(h => h.enabled).forEach(header => {
     headersArray.push({
       key: header.key,
-      value: resolveVariables(header.value, variables),
+      value: resolveVariables(header.value, unmaskedVariables),
       disabled: false
     });
   });
-  
-  // Add auth headers if needed
-  if (auth.type === 'basic') {
-    // Postman handles Basic Auth separately, not as headers
-  } else if (auth.type === 'bearer') {
-    const token = resolveVariables(auth.params.token || '', variables);
-    headersArray.push({
-      key: 'Authorization',
-      value: `Bearer ${token}`,
-      disabled: false
-    });
-  } else if (auth.type === 'apikey' && auth.params.addTo === 'header') {
-    const key = auth.params.key || '';
-    const value = resolveVariables(auth.params.value || '', variables);
-    headersArray.push({
-      key,
-      value,
-      disabled: false
-    });
-  }
   
   // Build the request object
   const postmanRequest: any = {
@@ -88,38 +117,78 @@ export function requestToPostman(request: HttpRequest): string {
     // If URL parsing fails, use the full URL as is
   }
   
+  // Add query parameters
+  if (params.length > 0) {
+    postmanRequest.request.url.query = params
+      .filter(p => p.enabled)
+      .map(param => ({
+        key: param.key,
+        value: resolveVariables(param.value, unmaskedVariables),
+        disabled: false
+      }));
+  }
+  
+  // Add headers
+  if (headers.length > 0) {
+    postmanRequest.request.header = headers
+      .filter(h => h.enabled)
+      .map(header => ({
+        key: header.key,
+        value: resolveVariables(header.value, unmaskedVariables),
+        disabled: false
+      }));
+  }
+  
   // Add authentication
-  if (auth.type === 'basic') {
-    const username = resolveVariables(auth.params.username || '', variables);
-    const password = resolveVariables(auth.params.password || '', variables);
-    
+  if (unmaskedAuth.type === 'basic') {
     postmanRequest.request.auth = {
       type: 'basic',
       basic: [
-        { key: 'username', value: username },
-        { key: 'password', value: password }
+        {
+          key: 'username',
+          value: resolveVariables(unmaskedAuth.params.username || '', unmaskedVariables),
+          type: 'string'
+        },
+        {
+          key: 'password',
+          value: resolveVariables(unmaskedAuth.params.password || '', unmaskedVariables),  
+          type: 'string'
+        }
       ]
     };
-  } else if (auth.type === 'bearer') {
-    const token = resolveVariables(auth.params.token || '', variables);
-    
+  } else if (unmaskedAuth.type === 'bearer') {
     postmanRequest.request.auth = {
       type: 'bearer',
       bearer: [
-        { key: 'token', value: token }
+        {
+          key: 'token',
+          value: resolveVariables(unmaskedAuth.params.token || '', unmaskedVariables),
+          type: 'string'
+        }
       ]
     };
-  } else if (auth.type === 'apikey') {
-    const key = auth.params.key || '';
-    const value = resolveVariables(auth.params.value || '', variables);
-    const addTo = auth.params.addTo || 'header';
+  } else if (unmaskedAuth.type === 'apikey') {
+    // Default to header if addTo is not set, for consistency with UI
+    const addTo = unmaskedAuth.params.addTo || 'header';
     
     postmanRequest.request.auth = {
       type: 'apikey',
       apikey: [
-        { key: 'key', value: key },
-        { key: 'value', value },
-        { key: 'in', value: addTo === 'header' ? 'header' : 'query' }
+        {
+          key: 'key',
+          value: unmaskedAuth.params.key || '',
+          type: 'string'
+        },
+        {
+          key: 'value',
+          value: resolveVariables(unmaskedAuth.params.value || '', unmaskedVariables),
+          type: 'string'
+        },
+        {
+          key: 'in',
+          value: addTo,
+          type: 'string'
+        }
       ]
     };
   }
@@ -134,7 +203,7 @@ export function requestToPostman(request: HttpRequest): string {
     };
     
     if (body.type === 'raw') {
-      postmanRequest.request.body.raw = resolveVariables(body.content, variables);
+      postmanRequest.request.body.raw = resolveVariables(body.content, unmaskedVariables);
       
       if (body.format) {
         let language = 'text';
@@ -164,7 +233,7 @@ export function requestToPostman(request: HttpRequest): string {
         .filter(p => p.enabled)
         .map(param => ({
           key: param.key,
-          value: resolveVariables(param.value, variables),
+          value: resolveVariables(param.value, unmaskedVariables),
           type: 'text',
           disabled: false
         }));
@@ -173,7 +242,7 @@ export function requestToPostman(request: HttpRequest): string {
         .filter(p => p.enabled)
         .map(param => ({
           key: param.key,
-          value: resolveVariables(param.value, variables),
+          value: resolveVariables(param.value, unmaskedVariables),
           disabled: false
         }));
     }

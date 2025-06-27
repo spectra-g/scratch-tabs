@@ -4,6 +4,8 @@ import { ConversionInput } from '../components/ConversionInput';
 
 interface Props {
   searchQuery: string;
+  data?: { inputs: Record<string, string> };
+  onDataChange?: (data: { inputs: Record<string, string> }) => void;
 }
 
 // Helper function for readable date formatting using Intl
@@ -26,17 +28,66 @@ const formatDateReadable = (date: Date, timeZone?: string): string => {
   }
 };
 
-export const DateTimeConversion: React.FC<Props> = ({ searchQuery }) => {
-  const [timestamp, setTimestamp] = useState('');
-  const [dateString, setDateString] = useState('');
-  const [calculatorDate, setCalculatorDate] = useState('');
-  const [calculatorAmount, setCalculatorAmount] = useState('');
-  const [calculatorUnit, setCalculatorUnit] = useState<'days' | 'weeks' | 'months' | 'years'>('days');
-  const [timezone, setTimezone] = useState('');
-  const [targetTimezone, setTargetTimezone] = useState('');
+export const DateTimeConversion: React.FC<Props> = ({ searchQuery, data, onDataChange }) => {
+  const [timestamp, setTimestamp] = useState(data?.inputs?.timestamp || '');
+  const [dateString, setDateString] = useState(data?.inputs?.dateString || '');
+  const [calculatorDate, setCalculatorDate] = useState(data?.inputs?.calculatorDate || '');
+  const [calculatorAmount, setCalculatorAmount] = useState(data?.inputs?.calculatorAmount || '');
+  const [calculatorUnit, setCalculatorUnit] = useState<'days' | 'weeks' | 'months' | 'years'>(data?.inputs?.calculatorUnit as any || 'days');
+  const [timezone, setTimezone] = useState(data?.inputs?.timezone || '');
+  const [targetTimezone, setTargetTimezone] = useState(data?.inputs?.targetTimezone || '');
 
   // Get list of available timezones - remains the same
-  const timezones = Intl.supportedValuesOf('timeZone');
+  const timezones = (Intl as any).supportedValuesOf?.('timeZone') || [];
+
+  const updateData = () => {
+    onDataChange?.({
+      inputs: {
+        timestamp,
+        dateString,
+        calculatorDate,
+        calculatorAmount,
+        calculatorUnit,
+        timezone,
+        targetTimezone
+      }
+    });
+  };
+
+  const handleTimestampChange = (value: string) => {
+    setTimestamp(value);
+    onDataChange?.({ inputs: { ...data?.inputs, timestamp: value } });
+  };
+
+  const handleDateStringChange = (value: string) => {
+    setDateString(value);
+    onDataChange?.({ inputs: { ...data?.inputs, dateString: value } });
+  };
+
+  const handleCalculatorDateChange = (value: string) => {
+    setCalculatorDate(value);
+    onDataChange?.({ inputs: { ...data?.inputs, calculatorDate: value } });
+  };
+
+  const handleCalculatorAmountChange = (value: string) => {
+    setCalculatorAmount(value);
+    onDataChange?.({ inputs: { ...data?.inputs, calculatorAmount: value } });
+  };
+
+  const handleCalculatorUnitChange = (value: 'days' | 'weeks' | 'months' | 'years') => {
+    setCalculatorUnit(value);
+    onDataChange?.({ inputs: { ...data?.inputs, calculatorUnit: value } });
+  };
+
+  const handleTimezoneChange = (value: string) => {
+    setTimezone(value);
+    onDataChange?.({ inputs: { ...data?.inputs, timezone: value } });
+  };
+
+  const handleTargetTimezoneChange = (value: string) => {
+    setTargetTimezone(value);
+    onDataChange?.({ inputs: { ...data?.inputs, targetTimezone: value } });
+  };
 
   const handleTimestampConversion = () => {
     try {
@@ -154,7 +205,7 @@ export const DateTimeConversion: React.FC<Props> = ({ searchQuery }) => {
         <>
           <ConversionInput
             value={timestamp}
-            onChange={setTimestamp}
+            onChange={handleTimestampChange}
             placeholder="Enter Unix timestamp (seconds or milliseconds)..."
             rows={1}
           />
@@ -185,7 +236,7 @@ export const DateTimeConversion: React.FC<Props> = ({ searchQuery }) => {
         <>
           <ConversionInput
             value={dateString}
-            onChange={setDateString}
+            onChange={handleDateStringChange}
             placeholder="Enter date string (e.g., 2024-03-15, March 15 2024 14:30)..."
             rows={1}
           />
@@ -223,7 +274,7 @@ export const DateTimeConversion: React.FC<Props> = ({ searchQuery }) => {
               <input
                 type="datetime-local"
                 value={calculatorDate}
-                onChange={(e) => setCalculatorDate(e.target.value)}
+                onChange={(e) => handleCalculatorDateChange(e.target.value)}
                 className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 // Add pattern for better mobile support if needed, though datetime-local handles format
               />
@@ -236,7 +287,7 @@ export const DateTimeConversion: React.FC<Props> = ({ searchQuery }) => {
                 <input
                   type="number"
                   value={calculatorAmount}
-                  onChange={(e) => setCalculatorAmount(e.target.value)}
+                  onChange={(e) => handleCalculatorAmountChange(e.target.value)}
                   placeholder="e.g., 5, -3"
                   className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
@@ -247,7 +298,7 @@ export const DateTimeConversion: React.FC<Props> = ({ searchQuery }) => {
                 </label>
                 <select
                   value={calculatorUnit}
-                  onChange={(e) => setCalculatorUnit(e.target.value as any)}
+                  onChange={(e) => handleCalculatorUnitChange(e.target.value as any)}
                   className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="days">Days</option>
@@ -290,12 +341,12 @@ export const DateTimeConversion: React.FC<Props> = ({ searchQuery }) => {
               </label>
               <select
                 value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
+                onChange={(e) => handleTimezoneChange(e.target.value)}
                 className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Select timezone...</option>
                 {/* Filter out potentially problematic zones if needed, but usually fine */}
-                {timezones.map(tz => (
+                {timezones.map((tz: string) => (
                   <option key={tz} value={tz}>{tz}</option>
                 ))}
               </select>
@@ -306,11 +357,11 @@ export const DateTimeConversion: React.FC<Props> = ({ searchQuery }) => {
               </label>
               <select
                 value={targetTimezone}
-                onChange={(e) => setTargetTimezone(e.target.value)}
+                onChange={(e) => handleTargetTimezoneChange(e.target.value)}
                 className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Select timezone...</option>
-                {timezones.map(tz => (
+                {timezones.map((tz: string) => (
                   <option key={tz} value={tz}>{tz}</option>
                 ))}
               </select>

@@ -199,7 +199,6 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
         let formattedHtml = "";
         let indentLevel = 0;
         const indentSize = 2; // Common for HTML
-        let inTag = false;
         let inPreTag = false;
 
         const lines = content.split('\n');

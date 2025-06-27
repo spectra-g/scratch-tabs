@@ -14,6 +14,7 @@ import {
   ExplanationLevel
 } from './types';
 import { executeRequest } from './utils/requestUtils';
+import { SensitiveDataManager } from '../../utils/sensitiveDataManager';
 
 interface RestClientTabletState extends TabletState {
   type: 'restclient';
@@ -45,9 +46,9 @@ export const RestClientTablet: Tablet = {
           },
           variables: [
             { key: 'host', value: 'jsonplaceholder.typicode.com', enabled: true },
-            { key: 'token', value: 'your-token-here', enabled: true },
+            { key: 'token', value: SensitiveDataManager.mask('your-token-here'), enabled: true },
             { key: 'user', value: 'testuser', enabled: true },
-            { key: 'password', value: 'password123', enabled: true }
+            { key: 'password', value: SensitiveDataManager.mask('password123'), enabled: true }
           ]
         },
         response: null,
@@ -73,6 +74,74 @@ export const RestClientTablet: Tablet = {
         if (!parsed.data.requestHistory) {
           parsed.data.requestHistory = [];
         }
+
+        // Migrate sensitive data in authentication parameters
+        if (parsed.data.request?.auth?.params) {
+          const authParams = parsed.data.request.auth.params;
+          const sensitiveAuthFields = ['password', 'token', 'value', 'secret'];
+          for (const field of sensitiveAuthFields) {
+            if (authParams[field]) {
+              authParams[field] = SensitiveDataManager.migrateField(authParams[field]);
+            }
+          }
+        }
+
+        // Migrate sensitive data in variables
+        if (parsed.data.request?.variables && Array.isArray(parsed.data.request.variables)) {
+          parsed.data.request.variables = parsed.data.request.variables.map((variable: any) => {
+            // Only mask values for keys that are likely sensitive
+            const sensitiveKeys = ['token', 'password', 'secret', 'key', 'auth', 'api', 'access'];
+            const shouldMask = sensitiveKeys.some(sensitiveKey => 
+              variable.key.toLowerCase().includes(sensitiveKey)
+            );
+            
+            if (shouldMask && typeof variable.value === 'string') {
+              return {
+                ...variable,
+                value: SensitiveDataManager.migrateField(variable.value)
+              };
+            }
+            return variable;
+          });
+        }
+
+        // Migrate sensitive data in request history
+        if (parsed.data.requestHistory && Array.isArray(parsed.data.requestHistory)) {
+          parsed.data.requestHistory = parsed.data.requestHistory.map((historyItem: HttpRequestHistoryItem) => {
+            if (historyItem.request) {
+              // Migrate auth params
+              if (historyItem.request.auth?.params) {
+                const authParams = historyItem.request.auth.params;
+                const sensitiveAuthFields = ['password', 'token', 'value', 'secret'];
+                for (const field of sensitiveAuthFields) {
+                  if (authParams[field]) {
+                    authParams[field] = SensitiveDataManager.migrateField(authParams[field]);
+                  }
+                }
+              }
+
+                             // Migrate variables
+               if (historyItem.request.variables && Array.isArray(historyItem.request.variables)) {
+                 historyItem.request.variables = historyItem.request.variables.map((variable: any) => {
+                   const sensitiveKeys = ['token', 'password', 'secret', 'key', 'auth', 'api', 'access'];
+                   const shouldMask = sensitiveKeys.some(sensitiveKey => 
+                     variable.key.toLowerCase().includes(sensitiveKey)
+                   );
+                   
+                   if (shouldMask && typeof variable.value === 'string') {
+                     return {
+                       ...variable,
+                       value: SensitiveDataManager.migrateField(variable.value)
+                     };
+                   }
+                   return variable;
+                 });
+               }
+            }
+            return historyItem;
+          });
+        }
+
         return parsed;
       }
     } catch (e) {
@@ -114,15 +183,37 @@ export const RestClientTablet: Tablet = {
     const handleExecuteRequest = async () => {
       updateState({ isExecuting: true, error: null });
 
+      // Create a deep copy of the request and unmask sensitive data for execution
+      const requestForExecution: HttpRequest = JSON.parse(JSON.stringify(data.request));
+      
+      // Unmask auth parameters
+      if (requestForExecution.auth?.params) {
+        const authParams = requestForExecution.auth.params;
+        const sensitiveAuthFields = ['password', 'token', 'value', 'secret'];
+        for (const field of sensitiveAuthFields) {
+          if (authParams[field]) {
+            authParams[field] = SensitiveDataManager.unmask(authParams[field]);
+          }
+        }
+      }
+
+      // Unmask variable values
+      if (requestForExecution.variables && Array.isArray(requestForExecution.variables)) {
+        requestForExecution.variables = requestForExecution.variables.map(variable => ({
+          ...variable,
+          value: SensitiveDataManager.unmask(variable.value)
+        }));
+      }
+
       const requestHistoryItem: HttpRequestHistoryItem = {
         id: crypto.randomUUID(),
         timestamp: Date.now(),
-        request: JSON.parse(JSON.stringify(data.request)), 
+        request: JSON.parse(JSON.stringify(data.request)), // Store the masked version in history
         isPinned: false,
       };
 
       try {
-        const response = await executeRequest(data.request);
+        const response = await executeRequest(requestForExecution);
 
         // Create a response history item
         const responseHistoryItem: ResponseHistoryItem = {

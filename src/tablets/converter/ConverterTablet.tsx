@@ -14,6 +14,15 @@ interface ConverterState extends TabletState {
   type: 'converter';
   data: {
     activeSection: string;
+    sectionData: {
+      'encode-decode': { inputs: Record<string, string> };
+      'hashing': { input: string };
+      'number': { inputs: Record<string, string> };
+      'text': { inputs: Record<string, string> };
+      'datetime': { inputs: Record<string, string> };
+      'color': { inputs: Record<string, string> };
+      'networking': { inputs: Record<string, string> };
+    };
   };
 }
 
@@ -41,8 +50,22 @@ const ConverterUI: React.FC<{ state: ConverterState; onChange: (state: Converter
     });
   };
 
+  const handleSectionDataChange = (sectionId: string, data: any) => {
+    onChange({
+      ...state,
+      data: {
+        ...state.data,
+        sectionData: {
+          ...state.data.sectionData,
+          [sectionId]: data
+        }
+      }
+    });
+  };
+
   const activeSection = sections.find(section => section.id === state.data.activeSection);
   const ActiveComponent = activeSection?.component;
+  const sectionData = state.data.sectionData[state.data.activeSection as keyof typeof state.data.sectionData];
 
   return (
     <div className="h-full bg-gray-900 flex">
@@ -90,7 +113,11 @@ const ConverterUI: React.FC<{ state: ConverterState; onChange: (state: Converter
       <div className="flex-1 overflow-auto custom-scrollbar">
         {ActiveComponent && (
           <ConverterSection>
-            <ActiveComponent searchQuery={searchQuery} />
+            <ActiveComponent 
+              searchQuery={searchQuery} 
+              data={sectionData as any}
+              onDataChange={(data: any) => handleSectionDataChange(state.data.activeSection, data)}
+            />
           </ConverterSection>
         )}
       </div>
@@ -107,7 +134,16 @@ export const ConverterTablet: Tablet = {
     return {
       type: 'converter',
       data: {
-        activeSection: sections[0].id
+        activeSection: sections[0].id,
+        sectionData: {
+          'encode-decode': { inputs: {} },
+          'hashing': { input: '' },
+          'number': { inputs: {} },
+          'text': { inputs: {} },
+          'datetime': { inputs: {} },
+          'color': { inputs: {} },
+          'networking': { inputs: {} },
+        }
       }
     };
   },

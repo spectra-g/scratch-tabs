@@ -4,11 +4,18 @@ import { ConversionInput } from '../components/ConversionInput';
 
 interface Props {
   searchQuery: string;
+  data?: { inputs: Record<string, string> };
+  onDataChange?: (data: { inputs: Record<string, string> }) => void;
 }
 
-export const ColorConversion: React.FC<Props> = ({ searchQuery }) => {
-  const [color, setColor] = useState('');
+export const ColorConversion: React.FC<Props> = ({ searchQuery, data, onDataChange }) => {
+  const [color, setColor] = useState(data?.inputs?.color || '');
   const [results, setResults] = useState<Record<string, string>>({});
+
+  const handleColorChange = (value: string) => {
+    setColor(value);
+    onDataChange?.({ inputs: { ...data?.inputs, color: value } });
+  };
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -146,7 +153,7 @@ export const ColorConversion: React.FC<Props> = ({ searchQuery }) => {
         <div>
           <ConversionInput
             value={color}
-            onChange={setColor}
+            onChange={handleColorChange}
             placeholder="Enter color (e.g., #ff0000, rgb(255,0,0), hsl(0,100%,50%))"
             rows={1}
           />

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useLayoutEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useRootStore } from '../../stores';
 import { TabletSelector } from '../../tablets';
 import { TabContextMenu } from "./TabContextMenu";
@@ -8,8 +8,8 @@ import { Tab } from '../../types';
 import { languageRegistry } from '../../languages';
 import { WorkspaceSwitcher } from '../Workspace/WorkspaceSwitcher';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
-import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
-import { arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { KeyboardSensor } from '@dnd-kit/core';
 import { SortableTabList } from './SortableTabList';
@@ -599,8 +599,26 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                                     setShowTabletSelector(false);
                                 } else {
                                     const rect = tabletButtonRef.current.getBoundingClientRect();
+                                    const viewportWidth = window.innerWidth;
+                                    const selectorWidth = window.innerWidth >= 1024 ? 700 : window.innerWidth >= 768 ? 600 : 384;
+                                    
+                                    // Calculate optimal x position
+                                    let x = rect.left;
+                                    
+                                    // Check if positioning 255px to the left would fit
+                                    if (x - 255 + selectorWidth > viewportWidth) {
+                                        // Not enough space, position to fit within viewport
+                                        x = viewportWidth - selectorWidth - 10; // 10px margin from edge
+                                    } else {
+                                        // Enough space, use the standard offset
+                                        x = x - 255;
+                                    }
+                                    
+                                    // Ensure it doesn't go off the left edge
+                                    x = Math.max(10, x);
+                                    
                                     setTabletSelectorPosition({
-                                        x: rect.left,
+                                        x: x,
                                         y: rect.bottom + 4
                                     });
                                     setShowTabletSelector(true);
@@ -622,7 +640,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                     ref={tabletSelectorTabBarRef}
                     style={{
                         position: 'fixed',
-                        left: tabletSelectorPosition.x - 255,
+                        left: tabletSelectorPosition.x,
                         top: tabletSelectorPosition.y,
                         zIndex: 50
                     }}

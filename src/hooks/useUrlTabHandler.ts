@@ -1,10 +1,15 @@
 import { useEffect, useRef } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useRootStore } from '../stores';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useRootStore } from '../stores/rootStore';
 import { useWorkspaceStore } from '../stores/workspaceStore';
-import { languageRegistry } from '../languages';
-import { tabletRegistry } from '../tablets';
 import { Tab } from '../types';
+import { languageRegistry } from '../languages/registry';
+import { tabletMetadata } from '../tablets/tabletMetadata';
+
+// Helper function to convert a label to URL identifier format
+const labelToUrlIdentifier = (label: string): string => {
+    return label.toLowerCase().replace(/\s+/g, '-');
+};
 
 /**
  * Generates a URL-friendly identifier from a tab title or uses the tab ID as a fallback.
@@ -13,12 +18,17 @@ import { Tab } from '../types';
  */
 const generateUrlIdentifier = (tab: Tab | undefined): string => {
     if (!tab) return '';
-    const identifier = tab.title
-        .toLowerCase()
-        .replace(/[\s_.,; T#%/\[\]{}()]+/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-+|-+$/g, '');
-    return identifier || tab.id;
+
+    // For tablets, use the label converted to URL format
+    if (tab.isTablet) {
+        const tabletInfo = tabletMetadata.find(t => t.label.toLowerCase() === tab.title.toLowerCase());
+        if (tabletInfo) {
+            return labelToUrlIdentifier(tabletInfo.label);
+        }
+    }
+
+    // For all other tabs (including language tabs), use a slugified version of the title
+    return tab.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 };
 
 /**
@@ -33,31 +43,35 @@ export const useUrlTabHandler = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Zustand stores
     const {
         tabs,
-        splitView,
+        activeLeftTabId,
+        activeRightTabId,
+        isSplit,
+        activeSide,
         setActiveLeftTab,
         setActiveRightTab,
         setActiveSide,
-        addTab,
+        splitView,
+        initialUrlProcessed,
     } = useRootStore(state => ({
         tabs: state.tabs,
-        splitView: state.splitView,
+        activeLeftTabId: state.splitView?.activeLeftTabId,
+        activeRightTabId: state.splitView?.activeRightTabId,
+        isSplit: state.splitView?.isSplit || false,
+        activeSide: state.splitView?.activeSide || 'left',
         setActiveLeftTab: state.setActiveLeftTab,
         setActiveRightTab: state.setActiveRightTab,
         setActiveSide: state.setActiveSide,
-        addTab: state.addTab,
+        splitView: state.splitView,
+        // Get the new flag from the store
+        initialUrlProcessed: state.initialUrlProcessed,
     }));
-    const { activeWorkspaceId } = useWorkspaceStore();
+    const { isLoading } = useWorkspaceStore();
 
     // Split view helpers
-    const isSplit = splitView?.isSplit;
     const leftTabs = splitView?.leftTabs || [];
     const rightTabs = splitView?.rightTabs || [];
-    const activeLeftTabId = splitView?.activeLeftTabId;
-    const activeRightTabId = splitView?.activeRightTabId;
-    const activeSide = splitView?.activeSide;
 
     // Refs for effect control
     const initialRender = useRef(true);
@@ -92,78 +106,6 @@ export const useUrlTabHandler = () => {
         return { tab: undefined, side: null };
     }
 
-    // 2. Find tablet by id/label/keyword
-    function findTabletByUrlIdentifier(urlIdentifier: string): any | undefined {
-        const normalizedParam = urlIdentifier.toLowerCase();
-        let tablet = tabletRegistry.getById(normalizedParam);
-        if (!tablet) {
-            const allTablets = tabletRegistry.getAll();
-            tablet = allTablets.find(t => {
-                if (t.id === normalizedParam) return true;
-                if (generateUrlIdentifier({
-                    id: t.id, title: t.label, content: '', language: 'plaintext', languageLocked: false, cursorPosition: { lineNumber: 0, column: 0 }, isTablet: true, dateCreated: Date.now(), lastModified: Date.now(), workspaceId: activeWorkspaceId || ''
-                }) === normalizedParam) return true;
-                return t.keywords.some(keyword => generateUrlIdentifier({
-                    id: t.id, title: keyword, content: '', language: 'plaintext', languageLocked: false, cursorPosition: { lineNumber: 0, column: 0 }, isTablet: true, dateCreated: Date.now(), lastModified: Date.now(), workspaceId: activeWorkspaceId || ''
-                }) === normalizedParam);
-            });
-        }
-        return tablet;
-    }
-
-    // 3. Create new tab (language, tablet, or plaintext)
-    function createNewTabFromUrl(urlIdentifier: string): Tab {
-        // Language
-        const language = languageRegistry.getById(urlIdentifier);
-        if (language) {
-            return {
-                id: crypto.randomUUID(),
-                title: `New ${urlIdentifier} Tab`,
-                content: language.sampleContent ? language.sampleContent() : '',
-                language: urlIdentifier,
-                languageLocked: true,
-                lastModified: Date.now(),
-                dateCreated: Date.now(),
-                cursorPosition: { lineNumber: 1, column: 1 },
-                isTablet: false,
-                workspaceId: activeWorkspaceId || ''
-            };
-        }
-        // Tablet
-        const tablet = findTabletByUrlIdentifier(urlIdentifier);
-        if (tablet) {
-            const state = tablet.createInitialState();
-            return {
-                id: crypto.randomUUID(),
-                title: tablet.label,
-                content: '',
-                language: 'plaintext',
-                languageLocked: true,
-                isTablet: true,
-                tabletState: tablet.serializeState(state),
-                lastModified: Date.now(),
-                dateCreated: Date.now(),
-                cursorPosition: { lineNumber: 1, column: 1 },
-                workspaceId: activeWorkspaceId || ''
-            };
-        }
-        // Plaintext fallback
-        let title = urlIdentifier.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        if (!title || title.length > 50) title = 'Untitled Tab';
-        return {
-            id: crypto.randomUUID(),
-            title: title,
-            content: '',
-            language: 'plaintext',
-            languageLocked: false,
-            lastModified: Date.now(),
-            dateCreated: Date.now(),
-            cursorPosition: { lineNumber: 1, column: 1 },
-            isTablet: false,
-            workspaceId: activeWorkspaceId || ''
-        };
-    }
-
     // 4. Activate tab on correct side
     function activateTab(tab: Tab, side: 'left' | 'right' | null) {
         if (side === 'left') {
@@ -192,13 +134,19 @@ export const useUrlTabHandler = () => {
         const targetTabId = getTargetTabId();
         const targetTab = targetTabId ? tabs.find(t => t.id === targetTabId) : undefined;
         const targetUrlIdentifier = generateUrlIdentifier(targetTab);
-        return targetUrlIdentifier ? `/${targetUrlIdentifier}` : '/';
+        const targetPath = targetUrlIdentifier ? `/${targetUrlIdentifier}` : '/';
+        return targetPath;
     }
 
     // --- Effects ---
 
     // Effect 1: Handles STATE changes, updates URL
     useEffect(() => {
+        // Completely disable URL handler when workspace is loading
+        if (isLoading || !initialUrlProcessed) {
+            return;
+        }
+
         if (isProcessingUrlChange.current) {
             return; // Don't run if the other effect is actively processing a URL change
         }
@@ -213,30 +161,32 @@ export const useUrlTabHandler = () => {
             if (targetPath !== currentPath) {
                 isUserNavigation.current = false; // Mark as app navigation BEFORE navigating
                 navigate(targetPath, { replace: true });
-                // No need for a timeout to reset isUserNavigation here, the URL effect handles it
             }
             stateUpdateTimeout.current = null; // Clear timeout reference
-        }, 150); // Slightly increased debounce
+        }, 150);
 
-    }, [activeLeftTabId, activeRightTabId, isSplit, activeSide, tabs, leftTabs, rightTabs, activeWorkspaceId, navigate, location.pathname, getTargetPath]); // Added navigate, location.pathname, getTargetPath
+    }, [activeLeftTabId, activeRightTabId, isSplit, activeSide, tabs, isLoading, initialUrlProcessed]); // Add the new flag to the dependency array.
 
 
     // Effect 2: Handles URL changes, updates STATE
     useEffect(() => {
-        // If it's the initial render, just set the prev ref
+        // Wait for workspace/tabs to finish loading before processing initial URL
+        if (isLoading || !initialUrlProcessed) {
+            return;
+        }
+
+        // If it's the initial render, just update the ref and return
         if (initialRender.current) {
             initialRender.current = false;
             prevUrlIdentifierParamRef.current = urlIdentifierParam;
-             // Let state effect handle initial sync if needed
             return;
         }
 
         // If the URL param hasn't actually changed, do nothing
         if (urlIdentifierParam === prevUrlIdentifierParamRef.current) {
-             return;
+            return;
         }
 
-        // --- This is the crucial part ---
         // If isUserNavigation is false, it means the state effect just caused the navigation.
         // We should only update the prev ref and reset the flag.
         if (!isUserNavigation.current) {
@@ -248,8 +198,8 @@ export const useUrlTabHandler = () => {
         // --- If we reach here, it's a USER navigation to a NEW URL ---
         isProcessingUrlChange.current = true; // Prevent state effect from interfering
         if (stateUpdateTimeout.current) {
-             clearTimeout(stateUpdateTimeout.current); // Cancel pending state updates
-             stateUpdateTimeout.current = null;
+            clearTimeout(stateUpdateTimeout.current); // Cancel pending state updates
+            stateUpdateTimeout.current = null;
         }
 
         // 1. Try to find existing tab matching the new URL
@@ -258,29 +208,27 @@ export const useUrlTabHandler = () => {
         if (tab) {
             activateTab(tab, side);
         } else if (urlIdentifierParam) {
-            // Prevent creation if no tabs exist (e.g., after closing last tab and URL is '/')
-            if (tabs.length === 0 && !urlIdentifierParam) {
-//                  console.log('[URL Effect] No tabs exist and URL is root, doing nothing.');
-            } else {
-                // 2. Try to create a new tab (Tablet, Language, or Plaintext)
-                const newTab = createNewTabFromUrl(urlIdentifierParam);
-                // Determine which side to add to (default to left or based on current focus?)
-                const targetSide = isSplit && activeSide === 'right' ? 'right' : 'left';
-                addTab(newTab, targetSide === 'right');
-                activateTab(newTab, targetSide); // Activate the newly created tab
+            // No existing tab found, create a new one
+            const { activeWorkspaceId } = useWorkspaceStore.getState();
+            if (activeWorkspaceId) {
+                createNewTabFromUrl(urlIdentifierParam, activeWorkspaceId).then(newTab => {
+                    const { addTab, setActiveLeftTab, setActiveSide } = useRootStore.getState();
+                    addTab(newTab, false);
+                    setActiveLeftTab(newTab.id);
+                    setActiveSide('left');
+                }).catch(error => {
+                    console.error('[useUrlTabHandler] Failed to create tab:', error);
+                });
             }
-        } else {
-             // This handles navigation to '/'
         }
 
         prevUrlIdentifierParamRef.current = urlIdentifierParam; // Update prev ref
         // Use a shorter timeout here just to release the lock
         setTimeout(() => {
-             isProcessingUrlChange.current = false;
-         }, 50);
+            isProcessingUrlChange.current = false;
+        }, 50);
 
-    }, [urlIdentifierParam]); // Rerun only when the urlIdentifierParam changes
-
+    }, [urlIdentifierParam, isLoading, initialUrlProcessed]); // Add the new flag to the dependency array.
 
     // Cleanup
     useEffect(() => {
@@ -290,4 +238,103 @@ export const useUrlTabHandler = () => {
             }
         };
     }, []);
+};
+
+// Helper function to create a new tab from URL identifier
+const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): Promise<Tab> => {
+    // Language
+    const language = languageRegistry.getById(urlIdentifier);
+    if (language) {
+        return {
+            id: crypto.randomUUID(),
+            title: `New ${urlIdentifier} Tab`,
+            content: language.sampleContent ? language.sampleContent() : '',
+            language: urlIdentifier,
+            languageLocked: true,
+            lastModified: Date.now(),
+            dateCreated: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+            isTablet: false,
+            workspaceId: workspaceId || ''
+        };
+    }
+    // Tablet - match against both ID and converted label
+    const tabletInfo = tabletMetadata.find(t => 
+        t.id === urlIdentifier || labelToUrlIdentifier(t.label) === urlIdentifier
+    );
+    if (tabletInfo) {
+        // Load the tablet implementation like TabletSelector does
+        const { dynamicTabletRegistry } = await import('../tablets/dynamicRegistry');
+        const tablet = await dynamicTabletRegistry.getById(tabletInfo.id);
+        if (tablet) {
+            // Create proper initial state like TabletSelector
+            const state = tablet.createInitialState();
+            const serializedState = tablet.serializeState ? tablet.serializeState(state) : JSON.stringify(state);
+            
+            return {
+                id: crypto.randomUUID(),
+                title: tablet.label,
+                content: '',
+                language: 'plaintext',
+                languageLocked: true,
+                isTablet: true,
+                tabletState: serializedState,
+                lastModified: Date.now(),
+                dateCreated: Date.now(),
+                cursorPosition: { lineNumber: 1, column: 1 },
+                workspaceId: workspaceId || ''
+            };
+        }
+    }
+    // Plaintext fallback
+    let title = urlIdentifier.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    if (!title || title.length > 50) title = 'Untitled Tab';
+    return {
+        id: crypto.randomUUID(),
+        title: title,
+        content: '',
+        language: 'plaintext',
+        languageLocked: false,
+        lastModified: Date.now(),
+        dateCreated: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 },
+        isTablet: false,
+        workspaceId: workspaceId || ''
+    };
+};
+
+// Guard to prevent multiple executions
+let handleInitialUrlExecuted = false;
+
+export const handleInitialUrl = async () => {
+    // Prevent multiple executions
+    if (handleInitialUrlExecuted) {
+        return;
+    }
+    handleInitialUrlExecuted = true;
+    
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    if (pathSegments.length > 0) {
+        const urlIdentifier = pathSegments[0];
+
+        const { tabs, setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
+        const { activeWorkspaceId } = useWorkspaceStore.getState();
+
+        const existingTab = tabs.find(tab => generateUrlIdentifier(tab) === urlIdentifier);
+
+        if (existingTab) {
+            setActiveLeftTab(existingTab.id);
+        } else if (activeWorkspaceId && urlIdentifier) {
+            // If no tab exists for this URL, create a new one.
+            // createNewTabFromUrl will correctly handle language, tablet, or plaintext.
+            const newTab = await createNewTabFromUrl(urlIdentifier, activeWorkspaceId);
+            addTab(newTab, false);
+            setActiveLeftTab(newTab.id);
+        }
+
+        setInitialUrlProcessed(true);
+    } else {
+        // If there's no URL param, we can immediately say we're done.
+        useRootStore.getState().setInitialUrlProcessed(true);
+    }
 };

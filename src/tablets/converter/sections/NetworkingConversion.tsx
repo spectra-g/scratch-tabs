@@ -5,23 +5,39 @@ import punycode from 'punycode';
 
 interface Props {
   searchQuery: string;
+  data?: { inputs: Record<string, string> };
+  onDataChange?: (data: { inputs: Record<string, string> }) => void;
 }
 
-export const NetworkingConversion: React.FC<Props> = ({ searchQuery }) => {
-  const [cidrInput, setCidrInput] = useState('');
-  const [domainInput, setDomainInput] = useState('');
+export const NetworkingConversion: React.FC<Props> = ({ searchQuery, data, onDataChange }) => {
+  const [cidrInput, setCidrInput] = useState(data?.inputs?.cidrInput || '');
+  const [domainInput, setDomainInput] = useState(data?.inputs?.domainInput || '');
+
+  const handleCidrInputChange = (value: string) => {
+    setCidrInput(value);
+    onDataChange?.({ inputs: { ...data?.inputs, cidrInput: value } });
+  };
+
+  const handleDomainInputChange = (value: string) => {
+    setDomainInput(value);
+    onDataChange?.({ inputs: { ...data?.inputs, domainInput: value } });
+  };
 
   const calculateCIDR = (input: string) => {
     try {
       const [ip, prefix] = input.split('/');
       const prefixNum = parseInt(prefix);
       
+      if (!ip || !prefix) {
+        throw new Error('Invalid CIDR format. Use format: IP/PREFIX (e.g., 192.168.1.0/24)');
+      }
+      
       if (!ip.match(/^(\d{1,3}\.){3}\d{1,3}$/)) {
         throw new Error('Invalid IP address format');
       }
       
       if (isNaN(prefixNum) || prefixNum < 0 || prefixNum > 32) {
-        throw new Error('Invalid prefix length');
+        throw new Error('Invalid prefix length (must be 0-32)');
       }
 
       const ipParts = ip.split('.').map(Number);
@@ -30,14 +46,38 @@ export const NetworkingConversion: React.FC<Props> = ({ searchQuery }) => {
       const networkBinary = ipBinary.slice(0, prefixNum).padEnd(32, '0');
       const broadcastBinary = ipBinary.slice(0, prefixNum).padEnd(32, '1');
       
-      const networkAddress = networkBinary.match(/.{8}/g)!.map(bin => parseInt(bin, 2)).join('.');
-      const broadcastAddress = broadcastBinary.match(/.{8}/g)!.map(bin => parseInt(bin, 2)).join('.');
+      // Convert binary to IP address with null checks
+      const networkMatch = networkBinary.match(/.{8}/g);
+      const broadcastMatch = broadcastBinary.match(/.{8}/g);
+      
+      if (!networkMatch || !broadcastMatch) {
+        throw new Error('Error processing binary conversion');
+      }
+      
+      const networkAddress = networkMatch.map(bin => parseInt(bin, 2)).join('.');
+      const broadcastAddress = broadcastMatch.map(bin => parseInt(bin, 2)).join('.');
       
       const numHosts = Math.pow(2, 32 - prefixNum) - 2;
-      const firstHost = networkBinary === broadcastBinary ? networkAddress :
-        networkBinary.slice(0, -1) + '1'.match(/.{8}/g)!.map(bin => parseInt(bin, 2)).join('.');
-      const lastHost = networkBinary === broadcastBinary ? broadcastAddress :
-        broadcastBinary.slice(0, -1) + '0'.match(/.{8}/g)!.map(bin => parseInt(bin, 2)).join('.');
+      
+      // Calculate first and last host addresses
+      let firstHost = networkAddress;
+      let lastHost = broadcastAddress;
+      
+      if (networkBinary !== broadcastBinary) {
+        // First host: network address + 1
+        const firstHostBinary = networkBinary.slice(0, -1) + '1';
+        const firstHostMatch = firstHostBinary.match(/.{8}/g);
+        if (firstHostMatch) {
+          firstHost = firstHostMatch.map(bin => parseInt(bin, 2)).join('.');
+        }
+        
+        // Last host: broadcast address - 1
+        const lastHostBinary = broadcastBinary.slice(0, -1) + '0';
+        const lastHostMatch = lastHostBinary.match(/.{8}/g);
+        if (lastHostMatch) {
+          lastHost = lastHostMatch.map(bin => parseInt(bin, 2)).join('.');
+        }
+      }
 
       return {
         'Network Address': networkAddress,
@@ -88,7 +128,7 @@ export const NetworkingConversion: React.FC<Props> = ({ searchQuery }) => {
         <>
           <ConversionInput
             value={cidrInput}
-            onChange={setCidrInput}
+            onChange={handleCidrInputChange}
             placeholder="Enter CIDR notation (e.g., 192.168.1.0/24)"
             rows={1}
           />
@@ -115,7 +155,7 @@ export const NetworkingConversion: React.FC<Props> = ({ searchQuery }) => {
         <>
           <ConversionInput
             value={domainInput}
-            onChange={setDomainInput}
+            onChange={handleDomainInputChange}
             placeholder="Enter domain name (Unicode or Punycode)"
             rows={1}
           />
