@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Plus, Trash2, Check, X } from 'lucide-react';
 import { KeyValuePair } from '../types';
 import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';

@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 
+src/components/AI/
+src/components/BatchTools/
+
 src/languages/json/components/JsonTreeView/
 src/languages/json/hooks/
 src/languages/json/utils/
