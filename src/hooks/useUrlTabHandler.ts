@@ -4,7 +4,12 @@ import { useRootStore } from '../stores/rootStore';
 import { useWorkspaceStore } from '../stores/workspaceStore';
 import { Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
-import { tabletRegistry } from '../tablets/registry';
+import { tabletMetadata } from '../tablets/tabletMetadata';
+
+// Helper function to convert a label to URL identifier format
+const labelToUrlIdentifier = (label: string): string => {
+    return label.toLowerCase().replace(/\s+/g, '-');
+};
 
 /**
  * Generates a URL-friendly identifier from a tab title or uses the tab ID as a fallback.
@@ -14,9 +19,12 @@ import { tabletRegistry } from '../tablets/registry';
 const generateUrlIdentifier = (tab: Tab | undefined): string => {
     if (!tab) return '';
 
-    // For tablets, use the tablet ID
+    // For tablets, use the label converted to URL format
     if (tab.isTablet) {
-        return tab.title.toLowerCase().replace(/\s+/g, '-');
+        const tabletInfo = tabletMetadata.find(t => t.label.toLowerCase() === tab.title.toLowerCase());
+        if (tabletInfo) {
+            return labelToUrlIdentifier(tabletInfo.label);
+        }
     }
 
     // For language tabs, use the language name
@@ -204,6 +212,20 @@ export const useUrlTabHandler = () => {
 
         if (tab) {
             activateTab(tab, side);
+        } else if (urlIdentifierParam) {
+            // No existing tab found, create a new one
+            const { activeWorkspaceId } = useWorkspaceStore.getState();
+            if (activeWorkspaceId) {
+                console.log('[useUrlTabHandler] Creating new tab for user navigation:', urlIdentifierParam);
+                createNewTabFromUrl(urlIdentifierParam, activeWorkspaceId).then(newTab => {
+                    const { addTab, setActiveLeftTab, setActiveSide } = useRootStore.getState();
+                    addTab(newTab, false);
+                    setActiveLeftTab(newTab.id);
+                    setActiveSide('left');
+                }).catch(error => {
+                    console.error('[useUrlTabHandler] Failed to create tab:', error);
+                });
+            }
         }
 
         prevUrlIdentifierParamRef.current = urlIdentifierParam; // Update prev ref
@@ -225,10 +247,14 @@ export const useUrlTabHandler = () => {
 };
 
 // Helper function to create a new tab from URL identifier
-const createNewTabFromUrl = (urlIdentifier: string, workspaceId: string): Tab => {
+const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): Promise<Tab> => {
+    console.log('[createNewTabFromUrl] Creating tab for:', urlIdentifier);
+    
     // Language
     const language = languageRegistry.getById(urlIdentifier);
+    console.log('[createNewTabFromUrl] Language found:', !!language);
     if (language) {
+        console.log('[createNewTabFromUrl] Creating language tab');
         return {
             id: crypto.randomUUID(),
             title: `New ${urlIdentifier} Tab`,
@@ -242,25 +268,38 @@ const createNewTabFromUrl = (urlIdentifier: string, workspaceId: string): Tab =>
             workspaceId: workspaceId || ''
         };
     }
-    // Tablet
-    const tablet = tabletRegistry.getById(urlIdentifier);
-    if (tablet) {
-        const state = tablet.createInitialState();
-        return {
-            id: crypto.randomUUID(),
-            title: tablet.label,
-            content: '',
-            language: 'plaintext',
-            languageLocked: true,
-            isTablet: true,
-            tabletState: tablet.serializeState(state),
-            lastModified: Date.now(),
-            dateCreated: Date.now(),
-            cursorPosition: { lineNumber: 1, column: 1 },
-            workspaceId: workspaceId || ''
-        };
+    // Tablet - match against both ID and converted label
+    const tabletInfo = tabletMetadata.find(t => 
+        t.id === urlIdentifier || labelToUrlIdentifier(t.label) === urlIdentifier
+    );
+    console.log('[createNewTabFromUrl] Tablet info found:', !!tabletInfo);
+    if (tabletInfo) {
+        console.log('[createNewTabFromUrl] Creating tablet tab');
+        // Load the tablet implementation like TabletSelector does
+        const { dynamicTabletRegistry } = await import('../tablets/dynamicRegistry');
+        const tablet = await dynamicTabletRegistry.getById(tabletInfo.id);
+        if (tablet) {
+            // Create proper initial state like TabletSelector
+            const state = tablet.createInitialState();
+            const serializedState = tablet.serializeState ? tablet.serializeState(state) : JSON.stringify(state);
+            
+            return {
+                id: crypto.randomUUID(),
+                title: tablet.label,
+                content: '',
+                language: 'plaintext',
+                languageLocked: true,
+                isTablet: true,
+                tabletState: serializedState,
+                lastModified: Date.now(),
+                dateCreated: Date.now(),
+                cursorPosition: { lineNumber: 1, column: 1 },
+                workspaceId: workspaceId || ''
+            };
+        }
     }
     // Plaintext fallback
+    console.log('[createNewTabFromUrl] Using plaintext fallback');
     let title = urlIdentifier.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     if (!title || title.length > 50) title = 'Untitled Tab';
     return {
@@ -277,26 +316,45 @@ const createNewTabFromUrl = (urlIdentifier: string, workspaceId: string): Tab =>
     };
 };
 
-export const handleInitialUrl = () => {
+// Guard to prevent multiple executions
+let handleInitialUrlExecuted = false;
+
+export const handleInitialUrl = async () => {
+    console.log('[handleInitialUrl] Called');
+    
+    // Prevent multiple executions
+    if (handleInitialUrlExecuted) {
+        console.log('[handleInitialUrl] Already executed, skipping');
+        return;
+    }
+    handleInitialUrlExecuted = true;
+    
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
     if (pathSegments.length > 0) {
         const urlIdentifier = pathSegments[0];
+        console.log('[handleInitialUrl] URL identifier:', urlIdentifier);
 
         const { tabs, setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
         const { activeWorkspaceId } = useWorkspaceStore.getState();
 
         const existingTab = tabs.find(tab => generateUrlIdentifier(tab) === urlIdentifier);
+        console.log('[handleInitialUrl] Existing tab found:', !!existingTab);
 
         if (existingTab) {
             setActiveLeftTab(existingTab.id);
-        } else if (activeWorkspaceId) {
-            const newTab = createNewTabFromUrl(urlIdentifier, activeWorkspaceId);
+        } else if (activeWorkspaceId && urlIdentifier) {
+            console.log('[handleInitialUrl] Creating new tab for:', urlIdentifier);
+            // If no tab exists for this URL, create a new one.
+            // createNewTabFromUrl will correctly handle language, tablet, or plaintext.
+            const newTab = await createNewTabFromUrl(urlIdentifier, activeWorkspaceId);
+            console.log('[handleInitialUrl] New tab created:', newTab.title, 'language:', newTab.language, 'isTablet:', newTab.isTablet);
             addTab(newTab, false);
+            console.log('[handleInitialUrl] Tab added to store');
+            setActiveLeftTab(newTab.id);
+            console.log('[handleInitialUrl] Tab set as active:', newTab.id);
         }
 
-        // Instead of a timeout, we now set a state flag.
         setInitialUrlProcessed(true);
-
     } else {
         // If there's no URL param, we can immediately say we're done.
         useRootStore.getState().setInitialUrlProcessed(true);
