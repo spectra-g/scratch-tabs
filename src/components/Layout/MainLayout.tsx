@@ -1,35 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import { useRootStore } from '../../stores';
-import { useSearchStore } from '../../stores/searchStore';
-import { WelcomeScreen } from '../Welcome/WelcomeScreen';
-import { EditorPaneWrapper } from '../Editor/EditorPaneWrapper';
-import { TabBar } from '../Tab/TabBar';
-import { DiffModal } from '../DiffModal';
-import { SummarizeModal } from '../AI/SummarizeModal';
-import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
-import { SplitViewDivider } from "../SplitView/SplitViewDivider.tsx";
-import { useUrlTabHandler } from '../../hooks/useUrlTabHandler';
+import { useRootStore } from '../../stores/rootStore';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { usePersistenceStore } from '../../stores/persistenceStore';
+import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
+import { useUrlTabHandler, handleInitialUrl } from '../../hooks/useUrlTabHandler';
+import { useSearchStore } from '../../stores/searchStore';
+import { WelcomeScreen } from '../Welcome/WelcomeScreen';
+import { TabBar } from '../Tab/TabBar';
+import { EditorPaneWrapper } from '../Editor/EditorPaneWrapper';
+import { SplitViewDivider } from '../SplitView/SplitViewDivider';
+import { DiffModal } from '../DiffModal';
+import { SummarizeModal } from '../AI/SummarizeModal';
 import { SearchModal } from '../Search/SearchModal';
 
 const MainLayout: React.FC = () => {
   const {
     tabs,
-    splitView,
-    setSplitRatio,
     activeLeftTabId,
     activeRightTabId,
     saveTabDataById,
+    setActiveLeftTab,
+    splitView,
+    setSplitRatio,
   } = useRootStore(state => ({
-      tabs: state.tabs,
-      splitView: state.splitView,
-      setSplitRatio: state.setSplitRatio,
-      activeLeftTabId: state.splitView?.activeLeftTabId,
-      activeRightTabId: state.splitView?.activeRightTabId,
-      saveTabDataById: state.saveTabDataById,
+    tabs: state.tabs,
+    activeLeftTabId: state.splitView?.activeLeftTabId,
+    activeRightTabId: state.splitView?.activeRightTabId,
+    saveTabDataById: state.saveTabDataById,
+    setActiveLeftTab: state.setActiveLeftTab,
+    splitView: state.splitView,
+    setSplitRatio: state.setSplitRatio,
   }));
 
+  const { loadWorkspaces, workspaces } = useWorkspaceStore();
+  const { saveState } = usePersistenceStore(); // Get saveState function
+  const [isAppInitialized, setIsAppInitialized] = useState(false);
 
   function setRealHeight() {
     document.documentElement.style.setProperty('--real-vh', `${window.innerHeight * 0.01}px`);
@@ -37,19 +42,19 @@ const MainLayout: React.FC = () => {
   window.addEventListener('resize', setRealHeight);
   setRealHeight();
 
-  const { loadWorkspaces } = useWorkspaceStore();
-  const { saveState } = usePersistenceStore(); // Get saveState function
-  const [isAppInitialized, setIsAppInitialized] = useState(false);
-
   // Initialize workspace store
   useEffect(() => {
     loadWorkspaces().then(() => {
       setIsAppInitialized(true);
+      
+      // CHANGE: The logic is replaced by a single, clean function call.
+      handleInitialUrl();
+
     }).catch(error => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
-      setIsAppInitialized(true); // Still mark as initialized to allow rendering (even if error state)
+      setIsAppInitialized(true);
     });
-  }, [loadWorkspaces]);
+  }, [loadWorkspaces]); // The dependency array is now correct.
 
      useEffect(() => {
        const saveInterval = setInterval(() => {
@@ -91,62 +96,34 @@ const MainLayout: React.FC = () => {
   const handleOpenDiffModal = (fromHistory?: boolean, explicitSide?: 'left' | 'right', explicitTabId?: string) => {
     const currentSplitView = useRootStore.getState().splitView;
     
-    if (fromHistory) {
-      // Determine which side we're on based on explicit side or current state
-      const isRightSide = explicitSide ? explicitSide === 'right' : currentSplitView.rightTabs.includes(currentSplitView.activeRightTabId || '');
-      const history = isRightSide ? currentSplitView.rightTabHistory : currentSplitView.leftTabHistory;
+    // If we have an explicit tab ID, use it on the appropriate side
+    let leftTabId = currentSplitView.activeLeftTabId;
+    let rightTabId = currentSplitView.activeRightTabId;
+    
+    if (explicitTabId) {
+      // If explicit side provided, use it on that side
+      if (explicitSide === 'left') {
+        leftTabId = explicitTabId;
+      } else if (explicitSide === 'right') {
+        rightTabId = explicitTabId;
+      } else {
+        // No side specified - determine based on which side contains the tab
+        const isInLeftSide = currentSplitView.leftTabs.includes(explicitTabId);
+        const isInRightSide = currentSplitView.rightTabs.includes(explicitTabId);
 
-      // Always use the explicit tab ID when provided
-      const currentTabId = explicitTabId || (isRightSide ? currentSplitView.activeRightTabId : currentSplitView.activeLeftTabId);
-
-      if (history && history.length >= 2 && currentTabId) {
-        // Get the previous tab from history that isn't the current tab
-        let previousTabId = null;
-        for (let i = 0; i < history.length; i++) {
-          if (history[i] !== currentTabId) {
-            previousTabId = history[i];
-            break;
-          }
-        }
-
-        if (previousTabId) {
-          setDiffModal({
-            leftTabId: isRightSide ? previousTabId : currentTabId,
-            rightTabId: isRightSide ? currentTabId : previousTabId,
-            fromHistory: true
-          });
-        }
-      }
-    } else {
-      // If we have an explicit tab ID, use it on the appropriate side
-      let leftTabId = currentSplitView.activeLeftTabId;
-      let rightTabId = currentSplitView.activeRightTabId;
-      
-      if (explicitTabId) {
-        // If explicit side provided, use it on that side
-        if (explicitSide === 'left') {
+        if (isInLeftSide) {
           leftTabId = explicitTabId;
-        } else if (explicitSide === 'right') {
+        } else if (isInRightSide) {
           rightTabId = explicitTabId;
-        } else {
-          // No side specified - determine based on which side contains the tab
-          const isInLeftSide = currentSplitView.leftTabs.includes(explicitTabId);
-          const isInRightSide = currentSplitView.rightTabs.includes(explicitTabId);
-
-          if (isInLeftSide) {
-            leftTabId = explicitTabId;
-          } else if (isInRightSide) {
-            rightTabId = explicitTabId;
-          }
         }
       }
-      
-      setDiffModal({
-        leftTabId: leftTabId,
-        rightTabId: rightTabId,
-        fromHistory: false
-      });
     }
+    
+    setDiffModal({
+      leftTabId: leftTabId,
+      rightTabId: rightTabId,
+      fromHistory: false
+    });
   };
 
   const handleCloseDiffModal = () => {
@@ -238,7 +215,7 @@ const MainLayout: React.FC = () => {
         ref={containerRef}
         className="flex w-full h-full overflow-hidden"
       >
-        {tabs.length === 0 ? (
+        {tabs.length === 0 && workspaces.length === 0 ? (
           <WelcomeScreen/>
         ) : (
           <>
