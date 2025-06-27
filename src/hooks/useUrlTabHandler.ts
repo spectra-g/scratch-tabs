@@ -13,17 +13,17 @@ import { tabletRegistry } from '../tablets/registry';
  */
 const generateUrlIdentifier = (tab: Tab | undefined): string => {
     if (!tab) return '';
-    
+
     // For tablets, use the tablet ID
     if (tab.isTablet) {
         return tab.title.toLowerCase().replace(/\s+/g, '-');
     }
-    
+
     // For language tabs, use the language name
     if (tab.language && tab.language !== 'plaintext') {
         return tab.language.toLowerCase();
     }
-    
+
     // For other tabs, use a slugified version of the title
     return tab.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 };
@@ -40,7 +40,6 @@ export const useUrlTabHandler = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Zustand stores
     const {
         tabs,
         activeLeftTabId,
@@ -51,6 +50,8 @@ export const useUrlTabHandler = () => {
         setActiveRightTab,
         setActiveSide,
         splitView,
+        // MODIFIED: We now get the new state from the store.
+        initialUrlProcessed,
     } = useRootStore(state => ({
         tabs: state.tabs,
         activeLeftTabId: state.splitView?.activeLeftTabId,
@@ -61,8 +62,10 @@ export const useUrlTabHandler = () => {
         setActiveRightTab: state.setActiveRightTab,
         setActiveSide: state.setActiveSide,
         splitView: state.splitView,
+        // Get the new flag from the store
+        initialUrlProcessed: state.initialUrlProcessed,
     }));
-    const { activeWorkspaceId, isLoading } = useWorkspaceStore();
+    const { isLoading } = useWorkspaceStore();
 
     // Split view helpers
     const leftTabs = splitView?.leftTabs || [];
@@ -138,14 +141,7 @@ export const useUrlTabHandler = () => {
     // Effect 1: Handles STATE changes, updates URL
     useEffect(() => {
         // Completely disable URL handler when workspace is loading
-        if (isLoading) {
-            console.log('[URL Effect 1] Workspace loading, skipping URL handler');
-            // Clear any pending timeouts to prevent them from executing after loading
-            if (stateUpdateTimeout.current) {
-                clearTimeout(stateUpdateTimeout.current);
-                stateUpdateTimeout.current = null;
-                console.log('[URL Effect 1] Cleared pending timeout due to loading');
-            }
+        if (isLoading || !initialUrlProcessed) {
             return;
         }
 
@@ -188,17 +184,16 @@ export const useUrlTabHandler = () => {
             stateUpdateTimeout.current = null; // Clear timeout reference
         }, 150);
 
-    }, [activeLeftTabId, activeRightTabId, isSplit, activeSide, tabs, leftTabs, activeWorkspaceId, navigate, location.pathname, getTargetPath, isLoading]);
+    }, [activeLeftTabId, activeRightTabId, isSplit, activeSide, tabs, isLoading, initialUrlProcessed]); // Add the new flag to the dependency array.
 
 
     // Effect 2: Handles URL changes, updates STATE
     useEffect(() => {
         // Wait for workspace/tabs to finish loading before processing initial URL
-        if (isLoading) {
-            console.log('[URL Effect 2] Workspace/tabs still loading, skipping URL processing');
+        if (isLoading || !initialUrlProcessed) {
             return;
         }
-        
+
         console.log('[URL Effect 2] URL → State triggered', {
             urlIdentifierParam,
             prevUrlIdentifierParam: prevUrlIdentifierParamRef.current,
@@ -235,9 +230,9 @@ export const useUrlTabHandler = () => {
         console.log('[URL Effect 2] User navigation detected, processing URL change');
         isProcessingUrlChange.current = true; // Prevent state effect from interfering
         if (stateUpdateTimeout.current) {
-             console.log('[URL Effect 2] Cancelling pending state update');
-             clearTimeout(stateUpdateTimeout.current); // Cancel pending state updates
-             stateUpdateTimeout.current = null;
+            console.log('[URL Effect 2] Cancelling pending state update');
+            clearTimeout(stateUpdateTimeout.current); // Cancel pending state updates
+            stateUpdateTimeout.current = null;
         }
 
         // 1. Try to find existing tab matching the new URL
@@ -256,18 +251,18 @@ export const useUrlTabHandler = () => {
                 console.log('[URL Effect 2] Tab creation handled by MainLayout, skipping');
             }
         } else {
-             console.log('[URL Effect 2] Handling navigation to root');
-             // This handles navigation to '/'
+            console.log('[URL Effect 2] Handling navigation to root');
+            // This handles navigation to '/'
         }
 
         prevUrlIdentifierParamRef.current = urlIdentifierParam; // Update prev ref
         // Use a shorter timeout here just to release the lock
         setTimeout(() => {
-             console.log('[URL Effect 2] Releasing processing lock');
-             isProcessingUrlChange.current = false;
-         }, 50);
+            console.log('[URL Effect 2] Releasing processing lock');
+            isProcessingUrlChange.current = false;
+        }, 50);
 
-    }, [urlIdentifierParam, isLoading]); // Add isLoading as a dependency
+    }, [urlIdentifierParam, isLoading, initialUrlProcessed]); // Add the new flag to the dependency array.
 
     // Monitor active tab changes
     useEffect(() => {
@@ -292,76 +287,79 @@ export const useUrlTabHandler = () => {
 
 // Helper function to create a new tab from URL identifier
 const createNewTabFromUrl = (urlIdentifier: string, workspaceId: string): Tab => {
-  // Language
-  const language = languageRegistry.getById(urlIdentifier);
-  if (language) {
+    // Language
+    const language = languageRegistry.getById(urlIdentifier);
+    if (language) {
+        return {
+            id: crypto.randomUUID(),
+            title: `New ${urlIdentifier} Tab`,
+            content: language.sampleContent ? language.sampleContent() : '',
+            language: urlIdentifier,
+            languageLocked: true,
+            lastModified: Date.now(),
+            dateCreated: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+            isTablet: false,
+            workspaceId: workspaceId || ''
+        };
+    }
+    // Tablet
+    const tablet = tabletRegistry.getById(urlIdentifier);
+    if (tablet) {
+        const state = tablet.createInitialState();
+        return {
+            id: crypto.randomUUID(),
+            title: tablet.label,
+            content: '',
+            language: 'plaintext',
+            languageLocked: true,
+            isTablet: true,
+            tabletState: tablet.serializeState(state),
+            lastModified: Date.now(),
+            dateCreated: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+            workspaceId: workspaceId || ''
+        };
+    }
+    // Plaintext fallback
+    let title = urlIdentifier.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    if (!title || title.length > 50) title = 'Untitled Tab';
     return {
-      id: crypto.randomUUID(),
-      title: `New ${urlIdentifier} Tab`,
-      content: language.sampleContent ? language.sampleContent() : '',
-      language: urlIdentifier,
-      languageLocked: true,
-      lastModified: Date.now(),
-      dateCreated: Date.now(),
-      cursorPosition: { lineNumber: 1, column: 1 },
-      isTablet: false,
-      workspaceId: workspaceId || ''
+        id: crypto.randomUUID(),
+        title: title,
+        content: '',
+        language: 'plaintext',
+        languageLocked: false,
+        lastModified: Date.now(),
+        dateCreated: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 },
+        isTablet: false,
+        workspaceId: workspaceId || ''
     };
-  }
-  // Tablet
-  const tablet = tabletRegistry.getById(urlIdentifier);
-  if (tablet) {
-    const state = tablet.createInitialState();
-    return {
-      id: crypto.randomUUID(),
-      title: tablet.label,
-      content: '',
-      language: 'plaintext',
-      languageLocked: true,
-      isTablet: true,
-      tabletState: tablet.serializeState(state),
-      lastModified: Date.now(),
-      dateCreated: Date.now(),
-      cursorPosition: { lineNumber: 1, column: 1 },
-      workspaceId: workspaceId || ''
-    };
-  }
-  // Plaintext fallback
-  let title = urlIdentifier.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  if (!title || title.length > 50) title = 'Untitled Tab';
-  return {
-    id: crypto.randomUUID(),
-    title: title,
-    content: '',
-    language: 'plaintext',
-    languageLocked: false,
-    lastModified: Date.now(),
-    dateCreated: Date.now(),
-    cursorPosition: { lineNumber: 1, column: 1 },
-    isTablet: false,
-    workspaceId: workspaceId || ''
-  };
 };
 
 export const handleInitialUrl = () => {
-    // This is the exact logic from MainLayout's useEffect, now living in its proper home.
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
     if (pathSegments.length > 0) {
         const urlIdentifier = pathSegments[0];
-        
-        // We still need the timeout to preserve the working timing.
-        setTimeout(() => {
-            const { tabs, setActiveLeftTab, addTab } = useRootStore.getState();
-            const { activeWorkspaceId } = useWorkspaceStore.getState();
 
-            const existingTab = tabs.find(tab => generateUrlIdentifier(tab) === urlIdentifier);
-            
-            if (existingTab) {
-                setActiveLeftTab(existingTab.id);
-            } else if (activeWorkspaceId) {
-                const newTab = createNewTabFromUrl(urlIdentifier, activeWorkspaceId);
-                addTab(newTab, false);
-            }
-        }, 100);
+        const { tabs, setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
+        const { activeWorkspaceId } = useWorkspaceStore.getState();
+
+        const existingTab = tabs.find(tab => generateUrlIdentifier(tab) === urlIdentifier);
+
+        if (existingTab) {
+            setActiveLeftTab(existingTab.id);
+        } else if (activeWorkspaceId) {
+            const newTab = createNewTabFromUrl(urlIdentifier, activeWorkspaceId);
+            addTab(newTab, false);
+        }
+
+        // Instead of a timeout, we now set a state flag.
+        setInitialUrlProcessed(true);
+
+    } else {
+        // If there's no URL param, we can immediately say we're done.
+        useRootStore.getState().setInitialUrlProcessed(true);
     }
 };
