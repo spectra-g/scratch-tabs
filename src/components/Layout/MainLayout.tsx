@@ -44,22 +44,14 @@ const MainLayout: React.FC = () => {
 
   // Initialize workspace store
   useEffect(() => {
-    console.log('[MainLayout] useEffect triggered - starting workspace initialization');
     loadWorkspaces().then(async () => {
-      console.log('[MainLayout] Workspaces loaded successfully');
-      
-      console.log('[MainLayout] About to call handleInitialUrl');
       await handleInitialUrl();
-      console.log('[MainLayout] handleInitialUrl completed');
-      
-      console.log('[MainLayout] Setting isAppInitialized to true');
       setIsAppInitialized(true);
-
     }).catch(error => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
       setIsAppInitialized(true);
     });
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
      useEffect(() => {
        const saveInterval = setInterval(() => {
@@ -205,15 +197,7 @@ const MainLayout: React.FC = () => {
 
   useUrlTabHandler();
 
-  console.log('[MainLayout] Render - isAppInitialized:', isAppInitialized, 'tabs count:', tabs.length, 'workspaces count:', workspaces.length);
-  console.log('[MainLayout] Active tabs - left:', activeLeftTabId, 'right:', activeRightTabId, 'side:', activeSide);
-  
-  if (tabs.length > 0) {
-    console.log('[MainLayout] Current tabs:', tabs.map(t => ({ id: t.id, title: t.title, language: t.language, isTablet: t.isTablet })));
-  }
-
   if (!isAppInitialized) {
-    console.log('[MainLayout] App not initialized yet, showing loading screen');
     return (
       <div className="app-loading-container">
         <div className="app-loading-spinner"></div>
@@ -221,8 +205,6 @@ const MainLayout: React.FC = () => {
       </div>
     );
   }
-
-  console.log('[MainLayout] App initialized, rendering main layout');
 
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white">

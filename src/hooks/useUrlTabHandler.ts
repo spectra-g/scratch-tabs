@@ -216,7 +216,6 @@ export const useUrlTabHandler = () => {
             // No existing tab found, create a new one
             const { activeWorkspaceId } = useWorkspaceStore.getState();
             if (activeWorkspaceId) {
-                console.log('[useUrlTabHandler] Creating new tab for user navigation:', urlIdentifierParam);
                 createNewTabFromUrl(urlIdentifierParam, activeWorkspaceId).then(newTab => {
                     const { addTab, setActiveLeftTab, setActiveSide } = useRootStore.getState();
                     addTab(newTab, false);
@@ -248,13 +247,9 @@ export const useUrlTabHandler = () => {
 
 // Helper function to create a new tab from URL identifier
 const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): Promise<Tab> => {
-    console.log('[createNewTabFromUrl] Creating tab for:', urlIdentifier);
-    
     // Language
     const language = languageRegistry.getById(urlIdentifier);
-    console.log('[createNewTabFromUrl] Language found:', !!language);
     if (language) {
-        console.log('[createNewTabFromUrl] Creating language tab');
         return {
             id: crypto.randomUUID(),
             title: `New ${urlIdentifier} Tab`,
@@ -272,9 +267,7 @@ const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): 
     const tabletInfo = tabletMetadata.find(t => 
         t.id === urlIdentifier || labelToUrlIdentifier(t.label) === urlIdentifier
     );
-    console.log('[createNewTabFromUrl] Tablet info found:', !!tabletInfo);
     if (tabletInfo) {
-        console.log('[createNewTabFromUrl] Creating tablet tab');
         // Load the tablet implementation like TabletSelector does
         const { dynamicTabletRegistry } = await import('../tablets/dynamicRegistry');
         const tablet = await dynamicTabletRegistry.getById(tabletInfo.id);
@@ -299,7 +292,6 @@ const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): 
         }
     }
     // Plaintext fallback
-    console.log('[createNewTabFromUrl] Using plaintext fallback');
     let title = urlIdentifier.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     if (!title || title.length > 50) title = 'Untitled Tab';
     return {
@@ -320,11 +312,8 @@ const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): 
 let handleInitialUrlExecuted = false;
 
 export const handleInitialUrl = async () => {
-    console.log('[handleInitialUrl] Called');
-    
     // Prevent multiple executions
     if (handleInitialUrlExecuted) {
-        console.log('[handleInitialUrl] Already executed, skipping');
         return;
     }
     handleInitialUrlExecuted = true;
@@ -332,26 +321,20 @@ export const handleInitialUrl = async () => {
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
     if (pathSegments.length > 0) {
         const urlIdentifier = pathSegments[0];
-        console.log('[handleInitialUrl] URL identifier:', urlIdentifier);
 
         const { tabs, setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
         const { activeWorkspaceId } = useWorkspaceStore.getState();
 
         const existingTab = tabs.find(tab => generateUrlIdentifier(tab) === urlIdentifier);
-        console.log('[handleInitialUrl] Existing tab found:', !!existingTab);
 
         if (existingTab) {
             setActiveLeftTab(existingTab.id);
         } else if (activeWorkspaceId && urlIdentifier) {
-            console.log('[handleInitialUrl] Creating new tab for:', urlIdentifier);
             // If no tab exists for this URL, create a new one.
             // createNewTabFromUrl will correctly handle language, tablet, or plaintext.
             const newTab = await createNewTabFromUrl(urlIdentifier, activeWorkspaceId);
-            console.log('[handleInitialUrl] New tab created:', newTab.title, 'language:', newTab.language, 'isTablet:', newTab.isTablet);
             addTab(newTab, false);
-            console.log('[handleInitialUrl] Tab added to store');
             setActiveLeftTab(newTab.id);
-            console.log('[handleInitialUrl] Tab set as active:', newTab.id);
         }
 
         setInitialUrlProcessed(true);

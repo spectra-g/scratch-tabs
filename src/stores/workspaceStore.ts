@@ -109,7 +109,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           const newTabsToPreserve = currentTabs.filter(tab => !existingTabIds.has(tab.id));
           
           if (newTabsToPreserve.length > 0) {
-            console.log('[loadWorkspaces] Preserving', newTabsToPreserve.length, 'newly created tabs');
             // Merge loaded tabs with newly created tabs
             const mergedTabs = [...tabsToLoad, ...newTabsToPreserve];
             useTabsStore.setState({ tabs: mergedTabs });
@@ -129,7 +128,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             
             if (activeTabExists && workspaceSplitView) {
               workspaceSplitView.activeLeftTabId = currentActiveLeftTabId;
-              console.log('[loadWorkspaces] Preserving active tab (URL handler):', currentActiveLeftTabId);
               
               // Also ensure the active tab is in the left pane
               if (!workspaceSplitView.leftTabs.includes(currentActiveLeftTabId)) {
