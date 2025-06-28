@@ -1,7 +1,6 @@
 import { useRootStore } from "../../stores";
-import { useAIStore } from "../../stores/aiStore";
+import { useBatchToolsStore } from '../../stores/batchToolsStore';
 import {
-  Brain,
   ChevronLeft, ChevronLeftSquare, ChevronRight, ChevronRightSquare, Copy, Edit3, FileCode, GitCompare,
   Layers, Maximize, Split, XCircle, ClipboardPaste, Pin, Download, History, ExternalLink
 } from 'lucide-react';
@@ -41,7 +40,6 @@ export const useContextMenuConfig = (
   startEditingTab?: (tabId: string) => void
 ): UseContextMenuConfigReturn => {
   const store = useRootStore();
-  const { isReady: isAiReady, isLoading: isAiLoading } = useAIStore(state => state.ai);
 
   const [confirmationState, setConfirmationState] = useState<{
     type: 'close' | 'closeAllExcept' | 'closeTabsToLeft' | 'closeTabsToRight';
@@ -66,7 +64,6 @@ export const useContextMenuConfig = (
   const isPinned = tab?.isPinned || false;
   const canDownload = !!tab && !tab.isTablet;
   const canRename = !!tab;
-  const canSummarize = isAiReady && !isAiLoading && !!tab && !tab.isTablet && tab.content.trim().length > 0;
   const history = isRightSide ? store.splitView.rightTabHistory : store.splitView.leftTabHistory;
   const canCompareWithPrevious = history && history.length >= 2 && !tab?.isTablet;
   const canGroupTypes = (() => {
@@ -118,7 +115,7 @@ export const useContextMenuConfig = (
     setConfirmationState(null); // Hide dialog
     closeContextMenu(); // <<<< NOW close the context menu after the action is done
 
-  }, [confirmationState, store, isRightSide]);
+  }, []);
 
   const cancelConfirmation = useCallback(() => {
     setConfirmationState(null); // Hide dialog
@@ -149,10 +146,6 @@ export const useContextMenuConfig = (
       }
     }
     closeContextMenu();
-  };
-
-  const handleSummarize = async () => {
-    closeContextMenu('summary', tabId);
   };
 
   const handleCompareFromClipboard = async () => {
@@ -204,12 +197,6 @@ export const useContextMenuConfig = (
     // Note: handleOpenDownloadAllModal might call onClose itself, or we might need to.
     // For now, assuming it handles menu closure or the modal nature does. If not, add closeContextMenu().
   };
-
-  const getSummarizeLabel = () => {
-    if (isAiLoading) return "Initializing AI...";
-    if (!isAiReady) return "AI Not Ready";
-    return "Summarize";
-  }
 
   const generateGitHubIssueUrl = (tab: any) => {
     const title = `Tab Issue Report: ${tab.title || 'Untitled'}`;
@@ -271,13 +258,20 @@ Add any other context about the problem here.
     closeContextMenu();
   };
 
+  const handleOpenTransformations = () => {
+    if (tab && !tab.isTablet) {
+      useBatchToolsStore.getState().openModal(tab.content);
+    }
+    closeContextMenu();
+  };
+
   const menuItems: MenuItem[] = [
     {
-      id: 'summarize',
-      label: getSummarizeLabel(),
-      icon: Brain,
-      action: handleSummarize,
-      condition: canSummarize
+      id: 'transformations',
+      label: 'Transformations',
+      icon: Layers,
+      action: handleOpenTransformations,
+      condition: !!tab && !tab.isTablet,
     },
     {
       id: 'rename',

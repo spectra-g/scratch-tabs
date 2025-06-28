@@ -31,6 +31,8 @@ export interface SplitViewRecord {
   splitRatio: number;
   workspaceId: string;
   lastModified: number;
+  leftTabHistory: string[];
+  rightTabHistory: string[];
 }
 
 export interface SplitViewState {

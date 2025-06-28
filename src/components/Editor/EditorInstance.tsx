@@ -55,6 +55,16 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     isCodegenGenerating: state.ai.isCodegenGenerating,
   }));
 
+  const { 
+    isReady: isAiReady, 
+    isLoading: isAiLoading,
+    summarizeText 
+  } = useAIStore(state => ({
+    isReady: state.ai.isReady,
+    isLoading: state.ai.isLoading,
+    summarizeText: state.summarizeText,
+  }));
+
   const { openModal: openBatchToolsModal } = useBatchToolsStore();
 
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -155,8 +165,23 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     if (!editor || !monaco) return;
 
     const actionId = 'ai-generate-code';
+    const summarizeActionId = 'ai-summarize';
     
-    // Add the action and get the disposable
+    // Add the summarize action
+    const disposableSummarizeAction = editor.addAction({
+      id: summarizeActionId,
+      label: 'Summarize',
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1.0,
+      precondition: isAiReady && !isAiLoading && !latestActiveTabRef.current.isTablet && latestActiveTabRef.current.content.trim().length > 0 ? undefined : 'false',
+      run: (ed) => {
+        const content = ed.getValue();
+        if (!isAiReady || isAiLoading || latestActiveTabRef.current.isTablet || content.trim().length === 0) return;
+        summarizeText(content);
+      },
+    });
+    
+    // Add the code generation action and get the disposable
     const disposableAction = editor.addAction({
       id: actionId,
       label: 'Generate Code',
@@ -178,9 +203,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     });
     
     return () => {
+      disposableSummarizeAction.dispose();
       disposableAction.dispose();
     };
-  }, [isCodegenReady, isCodegenGenerating, runCodegen]);
+  }, [isCodegenReady, isCodegenGenerating, runCodegen, isAiReady, isAiLoading, summarizeText]);
 
   // Cleanup batch tools disposable on unmount
   useEffect(() => {

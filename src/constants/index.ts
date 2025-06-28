@@ -81,4 +81,7 @@ export type VaultSortOrder = typeof VAULT_SORT_ORDER[keyof typeof VAULT_SORT_ORD
 export type SortDirection = typeof SORT_DIRECTION[keyof typeof SORT_DIRECTION];
 export type TabAction = typeof TAB_ACTIONS[keyof typeof TAB_ACTIONS];
 export type ContextMenuAction = typeof CONTEXT_MENU_ACTIONS[keyof typeof CONTEXT_MENU_ACTIONS];
-export type TabSide = typeof TAB_SIDES[keyof typeof TAB_SIDES]; 
+export type TabSide = typeof TAB_SIDES[keyof typeof TAB_SIDES];
+
+// New Tab Constants
+export const NEW_TAB_PREFIX = 'Scratch' as const;

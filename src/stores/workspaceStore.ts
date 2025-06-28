@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { StorageProviderFactory, db } from '../db';
-import { Workspace, Tab, SplitViewState } from '../types';
+import { Workspace, Tab, SplitViewState, SplitViewRecord } from '../types';
 import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { usePersistenceStore } from './persistenceStore';
@@ -9,18 +9,12 @@ import { modelManager } from '../services/modelManager';
 import { incrementSetting } from '../db';
 import { WELCOME_TAB_CONTENT } from '../constants';
 
-// Import the db-specific SplitViewRecord type
-type SplitViewRecord = {
-  id: string;
-  isSplit: boolean;
-  leftTabs: string[];
-  rightTabs: string[];
-  activeLeftTabId: string | null;
-  activeRightTabId: string | null;
-  activeSide: string | null;
-  splitRatio: number;
-  workspaceId: string;
-  lastModified: number;
+// Helper function to safely convert activeSide string to union type
+const parseActiveSide = (side: string | null): 'left' | 'right' | null => {
+  if (side === 'left' || side === 'right') {
+    return side;
+  }
+  return null;
 };
 
 interface WorkspaceStore {
@@ -79,11 +73,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
               rightTabs: fetchedRecord.rightTabs,
               activeLeftTabId: fetchedRecord.activeLeftTabId,
               activeRightTabId: fetchedRecord.activeRightTabId,
-              activeSide: fetchedRecord.activeSide as 'left' | 'right' | null,
+              activeSide: parseActiveSide(fetchedRecord.activeSide),
               splitRatio: fetchedRecord.splitRatio,
               workspaceId: fetchedRecord.workspaceId,
-              leftTabHistory: [], // Initialize history
-              rightTabHistory: [] // Initialize history
+              leftTabHistory: fetchedRecord.leftTabHistory || [], // Use persisted history
+              rightTabHistory: fetchedRecord.rightTabHistory || [] // Use persisted history
             };
           } else {
             // If no split view record, create a default one for this workspace
@@ -193,10 +187,12 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             rightTabs: initialSplitViewState.rightTabs,
             activeLeftTabId: initialSplitViewState.activeLeftTabId,
             activeRightTabId: initialSplitViewState.activeRightTabId,
-            activeSide: initialSplitViewState.activeSide as string | null,
+            activeSide: parseActiveSide(initialSplitViewState.activeSide),
             splitRatio: initialSplitViewState.splitRatio,
             workspaceId: initialSplitViewState.workspaceId,
-            lastModified: Date.now()
+            lastModified: Date.now(),
+            leftTabHistory: initialSplitViewState.leftTabHistory,
+            rightTabHistory: initialSplitViewState.rightTabHistory
           };
 
           await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
@@ -290,11 +286,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           rightTabs: splitViewToLoad.rightTabs || [],
           activeLeftTabId: splitViewToLoad.activeLeftTabId,
           activeRightTabId: splitViewToLoad.activeRightTabId,
-          activeSide: splitViewToLoad.activeSide as 'left' | 'right' | null,
+          activeSide: parseActiveSide(splitViewToLoad.activeSide),
           splitRatio: splitViewToLoad.splitRatio,
           workspaceId: splitViewToLoad.workspaceId,
-          leftTabHistory: [], // Initialize history
-          rightTabHistory: [] // Initialize history
+          leftTabHistory: splitViewToLoad.leftTabHistory || [], // Use persisted history
+          rightTabHistory: splitViewToLoad.rightTabHistory || [] // Use persisted history
         };
         useSplitViewStore.setState({ splitView: finalSplitViewState });
 
@@ -356,7 +352,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
         const initialSplitViewRecord: SplitViewRecord = {
           ...initialSplitViewState,
-          lastModified: Date.now()
+          lastModified: Date.now(),
+          leftTabHistory: initialSplitViewState.leftTabHistory,
+          rightTabHistory: initialSplitViewState.rightTabHistory
         };
 
         // Use a Dexie transaction for atomicity

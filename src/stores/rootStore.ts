@@ -7,6 +7,7 @@ import { EditorPosition, Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
 import { modelManager } from '../services/modelManager';
 import { incrementSetting } from '../db';
+import { NEW_TAB_PREFIX } from '../constants';
 
 import {
   isTabEmpty,
@@ -188,7 +189,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       // Count tabs excluding the Welcome tab for proper numbering
       const currentTabs = useTabsStore.getState().tabs.filter(t => t.workspaceId === ensuredWorkspaceId);
       const nonWelcomeTabs = currentTabs.filter(tab => tab.title !== 'Welcome to Scratch Tabs');
-      const defaultTitle = `new ${nonWelcomeTabs.length + 1}`;
+      const defaultTitle = `${NEW_TAB_PREFIX} ${nonWelcomeTabs.length + 1}`;
 
       const newTabObject = _createFinalTabObject(
         {},

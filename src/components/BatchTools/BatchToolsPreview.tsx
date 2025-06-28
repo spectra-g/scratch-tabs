@@ -63,15 +63,6 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
     return diffLines;
   }, [originalContent, transformedContent, previewMode]);
 
-  if (isProcessing) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-400">Processing transformations...</span>
-      </div>
-    );
-  }
-
   if (previewMode === 'side-by-side') {
     return (
       <div className="grid grid-cols-2 gap-4 h-full">
@@ -99,9 +90,16 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
             </span>
           </div>
           <div className="flex-1 overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
-            <pre className="p-3 text-sm text-gray-300 whitespace-pre-wrap break-words">
-              {transformedContent || <span className="text-gray-500 italic">No content</span>}
-            </pre>
+            {isProcessing ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                <span className="ml-2 text-gray-400">Processing transformations...</span>
+              </div>
+            ) : (
+              <pre className="p-3 text-sm text-gray-300 whitespace-pre-wrap break-words">
+                {transformedContent || <span className="text-gray-500 italic">No content</span>}
+              </pre>
+            )}
           </div>
         </div>
       </div>
@@ -109,6 +107,15 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
   }
 
   // Unified diff view
+  if (isProcessing) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-400">Processing transformations...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">

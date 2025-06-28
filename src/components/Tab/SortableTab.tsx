@@ -45,6 +45,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     const [tabElement, setTabElement] = useState<HTMLDivElement | null>(null);
     const [currentWidth, setCurrentWidth] = useState(0);
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const [confirmationPosition, setConfirmationPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+    const [confirmationPositionType, setConfirmationPositionType] = useState<'above' | 'below'>('above');
 
     const {
         attributes,
@@ -112,7 +114,47 @@ export const SortableTab: React.FC<SortableTabProps> = ({
 
     const handleCloseClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
-        if (tab.content && tab.content.trim() !== '') {
+        e.preventDefault(); // Prevent any default behavior
+        
+        // Show confirmation for any tab that has content or is a tablet
+        // (tablets might not have traditional content but should still be confirmed)
+        if ((tab.content && tab.content.trim() !== '') || tab.isTablet) {
+            // Get the position of the close button for positioning the confirmation dialog
+            const rect = e.currentTarget.getBoundingClientRect();
+            
+            // Calculate position ensuring the dialog stays on screen
+            const dialogHeight = 140; // Slightly larger estimate for the confirmation dialog
+            const dialogWidth = 400; // Approximate width of the confirmation dialog
+            const margin = 20; // Larger margin from screen edges for better visibility
+            
+            let x = rect.left + rect.width / 2; // Center of the close button
+            let y = rect.top; // Top of the close button
+            let positionType: 'above' | 'below' = 'above';
+            
+            // Adjust horizontal position if dialog would go off screen
+            if (x - dialogWidth / 2 < margin) {
+                x = dialogWidth / 2 + margin;
+            } else if (x + dialogWidth / 2 > window.innerWidth - margin) {
+                x = window.innerWidth - dialogWidth / 2 - margin;
+            }
+            
+            // Adjust vertical position - try to position above first, then below if needed
+            // When positioning above, we need to account for the full dialog height
+            if (y - dialogHeight - margin >= 0) {
+                // Position above the button
+                y = y - margin;
+                positionType = 'above';
+            } else {
+                // Position below the button
+                y = rect.bottom + margin;
+                positionType = 'below';
+            }
+            
+            setConfirmationPosition({
+                x: x,
+                y: y
+            });
+            setConfirmationPositionType(positionType);
             setShowConfirmation(true);
         } else {
             onClose(e);
@@ -121,6 +163,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
 
     const handleConfirmClose = () => {
         setShowConfirmation(false);
+        setConfirmationPosition(undefined);
+        setConfirmationPositionType('above');
         // Create a synthetic event for close
         const syntheticEvent = new MouseEvent('click') as unknown as React.MouseEvent<HTMLButtonElement>;
         onClose(syntheticEvent);
@@ -128,6 +172,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
 
     const handleCancelClose = () => {
         setShowConfirmation(false);
+        setConfirmationPosition(undefined);
+        setConfirmationPositionType('above');
     };
 
     const handleMouseEnter = () => {
@@ -144,12 +190,36 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     // This ensures active tab always has close button unless severely constrained
     const showCloseButton = !tab.isPinned && (currentWidth > MIN_WIDTH_FOR_X || (isActive && currentWidth > 35));
 
+    const handleTabClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        // Don't activate tab if clicking on the close button or its children
+        if (e.target instanceof Element) {
+            const target = e.target as Element;
+            if (target.closest('button')) {
+                return; // Don't activate tab if clicking on any button (like the close button)
+            }
+        }
+        
+        if (!isEditing) {
+            onClick();
+        }
+    };
+
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         // If we're editing or it's a right-click, don't activate
         if (isEditing || e.button !== 0) return;
         
+        // Don't activate tab if clicking on the close button or its children
+        if (e.target instanceof Element) {
+            const target = e.target as Element;
+            if (target.closest('button')) {
+                return; // Don't activate tab if clicking on any button (like the close button)
+            }
+        }
+        
         // Immediately activate the tab on mousedown
-        onClick();
+        if (!isEditing) {
+            onClick();
+        }
         
         // Don't stop propagation, so the drag can still happen
     };
@@ -158,7 +228,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         <>
             <div
                 ref={setRefs}
-                className={`tab-item relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
+                className={`tab-item group relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
                     ${isActive 
                         ? 'bg-gray-600/90 text-gray-100 border-b-2 border-blue-400 shadow-sm'
                         : 'text-gray-300 hover:text-gray-100 hover:bg-gray-700/40 border-b-2 border-transparent'
@@ -166,7 +236,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                     ${isDragging && !tab.isPinned ? 'bg-blue-500/90 text-white shadow-md scale-105' : ''}
                     border-r-2 border-r-gray-700/90 backdrop-blur-sm`}
                 style={style}
-                onClick={() => !isEditing && onClick()}
+                onClick={handleTabClick}
                 onMouseDown={handleMouseDown}
                 onContextMenu={(e) => !isEditing && onContextMenu(e)}
                 onDoubleClick={(e) => !isEditing && onDoubleClick(e)}
@@ -185,7 +255,14 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                 )}
 
                 {tab.isPinned && (
-                    <Pin size={11} className="flex-shrink-0 text-yellow-400/90 mr-1.5 drop-shadow-sm" />
+                    <Pin 
+                        size={11} 
+                        className={`flex-shrink-0 mr-1.5 drop-shadow-sm ${
+                            isActive 
+                                ? 'text-gray-100' 
+                                : 'text-gray-300 group-hover:text-gray-100'
+                        }`} 
+                    />
                 )}
 
                 <div className={`flex-1 min-w-0 flex items-center ${showCloseButton ? 'mr-1' : ''}`}>
@@ -233,6 +310,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                 onConfirm={handleConfirmClose}
                 onCancel={handleCancelClose}
                 message="Tab content cannot be recovered once closed. Are you sure you want to close this tab?"
+                position={confirmationPosition}
+                positionType={confirmationPositionType}
             />
         </>
     );
