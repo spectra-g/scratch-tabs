@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { Tab, Workspace, WorkspaceLink } from '../types';
+import { Tab, Workspace, WorkspaceLink, SplitViewRecord } from '../types';
 
 interface TabRecord {
   id: string;
@@ -11,19 +11,6 @@ interface TabRecord {
   tabletState?: string;
   lastModified: number;
   dateCreated: number;
-  workspaceId: string;
-}
-
-interface SplitViewRecord {
-  id: string;
-  isSplit: boolean;
-  leftTabs: string[];
-  rightTabs: string[];
-  activeLeftTabId: string | null;
-  activeRightTabId: string | null;
-  activeSide: string | null;
-  splitRatio: number;
-  lastModified: number;
   workspaceId: string;
 }
 
