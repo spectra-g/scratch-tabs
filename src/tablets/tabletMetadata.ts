@@ -22,5 +22,5 @@ export const tabletMetadata: TabletMetadata[] = [
   { id: 'shapesnap', label: 'Shape Snap', keywords: ['draw', 'diagram', 'shapes', 'sketch', 'flowchart', 'whiteboard'] },
   { id: 'usergen', label: 'User Generator', keywords: ['user', 'generator', 'random', 'profile', 'data'] },
   { id: 'uuid', label: 'UUID Generator', keywords: ['uuid', 'guid', 'identifier', 'unique', 'generate'] },
-  { id: 'vault', label: 'Vault', keywords: ['vault', 'secure', 'store', 'password', 'credentials', 'secrets'] }
+  { id: 'vault', label: 'Knowledge Vault', keywords: ['vault', 'snippets', 'knowledge base', 'code', 'notes', 'commands'] }
 ]; 
