@@ -13,6 +13,7 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { KeyboardSensor } from '@dnd-kit/core';
 import { SortableTabList } from './SortableTabList';
+import { NEW_TAB_PREFIX } from '../../constants';
 
 interface TabBarProps {
   side?: 'left' | 'right';
@@ -433,7 +434,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
         // Count tabs excluding the Welcome tab for proper numbering (same logic as handleNewTab)
         const currentTabs = tabs.filter(t => t.workspaceId === activeWorkspaceId);
         const nonWelcomeTabs = currentTabs.filter(tab => tab.title !== 'Welcome to Scratch Tabs');
-        const defaultTitle = `new ${nonWelcomeTabs.length + 1}`;
+        const defaultTitle = `${NEW_TAB_PREFIX} ${nonWelcomeTabs.length + 1}`;
         
         const newTabId = crypto.randomUUID();
         addTab({
