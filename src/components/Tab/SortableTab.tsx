@@ -228,7 +228,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         <>
             <div
                 ref={setRefs}
-                className={`tab-item relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
+                className={`tab-item group relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
                     ${isActive 
                         ? 'bg-gray-600/90 text-gray-100 border-b-2 border-blue-400 shadow-sm'
                         : 'text-gray-300 hover:text-gray-100 hover:bg-gray-700/40 border-b-2 border-transparent'
@@ -255,7 +255,14 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                 )}
 
                 {tab.isPinned && (
-                    <Pin size={11} className="flex-shrink-0 text-yellow-400/90 mr-1.5 drop-shadow-sm" />
+                    <Pin 
+                        size={11} 
+                        className={`flex-shrink-0 mr-1.5 drop-shadow-sm ${
+                            isActive 
+                                ? 'text-gray-100' 
+                                : 'text-gray-300 group-hover:text-gray-100'
+                        }`} 
+                    />
                 )}
 
                 <div className={`flex-1 min-w-0 flex items-center ${showCloseButton ? 'mr-1' : ''}`}>
