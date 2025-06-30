@@ -8,12 +8,16 @@ interface PromptSelectorProps {
   prompts: Prompt[];
   onSelectPrompt: (promptId: string) => void;
   onClose: () => void;
+  usedPromptIds: string[];
 }
 
-const PromptSelector: React.FC<PromptSelectorProps> = ({ prompts, onSelectPrompt, onClose }) => {
+const PromptSelector: React.FC<PromptSelectorProps> = ({ prompts, onSelectPrompt, onClose, usedPromptIds }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  const filteredPrompts = prompts.filter(prompt =>
+  // Filter out prompts that are already used in the workflow
+  const availablePrompts = prompts.filter(prompt => !usedPromptIds.includes(prompt.id));
+  
+  const filteredPrompts = availablePrompts.filter(prompt =>
     prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     prompt.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -33,9 +37,14 @@ const PromptSelector: React.FC<PromptSelectorProps> = ({ prompts, onSelectPrompt
           />
         </div>
         <div className="flex-1 overflow-y-auto">
-          {filteredPrompts.length === 0 ? (
+          {availablePrompts.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
-              No prompts found
+              <div className="mb-2">All prompts are already used in this workflow</div>
+              <div className="text-xs text-gray-600">Remove existing steps to add different prompts</div>
+            </div>
+          ) : filteredPrompts.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              No prompts found matching your search
             </div>
           ) : (
             filteredPrompts.map((prompt) => (
@@ -555,6 +564,7 @@ ${content}`;
                     prompts={prompts}
                     onSelectPrompt={handleAddStep}
                     onClose={() => setShowPromptSelector(false)}
+                    usedPromptIds={workflow.steps.map(step => step.promptId)}
                   />
                 )}
               </div>
@@ -690,6 +700,7 @@ ${content}`;
                     prompts={prompts}
                     onSelectPrompt={handleAddStep}
                     onClose={() => setShowPromptSelector(false)}
+                    usedPromptIds={workflow.steps.map(step => step.promptId)}
                   />
                 )}
               </div>

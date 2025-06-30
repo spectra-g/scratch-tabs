@@ -70,8 +70,6 @@ export const PromptManagerTablet: Tablet = {
           }
         });
         
-
-        
         // Ensure settings exist
         data.settings = {
           sortBy: data.settings?.sortBy || 'lastModified',
@@ -341,7 +339,7 @@ export const PromptManagerTablet: Tablet = {
       updateData({ workflows: updatedWorkflows });
     };
     
-    // Template operations
+    // Template CRUD operations
     const createTemplate = (template: Omit<Template, 'id'>) => {
       const newTemplate: Template = {
         id: crypto.randomUUID(),
@@ -390,7 +388,7 @@ export const PromptManagerTablet: Tablet = {
       });
     };
     
-    // Snippet operations
+    // Snippet CRUD operations
     const createSnippet = (snippet: Omit<Snippet, 'id'>) => {
       const newSnippet: Snippet = {
         id: crypto.randomUUID(),
