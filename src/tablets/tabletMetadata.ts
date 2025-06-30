@@ -13,6 +13,7 @@ export const tabletMetadata: TabletMetadata[] = [
   { id: 'ipdetails', label: 'IP Details', keywords: ['ip', 'address', 'location', 'network', 'geolocation'] },
   { id: 'jsonmapper', label: 'JSON Mapper', keywords: ['json', 'mapper', 'transform', 'mapping', 'data'] },
   { id: 'jwt', label: 'JWT', keywords: ['jwt', 'token', 'json web token', 'authentication', 'decode'] },
+  { id: 'openmetrics', label: 'OpenMetrics Viewer', keywords: ['metrics', 'prometheus', 'openmetrics', 'monitoring', 'prom', 'exposition'] },
   { id: 'password', label: 'Password Generator', keywords: ['password', 'generator', 'secure', 'random', 'crypto'] },
   { id: 'pomodoro', label: 'Pomodoro Timer', keywords: ['pomodoro', 'timer', 'productivity', 'focus', 'time'] },
   { id: 'promptmanager', label: 'Prompt Manager', keywords: ['prompt', 'manager', 'ai', 'templates', 'snippets'] },
@@ -23,4 +24,4 @@ export const tabletMetadata: TabletMetadata[] = [
   { id: 'usergen', label: 'User Generator', keywords: ['user', 'generator', 'random', 'profile', 'data'] },
   { id: 'uuid', label: 'UUID Generator', keywords: ['uuid', 'guid', 'identifier', 'unique', 'generate'] },
   { id: 'vault', label: 'Knowledge Vault', keywords: ['vault', 'snippets', 'knowledge base', 'code', 'notes', 'commands'] }
-]; 
+];
