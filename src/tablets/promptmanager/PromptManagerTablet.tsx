@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tablet, TabletState } from '../types';
-import { PromptManagerData, Prompt, Template, Snippet, Tag } from './types';
+import { PromptManagerData, Prompt, Template, Snippet, Tag, Workflow, WorkflowStep } from './types';
 import { PromptManagerUI } from './components/PromptManagerUI';
 import { defaultTemplates } from './data/defaultTemplates';
 import { defaultSnippets } from './data/defaultSnippets';
@@ -23,6 +23,7 @@ export const PromptManagerTablet: Tablet = {
         prompts: [],
         templates: defaultTemplates,
         snippets: defaultSnippets,
+        workflows: [],
         tags: defaultTags,
         settings: {
           sortBy: 'lastModified',
@@ -35,6 +36,7 @@ export const PromptManagerTablet: Tablet = {
           selectedPromptId: null,
           selectedTemplateId: null,
           selectedSnippetId: null,
+          selectedWorkflowId: null,
           searchQuery: '',
           selectedTags: [],
           showFavoritesOnly: false,
@@ -58,7 +60,17 @@ export const PromptManagerTablet: Tablet = {
         data.prompts = Array.isArray(data.prompts) ? data.prompts : [];
         data.templates = Array.isArray(data.templates) ? data.templates : [...defaultTemplates];
         data.snippets = Array.isArray(data.snippets) ? data.snippets : [...defaultSnippets];
+        data.workflows = Array.isArray(data.workflows) ? data.workflows : [];
         data.tags = Array.isArray(data.tags) ? data.tags : [...defaultTags];
+        
+        // Ensure history exists for prompts (backward compatibility)
+        data.prompts.forEach(prompt => {
+          if (!prompt.history) {
+            prompt.history = [];
+          }
+        });
+        
+
         
         // Ensure settings exist
         data.settings = {
@@ -74,6 +86,7 @@ export const PromptManagerTablet: Tablet = {
           selectedPromptId: data.ui?.selectedPromptId || null,
           selectedTemplateId: data.ui?.selectedTemplateId || null,
           selectedSnippetId: data.ui?.selectedSnippetId || null,
+          selectedWorkflowId: data.ui?.selectedWorkflowId || null,
           searchQuery: data.ui?.searchQuery || '',
           selectedTags: Array.isArray(data.ui?.selectedTags) ? data.ui.selectedTags : [],
           showFavoritesOnly: data.ui?.showFavoritesOnly || false,
@@ -153,15 +166,31 @@ export const PromptManagerTablet: Tablet = {
     };
     
     const updatePrompt = (id: string, updates: Partial<Omit<Prompt, 'id' | 'createdAt'>>) => {
-      const updatedPrompts = data.prompts.map(prompt => 
-        prompt.id === id 
-          ? { 
-              ...prompt, 
-              ...updates, 
-              lastModified: Date.now() 
-            } 
-          : prompt
-      );
+      const updatedPrompts = data.prompts.map(prompt => {
+        if (prompt.id === id) {
+          // If content is being updated, save current content to history
+          const newHistory = [...(prompt.history || [])];
+          if (updates.content && updates.content !== prompt.content) {
+            newHistory.push({
+              content: prompt.content,
+              timestamp: prompt.lastModified
+            });
+            
+            // Keep only the last 20 versions
+            if (newHistory.length > 20) {
+              newHistory.splice(0, newHistory.length - 20);
+            }
+          }
+          
+          return { 
+            ...prompt, 
+            ...updates, 
+            history: newHistory,
+            lastModified: Date.now() 
+          };
+        }
+        return prompt;
+      });
       
       updateData({ prompts: updatedPrompts });
     };
@@ -225,6 +254,91 @@ export const PromptManagerTablet: Tablet = {
       );
       
       updateData({ prompts: updatedPrompts });
+    };
+    
+    // Workflow CRUD operations
+    const createWorkflow = (workflow: Omit<Workflow, 'id' | 'createdAt' | 'lastModified'>) => {
+      const newWorkflow: Workflow = {
+        id: crypto.randomUUID(),
+        createdAt: Date.now(),
+        lastModified: Date.now(),
+        ...workflow
+      };
+      
+      updateData({
+        workflows: [...(data.workflows || []), newWorkflow],
+        ui: {
+          ...data.ui,
+          selectedWorkflowId: newWorkflow.id
+        }
+      });
+      
+      return newWorkflow;
+    };
+    
+    const updateWorkflow = (id: string, updates: Partial<Omit<Workflow, 'id' | 'createdAt'>>) => {
+      const updatedWorkflows = (data.workflows || []).map(workflow => {
+        if (workflow.id === id) {
+          return { 
+            ...workflow, 
+            ...updates, 
+            lastModified: Date.now() 
+          };
+        }
+        return workflow;
+      });
+      
+      updateData({ workflows: updatedWorkflows });
+    };
+    
+    const deleteWorkflow = (id: string) => {
+      const updatedWorkflows = (data.workflows || []).filter(workflow => workflow.id !== id);
+      
+      // If the deleted workflow was selected, clear selection
+      const newUI = data.ui.selectedWorkflowId === id 
+        ? { selectedWorkflowId: updatedWorkflows.length > 0 ? updatedWorkflows[0].id : null }
+        : {};
+      
+      updateData({ 
+        workflows: updatedWorkflows,
+        ui: {
+          ...data.ui,
+          ...newUI
+        }
+      });
+    };
+    
+    const cloneWorkflow = (id: string) => {
+      const workflowToClone = (data.workflows || []).find(w => w.id === id);
+      if (!workflowToClone) return;
+      
+      const newWorkflow: Workflow = {
+        ...workflowToClone,
+        id: crypto.randomUUID(),
+        title: `${workflowToClone.title} (Copy)`,
+        createdAt: Date.now(),
+        lastModified: Date.now()
+      };
+      
+      updateData({
+        workflows: [...(data.workflows || []), newWorkflow],
+        ui: {
+          ...data.ui,
+          selectedWorkflowId: newWorkflow.id
+        }
+      });
+      
+      return newWorkflow;
+    };
+    
+    const toggleWorkflowFavorite = (id: string) => {
+      const updatedWorkflows = (data.workflows || []).map(workflow => 
+        workflow.id === id 
+          ? { ...workflow, isFavorite: !workflow.isFavorite } 
+          : workflow
+      );
+      
+      updateData({ workflows: updatedWorkflows });
     };
     
     // Template operations
@@ -390,6 +504,7 @@ export const PromptManagerTablet: Tablet = {
         prompts: [...(importedData.prompts || []), ...data.prompts],
         templates: [...(importedData.templates || []), ...data.templates],
         snippets: [...(importedData.snippets || []), ...data.snippets],
+        workflows: [...(importedData.workflows || []), ...(data.workflows || [])],
         tags: [...(importedData.tags || []), ...data.tags],
         settings: data.settings,
         ui: data.ui
@@ -408,6 +523,10 @@ export const PromptManagerTablet: Tablet = {
         new Map(mergedData.snippets.map(item => [item.id, item])).values()
       );
       
+      const uniqueWorkflows = Array.from(
+        new Map(mergedData.workflows.map(item => [item.id, item])).values()
+      );
+      
       const uniqueTags = Array.from(
         new Map(mergedData.tags.map(item => [item.id, item])).values()
       );
@@ -416,6 +535,7 @@ export const PromptManagerTablet: Tablet = {
         prompts: uniquePrompts,
         templates: uniqueTemplates,
         snippets: uniqueSnippets,
+        workflows: uniqueWorkflows,
         tags: uniqueTags
       });
     };
@@ -425,6 +545,7 @@ export const PromptManagerTablet: Tablet = {
         prompts: data.prompts,
         templates: data.templates.filter(t => !t.isBuiltIn), // Only export user templates
         snippets: data.snippets.filter(s => !s.isBuiltIn), // Only export user snippets
+        workflows: data.workflows || [], // Export all workflows
         tags: data.tags.filter(t => !t.isBuiltIn) // Only export user tags
       };
       
@@ -470,6 +591,11 @@ export const PromptManagerTablet: Tablet = {
         clonePrompt={clonePrompt}
         incrementPromptUsage={incrementPromptUsage}
         toggleFavorite={toggleFavorite}
+        createWorkflow={createWorkflow}
+        updateWorkflow={updateWorkflow}
+        deleteWorkflow={deleteWorkflow}
+        cloneWorkflow={cloneWorkflow}
+        toggleWorkflowFavorite={toggleWorkflowFavorite}
         createTemplate={createTemplate}
         updateTemplate={updateTemplate}
         deleteTemplate={deleteTemplate}

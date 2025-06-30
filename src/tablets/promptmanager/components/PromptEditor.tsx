@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Copy, Eye, EyeOff, Tag as TagIcon, Check, X, Plus } from 'lucide-react';
+import { Copy, Eye, EyeOff, Tag as TagIcon, Check, X, Plus, History } from 'lucide-react';
 import { Prompt, Tag, Snippet } from '../types';
 import { MarkdownPreview } from './MarkdownPreview';
 import { SnippetSelector } from './SnippetSelector';
+import { HistoryViewer } from './HistoryViewer';
 
 interface PromptEditorProps {
   prompt: Prompt;
@@ -28,6 +29,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   const [content, setContent] = useState(prompt.content);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [showSnippetSelector, setShowSnippetSelector] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -161,6 +163,13 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-200 truncate">{prompt.title}</h2>
             <div className="flex items-center space-x-2">
+              <button
+                className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md"
+                onClick={() => setShowHistory(true)}
+                title="View history"
+              >
+                <History size={18} />
+              </button>
               <button
                 className={`p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md ${
                   showPreview ? 'bg-gray-700/50' : ''
@@ -336,6 +345,14 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
           </div>
         )}
       </div>
+      
+              {/* History Viewer */}
+        {showHistory && (
+          <HistoryViewer
+            prompt={prompt}
+            onClose={() => setShowHistory(false)}
+          />
+        )}
     </div>
   );
 };
