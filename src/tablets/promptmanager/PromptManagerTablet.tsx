@@ -1,9 +1,6 @@
-import React from 'react';
 import { Tablet, TabletState } from '../types';
-import { PromptManagerData, Prompt, Template, Snippet, Tag, Workflow, WorkflowStep } from './types';
+import { PromptManagerData, Prompt, Template, Snippet, Tag, Workflow } from './types';
 import { PromptManagerUI } from './components/PromptManagerUI';
-import { defaultTemplates } from './data/defaultTemplates';
-import { defaultSnippets } from './data/defaultSnippets';
 import { defaultTags } from './data/defaultTags';
 
 interface PromptManagerTabletState extends TabletState {
