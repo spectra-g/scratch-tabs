@@ -9,6 +9,8 @@ import { WorkflowList } from './WorkflowList';
 import { WorkflowEditor } from './WorkflowEditor';
 import { ImportExportModal } from './ImportExportModal';
 import { PromptManagerData, Prompt, Template, Snippet, Tag, Workflow } from '../types';
+import { defaultTemplates } from '../data/defaultTemplates';
+import { defaultSnippets } from '../data/defaultSnippets';
 
 interface PromptManagerUIProps {
   data: PromptManagerData;
@@ -120,17 +122,19 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
     return sortDirection === 'asc' ? comparison : -comparison;
   });
   
-  // Filter templates based on search
-  const filteredTemplates = data.templates.filter(template => {
+  // Combine default and user templates, then filter based on search
+  const allTemplates = [...defaultTemplates, ...data.templates];
+  const filteredTemplates = allTemplates.filter(template => {
     if (!data.ui.searchQuery) return true;
     
     return template.title.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) ||
-           template.description.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) ||
+           (template.description || '').toLowerCase().includes(data.ui.searchQuery.toLowerCase()) ||
            template.content.toLowerCase().includes(data.ui.searchQuery.toLowerCase());
   });
   
-  // Filter snippets based on search
-  const filteredSnippets = data.snippets.filter(snippet => {
+  // Combine default and user snippets, then filter based on search
+  const allSnippets = [...defaultSnippets, ...data.snippets];
+  const filteredSnippets = allSnippets.filter(snippet => {
     if (!data.ui.searchQuery) return true;
     
     return snippet.title.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) ||

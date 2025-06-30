@@ -306,12 +306,12 @@ ${content}`;
       const stepTitle = step.stepTitle || prompt?.title || 'Unknown Prompt';
       const content = prompt?.content || '';
       
-      return `Step ${stepIndex + 1}: ${stepTitle}
+      return `## Step ${stepIndex + 1}: ${stepTitle}
 
 ${content}`;
     }).join('\n\n---\n\n');
 
-    const header = `${workflow.title}${workflow.description ? `\n${workflow.description}` : ''}`;
+    const header = `# ${workflow.title}${workflow.description ? `\n\n${workflow.description}` : ''}`;
     const fullContent = `${header}\n\n${stepsText}`;
 
     // Determine which side to open the tab on
@@ -325,7 +325,7 @@ ${content}`;
       title: `${workflow.title} (${selectedSteps.size} steps)`,
       content: fullContent,
       language: 'markdown',
-      languageLocked: false,
+      languageLocked: true,
       cursorPosition: { lineNumber: 1, column: 1 },
       dateCreated: Date.now(),
       lastModified: Date.now(),

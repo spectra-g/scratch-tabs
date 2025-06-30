@@ -21,8 +21,8 @@ export const PromptManagerTablet: Tablet = {
       type: 'promptmanager',
       data: {
         prompts: [],
-        templates: defaultTemplates,
-        snippets: defaultSnippets,
+        templates: [], // Should be empty - only user templates
+        snippets: [],  // Should be empty - only user snippets
         workflows: [],
         tags: defaultTags,
         settings: {
@@ -58,8 +58,8 @@ export const PromptManagerTablet: Tablet = {
         
         // Ensure arrays exist
         data.prompts = Array.isArray(data.prompts) ? data.prompts : [];
-        data.templates = Array.isArray(data.templates) ? data.templates : [...defaultTemplates];
-        data.snippets = Array.isArray(data.snippets) ? data.snippets : [...defaultSnippets];
+        data.templates = Array.isArray(data.templates) ? data.templates : []; // Only user templates
+        data.snippets = Array.isArray(data.snippets) ? data.snippets : [];   // Only user snippets
         data.workflows = Array.isArray(data.workflows) ? data.workflows : [];
         data.tags = Array.isArray(data.tags) ? data.tags : [...defaultTags];
         
@@ -497,11 +497,11 @@ export const PromptManagerTablet: Tablet = {
     
     // Import/Export
     const importData = (importedData: Partial<PromptManagerData>) => {
-      // Merge imported data with existing data
+      // Merge imported data with existing data (only user data)
       const mergedData: PromptManagerData = {
         prompts: [...(importedData.prompts || []), ...data.prompts],
-        templates: [...(importedData.templates || []), ...data.templates],
-        snippets: [...(importedData.snippets || []), ...data.snippets],
+        templates: [...(importedData.templates || []), ...data.templates], // Only user templates
+        snippets: [...(importedData.snippets || []), ...data.snippets],   // Only user snippets
         workflows: [...(importedData.workflows || []), ...(data.workflows || [])],
         tags: [...(importedData.tags || []), ...data.tags],
         settings: data.settings,
@@ -541,8 +541,8 @@ export const PromptManagerTablet: Tablet = {
     const exportData = () => {
       const exportData: Partial<PromptManagerData> = {
         prompts: data.prompts,
-        templates: data.templates.filter(t => !t.isBuiltIn), // Only export user templates
-        snippets: data.snippets.filter(s => !s.isBuiltIn), // Only export user snippets
+        templates: data.templates, // Only user templates (no built-ins in state)
+        snippets: data.snippets,   // Only user snippets (no built-ins in state)
         workflows: data.workflows || [], // Export all workflows
         tags: data.tags.filter(t => !t.isBuiltIn) // Only export user tags
       };
