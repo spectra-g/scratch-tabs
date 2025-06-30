@@ -23,7 +23,7 @@ interface WorkspaceStore {
   isLoading: boolean;
   error: string | null;
 
-  loadWorkspaces: () => Promise<void>;
+  loadWorkspaces: (clearExistingTabs?: boolean) => Promise<void>;
   ensureWorkspace: () => Promise<string | null>;
   createWorkspace: (name: string) => Promise<string | null>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
@@ -44,7 +44,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     isLoading: false,
     error: null,
 
-    loadWorkspaces: async () => {
+    loadWorkspaces: async (clearExistingTabs: boolean = false) => {
       set({ isLoading: true, error: null });
       try {
         // Clear the model cache when loading workspaces
@@ -95,13 +95,17 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           set({ workspaces: sortedWorkspaces.sort((a, b) => a.name.localeCompare(b.name)), activeWorkspaceId: newActiveWorkspaceId });
           
           // Check if there are existing tabs that should be preserved (e.g., created by URL handler)
+          // But only if we're not clearing existing tabs (e.g., during workspace deletion)
           const currentTabs = useTabsStore.getState().tabs;
           const currentSplitView = useSplitViewStore.getState().splitView;
           const currentActiveLeftTabId = currentSplitView?.activeLeftTabId;
           
-          const existingTabIds = new Set(tabsToLoad.map(tab => tab.id));
-          const newTabsToPreserve = currentTabs.filter(tab => !existingTabIds.has(tab.id));
+          let newTabsToPreserve: Tab[] = [];
           
+          if (!clearExistingTabs) {
+            const existingTabIds = new Set(tabsToLoad.map(tab => tab.id));
+            newTabsToPreserve = currentTabs.filter(tab => !existingTabIds.has(tab.id));
+          }
           if (newTabsToPreserve.length > 0) {
             // Merge loaded tabs with newly created tabs
             const mergedTabs = [...tabsToLoad, ...newTabsToPreserve];
@@ -111,15 +115,24 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             const newTabIds = newTabsToPreserve.map(tab => tab.id);
             workspaceSplitView.leftTabs = [...workspaceSplitView.leftTabs, ...newTabIds];
           } else {
-            useTabsStore.setState({ tabs: tabsToLoad });
+            if (clearExistingTabs) {
+              // When clearing existing tabs, set the activeTabId from the splitView
+              useTabsStore.setState({ 
+                tabs: tabsToLoad,
+                activeTabId: workspaceSplitView?.activeLeftTabId || tabsToLoad[0]?.id || null
+              });
+            } else {
+              useTabsStore.setState({ tabs: tabsToLoad });
+            }
           }
           
           // Always check if we should preserve the current active tab (for both new and existing tabs)
-          if (currentActiveLeftTabId && currentActiveLeftTabId !== workspaceSplitView?.activeLeftTabId) {
+          // But only if we're not clearing existing tabs (during workspace deletion)
+          if (!clearExistingTabs && currentActiveLeftTabId && currentActiveLeftTabId !== workspaceSplitView?.activeLeftTabId) {
             // Check if the current active tab exists in our final tab list
             const finalTabs = newTabsToPreserve.length > 0 ? [...tabsToLoad, ...newTabsToPreserve] : tabsToLoad;
             const activeTabExists = finalTabs.some(tab => tab.id === currentActiveLeftTabId);
-            
+
             if (activeTabExists && workspaceSplitView) {
               workspaceSplitView.activeLeftTabId = currentActiveLeftTabId;
               
@@ -131,6 +144,10 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           }
           
           useSplitViewStore.setState({ splitView: workspaceSplitView });
+          
+          // Log final state after setting
+          const finalTabsState = useTabsStore.getState();
+          const finalSplitViewState = useSplitViewStore.getState();
 
         } else {
           set({ workspaces: [], activeWorkspaceId: null });
@@ -403,8 +420,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         if (workspaceId === currentActiveId) {
           // If the active workspace was deleted, load remaining workspaces
           // loadWorkspaces will pick the most recently accessed as the new active one, or create default
-          //set({ workspaces: remainingWorkspaces, activeWorkspaceId: null, tabs: [], splitView: createDefaultSplitViewState() }); // Optimistically clear
-          await loadWorkspaces(); // This will handle setting a new active one or creating default
+          // Pass clearExistingTabs: true to ensure tabs from deleted workspace are not preserved
+          await loadWorkspaces(true); // This will handle setting a new active one or creating default
         } else {
           // Just update the list of workspaces if a non-active one was deleted
           set({ workspaces: remainingWorkspaces.sort((a, b) => a.name.localeCompare(b.name)) });
