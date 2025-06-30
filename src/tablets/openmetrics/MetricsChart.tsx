@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { BarChart as BarChartIcon, LineChart as LineChartIcon, PieChart as PieChartIcon, Tag, X } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line, LineChart, PieChart, Pie, Cell } from 'recharts';
 import { MetricSample } from './types';
-import { groupMetricsByLabels } from './utils';
+import { groupMetricsByLabels, formatLabelsForDisplay } from './utils';
 
 interface MetricsChartProps {
   metrics: MetricSample[];
@@ -77,7 +77,7 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
     // If no grouping labels are selected, just return the raw values
     if (chartConfig.groupByLabels.length === 0) {
       return selectedMetricSamples.map(sample => ({
-        name: formatLabels(sample.labels),
+        name: formatLabelsForDisplay(sample.labels),
         value: sample.value
       }));
     }
@@ -85,13 +85,6 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
     // Group metrics by the selected labels
     return groupMetricsByLabels(selectedMetricSamples, chartConfig.groupByLabels);
   }, [selectedMetricName, selectedMetricSamples, chartConfig.groupByLabels]);
-
-  // Format labels for display
-  const formatLabels = (labels: Record<string, string>): string => {
-    return Object.entries(labels)
-      .map(([key, value]) => `${key}="${value}"`)
-      .join(', ');
-  };
 
   // Toggle a label for grouping
   const toggleGroupByLabel = (labelKey: string) => {
@@ -229,7 +222,7 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
                 {selectedMetricName}
                 {Object.keys(selectedLabels).length > 0 && (
                   <span className="ml-2">
-                    {formatLabels(selectedLabels)}
+                    {formatLabelsForDisplay(selectedLabels)}
                   </span>
                 )}
               </div>

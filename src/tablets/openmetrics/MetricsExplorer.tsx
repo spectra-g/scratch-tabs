@@ -254,7 +254,7 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
 const TypeIcon: React.FC<{ type: string | undefined }> = ({ type }) => {
   switch (type) {
     case 'counter':
-      <Hash size={16} className="text-blue-400" />;
+      return <Hash size={16} className="text-blue-400" />;
     case 'gauge':
       return <BarChart size={16} className="text-green-400" />;
     case 'histogram':
