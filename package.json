@@ -45,6 +45,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.22.3",
     "react-window": "^1.8.11",
+    "recharts": "^2.12.3",
     "remark-gfm": "^4.0.1",
     "roughjs": "^4.6.6",
     "string-similarity": "^4.0.4",
