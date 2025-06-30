@@ -144,11 +144,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           }
           
           useSplitViewStore.setState({ splitView: workspaceSplitView });
-          
-          // Log final state after setting
-          const finalTabsState = useTabsStore.getState();
-          const finalSplitViewState = useSplitViewStore.getState();
-
         } else {
           set({ workspaces: [], activeWorkspaceId: null });
           useTabsStore.setState({ tabs: [] });

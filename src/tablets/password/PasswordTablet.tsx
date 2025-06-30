@@ -215,8 +215,20 @@ const PasswordGeneratorUI: React.FC<{
     navigator.clipboard.writeText(SensitiveDataManager.unmask(passwordToSave));
     setCopiedId('current');
     setTimeout(() => setCopiedId(null), 1500);
-    regenerate();
-    onChange({ ...state, data: { ...data, history: [newEntry, ...history.slice(0, 49)] } });
+    
+    // Generate new password and update both current password and history in a single state update
+    const newPassword = mode === 'password'
+      ? generateSecurePassword(passwordSettings)
+      : generateSecurePassphrase(passphraseSettings);
+    
+    onChange({ 
+      ...state, 
+      data: { 
+        ...data, 
+        currentPassword: SensitiveDataManager.mask(newPassword),
+        history: [newEntry, ...history.slice(0, 49)] 
+      } 
+    });
   };
 
   const handleHistoryChange = (id: string, field: 'identifier' | 'purpose', value: string) => {
