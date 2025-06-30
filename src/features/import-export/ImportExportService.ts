@@ -219,10 +219,13 @@ export class ImportExportService {
             splitRatio: svs.splitRatio,
             lastModified: Date.now(),
             workspaceId: svs.workspaceId,
+            leftTabHistory: svs.leftTabHistory || [],
+            rightTabHistory: svs.rightTabHistory || [],
         })); 
         if (recordsToSaveToDb.length > 0) await db.splitView.bulkPut(recordsToSaveToDb);
       });
-      await useWorkspaceStore.getState().loadWorkspaces();
+      // Remove the loadWorkspaces call to prevent modal state interference
+      // await useWorkspaceStore.getState().loadWorkspaces();
     } catch (dbError) {
       summary.errors.push(`Failed to save imported data to the database: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
     }

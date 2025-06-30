@@ -117,26 +117,42 @@ function estimateTimeToCrack(entropy: number): string {
 function calculateStrength(data: PasswordGeneratorData) {
   if (!data.currentPassword) return { entropy: 0, strength: 'Very Weak', color: 'text-red-500', timeToCrack: 'instantly' };
 
+  const actualPassword = SensitiveDataManager.unmask(data.currentPassword);
+  const length = actualPassword.length;
+  
+  if (length === 0) return { entropy: 0, strength: 'Very Weak', color: 'text-red-500', timeToCrack: 'instantly' };
+
   let poolSize = 0;
-  let length = 0;
   
   if (data.mode === 'password') {
-    const passwordSettings = data.passwordSettings || {
-      length: 16, useUppercase: true, useLowercase: true, useNumbers: true, useSpecial: true, excludeAmbiguous: false
-    };
-    length = passwordSettings.length;
-    if (passwordSettings.useUppercase) poolSize += passwordSettings.excludeAmbiguous ? 24 : 26;
-    if (passwordSettings.useLowercase) poolSize += passwordSettings.excludeAmbiguous ? 24 : 26;
-    if (passwordSettings.useNumbers) poolSize += passwordSettings.excludeAmbiguous ? 8 : 10;
-    if (passwordSettings.useSpecial) poolSize += CHARSETS.special.length;
-    if (poolSize === 0) poolSize = 1;
+    // Analyze the actual password content to determine character pool
+    const hasUppercase = /[A-Z]/.test(actualPassword);
+    const hasLowercase = /[a-z]/.test(actualPassword);
+    const hasNumbers = /[0-9]/.test(actualPassword);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(actualPassword);
+    
+    // Calculate pool size based on what's actually in the password
+    if (hasUppercase) poolSize += 26;
+    if (hasLowercase) poolSize += 26;
+    if (hasNumbers) poolSize += 10;
+    if (hasSpecial) poolSize += CHARSETS.special.length;
+    
+    // If somehow no character types detected, assume lowercase
+    if (poolSize === 0) poolSize = 26;
   } else { // Passphrase mode
-    const passphraseSettings = data.passphraseSettings || { wordCount: 4, separator: '-', capitalize: 'title' as Capitalization };
+    // For passphrases, still use the wordlist approach but count actual words
+    const words = actualPassword.split(/[-_\s]+/).filter(word => word.length > 0);
     poolSize = wordlist.length;
-    length = passphraseSettings.wordCount;
-    // Add a bit of entropy for capitalization and separator if used
-    if (passphraseSettings.capitalize !== 'none') poolSize += 1;
-    if (passphraseSettings.separator) poolSize += 1;
+    // Use actual word count instead of settings
+    const wordCount = words.length;
+    const entropy = Math.log2(Math.pow(poolSize, wordCount));
+    const timeToCrack = estimateTimeToCrack(entropy);
+
+    if (entropy < 40) return { entropy: Math.round(entropy), strength: 'Very Weak', color: 'text-red-500', timeToCrack };
+    if (entropy < 60) return { entropy: Math.round(entropy), strength: 'Weak', color: 'text-orange-500', timeToCrack };
+    if (entropy < 80) return { entropy: Math.round(entropy), strength: 'Moderate', color: 'text-yellow-500', timeToCrack };
+    if (entropy < 100) return { entropy: Math.round(entropy), strength: 'Strong', color: 'text-green-500', timeToCrack };
+    return { entropy: Math.round(entropy), strength: 'Very Strong', color: 'text-green-500', timeToCrack };
   }
   
   const entropy = Math.log2(Math.pow(poolSize, length));
@@ -146,7 +162,6 @@ function calculateStrength(data: PasswordGeneratorData) {
   if (entropy < 60) return { entropy: Math.round(entropy), strength: 'Weak', color: 'text-orange-500', timeToCrack };
   if (entropy < 80) return { entropy: Math.round(entropy), strength: 'Moderate', color: 'text-yellow-500', timeToCrack };
   if (entropy < 100) return { entropy: Math.round(entropy), strength: 'Strong', color: 'text-green-500', timeToCrack };
-  // Use green-500 for Very Strong to ensure visibility
   return { entropy: Math.round(entropy), strength: 'Very Strong', color: 'text-green-500', timeToCrack };
 }
 
@@ -215,8 +230,20 @@ const PasswordGeneratorUI: React.FC<{
     navigator.clipboard.writeText(SensitiveDataManager.unmask(passwordToSave));
     setCopiedId('current');
     setTimeout(() => setCopiedId(null), 1500);
-    regenerate();
-    onChange({ ...state, data: { ...data, history: [newEntry, ...history.slice(0, 49)] } });
+    
+    // Generate new password and update both current password and history in a single state update
+    const newPassword = mode === 'password'
+      ? generateSecurePassword(passwordSettings)
+      : generateSecurePassphrase(passphraseSettings);
+    
+    onChange({ 
+      ...state, 
+      data: { 
+        ...data, 
+        currentPassword: SensitiveDataManager.mask(newPassword),
+        history: [newEntry, ...history.slice(0, 49)] 
+      } 
+    });
   };
 
   const handleHistoryChange = (id: string, field: 'identifier' | 'purpose', value: string) => {
@@ -248,8 +275,9 @@ const PasswordGeneratorUI: React.FC<{
           <input
             type="text"
             value={SensitiveDataManager.unmask(currentPassword)}
-            readOnly
+            onChange={(e) => onChange({ ...state, data: { ...data, currentPassword: SensitiveDataManager.mask(e.target.value) } })}
             className="flex-1 font-mono text-lg text-gray-100 bg-gray-900/50 px-3 py-2 rounded-md border border-gray-700/50 focus:border-blue-500/50 focus:outline-none transition-colors"
+            placeholder="Generated password (editable)"
           />
           <button onClick={regenerate} className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors" title="Regenerate">
             <RefreshCw size={18} />

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { ImportExportService } from '../../features/import-export/ImportExportService';
 import { ImportProcessSummary } from '../../features/import-export/types';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { X, UploadCloud, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface ImportWorkspacesModalProps {
@@ -16,21 +17,31 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({ is
   const [summary, setSummary] = useState<ImportProcessSummary | null>(null);
   const [processingError, setProcessingError] = useState<string | null>(null);
   const service = useMemo(() => new ImportExportService(), []);
+  const workspaceStore = useWorkspaceStore();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
+      
       if (!file.name.endsWith('.scratch')) {
         setProcessingError("Invalid file type. Please select a '.scratch' file.");
         setStep('selectFile'); // Stay on select file step
         return;
       }
+      
       setProcessingError(null);
       setStep('loading');
       setSummary(null);
-      const importResult = await service.importWorkspaces(file);
-      setSummary(importResult);
-      setStep('summary');
+      
+      try {
+        const importResult = await service.importWorkspaces(file);
+        setSummary(importResult);
+        setStep('summary');
+      } catch (error) {
+        console.error('Import error:', error);
+        setProcessingError(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+        setStep('selectFile');
+      }
     }
   }, [service]);
 
@@ -38,9 +49,14 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({ is
     onDrop,
     accept: { 'application/octet-stream': ['.scratch'] }, // More specific if possible
     multiple: false,
+    disabled: step === 'loading' || step === 'summary',
   });
 
   const handleClose = () => {
+    // If we're closing from the summary step, update the workspace list
+    if (step === 'summary') {
+      workspaceStore.loadWorkspaces();
+    }
     setStep('selectFile');
     setSummary(null);
     setProcessingError(null);

@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, X, FileUp, FileDown, Menu } from 'lucide-react';
 
 interface TabsProps {
-  activeTab: 'prompts' | 'templates' | 'snippets';
-  onTabChange: (tab: 'prompts' | 'templates' | 'snippets') => void;
+  activeTab: 'prompts' | 'templates' | 'snippets' | 'workflows';
+  onTabChange: (tab: 'prompts' | 'templates' | 'snippets' | 'workflows') => void;
   onSearch: (query: string) => void;
   searchQuery: string;
   onImportExport: () => void;
@@ -75,6 +75,16 @@ export const Tabs: React.FC<TabsProps> = ({
             onClick={() => onTabChange('snippets')}
           >
             Snippets
+          </button>
+          <button
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'workflows'
+                ? 'bg-blue-500/20 text-blue-400'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+            }`}
+            onClick={() => onTabChange('workflows')}
+          >
+            Workflows
           </button>
         </div>
       </div>
