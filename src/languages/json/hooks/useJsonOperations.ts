@@ -1,9 +1,12 @@
 import { useCallback } from 'react';
 import * as monaco from 'monaco-editor'; // Import monaco namespace
 import { unstringifyJson } from '../utils/unstringify';
+import { extractJsonFromText } from '../utils/extractJson';
+import { Tab } from '../../../types';
 
 export const useJsonOperations = (
-  editor: monaco.editor.IStandaloneCodeEditor | null // Allow editor to be null initially
+  editor: monaco.editor.IStandaloneCodeEditor | null, // Allow editor to be null initially
+  addBackgroundTab?: (tab: Tab) => void // Optional function to add background tabs
 ) => {
 
   // Helper function to apply edits while preserving undo stack
@@ -318,6 +321,76 @@ export const useJsonOperations = (
     }
   }, [editor, applyEdit]);
 
+  // --- Extract JSON operation ---
+  const handleExtractJson = useCallback(() => {
+    if (!editor || !addBackgroundTab) return;
+    
+    try {
+      const content = editor.getValue();
+      const extractedJsons = extractJsonFromText(content);
+      
+      if (extractedJsons.length === 0) {
+        console.log('No JSON found in content');
+        return;
+      }
+      
+      // Replace the current editor content with the first JSON found
+      const firstJson = extractedJsons[0];
+      let formattedJson: string;
+      
+      if (firstJson.isStringified) {
+        formattedJson = firstJson.content; // Already formatted by extractJson
+      } else {
+        try {
+          const parsed = JSON.parse(firstJson.content);
+          formattedJson = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+          formattedJson = firstJson.content; // Use as-is if formatting fails
+        }
+      }
+      
+      applyEdit(formattedJson, 'json.extract');
+      
+      // Create background tabs for any additional JSON found
+      if (extractedJsons.length > 1) {
+        for (let i = 1; i < extractedJsons.length; i++) {
+          const jsonExtract = extractedJsons[i];
+          let tabContent: string;
+          
+          if (jsonExtract.isStringified) {
+            tabContent = jsonExtract.content; // Already formatted
+          } else {
+            try {
+              const parsed = JSON.parse(jsonExtract.content);
+              tabContent = JSON.stringify(parsed, null, 2);
+            } catch (e) {
+              tabContent = jsonExtract.content; // Use as-is if formatting fails
+            }
+          }
+          
+          const newTab: Tab = {
+            id: crypto.randomUUID(),
+            title: `Extracted JSON ${i + 1}`,
+            content: tabContent,
+            language: 'json',
+            languageLocked: true, // Lock to JSON as requested
+            cursorPosition: { lineNumber: 1, column: 1 },
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            workspaceId: '', // Will be set by the store
+            isPinned: false
+          };
+          
+          addBackgroundTab(newTab);
+        }
+      }
+      
+      console.log(`Extracted ${extractedJsons.length} JSON object(s)`);
+    } catch (error) {
+      console.error('Failed to extract JSON:', error);
+    }
+  }, [editor, addBackgroundTab, applyEdit]);
+
   return {
     handleFormat,
     handleMinify,
@@ -327,6 +400,7 @@ export const useJsonOperations = (
     handleRemoveEmpty,
     handleRemoveComments,
     handleStringify,
-    handleUnstringify
+    handleUnstringify,
+    handleExtractJson
   };
 };

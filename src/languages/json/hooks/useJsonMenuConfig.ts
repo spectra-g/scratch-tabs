@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor';
 import {
     FileText, FileCode, Settings2, WrapText, UnfoldVertical,
     SortAsc, Trash2, TextQuote, Palette,
-    FileCheck, ListRestart, FileSymlink, FileCog, FolderTree, MessageSquareOff
+    FileCheck, ListRestart, FileSymlink, FileCog, FolderTree, MessageSquareOff, PackageSearch
 } from 'lucide-react';
 
 import { useRootStore } from '../../../stores';
@@ -43,8 +43,8 @@ export const useJsonMenuConfig = (
 
     const {
         handleFormat, handleMinify, handleSortKeys, handleFlatten,
-        handleUnflatten, handleRemoveEmpty, handleRemoveComments, handleStringify, handleUnstringify
-    } = useJsonOperations(editor); // Operations that modify the current tab directly
+        handleUnflatten, handleRemoveEmpty, handleRemoveComments, handleStringify, handleUnstringify, handleExtractJson
+    } = useJsonOperations(editor, handleAddBackgroundTab); // Operations that modify the current tab directly
 
     const {
         handleToCamelCase, handleToSnakeCase, handleToKebabCase
@@ -74,6 +74,7 @@ export const useJsonMenuConfig = (
         const removeCommentsAction = createAction(handleRemoveComments);
         const stringifyAction = createAction(handleStringify);
         const unstringifyAction = createAction(handleUnstringify);
+        const extractJsonAction = createAction(handleExtractJson);
 
         const toCamelCaseAction = createAction(handleToCamelCase);
         const toSnakeCaseAction = createAction(handleToSnakeCase);
@@ -115,6 +116,7 @@ export const useJsonMenuConfig = (
             { id: 'removeComments', label: 'Remove Comments', icon: MessageSquareOff, action: removeCommentsAction },
             { id: 'stringify', label: 'Stringify', icon: TextQuote, action: stringifyAction },
             { id: 'unstringify', label: 'Un-stringify', icon: TextQuote, action: unstringifyAction, disabled: !enableUnstringify },
+            { id: 'extractJson', label: 'Extract JSON', icon: PackageSearch, action: extractJsonAction },
             { id: 'separator2', isSeparator: true, label: 'sep1', icon: Settings2 }, // Icon needed but won't show
 
             // Section 2: Key Transformations
@@ -152,7 +154,7 @@ export const useJsonMenuConfig = (
     }, [
         editor, onClose,
         handleFormat, handleMinify, handleSortKeys, handleFlatten, handleUnflatten,
-        handleRemoveEmpty, handleRemoveComments, handleStringify, handleUnstringify,
+        handleRemoveEmpty, handleRemoveComments, handleStringify, handleUnstringify, handleExtractJson,
         handleToCamelCase, handleToSnakeCase, handleToKebabCase,
         handleToJava, handleToTypeScript, handleToPython, handleToGo, handleToCSharp,
         handleToCsv, handleToYaml, handleToXml,
