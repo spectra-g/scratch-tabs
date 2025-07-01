@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, ExternalLink } from 'lucide-react';
+import { Clock, ExternalLink, X } from 'lucide-react';
 
 interface HistoryPanelProps {
   history: string[];
