@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  Code, 
-  Download, 
-  Copy, 
-  Trash2, 
-  History, 
-  AlertTriangle, 
-  Eye, 
-  EyeOff, 
-  BarChart2, 
-  BarChart2Off 
-} from 'lucide-react';
+import { Code, Download, Copy, Trash2, History, AlertTriangle, Eye, EyeOff, BarChart2, BarChart2 as BarChart2Off } from 'lucide-react';
 import { toCurl } from '../utils/urlUtils';
 
 interface ToolbarButtonsProps {
