@@ -20,6 +20,7 @@ interface SortableTabProps {
     onEditCancel: () => void;
     onMouseEnterTab: (tab: Tab, element: HTMLElement) => void;
     onMouseLeaveTab: (tabId: string) => void;
+    onForceHideTooltip?: () => void;
 }
 
 const MIN_WIDTH_FOR_X = 50;
@@ -40,6 +41,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     onEditCancel,
     onMouseEnterTab,
     onMouseLeaveTab,
+    onForceHideTooltip,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [tabElement, setTabElement] = useState<HTMLDivElement | null>(null);
@@ -115,6 +117,13 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     const handleCloseClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         e.preventDefault(); // Prevent any default behavior
+        
+        // Force hide tooltip immediately when close button is clicked
+        if (onForceHideTooltip) {
+            onForceHideTooltip();
+        } else {
+            onMouseLeaveTab(tab.id);
+        }
         
         // Show confirmation for any tab that has content or is a tablet
         // (tablets might not have traditional content but should still be confirmed)

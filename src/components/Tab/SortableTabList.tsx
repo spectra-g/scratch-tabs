@@ -20,6 +20,7 @@ interface SortableTabListProps {
   onEditCancel: () => void;
   onMouseEnterTab: (tab: Tab, element: HTMLElement) => void;
   onMouseLeaveTab: (tabId: string) => void;
+  onForceHideTooltip?: () => void;
 }
 
 export const SortableTabList: React.FC<SortableTabListProps> = ({
@@ -38,7 +39,8 @@ export const SortableTabList: React.FC<SortableTabListProps> = ({
   onEditSubmit,
   onEditCancel,
   onMouseEnterTab,
-  onMouseLeaveTab
+  onMouseLeaveTab,
+  onForceHideTooltip
 }) => {
   // Only tabs that match the pinned state are shown
   const filteredTabs = tabs.filter(tab => !!tab.isPinned === isPinned);
@@ -74,6 +76,7 @@ export const SortableTabList: React.FC<SortableTabListProps> = ({
             onEditCancel={onEditCancel}
             onMouseEnterTab={onMouseEnterTab}
             onMouseLeaveTab={onMouseLeaveTab}
+            onForceHideTooltip={onForceHideTooltip}
           />
         ))}
       </div>
