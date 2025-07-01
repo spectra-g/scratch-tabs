@@ -68,11 +68,10 @@ export const AIModelManagementModal: React.FC = () => {
 
     return (
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2">
           <span className="text-sm font-medium text-gray-300">{modelName}</span>
-          <span className="text-xs text-gray-400">{progress}%</span>
         </div>
-        {visibleFiles.length > 0 ? (
+        {visibleFiles.length > 0 && (
           <div className="space-y-2">
             {visibleFiles.map(file => (
               <div key={file.file} className="flex items-center space-x-2">
@@ -87,13 +86,6 @@ export const AIModelManagementModal: React.FC = () => {
                 </span>
               </div>
             ))}
-          </div>
-        ) : (
-          <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
-            />
           </div>
         )}
       </div>

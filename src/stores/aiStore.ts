@@ -40,9 +40,11 @@ export interface AISlice {
   ai: AIState;
   initializeModel: () => Promise<void>;
   summarizeText: (text: string) => void; // No longer returns Promise<string>
+  summarizeTextWithModal: (text: string, tabId: string) => void; // New function that also triggers modal
   terminateWorker: () => void; // Add function to terminate worker
   initializeCodegenModel: () => Promise<void>;
   runCodegen: (payload: any) => void;
+  setSummaryModalCallback: (callback: ((tabId: string) => void) | null) => void;
 }
 
 // Helper function to update progress state for the ai slice only
@@ -106,6 +108,7 @@ function updateProgressState(ai: AIState, p: any): AIState {
 let workerInstance: Worker | null = null;
 let codegenWorkerInstance: Worker | null = null;
 let codegenListenerAttached = false;
+let summaryModalCallback: ((tabId: string) => void) | null = null;
 
 export const useAIStore = create<AISlice>((set, get) => {
     // Track the current codegen model name for persistence
@@ -125,7 +128,7 @@ export const useAIStore = create<AISlice>((set, get) => {
     // On store creation, check IndexedDB settings and auto-initialize if needed
     if (typeof window !== 'undefined') {
         getSetting(getSummarizationPersistenceKey()).then(val => {
-            if (val === 'true') setTimeout(() => get().initializeModel(), 0);
+            if (val === 'true') get().initializeModel();
         });
         
         // Only initialize codegen if enabled
@@ -138,7 +141,7 @@ export const useAIStore = create<AISlice>((set, get) => {
                 const persistenceKey = getCodegenPersistenceKey();
                 getSetting(persistenceKey).then(val => {
                     if (val === 'true') {
-                        setTimeout(() => get().initializeCodegenModel(), 0);
+                        get().initializeCodegenModel();
                     }
                 });
             });
@@ -396,6 +399,21 @@ export const useAIStore = create<AISlice>((set, get) => {
                 };
             });
             codegenWorker.postMessage({ type: 'generate', ...payload });
+        },
+
+        summarizeTextWithModal: (text: string, tabId: string) => {
+            // First call the regular summarizeText
+            const { summarizeText } = get();
+            summarizeText(text);
+            
+            // Then trigger the modal callback if it exists
+            if (summaryModalCallback) {
+                summaryModalCallback(tabId);
+            }
+        },
+
+        setSummaryModalCallback: (callback: ((tabId: string) => void) | null) => {
+            summaryModalCallback = callback;
         }
     };
 });
