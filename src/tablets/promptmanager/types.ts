@@ -54,6 +54,7 @@ export interface PromptManagerUI {
   searchQuery: string;
   selectedTags: string[];
   showFavoritesOnly: boolean;
+  showFiltersPanel: boolean;
 }
 
 export interface PromptManagerData {

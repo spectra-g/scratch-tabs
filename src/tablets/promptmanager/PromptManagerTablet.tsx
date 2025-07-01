@@ -37,6 +37,7 @@ export const PromptManagerTablet: Tablet = {
           searchQuery: '',
           selectedTags: [],
           showFavoritesOnly: false,
+          showFiltersPanel: true,
         }
       }
     };
@@ -85,6 +86,7 @@ export const PromptManagerTablet: Tablet = {
           searchQuery: data.ui?.searchQuery || '',
           selectedTags: Array.isArray(data.ui?.selectedTags) ? data.ui.selectedTags : [],
           showFavoritesOnly: data.ui?.showFavoritesOnly || false,
+          showFiltersPanel: data.ui?.showFiltersPanel ?? true,
         };
         
         return parsed;

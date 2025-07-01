@@ -7,6 +7,7 @@ import { detectLanguage } from '../../languages';
 import { VaultItemCard } from './components/VaultItemCard';
 import { VaultItemModal } from './components/VaultItemModal';
 import { VaultSidebar } from './components/VaultSidebar';
+import { VaultImportModal } from './components/VaultImportModal';
 import { VaultItem, SortOrder, VaultTabletState, ContentType } from './types';
 import { getContentTypeIcon } from './utils/contentTypeUtils';
 import { filterItems, sortItems } from './utils/filterUtils';
@@ -93,6 +94,9 @@ export const VaultTablet: Tablet = {
 
     // Store the current sorted order in state when we need to preserve it
     const [manualOrder, setManualOrder] = useState<string[]>([]);
+
+    // Import modal state
+    const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
 
     // Memoized filtered and sorted items
     const filteredItems = useMemo(() => {
@@ -282,6 +286,26 @@ export const VaultTablet: Tablet = {
           isAddingItem: false
         }
       });
+    }, [state, onChange]);
+
+    const handleImportItems = useCallback(() => {
+      setIsImportModalOpen(true);
+    }, []);
+
+    const handleCloseImportModal = useCallback(() => {
+      setIsImportModalOpen(false);
+    }, []);
+
+    const handleImportItemsConfirm = useCallback((newItems: VaultItem[]) => {
+      // Add new items to the beginning of the list
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          items: [...newItems, ...state.data.items]
+        }
+      });
+      setIsImportModalOpen(false);
     }, [state, onChange]);
 
     const handleSaveItem = useCallback((item: VaultItem, isNew: boolean) => {
@@ -683,6 +707,7 @@ export const VaultTablet: Tablet = {
           searchQuery={state.data.searchQuery}
           onSearchChange={handleSearchChange}
           onAddItem={handleAddItem}
+          onImportItems={handleImportItems}
           allLabels={allLabels}
           allContentTypes={allContentTypes}
           activeFilters={state.data.activeFilters}
@@ -810,6 +835,15 @@ export const VaultTablet: Tablet = {
             onSave={handleSaveItem}
             onClose={handleCloseModal}
             existingLabels={allLabels}
+          />
+        )}
+
+        {/* Import Modal */}
+        {isImportModalOpen && (
+          <VaultImportModal
+            onImport={handleImportItemsConfirm}
+            onClose={handleCloseImportModal}
+            existingItems={state.data.items}
           />
         )}
       </div>

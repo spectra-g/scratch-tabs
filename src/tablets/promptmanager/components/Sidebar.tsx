@@ -13,6 +13,7 @@ interface SidebarProps {
   onDeleteTag: (id: string) => void;
   isVisible: boolean;
   onClose: () => void;
+  showFiltersPanel: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -25,7 +26,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onUpdateTag,
   onDeleteTag,
   isVisible,
-  onClose
+  onClose,
+  showFiltersPanel
 }) => {
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
@@ -92,8 +94,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar */}
       <div 
         className={`w-64 bg-gray-800 border-r border-gray-700/50 flex-none overflow-y-auto custom-scrollbar transition-all duration-300 ease-in-out ${
-          isVisible ? 'fixed md:relative left-0 top-0 bottom-0 z-50' : 'fixed md:relative -left-64 md:left-0 top-0 bottom-0 z-50'
-        }`}
+          isVisible ? 'fixed left-0 top-0 bottom-0 z-50' : 'fixed -left-64 top-0 bottom-0 z-50'
+        } ${showFiltersPanel ? 'md:relative md:left-0' : 'md:hidden'}`}
       >
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">

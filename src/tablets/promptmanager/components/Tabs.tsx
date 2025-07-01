@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, X, FileUp, FileDown, Menu } from 'lucide-react';
+import { Search, X, FileUp, FileDown, Menu, SlidersHorizontal } from 'lucide-react';
 
 interface TabsProps {
   activeTab: 'prompts' | 'templates' | 'snippets' | 'workflows';
@@ -8,6 +8,8 @@ interface TabsProps {
   searchQuery: string;
   onImportExport: () => void;
   onMobileMenuToggle: () => void;
+  showFiltersPanel: boolean;
+  onToggleFiltersPanel: () => void;
 }
 
 export const Tabs: React.FC<TabsProps> = ({
@@ -16,7 +18,9 @@ export const Tabs: React.FC<TabsProps> = ({
   onSearch,
   searchQuery,
   onImportExport,
-  onMobileMenuToggle
+  onMobileMenuToggle,
+  showFiltersPanel,
+  onToggleFiltersPanel
 }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -112,6 +116,19 @@ export const Tabs: React.FC<TabsProps> = ({
             </button>
           )}
         </div>
+        
+        {/* Filters Panel Toggle */}
+        <button
+          onClick={onToggleFiltersPanel}
+          className={`p-2 rounded-md transition-colors ${
+            showFiltersPanel
+              ? 'text-blue-400 bg-blue-500/20'
+              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+          }`}
+          title={showFiltersPanel ? 'Hide Filters Panel' : 'Show Filters Panel'}
+        >
+          <SlidersHorizontal size={18} />
+        </button>
         
         {/* Import/Export */}
         <button

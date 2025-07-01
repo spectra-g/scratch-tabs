@@ -1,5 +1,5 @@
 import React from 'react';
-import { Archive, Search, Plus, Tag, FileCode, Filter, SortDesc, Pin, SortAsc, Clock, Hash, Star, X } from 'lucide-react';
+import { Archive, Search, Plus, Tag, FileCode, Filter, SortDesc, Pin, SortAsc, Clock, Hash, Star, X, Upload } from 'lucide-react';
 import { ContentType, SortOrder } from '../types';
 import { getContentTypeIcon } from '../utils/contentTypeUtils';
 
@@ -7,6 +7,7 @@ interface VaultSidebarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onAddItem: () => void;
+  onImportItems: () => void;
   allLabels: string[];
   allContentTypes: ContentType[];
   activeFilters: {
@@ -26,6 +27,7 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
   searchQuery,
   onSearchChange,
   onAddItem,
+  onImportItems,
   allLabels,
   allContentTypes,
   activeFilters,
@@ -63,14 +65,24 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
           />
         </div>
         
-        {/* Add Button */}
-        <button
-          onClick={onAddItem}
-          className="mt-4 w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
-        >
-          <Plus size={16} />
-          <span>Add New Item</span>
-        </button>
+        {/* Action Buttons */}
+        <div className="mt-4 space-y-2">
+          <button
+            onClick={onAddItem}
+            className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
+          >
+            <Plus size={16} />
+            <span>Add New Item</span>
+          </button>
+          
+          <button
+            onClick={onImportItems}
+            className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-green-500/20 text-green-400 rounded-md hover:bg-green-500/30 transition-colors"
+          >
+            <Upload size={16} />
+            <span>Import Items</span>
+          </button>
+        </div>
       </div>
       
       {/* Filters Section */}
