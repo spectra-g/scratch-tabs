@@ -262,6 +262,27 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
 
     restoreScrollPosition(activeTab.id);
     
+    // Auto-format tabs that were likely created from paste or file import
+    // First check if tab was created recently to avoid unnecessary work
+    const now = Date.now();
+    if ((now - activeTab.dateCreated) < 500) {
+      // Only check other conditions if tab was recently created
+      const hasSubstantialContent = activeTab.content && activeTab.content.trim().length > 50;
+      const isFormattableLanguage = activeTab.language !== 'plaintext';
+      const isNotTablet = !activeTab.isTablet;
+      const isNotLikelyDuplicate = !activeTab.title.includes('(copy)') && !activeTab.title.includes('Copy of');
+      
+      if (hasSubstantialContent && isFormattableLanguage && isNotTablet && isNotLikelyDuplicate) {
+        // Use setTimeout to ensure the model and language are fully set before formatting
+        setTimeout(() => {
+          const formatAction = editor.getAction('editor.action.formatDocument');
+          if (formatAction) {
+            formatAction.run();
+          }
+        }, 100); // Small delay to ensure everything is ready
+      }
+    }
+    
     // Ctrl+K (Format)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
        if (!editor.hasTextFocus()) {
