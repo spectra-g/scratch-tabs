@@ -384,8 +384,6 @@ export const useJsonOperations = (
           addBackgroundTab(newTab);
         }
       }
-      
-      console.log(`Extracted ${extractedJsons.length} JSON object(s)`);
     } catch (error) {
       console.error('Failed to extract JSON:', error);
     }

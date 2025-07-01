@@ -12,6 +12,7 @@ import { SplitViewDivider } from '../SplitView/SplitViewDivider';
 import { DiffModal } from '../DiffModal';
 import { SummarizeModal } from '../AI/SummarizeModal';
 import { SearchModal } from '../Search/SearchModal';
+import { AIModelManagementModal } from '../AI/AIModelManagementModal';
 
 const MainLayout: React.FC = () => {
   const {
@@ -303,6 +304,7 @@ const MainLayout: React.FC = () => {
           />
       )}
       {isSearchOpen && <SearchModal />}
+      <AIModelManagementModal />
     </div>
   );
 };
