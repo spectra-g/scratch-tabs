@@ -18,20 +18,20 @@ export const AIModelManagementModal: React.FC = () => {
   const { isAIModelManagementModalOpen, closeAIModelManagementModal } = useModalStore();
   
   const {
-    isReady, isLoading, error, progress, progressStatus, files, initializeModel,
-    isCodegenReady, isCodegenLoading, codegenProgress, codegenProgressStatus, codegenError, codegenFiles, initializeCodegenModel
+    isReady, isLoading, error, progress, _progressStatus, files, initializeModel,
+    isCodegenReady, isCodegenLoading, codegenProgress, _codegenProgressStatus, codegenError, codegenFiles, initializeCodegenModel
   } = useAIStore(state => ({
     isReady: state.ai.isReady,
     isLoading: state.ai.isLoading,
     error: state.ai.error,
     progress: state.ai.progress,
-    progressStatus: state.ai.progressStatus,
+    _progressStatus: state.ai.progressStatus,
     files: state.ai.files,
     initializeModel: state.initializeModel,
     isCodegenReady: state.ai.isCodegenReady,
     isCodegenLoading: state.ai.isCodegenLoading,
     codegenProgress: state.ai.codegenProgress,
-    codegenProgressStatus: state.ai.codegenProgressStatus,
+    _codegenProgressStatus: state.ai.codegenProgressStatus,
     codegenError: state.ai.codegenError,
     codegenFiles: state.ai.codegenFiles,
     initializeCodegenModel: state.initializeCodegenModel,
@@ -47,9 +47,6 @@ export const AIModelManagementModal: React.FC = () => {
     const isDownloading = isLoading || isCodegenLoading;
     const bothReady = isReady && isCodegenReady;
     const someReady = isReady || isCodegenReady;
-    const noneReady = !isReady && !isCodegenReady && !isLoading && !isCodegenLoading;
-
-
 
     if (hasErrors) return 'error';
     if (isDownloading) return 'downloading';
@@ -61,7 +58,7 @@ export const AIModelManagementModal: React.FC = () => {
   const state = getOverallState();
 
   // Helper to render progress for a specific model
-  const renderModelProgress = (modelName: string, progress: number, files: Record<string, FileProgress>) => {
+  const renderModelProgress = (modelName: string, _progress: number, files: Record<string, FileProgress>) => {
     const visibleFiles = Object.values(files).filter(file =>
       !file.completed || (Date.now() - file.lastUpdateTime < 10000)
     );
