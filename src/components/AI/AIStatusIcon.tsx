@@ -1,12 +1,13 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Brain } from 'lucide-react';
 import { useAIStore } from '../../stores/aiStore';
+import { useModalStore } from '../../stores/modalStore';
 import { AITooltip } from './AIToolTip';
 
 export const AIStatusIcon: React.FC = () => {
   const {
-    isReady, isLoading, error, progress, progressStatus, files, initializeModel,
-    isCodegenReady, isCodegenLoading, codegenProgress, codegenProgressStatus, codegenError, codegenFiles, initializeCodegenModel
+    isReady, isLoading, error, progress, progressStatus, files,
+    isCodegenReady, isCodegenLoading, codegenProgress, codegenProgressStatus, codegenError, codegenFiles
   } = useAIStore(state => ({
       isReady: state.ai.isReady,
       isLoading: state.ai.isLoading, // Use this for pulse/disabled
@@ -14,15 +15,15 @@ export const AIStatusIcon: React.FC = () => {
       progress: state.ai.progress,
       progressStatus: state.ai.progressStatus,
       files: state.ai.files,
-      initializeModel: state.initializeModel,
       isCodegenReady: state.ai.isCodegenReady,
       isCodegenLoading: state.ai.isCodegenLoading,
       codegenProgress: state.ai.codegenProgress,
       codegenProgressStatus: state.ai.codegenProgressStatus,
       codegenError: state.ai.codegenError,
       codegenFiles: state.ai.codegenFiles,
-      initializeCodegenModel: state.initializeCodegenModel,
   }));
+
+  const { openAIModelManagementModal } = useModalStore();
 
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
@@ -30,15 +31,9 @@ export const AIStatusIcon: React.FC = () => {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleClick = useCallback(() => {
-    // Always try to initialize both models if they're not ready
-    if (!isReady && !isLoading) {
-      initializeModel();
-    }
-    
-    if (!isCodegenReady && !isCodegenLoading) {
-      initializeCodegenModel();
-    }
-  }, [isReady, isLoading, isCodegenReady, isCodegenLoading, initializeModel, initializeCodegenModel]);
+    // Open the AI model management modal instead of directly initializing
+    openAIModelManagementModal();
+  }, [openAIModelManagementModal]);
 
   const handleMouseEnter = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -61,27 +56,25 @@ export const AIStatusIcon: React.FC = () => {
   let iconColor = 'text-gray-400';
   let hoverColor = 'hover:text-gray-300';
   let animationClass = '';
-  let title = 'Initialize AI Model';
-  let isDisabled = false;
+  let title = 'Open AI Model Management';
 
-  if (error) {
+  if (error || codegenError) {
     iconColor = 'text-red-400';
     hoverColor = 'hover:text-red-300';
-    title = `AI Error: ${error}`;
+    title = 'AI Error - Click to manage models';
   } else if (isLoading || isCodegenLoading) { // Check both loading states for pulse
     iconColor = 'text-blue-400';
     hoverColor = 'hover:text-blue-300';
     animationClass = 'animate-pulse'; // Pulse when either model is loading
-    title = `AI Initializing (${progressStatus})... ${progress}%`;
+    title = 'AI Downloading - Click to view progress';
   } else if (isReady && isCodegenReady) { // Both models ready
     iconColor = 'text-green-100'; // Green when both ready
     hoverColor = 'hover:text-green-300';
-    title = 'AI Ready';
-    isDisabled = true; // Only disable when both models are ready
+    title = 'AI Ready - Click to manage models';
   } else if (isReady && !isCodegenReady) { // Summary ready, codegen not ready
     iconColor = 'text-yellow-400'; // Yellow to indicate partial readiness
     hoverColor = 'hover:text-yellow-300';
-    title = 'Summary Ready - Click to Initialize Codegen';
+    title = 'AI Partially Ready - Click to manage models';
   }
   // If !isReady and !isLoading and !error, it stays gray (initial state)
 
@@ -90,8 +83,7 @@ export const AIStatusIcon: React.FC = () => {
       <button
         ref={buttonRef}
         onClick={handleClick}
-        disabled={isDisabled} // Only disable when both models are ready
-        className={`p-1 rounded transition-colors disabled:opacity-70 disabled:cursor-not-allowed ${iconColor} ${hoverColor}`}
+        className={`p-1 rounded transition-colors ${iconColor} ${hoverColor}`}
         title={title}
         aria-describedby={tooltipVisible ? "ai-tooltip-content" : undefined}
       >

@@ -221,18 +221,96 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero-gradient pt-20 pb-32 md:pt-32 md:pb-40">
+    <!-- Start: Hero Section with Scrolling Headlines -->
+    <section class="hero-gradient pt-20 pb-32 md:pt-32 md:pb-20">
+        <style>
+            /*
+             * CSS for the scrolling headline effect.
+             * No JavaScript required.
+            */
+
+            /* 1. The container that clips the scrolling content */
+            .headline-container {
+                height: 190px; /* Adjust this to fit your largest headline + subtext */
+                overflow: hidden;
+                position: relative;
+            }
+
+            /* 2. The scroller element that contains all items and moves up/down */
+            .headline-scroller {
+                /* It will be animated to move its content into view */
+                animation: scroll-headlines 15s infinite ease-in-out;
+            }
+
+            /* 3. Each individual headline item */
+            .headline-item {
+                height: 190px; /* Must match the container height */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            /* 4. The Keyframe Animation */
+            @keyframes scroll-headlines {
+                /* -- Slide 1 -- */
+                /* Start: Stay on the first item */
+                0% { transform: translateY(0%); }
+                /* Stay for 3 seconds */
+                30% { transform: translateY(0%); }
+
+                /* -- Slide 2 -- */
+                /* Start transition to the second item */
+                33.33% { transform: translateY(-33.33%); }
+                /* Stay for 3 seconds */
+                63.33% { transform: translateY(-33.33%); }
+
+                /* -- Slide 3 -- */
+                /* Start transition to the third item */
+                66.66% { transform: translateY(-66.66%); }
+                /* Stay for 3 seconds */
+                96.66% { transform: translateY(-66.66%); }
+
+                /* Loop back to the start */
+                100% { transform: translateY(0%); }
+            }
+        </style>
+
         <div class="container mx-auto px-6 text-center">
-            <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-                The Ultimate <span class="text-blue-400">Client-Side</span> Data Toolkit
-            </h1>
-            <p class="text-lg md:text-xl text-gray-300 mb-10 max-w-3xl mx-auto">
-                Edit JSON, transform data, generate passwords, sketch ideas, decode JWT tokens, and more - all in your browser.
-                <strong>Zero server dependency. Zero tracking. Zero accounts required.</strong>
-            </p>
+            <!-- The headline container houses the animation -->
+            <div class="headline-container mb-6">
+                <div class="headline-scroller">
+                    <!-- Item 1: The Editor -->
+                    <div class="headline-item">
+                        <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">
+                            Temporary <span class="text-blue-400">reimagined</span>.
+                        </h1>
+                        <p class="text-lg md:text-xl text-gray-300 mt-6 max-w-3xl mx-auto">
+                            The perfect home for your <strong>temporary</strong> data. JSON? Markdown? cURL? Stack trace? Diagrams? Everything is covered. Instantly recognized, beautifully formatted.
+                        </p>
+                    </div>
+                    <!-- Item 2: The Tools -->
+                    <div class="headline-item">
+                        <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">
+                            An arsenal of <span class="text-blue-400">developer tools</span>.
+                        </h1>
+                        <p class="text-lg md:text-xl text-gray-300 mt-6 max-w-3xl mx-auto">
+                            Go beyond text with a suite of 50+ integrated tools. Decode JWTs, test regex, transform data, and manage your clipboard without leaving the tab.
+                        </p>
+                    </div>
+                    <!-- Item 3: The Privacy -->
+                    <div class="headline-item">
+                        <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">
+                            <span class="text-blue-400">Your data</span>, never ours, never theirs.
+                        </h1>
+                        <p class="text-lg md:text-xl text-gray-300 mt-6 max-w-3xl mx-auto">
+                            Everything runs 100% in your browser. Your data never leaves your machine. Zero tracking. Zero accounts. Zero servers. Just pure, private utility.
+                        </p>
+                    </div>
+                </div>
+            </div>
             <a href="https://app.scratchtabs.com" target="_blank"
-                class="primary-button text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105 cta-button-glow">
+               class="primary-button text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105 cta-button-glow">
                 Launch App & Start Building
             </a>
             <p class="text-sm text-gray-500 mt-6">No registration required. Instant access.</p>
@@ -254,6 +332,58 @@
                         <div class="text-xs">Setup Steps</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- START: Updated "The Daily Struggle" Section -->
+    <section class="py-16 bg-gray-800/30">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title text-3xl md:text-4xl font-bold text-center mb-4">The Daily Struggle</h2>
+            <p class="text-gray-400 text-center text-lg mb-12 max-w-3xl mx-auto">Everyone works with temporary data
+                <strong>daily</strong>, but nothing exists to help you manage it. Say you need to quickly compare two JSON objects. The
+                "quick" task that ends up polluting your editor and wasting your time.</p>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <!-- Before -->
+                <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold text-red-400 mb-4">The Old Way (In Your IDE)</h3>
+                    <ol class="text-gray-400 text-sm space-y-2 list-decimal list-inside">
+                        <li>Open your IDE. Wait for it to load.</li>
+                        <li>Copy your first JSON.</li>
+                        <li>Create a new file: `Untitled-1.json`.</li>
+                        <li>Paste the first JSON. It's unformatted.</li>
+                        <li>Run the "Format Document" command.</li>
+                        <li>Repeat steps 2-5 for `Untitled-2.json`.</li>
+                        <li>Find and run the "Compare Active File With..." command.</li>
+                        <li>Navigate your file system to select the other file.</li>
+                        <li>Finally, see the diff.</li>
+                        <li>Remember to delete the temporary files later.</li>
+                    </ol>
+                </div>
+                <!-- After -->
+                <div class="bg-gray-900 border border-green-500/30 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold text-green-400 mb-4">The Scratch Tabs Way</h3>
+                    <ol class="text-gray-300 text-sm space-y-2 list-decimal list-inside">
+                        <li>Copy your first JSON.</li>
+                        <li>Click "New from Paste". A JSON formatted tab appears instantly.</li>
+                        <li>Copy your second JSON.</li>
+                        <li>Right-click the tab, select "Compare with Clipboard."</li>
+                        <li class="font-bold text-green-300 mt-4">Two clicks and done. No files, no hassle.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- New Subsection: The Power-Up -->
+            <div class="mt-16 max-w-4xl mx-auto text-center border-t border-gray-700/50 pt-12">
+                <h3 class="text-2xl font-semibold text-white mb-4">But what if the data isn't perfect?</h3>
+                <p class="text-gray-400 leading-relaxed">
+                    What if the keys are out of order? What if your content is stringified, or contains comments and other
+                    noise? Scratch Tabs is built for this.
+                </p>
+                <p class="mt-6 text-xl font-medium text-blue-300">
+                    Clean, format, and transform any data with powerful, one-click functions.
+                </p>
             </div>
         </div>
     </section>
@@ -280,7 +410,7 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-white mb-2">Frictionless Workflow</h3>
-                    <p class="text-gray-400 text-sm">Auto language detection, instant formatting, and one-click transformations. What takes 5 steps in an IDE becomes 1 click in Scratch Tabs.</p>
+                    <p class="text-gray-400 text-sm">Auto language detection, instant formatting, and one-click transformations. What takes several steps in an IDE becomes 1 click in Scratch Tabs.</p>
                 </div>
                 <div class="value-prop-card text-center p-6 rounded-lg">
                     <div class="icon-placeholder">
@@ -291,7 +421,7 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-white mb-2">Unrivaled Transformation</h3>
-                    <p class="text-gray-400 text-sm">Shape Snap's intelligent shape detection and correction, powerful JSON mapper, and transformation tools you won't find anywhere else. Built by developers who care.</p>
+                    <p class="text-gray-400 text-sm">Manage whitespace, sorting, remove duplicates, prefix, suffix, line endings, padding, line numbering, duplicating, case conversion, join/split, manipulation via script and more.</p>
                 </div>
                 <div class="value-prop-card text-center p-6 rounded-lg">
                     <div class="icon-placeholder">
@@ -311,47 +441,54 @@
         </div>
     </section>
 
-    <!-- Use Cases Section -->
-    <section class="py-16 bg-gray-800/30">
+    <section class="py-16">
         <div class="container mx-auto px-6">
-            <h2 class="section-title text-3xl md:text-4xl font-bold text-center mb-4">Perfect For These Scenarios</h2>
-            <p class="text-gray-400 text-center text-lg mb-16 max-w-2xl mx-auto">Whether you're transforming data,
-                analyzing JSON, or streamlining your development workflow, Scratch Tabs has you covered.</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="feature-card text-center p-6 rounded-lg">
-                    <div class="icon-placeholder mb-4">
+            <h2 class="section-title text-3xl md:text-4xl font-bold text-center mb-12">Your Instant Superpowers</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Same cards as before, but the context is now stronger -->
+                <div class="value-prop-card text-center p-6 rounded-lg">
+                    <div class="icon-placeholder">
+                        <svg class="icon-shield" viewBox="0 0 24 24">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Absolutely Private</h3>
+                    <p class="text-gray-400 text-sm">Your data never leaves your machine. All processing happens
+                        directly in your browser. Period.</p>
+                </div>
+                <div class="value-prop-card text-center p-6 rounded-lg">
+                    <div class="icon-placeholder">
+                        <svg class="icon-zap" viewBox="0 0 24 24">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Frictionless</h3>
+                    <p class="text-gray-400 text-sm">No setup, no installations, no accounts. Launch the app
+                        and get to work in seconds.</p>
+                </div>
+                <div class="value-prop-card text-center p-6 rounded-lg">
+                    <div class="icon-placeholder">
                         <svg class="icon-tool" viewBox="0 0 24 24">
                             <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-white mb-3">Data Transformation</h3>
-                    <p class="text-gray-400 text-sm">Transform JSON structures, map data between formats, and use Shape Snap's intelligent shape detection. Tools that are few and far between, all in one place.</p>
+                    <h3 class="text-xl font-semibold text-white mb-2">Surprisingly Powerful</h3>
+                    <p class="text-gray-400 text-sm">It's not just a text editor. It's a suite of 50+ developer tools,
+                        from a REST client to a JWT decoder, all in one place.</p>
                 </div>
-                <div class="feature-card text-center p-6 rounded-lg">
-                    <div class="icon-placeholder mb-4">
-                        <svg class="icon-tool" viewBox="0 0 24 24">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="3" y1="9" x2="21" y2="9"></line>
-                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                <div class="value-prop-card text-center p-6 rounded-lg">
+                    <div class="icon-placeholder">
+                        <svg class="icon-gift" viewBox="0 0 24 24">
+                            <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                            <rect x="2" y="7" width="20" height="5"></rect>
+                            <line x1="12" y1="22" x2="12" y2="7"></line>
+                            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-white mb-3">Data Analysis</h3>
-                    <p class="text-gray-400 text-sm">Quick data exploration, CSV conversion, JSON transformation, and
-                        temporary data storage. Perfect for ad-hoc analysis and data cleaning.</p>
-                </div>
-                <div class="feature-card text-center p-6 rounded-lg">
-                    <div class="icon-placeholder mb-4">
-                        <svg class="icon-tool" viewBox="0 0 24 24">
-                            <path
-                                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.72l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z">
-                            </path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-3">Development Workflow</h3>
-                    <p class="text-gray-400 text-sm">Generate passwords, test regex patterns, encode/decode data, and
-                        manage clipboard history. Streamline your daily development tasks with frictionless tools.</p>
+                    <h3 class="text-xl font-semibold text-white mb-2">Free & Open</h3>
+                    <p class="text-gray-400 text-sm">Scratch Tabs is free forever, with no strings attached. Built for
+                        the community, by a developer who needed it too.</p>
                 </div>
             </div>
         </div>
@@ -381,8 +518,8 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-white mb-2">JSON Editor That Actually Works</h3>
-                    <p class="text-gray-400 text-sm">Format, validate, and transform JSON instantly. Generate TypeScript
-                        interfaces, Java classes, or Python models from your data.</p>
+                    <p class="text-gray-400 text-sm">Extract, format, validate, clean, inspect and transform JSON instantly. Generate TypeScript
+                        interfaces, Java classes, Python models and more from your data.</p>
                 </div>
                 <div class="feature-card rounded-lg p-6 shadow-lg">
                     <div class="icon-placeholder">
@@ -391,7 +528,7 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-white mb-2">Unrivaled Data Transformation</h3>
-                    <p class="text-gray-400 text-sm">Shape Snap's intelligent shape detection and correction, powerful JSON mapper, and transformation tools you won't find anywhere else. Built by developers who care.</p>
+                    <p class="text-gray-400 text-sm">Clean, filter, sort, format, convert, it's the ultimate transformation toolkit you won't find anywhere else. Built by developers who care.</p>
                 </div>
                 <div class="feature-card rounded-lg p-6 shadow-lg">
                     <div class="icon-placeholder">
@@ -543,11 +680,14 @@
                     <p class="text-gray-400">Yes, Scratch Tabs is completely free and will remain free forever. No
                         premium features, no paywalls, no hidden costs. We believe powerful developer tools should be
                         accessible to everyone.</p>
+                    <p class="text-gray-400 pt-6">If the app has helped your productivity, saved you time, or just made your dev life a little smoother — consider supporting it with a
+                        <a href="https://ko-fi.com/scratchtabs"
+                           target="_blank" class="text-blue-400 hover:text-blue-300">coffee (or two!)</a>.</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg">
                     <h3 class="text-lg font-semibold text-white mb-2">How does client-side processing work?</h3>
                     <p class="text-gray-400">All processing happens directly in your browser using JavaScript. No data
-                        is sent to any server, ensuring complete privacy. Your JSON, API calls, passwords, and all other
+                        is sent to any server, ensuring complete privacy. Your JSON, passwords, and all other
                         data stay on your machine.</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg">
@@ -563,7 +703,7 @@
                 <div class="bg-gray-800 p-6 rounded-lg">
                     <h3 class="text-lg font-semibold text-white mb-2">Can I use it offline?</h3>
                     <p class="text-gray-400">Absolutely! Once loaded, Scratch Tabs works completely offline. All
-                        features including JSON editing, API testing, and data conversion work without an internet
+                        features including editing, AI summary, data conversion etc. work without an internet
                         connection.</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg">
@@ -573,8 +713,8 @@
                 <div class="bg-gray-800 p-6 rounded-lg">
                     <h3 class="text-lg font-semibold text-white mb-2">What makes it different from other tools?</h3>
                     <p class="text-gray-400">Unlike other tools that require accounts, installations, or send your data
-                        to servers, Scratch Tabs is completely client-side. It combines JSON editing, API testing, data
-                        conversion, and specialized tablets in one privacy-focused package.</p>
+                        to servers, Scratch Tabs is completely client-side. It combines data editing, data
+                        conversion, transformation, and specialized tools in one privacy-focused package.</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg">
                     <h3 class="text-lg font-semibold text-white mb-2">How can I provide feedback or report issues?</h3>

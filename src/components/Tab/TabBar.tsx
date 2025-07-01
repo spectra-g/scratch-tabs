@@ -564,6 +564,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                                     onEditCancel={() => setEditingTabId(null)}
                                     onMouseEnterTab={handleTabMouseEnter}
                                     onMouseLeaveTab={handleTabMouseLeave}
+                                    onForceHideTooltip={clearCommonTooltipState}
                                 />
                             )}
                             
@@ -585,6 +586,7 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
                                     onEditCancel={() => setEditingTabId(null)}
                                     onMouseEnterTab={handleTabMouseEnter}
                                     onMouseLeaveTab={handleTabMouseLeave}
+                                    onForceHideTooltip={clearCommonTooltipState}
                                 />
                             )}
                         </DndContext>

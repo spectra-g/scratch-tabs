@@ -203,6 +203,11 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
   const handleFavoritesToggle = () => {
     updateUI({ showFavoritesOnly: !data.ui.showFavoritesOnly });
   };
+
+  // Handle filters panel toggle
+  const handleFiltersToggle = () => {
+    updateUI({ showFiltersPanel: !data.ui.showFiltersPanel });
+  };
   
   // Handle sort change
   const handleSortChange = (sortBy: PromptManagerData['settings']['sortBy']) => {
@@ -255,6 +260,8 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
           searchQuery={data.ui.searchQuery}
           onImportExport={() => setShowImportExport('import')}
           onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          showFiltersPanel={data.ui.showFiltersPanel}
+          onToggleFiltersPanel={handleFiltersToggle}
         />
       </div>
       
@@ -272,6 +279,7 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
           onDeleteTag={deleteTag}
           isVisible={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
+          showFiltersPanel={data.ui.showFiltersPanel}
         />
         
         {/* Content Area */}
@@ -291,7 +299,7 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
                 onViewModeChange={handleViewModeChange}
                 sortBy={data.settings.sortBy === 'usageCount' ? 'lastModified' : data.settings.sortBy as 'title' | 'createdAt' | 'lastModified'}
                 sortDirection={data.settings.sortDirection}
-                onSortChange={handleWorkflowSortChange}
+                onSortChange={handleSortChange}
                 onSortDirectionChange={handleSortDirectionChange}
                 tags={data.tags}
               />
@@ -347,9 +355,9 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
                 onToggleFavorite={toggleWorkflowFavorite}
                 viewMode={data.settings.viewMode}
                 onViewModeChange={handleViewModeChange}
-                sortBy={data.settings.sortBy}
+                sortBy={data.settings.sortBy === 'usageCount' ? 'lastModified' : data.settings.sortBy as 'title' | 'createdAt' | 'lastModified'}
                 sortDirection={data.settings.sortDirection}
-                onSortChange={handleSortChange}
+                onSortChange={handleWorkflowSortChange}
                 onSortDirectionChange={handleSortDirectionChange}
                 tags={data.tags}
               />

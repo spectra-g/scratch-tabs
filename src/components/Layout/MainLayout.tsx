@@ -12,6 +12,8 @@ import { SplitViewDivider } from '../SplitView/SplitViewDivider';
 import { DiffModal } from '../DiffModal';
 import { SummarizeModal } from '../AI/SummarizeModal';
 import { SearchModal } from '../Search/SearchModal';
+import { AIModelManagementModal } from '../AI/AIModelManagementModal';
+import { useAIStore } from '../../stores/aiStore';
 
 const MainLayout: React.FC = () => {
   const {
@@ -33,6 +35,7 @@ const MainLayout: React.FC = () => {
   const { loadWorkspaces, workspaces } = useWorkspaceStore();
   const { saveState } = usePersistenceStore(); // Get saveState function
   const [isAppInitialized, setIsAppInitialized] = useState(false);
+  const { setSummaryModalCallback } = useAIStore();
 
   function setRealHeight() {
     document.documentElement.style.setProperty('--real-vh', `${window.innerHeight * 0.01}px`);
@@ -50,6 +53,12 @@ const MainLayout: React.FC = () => {
       setIsAppInitialized(true);
     });
   }, []);
+
+  // Set up AI summary modal callback
+  useEffect(() => {
+    setSummaryModalCallback(handleOpenSummarizeModal);
+    return () => setSummaryModalCallback(null);
+  }, [setSummaryModalCallback]);
 
      useEffect(() => {
        const saveInterval = setInterval(() => {
@@ -303,6 +312,7 @@ const MainLayout: React.FC = () => {
           />
       )}
       {isSearchOpen && <SearchModal />}
+      <AIModelManagementModal />
     </div>
   );
 };

@@ -58,17 +58,19 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
   const { 
     isReady: isAiReady, 
     isLoading: isAiLoading,
-    summarizeText 
+    summarizeTextWithModal 
   } = useAIStore(state => ({
     isReady: state.ai.isReady,
     isLoading: state.ai.isLoading,
-    summarizeText: state.summarizeText,
+    summarizeTextWithModal: state.summarizeTextWithModal,
   }));
 
   const { openModal: openBatchToolsModal } = useBatchToolsStore();
 
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const batchToolsDisposableRef = useRef<Monaco.IDisposable | null>(null);
+  const aiReadyContextKeyRef = useRef<Monaco.editor.IContextKey<boolean> | null>(null);
+  const codegenReadyContextKeyRef = useRef<Monaco.editor.IContextKey<boolean> | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const currentTabIdRef = useRef<string>(activeTab.id);
@@ -158,55 +160,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     
   }, [activeTab.id, activeTab.content, activeTab.language, activeTab]);
 
-  // AI effect for context menu action
+  // Effect to update context keys when AI state changes
   useEffect(() => {
-    const editor = editorRef.current;
-    const monaco = monacoRef.current;
-    if (!editor || !monaco) return;
-
-    const actionId = 'ai-generate-code';
-    const summarizeActionId = 'ai-summarize';
-    
-    // Add the summarize action
-    const disposableSummarizeAction = editor.addAction({
-      id: summarizeActionId,
-      label: 'Summarize',
-      contextMenuGroupId: 'navigation',
-      contextMenuOrder: 1.0,
-      precondition: isAiReady && !isAiLoading && !latestActiveTabRef.current.isTablet && latestActiveTabRef.current.content.trim().length > 0 ? undefined : 'false',
-      run: (ed) => {
-        const content = ed.getValue();
-        if (!isAiReady || isAiLoading || latestActiveTabRef.current.isTablet || content.trim().length === 0) return;
-        summarizeText(content);
-      },
-    });
-    
-    // Add the code generation action and get the disposable
-    const disposableAction = editor.addAction({
-      id: actionId,
-      label: 'Generate Code',
-      contextMenuGroupId: 'navigation',
-      contextMenuOrder: 1.5,
-      precondition: isCodegenReady && !isCodegenGenerating ? undefined : 'false',
-      run: (ed) => {
-        const originalValue = ed.getValue();
-        if (!isCodegenReady || isCodegenGenerating) return;
-        runCodegen({
-          tabId: latestActiveTabRef.current.id,
-          text: originalValue,
-          max_new_tokens: 128,
-          temperature: 0.5,
-          top_k: 5,
-          do_sample: false,
-        });
-      },
-    });
-    
-    return () => {
-      disposableSummarizeAction.dispose();
-      disposableAction.dispose();
-    };
-  }, [isCodegenReady, isCodegenGenerating, runCodegen, isAiReady, isAiLoading, summarizeText]);
+    if (aiReadyContextKeyRef.current) {
+      aiReadyContextKeyRef.current.set(isAiReady && !isAiLoading);
+    }
+    if (codegenReadyContextKeyRef.current) {
+      codegenReadyContextKeyRef.current.set(isCodegenReady && !isCodegenGenerating);
+    }
+  }, [isAiReady, isAiLoading, isCodegenReady, isCodegenGenerating]);
 
   // Cleanup batch tools disposable on unmount
   useEffect(() => {
@@ -300,6 +262,27 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
 
     restoreScrollPosition(activeTab.id);
     
+    // Auto-format tabs that were likely created from paste or file import
+    // First check if tab was created recently to avoid unnecessary work
+    const now = Date.now();
+    if ((now - activeTab.dateCreated) < 500) {
+      // Only check other conditions if tab was recently created
+      const hasSubstantialContent = activeTab.content && activeTab.content.trim().length > 50;
+      const isFormattableLanguage = activeTab.language !== 'plaintext';
+      const isNotTablet = !activeTab.isTablet;
+      const isNotLikelyDuplicate = !activeTab.title.includes('(copy)') && !activeTab.title.includes('Copy of');
+      
+      if (hasSubstantialContent && isFormattableLanguage && isNotTablet && isNotLikelyDuplicate) {
+        // Use setTimeout to ensure the model and language are fully set before formatting
+        setTimeout(() => {
+          const formatAction = editor.getAction('editor.action.formatDocument');
+          if (formatAction) {
+            formatAction.run();
+          }
+        }, 100); // Small delay to ensure everything is ready
+      }
+    }
+    
     // Ctrl+K (Format)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
        if (!editor.hasTextFocus()) {
@@ -333,6 +316,49 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
         const fullContent = editor.getValue();
         openBatchToolsModal(fullContent, selectedText);
       }
+    });
+
+    // Create context keys for AI actions (only once per editor instance)
+    aiReadyContextKeyRef.current = editor.createContextKey('aiReady', isAiReady && !isAiLoading);
+    codegenReadyContextKeyRef.current = editor.createContextKey('codegenReady', isCodegenReady && !isCodegenGenerating);
+    
+    // Add AI actions
+    const summarizeActionId = 'ai-summarize';
+    const codegenActionId = 'ai-generate-code';
+    
+    // Add the summarize action
+    editor.addAction({
+      id: summarizeActionId,
+      label: 'Summarize',
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1.0,
+      precondition: 'aiReady',
+      run: (ed) => {
+        const content = ed.getValue();
+        if (!isAiReady || isAiLoading || latestActiveTabRef.current.isTablet || content.trim().length === 0) return;
+        summarizeTextWithModal(content, latestActiveTabRef.current.id);
+      },
+    });
+    
+    // Add the code generation action
+    editor.addAction({
+      id: codegenActionId,
+      label: 'Generate Code',
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1.5,
+      precondition: 'codegenReady',
+      run: (ed) => {
+        const originalValue = ed.getValue();
+        if (!isCodegenReady || isCodegenGenerating) return;
+        runCodegen({
+          tabId: latestActiveTabRef.current.id,
+          text: originalValue,
+          max_new_tokens: 128,
+          temperature: 0.5,
+          top_k: 5,
+          do_sample: false,
+        });
+      },
     });
   };
 

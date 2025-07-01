@@ -115,7 +115,7 @@ export const useContextMenuConfig = (
     setConfirmationState(null); // Hide dialog
     closeContextMenu(); // <<<< NOW close the context menu after the action is done
 
-  }, []);
+  }, [confirmationState, isRightSide, store, closeContextMenu]);
 
   const cancelConfirmation = useCallback(() => {
     setConfirmationState(null); // Hide dialog

@@ -9,6 +9,9 @@ interface ModalState {
   isImportModalActive: boolean;
   openImportModal: () => void;
   closeImportModal: () => void;
+  isAIModelManagementModalOpen: boolean;
+  openAIModelManagementModal: () => void;
+  closeAIModelManagementModal: () => void;
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -21,4 +24,7 @@ export const useModalStore = create<ModalState>((set) => ({
     isImportModalActive: false,
     openImportModal: () => set({ isImportModalActive: true, isTabManagementActionInProgress: false }),
     closeImportModal: () => set({ isImportModalActive: false }),
+    isAIModelManagementModalOpen: false,
+    openAIModelManagementModal: () => set({ isAIModelManagementModalOpen: true }),
+    closeAIModelManagementModal: () => set({ isAIModelManagementModalOpen: false }),
 })); 

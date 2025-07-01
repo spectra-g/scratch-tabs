@@ -4,6 +4,8 @@ import { EditorInstance } from './EditorInstance';
 import { TabletView } from '../Tab/TabletView';
 import { extendedViewRegistry } from '../../views/registry';
 import { StatusBar } from '../StatusBar';
+import { useMarkdownPreviewResizer } from '../../hooks/useMarkdownPreviewResizer';
+import { PreviewDivider } from '../Preview/PreviewDivider';
 
 interface EditorPaneWrapperProps {
   side: 'left' | 'right';
@@ -56,6 +58,15 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
   const shouldShowHtmlPreview = activeTab?.previewMode && activeTab?.language === 'html';
   const shouldShowPreview = shouldShowMarkdownPreview || shouldShowHtmlPreview;
 
+  // Use the markdown preview resizer hook
+  const {
+    containerRef,
+    editorStyle,
+    previewStyle,
+    dividerProps,
+    isDragging,
+  } = useMarkdownPreviewResizer(!!shouldShowPreview);
+
   // Clear editor instance when switching to extended view or tablet
   React.useEffect(() => {
     if (extendedView || activeTab?.isTablet) {
@@ -66,12 +77,14 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
   return (
     // Main container for this pane
     <div
+      ref={containerRef}
       data-editor-pane-side={side}
       className={`flex h-full w-full overflow-hidden ${shouldShowPreview ? 'flex-row' : 'flex-col'}`}
     >
       {/* Editor/Tablet/Extended View Container */}
       <div
-        className={`flex-1 overflow-hidden relative ${shouldShowPreview ? 'w-1/2' : 'w-full'} flex flex-col`}
+        style={shouldShowPreview ? editorStyle : undefined}
+        className={`overflow-hidden relative ${shouldShowPreview ? '' : 'flex-1 w-full'} flex flex-col`}
       >
         {/* Main Content Area */}
         <div className="flex-1 overflow-hidden">
@@ -117,21 +130,33 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
         )}
       </div>
 
+      {/* Resizer Divider */}
+      {shouldShowPreview && (
+        <PreviewDivider
+          dividerProps={dividerProps}
+          isDragging={isDragging}
+          isPreviewEnabled={!!shouldShowPreview}
+        />
+      )}
+
       {/* Preview Area (Conditional) */}
       {shouldShowPreview && activeTab && (
-          <div className="w-1/2 h-full flex-1 flex flex-col overflow-hidden border-l border-gray-700">
-            <div className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-gray-850" style={{ padding: shouldShowMarkdownPreview ? '1rem' : '0' }}>
-              <Suspense fallback={<PreviewLoadingFallback />}>
-                {shouldShowMarkdownPreview && (
-                  <LazyMarkdownPreview content={activeTab.content} />
-                )}
-                {shouldShowHtmlPreview && (
-                  <LazyHtmlPreview content={activeTab.content} />
-                )}
-              </Suspense>
-            </div>
+        <div 
+          style={previewStyle}
+          className="h-full flex flex-col overflow-hidden border-l border-gray-700"
+        >
+          <div className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-gray-850" style={{ padding: shouldShowMarkdownPreview ? '1rem' : '0' }}>
+            <Suspense fallback={<PreviewLoadingFallback />}>
+              {shouldShowMarkdownPreview && (
+                <LazyMarkdownPreview content={activeTab.content} />
+              )}
+              {shouldShowHtmlPreview && (
+                <LazyHtmlPreview content={activeTab.content} />
+              )}
+            </Suspense>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };
