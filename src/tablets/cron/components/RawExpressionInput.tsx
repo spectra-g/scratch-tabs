@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Check, MagicWand } from 'lucide-react';
+import { AlertTriangle, Check, Wand as MagicWand } from 'lucide-react';
 import { CronDialect, CronValidationError } from '../types';
 
 interface RawExpressionInputProps {
