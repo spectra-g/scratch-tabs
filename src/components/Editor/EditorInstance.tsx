@@ -162,11 +162,14 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
 
   // Effect to update context keys when AI state changes
   useEffect(() => {
+    const aiReadyValue = isAiReady && !isAiLoading;
+    const codegenReadyValue = isCodegenReady && !isCodegenGenerating;
+    
     if (aiReadyContextKeyRef.current) {
-      aiReadyContextKeyRef.current.set(isAiReady && !isAiLoading);
+      aiReadyContextKeyRef.current.set(aiReadyValue);
     }
     if (codegenReadyContextKeyRef.current) {
-      codegenReadyContextKeyRef.current.set(isCodegenReady && !isCodegenGenerating);
+      codegenReadyContextKeyRef.current.set(codegenReadyValue);
     }
   }, [isAiReady, isAiLoading, isCodegenReady, isCodegenGenerating]);
 
@@ -334,8 +337,26 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       contextMenuOrder: 1.0,
       precondition: 'aiReady',
       run: (ed) => {
+        // Get fresh state directly from store to avoid stale state issues
+        const freshAIState = useAIStore.getState().ai;
+        
+        // Update context keys with fresh state
+        if (aiReadyContextKeyRef.current) {
+          const freshAiReady = freshAIState.isReady && !freshAIState.isLoading;
+          aiReadyContextKeyRef.current.set(freshAiReady);
+        }
+        
         const content = ed.getValue();
-        if (!isAiReady || isAiLoading || latestActiveTabRef.current.isTablet || content.trim().length === 0) return;
+        
+        // Use fresh state for condition check
+        const shouldProceed = freshAIState.isReady && 
+                             !freshAIState.isLoading && 
+                             !latestActiveTabRef.current.isTablet && 
+                             content.trim().length > 0;
+                             
+        if (!shouldProceed) {
+          return;
+        }
         summarizeTextWithModal(content, latestActiveTabRef.current.id);
       },
     });

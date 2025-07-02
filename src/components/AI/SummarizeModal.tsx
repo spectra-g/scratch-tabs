@@ -92,7 +92,7 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
 
   const currentError = localError;
   const showThinking = isGenerating;
-  const thinkingText = 'Thinking...';
+  const thinkingText = 'Summarizing...';
 
   return (
     <BaseModal title="Summary" onClose={onClose} maxWidthClass="max-w-4xl">
