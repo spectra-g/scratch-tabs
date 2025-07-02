@@ -166,14 +166,21 @@ describe('Text Transformations', () => {
 
   it('should filter by regex', () => {
     const input = 'test123\nhello\ntest456\nworld';
-    const config = { filterByRegex: 'test\\d+' };
+    const config = { filterByRegex: { pattern: 'test\\d+', caseSensitive: true } };
     const result = applyTransformations(input, config);
     expect(result).toBe('test123\ntest456');
   });
 
+  it('should filter by regex case insensitive', () => {
+    const input = 'USER123\nhello\nuser456\nworld';
+    const config = { filterByRegex: { pattern: 'user\\d+', caseSensitive: false } };
+    const result = applyTransformations(input, config);
+    expect(result).toBe('USER123\nuser456');
+  });
+
   it('should handle invalid regex gracefully', () => {
     const input = 'line1\nline2';
-    const config = { filterByRegex: '[' }; // Invalid regex
+    const config = { filterByRegex: { pattern: '[', caseSensitive: true } }; // Invalid regex
     const result = applyTransformations(input, config);
     expect(result).toBe(input); // Should return original content
   });
