@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Tablet, TabletState } from '../types';
 import { Base64TabletState, HistoryItem } from './types';
-import { base64Formats, getFormatById } from './utils/base64Formats';
-import { encodingOptions, getEncodingById } from './utils/encodingOptions';
+import { base64Formats } from './utils/base64Formats';
+import { encodingOptions } from './utils/encodingOptions';
 import { 
   encodeBase64, 
   decodeBase64, 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Camera, Trash2, Clock, ArrowRightLeft, Plus, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Camera, Trash2, Clock, ArrowRightLeft, Plus, CheckCircle } from 'lucide-react';
 import { Snapshot, MetricSample } from './types';
 import { diffSnapshots } from './DiffEngine';
 

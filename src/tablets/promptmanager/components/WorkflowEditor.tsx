@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Plus, Trash2, GripVertical, Clock, Tag as TagIcon, Check, X, Copy, CheckSquare, Square, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Tag as TagIcon, Check, X, Copy, CheckSquare, Square, ExternalLink } from 'lucide-react';
 import { Workflow, WorkflowStep, Prompt, Tag } from '../types';
 import { useRootStore } from '../../../stores';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
@@ -93,7 +93,6 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
   const [selectedSteps, setSelectedSteps] = useState<Set<number>>(new Set());
   const [copiedStep, setCopiedStep] = useState<number | null>(null);
   const [copiedAllSteps, setCopiedAllSteps] = useState(false);
-  const [openedStepIndex, setOpenedStepIndex] = useState<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 

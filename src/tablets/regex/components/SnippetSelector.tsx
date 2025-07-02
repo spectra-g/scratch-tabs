@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, Code } from 'lucide-react';
 import { getSnippetsByCategory } from '../utils/snippets';
 

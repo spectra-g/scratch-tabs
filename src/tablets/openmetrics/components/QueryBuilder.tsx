@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Play, AlertCircle } from 'lucide-react';
+import { Search, X, Play } from 'lucide-react';
 
 interface QueryBuilderProps {
   metricNames: string[];
