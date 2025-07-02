@@ -63,47 +63,30 @@
 
     <style>
         html {
-            scroll-padding-top: 5rem;
-            /* Offset for sticky header */
+            scroll-padding-top: 5rem; /* Offset for sticky header */
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
             background-color: #111827;
             color: #d1d5db;
         }
 
-        .hero-gradient {
-            background: linear-gradient(180deg, rgba(31, 41, 55, 0.9) 0%, #111827 100%);
-        }
+        .hero-gradient { background: linear-gradient(180deg, rgba(31, 41, 55, 0.9) 0%, #111827 100%); }
 
-        .feature-card,
-        .tablet-card,
-        .value-prop-card {
+        .feature-card, .tablet-card, .value-prop-card {
             background-color: #1f2937;
             border: 1px solid #374151;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .feature-card:hover,
-        .tablet-card:hover,
-        .value-prop-card:hover {
+        .feature-card:hover, .tablet-card:hover, .value-prop-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .primary-button {
-            background-color: #2563eb;
-            color: white;
-        }
-
-        .primary-button:hover {
-            background-color: #1d4ed8;
-        }
-
-        .section-title {
-            color: #f3f4f6;
-        }
+        .primary-button { background-color: #2563eb; color: white; }
+        .primary-button:hover { background-color: #1d4ed8; }
+        .section-title { color: #f3f4f6; }
 
         .icon-placeholder {
             background-color: rgba(59, 130, 246, 0.15);
@@ -117,10 +100,7 @@
             margin-bottom: 1rem;
         }
 
-        .icon-shield,
-        .icon-zap,
-        .icon-tool,
-        .icon-gift {
+        .icon-shield, .icon-zap, .icon-tool, .icon-gift {
             width: 24px;
             height: 24px;
             stroke: currentColor;
@@ -131,34 +111,25 @@
         }
 
         @keyframes pulse-glow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 5px #2563eb, 0 0 10px #2563eb;
-            }
-
-            50% {
-                box-shadow: 0 0 15px #3b82f6, 0 0 25px #3b82f6;
-            }
+            0%, 100% { box-shadow: 0 0 5px #2563eb, 0 0 10px #2563eb; }
+            50% { box-shadow: 0 0 15px #3b82f6, 0 0 25px #3b82f6; }
         }
+        .cta-button-glow { animation: pulse-glow 2.5s infinite ease-in-out; }
 
-        .cta-button-glow {
-            animation: pulse-glow 2.5s infinite ease-in-out;
-        }
-
-        /* Styles for Scrolling Headline */
+        /* === CORRECTED STYLES FOR SCROLLING HEADLINE === */
         .headline-container {
             height: 320px;
             overflow: hidden;
             position: relative;
         }
-
         .headline-scroller {
-            animation: scroll-headlines 16s infinite ease-in-out;
+            /* Total animation time: 4 items * 4s/item = 16s */
+            animation: scroll-headlines 16s infinite;
+            /* Use steps() to create discrete jumps, not smooth transitions */
+            animation-timing-function: steps(4, end);
         }
-
         .headline-item {
-            height: 320px;
+            height: 320px; /* Must match container height */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -166,50 +137,21 @@
             padding: 1.25rem;
         }
 
+        /* Responsive adjustments */
         @media (min-width: 768px) {
-
-            .headline-container,
-            .headline-item {
-                height: 220px;
-                padding: 1.5rem;
-            }
+            .headline-container, .headline-item { height: 220px; }
         }
-
         @media (min-width: 1024px) {
-
-            .headline-container,
-            .headline-item {
-                height: 190px;
-                padding: 2rem;
-            }
+            .headline-container, .headline-item { height: 190px; }
         }
 
+        /* The animation now moves the entire scroller height at once */
         @keyframes scroll-headlines {
-
-            0%,
-            22.5% {
-                transform: translateY(0%);
-            }
-
-            25%,
-            47.5% {
-                transform: translateY(-25%);
-            }
-
-            50%,
-            72.5% {
-                transform: translateY(-50%);
-            }
-
-            75%,
-            97.5% {
-                transform: translateY(-75%);
-            }
-
-            100% {
-                transform: translateY(0%);
+            to {
+                transform: translateY(-100%);
             }
         }
+        /* === END OF CORRECTIONS === */
 
         /* Styles for Collapsible FAQ */
         .faq-item summary {
@@ -220,19 +162,9 @@
             justify-content: space-between;
             align-items: center;
         }
-
-        .faq-item summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .faq-item summary .arrow {
-            transition: transform 0.2s ease-in-out;
-        }
-
-        .faq-item[open]>summary .arrow {
-            transform: rotate(180deg);
-        }
-
+        .faq-item summary::-webkit-details-marker { display: none; }
+        .faq-item summary .arrow { transition: transform 0.2s ease-in-out; }
+        .faq-item[open] > summary .arrow { transform: rotate(180deg); }
         .faq-item div {
             padding: 0 1.5rem 1.5rem 1.5rem;
             border-top: 1px solid #374151;
@@ -242,12 +174,13 @@
 
 <body class="antialiased">
 
-    <!-- Header -->
+    <!-- CORRECTED Header -->
     <header class="py-4 px-6 sticky top-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-gray-700/50">
         <div class="container mx-auto flex justify-between items-center">
-            <a href="#" class="flex items-center space-x-3">
+            <a href="#" class="flex items-center space-x-2">
                 <img src="img/favicon-gray.svg" alt="Scratch Tabs Logo" class="w-8 h-8">
-                <span class="text-2xl font-semibold text-white">Scratch Tabs</span>
+                <!-- Responsive text size for the brand name -->
+                <span class="text-xl sm:text-2xl font-semibold text-white">Scratch Tabs</span>
             </a>
             <!-- Desktop Nav -->
             <nav class="hidden md:flex items-center space-x-6">
@@ -286,7 +219,8 @@
                 <div class="headline-scroller">
                     <div class="headline-item">
                         <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight">A workspace for
-                            <span class="text-blue-400">everything</span>.</h1>
+                            <span class="text-blue-400">everything</span>.
+                        </h1>
                         <p
                             class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4">
                             The perfect temporary home for JSON, cURL commands, stack traces, logs, and notes. Instantly
@@ -294,7 +228,8 @@
                     </div>
                     <div class="headline-item">
                         <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight">An arsenal of
-                            <span class="text-blue-400">developer tools</span>.</h1>
+                            <span class="text-blue-400">developer tools</span>.
+                        </h1>
                         <p
                             class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4">
                             Go beyond text with a suite of 50+ integrated tools. Decode JWTs, test regex, transform
@@ -317,7 +252,8 @@
                             Code snippets, API responses, log files, random JSON blobs—they don't belong in your project
                             files, but you need a place to work with them. Scratch Tabs allows you to instantly
                             <strong>compare, clean, transform, and validate</strong> that data before it moves to its
-                            final destination.</p>
+                            final destination.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -386,7 +322,8 @@
             <h2 class="section-title text-3xl md:text-4xl font-bold text-center mb-4">The Daily Struggle</h2>
             <p class="text-gray-400 text-center text-lg mb-12 max-w-3xl mx-auto">Everyone works with temporary data
                 <strong>daily</strong>, but nothing exists to help you manage it. Say you need to quickly compare two
-                JSON objects. The "quick" task that ends up polluting your editor and wasting your time.</p>
+                JSON objects. The "quick" task that ends up polluting your editor and wasting your time.
+            </p>
             <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
                 <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg">
                     <h3 class="text-xl font-semibold text-red-400 mb-4">The Old Way (In Your IDE)</h3>
@@ -476,7 +413,8 @@
         <div class="container mx-auto px-6">
             <div
                 class="rounded-lg shadow-xl aspect-[16/9] w-full max-w-5xl mx-auto flex items-center justify-center text-center p-0">
-                <img src="img/app-screenshot.png" alt="Editing JSON Side by Side"></div>
+                <img src="img/app-screenshot.png" alt="Editing JSON Side by Side">
+            </div>
         </div>
     </section>
 
