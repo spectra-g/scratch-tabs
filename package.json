@@ -29,7 +29,7 @@
     "cronstrue": "^2.48.0",
     "crypto-js": "^4.2.0",
     "date-fns": "^3.6.0",
-    "date-fns-tz": "^2.0.1",
+    "date-fns-tz": "^3.0.0",
     "dexie": "^3.2.6",
     "framer-motion": "^11.0.8",
     "ics": "^3.7.2",
