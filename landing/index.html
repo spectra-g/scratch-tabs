@@ -222,7 +222,7 @@
     </header>
 
     <!-- Start: Hero Section with Scrolling Headlines -->
-    <section class="hero-gradient pt-20 pb-32 md:pt-20 md:pb-20">
+    <section class="hero-gradient pt-8 pb-32 md:pt-20 md:pb-20">
         <style>
             /*
              * CSS for the scrolling headline effect.
@@ -231,7 +231,7 @@
 
             /* 1. The container that clips the scrolling content */
             .headline-container {
-                height: 280px; /* Mobile height - more space for smaller screens */
+                height: 320px; /* Mobile height - increased for longer text */
                 overflow: hidden;
                 position: relative;
             }
@@ -239,17 +239,17 @@
             /* 2. The scroller element that contains all items and moves up/down */
             .headline-scroller {
                 /* It will be animated to move its content into view */
-                animation: scroll-headlines 15s infinite ease-in-out;
+                animation: scroll-headlines 24s infinite ease-in-out;
             }
 
             /* 3. Each individual headline item */
             .headline-item {
-                height: 280px; /* Must match the container height */
+                height: 320px; /* Must match the container height */
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                padding: 1rem; /* Add padding to prevent edge cutoff */
+                padding: 1.25rem; /* Slightly more padding for better spacing */
             }
 
             /* 4. Responsive adjustments for larger screens */
@@ -281,19 +281,25 @@
                 /* Start: Stay on the first item */
                 0% { transform: translateY(0%); }
                 /* Stay for 3 seconds */
-                30% { transform: translateY(0%); }
+                22.5% { transform: translateY(0%); }
 
                 /* -- Slide 2 -- */
                 /* Start transition to the second item */
-                33.33% { transform: translateY(-33.33%); }
+                25% { transform: translateY(-25%); }
                 /* Stay for 3 seconds */
-                63.33% { transform: translateY(-33.33%); }
+                47.5% { transform: translateY(-25%); }
 
                 /* -- Slide 3 -- */
                 /* Start transition to the third item */
-                66.66% { transform: translateY(-66.66%); }
+                50% { transform: translateY(-50%); }
                 /* Stay for 3 seconds */
-                96.66% { transform: translateY(-66.66%); }
+                72.5% { transform: translateY(-50%); }
+
+                /* -- Slide 4 -- */
+                /* Start transition to the fourth item */
+                75% { transform: translateY(-75%); }
+                /* Stay for 3 seconds */
+                97.5% { transform: translateY(-75%); }
 
                 /* Loop back to the start */
                 100% { transform: translateY(0%); }
@@ -329,6 +335,16 @@
                         </h1>
                         <p class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4">
                             Everything runs 100% in your browser. Your data never leaves your machine. Zero tracking. Zero accounts. Zero servers. Just pure, private utility.
+                        </p>
+                    </div>
+                    <!-- Item 4: IDE Companion -->
+                    <div class="headline-item">
+                        <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight">
+                            The Perfect Companion to <span class="text-blue-400">Your IDE</span>.
+                        </h1>
+                        <p class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4">
+                            Code snippets, API responses, log files, random JSON blobs—they don't belong in your project files, but you need a place to work with them.
+                            Scratch Tabs allows you to instantly <strong>compare, clean, transform, and validate</strong> that data before it moves to its final destination.
                         </p>
                     </div>
                 </div>
@@ -729,13 +745,6 @@
                     <p class="text-gray-400">Absolutely! Once loaded, Scratch Tabs works completely offline. All
                         features including editing, AI summary, data conversion etc. work without an internet
                         connection.</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold text-white mb-2">Is it an IDE?</h3>
-                    <p class="text-gray-400">No. It's a place to put your temporary data. In your workflow, you
-                        can only copy-paste a single item at a time, Scratch Tabs helps you collate that data.
-                        It helps you compare that data, clean that data, transform that data before you move it on
-                        in your workflow.</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg">
                     <h3 class="text-lg font-semibold text-white mb-2">How do I share my work?</h3>
