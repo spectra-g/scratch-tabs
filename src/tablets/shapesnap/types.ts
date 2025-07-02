@@ -111,6 +111,8 @@ export interface ShapeSnapData {
   history: Shape[][];
   historyIndex: number;
   currentFontSize: number;
+  selectedShapeIds?: string[]; // Support for multi-selection
+  clipboard?: Shape[]; // Clipboard for copy/paste operations
 }
 
 export interface DrawState {

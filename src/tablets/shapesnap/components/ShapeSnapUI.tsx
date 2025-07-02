@@ -21,6 +21,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   const [showInfoModal, setShowInfoModal] = useState(false);
   
   const canvasRef = useRef<HTMLDivElement>(null);
+  const uiRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   
   const engine = useShapeSnapEngine(state, onChange);
@@ -47,7 +48,78 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
       resizeObserver.disconnect();
     };
   }, []);
-  
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle keyboard shortcuts if we're in an input field or modal
+      if (showInfoModal || 
+          e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+
+      switch (e.key) {
+        case 'c':
+        case 'C':
+          if (ctrlOrCmd) {
+            e.preventDefault();
+            engine.copySelectedShapes();
+          }
+          break;
+        case 'v':
+        case 'V':
+          if (ctrlOrCmd) {
+            e.preventDefault();
+            engine.pasteShapes();
+          }
+          break;
+        case 'x':
+        case 'X':
+          if (ctrlOrCmd) {
+            e.preventDefault();
+            engine.cutSelectedShapes();
+          }
+          break;
+        case 'Delete':
+        case 'Backspace':
+          e.preventDefault();
+          engine.deleteSelectedShapes();
+          break;
+        case 'Escape':
+          e.preventDefault();
+          engine.clearSelection();
+          break;
+        case 'a':
+        case 'A':
+          if (ctrlOrCmd) {
+            e.preventDefault();
+            // Select all shapes
+            const allShapeIds = state.shapes.map(shape => shape.id);
+            engine.setSelectedShapes(allShapeIds);
+          }
+          break;
+      }
+    };
+
+    // Add event listener to the UI container
+    const uiElement = uiRef.current;
+    if (uiElement) {
+      uiElement.addEventListener('keydown', handleKeyDown);
+      // Make sure the element can receive focus
+      uiElement.focus();
+    }
+
+    return () => {
+      if (uiElement) {
+        uiElement.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+  }, [engine, showInfoModal, state.shapes]);
+
   // Helper function to get point from event (mouse or touch)
   const getPointFromEvent = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -204,7 +276,11 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   };
   
   return (
-    <div className="h-full flex flex-col bg-gray-900">
+    <div 
+      ref={uiRef}
+      className="h-full flex flex-col bg-gray-900 outline-none"
+      tabIndex={0} // Make the container focusable for keyboard events
+    >
       <ShapeSnapToolbar 
         currentTool={state.currentTool}
         canvasMode={state.canvas.mode}
@@ -247,11 +323,15 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
           height={canvasSize.height}
           currentTool={state.currentTool}
           currentFontSize={state.currentFontSize || 16}
+          selectedShapeIds={state.selectedShapeIds || []}
           onUpdateLabel={engine.updateShapeLabel}
           onUpdateShape={engine.updateShape}
           onDeleteShape={engine.deleteShape}
           onAddShape={engine.addShape}
           onDrawEnd={engine.detectAndAddShape}
+          onSelectionChange={engine.setSelectedShapes}
+          onToggleShapeSelection={engine.toggleShapeSelection}
+          onClearSelection={engine.clearSelection}
           gridSnappingEnabled={gridSnappingEnabled}
           sketchModeEnabled={sketchModeEnabled}
           showInfoModal={showInfoModal}
@@ -263,6 +343,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
         shapeCount={state.shapes.length}
         currentTool={state.currentTool}
         canvasMode={state.canvas.mode}
+        selectedCount={state.selectedShapeIds?.length || 0}
       />
     </div>
   );

@@ -24,7 +24,9 @@ export const ShapeSnapTablet: Tablet = {
         currentTool: 'draw',
         history: [],
         historyIndex: -1,
-        currentFontSize: 16
+        currentFontSize: 16,
+        selectedShapeIds: [],
+        clipboard: []
       }
     };
   },

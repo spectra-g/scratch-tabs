@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Pencil, 
-  MousePointer, 
   Eraser, 
   RotateCcw, 
   RotateCw, 
@@ -66,16 +65,14 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         {/* Draw/Select toggle button */}
         <button
           className={`p-2 rounded-md transition-colors ${
-            currentTool === 'draw' 
-              ? 'bg-blue-500/20 text-blue-400' 
-              : currentTool === 'select'
-              ? 'bg-green-500/20 text-green-400'
+            currentTool === 'draw'
+              ? 'bg-blue-500/20 text-blue-400'
               : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
           }`}
           onClick={handleDrawToggle}
-          title={currentTool === 'draw' ? 'Draw Mode (Click to switch to Select)' : 'Select Mode (Click to switch to Draw)'}
+          title={currentTool === 'draw' ? 'Draw Mode (Click for Select Mode)' : 'Select Mode (Click for Draw Mode)'}
         >
-          {currentTool === 'draw' ? <Pencil size={18} /> : <MousePointer size={18} />}
+          <Pencil size={18} />
         </button>
         
         {/* Eraser tool */}

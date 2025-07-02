@@ -222,7 +222,7 @@
     </header>
 
     <!-- Start: Hero Section with Scrolling Headlines -->
-    <section class="hero-gradient pt-20 pb-32 md:pt-32 md:pb-20">
+    <section class="hero-gradient pt-20 pb-32 md:pt-20 md:pb-20">
         <style>
             /*
              * CSS for the scrolling headline effect.
@@ -231,7 +231,7 @@
 
             /* 1. The container that clips the scrolling content */
             .headline-container {
-                height: 190px; /* Adjust this to fit your largest headline + subtext */
+                height: 280px; /* Mobile height - more space for smaller screens */
                 overflow: hidden;
                 position: relative;
             }
@@ -244,11 +244,35 @@
 
             /* 3. Each individual headline item */
             .headline-item {
-                height: 190px; /* Must match the container height */
+                height: 280px; /* Must match the container height */
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
+                padding: 1rem; /* Add padding to prevent edge cutoff */
+            }
+
+            /* 4. Responsive adjustments for larger screens */
+            @media (min-width: 768px) {
+                .headline-container {
+                    height: 220px; /* Medium screens */
+                }
+                
+                .headline-item {
+                    height: 220px;
+                    padding: 1.5rem;
+                }
+            }
+
+            @media (min-width: 1024px) {
+                .headline-container {
+                    height: 190px; /* Desktop - original height */
+                }
+                
+                .headline-item {
+                    height: 190px;
+                    padding: 2rem;
+                }
             }
 
             /* 4. The Keyframe Animation */
@@ -282,28 +306,28 @@
                 <div class="headline-scroller">
                     <!-- Item 1: The Editor -->
                     <div class="headline-item">
-                        <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">
-                            Temporary <span class="text-blue-400">reimagined</span>.
+                        <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight">
+                            The importance of <span class="text-blue-400">temporary</span>.
                         </h1>
-                        <p class="text-lg md:text-xl text-gray-300 mt-6 max-w-3xl mx-auto">
+                        <p class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4">
                             The perfect home for your <strong>temporary</strong> data. JSON? Markdown? cURL? Stack trace? Diagrams? Everything is covered. Instantly recognized, beautifully formatted.
                         </p>
                     </div>
                     <!-- Item 2: The Tools -->
                     <div class="headline-item">
-                        <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">
-                            An arsenal of <span class="text-blue-400">developer tools</span>.
+                        <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight">
+                            All the tools in <span class="text-blue-400">one place</span>.
                         </h1>
-                        <p class="text-lg md:text-xl text-gray-300 mt-6 max-w-3xl mx-auto">
+                        <p class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4">
                             Go beyond text with a suite of 50+ integrated tools. Decode JWTs, test regex, transform data, and manage your clipboard without leaving the tab.
                         </p>
                     </div>
                     <!-- Item 3: The Privacy -->
                     <div class="headline-item">
-                        <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">
+                        <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight">
                             <span class="text-blue-400">Your data</span>, never ours, never theirs.
                         </h1>
-                        <p class="text-lg md:text-xl text-gray-300 mt-6 max-w-3xl mx-auto">
+                        <p class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4">
                             Everything runs 100% in your browser. Your data never leaves your machine. Zero tracking. Zero accounts. Zero servers. Just pure, private utility.
                         </p>
                     </div>
@@ -705,6 +729,13 @@
                     <p class="text-gray-400">Absolutely! Once loaded, Scratch Tabs works completely offline. All
                         features including editing, AI summary, data conversion etc. work without an internet
                         connection.</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-white mb-2">Is it an IDE?</h3>
+                    <p class="text-gray-400">No. It's a place to put your temporary data. In your workflow, you
+                        can only copy-paste a single item at a time, Scratch Tabs helps you collate that data.
+                        It helps you compare that data, clean that data, transform that data before you move it on
+                        in your workflow.</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg">
                     <h3 class="text-lg font-semibold text-white mb-2">How do I share my work?</h3>
