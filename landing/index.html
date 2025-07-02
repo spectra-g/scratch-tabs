@@ -116,20 +116,24 @@
         }
         .cta-button-glow { animation: pulse-glow 2.5s infinite ease-in-out; }
 
-        /* === CORRECTED STYLES FOR SCROLLING HEADLINE === */
         .headline-container {
-            height: 320px;
+            height: 330px; /* Mobile height */
             overflow: hidden;
             position: relative;
         }
+
         .headline-scroller {
-            /* Total animation time: 4 items * 4s/item = 16s */
-            animation: scroll-headlines 16s infinite;
-            /* Use steps() to create discrete jumps, not smooth transitions */
-            animation-timing-function: steps(4, end);
+            /* Positioned absolutely to be moved by the 'top' property */
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            /* Animation: 16s total duration, ease-in-out for smooth scrolling, infinite loop */
+            animation: scroll-headlines 16s infinite ease-in-out;
         }
+
         .headline-item {
-            height: 320px; /* Must match container height */
+            height: 330px; /* Must match container height */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -137,21 +141,34 @@
             padding: 1.25rem;
         }
 
-        /* Responsive adjustments */
+        /* Responsive adjustments for container and item heights */
         @media (min-width: 768px) {
-            .headline-container, .headline-item { height: 220px; }
+            .headline-container, .headline-item { height: 230px; }
         }
         @media (min-width: 1024px) {
-            .headline-container, .headline-item { height: 190px; }
+            .headline-container, .headline-item { height: 200px; }
         }
 
-        /* The animation now moves the entire scroller height at once */
+        /* The Keyframe Animation using 'top' property */
         @keyframes scroll-headlines {
-            to {
-                transform: translateY(-100%);
-            }
+            /* -- Item 1 -- */
+            0%      { top: 0; }         /* Start at the top (item 1 visible) */
+            20%     { top: 0; }         /* Stay on item 1 for a while */
+
+            /* -- Item 2 -- */
+            25%     { top: -100%; }    /* Smoothly scroll to item 2 */
+            45%     { top: -100%; }    /* Stay on item 2 */
+
+            /* -- Item 3 -- */
+            50%     { top: -200%; }    /* Smoothly scroll to item 3 */
+            70%     { top: -200%; }    /* Stay on item 3 */
+
+            /* -- Item 4 -- */
+            75%     { top: -300%; }    /* Smoothly scroll to item 4 */
+            95%     { top: -300%; }    /* Stay on item 4 */
+
+            100%    { top: 0; }         /* Instantly jump back to the start for the loop */
         }
-        /* === END OF CORRECTIONS === */
 
         /* Styles for Collapsible FAQ */
         .faq-item summary {
