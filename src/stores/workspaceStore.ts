@@ -7,7 +7,7 @@ import { usePersistenceStore } from './persistenceStore';
 import { useCacheStore } from './cacheStore';
 import { modelManager } from '../services/modelManager';
 import { incrementSetting } from '../db';
-import { WELCOME_TAB_CONTENT } from '../constants';
+import { WELCOME_TAB_CONTENT, NEW_TAB_PREFIX } from '../constants';
 
 // Helper function to safely convert activeSide string to union type
 const parseActiveSide = (side: string | null): 'left' | 'right' | null => {
@@ -346,7 +346,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         // Create a "new 1" tab as well
         const newTab: Tab = {
           id: crypto.randomUUID(),
-          title: 'new 1',
+          title: `${NEW_TAB_PREFIX} 1`,
           content: '',
           language: 'plaintext',
           languageLocked: false,
