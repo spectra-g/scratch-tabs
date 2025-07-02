@@ -350,7 +350,8 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
           const sourceData = sourceJson ? JSON.parse(sourceJson) : {};
           const result = transformFn(sourceValue, sourceData);
           
-          setPreviewValue(result);
+          // FIX: Wrap the result in a function to prevent React's functional update behavior
+          setPreviewValue(() => result);
           setError(null);
         } catch (error) {
           console.error('Error applying custom transformation:', error);
