@@ -350,7 +350,8 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
           const sourceData = sourceJson ? JSON.parse(sourceJson) : {};
           const result = transformFn(sourceValue, sourceData);
           
-          setPreviewValue(result);
+          // FIX: Wrap the result in a function to prevent React's functional update behavior
+          setPreviewValue(() => result);
           setError(null);
         } catch (error) {
           console.error('Error applying custom transformation:', error);
@@ -654,7 +655,7 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                 {sourceValue !== null && (
                   <div className="mt-2">
                     <div className="text-xs text-gray-400 mb-1">Source Value:</div>
-                    <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto max-h-20">
+                    <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
                       {typeof sourceValue === 'object'
                         ? JSON.stringify(sourceValue, null, 2)
                         : String(sourceValue)
@@ -677,7 +678,7 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                 {targetValue !== null && (
                   <div className="mt-2">
                     <div className="text-xs text-gray-400 mb-1">Target Value:</div>
-                    <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto max-h-20">
+                    <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
                       {typeof targetValue === 'object'
                         ? JSON.stringify(targetValue, null, 2)
                         : String(targetValue)
@@ -809,7 +810,7 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
               {/* Preview - Always visible */}
               <div>
                 <div className="text-xs text-gray-400 mb-1">Transformation Preview:</div>
-                <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto max-h-20">
+                <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
                   {error ? (
                     <span className="text-red-400">{error}</span>
                   ) : previewValue !== null ? (

@@ -142,7 +142,7 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
           ) : (
             <div className="h-full flex">
               {/* History List */}
-              <div className="w-80 border-r border-gray-700 overflow-y-auto">
+              <div className="w-80 border-r border-gray-700 overflow-y-auto custom-scrollbar">
                 <div className="p-4">
                   <h3 className="text-sm font-medium text-gray-300 mb-3">Version History</h3>
                   {history.length === 0 ? (
@@ -191,7 +191,7 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
               </div>
 
               {/* Version Preview */}
-              <div className="flex-1 p-4 overflow-y-auto">
+              <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
                 {selectedVersion !== null ? (
                   <div>
                     <div className="flex items-center justify-between mb-4">

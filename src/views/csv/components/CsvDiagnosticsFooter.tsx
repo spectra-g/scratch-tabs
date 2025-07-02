@@ -12,7 +12,7 @@ export const CsvDiagnosticsFooter: React.FC<CsvDiagnosticsFooterProps> = ({
   if (diagnostics.length === 0) return null;
 
   return (
-    <div className="flex-none border-t border-gray-700 bg-gray-800 max-h-32 overflow-auto">
+    <div className="flex-none border-t border-gray-700 bg-gray-800 max-h-32 overflow-auto custom-scrollbar">
       <div className="p-2 space-y-1">
         {diagnostics.slice(0, 10).map((diag, index) => (
           <div key={index} className={`text-xs flex items-center space-x-2 ${

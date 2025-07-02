@@ -76,6 +76,155 @@ export const useShapeSnapEngine = (
     });
   }, [state, onChange]);
   
+  // Delete selected shapes
+  const deleteSelectedShapes = useCallback(() => {
+    if (!state.selectedShapeIds || state.selectedShapeIds.length === 0) return;
+    
+    const updatedShapes = state.shapes.filter(shape => 
+      !state.selectedShapeIds!.includes(shape.id)
+    );
+    
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(updatedShapes);
+    
+    onChange({
+      ...state,
+      shapes: updatedShapes,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      selectedShapeIds: [] // Clear selection after deletion
+    });
+  }, [state, onChange]);
+  
+  // Copy selected shapes to clipboard
+  const copySelectedShapes = useCallback(() => {
+    if (!state.selectedShapeIds || state.selectedShapeIds.length === 0) return;
+    
+    const selectedShapes = state.shapes.filter(shape => 
+      state.selectedShapeIds!.includes(shape.id)
+    );
+    
+    // Deep copy the shapes to avoid reference issues
+    const copiedShapes = selectedShapes.map(shape => ({
+      ...shape,
+      id: generateId() // Generate new IDs for copies
+    }));
+    
+    onChange({
+      ...state,
+      clipboard: copiedShapes
+    });
+  }, [state, onChange]);
+  
+  // Cut selected shapes (copy + delete)
+  const cutSelectedShapes = useCallback(() => {
+    if (!state.selectedShapeIds || state.selectedShapeIds.length === 0) return;
+    
+    const selectedShapes = state.shapes.filter(shape => 
+      state.selectedShapeIds!.includes(shape.id)
+    );
+    
+    // Deep copy the shapes to clipboard
+    const copiedShapes = selectedShapes.map(shape => ({
+      ...shape,
+      id: generateId() // Generate new IDs for copies
+    }));
+    
+    // Remove selected shapes from canvas
+    const updatedShapes = state.shapes.filter(shape => 
+      !state.selectedShapeIds!.includes(shape.id)
+    );
+    
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(updatedShapes);
+    
+    onChange({
+      ...state,
+      shapes: updatedShapes,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      clipboard: copiedShapes,
+      selectedShapeIds: [] // Clear selection after cut
+    });
+  }, [state, onChange]);
+  
+  // Paste shapes from clipboard
+  const pasteShapes = useCallback(() => {
+    if (!state.clipboard || state.clipboard.length === 0) return;
+    
+    // Offset pasted shapes slightly to avoid exact overlap
+    const offset = 20;
+    const pastedShapes = state.clipboard.map(shape => ({
+      ...shape,
+      id: generateId(), // Generate new unique IDs
+      zIndex: Date.now(), // Ensure pasted shapes appear on top
+      // Apply offset based on shape type
+      ...(shape.type === 'line' ? {
+        points: (shape as any).points.map((point: Point) => ({
+          x: point.x + offset,
+          y: point.y + offset
+        }))
+      } : shape.type === 'arrow' ? {
+        from: { x: (shape as any).from.x + offset, y: (shape as any).from.y + offset },
+        to: { x: (shape as any).to.x + offset, y: (shape as any).to.y + offset }
+      } : {
+        x: (shape as any).x + offset,
+        y: (shape as any).y + offset
+      })
+    }));
+    
+    const updatedShapes = [...state.shapes, ...pastedShapes];
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(updatedShapes);
+    
+    // Select the newly pasted shapes
+    const pastedShapeIds = pastedShapes.map(shape => shape.id);
+    
+    onChange({
+      ...state,
+      shapes: updatedShapes,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      selectedShapeIds: pastedShapeIds
+    });
+  }, [state, onChange]);
+  
+  // Set selected shapes
+  const setSelectedShapes = useCallback((shapeIds: string[]) => {
+    onChange({
+      ...state,
+      selectedShapeIds: shapeIds
+    });
+  }, [state, onChange]);
+  
+  // Toggle shape selection (for multi-select with Ctrl/Cmd)
+  const toggleShapeSelection = useCallback((shapeId: string) => {
+    const currentSelection = state.selectedShapeIds || [];
+    const isSelected = currentSelection.includes(shapeId);
+    
+    let newSelection: string[];
+    if (isSelected) {
+      // Remove from selection
+      newSelection = currentSelection.filter(id => id !== shapeId);
+    } else {
+      // Add to selection
+      newSelection = [...currentSelection, shapeId];
+    }
+    
+    onChange({
+      ...state,
+      selectedShapeIds: newSelection
+    });
+  }, [state, onChange]);
+  
+  // Clear selection
+  const clearSelection = useCallback(() => {
+    onChange({
+      ...state,
+      selectedShapeIds: []
+    });
+  }, [state, onChange]);
+  
   // Detect and add a shape based on drawn points
   const detectAndAddShape = useCallback((points: Point[]) => {
     if (points.length < 2) return null;
@@ -282,6 +431,13 @@ export const useShapeSnapEngine = (
     updateShapeLabel,
     updateShape,
     deleteShape,
+    deleteSelectedShapes,
+    copySelectedShapes,
+    cutSelectedShapes,
+    pasteShapes,
+    setSelectedShapes,
+    toggleShapeSelection,
+    clearSelection,
     detectAndAddShape,
     setTool,
     toggleCanvasMode,

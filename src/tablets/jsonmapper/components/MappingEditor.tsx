@@ -652,7 +652,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-300">
-                  Target JSON
+                  What should the target JSON look like?
                 </label>
                 <div className="flex space-x-2">
                   <label className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors cursor-pointer">

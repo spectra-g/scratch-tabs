@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Plus, Trash2, GripVertical, Clock, Tag as TagIcon, Check, X, Copy, CheckSquare, Square, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Tag as TagIcon, Check, X, Copy, CheckSquare, Square, ExternalLink } from 'lucide-react';
 import { Workflow, WorkflowStep, Prompt, Tag } from '../types';
 import { useRootStore } from '../../../stores';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
@@ -36,7 +36,7 @@ const PromptSelector: React.FC<PromptSelectorProps> = ({ prompts, onSelectPrompt
             autoFocus
           />
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {availablePrompts.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
               <div className="mb-2">All prompts are already used in this workflow</div>
@@ -93,7 +93,6 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
   const [selectedSteps, setSelectedSteps] = useState<Set<number>>(new Set());
   const [copiedStep, setCopiedStep] = useState<number | null>(null);
   const [copiedAllSteps, setCopiedAllSteps] = useState(false);
-  const [openedStepIndex, setOpenedStepIndex] = useState<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -449,7 +448,7 @@ ${content}`;
                       onClick={() => setShowTagSelector(false)}
                     />
                     <div className="absolute left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 min-w-[200px]">
-                      <div className="py-2 max-h-60 overflow-y-auto">
+                      <div className="py-2 max-h-60 overflow-y-auto custom-scrollbar">
                         {tags.map((tag) => (
                           <button
                             key={tag.id}
@@ -479,7 +478,7 @@ ${content}`;
       </div>
 
       {/* Steps */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
         {/* Selection Toolbar */}
         {workflow.steps.length > 0 && (
           <div className="mb-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700/50">

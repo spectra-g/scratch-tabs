@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Play, AlertCircle } from 'lucide-react';
+import { Search, X, Play } from 'lucide-react';
 
 interface QueryBuilderProps {
   metricNames: string[];
@@ -121,7 +121,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
           
           {/* Metric suggestions */}
           {showMetricSuggestions && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar">
               {getFilteredMetrics().map(metric => (
                 <div
                   key={metric}
@@ -164,7 +164,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
           </div>
           
           {showLabelSuggestions && (
-            <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto">
+            <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-2 gap-1">
                 {labelKeys.map(labelKey => (
                   <button
@@ -185,7 +185,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
               <div className="text-xs text-gray-400 mb-1">
                 Select value for "{currentLabelKey}"
               </div>
-              <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto">
+              <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
                 <div className="grid grid-cols-2 gap-1">
                   {labelValues[currentLabelKey].map(value => (
                     <button

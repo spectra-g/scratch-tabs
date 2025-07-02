@@ -53,30 +53,30 @@ export const AIStatusIcon: React.FC = () => {
   };
 
   // Determine icon color, animation, and title based on state
-  let iconColor = 'text-gray-400';
-  let hoverColor = 'hover:text-gray-300';
+  let iconColor = 'text-blue-400'; // Default to blue for not ready states
+  let hoverColor = 'hover:text-blue-300';
   let animationClass = '';
   let title = 'Open AI Model Management';
 
-  if (error || codegenError) {
-    iconColor = 'text-red-400';
-    hoverColor = 'hover:text-red-300';
+  if (isReady && isCodegenReady) { // Both models ready - use same color as nearby icons
+    iconColor = 'text-gray-300';
+    hoverColor = 'hover:text-gray-200';
+    title = 'AI Ready - Click to manage models';
+  } else if (error || codegenError) {
+    iconColor = 'text-blue-400'; // Blue for error states instead of red
+    hoverColor = 'hover:text-blue-300';
     title = 'AI Error - Click to manage models';
   } else if (isLoading || isCodegenLoading) { // Check both loading states for pulse
     iconColor = 'text-blue-400';
     hoverColor = 'hover:text-blue-300';
     animationClass = 'animate-pulse'; // Pulse when either model is loading
     title = 'AI Downloading - Click to view progress';
-  } else if (isReady && isCodegenReady) { // Both models ready
-    iconColor = 'text-green-100'; // Green when both ready
-    hoverColor = 'hover:text-green-300';
-    title = 'AI Ready - Click to manage models';
   } else if (isReady && !isCodegenReady) { // Summary ready, codegen not ready
-    iconColor = 'text-yellow-400'; // Yellow to indicate partial readiness
-    hoverColor = 'hover:text-yellow-300';
+    iconColor = 'text-blue-400'; // Blue for partial readiness instead of yellow
+    hoverColor = 'hover:text-blue-300';
     title = 'AI Partially Ready - Click to manage models';
   }
-  // If !isReady and !isLoading and !error, it stays gray (initial state)
+  // All other states use blue as default
 
   return (
     <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>

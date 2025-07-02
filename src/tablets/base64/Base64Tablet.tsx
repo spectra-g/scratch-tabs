@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Tablet, TabletState } from '../types';
 import { Base64TabletState, HistoryItem } from './types';
-import { base64Formats, getFormatById } from './utils/base64Formats';
-import { encodingOptions, getEncodingById } from './utils/encodingOptions';
+import { base64Formats } from './utils/base64Formats';
+import { encodingOptions } from './utils/encodingOptions';
 import { 
   encodeBase64, 
   decodeBase64, 
@@ -445,7 +445,7 @@ const Base64TabletUI: React.FC<{
       </AnimatePresence>
       
       {/* Main Content */}
-      <div className={`flex-1 p-3 flex ${layout === 'horizontal' ? 'flex-row' : 'flex-col'} gap-3 overflow-auto`}>
+      <div className={`flex-1 p-3 flex ${layout === 'horizontal' ? 'flex-row' : 'flex-col'} gap-3 overflow-auto custom-scrollbar`}>
         {/* Input */}
         <Base64Input
           value={input}

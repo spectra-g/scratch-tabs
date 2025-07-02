@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Camera, Trash2, Clock, ArrowRightLeft, Plus, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Camera, Trash2, Clock, ArrowRightLeft, Plus, CheckCircle } from 'lucide-react';
 import { Snapshot, MetricSample } from './types';
 import { diffSnapshots } from './DiffEngine';
 
@@ -202,7 +202,7 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
           </button>
         )}
         
-        <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-200px)]">
+        <div className="space-y-2 overflow-y-auto custom-scrollbar max-h-[calc(100vh-200px)]">
           {snapshots.map(snapshot => (
             <div 
               key={snapshot.id}
@@ -270,7 +270,7 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
       </div>
       
       {/* Diff View */}
-      <div className="flex-1 p-4 overflow-auto">
+              <div className="flex-1 p-4 overflow-auto custom-scrollbar">
         {!activeSnapshot ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Camera size={48} className="mb-4 opacity-50" />

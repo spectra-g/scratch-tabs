@@ -243,7 +243,7 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
         />
       </div>
       
-      <div className="flex-1 overflow-auto p-3">
+              <div className="flex-1 overflow-auto custom-scrollbar p-3">
         {searchTerm ? renderFilteredMetrics() : renderMetricsByType()}
       </div>
     </div>

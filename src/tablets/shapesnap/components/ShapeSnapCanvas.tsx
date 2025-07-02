@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool } from '../types';
 import { renderShape, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
 import { getShapeCenter, getShapeBoundingBox } from '../utils/geometryUtils';
@@ -23,12 +23,16 @@ interface ShapeSnapCanvasProps {
   height: number;
   currentTool: ShapeSnapTool;
   currentFontSize?: number;
+  selectedShapeIds?: string[];
   onShapeClick?: (shape: Shape, position: Point) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onUpdateShape?: (shapeId: string, updates: Partial<Shape>) => void;
   onDeleteShape?: (shapeId: string) => void;
   onAddShape?: (shape: Shape) => void;
   onDrawEnd?: (points: Point[]) => Shape | null;
+  onSelectionChange?: (shapeIds: string[]) => void;
+  onToggleShapeSelection?: (shapeId: string) => void;
+  onClearSelection?: () => void;
   gridSnappingEnabled?: boolean;
   sketchModeEnabled?: boolean;
   showInfoModal: boolean;
@@ -43,11 +47,15 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   height,
   currentTool,
   currentFontSize,
+  selectedShapeIds = [],
   onShapeClick,
   onUpdateLabel,
   onUpdateShape,
   onDeleteShape,
   onAddShape,
+  onSelectionChange,
+  onToggleShapeSelection,
+  onClearSelection,
   gridSnappingEnabled,
   sketchModeEnabled,
   showInfoModal,
@@ -57,15 +65,46 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   
   const svgRef = useRef<SVGSVGElement>(null);
   
+  // Track modifier key states
+  const [modifierKeys, setModifierKeys] = useState({
+    ctrlKey: false,
+    metaKey: false
+  });
+
+  // Handle modifier key tracking
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      setModifierKeys(prev => ({
+        ...prev,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey
+      }));
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      setModifierKeys(prev => ({
+        ...prev,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey
+      }));
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+  
   // Use the events hook to handle all mouse interactions
   const {
-    selectedShapeId,
     editingShape,
     draggedShape,
     dragGuides,
     resizeHandle,
-    setSelectedShapeId,
-    handleShapeClick,
+    setEditingShape,
     handleLabelSave,
     handleLabelCancel,
     handleCanvasDoubleClick,
@@ -80,12 +119,105 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     currentTool,
     currentFontSize,
     gridSnappingEnabled,
-    onShapeClick,
+    onShapeClick: undefined, // Don't use the hook's click handler
     onUpdateLabel,
     onUpdateShape,
     onDeleteShape,
     onAddShape
   });
+
+  // Aggressively clear editing state in select mode - use useLayoutEffect for immediate execution
+  useLayoutEffect(() => {
+    if (currentTool === 'select' && editingShape) {
+      setEditingShape(null);
+    }
+  }, [currentTool, editingShape, setEditingShape]);
+
+  // Also clear on any state change that might trigger editing in select mode
+  useEffect(() => {
+    if (currentTool === 'select') {
+      setEditingShape(null);
+    }
+  }, [currentTool, setEditingShape]);
+
+  // Wrapper functions to control when the hook's mouse events should be handled
+  const handleWrappedMouseDown = (shape: Shape, e: React.MouseEvent) => {
+    // Always allow the hook to handle mouse down for dragging and resizing
+    // The key is that we prevent the hook's onShapeClick callback, not the mouse tracking
+    handleShapeMouseDown(shape, e);
+  };
+
+  const handleWrappedMouseMove = (e: React.MouseEvent) => {
+    // Always allow mouse move
+    handleMouseMove(e);
+  };
+
+  const handleWrappedMouseUp = (e: React.MouseEvent) => {
+    // Always allow the hook to handle mouseUp for proper state cleanup
+    // We already disabled the hook's onShapeClick callback (passed undefined), 
+    // so the hook's internal click detection won't trigger label editing
+    handleMouseUp(e);
+  };
+
+  // Custom shape click handler that properly handles multi-selection
+  const handleCustomShapeClick = (shape: Shape, position: Point) => {
+    // Call the original onShapeClick if provided
+    if (onShapeClick) {
+      onShapeClick(shape, position);
+    }
+    
+    // Handle different tools
+    switch (currentTool) {
+      case 'select':
+      case 'draw':
+        // Both select and draw modes should allow shape selection and show resize handles
+        // Handle multi-selection with tracked modifier keys
+        const isMultiSelect = modifierKeys.ctrlKey || modifierKeys.metaKey;
+        
+        if (isMultiSelect && onToggleShapeSelection) {
+          // Multi-selection: toggle this shape in the selection
+          onToggleShapeSelection(shape.id);
+        } else if (onSelectionChange) {
+          // Single selection: select only this shape
+          onSelectionChange([shape.id]);
+        }
+        break;
+        
+      case 'eraser':
+        // Delete the shape when in eraser mode
+        if (onDeleteShape) {
+          onDeleteShape(shape.id);
+        }
+        // Clear selection after deleting
+        if (onClearSelection) {
+          onClearSelection();
+        }
+        break;
+        
+      default:
+        // For other tools, clear selection
+        if (onClearSelection) {
+          onClearSelection();
+        }
+        break;
+    }
+  };
+
+  // Custom double-click handler that only opens label editor in Draw mode
+  const handleCustomShapeDoubleClick = (shape: Shape) => {
+    // Only allow label editing in draw mode, not select mode
+    if (currentTool === 'draw') {
+      handleShapeDoubleClick(shape);
+    }
+  };
+  
+  // Handle canvas click to clear selection
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    // Only clear selection if clicking on empty space (not on a shape)
+    if (e.target === e.currentTarget && onClearSelection) {
+      onClearSelection();
+    }
+  };
   
   // Sort shapes by zIndex for proper rendering order
   const sortedShapes = [...shapes].sort((a, b) => a.zIndex - b.zIndex);
@@ -120,9 +252,10 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     }
   };
 
-  // Helper function to render resize indicators
+  // Helper function to render resize indicators for selected shapes
   const renderResizeIndicators = (shape: Shape): React.ReactNode => {
-    if (shape.type === 'line' || selectedShapeId !== shape.id) {
+    // Show resize handles for all selected shapes (not just the one being dragged)
+    if (shape.type === 'line' || !selectedShapeIds.includes(shape.id)) {
       return null;
     }
     
@@ -153,13 +286,13 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       const handle = detectResizeHandle(shape, mousePoint);
       if (handle) {
         // Select the shape if it's not already selected
-        if (selectedShapeId !== shape.id) {
-          setSelectedShapeId(shape.id);
+        if (!selectedShapeIds.includes(shape.id) && onSelectionChange) {
+          onSelectionChange([shape.id]);
         }
         
         // The resize logic is now handled by the hook's handleShapeMouseDown
         // We just need to trigger the mouse down event on the shape
-        handleShapeMouseDown(shape, e);
+        handleWrappedMouseDown(shape, e);
       }
     };
     
@@ -177,8 +310,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       const handle = detectResizeHandle(shape, touchPoint);
       if (handle) {
         // Select the shape if it's not already selected
-        if (selectedShapeId !== shape.id) {
-          setSelectedShapeId(shape.id);
+        if (!selectedShapeIds.includes(shape.id) && onSelectionChange) {
+          onSelectionChange([shape.id]);
         }
         
         // Convert touch to mouse event for compatibility with existing logic
@@ -187,7 +320,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
           clientY: touch.clientY,
           bubbles: true
         });
-        handleShapeMouseDown(shape, mouseEvent as any);
+        handleWrappedMouseDown(shape, mouseEvent as any);
       }
     };
     
@@ -225,6 +358,15 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     };
   };
 
+  // Wrapper function that handles shape clicks and prevents hook's click logic in select mode  
+  const handleShapeClickWrapper = (shape: Shape, position: Point) => {
+    // Handle the click with our custom logic
+    handleCustomShapeClick(shape, position);
+    
+    // In select mode, we don't want the hook's internal click logic to run at all
+    // So we don't call the hook's click handler
+  };
+
   return (
     <div className="relative w-full h-full">
       {/* Information Icon */}
@@ -255,14 +397,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         }}
         {...(showInfoModal ? {} : {
           onDoubleClick: handleCanvasDoubleClick,
-          onMouseMove: handleMouseMove,
-          onMouseUp: handleMouseUp,
-          onClick: (e) => {
-            // Clear selection when clicking on empty canvas area
-            if (e.target === e.currentTarget) {
-              setSelectedShapeId(undefined);
-            }
-          },
+          onMouseMove: handleWrappedMouseMove,
+          onMouseUp: handleWrappedMouseUp,
+          onClick: handleCanvasClick,
           onTouchStart: (e) => {
             // Prevent default to avoid scrolling
             e.preventDefault();
@@ -325,11 +462,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                       {renderShape(
                         // Clone the shape and override style for hit area
                         { ...shape, style: { ...shape.style, stroke: 'transparent', fill: 'transparent' } },
-                        (s, pos) => { handleShapeClick(s, pos); },
-                        selectedShapeId,
+                        (s, pos) => { handleShapeClickWrapper(s, pos); },
+                        selectedShapeIds.includes(shape.id) ? shape.id : undefined,
                         editingShape ? editingShape.id : undefined,
-                        handleShapeDoubleClick,
-                        handleShapeMouseDown,
+                        handleCustomShapeDoubleClick,
+                        handleWrappedMouseDown,
                         currentTool,
                         sketchModeEnabled,
                         currentFontSize,
@@ -340,17 +477,17 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                   ) : null;
                 }
                 default:
-                  return renderShape(shape, (s, pos) => { handleShapeClick(s, pos); }, selectedShapeId, editingShape ? editingShape.id : undefined, handleShapeDoubleClick, handleShapeMouseDown, currentTool, sketchModeEnabled, currentFontSize, showInfoModal);
+                  return renderShape(shape, (s, pos) => { handleShapeClickWrapper(s, pos); }, selectedShapeIds.includes(shape.id) ? shape.id : undefined, editingShape ? editingShape.id : undefined, handleCustomShapeDoubleClick, handleWrappedMouseDown, currentTool, sketchModeEnabled, currentFontSize, showInfoModal);
               }
             })()
           ) : (
             renderShape(
               shape, 
-              (s, pos) => { handleShapeClick(s, pos); },
-              selectedShapeId,
+              (s, pos) => { handleShapeClickWrapper(s, pos); },
+              selectedShapeIds.includes(shape.id) ? shape.id : undefined,
               editingShape ? editingShape.id : undefined,
-              handleShapeDoubleClick,
-              handleShapeMouseDown,
+              handleCustomShapeDoubleClick,
+              handleWrappedMouseDown,
               currentTool,
               sketchModeEnabled,
               currentFontSize,

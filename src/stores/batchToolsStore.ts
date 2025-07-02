@@ -44,7 +44,7 @@ export interface TransformationConfig {
   padLines?: { length: number; align: 'left' | 'right' | 'center'; char: string } | false;
 
   // Filtering & Selection
-  filterByRegex?: string | false;
+  filterByRegex?: { pattern: string; caseSensitive?: boolean } | false;
   filterByKeyword?: { keyword: string; action: 'keep' | 'remove'; position?: 'contains' | 'starts' | 'ends' } | false;
   keepFirstNLines?: number | false;
   keepLastNLines?: number | false;

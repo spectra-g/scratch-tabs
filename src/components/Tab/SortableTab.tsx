@@ -68,6 +68,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         cursor: tab.isPinned ? 'default' : (isDragging ? 'grabbing' : 'grab'),
         minHeight: '1.5rem',
         overflow: isEditing ? 'visible' : 'hidden',
+        position: isEditing ? ('relative' as const) : undefined,
+        zIndex: isEditing ? 1000 : undefined, // High z-index for the entire tab when editing
     };
 
     // Set up both refs - the sortable ref and our local one for measurements
@@ -291,12 +293,13 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                         onBlur={onEditSubmit}
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
-                        className="absolute top-0 left-0 h-full bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none text-xs z-10 border border-blue-500 shadow-lg"
+                        className="absolute top-0 left-0 h-full bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none text-xs border border-blue-500 shadow-lg"
                         style={{
                             minWidth: EDITING_INPUT_MIN_WIDTH,
                             width: `${Math.max(150, (editingTitle.length + 5) * 8)}px`, // Dynamic width based on content
-                            maxWidth: '80%', // Prevent excessive width
+                            maxWidth: '300px', // Increased max width for better usability
                             boxSizing: 'border-box',
+                            zIndex: 1001, // Even higher z-index than the tab itself
                         }}
                         aria-label="Edit tab title"
                     />

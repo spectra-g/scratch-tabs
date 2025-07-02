@@ -104,6 +104,16 @@ export interface CanvasSettings {
   mode: ShapeSnapMode;
 }
 
+export interface ShapeSnapTemplate {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  shapes: Shape[];
+  canvas: CanvasSettings;
+  isBuiltIn?: boolean;
+}
+
 export interface ShapeSnapData {
   shapes: Shape[];
   canvas: CanvasSettings;
@@ -111,6 +121,8 @@ export interface ShapeSnapData {
   history: Shape[][];
   historyIndex: number;
   currentFontSize: number;
+  selectedShapeIds?: string[]; // Support for multi-selection
+  clipboard?: Shape[]; // Clipboard for copy/paste operations
 }
 
 export interface DrawState {

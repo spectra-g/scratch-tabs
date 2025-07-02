@@ -145,8 +145,15 @@ function applyTransformationsToLines(lines: string[], config: TransformationConf
   // 4. Filtering & Selection
   if (config.filterByRegex) {
     try {
-      const regex = new RegExp(config.filterByRegex, 'gm');
-      processedLines = processedLines.filter(line => regex.test(line));
+      const { pattern, caseSensitive = true } = config.filterByRegex;
+      const flags = caseSensitive ? 'gm' : 'gmi';
+      const regex = new RegExp(pattern, flags);
+      
+      processedLines = processedLines.filter(line => {
+        const matches = regex.test(line);
+        regex.lastIndex = 0; // Reset for global flag to prevent state issues
+        return matches;
+      });
     } catch (e) {
       // Invalid regex, skip filtering
     }

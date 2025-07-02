@@ -18,17 +18,17 @@ import { useAIStore } from '../../stores/aiStore';
 const MainLayout: React.FC = () => {
   const {
     tabs,
+    splitView,
     activeLeftTabId,
     activeRightTabId,
     saveTabDataById,
-    splitView,
-    setSplitRatio,
+    setSplitRatio
   } = useRootStore(state => ({
     tabs: state.tabs,
+    splitView: state.splitView,
     activeLeftTabId: state.splitView?.activeLeftTabId,
     activeRightTabId: state.splitView?.activeRightTabId,
     saveTabDataById: state.saveTabDataById,
-    splitView: state.splitView,
     setSplitRatio: state.setSplitRatio,
   }));
 
@@ -57,7 +57,9 @@ const MainLayout: React.FC = () => {
   // Set up AI summary modal callback
   useEffect(() => {
     setSummaryModalCallback(handleOpenSummarizeModal);
-    return () => setSummaryModalCallback(null);
+    return () => {
+      setSummaryModalCallback(null);
+    };
   }, [setSummaryModalCallback]);
 
      useEffect(() => {
@@ -103,7 +105,7 @@ const MainLayout: React.FC = () => {
     if (fromHistory) {
       // Determine which side we're on based on explicit side or current state
       const isRightSide = explicitSide ? explicitSide === 'right' : currentSplitView.rightTabs.includes(currentSplitView.activeRightTabId || '');
-      const history = isRightSide ? currentSplitView.rightTabHistory : currentSplitView.leftTabHistory;
+      const history = isRightSide ? (currentSplitView as any).rightTabHistory : (currentSplitView as any).leftTabHistory;
 
       // Always use the explicit tab ID when provided
       const currentTabId = explicitTabId || (isRightSide ? currentSplitView.activeRightTabId : currentSplitView.activeLeftTabId);

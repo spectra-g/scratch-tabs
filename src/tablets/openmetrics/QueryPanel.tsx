@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, AlertCircle, Play, X } from 'lucide-react';
 import { MetricSample, QueryResult } from './types';
 import { executeQuery } from './QueryEngine';
@@ -132,7 +132,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
         )}
       </div>
       
-      <div className="flex-1 p-4 overflow-auto">
+              <div className="flex-1 p-4 overflow-auto custom-scrollbar">
         {result ? (
           <div>
             <div className="mb-4">

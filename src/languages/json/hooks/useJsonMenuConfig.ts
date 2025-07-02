@@ -105,9 +105,10 @@ export const useJsonMenuConfig = (
 
         return [
             { id: 'treeView', label: 'Tree/Path view', icon: FolderTree, action: treeViewAction },
-            { id: 'separator1', isSeparator: true, label: 'sep0', icon: Settings2 }, // Icon needed but won't show
-            // Section 1: Formatting & Basic Ops
+            { id: 'extractJson', label: 'Extract JSON(s)', icon: PackageSearch, action: extractJsonAction },
             { id: 'format', label: 'Format', icon: WrapText, action: formatAction },
+            { id: 'separator1', isSeparator: true, label: 'sep0', icon: Settings2 }, // Icon needed but won't show
+            // Section 1: Other Formatting & Basic Ops
             { id: 'minify', label: 'Minify', icon: UnfoldVertical, action: minifyAction },
             { id: 'sort', label: 'Sort Keys', icon: SortAsc, action: sortKeysAction },
             { id: 'flatten', label: 'Flatten JSON', icon: ListRestart, action: flattenAction },
@@ -116,7 +117,6 @@ export const useJsonMenuConfig = (
             { id: 'removeComments', label: 'Remove Comments', icon: MessageSquareOff, action: removeCommentsAction },
             { id: 'stringify', label: 'Stringify', icon: TextQuote, action: stringifyAction },
             { id: 'unstringify', label: 'Un-stringify', icon: TextQuote, action: unstringifyAction, disabled: !enableUnstringify },
-            { id: 'extractJson', label: 'Extract JSON', icon: PackageSearch, action: extractJsonAction },
             { id: 'separator2', isSeparator: true, label: 'sep1', icon: Settings2 }, // Icon needed but won't show
 
             // Section 2: Key Transformations

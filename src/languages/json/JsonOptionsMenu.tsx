@@ -56,7 +56,7 @@ export const JsonOptionsMenu: React.FC<JsonOptionsMenuProps> = ({ editor }) => {
                         ref={menuRef}
                         className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg z-50 py-1 custom-scrollbar"
                         style={{
-                            bottom: '28px', left: '0px', width: '250px', height: '300px',
+                            bottom: '28px', left: '0px', width: '250px', height: '420px',
                             overflowY: "auto",
                          }}
                         onContextMenu={(e) => e.preventDefault()}

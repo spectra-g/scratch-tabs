@@ -4,6 +4,9 @@ import { useModalStore } from '../../stores/modalStore';
 import { BaseModal } from '../../languages/json/components/modals/BaseModal';
 import { Brain, Shield, Wifi, Clock, Download, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
+// Feature flag to control codegen visibility
+const ENABLE_CODEGEN_WORKER = false;
+
 interface FileProgress {
   file: string;
   loaded: number;
@@ -123,7 +126,7 @@ export const AIModelManagementModal: React.FC = () => {
     if (!isReady && !isLoading) {
       initializeModel();
     }
-    if (!isCodegenReady && !isCodegenLoading) {
+    if (ENABLE_CODEGEN_WORKER && !isCodegenReady && !isCodegenLoading) {
       initializeCodegenModel();
     }
   };
@@ -135,7 +138,7 @@ export const AIModelManagementModal: React.FC = () => {
     if (error) {
       initializeModel();
     }
-    if (codegenError) {
+    if (ENABLE_CODEGEN_WORKER && codegenError) {
       initializeCodegenModel();
     }
   };
@@ -187,7 +190,7 @@ export const AIModelManagementModal: React.FC = () => {
                 isReady,
                 isLoading
               )}
-              {renderModelStatus(
+              {ENABLE_CODEGEN_WORKER && renderModelStatus(
                 'Code Generation Model',
                 'Generates code based on your instructions.',
                 'Approx. ~350 MB',
@@ -219,7 +222,7 @@ export const AIModelManagementModal: React.FC = () => {
               {(isLoading || isReady) && (
                 renderModelProgress('Text Summarization Model', progress, files)
               )}
-              {(isCodegenLoading || isCodegenReady) && Object.keys(codegenFiles).length > 0 && (
+              {ENABLE_CODEGEN_WORKER && (isCodegenLoading || isCodegenReady) && Object.keys(codegenFiles).length > 0 && (
                 renderModelProgress('Code Generation Model', codegenProgress, codegenFiles)
               )}
             </div>
@@ -239,7 +242,7 @@ export const AIModelManagementModal: React.FC = () => {
               <CheckCircle size={48} className="text-green-400 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-100 mb-2">AI Features are Ready!</h2>
               <p className="text-gray-400 mb-6">
-                You can now use AI features, such as right-clicking a tab to get a summary or generate code.
+                You can now use AI features, such as right-clicking a tab to get a summary{ENABLE_CODEGEN_WORKER ? ' or generate code' : ''}.
               </p>
             </div>
 
@@ -251,7 +254,7 @@ export const AIModelManagementModal: React.FC = () => {
                 isReady,
                 isLoading
               )}
-              {renderModelStatus(
+              {ENABLE_CODEGEN_WORKER && renderModelStatus(
                 'Code Generation Model',
                 'Generates code based on your instructions.',
                 'Approx. ~350 MB',
@@ -276,7 +279,7 @@ export const AIModelManagementModal: React.FC = () => {
               <AlertCircle size={48} className="text-red-400 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-100 mb-2">An Error Occurred</h2>
               <div className="text-red-300 text-sm bg-red-900/20 border border-red-800 rounded-lg p-3">
-                {error || codegenError}
+                {error || (ENABLE_CODEGEN_WORKER && codegenError)}
               </div>
             </div>
 

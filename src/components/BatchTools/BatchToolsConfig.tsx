@@ -173,13 +173,20 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
             description="Choose when to apply the transformations below"
           />
 
-          {config.condition && ['contains', 'not-contains', 'starts-with', 'ends-with', 'regex'].includes(config.condition.type) && (
+          {config.condition && config.condition !== false && ['contains', 'not-contains', 'starts-with', 'ends-with', 'regex'].includes(config.condition.type) && (
             <TextInput
               label={config.condition.type === 'regex' ? 'Regular expression' : 'Text to match'}
               value={config.condition.value || ''}
               onChange={(value) =>
                 onChange({
-                  condition: { ...config.condition!, value },
+                  condition: { 
+                    type: config.condition!.type,
+                    value,
+                    lineNumber: config.condition!.lineNumber,
+                    startLine: config.condition!.startLine,
+                    endLine: config.condition!.endLine,
+                    nthInterval: config.condition!.nthInterval,
+                  },
                 })
               }
               placeholder={
@@ -547,13 +554,52 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
 
       {/* Filtering & Selection */}
       <ConfigSection title={<div className="flex items-center space-x-2"><Search className="w-4 h-4 text-blue-400" /><span>Filtering & Selection</span></div>}>
-        <TextInput
-          label="Filter by RegEx"
-          value={config.filterByRegex || ''}
-          onChange={(value) => onChange({ filterByRegex: value || false })}
-          placeholder="Enter regular expression..."
-          description="Keep only lines matching the regex pattern"
-        />
+        <div className="space-y-3">
+          <Checkbox
+            label="Filter by RegEx"
+            checked={!!config.filterByRegex}
+            onChange={(checked) => {
+              if (checked) {
+                onChange({
+                  filterByRegex: {
+                    pattern: '',
+                    caseSensitive: true,
+                  },
+                });
+              } else {
+                onChange({ filterByRegex: false });
+              }
+            }}
+            description="Keep only lines matching the regex pattern"
+          />
+
+          {config.filterByRegex && (
+            <>
+              <TextInput
+                label="Regular expression pattern"
+                value={config.filterByRegex.pattern || ''}
+                onChange={(value) =>
+                  onChange({
+                    filterByRegex: { ...config.filterByRegex!, pattern: value },
+                  })
+                }
+                placeholder="Enter regular expression..."
+                description="JavaScript regex pattern to match lines"
+              />
+
+              <Checkbox
+                label="Case sensitive"
+                checked={config.filterByRegex.caseSensitive !== false}
+                onChange={(checked) =>
+                  onChange({
+                    filterByRegex: { ...config.filterByRegex!, caseSensitive: checked },
+                  })
+                }
+                description="Match case exactly (uncheck for case-insensitive matching)"
+              />
+            </>
+          )}
+        </div>
 
         <div className="space-y-3">
           <Checkbox
