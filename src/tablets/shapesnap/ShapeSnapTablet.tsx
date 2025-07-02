@@ -1,5 +1,5 @@
 import { Tablet, TabletState } from '../types';
-import { ShapeSnapData } from './types';
+import { ShapeSnapData, ShapeSnapTemplate } from './types';
 import { ShapeSnapUI } from './components/ShapeSnapUI';
 
 interface ShapeSnapTabletState extends TabletState {
@@ -39,6 +39,21 @@ export const ShapeSnapTablet: Tablet = {
     try {
       const parsed = JSON.parse(json);
       if (parsed.type === 'shapesnap' && parsed.data) {
+        // Ensure all required properties exist
+        const data = parsed.data as ShapeSnapData;
+        
+        // Ensure arrays exist
+        data.shapes = Array.isArray(data.shapes) ? data.shapes : [];
+        data.history = Array.isArray(data.history) ? data.history : [];
+        data.selectedShapeIds = Array.isArray(data.selectedShapeIds) ? data.selectedShapeIds : [];
+        data.clipboard = Array.isArray(data.clipboard) ? data.clipboard : [];
+        
+        // Ensure required properties exist
+        data.canvas = data.canvas || { background: '#1e1e1e', mode: 'dark' };
+        data.currentTool = data.currentTool || 'draw';
+        data.historyIndex = typeof data.historyIndex === 'number' ? data.historyIndex : -1;
+        data.currentFontSize = typeof data.currentFontSize === 'number' ? data.currentFontSize : 16;
+        
         return parsed;
       }
     } catch (e) {

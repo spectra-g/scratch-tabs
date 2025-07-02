@@ -10,7 +10,8 @@ import {
   Moon, 
   Magnet,
   Signature,
-  Type
+  Type,
+  Layers
 } from 'lucide-react';
 import { ShapeSnapTool, ShapeSnapMode } from '../types';
 
@@ -31,6 +32,7 @@ interface ShapeSnapToolbarProps {
   onToggleGridSnapping: () => void;
   sketchModeEnabled: boolean;
   onToggleSketchMode: () => void;
+  onToggleTemplates: () => void;
 }
 
 export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
@@ -49,7 +51,8 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
   gridSnappingEnabled,
   onToggleGridSnapping,
   sketchModeEnabled,
-  onToggleSketchMode
+  onToggleSketchMode,
+  onToggleTemplates
 }) => {
   const [showExportOptions, setShowExportOptions] = useState(false);
   
@@ -153,6 +156,14 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         </button>
         
         <div className="w-px h-6 bg-gray-700 mx-1"></div>
+        
+        <button
+          className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+          onClick={onToggleTemplates}
+          title="Templates"
+        >
+          <Layers size={18} />
+        </button>
         
         <button
           className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"

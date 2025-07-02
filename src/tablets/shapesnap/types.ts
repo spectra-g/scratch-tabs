@@ -104,6 +104,16 @@ export interface CanvasSettings {
   mode: ShapeSnapMode;
 }
 
+export interface ShapeSnapTemplate {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  shapes: Shape[];
+  canvas: CanvasSettings;
+  isBuiltIn?: boolean;
+}
+
 export interface ShapeSnapData {
   shapes: Shape[];
   canvas: CanvasSettings;

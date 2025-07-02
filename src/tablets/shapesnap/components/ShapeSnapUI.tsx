@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShapeSnapData, DrawState } from '../types';
+import { ShapeSnapData, DrawState, ShapeSnapTemplate } from '../types';
 import { useShapeSnapEngine } from '../hooks/useShapeSnapEngine';
 import { ShapeSnapCanvas } from './ShapeSnapCanvas';
 import { ShapeSnapToolbar } from './ShapeSnapToolbar';
 import { ShapeSnapStatusBar } from './ShapeSnapStatusBar';
+import { ShapeSnapTemplatesPanel } from './ShapeSnapTemplatesPanel';
 
 interface ShapeSnapUIProps {
   state: ShapeSnapData;
@@ -19,12 +20,24 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   const [gridSnappingEnabled, setGridSnappingEnabled] = useState(false);
   const [sketchModeEnabled, setSketchModeEnabled] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const uiRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   
   const engine = useShapeSnapEngine(state, onChange);
+  
+  // Template functions
+  const handleApplyTemplate = (template: ShapeSnapTemplate) => {
+    onChange({
+      ...state,
+      shapes: [...template.shapes],
+      canvas: template.canvas,
+      history: [template.shapes],
+      historyIndex: 0
+    });
+  };
   
   // Handle canvas resize
   useEffect(() => {
@@ -298,6 +311,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
         onToggleGridSnapping={() => setGridSnappingEnabled(s => !s)}
         sketchModeEnabled={sketchModeEnabled}
         onToggleSketchMode={() => setSketchModeEnabled(s => !s)}
+        onToggleTemplates={() => setShowTemplatesPanel(s => !s)}
       />
       
       <div 
@@ -345,6 +359,14 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
         canvasMode={state.canvas.mode}
         selectedCount={state.selectedShapeIds?.length || 0}
       />
+      
+      {/* Templates Panel */}
+      {showTemplatesPanel && (
+        <ShapeSnapTemplatesPanel
+          onApplyTemplate={handleApplyTemplate}
+          onClose={() => setShowTemplatesPanel(false)}
+        />
+      )}
     </div>
   );
 };
