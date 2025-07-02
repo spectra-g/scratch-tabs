@@ -47,7 +47,7 @@ export function SnippetSelector({ selectedSnippet, onSnippetSelect }: SnippetSel
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800/95 border border-gray-700/50 rounded-md shadow-lg backdrop-blur-sm z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800/95 border border-gray-700/50 rounded-md shadow-lg backdrop-blur-sm z-50 max-h-80 overflow-y-auto custom-scrollbar">
           {categories.map(category => (
             <div key={category}>
               <button

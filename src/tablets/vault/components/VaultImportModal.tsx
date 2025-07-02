@@ -141,7 +141,7 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto custom-scrollbar p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column - Import Configuration */}
             <div className="space-y-6">
@@ -259,7 +259,7 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                   )}
 
                   {/* Items Preview */}
-                  <div className="max-h-96 overflow-auto space-y-2">
+                  <div className="max-h-96 overflow-auto custom-scrollbar space-y-2">
                     {previewItems.map((item, index) => {
                       const isDuplicate = duplicateItems.some(dup => dup.content === item.content);
                       const duplicateCount = previewItems.filter(p => p.content.trim() === item.content.trim()).length;

@@ -89,7 +89,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
               </button>
             )}
           </div>
-          <div className="mt-2 max-h-32 overflow-y-auto bg-gray-800 border border-gray-700 rounded">
+          <div className="mt-2 max-h-32 overflow-y-auto custom-scrollbar bg-gray-800 border border-gray-700 rounded">
             {filteredMetricNames.length === 0 ? (
               <div className="p-2 text-sm text-gray-500">No metrics found</div>
             ) : (
@@ -112,7 +112,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
         {selectedMetricName && availableLabelKeys.length > 0 && (
           <div className="w-full md:w-1/3">
             <div className="text-xs text-gray-400 mb-1">Group By Labels</div>
-            <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto">
+            <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
               {availableLabelKeys.map(labelKey => (
                 <div key={labelKey} className="flex items-center mb-1 last:mb-0">
                   <input

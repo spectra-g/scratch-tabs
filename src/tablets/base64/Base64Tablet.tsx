@@ -445,7 +445,7 @@ const Base64TabletUI: React.FC<{
       </AnimatePresence>
       
       {/* Main Content */}
-      <div className={`flex-1 p-3 flex ${layout === 'horizontal' ? 'flex-row' : 'flex-col'} gap-3 overflow-auto`}>
+      <div className={`flex-1 p-3 flex ${layout === 'horizontal' ? 'flex-row' : 'flex-col'} gap-3 overflow-auto custom-scrollbar`}>
         {/* Input */}
         <Base64Input
           value={input}

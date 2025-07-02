@@ -92,7 +92,7 @@ The tablet should render normally without breaking the entire application.
       const githubUrl = this.generateGitHubIssueUrl();
       
       return (
-        <div className="h-full bg-gray-900 text-gray-100 p-6 overflow-y-auto">
+        <div className="h-full bg-gray-900 text-gray-100 p-6 overflow-y-auto custom-scrollbar">
           <div className="max-w-2xl mx-auto flex flex-col justify-center min-h-full">
             <div className="flex items-center gap-3 mb-6">
               <AlertTriangle className="text-red-400" size={32} />

@@ -132,7 +132,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
         )}
       </div>
       
-      <div className="flex-1 p-4 overflow-auto">
+              <div className="flex-1 p-4 overflow-auto custom-scrollbar">
         {result ? (
           <div>
             <div className="mb-4">
