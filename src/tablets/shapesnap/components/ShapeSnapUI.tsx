@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ShapeSnapData, DrawState, ShapeSnapTemplate } from '../types';
-import { useShapeSnapEngine } from '../hooks/useShapeSnapEngine';
+import { useShapeSnapEngineV2 } from '../hooks/useShapeSnapEngineV2';
 import { ShapeSnapCanvas } from './ShapeSnapCanvas';
 import { ShapeSnapToolbar } from './ShapeSnapToolbar';
 import { ShapeSnapStatusBar } from './ShapeSnapStatusBar';
@@ -26,7 +26,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({ state, onChange }) => 
   const uiRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   
-  const engine = useShapeSnapEngine(state, onChange);
+  const engine = useShapeSnapEngineV2(state, onChange);
   
   // Template functions
   const handleApplyTemplate = (template: ShapeSnapTemplate) => {

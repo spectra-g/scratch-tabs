@@ -32,14 +32,12 @@ export interface UseMouseEventCoordinatorProps {
 
 export const useMouseEventCoordinator = ({
   shapes,
-  canvasSettings,
   currentTool,
   currentFontSize,
   gridSnappingEnabled,
   onShapeClick,
   onUpdateLabel,
   onUpdateShape,
-  onDeleteShape,
   onAddShape
 }: UseMouseEventCoordinatorProps) => {
   const [mouseEventState, setMouseEventState] = useState<MouseEventState>({
@@ -80,6 +78,13 @@ export const useMouseEventCoordinator = ({
 
   // Handle shape mouse down
   const handleShapeMouseDown = useCallback((shape: Shape, e: React.MouseEvent) => {
+    console.log('🔍 [Coordinator] Shape mouse down:', {
+      shapeId: shape.id,
+      shapeType: shape.type,
+      currentTool,
+      mousePos: { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY }
+    });
+
     const mousePoint = {
       x: e.nativeEvent.offsetX,
       y: e.nativeEvent.offsetY
@@ -89,6 +94,7 @@ export const useMouseEventCoordinator = ({
     const arrowTipState = arrowTipHandler.detectArrowTipClick(shape, mousePoint);
     
     if (arrowTipState.isArrowTipClick) {
+      console.log('🔍 [Coordinator] Arrow tip click detected:', arrowTipState);
       setMouseEventState({
         mouseDownShape: {
           shape,
@@ -105,6 +111,7 @@ export const useMouseEventCoordinator = ({
     // Check for resize handle
     const resizeHandle = resizeHandler.detectResizeHandle(shape, mousePoint);
     if (resizeHandle) {
+      console.log('🔍 [Coordinator] Resize handle detected:', resizeHandle);
       resizeHandler.startResize(shape, mousePoint, resizeHandle);
       return;
     }
@@ -113,12 +120,14 @@ export const useMouseEventCoordinator = ({
     if (shape.type === 'line') {
       const lineDragMode = lineResizeHandler.detectLineDragMode(shape, mousePoint);
       if (lineDragMode !== 'move') {
+        console.log('🔍 [Coordinator] Line resize detected:', lineDragMode);
         lineResizeHandler.startLineResize(shape, mousePoint);
         return;
       }
     }
 
     // Default to drag operation
+    console.log('🔍 [Coordinator] Starting drag operation');
     dragHandler.startDrag(shape, mousePoint);
     
     setMouseEventState({
@@ -129,7 +138,7 @@ export const useMouseEventCoordinator = ({
       },
       hasMoved: false
     });
-  }, [dragHandler, resizeHandler, lineResizeHandler, arrowTipHandler]);
+  }, [dragHandler, resizeHandler, lineResizeHandler, arrowTipHandler, currentTool]);
 
   // Handle mouse move
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -146,24 +155,40 @@ export const useMouseEventCoordinator = ({
       );
       
       if (distance > 5) {
+        console.log('🔍 [Coordinator] Mouse moved, distance:', distance);
         setMouseEventState(prev => ({ ...prev, hasMoved: true }));
+        
+        // If we're dragging an arrow tip, start line resize
+        if (mouseEventState.mouseDownShape?.isArrowTipClick && mouseEventState.mouseDownShape.shape.type === 'line') {
+          console.log('🔍 [Coordinator] Starting line resize for arrow tip drag:', mouseEventState.mouseDownShape.arrowTipMode);
+          // For arrow tip drags, we need to determine which end to resize based on the arrow tip mode
+          const arrowTipMode = mouseEventState.mouseDownShape.arrowTipMode;
+          if (arrowTipMode === 'resize-start' || arrowTipMode === 'resize-end') {
+            // Start line resize with the appropriate mode
+            lineResizeHandler.startLineResize(mouseEventState.mouseDownShape.shape, mousePoint, arrowTipMode);
+            return;
+          }
+        }
       }
     }
 
     // Handle resize operations
     if (resizeHandler.isResizing) {
+      console.log('🔍 [Coordinator] Updating resize:', mousePoint);
       resizeHandler.updateResize(mousePoint);
       return;
     }
 
     // Handle line resize operations
     if (lineResizeHandler.isLineResizing) {
+      console.log('🔍 [Coordinator] Updating line resize:', mousePoint);
       lineResizeHandler.updateLineResize(mousePoint);
       return;
     }
 
     // Handle drag operations
     if (dragHandler.isDragging) {
+      console.log('🔍 [Coordinator] Updating drag:', mousePoint);
       dragHandler.updateDrag(mousePoint);
       return;
     }
@@ -176,94 +201,119 @@ export const useMouseEventCoordinator = ({
       y: e.nativeEvent.offsetY
     };
 
+    console.log('🔍 [Coordinator] Mouse up:', {
+      isResizing: resizeHandler.isResizing,
+      isLineResizing: lineResizeHandler.isLineResizing,
+      isDragging: dragHandler.isDragging,
+      hasMoved: mouseEventState.hasMoved
+    });
+
     // Handle resize operations
     if (resizeHandler.isResizing) {
+      console.log('🔍 [Coordinator] Ending resize');
       resizeHandler.endResize(mousePoint);
       return;
     }
 
     // Handle line resize operations
     if (lineResizeHandler.isLineResizing) {
-      lineResizeHandler.endLineResize(mousePoint);
+      console.log('🔍 [Coordinator] Ending line resize');
+      lineResizeHandler.endLineResize();
       return;
     }
 
     // Handle drag operations
     if (dragHandler.isDragging) {
+      console.log('🔍 [Coordinator] Ending drag');
       const result = dragHandler.endDrag(mousePoint);
       
       // If it was a click (not a drag), handle arrow tip click
       if (result.wasClick && mouseEventState.mouseDownShape?.isArrowTipClick) {
         const { shape, arrowTipMode } = mouseEventState.mouseDownShape;
         if (arrowTipMode) {
+          console.log('🔍 [Coordinator] Handling arrow tip click:', arrowTipMode);
           arrowTipHandler.handleArrowTipClick(shape, arrowTipMode);
         }
       }
-      
       return;
     }
 
-    // Handle regular clicks
-    if (mouseEventState.mouseDownShape && !mouseEventState.hasMoved) {
-      const { shape } = mouseEventState.mouseDownShape;
-      
-      // Handle arrow tip click
-      if (mouseEventState.mouseDownShape.isArrowTipClick && mouseEventState.mouseDownShape.arrowTipMode) {
-        arrowTipHandler.handleArrowTipClick(shape, mouseEventState.mouseDownShape.arrowTipMode);
-      } else {
-        // Regular shape click
-        clickHandler.handleShapeClick(shape, mousePoint);
+    // Handle arrow tip clicks that didn't result in dragging
+    if (mouseEventState.mouseDownShape?.isArrowTipClick && !mouseEventState.hasMoved) {
+      const { shape, arrowTipMode } = mouseEventState.mouseDownShape;
+      if (arrowTipMode) {
+        console.log('🔍 [Coordinator] Handling arrow tip click (no drag):', arrowTipMode);
+        arrowTipHandler.handleArrowTipClick(shape, arrowTipMode);
       }
     }
 
-    // Reset mouse event state
+    // Reset state
     setMouseEventState({
       mouseDownShape: null,
       hasMoved: false
     });
-  }, [mouseEventState, dragHandler, resizeHandler, lineResizeHandler, arrowTipHandler, clickHandler]);
-
-  // Handle canvas double click
-  const handleCanvasDoubleClick = useCallback((e: React.MouseEvent) => {
-    clickHandler.handleCanvasDoubleClick(e);
-  }, [clickHandler]);
+  }, [mouseEventState, dragHandler, resizeHandler, lineResizeHandler, arrowTipHandler]);
 
   // Handle shape double click
   const handleShapeDoubleClick = useCallback((shape: Shape) => {
-    clickHandler.handleShapeDoubleClick(shape);
+    console.log('🔍 [Coordinator] Shape double click:', {
+      shapeId: shape.id,
+      shapeType: shape.type,
+      currentTool
+    });
+    
+    if (currentTool === 'draw') {
+      console.log('🔍 [Coordinator] Starting label edit in draw mode');
+      clickHandler.setEditingShape(shape);
+    }
+  }, [currentTool, clickHandler]);
+
+  // Handle canvas double click
+  const handleCanvasDoubleClick = useCallback((e: React.MouseEvent) => {
+    console.log('🔍 [Coordinator] Canvas double click');
+    clickHandler.handleCanvasDoubleClick(e);
+  }, [clickHandler]);
+
+  // Handle label save
+  const handleLabelSave = useCallback((shapeId: string, label: string) => {
+    console.log('🔍 [Coordinator] Saving label:', { shapeId, label });
+    clickHandler.handleLabelSave(shapeId, label);
+  }, [clickHandler]);
+
+  // Handle label cancel
+  const handleLabelCancel = useCallback(() => {
+    console.log('🔍 [Coordinator] Canceling label edit');
+    clickHandler.handleLabelCancel();
   }, [clickHandler]);
 
   return {
-    // State from all handlers
-    dragState: dragHandler.dragState,
-    resizeState: resizeHandler.resizeState,
-    lineResizeState: lineResizeHandler.lineResizeState,
-    clickState: clickHandler.clickState,
-    mouseEventState,
-    
-    // Computed values
-    isDragging: dragHandler.isDragging,
-    isResizing: resizeHandler.isResizing,
-    isLineResizing: lineResizeHandler.isLineResizing,
+    // State
+    editingShape: clickHandler.editingShape,
     draggedShape: dragHandler.draggedShape,
     dragGuides: dragHandler.dragGuides,
     resizeHandle: resizeHandler.resizeHandle,
-    selectedShapeId: clickHandler.selectedShapeId,
-    editingShape: clickHandler.editingShape,
+    setEditingShape: clickHandler.setEditingShape,
     
-    // Event handlers
+    // Actions
+    handleLabelSave,
+    handleLabelCancel,
+    handleCanvasDoubleClick,
+    handleShapeDoubleClick,
     handleShapeMouseDown,
     handleMouseMove,
     handleMouseUp,
-    handleCanvasDoubleClick,
-    handleShapeDoubleClick,
     
-    // Click handler methods
-    handleLabelSave: clickHandler.handleLabelSave,
-    handleLabelCancel: clickHandler.handleLabelCancel,
-    
-    // Setters
+    // State from handlers
+    resizeState: resizeHandler.resizeState,
+    dragState: dragHandler.dragState,
+    lineResizeState: lineResizeHandler.lineResizeState,
+    clickState: clickHandler.clickState,
+    mouseEventState,
+    selectedShapeId: clickHandler.selectedShapeId,
     setSelectedShapeId: clickHandler.setSelectedShapeId,
-    setEditingShape: clickHandler.setEditingShape
+    detectResizeHandle: resizeHandler.detectResizeHandle,
+    
+    // Line resize dragged shape for immediate visual feedback
+    lineResizeDraggedShape: lineResizeHandler.draggedShape
   };
 }; 

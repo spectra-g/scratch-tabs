@@ -47,13 +47,13 @@ export const useArrowTipHandler = ({
       Math.pow(mousePoint.x - endPoint.x, 2) + Math.pow(mousePoint.y - endPoint.y, 2)
     );
     
-    // Check if click is on start arrow tip
-    if (distanceToStart <= threshold && lineShape.arrowTipStart) {
+    // Check if click is on start arrow tip (allow cycling even if no tip is set)
+    if (distanceToStart <= threshold) {
       return { isArrowTipClick: true, arrowTipMode: 'resize-start' };
     }
     
-    // Check if click is on end arrow tip
-    if (distanceToEnd <= threshold && lineShape.arrowTipEnd) {
+    // Check if click is on end arrow tip (allow cycling even if no tip is set)
+    if (distanceToEnd <= threshold) {
       return { isArrowTipClick: true, arrowTipMode: 'resize-end' };
     }
     

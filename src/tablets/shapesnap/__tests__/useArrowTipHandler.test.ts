@@ -73,7 +73,7 @@ describe('useArrowTipHandler', () => {
       expect(arrowTipState.arrowTipMode).toBe(null);
     });
 
-    it('should not detect arrow tip click when no arrow tips are set', () => {
+    it('should detect arrow tip click even when no arrow tips are set (allows cycling)', () => {
       const { result } = renderHook(() =>
         useArrowTipHandler({
           onUpdateShape: mockOnUpdateShape
@@ -91,8 +91,8 @@ describe('useArrowTipHandler', () => {
       const startPoint = { x: 105, y: 105 };
       const arrowTipState = result.current.detectArrowTipClick(lineWithoutArrows, startPoint);
 
-      expect(arrowTipState.isArrowTipClick).toBe(false);
-      expect(arrowTipState.arrowTipMode).toBe(null);
+      expect(arrowTipState.isArrowTipClick).toBe(true);
+      expect(arrowTipState.arrowTipMode).toBe('resize-start');
     });
 
     it('should not detect arrow tip click when too far from endpoints', () => {
@@ -361,8 +361,8 @@ describe('useArrowTipHandler', () => {
       const endPoint = { x: 195, y: 195 };
       const endArrowTipState = result.current.detectArrowTipClick(lineWithStartOnly, endPoint);
 
-      expect(endArrowTipState.isArrowTipClick).toBe(false);
-      expect(endArrowTipState.arrowTipMode).toBe(null);
+      expect(endArrowTipState.isArrowTipClick).toBe(true);
+      expect(endArrowTipState.arrowTipMode).toBe('resize-end');
     });
 
     it('should handle lines with only end arrow tip', () => {
@@ -384,8 +384,8 @@ describe('useArrowTipHandler', () => {
       const startPoint = { x: 105, y: 105 };
       const startArrowTipState = result.current.detectArrowTipClick(lineWithEndOnly, startPoint);
 
-      expect(startArrowTipState.isArrowTipClick).toBe(false);
-      expect(startArrowTipState.arrowTipMode).toBe(null);
+      expect(startArrowTipState.isArrowTipClick).toBe(true);
+      expect(startArrowTipState.arrowTipMode).toBe('resize-start');
 
       const endPoint = { x: 195, y: 195 };
       const endArrowTipState = result.current.detectArrowTipClick(lineWithEndOnly, endPoint);

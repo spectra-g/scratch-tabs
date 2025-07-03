@@ -161,12 +161,13 @@ describe('useResizeHandler', () => {
       let updates: Partial<Shape> | undefined;
 
       act(() => {
-        updates = result.current.updateResize(movePoint);
+        result.current.updateResize(movePoint);
       });
 
-      expect(updates).toBeDefined();
-      expect(updates).toHaveProperty('width');
-      expect(updates).toHaveProperty('height');
+      expect(mockOnUpdateShape).toHaveBeenCalledWith('rect-1', expect.objectContaining({
+        width: expect.any(Number),
+        height: expect.any(Number)
+      }));
     });
 
     it('should update resize bounds for circle', () => {
@@ -188,11 +189,12 @@ describe('useResizeHandler', () => {
       let updates: Partial<Shape> | undefined;
 
       act(() => {
-        updates = result.current.updateResize(movePoint);
+        result.current.updateResize(movePoint);
       });
 
-      expect(updates).toBeDefined();
-      expect(updates).toHaveProperty('radius');
+      expect(mockOnUpdateShape).toHaveBeenCalledWith('circle-1', expect.objectContaining({
+        radius: expect.any(Number)
+      }));
     });
 
     it('should return undefined when not resizing', () => {
@@ -206,10 +208,10 @@ describe('useResizeHandler', () => {
       let updates: Partial<Shape> | undefined;
 
       act(() => {
-        updates = result.current.updateResize(movePoint);
+        result.current.updateResize(movePoint);
       });
 
-      expect(updates).toBeUndefined();
+      expect(mockOnUpdateShape).not.toHaveBeenCalled();
     });
   });
 

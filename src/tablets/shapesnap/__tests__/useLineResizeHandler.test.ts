@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useLineResizeHandler } from '../hooks/useLineResizeHandler';
-import { Shape, Point } from '../types';
+import { Shape } from '../types';
 
 describe('useLineResizeHandler', () => {
   const mockLineShape: Shape = {
@@ -28,7 +28,8 @@ describe('useLineResizeHandler', () => {
       expect(result.current.lineResizeState).toEqual({
         lineDragMode: null,
         lineDragPoint: null,
-        lineDragShape: null
+        lineDragShape: null,
+        draggedShape: null
       });
       expect(result.current.isLineResizing).toBe(false);
       expect(result.current.lineDragMode).toBe(null);
@@ -209,15 +210,13 @@ describe('useLineResizeHandler', () => {
         result.current.startLineResize(mockLineShape, startPoint);
       });
 
-      let updates: Partial<Shape> | undefined;
-
       act(() => {
-        updates = result.current.updateLineResize(movePoint);
+        result.current.updateLineResize(movePoint);
       });
 
-      expect(updates).toBeDefined();
-      expect(updates).toHaveProperty('points');
-      expect((updates as any).points).toHaveLength(2);
+      expect(result.current.draggedShape).toBeDefined();
+      expect(result.current.draggedShape).toHaveProperty('points');
+      expect((result.current.draggedShape as any).points).toHaveLength(2);
     });
 
     it('should update resize-end operation', () => {
@@ -234,15 +233,13 @@ describe('useLineResizeHandler', () => {
         result.current.startLineResize(mockLineShape, startPoint);
       });
 
-      let updates: Partial<Shape> | undefined;
-
       act(() => {
-        updates = result.current.updateLineResize(movePoint);
+        result.current.updateLineResize(movePoint);
       });
 
-      expect(updates).toBeDefined();
-      expect(updates).toHaveProperty('points');
-      expect((updates as any).points).toHaveLength(2);
+      expect(result.current.draggedShape).toBeDefined();
+      expect(result.current.draggedShape).toHaveProperty('points');
+      expect((result.current.draggedShape as any).points).toHaveLength(2);
     });
 
     it('should update move operation', () => {
@@ -259,15 +256,13 @@ describe('useLineResizeHandler', () => {
         result.current.startLineResize(mockLineShape, startPoint);
       });
 
-      let updates: Partial<Shape> | undefined;
-
       act(() => {
-        updates = result.current.updateLineResize(movePoint);
+        result.current.updateLineResize(movePoint);
       });
 
-      expect(updates).toBeDefined();
-      expect(updates).toHaveProperty('points');
-      expect((updates as any).points).toHaveLength(2);
+      expect(result.current.draggedShape).toBeDefined();
+      expect(result.current.draggedShape).toHaveProperty('points');
+      expect((result.current.draggedShape as any).points).toHaveLength(2);
     });
 
     it('should return undefined when not resizing', () => {
@@ -278,13 +273,12 @@ describe('useLineResizeHandler', () => {
       );
 
       const movePoint = { x: 170, y: 170 };
-      let updates: Partial<Shape> | undefined;
 
       act(() => {
-        updates = result.current.updateLineResize(movePoint);
+        result.current.updateLineResize(movePoint);
       });
 
-      expect(updates).toBeUndefined();
+      expect(result.current.draggedShape).toBeNull();
     });
   });
 
@@ -304,7 +298,11 @@ describe('useLineResizeHandler', () => {
       });
 
       act(() => {
-        result.current.endLineResize(endPoint);
+        result.current.updateLineResize(endPoint);
+      });
+
+      act(() => {
+        result.current.endLineResize();
       });
 
       expect(mockOnUpdateShape).toHaveBeenCalledWith('line-1', expect.objectContaining({
@@ -320,10 +318,8 @@ describe('useLineResizeHandler', () => {
         })
       );
 
-      const endPoint = { x: 120, y: 120 };
-
       act(() => {
-        result.current.endLineResize(endPoint);
+        result.current.endLineResize();
       });
 
       expect(mockOnUpdateShape).not.toHaveBeenCalled();
@@ -373,7 +369,11 @@ describe('useLineResizeHandler', () => {
       });
 
       act(() => {
-        result.current.endLineResize(endPoint);
+        result.current.updateLineResize(endPoint);
+      });
+
+      act(() => {
+        result.current.endLineResize();
       });
 
       expect(mockOnUpdateShape).toHaveBeenCalledWith('line-1', expect.objectContaining({
@@ -397,7 +397,11 @@ describe('useLineResizeHandler', () => {
       });
 
       act(() => {
-        result.current.endLineResize(endPoint);
+        result.current.updateLineResize(endPoint);
+      });
+
+      act(() => {
+        result.current.endLineResize();
       });
 
       expect(mockOnUpdateShape).toHaveBeenCalledWith('line-1', expect.objectContaining({
