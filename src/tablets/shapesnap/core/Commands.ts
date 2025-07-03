@@ -34,7 +34,16 @@ export abstract class BaseCommand implements Command {
   }
 
   protected updateState(newState: ShapeSnapData): void {
-    this.onChange(newState);
+    // Update history when state changes
+    const newHistory = newState.history.slice(0, newState.historyIndex + 1);
+    newHistory.push([...newState.shapes]);
+    const newHistoryIndex = newHistory.length - 1;
+    
+    this.onChange({
+      ...newState,
+      history: newHistory,
+      historyIndex: newHistoryIndex
+    });
   }
 
   protected addToHistory(shapes: Shape[]): void {

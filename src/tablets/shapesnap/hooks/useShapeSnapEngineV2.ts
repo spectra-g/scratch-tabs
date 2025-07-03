@@ -98,16 +98,19 @@ export const useShapeSnapEngineV2 = (
       }
     });
 
-    // Add all pasted shapes
-    pastedShapes.forEach(shape => {
-      const command = new AddShapeCommand(getCurrentState, onChange, shape);
-      commandManager.executeCommand(command);
+    // Batch add all pasted shapes to avoid stale state issues
+    const newShapes = [...state.shapes, ...pastedShapes];
+    onChange({
+      ...state,
+      shapes: newShapes
     });
 
-    // Select the newly pasted shapes
-    const pastedShapeIds = pastedShapes.map(shape => shape.id);
-    selectionManager.selectShapes(pastedShapeIds);
-  }, [state.clipboard, getCurrentState, onChange, commandManager, selectionManager]);
+    // NOTE: Removed immediate selection of pasted shapes to prevent state overwrite issues.
+    // The selectionManager.selectShapes() call was causing the shapes state to be overwritten
+    // because it used stale state and called onChange() again, which conflicted with the
+    // just-completed paste operation. Selection should be handled by the UI layer
+    // in a separate render cycle or effect to avoid state conflicts.
+  }, [state.clipboard, state.shapes, onChange, selectionManager]);
 
   // Set selected shapes
   const setSelectedShapes = useCallback((shapeIds: string[]) => {
