@@ -69,7 +69,6 @@ export class AddShapeCommand extends BaseCommand {
         ...this.state,
         shapes: newShapes
       });
-      this.addToHistory(newShapes);
       this.shapeAdded = true;
     }
   }
@@ -81,7 +80,6 @@ export class AddShapeCommand extends BaseCommand {
         ...this.state,
         shapes: newShapes
       });
-      this.addToHistory(newShapes);
       this.shapeAdded = false;
     }
   }
@@ -120,7 +118,6 @@ export class UpdateShapeCommand extends BaseCommand {
       ...this.state,
       shapes: updatedShapes
     });
-    this.addToHistory(updatedShapes);
   }
 
   undo(): void {
@@ -136,7 +133,6 @@ export class UpdateShapeCommand extends BaseCommand {
       ...this.state,
       shapes: updatedShapes
     });
-    this.addToHistory(updatedShapes);
   }
 }
 
@@ -168,7 +164,6 @@ export class DeleteShapeCommand extends BaseCommand {
       shapes: newShapes,
       selectedShapeIds: (this.state.selectedShapeIds || []).filter(id => id !== this.shapeId)
     });
-    this.addToHistory(newShapes);
   }
 
   undo(): void {
@@ -181,7 +176,6 @@ export class DeleteShapeCommand extends BaseCommand {
       ...this.state,
       shapes: newShapes
     });
-    this.addToHistory(newShapes);
   }
 }
 
@@ -213,7 +207,6 @@ export class DeleteSelectedShapesCommand extends BaseCommand {
       shapes: newShapes,
       selectedShapeIds: []
     });
-    this.addToHistory(newShapes);
   }
 
   undo(): void {
@@ -236,7 +229,6 @@ export class DeleteSelectedShapesCommand extends BaseCommand {
       ...currentState,
       shapes: newShapes
     });
-    this.addToHistory(newShapes);
   }
 }
 
@@ -274,7 +266,6 @@ export class MoveShapeCommand extends BaseCommand {
       ...this.state,
       shapes: updatedShapes
     });
-    this.addToHistory(updatedShapes);
   }
 
   undo(): void {
@@ -297,7 +288,6 @@ export class MoveShapeCommand extends BaseCommand {
       ...this.state,
       shapes: updatedShapes
     });
-    this.addToHistory(updatedShapes);
   }
 
   private getShapePosition(shape: Shape): Point {
