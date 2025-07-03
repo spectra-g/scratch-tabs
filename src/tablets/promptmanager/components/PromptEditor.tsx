@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Copy, Eye, EyeOff, Tag as TagIcon, Check, X, Plus, History } from 'lucide-react';
-import { Prompt, Tag, Snippet } from '../types';
+import { Copy, Tag as TagIcon, Check, X, Plus, History } from 'lucide-react';
+import { Prompt, Tag, Snippet, Template } from '../types';
 import { MarkdownPreview } from './MarkdownPreview';
-import { SnippetSelector } from './SnippetSelector';
 import { HistoryViewer } from './HistoryViewer';
+import { EditorInsertPanel } from './EditorInsertPanel';
+import { FormattingToolbar } from './FormattingToolbar';
 
 interface PromptEditorProps {
   prompt: Prompt;
@@ -11,8 +12,13 @@ interface PromptEditorProps {
   onIncrementUsage: (id: string) => void;
   tags: Tag[];
   snippets: Snippet[];
-  showPreview: boolean;
-  onTogglePreview: () => void;
+  templates: Template[];
+}
+
+interface HistoryState {
+  content: string;
+  title: string;
+  timestamp: number;
 }
 
 export const PromptEditor: React.FC<PromptEditorProps> = ({
@@ -21,16 +27,22 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   onIncrementUsage,
   tags,
   snippets,
-  showPreview,
-  onTogglePreview
+  templates
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(prompt.title);
   const [content, setContent] = useState(prompt.content);
   const [showTagSelector, setShowTagSelector] = useState(false);
-  const [showSnippetSelector, setShowSnippetSelector] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isInsertPanelOpen, setIsInsertPanelOpen] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  
+  // Undo/Redo state
+  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isUndoRedoAction, setIsUndoRedoAction] = useState(false);
+  
   const titleInputRef = useRef<HTMLInputElement>(null);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -50,9 +62,14 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
       if (isNewPrompt) {
         setIsEditing(true);
         isCurrentlyEditingRef.current = true;
+        // Initialize history for new prompts
+        initializeHistory(prompt.title, prompt.content);
       } else {
         setIsEditing(false);
         isCurrentlyEditingRef.current = false;
+        // Clear history when not editing
+        setHistory([]);
+        setHistoryIndex(-1);
       }
     }
   }, [prompt.id, prompt.title, prompt.content]);
@@ -68,6 +85,87 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
       titleInputRef.current.focus();
     }
   }, [isEditing]);
+
+  // Initialize history when editing starts
+  const initializeHistory = (initialTitle: string, initialContent: string) => {
+    const initialState: HistoryState = {
+      title: initialTitle,
+      content: initialContent,
+      timestamp: Date.now()
+    };
+    setHistory([initialState]);
+    setHistoryIndex(0);
+  };
+
+  // Add to history when content or title changes
+  const addToHistory = (newTitle: string, newContent: string) => {
+    if (isUndoRedoAction) {
+      setIsUndoRedoAction(false);
+      return;
+    }
+
+    const newState: HistoryState = {
+      title: newTitle,
+      content: newContent,
+      timestamp: Date.now()
+    };
+
+    // Remove any states after current index (for redo)
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newState);
+
+    // Keep only last 50 states
+    if (newHistory.length > 50) {
+      newHistory.splice(0, newHistory.length - 50);
+    }
+
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // Handle title changes
+  const handleTitleChange = (newTitle: string) => {
+    setTitle(newTitle);
+    if (isEditing) {
+      addToHistory(newTitle, content);
+    }
+  };
+
+  // Handle content changes
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+    if (isEditing) {
+      addToHistory(title, newContent);
+    }
+  };
+
+  // Undo functionality
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const state = history[newIndex];
+      setIsUndoRedoAction(true);
+      setTitle(state.title);
+      setContent(state.content);
+      setHistoryIndex(newIndex);
+    }
+  };
+
+  // Redo functionality
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      const state = history[newIndex];
+      setIsUndoRedoAction(true);
+      setTitle(state.title);
+      setContent(state.content);
+      setHistoryIndex(newIndex);
+    }
+  };
+
+  // Check if undo/redo is available
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
   
   const handleSave = () => {
     onUpdatePrompt(prompt.id, {
@@ -75,12 +173,22 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
       content
     });
     setIsEditing(false);
+    setIsPreviewMode(false);
+    setIsInsertPanelOpen(false);
+    // Clear history when saving
+    setHistory([]);
+    setHistoryIndex(-1);
   };
   
   const handleCancel = () => {
     setTitle(prompt.title);
     setContent(prompt.content);
     setIsEditing(false);
+    setIsPreviewMode(false);
+    setIsInsertPanelOpen(false);
+    // Clear history when canceling
+    setHistory([]);
+    setHistoryIndex(-1);
   };
   
   const handleCopy = () => {
@@ -101,7 +209,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
     onUpdatePrompt(prompt.id, { tags: newTags });
   };
   
-  const handleInsertSnippet = (snippetContent: string) => {
+  const handleInsertContent = (contentToInsert: string) => {
     // Get cursor position
     const textarea = contentTextareaRef.current;
     if (!textarea) return;
@@ -110,24 +218,105 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
     const textBefore = content.substring(0, cursorPos);
     const textAfter = content.substring(cursorPos);
     
-    // Insert snippet at cursor position
-    const newContent = `${textBefore}${snippetContent}${textAfter}`;
-    setContent(newContent);
+    // Insert content at cursor position
+    const newContent = `${textBefore}${contentToInsert}${textAfter}`;
+    handleContentChange(newContent);
     
-    // Update prompt content
-    onUpdatePrompt(prompt.id, { content: newContent });
-    
-    // Close snippet selector
-    setShowSnippetSelector(false);
-    
-    // Focus textarea and set cursor position after inserted snippet
+    // Focus textarea and set cursor position after inserted content
     setTimeout(() => {
       if (textarea) {
         textarea.focus();
-        const newCursorPos = cursorPos + snippetContent.length;
+        const newCursorPos = cursorPos + contentToInsert.length;
         textarea.setSelectionRange(newCursorPos, newCursorPos);
       }
     }, 0);
+  };
+
+  const handleFormat = (markdown: string) => {
+    const textarea = contentTextareaRef.current;
+    if (!textarea) return;
+
+    const cursorPos = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+    const selectedText = content.substring(cursorPos, selectionEnd);
+    
+    let newContent: string;
+    let newCursorPos: number;
+
+    if (selectedText) {
+      // If text is selected, wrap it with the markdown
+      const before = content.substring(0, cursorPos);
+      const after = content.substring(selectionEnd);
+      
+      if (markdown === '**text**') {
+        newContent = `${before}**${selectedText}**${after}`;
+        newCursorPos = cursorPos + selectedText.length + 4;
+      } else if (markdown === '*text*') {
+        newContent = `${before}*${selectedText}*${after}`;
+        newCursorPos = cursorPos + selectedText.length + 2;
+      } else if (markdown === '`code`') {
+        newContent = `${before}\`${selectedText}\`${after}`;
+        newCursorPos = cursorPos + selectedText.length + 2;
+      } else if (markdown === '- item') {
+        newContent = `${before}- ${selectedText}${after}`;
+        newCursorPos = cursorPos + selectedText.length + 2;
+      } else if (markdown === '1. item') {
+        newContent = `${before}1. ${selectedText}${after}`;
+        newCursorPos = cursorPos + selectedText.length + 3;
+      } else if (markdown === '[text](url)') {
+        newContent = `${before}[${selectedText}](url)${after}`;
+        newCursorPos = cursorPos + selectedText.length + 3;
+      } else if (markdown === '> quote') {
+        newContent = `${before}> ${selectedText}${after}`;
+        newCursorPos = cursorPos + selectedText.length + 2;
+      } else if (markdown === '# Heading 1') {
+        newContent = `${before}# ${selectedText}${after}`;
+        newCursorPos = cursorPos + selectedText.length + 2;
+      } else if (markdown === '## Heading 2') {
+        newContent = `${before}## ${selectedText}${after}`;
+        newCursorPos = cursorPos + selectedText.length + 3;
+      } else if (markdown === '### Heading 3') {
+        newContent = `${before}### ${selectedText}${after}`;
+        newCursorPos = cursorPos + selectedText.length + 4;
+      } else {
+        newContent = content;
+        newCursorPos = cursorPos;
+      }
+    } else {
+      // If no text is selected, insert the markdown template
+      const before = content.substring(0, cursorPos);
+      const after = content.substring(cursorPos);
+      
+      // Handle special cases for multi-line insertions
+      if (markdown === '```\ncode block\n```') {
+        newContent = `${before}\`\`\`\ncode block\n\`\`\`${after}`;
+        newCursorPos = cursorPos + 13; // Position cursor after "```\n"
+      } else if (markdown === '| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |') {
+        newContent = `${before}| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |${after}`;
+        newCursorPos = cursorPos + 8; // Position cursor after "| "
+      } else {
+        newContent = `${before}${markdown}${after}`;
+        newCursorPos = cursorPos + markdown.length;
+      }
+    }
+
+    handleContentChange(newContent);
+
+    // Focus textarea and set cursor position
+    setTimeout(() => {
+      if (textarea) {
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
+  };
+
+  const handleToggleInsertPanel = () => {
+    setIsInsertPanelOpen(!isInsertPanelOpen);
+  };
+
+  const handleTogglePreview = () => {
+    setIsPreviewMode(!isPreviewMode);
   };
   
   return (
@@ -140,7 +329,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
               ref={titleInputRef}
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Prompt title"
               className="flex-1 bg-gray-800 border border-gray-700 rounded-md px-3 py-1.5 text-base text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
             />
@@ -171,18 +360,10 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
                 <History size={18} />
               </button>
               <button
-                className={`p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md ${
-                  showPreview ? 'bg-gray-700/50' : ''
-                }`}
-                onClick={onTogglePreview}
-                title={showPreview ? 'Hide preview' : 'Show preview'}
-              >
-                {showPreview ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-              <button
                 className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md"
                 onClick={() => {
                   setIsEditing(true);
+                  initializeHistory(prompt.title, prompt.content);
                 }}
                 title="Edit prompt"
               >
@@ -203,156 +384,153 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
         )}
       </div>
       
-      {/* Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Editor */}
-        <div className={`flex-1 flex flex-col overflow-hidden ${showPreview ? 'md:w-1/2' : 'w-full'}`}>
-          {/* Tags */}
-          <div className="flex-none p-3 border-b border-gray-700/50">
-            <div className="flex items-center space-x-2">
-              <TagIcon size={16} className="text-gray-400" />
-              <span className="text-sm text-gray-400">Tags:</span>
-              
-              <div className="flex flex-wrap gap-1 flex-1">
-                {prompt.tags.length > 0 ? (
-                  prompt.tags.map(tagId => {
-                    const tag = tags.find(t => t.id === tagId);
-                    if (!tag) return null;
-                    
-                    return (
-                      <span
-                        key={tag.id}
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs"
-                        style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
+      {/* Tags */}
+      <div className="flex-none p-3 border-b border-gray-700/50">
+        <div className="flex items-center space-x-2">
+          <TagIcon size={16} className="text-gray-400" />
+          <span className="text-sm text-gray-400">Tags:</span>
+          
+          <div className="flex flex-wrap gap-1 flex-1">
+            {prompt.tags.length > 0 ? (
+              prompt.tags.map(tagId => {
+                const tag = tags.find(t => t.id === tagId);
+                if (!tag) return null;
+                
+                return (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center px-2 py-0.5 rounded text-xs"
+                    style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
+                  >
+                    {tag.name}
+                    {isEditing && (
+                      <button
+                        className="ml-1 hover:text-gray-200"
+                        onClick={() => handleTagToggle(tag.id)}
                       >
-                        {tag.name}
-                        {isEditing && (
+                        <X size={12} />
+                      </button>
+                    )}
+                  </span>
+                );
+              })
+            ) : (
+              <span className="text-xs text-gray-500 italic">No tags</span>
+            )}
+            
+            {isEditing && (
+              <div className="relative">
+                <button
+                  className="inline-flex items-center px-2 py-0.5 bg-gray-700/50 hover:bg-gray-700 rounded text-xs text-gray-300"
+                  onClick={() => setShowTagSelector(!showTagSelector)}
+                >
+                  <Plus size={12} className="mr-1" />
+                  Add Tag
+                </button>
+                
+                {showTagSelector && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setShowTagSelector(false)}
+                    />
+                    <div className="absolute left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 min-w-[180px] max-h-[200px] overflow-y-auto custom-scrollbar">
+                      <div className="py-1">
+                        {tags.map(tag => (
                           <button
-                            className="ml-1 hover:text-gray-200"
+                            key={tag.id}
+                            className={`flex items-center w-full px-3 py-1.5 text-sm text-left hover:bg-gray-700 transition-colors ${
+                              prompt.tags.includes(tag.id) ? 'bg-gray-700/70' : ''
+                            }`}
                             onClick={() => handleTagToggle(tag.id)}
                           >
-                            <X size={12} />
-                          </button>
-                        )}
-                      </span>
-                    );
-                  })
-                ) : (
-                  <span className="text-xs text-gray-500 italic">No tags</span>
-                )}
-                
-                {isEditing && (
-                  <div className="relative">
-                    <button
-                      className="inline-flex items-center px-2 py-0.5 bg-gray-700/50 hover:bg-gray-700 rounded text-xs text-gray-300"
-                      onClick={() => setShowTagSelector(!showTagSelector)}
-                    >
-                      <Plus size={12} className="mr-1" />
-                      Add Tag
-                    </button>
-                    
-                    {showTagSelector && (
-                      <>
-                        <div 
-                          className="fixed inset-0 z-10" 
-                          onClick={() => setShowTagSelector(false)}
-                        />
-                        <div className="absolute left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 min-w-[180px] max-h-[200px] overflow-y-auto custom-scrollbar">
-                          <div className="py-1">
-                            {tags.map(tag => (
-                              <button
-                                key={tag.id}
-                                className={`flex items-center w-full px-3 py-1.5 text-sm text-left hover:bg-gray-700 transition-colors ${
-                                  prompt.tags.includes(tag.id) ? 'bg-gray-700/70' : ''
-                                }`}
-                                onClick={() => handleTagToggle(tag.id)}
-                              >
-                                <span
-                                  className="w-3 h-3 rounded-full mr-2"
-                                  style={{ backgroundColor: tag.color }}
-                                />
-                                <span>{tag.name}</span>
-                                {prompt.tags.includes(tag.id) && (
-                                  <Check size={14} className="ml-auto text-green-400" />
-                                )}
-                              </button>
-                            ))}
-                            
-                            {tags.length === 0 && (
-                              <div className="px-3 py-2 text-sm text-gray-500 italic">
-                                No tags available
-                              </div>
+                            <span
+                              className="w-3 h-3 rounded-full mr-2"
+                              style={{ backgroundColor: tag.color }}
+                            />
+                            <span>{tag.name}</span>
+                            {prompt.tags.includes(tag.id) && (
+                              <Check size={14} className="ml-auto text-green-400" />
                             )}
+                          </button>
+                        ))}
+                        
+                        {tags.length === 0 && (
+                          <div className="px-3 py-2 text-sm text-gray-500 italic">
+                            No tags available
                           </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Editor Area */}
-          <div className="flex-1 overflow-hidden flex flex-col">
-            {isEditing ? (
-              <div className="flex-1 flex flex-col">
-                <div className="flex items-center justify-between p-2 bg-gray-800/50 border-b border-gray-700/50">
-                  <span className="text-xs text-gray-400">Markdown supported</span>
-                  
-                  <div className="relative">
-                    <button
-                      className="px-2 py-1 text-xs bg-gray-700/50 hover:bg-gray-700 rounded text-gray-300"
-                      onClick={() => setShowSnippetSelector(!showSnippetSelector)}
-                    >
-                      Insert Snippet
-                    </button>
-                    
-                    {showSnippetSelector && (
-                      <SnippetSelector
-                        snippets={snippets}
-                        onSelectSnippet={(snippetContent) => handleInsertSnippet(snippetContent)}
-                        onClose={() => setShowSnippetSelector(false)}
-                      />
-                    )}
-                  </div>
-                </div>
-                
-                <textarea
-                  ref={contentTextareaRef}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Write your prompt here..."
-                  className="flex-1 w-full bg-gray-900 text-gray-200 p-4 resize-none focus:outline-none custom-scrollbar font-mono text-sm leading-relaxed"
-                />
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-                <pre className="whitespace-pre-wrap font-mono text-sm text-gray-300 leading-relaxed">
-                  {prompt.content || <span className="text-gray-500 italic">No content</span>}
-                </pre>
               </div>
             )}
           </div>
         </div>
-        
-        {/* Preview */}
-        {showPreview && (
-          <div className="hidden md:block md:w-1/2 border-l border-gray-700/50 overflow-hidden">
-            <div className="h-full overflow-y-auto custom-scrollbar">
-              <MarkdownPreview content={content} />
+      </div>
+      
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Editor/Preview Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {isEditing ? (
+            <>
+              {/* Formatting Toolbar */}
+              <FormattingToolbar
+                onFormat={handleFormat}
+                onToggleInsertPanel={handleToggleInsertPanel}
+                onTogglePreview={handleTogglePreview}
+                isInsertPanelOpen={isInsertPanelOpen}
+                isPreviewMode={isPreviewMode}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+              />
+              
+              {/* Editor/Preview Content */}
+              {isPreviewMode ? (
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <MarkdownPreview content={content} />
+                </div>
+              ) : (
+                <textarea
+                  ref={contentTextareaRef}
+                  value={content}
+                  onChange={(e) => handleContentChange(e.target.value)}
+                  placeholder="Write your prompt here... Use the formatting toolbar above for common markdown operations."
+                  className="flex-1 w-full bg-gray-900 text-gray-200 p-4 resize-none focus:outline-none custom-scrollbar font-mono text-sm leading-relaxed"
+                />
+              )}
+            </>
+          ) : (
+            /* Read-only rendered view */
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <MarkdownPreview content={prompt.content} />
             </div>
+          )}
+        </div>
+        
+        {/* Insert Panel */}
+        {isEditing && isInsertPanelOpen && (
+          <div className="w-96 border-l border-gray-700/50">
+            <EditorInsertPanel
+              templates={templates}
+              snippets={snippets}
+              onInsert={handleInsertContent}
+            />
           </div>
         )}
       </div>
       
-              {/* History Viewer */}
-        {showHistory && (
-          <HistoryViewer
-            prompt={prompt}
-            onClose={() => setShowHistory(false)}
-          />
-        )}
+      {/* History Viewer */}
+      {showHistory && (
+        <HistoryViewer
+          prompt={prompt}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   );
 };

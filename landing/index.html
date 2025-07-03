@@ -186,6 +186,41 @@
             padding: 0 1.5rem 1.5rem 1.5rem;
             border-top: 1px solid #374151;
         }
+        /* Styles for Image Carousel */
+        .carousel-container {
+            aspect-ratio: 16 / 9;
+        }
+        /* The slide container is now a flex column */
+        .carousel-slide {
+            /* No padding here */
+        }
+        /* The image now grows to fill available space */
+        .carousel-slide img {
+            object-fit: contain;
+            /* No explicit height; flexbox handles it */
+        }
+        /* The caption is a normal flex item, not an overlay */
+        .carousel-caption {
+            background-color: #111827; /* Solid background matching the page */
+            color: white;
+            text-align: center;
+            padding: 0.5rem 1rem; /* Adjust padding as needed */
+            font-size: 0.875rem; /* text-sm */
+            user-select: none;
+            flex-shrink: 0; /* Prevent the caption from shrinking */
+            border-top: 1px solid #374151; /* Optional: adds a nice separator */
+        }
+        .carousel-dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 9999px;
+            background-color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .carousel-dot.active {
+            background-color: white;
+        }
     </style>
 </head>
 
@@ -229,7 +264,7 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero-gradient pt-8 pb-32 md:pt-20 md:pb-20">
+    <section id="hero" class="hero-gradient pt-8 pb-32 md:pt-20 md:pb-20">
         <div class="container mx-auto px-6 text-center">
             <div class="headline-container mb-6">
                 <div class="headline-scroller">
@@ -298,7 +333,7 @@
     </section>
 
     <!-- Positioning Section -->
-    <section class="py-12 bg-gray-800/20">
+    <section id="positioning" class="py-12 bg-gray-800/20">
         <div class="container mx-auto px-6 text-center">
             <div class="max-w-4xl mx-auto">
                 <h2 class="text-2xl md:text-3xl font-bold text-white mb-6">Scratch Tabs isn't an IDE. It's the powerful,
@@ -333,7 +368,7 @@
     </section>
 
     <!-- The Daily Struggle Section -->
-    <section class="py-16 bg-gray-800/30">
+    <section id="daily" class="py-16 bg-gray-800/30">
         <div class="container mx-auto px-6">
             <h2 class="section-title text-3xl md:text-4xl font-bold text-center mb-4">The Daily Struggle</h2>
             <p class="text-gray-400 text-center text-lg mb-12 max-w-3xl mx-auto">Everyone works with temporary data
@@ -378,7 +413,7 @@
     </section>
 
     <!-- Superpowers Section -->
-    <section class="py-16">
+    <section id="superpowers" class="py-16">
         <div class="container mx-auto px-6">
             <h2 class="section-title text-3xl md:text-4xl font-bold text-center mb-12">Your Instant Superpowers</h2>
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -424,16 +459,72 @@
         </div>
     </section>
 
-    <!-- App Screenshot -->
-    <section class="py-16">
+    <!-- App Showcase Carousel -->
+    <section id="app-showcase" class="py-16">
         <div class="container mx-auto px-6">
-            <div
-                class="rounded-lg shadow-xl aspect-[16/9] w-full max-w-5xl mx-auto flex items-center justify-center text-center p-0">
-                <img src="img/app-screenshot.png" alt="Editing JSON Side by Side">
+            <div class="carousel-container relative max-w-5xl mx-auto rounded-lg shadow-2xl overflow-hidden border border-gray-700/50">
+                <!-- This track will be moved by JavaScript -->
+                <div class="carousel-track flex transition-transform duration-500 ease-in-out">
+
+                    <!-- Slide 1: Batch Tools -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
+                        <img src="img/transformations.png" alt="Batch Tools for text transformation" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">Powerful Batch Tools for complex text transformations.</p>
+                    </div>
+
+                    <!-- Slide 2: Diff Viewer -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
+                        <img src="img/diff.png" alt="Side-by-side diff comparison" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">Instantly compare any two tabs with a side-by-side diff viewer.</p>
+                    </div>
+
+                    <!-- Slide 3: JSON Mapper -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
+                        <img src="img/json-mapper.png" alt="JSON Mapper for data transformation" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">Visually map and transform complex JSON structures with ease.</p>
+                    </div>
+
+                    <!-- Slide 4: Cron Job Builder -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
+                        <img src="img/cron.png" alt="Cron Job Expression Builder" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">Build and understand cron expressions with a natural language interface.</p>
+                    </div>
+
+                    <!-- Slide 5: Tablet Selector -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
+                        <img src="img/tablets.png" alt="Tablet Selector Menu" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">Access over 50 specialized tools from the Tablet Selector.</p>
+                    </div>
+
+                    <!-- Slide 6: Prompt Manager -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
+                        <img src="img/prompt.png" alt="Prompt Manager" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">Manage your prompts and AI task workflows.</p>
+                    </div>
+
+                    <!-- Slide 6: JSON Options Menu -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
+                        <img src="img/json-options.png" alt="JSON context menu with many tools" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">A rich context menu for one-click JSON formatting and conversion.</p>
+                    </div>
+
+                </div>
+
+                <!-- Navigation Buttons -->
+                <button id="prevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <button id="nextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+
+                <!-- Navigation Dots -->
+                <div id="carousel-dots" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                    <!-- Dots will be dynamically inserted here by JavaScript -->
+                </div>
             </div>
         </div>
     </section>
-
     <!-- Features Section -->
     <section id="features" class="py-16 bg-gray-800/30">
         <div class="container mx-auto px-6">
@@ -784,6 +875,85 @@
             link.addEventListener('click', () => {
                 mobileMenu.classList.add('hidden');
             });
+        });
+
+        // --- SCRIPT FOR IMAGE CAROUSEL ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const track = document.querySelector('.carousel-track');
+            const slides = Array.from(track.children);
+            const nextButton = document.getElementById('nextBtn');
+            const prevButton = document.getElementById('prevBtn');
+            const dotsNav = document.getElementById('carousel-dots');
+
+            if (!track || slides.length === 0) return;
+
+            const slideWidth = slides[0].getBoundingClientRect().width;
+            let currentIndex = 0;
+            let autoplayInterval;
+
+            // Arrange slides next to one another
+            const setSlidePosition = (slide, index) => {
+                // This is handled by flexbox, so this function is not needed
+                // but left here conceptually.
+            };
+            slides.forEach(setSlidePosition);
+
+            // Create navigation dots
+            slides.forEach((_, index) => {
+                const dot = document.createElement('button');
+                dot.classList.add('carousel-dot');
+                dot.addEventListener('click', () => moveToSlide(index));
+                dotsNav.appendChild(dot);
+            });
+            const dots = Array.from(dotsNav.children);
+
+            // Function to move to a specific slide
+            const moveToSlide = (targetIndex) => {
+                if (!track) return;
+                track.style.transform = 'translateX(-' + slideWidth * targetIndex + 'px)';
+
+                // Update dot
+                dots[currentIndex].classList.remove('active');
+                dots[targetIndex].classList.add('active');
+
+                currentIndex = targetIndex;
+            };
+
+            // Click listeners
+            prevButton.addEventListener('click', () => {
+                const newIndex = currentIndex === 0 ? slides.length - 1 : currentIndex - 1;
+                moveToSlide(newIndex);
+            });
+
+            nextButton.addEventListener('click', () => {
+                const newIndex = currentIndex === slides.length - 1 ? 0 : currentIndex + 1;
+                moveToSlide(newIndex);
+            });
+
+            // Autoplay functionality
+            const startAutoplay = () => {
+                autoplayInterval = setInterval(() => {
+                    nextButton.click();
+                }, 5000); // Change slide every 5 seconds
+            };
+
+            const stopAutoplay = () => {
+                clearInterval(autoplayInterval);
+            };
+
+            track.parentElement.addEventListener('mouseenter', stopAutoplay);
+            track.parentElement.addEventListener('mouseleave', startAutoplay);
+
+            // Recalculate width on resize
+            window.addEventListener('resize', () => {
+                const newSlideWidth = slides[0].getBoundingClientRect().width;
+                // slideWidth = newSlideWidth; // This would require re-setting slide positions if not using flex
+                moveToSlide(currentIndex);
+            });
+
+            // Initialize
+            moveToSlide(0);
+            startAutoplay();
         });
     </script>
 

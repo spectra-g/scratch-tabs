@@ -26,7 +26,6 @@ export const PromptManagerTablet: Tablet = {
           sortBy: 'lastModified',
           sortDirection: 'desc',
           viewMode: 'grid',
-          showPreview: true,
         },
         ui: {
           activeTab: 'prompts',
@@ -73,7 +72,6 @@ export const PromptManagerTablet: Tablet = {
           sortBy: data.settings?.sortBy || 'lastModified',
           sortDirection: data.settings?.sortDirection || 'desc',
           viewMode: data.settings?.viewMode || 'grid',
-          showPreview: data.settings?.showPreview ?? true,
         };
         
         // Ensure UI state exists

@@ -1,80 +1,93 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface MarkdownPreviewProps {
   content: string;
+  className?: string;
 }
 
-export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
-  // For now, we'll use a simple implementation
-  // In a real app, you'd use a library like react-markdown
-  
-  // Convert markdown to HTML (very basic implementation)
-  const renderMarkdown = (markdown: string) => {
-    if (!markdown) {
-      return <div className="text-gray-500 italic p-4">No content to preview</div>;
-    }
-    
-    // Process the markdown
-    let html = markdown;
-    
-    // Headers
-    html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-    html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-    html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-    html = html.replace(/^#### (.*$)/gm, '<h4>$1</h4>');
-    html = html.replace(/^##### (.*$)/gm, '<h5>$1</h5>');
-    html = html.replace(/^###### (.*$)/gm, '<h6>$1</h6>');
-    
-    // Bold
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
-    
-    // Italic
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/_(.*?)_/g, '<em>$1</em>');
-    
-    // Lists
-    html = html.replace(/^\s*\*\s+(.*$)/gm, '<li>$1</li>');
-    html = html.replace(/^\s*-\s+(.*$)/gm, '<li>$1</li>');
-    html = html.replace(/^\s*\d+\.\s+(.*$)/gm, '<li>$1</li>');
-    
-    // Wrap lists in ul/ol (simplified)
-    html = html.replace(/<li>.*?<\/li>/g, match => {
-      return `<ul>${match}</ul>`;
-    });
-    
-    // Code blocks
-    html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-    
-    // Inline code
-    html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-    
-    // Links
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-    
-    // Blockquotes
-    html = html.replace(/^\s*>\s+(.*$)/gm, '<blockquote>$1</blockquote>');
-    
-    // Horizontal rule
-    html = html.replace(/^\s*---\s*$/gm, '<hr />');
-    
-    // Paragraphs (simplified)
-    html = html.replace(/^([^<].*?)$/gm, '<p>$1</p>');
-    
-    // Clean up empty paragraphs
-    html = html.replace(/<p><\/p>/g, '');
-    
-    return (
-      <div 
-        className="prose prose-invert max-w-none p-4"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-    );
-  };
-  
+export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ 
+  content, 
+  className = "prose prose-invert max-w-none p-4 text-sm [&>h1]:mb-2 [&>h2]:mb-2 [&>h3]:mb-2 [&>h4]:mb-2 [&>h5]:mb-2 [&>h6]:mb-2 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-3 [&>h4]:mt-2 [&>h5]:mt-2 [&>h6]:mt-2 [&>h1]:text-gray-200 [&>h2]:text-gray-200 [&>h3]:text-gray-200 [&>h4]:text-gray-200 [&>h5]:text-gray-200 [&>h6]:text-gray-200" 
+}) => {
+  if (!content) {
+    return <div className="text-gray-500 italic p-4">No content to preview</div>;
+  }
+
   return (
-    <div className="h-full bg-gray-800/30">
-      {renderMarkdown(content)}
+    <div className={className}>
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Custom styling for code blocks
+          code: ({ node, inline, className, children, ...props }: any) => {
+            const match = /language-(\w+)/.exec(className || '');
+            return !inline ? (
+              <pre className="bg-gray-800 rounded-md p-4 overflow-x-auto">
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              </pre>
+            ) : (
+              <code className="bg-gray-800 px-1 py-0.5 rounded text-sm" {...props}>
+                {children}
+              </code>
+            );
+          },
+          // Custom styling for tables
+          table: ({ children }) => (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse border border-gray-600">
+                {children}
+              </table>
+            </div>
+          ),
+          th: ({ children }) => (
+            <th className="border border-gray-600 px-4 py-2 bg-gray-700 text-left font-semibold">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="border border-gray-600 px-4 py-2">
+              {children}
+            </td>
+          ),
+          // Custom styling for blockquotes
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-300">
+              {children}
+            </blockquote>
+          ),
+          // Custom styling for links
+          a: ({ href, children }) => (
+            <a 
+              href={href} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              {children}
+            </a>
+          ),
+          // Custom styling for checkboxes
+          input: ({ type, checked }) => {
+            if (type === 'checkbox') {
+              return (
+                <input 
+                  type="checkbox" 
+                  checked={checked} 
+                  readOnly 
+                  className="mr-2"
+                />
+              );
+            }
+            return null;
+          }
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 };
