@@ -340,6 +340,42 @@ export class MoveShapeCommand extends BaseCommand {
   }
 }
 
+export class AddMultipleShapesCommand extends BaseCommand {
+  private shapes: Shape[];
+  private shapesAdded: boolean = false;
+
+  constructor(
+    getState: () => ShapeSnapData,
+    onChange: (newState: ShapeSnapData) => void,
+    shapes: Shape[]
+  ) {
+    super(getState, onChange, `Add ${shapes.length} shapes`);
+    this.shapes = shapes;
+  }
+
+  execute(): void {
+    if (!this.shapesAdded) {
+      const newShapes = [...this.state.shapes, ...this.shapes];
+      this.updateState({
+        ...this.state,
+        shapes: newShapes
+      });
+      this.shapesAdded = true;
+    }
+  }
+
+  undo(): void {
+    if (this.shapesAdded) {
+      const newShapes = this.state.shapes.filter(s => !this.shapes.some(added => added.id === s.id));
+      this.updateState({
+        ...this.state,
+        shapes: newShapes
+      });
+      this.shapesAdded = false;
+    }
+  }
+}
+
 export class CommandManager {
   private commands: Command[] = [];
   private currentIndex: number = -1;

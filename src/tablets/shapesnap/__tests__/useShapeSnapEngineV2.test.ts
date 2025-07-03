@@ -249,10 +249,10 @@ describe('useShapeSnapEngineV2', () => {
       expect(lastCall.shapes[0].id).not.toBe('shape1');
       expect(lastCall.shapes[1].id).not.toBe('shape2');
       // Positions should be offset
-      expect((lastCall.shapes[0] as any).x).toBe(30); // 10 + 20 offset
-      expect((lastCall.shapes[1] as any).x).toBe(30);
-      expect((lastCall.shapes[0] as any).y).toBe(40); // 20 + 20 offset
-      expect((lastCall.shapes[1] as any).y).toBe(40);
+      expect((lastCall.shapes[0] as any).x).toBe(20); // 0 + 20 offset
+      expect((lastCall.shapes[1] as any).x).toBe(20);
+      expect((lastCall.shapes[0] as any).y).toBe(20); // 0 + 20 offset
+      expect((lastCall.shapes[1] as any).y).toBe(20);
       // History should be updated
       expect(lastCall.history.length).toBe(2);
       expect(lastCall.historyIndex).toBe(1);

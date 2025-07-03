@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { ShapeSnapData, Point, Shape, ShapeSnapTool } from '../types';
 import { detectShape } from '../utils/shapeDetection';
 import { ShapeRegistry } from '../core/ShapeRegistry';
-import { CommandManager, AddShapeCommand, UpdateShapeCommand, DeleteShapeCommand, DeleteSelectedShapesCommand, MoveShapeCommand } from '../core/Commands';
+import { CommandManager, AddShapeCommand, UpdateShapeCommand, DeleteShapeCommand, DeleteSelectedShapesCommand, MoveShapeCommand, AddMultipleShapesCommand } from '../core/Commands';
 import { SelectionManager } from '../core/SelectionManager';
 
 const generateId = (): string => `shape-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -98,19 +98,16 @@ export const useShapeSnapEngineV2 = (
       }
     });
 
-    // Batch add all pasted shapes to avoid stale state issues
-    const newShapes = [...state.shapes, ...pastedShapes];
-    onChange({
-      ...state,
-      shapes: newShapes
-    });
+    // Use AddMultipleShapesCommand for batch paste
+    const command = new AddMultipleShapesCommand(getCurrentState, onChange, pastedShapes);
+    commandManager.executeCommand(command);
 
     // NOTE: Removed immediate selection of pasted shapes to prevent state overwrite issues.
     // The selectionManager.selectShapes() call was causing the shapes state to be overwritten
     // because it used stale state and called onChange() again, which conflicted with the
     // just-completed paste operation. Selection should be handled by the UI layer
     // in a separate render cycle or effect to avoid state conflicts.
-  }, [state.clipboard, state.shapes, onChange, selectionManager]);
+  }, [state.clipboard, getCurrentState, onChange, commandManager]);
 
   // Set selected shapes
   const setSelectedShapes = useCallback((shapeIds: string[]) => {
