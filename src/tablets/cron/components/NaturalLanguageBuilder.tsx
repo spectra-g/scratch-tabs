@@ -25,6 +25,33 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
   // Flag to prevent circular dependency
   const isUpdatingExpressionRef = useRef(false);
 
+  // Set appropriate default values when frequency changes
+  useEffect(() => {
+    switch (frequency) {
+      case 'weekly':
+        // Set Sunday as default if weekdayValue is '*' or invalid
+        if (weekdayValue === '*') {
+          setWeekdayValue('0');
+        }
+        break;
+      case 'monthly':
+        // Set day 1 as default if dayValue is '*' or invalid
+        if (dayValue === '*') {
+          setDayValue('1');
+        }
+        break;
+      case 'yearly':
+        // Set day 1 and January as defaults if they are '*' or invalid
+        if (dayValue === '*') {
+          setDayValue('1');
+        }
+        if (monthValue === '*') {
+          setMonthValue('1');
+        }
+        break;
+    }
+  }, [frequency]);
+
   // Initialize from expression (only run when expression changes from external sources)
   useEffect(() => {
     // Skip if we're in the middle of updating the expression from this component
