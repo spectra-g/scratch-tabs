@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CronExpression, CronDialect, CronValidationError } from '../types';
 
 interface NaturalLanguageBuilderProps {
@@ -22,8 +22,16 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
   const [monthValue, setMonthValue] = useState('*');
   const [weekdayValue, setWeekdayValue] = useState('*');
 
-  // Initialize from expression
+  // Flag to prevent circular dependency
+  const isUpdatingExpressionRef = useRef(false);
+
+  // Initialize from expression (only run when expression changes from external sources)
   useEffect(() => {
+    // Skip if we're in the middle of updating the expression from this component
+    if (isUpdatingExpressionRef.current) {
+      return;
+    }
+
     // Detect frequency from expression
     if (expression.minute === '*' && expression.hour === '*') {
       setFrequency('minutely');
@@ -62,6 +70,8 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
 
   // Update expression when natural language components change
   useEffect(() => {
+    isUpdatingExpressionRef.current = true;
+    
     let newExpression = '';
     
     switch (frequency) {
@@ -102,6 +112,11 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
     if (newExpression !== expression.raw) {
       onExpressionChange(newExpression);
     }
+    
+    // Reset flag after a short delay to allow the expression to update
+    setTimeout(() => {
+      isUpdatingExpressionRef.current = false;
+    }, 0);
   }, [frequency, minuteValue, hourValue, dayValue, monthValue, weekdayValue, dialect, onExpressionChange]);
 
   return (
