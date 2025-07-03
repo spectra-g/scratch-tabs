@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { CanvasSettings, Shape, Point, ShapeSnapTool } from '../types';
 import { renderShape, renderRoughShapeSVG, renderShapeOverlay, hashCode } from '../utils/renderUtils';
 import { getShapeCenter, getShapeBoundingBox } from '../utils/geometryUtils';
-import { useShapeSnapCanvasEvents } from '../hooks/useShapeSnapCanvasEvents';
+import { useMouseEventCoordinator } from '../hooks/useMouseEventCoordinator';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { ShapeSnapInfoModal } from './ShapeSnapInfoModal';
 
@@ -98,7 +98,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     };
   }, []);
   
-  // Use the events hook to handle all mouse interactions
+  // Use the new event coordinator hook
   const {
     editingShape,
     draggedShape,
@@ -112,8 +112,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     handleShapeMouseDown,
     handleMouseMove,
     handleMouseUp,
-    detectResizeHandle
-  } = useShapeSnapCanvasEvents({
+    detectResizeHandle,
+    lineResizeDraggedShape
+  } = useMouseEventCoordinator({
     shapes,
     canvasSettings,
     currentTool,
@@ -223,9 +224,22 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const sortedShapes = [...shapes].sort((a, b) => a.zIndex - b.zIndex);
   
   // If we're dragging a shape, replace it with the dragged version for visual feedback
-  const shapesToRender = draggedShape 
-    ? sortedShapes.map(shape => shape.id === draggedShape.id ? draggedShape : shape)
-    : sortedShapes;
+  // Handle both regular drag and line resize drag
+  const shapesToRender = (() => {
+    let shapes = sortedShapes;
+    
+    // Replace with regular dragged shape if available
+    if (draggedShape) {
+      shapes = shapes.map(shape => shape.id === draggedShape.id ? draggedShape : shape);
+    }
+    
+    // Replace with line resize dragged shape if available
+    if (lineResizeDraggedShape) {
+      shapes = shapes.map(shape => shape.id === lineResizeDraggedShape.id ? lineResizeDraggedShape : shape);
+    }
+    
+    return shapes;
+  })();
   
   // Determine stroke color based on canvas mode
   const strokeColor = canvasSettings.mode === 'dark' ? '#ffffff' : '#000000';
