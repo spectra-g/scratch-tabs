@@ -150,16 +150,6 @@ export const JsonStructureComparisonUI: React.FC<JsonStructureComparisonUIProps>
               <span className="text-sm">Options</span>
               {showOptions ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
-            
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={syncScroll}
-                onChange={(e) => onSyncScrollChange(e.target.checked)}
-                className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-300">Sync Scroll</span>
-            </label>
           </div>
           
           {comparisonResult && (
@@ -238,13 +228,14 @@ export const JsonStructureComparisonUI: React.FC<JsonStructureComparisonUIProps>
                 Array Comparison Strategy
                 <span className="ml-2 text-gray-400 cursor-pointer group relative">
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor">i</text></svg>
-                  <span className="absolute left-1/2 top-full z-10 w-72 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-xs text-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="absolute left-1/2 top-full z-10 w-80 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-xs text-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <b>Strict:</b> Only compares the structure of the first array element.<br/>
-                    <b>Union (Squash):</b> Merges all keys/types from every array element into a single superset. Great for polymorphic arrays, but loses per-type context.
+                    <b>Union (Squash):</b> Merges all keys/types from every array element into a single superset. Great for polymorphic arrays, but loses per-type context.<br/>
+                    <b>Discriminator:</b> Groups array elements by a field (e.g. <code>type</code>), compares the structure of each group. Best for arrays of objects with a type or kind field.
                   </span>
                 </span>
               </label>
-              <div className="flex items-center space-x-6 mt-1">
+              <div className="flex flex-col md:flex-row md:items-center md:space-x-6 mt-1 space-y-2 md:space-y-0">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="radio"
@@ -267,7 +258,38 @@ export const JsonStructureComparisonUI: React.FC<JsonStructureComparisonUIProps>
                   />
                   <span className="text-sm text-gray-200">Union (Squash Items)</span>
                 </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="arrayComparisonStrategy"
+                    value="discriminator"
+                    checked={options.arrayComparisonStrategy === 'discriminator'}
+                    onChange={() => onOptionsChange({ ...options, arrayComparisonStrategy: 'discriminator' })}
+                    className="accent-blue-500"
+                  />
+                  <span className="text-sm text-gray-200">Discriminator (Group by Field)</span>
+                </label>
+                {options.arrayComparisonStrategy === 'discriminator' && (
+                  <input
+                    type="text"
+                    placeholder="Discriminator field (e.g. type)"
+                    value={options.discriminatorField || ''}
+                    onChange={e => onOptionsChange({ ...options, discriminatorField: e.target.value })}
+                    className="ml-2 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 w-48"
+                  />
+                )}
               </div>
+            </div>
+            <div className="mt-6">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={syncScroll}
+                  onChange={(e) => onSyncScrollChange(e.target.checked)}
+                  className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-300">Sync Scroll</span>
+              </label>
             </div>
           </div>
         )}
