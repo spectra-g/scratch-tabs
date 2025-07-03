@@ -42,7 +42,6 @@ export interface PromptManagerSettings {
   sortBy: 'title' | 'createdAt' | 'lastModified' | 'usageCount';
   sortDirection: 'asc' | 'desc';
   viewMode: 'list' | 'grid';
-  showPreview: boolean;
 }
 
 export interface PromptManagerUI {

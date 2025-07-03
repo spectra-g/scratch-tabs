@@ -233,10 +233,7 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
     });
   };
   
-  // Handle preview toggle
-  const handlePreviewToggle = () => {
-    updateSettings({ showPreview: !data.settings.showPreview });
-  };
+
   
   // Handle import/export
   const handleImport = (importedData: Partial<PromptManagerData>) => {
@@ -311,9 +308,8 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
                   onUpdatePrompt={updatePrompt}
                   onIncrementUsage={incrementPromptUsage}
                   tags={data.tags}
-                  snippets={data.snippets}
-                  showPreview={data.settings.showPreview}
-                  onTogglePreview={handlePreviewToggle}
+                  snippets={filteredSnippets}
+                  templates={filteredTemplates}
                 />
               )}
             </div>
