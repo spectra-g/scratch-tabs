@@ -275,54 +275,52 @@
             border-top: 1px solid #374151;
         }
 
-        /* Styles for Image Carousel */
-        .carousel-container {
-            aspect-ratio: 16 / 9;
-        }
-
-        .carousel-slide {
-            position: relative;
-            /* Keep relative for potential future overlays if needed */
-        }
-
-        .carousel-slide img {
-            object-fit: contain;
-            width: 100%;
-            height: 100%;
-            background-color: #1f2937;
-            /* Add a dark bg for images that aren't full-width */
-        }
-
-        .carousel-caption {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(17, 24, 39, 0.9), transparent);
-            /* Dark fade for readability */
-            color: white;
-            text-align: center;
-            padding: 1.5rem 1rem 0.75rem;
-            /* Taller padding for the fade effect */
-            font-size: 0.875rem;
-            /* text-sm */
-            user-select: none;
-            pointer-events: none;
-            /* Make caption non-interactive */
-        }
-
-        .carousel-dot {
-            width: 0.75rem;
-            height: 0.75rem;
-            border-radius: 9999px;
-            background-color: rgba(255, 255, 255, 0.4);
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .carousel-dot.active {
-            background-color: white;
-        }
+/* Styles for Image Carousel */
+.carousel-container {
+    aspect-ratio: 16 / 9;
+}
+.carousel-slide {
+    position: relative;
+}
+.slide-content-wrapper {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+}
+.slide-image {
+    flex: 1;
+    object-fit: contain;
+    width: 100%;
+    min-height: 0;
+    background-color: #1f2937;
+}
+.carousel-caption {
+    flex-shrink: 0;
+    background: linear-gradient(to top, rgba(17, 24, 39, 0.9), transparent);
+    color: white;
+    text-align: center;
+    padding: 1.5rem 1rem 0.75rem;
+    font-size: 0.875rem;
+    user-select: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    pointer-events: none;
+}
+.carousel-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.carousel-dot.active {
+    background-color: white;
+}
     </style>
 </head>
 
@@ -561,91 +559,58 @@
         </div>
     </section>
 
-    <!-- App Showcase Carousel -->
-    <section id="app-showcase" class="py-16">
-        <div class="container mx-auto px-6">
-            <!-- The container is now a flex column to stack the track and dots -->
-            <div
-                class="carousel-container relative max-w-5xl mx-auto rounded-lg shadow-2xl overflow-hidden border border-gray-700/50">
+<!-- App Showcase Carousel -->
+<section id="app-showcase" class="py-16">
+    <div class="container mx-auto px-6">
+        <!-- New outer wrapper for positioning dots relative to the whole component -->
+        <div class="relative">
+            <div class="carousel-container max-w-5xl mx-auto rounded-lg shadow-2xl overflow-hidden border border-gray-700/50">
                 <!-- This track will be moved by JavaScript -->
                 <div class="carousel-track flex transition-transform duration-500 ease-in-out h-full">
 
+                    <!-- Slide 0: App -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800">
+                        <div class="slide-content-wrapper">
+                            <img src="img/app-screenshot.png" alt="Main editor view" class="slide-image">
+                            <p class="carousel-caption">Open many tabs, view content side by side.</p>
+                        </div>
+                    </div>
+
                     <!-- Slide 1: Batch Tools -->
-                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/transformations.png" alt="Batch Tools for text transformation"
-                            class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">Powerful Batch Tools for complex text transformations.</p>
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800">
+                        <div class="slide-content-wrapper">
+                            <img src="img/transformations.png" alt="Batch Tools for text transformation" class="slide-image">
+                            <p class="carousel-caption">Powerful Batch Tools for complex text transformations.</p>
+                        </div>
                     </div>
 
-                    <!-- Slide 2: Diff Viewer -->
-                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/diff.png" alt="Side-by-side diff comparison"
-                            class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">Instantly compare any two tabs with a side-by-side diff viewer.</p>
-                    </div>
-
-                    <!-- Slide 3: JSON Mapper -->
-                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/json-mapper.png" alt="JSON Mapper for data transformation"
-                            class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">Visually map and transform complex JSON structures with ease.</p>
-                    </div>
-
-                    <!-- Slide 4: Cron Job Builder -->
-                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/cron.png" alt="Cron Job Expression Builder"
-                            class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">Build and understand cron expressions with a natural language
-                            interface.</p>
-                    </div>
-
-                    <!-- Slide 5: Tablet Selector -->
-                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/tablets.png" alt="Tablet Selector Menu"
-                            class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">Access over 50 specialized tools from the Tablet Selector.</p>
-                    </div>
-
-                    <!-- Slide 6: Prompt Manager -->
-                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/prompt.png" alt="Prompt Manager"
-                            class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">Manage your prompts and AI task workflows.</p>
-                    </div>
-
-                    <!-- Slide 7: JSON Options Menu -->
-                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/json-options.png" alt="JSON context menu with many tools"
-                            class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">A rich context menu for one-click JSON formatting and conversion.
-                        </p>
-                    </div>
+                    <!-- ... (All your other slides go here, unchanged) ... -->
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800"><div class="slide-content-wrapper"><img src="img/diff.png" alt="Side-by-side diff comparison" class="slide-image"><p class="carousel-caption">Instantly compare any two tabs with a side-by-side diff viewer.</p></div></div>
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800"><div class="slide-content-wrapper"><img src="img/json-mapper.png" alt="JSON Mapper for data transformation" class="slide-image"><p class="carousel-caption">Visually map and transform complex JSON structures with ease.</p></div></div>
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800"><div class="slide-content-wrapper"><img src="img/cron.png" alt="Cron Job Expression Builder" class="slide-image"><p class="carousel-caption">Build and understand cron expressions with a natural language interface.</p></div></div>
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800"><div class="slide-content-wrapper"><img src="img/tablets.png" alt="Tablet Selector Menu" class="slide-image"><p class="carousel-caption">Access over 50 specialized tools from the Tablet Selector.</p></div></div>
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800"><div class="slide-content-wrapper"><img src="img/prompt.png" alt="Prompt Manager" class="slide-image"><p class="carousel-caption">Manage your prompts and AI task workflows.</p></div></div>
+                    <div class="carousel-slide flex-shrink-0 w-full bg-gray-800"><div class="slide-content-wrapper"><img src="img/json-options.png" alt="JSON context menu with many tools" class="slide-image"><p class="carousel-caption">A rich context menu for one-click JSON formatting and conversion.</p></div></div>
 
                 </div>
 
-                <!-- Navigation Buttons: Moved outside the track -->
-                <button id="prevBtn"
-                    class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
-                        </path>
-                    </svg>
+                <!-- Navigation Buttons -->
+                <button id="prevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
-                <button id="nextBtn"
-                    class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
+                <button id="nextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
+            </div>
 
-                <!-- Navigation Dots: Moved outside the track -->
-                <div id="carousel-dots"
-                    class="absolute bottom-14 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-                    <!-- Dots will be dynamically inserted here by JavaScript -->
-                </div>
+            <!-- Navigation Dots are now OUTSIDE the main container -->
+            <div id="carousel-dots" class="flex justify-center space-x-2 mt-4">
+                <!-- Dots will be dynamically inserted here by JavaScript -->
             </div>
         </div>
-    </section>
+    </div>
+</section>
+
     <!-- Features Section -->
     <section id="features" class="py-16 bg-gray-800/30">
         <div class="container mx-auto px-6">
