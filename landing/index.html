@@ -63,30 +63,47 @@
 
     <style>
         html {
-            scroll-padding-top: 5rem; /* Offset for sticky header */
+            scroll-padding-top: 5rem;
+            /* Offset for sticky header */
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
             background-color: #111827;
             color: #d1d5db;
         }
 
-        .hero-gradient { background: linear-gradient(180deg, rgba(31, 41, 55, 0.9) 0%, #111827 100%); }
+        .hero-gradient {
+            background: linear-gradient(180deg, rgba(31, 41, 55, 0.9) 0%, #111827 100%);
+        }
 
-        .feature-card, .tablet-card, .value-prop-card {
+        .feature-card,
+        .tablet-card,
+        .value-prop-card {
             background-color: #1f2937;
             border: 1px solid #374151;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .feature-card:hover, .tablet-card:hover, .value-prop-card:hover {
+        .feature-card:hover,
+        .tablet-card:hover,
+        .value-prop-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .primary-button { background-color: #2563eb; color: white; }
-        .primary-button:hover { background-color: #1d4ed8; }
-        .section-title { color: #f3f4f6; }
+        .primary-button {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .primary-button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .section-title {
+            color: #f3f4f6;
+        }
 
         .icon-placeholder {
             background-color: rgba(59, 130, 246, 0.15);
@@ -100,7 +117,10 @@
             margin-bottom: 1rem;
         }
 
-        .icon-shield, .icon-zap, .icon-tool, .icon-gift {
+        .icon-shield,
+        .icon-zap,
+        .icon-tool,
+        .icon-gift {
             width: 24px;
             height: 24px;
             stroke: currentColor;
@@ -111,13 +131,24 @@
         }
 
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 5px #2563eb, 0 0 10px #2563eb; }
-            50% { box-shadow: 0 0 15px #3b82f6, 0 0 25px #3b82f6; }
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px #2563eb, 0 0 10px #2563eb;
+            }
+
+            50% {
+                box-shadow: 0 0 15px #3b82f6, 0 0 25px #3b82f6;
+            }
         }
-        .cta-button-glow { animation: pulse-glow 2.5s infinite ease-in-out; }
+
+        .cta-button-glow {
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
 
         .headline-container {
-            height: 330px; /* Mobile height */
+            height: 330px;
+            /* Mobile height */
             overflow: hidden;
             position: relative;
         }
@@ -133,7 +164,8 @@
         }
 
         .headline-item {
-            height: 330px; /* Must match container height */
+            height: 330px;
+            /* Must match container height */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -143,31 +175,77 @@
 
         /* Responsive adjustments for container and item heights */
         @media (min-width: 768px) {
-            .headline-container, .headline-item { height: 230px; }
+
+            .headline-container,
+            .headline-item {
+                height: 230px;
+            }
         }
+
         @media (min-width: 1024px) {
-            .headline-container, .headline-item { height: 200px; }
+
+            .headline-container,
+            .headline-item {
+                height: 200px;
+            }
         }
 
         /* The Keyframe Animation using 'top' property */
         @keyframes scroll-headlines {
+
             /* -- Item 1 -- */
-            0%      { top: 0; }         /* Start at the top (item 1 visible) */
-            20%     { top: 0; }         /* Stay on item 1 for a while */
+            0% {
+                top: 0;
+            }
+
+            /* Start at the top (item 1 visible) */
+            20% {
+                top: 0;
+            }
+
+            /* Stay on item 1 for a while */
 
             /* -- Item 2 -- */
-            25%     { top: -100%; }    /* Smoothly scroll to item 2 */
-            45%     { top: -100%; }    /* Stay on item 2 */
+            25% {
+                top: -100%;
+            }
+
+            /* Smoothly scroll to item 2 */
+            45% {
+                top: -100%;
+            }
+
+            /* Stay on item 2 */
 
             /* -- Item 3 -- */
-            50%     { top: -200%; }    /* Smoothly scroll to item 3 */
-            70%     { top: -200%; }    /* Stay on item 3 */
+            50% {
+                top: -200%;
+            }
+
+            /* Smoothly scroll to item 3 */
+            70% {
+                top: -200%;
+            }
+
+            /* Stay on item 3 */
 
             /* -- Item 4 -- */
-            75%     { top: -300%; }    /* Smoothly scroll to item 4 */
-            95%     { top: -300%; }    /* Stay on item 4 */
+            75% {
+                top: -300%;
+            }
 
-            100%    { top: 0; }         /* Instantly jump back to the start for the loop */
+            /* Smoothly scroll to item 4 */
+            95% {
+                top: -300%;
+            }
+
+            /* Stay on item 4 */
+
+            100% {
+                top: 0;
+            }
+
+            /* Instantly jump back to the start for the loop */
         }
 
         /* Styles for Collapsible FAQ */
@@ -179,37 +257,60 @@
             justify-content: space-between;
             align-items: center;
         }
-        .faq-item summary::-webkit-details-marker { display: none; }
-        .faq-item summary .arrow { transition: transform 0.2s ease-in-out; }
-        .faq-item[open] > summary .arrow { transform: rotate(180deg); }
+
+        .faq-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .faq-item summary .arrow {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .faq-item[open]>summary .arrow {
+            transform: rotate(180deg);
+        }
+
         .faq-item div {
             padding: 0 1.5rem 1.5rem 1.5rem;
             border-top: 1px solid #374151;
         }
+
         /* Styles for Image Carousel */
         .carousel-container {
             aspect-ratio: 16 / 9;
         }
-        /* The slide container is now a flex column */
+
         .carousel-slide {
-            /* No padding here */
+            position: relative;
+            /* Keep relative for potential future overlays if needed */
         }
-        /* The image now grows to fill available space */
+
         .carousel-slide img {
             object-fit: contain;
-            /* No explicit height; flexbox handles it */
+            width: 100%;
+            height: 100%;
+            background-color: #1f2937;
+            /* Add a dark bg for images that aren't full-width */
         }
-        /* The caption is a normal flex item, not an overlay */
+
         .carousel-caption {
-            background-color: #111827; /* Solid background matching the page */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(17, 24, 39, 0.9), transparent);
+            /* Dark fade for readability */
             color: white;
             text-align: center;
-            padding: 0.5rem 1rem; /* Adjust padding as needed */
-            font-size: 0.875rem; /* text-sm */
+            padding: 1.5rem 1rem 0.75rem;
+            /* Taller padding for the fade effect */
+            font-size: 0.875rem;
+            /* text-sm */
             user-select: none;
-            flex-shrink: 0; /* Prevent the caption from shrinking */
-            border-top: 1px solid #374151; /* Optional: adds a nice separator */
+            pointer-events: none;
+            /* Make caption non-interactive */
         }
+
         .carousel-dot {
             width: 0.75rem;
             height: 0.75rem;
@@ -218,6 +319,7 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
+
         .carousel-dot.active {
             background-color: white;
         }
@@ -462,64 +564,83 @@
     <!-- App Showcase Carousel -->
     <section id="app-showcase" class="py-16">
         <div class="container mx-auto px-6">
-            <div class="carousel-container relative max-w-5xl mx-auto rounded-lg shadow-2xl overflow-hidden border border-gray-700/50">
+            <!-- The container is now a flex column to stack the track and dots -->
+            <div
+                class="carousel-container relative max-w-5xl mx-auto rounded-lg shadow-2xl overflow-hidden border border-gray-700/50">
                 <!-- This track will be moved by JavaScript -->
-                <div class="carousel-track flex transition-transform duration-500 ease-in-out">
+                <div class="carousel-track flex transition-transform duration-500 ease-in-out h-full">
 
                     <!-- Slide 1: Batch Tools -->
                     <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/transformations.png" alt="Batch Tools for text transformation" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <img src="img/transformations.png" alt="Batch Tools for text transformation"
+                            class="flex-1 w-full h-auto object-contain min-h-0">
                         <p class="carousel-caption">Powerful Batch Tools for complex text transformations.</p>
                     </div>
 
                     <!-- Slide 2: Diff Viewer -->
                     <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/diff.png" alt="Side-by-side diff comparison" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <img src="img/diff.png" alt="Side-by-side diff comparison"
+                            class="flex-1 w-full h-auto object-contain min-h-0">
                         <p class="carousel-caption">Instantly compare any two tabs with a side-by-side diff viewer.</p>
                     </div>
 
                     <!-- Slide 3: JSON Mapper -->
                     <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/json-mapper.png" alt="JSON Mapper for data transformation" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <img src="img/json-mapper.png" alt="JSON Mapper for data transformation"
+                            class="flex-1 w-full h-auto object-contain min-h-0">
                         <p class="carousel-caption">Visually map and transform complex JSON structures with ease.</p>
                     </div>
 
                     <!-- Slide 4: Cron Job Builder -->
                     <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/cron.png" alt="Cron Job Expression Builder" class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">Build and understand cron expressions with a natural language interface.</p>
+                        <img src="img/cron.png" alt="Cron Job Expression Builder"
+                            class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">Build and understand cron expressions with a natural language
+                            interface.</p>
                     </div>
 
                     <!-- Slide 5: Tablet Selector -->
                     <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/tablets.png" alt="Tablet Selector Menu" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <img src="img/tablets.png" alt="Tablet Selector Menu"
+                            class="flex-1 w-full h-auto object-contain min-h-0">
                         <p class="carousel-caption">Access over 50 specialized tools from the Tablet Selector.</p>
                     </div>
 
                     <!-- Slide 6: Prompt Manager -->
                     <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/prompt.png" alt="Prompt Manager" class="flex-1 w-full h-auto object-contain min-h-0">
+                        <img src="img/prompt.png" alt="Prompt Manager"
+                            class="flex-1 w-full h-auto object-contain min-h-0">
                         <p class="carousel-caption">Manage your prompts and AI task workflows.</p>
                     </div>
 
-                    <!-- Slide 6: JSON Options Menu -->
+                    <!-- Slide 7: JSON Options Menu -->
                     <div class="carousel-slide flex-shrink-0 w-full bg-gray-800 flex flex-col">
-                        <img src="img/json-options.png" alt="JSON context menu with many tools" class="flex-1 w-full h-auto object-contain min-h-0">
-                        <p class="carousel-caption">A rich context menu for one-click JSON formatting and conversion.</p>
+                        <img src="img/json-options.png" alt="JSON context menu with many tools"
+                            class="flex-1 w-full h-auto object-contain min-h-0">
+                        <p class="carousel-caption">A rich context menu for one-click JSON formatting and conversion.
+                        </p>
                     </div>
 
                 </div>
 
-                <!-- Navigation Buttons -->
-                <button id="prevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <!-- Navigation Buttons: Moved outside the track -->
+                <button id="prevBtn"
+                    class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
+                        </path>
+                    </svg>
                 </button>
-                <button id="nextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <button id="nextBtn"
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
                 </button>
 
-                <!-- Navigation Dots -->
-                <div id="carousel-dots" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                <!-- Navigation Dots: Moved outside the track -->
+                <div id="carousel-dots"
+                    class="absolute bottom-14 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
                     <!-- Dots will be dynamically inserted here by JavaScript -->
                 </div>
             </div>
