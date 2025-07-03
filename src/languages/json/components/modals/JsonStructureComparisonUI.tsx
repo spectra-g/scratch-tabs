@@ -232,6 +232,43 @@ export const JsonStructureComparisonUI: React.FC<JsonStructureComparisonUIProps>
                 </label>
               </div>
             </div>
+            {/* Array Comparison Strategy */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                Array Comparison Strategy
+                <span className="ml-2 text-gray-400 cursor-pointer group relative">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor">i</text></svg>
+                  <span className="absolute left-1/2 top-full z-10 w-72 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-xs text-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <b>Strict:</b> Only compares the structure of the first array element.<br/>
+                    <b>Union (Squash):</b> Merges all keys/types from every array element into a single superset. Great for polymorphic arrays, but loses per-type context.
+                  </span>
+                </span>
+              </label>
+              <div className="flex items-center space-x-6 mt-1">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="arrayComparisonStrategy"
+                    value="strict"
+                    checked={options.arrayComparisonStrategy === undefined || options.arrayComparisonStrategy === 'strict'}
+                    onChange={() => onOptionsChange({ ...options, arrayComparisonStrategy: 'strict' })}
+                    className="accent-blue-500"
+                  />
+                  <span className="text-sm text-gray-200">Strict (First Item)</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="arrayComparisonStrategy"
+                    value="union"
+                    checked={options.arrayComparisonStrategy === 'union'}
+                    onChange={() => onOptionsChange({ ...options, arrayComparisonStrategy: 'union' })}
+                    className="accent-blue-500"
+                  />
+                  <span className="text-sm text-gray-200">Union (Squash Items)</span>
+                </label>
+              </div>
+            </div>
           </div>
         )}
       </div>

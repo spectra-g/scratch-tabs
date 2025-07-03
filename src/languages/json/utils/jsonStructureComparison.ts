@@ -2,6 +2,7 @@ export interface ComparisonOptions {
   arraySampleCount?: number;
   strictArrayLength?: boolean;
   caseSensitiveKeys?: boolean;
+  arrayComparisonStrategy?: 'strict' | 'union';
 }
 
 export interface DiffItem {
@@ -45,6 +46,7 @@ const DEFAULT_OPTIONS: Required<ComparisonOptions> = {
   arraySampleCount: 3,
   strictArrayLength: false,
   caseSensitiveKeys: true,
+  arrayComparisonStrategy: 'strict',
 };
 
 /**
@@ -97,6 +99,27 @@ function hasUniformArrayStructure(arr: any[], sampleCount: number): boolean {
   }
 
   return true;
+}
+
+/**
+ * Build a union object from all objects in an array (for squashing polymorphic arrays)
+ */
+function buildUnionObject(arr: any[]): Record<string, string> {
+  const union: Record<string, string> = {};
+  for (const el of arr) {
+    if (el && typeof el === 'object' && !Array.isArray(el)) {
+      for (const key of Object.keys(el)) {
+        const type = getValueType(el[key]);
+        // If already present, keep as 'optional' if types differ
+        if (!(key in union)) {
+          union[key] = type;
+        } else if (union[key] !== type) {
+          union[key] = 'mixed';
+        }
+      }
+    }
+  }
+  return union;
 }
 
 /**
@@ -171,6 +194,100 @@ function compareValues(
     const leftArray = left as any[];
     const rightArray = right as any[];
 
+    // --- UNION STRATEGY ---
+    if (options.arrayComparisonStrategy === 'union') {
+      // Build union objects for both arrays
+      const leftUnion = buildUnionObject(leftArray);
+      const rightUnion = buildUnionObject(rightArray);
+      // Compare the union objects as regular objects
+      const unionPath = `${path}[]/{union}`;
+      const children: DiffTreeNode[] = [];
+      const leftKeys = Object.keys(leftUnion);
+      const rightKeys = Object.keys(rightUnion);
+      const allKeys = new Set([...leftKeys, ...rightKeys]);
+      for (const key of allKeys) {
+        const leftKeyType = leftUnion[key];
+        const rightKeyType = rightUnion[key];
+        const keyPath = `${unionPath}/${key}`;
+        if (leftKeyType && rightKeyType) {
+          if (leftKeyType !== rightKeyType) {
+            diffList.push({
+              path: keyPath,
+              type: 'TYPE_MISMATCH',
+              message: `Type mismatch in union: Source is '${leftKeyType}', Target is '${rightKeyType}'.`,
+              leftValueType: leftKeyType,
+              rightValueType: rightKeyType,
+            });
+            children.push({
+              path: keyPath,
+              name: key,
+              type: 'primitive',
+              hasDiff: true,
+              diffType: 'TYPE_MISMATCH',
+              leftValueType: leftKeyType,
+              rightValueType: rightKeyType,
+            });
+          } else {
+            children.push({
+              path: keyPath,
+              name: key,
+              type: 'primitive',
+              hasDiff: false,
+              leftValueType: leftKeyType,
+              rightValueType: rightKeyType,
+            });
+          }
+        } else if (leftKeyType) {
+          diffList.push({
+            path: keyPath,
+            type: 'MISSING_KEY_RIGHT',
+            message: `Key '${key}' is missing in the Target union.`,
+            leftValueType: leftKeyType,
+            rightValueType: 'undefined',
+          });
+          children.push({
+            path: keyPath,
+            name: key,
+            type: 'primitive',
+            hasDiff: true,
+            diffType: 'MISSING_KEY_RIGHT',
+            leftValueType: leftKeyType,
+            rightValueType: 'undefined',
+          });
+        } else if (rightKeyType) {
+          diffList.push({
+            path: keyPath,
+            type: 'MISSING_KEY_LEFT',
+            message: `Key '${key}' is missing in the Source union.`,
+            leftValueType: 'undefined',
+            rightValueType: rightKeyType,
+          });
+          children.push({
+            path: keyPath,
+            name: key,
+            type: 'primitive',
+            hasDiff: true,
+            diffType: 'MISSING_KEY_LEFT',
+            leftValueType: 'undefined',
+            rightValueType: rightKeyType,
+          });
+        }
+      }
+      const hasDiff = children.some(child => child.hasDiff);
+      return {
+        path: unionPath,
+        name: '{union}',
+        type: 'object',
+        hasDiff,
+        children,
+        leftValue: leftUnion,
+        rightValue: rightUnion,
+        leftValueType: 'object',
+        rightValueType: 'object',
+      };
+    }
+
+    // --- STRICT/DEFAULT STRATEGY ---
     // Check array length if strict mode is enabled
     if (options.strictArrayLength && leftArray.length !== rightArray.length) {
       const diffItem: DiffItem = {
