@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CronHeader } from './components/CronHeader';
 import { CronTabs } from './components/CronTabs';
 import { NaturalLanguageBuilder } from './components/NaturalLanguageBuilder';
@@ -29,13 +29,11 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
   const [showVisualizer, setShowVisualizer] = useState(false);
 
   const {
-    expression,
     humanReadable,
     nextExecutions,
     validationErrors,
     updateExpression,
     updateDialect,
-    updateTimezone,
     detectDialect,
     savePattern,
     deletePattern,
@@ -45,65 +43,70 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
     copyAllTimes
   } = useCronEngine(state.expression, state.dialect, state.timezone, state.savedPatterns);
 
-  // Update parent state when expression changes
-  useEffect(() => {
+  // Handle expression changes from user input
+  const handleExpressionChange = useCallback((newExpression: string | CronExpression) => {
+    const updatedExpression = updateExpression(newExpression);
     onChange({
       ...state,
-      expression,
-      dialect: state.dialect
+      expression: updatedExpression
     });
-  }, [expression, state.dialect]);
+  }, [state, onChange, updateExpression]);
 
   // Update expression when dialect changes
-  const handleDialectChange = (dialect: CronDialect) => {
-    updateDialect(dialect);
+  const handleDialectChange = useCallback((newDialect: CronDialect) => {
+    const convertedExpression = updateDialect(newDialect);
     onChange({
       ...state,
-      dialect
+      dialect: newDialect,
+      expression: convertedExpression
     });
-  };
+  }, [state, onChange, updateDialect]);
 
   // Update timezone
-  const handleTimezoneChange = (timezone: TimeZone) => {
-    updateTimezone(timezone);
+  const handleTimezoneChange = useCallback((timezone: TimeZone) => {
     onChange({
       ...state,
       timezone
     });
-  };
+  }, [state, onChange]);
 
   // Save a pattern
-  const handleSavePattern = (name: string, description?: string) => {
+  const handleSavePattern = useCallback((name: string, description?: string) => {
     const newPattern = savePattern(name, description);
     onChange({
       ...state,
       savedPatterns: [...state.savedPatterns, newPattern]
     });
-  };
+  }, [state, onChange, savePattern]);
 
   // Delete a pattern
-  const handleDeletePattern = (id: string) => {
+  const handleDeletePattern = useCallback((id: string) => {
     deletePattern(id);
     onChange({
       ...state,
       savedPatterns: state.savedPatterns.filter(p => p.id !== id)
     });
-  };
+  }, [state, onChange, deletePattern]);
 
   // Load a pattern
-  const handleLoadPattern = (pattern: CronPattern) => {
-    updateExpression(pattern.expression);
-    handleDialectChange(pattern.dialect);
+  const handleLoadPattern = useCallback((pattern: CronPattern) => {
+    const newExpression = updateExpression(pattern.expression);
+    const convertedExpression = updateDialect(pattern.dialect);
+    onChange({
+      ...state,
+      expression: convertedExpression,
+      dialect: pattern.dialect
+    });
     setShowPatternLibrary(false);
-  };
+  }, [state, onChange, updateExpression, updateDialect]);
 
   // Update active tab
-  const handleTabChange = (tab: 'natural' | 'segmented' | 'raw') => {
+  const handleTabChange = useCallback((tab: 'natural' | 'segmented' | 'raw') => {
     onChange({
       ...state,
       activeTab: tab
     });
-  };
+  }, [state, onChange]);
 
   return (
     <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
@@ -127,27 +130,27 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
           <div className="space-y-6">
             {state.activeTab === 'natural' && (
               <NaturalLanguageBuilder 
-                expression={expression}
+                expression={state.expression}
                 dialect={state.dialect}
-                onExpressionChange={updateExpression}
+                onExpressionChange={handleExpressionChange}
                 validationErrors={validationErrors}
               />
             )}
             
             {state.activeTab === 'segmented' && (
               <SegmentedBuilder 
-                expression={expression}
+                expression={state.expression}
                 dialect={state.dialect}
-                onExpressionChange={updateExpression}
+                onExpressionChange={handleExpressionChange}
                 validationErrors={validationErrors}
               />
             )}
             
             {state.activeTab === 'raw' && (
               <RawExpressionInput 
-                expression={expression.raw}
+                expression={state.expression.raw}
                 dialect={state.dialect}
-                onExpressionChange={(raw) => updateExpression(raw)}
+                onExpressionChange={(raw) => handleExpressionChange(raw)}
                 onDialectDetect={detectDialect}
                 validationErrors={validationErrors}
               />
@@ -184,7 +187,7 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
 
       {showCodeExporter && (
         <CronCodeExporter
-          expression={expression.raw}
+          expression={state.expression.raw}
           dialect={state.dialect}
           onClose={() => setShowCodeExporter(false)}
         />
@@ -192,7 +195,7 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
 
       {showVisualizer && (
         <CronVisualizer
-          expression={expression.raw}
+          expression={state.expression.raw}
           dialect={state.dialect}
           timezone={state.timezone}
           onClose={() => setShowVisualizer(false)}

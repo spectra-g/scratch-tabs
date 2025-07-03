@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import parser from 'cron-parser';
 import cronstrue from 'cronstrue';
 import { format, addMonths } from 'date-fns';
@@ -10,19 +10,16 @@ import { validateCronExpression } from '../utils/validator';
 import { convertBetweenDialects } from '../utils/dialectConverter';
 
 export const useCronEngine = (
-  initialExpression: CronExpression,
-  initialDialect: CronDialect,
-  initialTimezone: TimeZone,
+  expression: CronExpression,
+  dialect: CronDialect,
+  timezone: TimeZone,
   savedPatterns: CronPattern[]
 ) => {
-  const [expression, setExpression] = useState<CronExpression>(initialExpression);
-  const [dialect, setDialect] = useState<CronDialect>(initialDialect);
-  const [timezone, setTimezone] = useState<TimeZone>(initialTimezone);
   const [humanReadable, setHumanReadable] = useState<string>('');
   const [nextExecutions, setNextExecutions] = useState<CronExecution[]>([]);
   const [validationErrors, setValidationErrors] = useState<CronValidationError[]>([]);
 
-  // Update human-readable description and next executions when expression or dialect changes
+  // Calculate human-readable description and next executions when expression, dialect, or timezone changes
   useEffect(() => {
     try {
       // Update human-readable description
@@ -54,7 +51,6 @@ export const useCronEngine = (
 
         // Handle different dialects
         if (dialect === 'quartz') {
-          options.iterator = true;
           options.utc = timezone.type === 'utc';
         }
 
@@ -89,142 +85,138 @@ export const useCronEngine = (
     }
   }, [expression, dialect, timezone]);
 
-  // Update expression
-  const updateExpression = useCallback((newExpression: string | CronExpression) => {
-    if (typeof newExpression === 'string') {
-      // Parse the raw string into a structured expression
-      const parts = newExpression.trim().split(/\s+/);
-      
-      let updatedExpression: CronExpression = {
-        raw: newExpression,
-        minute: '*',
-        hour: '*',
-        dayOfMonth: '*',
-        month: '*',
-        dayOfWeek: '*',
-        second: '0',
-        year: '*'
-      };
-      
-      // Map parts to fields based on dialect
-      if (dialect === 'unix' || dialect === 'crontab') {
-        // Standard 5-field cron: minute hour day-of-month month day-of-week
-        if (parts.length >= 5) {
-          updatedExpression.minute = parts[0];
-          updatedExpression.hour = parts[1];
-          updatedExpression.dayOfMonth = parts[2];
-          updatedExpression.month = parts[3];
-          updatedExpression.dayOfWeek = parts[4];
-        }
-      } else if (dialect === 'quartz') {
-        // Quartz: second minute hour day-of-month month day-of-week [year]
-        if (parts.length >= 6) {
-          updatedExpression.second = parts[0];
-          updatedExpression.minute = parts[1];
-          updatedExpression.hour = parts[2];
-          updatedExpression.dayOfMonth = parts[3];
-          updatedExpression.month = parts[4];
-          updatedExpression.dayOfWeek = parts[5];
-          if (parts.length >= 7) {
-            updatedExpression.year = parts[6];
-          }
-        }
-      } else if (dialect === 'spring') {
-        // Spring: second minute hour day-of-month month day-of-week
-        if (parts.length >= 6) {
-          updatedExpression.second = parts[0];
-          updatedExpression.minute = parts[1];
-          updatedExpression.hour = parts[2];
-          updatedExpression.dayOfMonth = parts[3];
-          updatedExpression.month = parts[4];
-          updatedExpression.dayOfWeek = parts[5];
-        }
-      } else if (dialect === 'aws') {
-        // AWS: minute hour day-of-month month day-of-week year
-        if (parts.length >= 6) {
-          updatedExpression.minute = parts[0];
-          updatedExpression.hour = parts[1];
-          updatedExpression.dayOfMonth = parts[2];
-          updatedExpression.month = parts[3];
-          updatedExpression.dayOfWeek = parts[4];
-          updatedExpression.year = parts[5];
+  // Create expression from raw string
+  const createExpression = useCallback((rawExpression: string, currentDialect: CronDialect): CronExpression => {
+    const parts = rawExpression.trim().split(/\s+/);
+    
+    let updatedExpression: CronExpression = {
+      raw: rawExpression,
+      minute: '*',
+      hour: '*',
+      dayOfMonth: '*',
+      month: '*',
+      dayOfWeek: '*',
+      second: '0',
+      year: '*'
+    };
+    
+    // Map parts to fields based on dialect
+    if (currentDialect === 'unix' || currentDialect === 'crontab') {
+      // Standard 5-field cron: minute hour day-of-month month day-of-week
+      if (parts.length >= 5) {
+        updatedExpression.minute = parts[0];
+        updatedExpression.hour = parts[1];
+        updatedExpression.dayOfMonth = parts[2];
+        updatedExpression.month = parts[3];
+        updatedExpression.dayOfWeek = parts[4];
+      }
+    } else if (currentDialect === 'quartz') {
+      // Quartz: second minute hour day-of-month month day-of-week [year]
+      if (parts.length >= 6) {
+        updatedExpression.second = parts[0];
+        updatedExpression.minute = parts[1];
+        updatedExpression.hour = parts[2];
+        updatedExpression.dayOfMonth = parts[3];
+        updatedExpression.month = parts[4];
+        updatedExpression.dayOfWeek = parts[5];
+        if (parts.length >= 7) {
+          updatedExpression.year = parts[6];
         }
       }
-      
-      setExpression(updatedExpression);
+    } else if (currentDialect === 'spring') {
+      // Spring: second minute hour day-of-month month day-of-week
+      if (parts.length >= 6) {
+        updatedExpression.second = parts[0];
+        updatedExpression.minute = parts[1];
+        updatedExpression.hour = parts[2];
+        updatedExpression.dayOfMonth = parts[3];
+        updatedExpression.month = parts[4];
+        updatedExpression.dayOfWeek = parts[5];
+      }
+    } else if (currentDialect === 'aws') {
+      // AWS: minute hour day-of-month month day-of-week year
+      if (parts.length >= 6) {
+        updatedExpression.minute = parts[0];
+        updatedExpression.hour = parts[1];
+        updatedExpression.dayOfMonth = parts[2];
+        updatedExpression.month = parts[3];
+        updatedExpression.dayOfWeek = parts[4];
+        updatedExpression.year = parts[5];
+      }
+    }
+    
+    return updatedExpression;
+  }, []);
+
+  // Create raw string from expression
+  const createRawExpression = useCallback((expr: CronExpression, currentDialect: CronDialect): string => {
+    let rawParts: string[] = [];
+    
+    if (currentDialect === 'unix' || currentDialect === 'crontab') {
+      rawParts = [
+        expr.minute,
+        expr.hour,
+        expr.dayOfMonth,
+        expr.month,
+        expr.dayOfWeek
+      ];
+    } else if (currentDialect === 'quartz') {
+      rawParts = [
+        expr.second || '0',
+        expr.minute,
+        expr.hour,
+        expr.dayOfMonth,
+        expr.month,
+        expr.dayOfWeek,
+        expr.year || '*'
+      ];
+    } else if (currentDialect === 'spring') {
+      rawParts = [
+        expr.second || '0',
+        expr.minute,
+        expr.hour,
+        expr.dayOfMonth,
+        expr.month,
+        expr.dayOfWeek
+      ];
+    } else if (currentDialect === 'aws') {
+      rawParts = [
+        expr.minute,
+        expr.hour,
+        expr.dayOfMonth,
+        expr.month,
+        expr.dayOfWeek,
+        expr.year || '*'
+      ];
+    }
+    
+    return rawParts.join(' ');
+  }, []);
+
+  // Update expression (returns new expression, doesn't mutate)
+  const updateExpression = useCallback((newExpression: string | CronExpression) => {
+    if (typeof newExpression === 'string') {
+      return createExpression(newExpression, dialect);
     } else {
       // Handle structured expression update
       const updatedExpression = { ...newExpression };
-      
-      // Reconstruct raw string based on dialect
-      let rawParts: string[] = [];
-      
-      if (dialect === 'unix' || dialect === 'crontab') {
-        rawParts = [
-          updatedExpression.minute,
-          updatedExpression.hour,
-          updatedExpression.dayOfMonth,
-          updatedExpression.month,
-          updatedExpression.dayOfWeek
-        ];
-      } else if (dialect === 'quartz') {
-        rawParts = [
-          updatedExpression.second || '0',
-          updatedExpression.minute,
-          updatedExpression.hour,
-          updatedExpression.dayOfMonth,
-          updatedExpression.month,
-          updatedExpression.dayOfWeek,
-          updatedExpression.year || '*'
-        ];
-      } else if (dialect === 'spring') {
-        rawParts = [
-          updatedExpression.second || '0',
-          updatedExpression.minute,
-          updatedExpression.hour,
-          updatedExpression.dayOfMonth,
-          updatedExpression.month,
-          updatedExpression.dayOfWeek
-        ];
-      } else if (dialect === 'aws') {
-        rawParts = [
-          updatedExpression.minute,
-          updatedExpression.hour,
-          updatedExpression.dayOfMonth,
-          updatedExpression.month,
-          updatedExpression.dayOfWeek,
-          updatedExpression.year || '*'
-        ];
-      }
-      
-      updatedExpression.raw = rawParts.join(' ');
-      setExpression(updatedExpression);
+      updatedExpression.raw = createRawExpression(updatedExpression, dialect);
+      return updatedExpression;
     }
-  }, [dialect]);
+  }, [dialect, createExpression, createRawExpression]);
 
-  // Update dialect
+  // Update dialect (returns converted expression)
   const updateDialect = useCallback((newDialect: CronDialect) => {
-    if (newDialect === dialect) return;
+    if (newDialect === dialect) return expression;
     
     // Convert expression to new dialect
-    const convertedExpression = convertBetweenDialects(expression, dialect, newDialect);
-    setDialect(newDialect);
-    setExpression(convertedExpression);
+    return convertBetweenDialects(expression, dialect, newDialect);
   }, [dialect, expression]);
-
-  // Update timezone
-  const updateTimezone = useCallback((newTimezone: TimeZone) => {
-    setTimezone(newTimezone);
-  }, []);
 
   // Detect dialect from expression
   const detectDialect = useCallback((rawExpression: string) => {
     const detectedDialect = detectCronDialect(rawExpression);
-    if (detectedDialect && detectedDialect !== dialect) {
-      setDialect(detectedDialect);
-      return detectedDialect;
-    }
-    return dialect;
+    return detectedDialect || dialect;
   }, [dialect]);
 
   // Save pattern
@@ -250,30 +242,33 @@ export const useCronEngine = (
   const exportToICS = useCallback(() => {
     if (nextExecutions.length === 0) return null;
     
-    const events = nextExecutions.map(execution => ({
-      start: [
-        execution.date.getFullYear(),
-        execution.date.getMonth() + 1,
-        execution.date.getDate(),
-        execution.date.getHours(),
-        execution.date.getMinutes()
-      ],
-      duration: { minutes: 30 },
-      title: `Cron Job: ${expression.raw}`,
-      description: humanReadable,
-      status: 'CONFIRMED',
-      busyStatus: 'BUSY',
-      organizer: { name: 'Cron Expression Builder', email: 'cron@example.com' }
-    }));
-    
-    createEvents(events, (error, value) => {
-      if (error) {
-        console.error('Error creating ICS file:', error);
-        return;
+    try {
+      const events = nextExecutions.map(execution => ({
+        start: [
+          execution.date.getFullYear(),
+          execution.date.getMonth() + 1,
+          execution.date.getDate(),
+          execution.date.getHours(),
+          execution.date.getMinutes()
+        ] as [number, number, number, number, number],
+        duration: { minutes: 30 },
+        title: `Cron Job: ${expression.raw}`,
+        description: humanReadable,
+        status: 'CONFIRMED' as const,
+        busyStatus: 'BUSY' as const,
+        organizer: { name: 'Cron Expression Builder', email: 'cron@example.com' }
+      }));
+      
+      // Use the createEvents function with proper typing
+      const result = createEvents(events as any);
+      
+      if (result.error || !result.value) {
+        console.error('Error creating ICS file:', result.error);
+        return false;
       }
       
       // Create and download the file
-      const blob = new Blob([value], { type: 'text/calendar' });
+      const blob = new Blob([result.value], { type: 'text/calendar' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -282,9 +277,12 @@ export const useCronEngine = (
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    });
-    
-    return true;
+      
+      return true;
+    } catch (error) {
+      console.error('Error exporting to ICS:', error);
+      return false;
+    }
   }, [nextExecutions, expression.raw, humanReadable]);
 
   // Export to CSV
@@ -357,15 +355,11 @@ export const useCronEngine = (
   }, [nextExecutions]);
 
   return {
-    expression,
-    dialect,
-    timezone,
     humanReadable,
     nextExecutions,
     validationErrors,
     updateExpression,
     updateDialect,
-    updateTimezone,
     detectDialect,
     savePattern,
     deletePattern,
