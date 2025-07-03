@@ -28,6 +28,7 @@ src/tablets/jsonmapper/
 src/tablets/pomodoro/
 src/tablets/regex/
 src/tablets/shapesnap/
+src/tablets/cron/
 
 *.md
 *.svg

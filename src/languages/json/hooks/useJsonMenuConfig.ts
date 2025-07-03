@@ -3,7 +3,8 @@ import * as monaco from 'monaco-editor';
 import {
     FileText, FileCode, Settings2, WrapText, UnfoldVertical,
     SortAsc, Trash2, TextQuote, Palette,
-    FileCheck, ListRestart, FileSymlink, FileCog, FolderTree, MessageSquareOff, PackageSearch
+    FileCheck, ListRestart, FileSymlink, FileCog, FolderTree, MessageSquareOff, PackageSearch,
+    GitCompare
 } from 'lucide-react';
 
 import { useRootStore } from '../../../stores';
@@ -11,6 +12,7 @@ import { useJsonOperations } from './useJsonOperations';
 import { useJsonConversions } from './useJsonConversions';
 import { useJsonTransformations } from './useJsonTransformations';
 import { useJsonValidation } from './useJsonValidation';
+import { useJsonModals } from './useJsonModals';
 import { MenuItem } from '../../../components/ContextMenu/types';
 import { Tab } from '../../../types';
 import { validateJson } from '../validation';
@@ -59,6 +61,8 @@ export const useJsonMenuConfig = (
         handleValidateSchema, handleGenerateSchema
     } = useJsonValidation(editor, handleAddTab); // Pass handleAddTab
 
+    const { openStructureComparisonModal } = useJsonModals();
+
     // Use useMemo to prevent recalculating the config on every render unless dependencies change
     const menuConfig = useMemo<MenuItem[]>(() => {
         if (!editor) return []; // Return empty array if editor is not ready
@@ -91,6 +95,12 @@ export const useJsonMenuConfig = (
 
         const validateSchemaAction = createTabAction(handleValidateSchema);
         const generateSchemaAction = createTabAction(handleGenerateSchema);
+        const compareStructuresAction = createAction(() => {
+            if (editor) {
+                const content = editor.getValue();
+                openStructureComparisonModal(content);
+            }
+        });
 
         // Determine if current content is valid JSON
         let isJsonValid = false;
@@ -106,6 +116,7 @@ export const useJsonMenuConfig = (
         return [
             { id: 'treeView', label: 'Tree/Path view', icon: FolderTree, action: treeViewAction },
             { id: 'extractJson', label: 'Extract JSON(s)', icon: PackageSearch, action: extractJsonAction },
+            { id: 'compareStructures', label: 'Compare Structures', icon: GitCompare, action: compareStructuresAction },
             { id: 'format', label: 'Format', icon: WrapText, action: formatAction },
             { id: 'separator1', isSeparator: true, label: 'sep0', icon: Settings2 }, // Icon needed but won't show
             // Section 1: Other Formatting & Basic Ops
@@ -158,7 +169,8 @@ export const useJsonMenuConfig = (
         handleToCamelCase, handleToSnakeCase, handleToKebabCase,
         handleToJava, handleToTypeScript, handleToPython, handleToGo, handleToCSharp,
         handleToCsv, handleToYaml, handleToXml,
-        handleValidateSchema, handleGenerateSchema
+        handleValidateSchema, handleGenerateSchema,
+        openStructureComparisonModal
     ]); // Add all dependencies
 
     return menuConfig;
