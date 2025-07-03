@@ -227,19 +227,35 @@ describe('useShapeSnapEngineV2', () => {
       expect(cutShapes!.length).toBe(2);
     });
 
-    it('should paste shapes from clipboard', () => {
-      const clipboardShapes = [createMockShape('clip1'), createMockShape('clip2')];
-      mockState.clipboard = clipboardShapes;
-      updateHookState(mockState);
-      
-      act(() => {
-        result.current.pasteShapes();
-      });
+    it('should paste shapes from clipboard and add to state/history', () => {
+      // Add two shapes to clipboard
+      const shape1 = createMockShape('shape1');
+      const shape2 = createMockShape('shape2');
+      mockState.clipboard = [shape1, shape2];
 
-      expect(mockOnChange).toHaveBeenCalled();
-      // The paste operation should trigger multiple onChange calls
-      // (one for each shape addition, plus selection updates)
-      expect(mockOnChange.mock.calls.length).toBeGreaterThan(1);
+      const { result } = renderHook(() => useShapeSnapEngineV2(mockState, mockOnChange));
+
+          act(() => {
+      result.current.pasteShapes();
+    });
+
+    // After pasting, there should be two new shapes with new IDs and offset positions
+    expect(mockOnChange).toHaveBeenCalled();
+    const lastCall = mockOnChange.mock.calls[mockOnChange.mock.calls.length - 1][0];
+    console.log('Debug - lastCall.shapes:', lastCall.shapes);
+    console.log('Debug - lastCall.shapes.length:', lastCall.shapes.length);
+    expect(lastCall.shapes.length).toBe(2);
+      // IDs should not match originals
+      expect(lastCall.shapes[0].id).not.toBe('shape1');
+      expect(lastCall.shapes[1].id).not.toBe('shape2');
+      // Positions should be offset
+      expect((lastCall.shapes[0] as any).x).toBe(30); // 10 + 20 offset
+      expect((lastCall.shapes[1] as any).x).toBe(30);
+      expect((lastCall.shapes[0] as any).y).toBe(40); // 20 + 20 offset
+      expect((lastCall.shapes[1] as any).y).toBe(40);
+      // History should be updated
+      expect(lastCall.history.length).toBe(2);
+      expect(lastCall.historyIndex).toBe(1);
     });
   });
 
