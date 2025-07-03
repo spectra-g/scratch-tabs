@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import parser from 'cron-parser';
+import * as parser from 'cron-parser';
 import cronstrue from 'cronstrue';
 import { format, addMonths } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -34,10 +34,17 @@ export const useCronEngine = (
           options.verbose = true;
         }
         
-        description = cronstrue.toString(expression.raw, options);
-      } catch (error) {
-        description = 'Invalid cron expression';
-      }
+        // Convert to Unix format for cronstrue (it only understands Unix format)
+        let expressionForCronstrue = expression.raw;
+        if (dialect !== 'unix' && dialect !== 'crontab') {
+          const unixExpression = convertBetweenDialects(expression, dialect, 'unix');
+          expressionForCronstrue = unixExpression.raw;
+        }
+        
+        description = cronstrue.toString(expressionForCronstrue, options);
+              } catch (error) {
+          description = 'Invalid cron expression';
+        }
       setHumanReadable(description);
 
       // Calculate next executions
@@ -54,7 +61,14 @@ export const useCronEngine = (
           options.utc = timezone.type === 'utc';
         }
 
-        const interval = parser.parseExpression(expression.raw, options);
+        // Convert to Unix format for cron-parser (it only understands Unix format)
+        let expressionForParser = expression.raw;
+        if (dialect !== 'unix' && dialect !== 'crontab') {
+          const unixExpression = convertBetweenDialects(expression, dialect, 'unix');
+          expressionForParser = unixExpression.raw;
+        }
+
+        const interval = parser.parseExpression(expressionForParser, options);
         
         // Get next 20 executions
         for (let i = 0; i < 20; i++) {
