@@ -29,8 +29,11 @@ export const useLanguageDetection = (
     currentLanguage: string,
     languageLocked: boolean // Whether the language is locked by the user
   ) => {
+    console.time(`LanguageDetection Logic for tab ${tabId}`); // <<< ADD THIS
+    
     // --- 1. Respect Manual Lock ---
     if (languageLocked) {
+      console.timeEnd(`LanguageDetection Logic for tab ${tabId}`); // <<< ADD THIS
       return; // User has explicitly set the language, do nothing.
     }
 
@@ -93,6 +96,7 @@ export const useLanguageDetection = (
 
     // --- 6. Perform Update ---
     if (shouldUpdate) {
+      console.log(`LanguageDetection: Updating language for tab ${tabId} from "${currentLanguage}" to "${newDetectedLanguage}". Auto-lock: ${false}`); // <<< ADD THIS
       // Update the language with the lock parameter set to false to ensure user can override
       updateTabLanguage(tabId, newDetectedLanguage, false);
       
@@ -103,7 +107,10 @@ export const useLanguageDetection = (
           onLanguageDetectedOnSignificantChange?.(tabId, newDetectedLanguage);
         }, 50); // Small delay to ensure language is set before formatting
       }
+    } else {
+      console.log(`LanguageDetection: No language update needed for tab ${tabId}. Current: "${currentLanguage}", Detected: "${newDetectedLanguage}".`); // <<< ADD THIS
     }
+    console.timeEnd(`LanguageDetection Logic for tab ${tabId}`); // <<< ADD THIS
 
   }, [updateTabLanguage, onLanguageDetectedOnSignificantChange]); // Add callback to dependencies
 
@@ -126,6 +133,7 @@ export const useLanguageDetection = (
     currentLanguage: string,
     languageLocked: boolean
   ) => {
+    console.log(`[LanguageDetection] Queuing detection for tab ${tabId}. Content size: ${newContent.length}`); // <<< ADD THIS
     // Directly invoke the latest debounced function stored in the ref
     debouncedUpdateRef.current?.(tabId, newContent, prevContent, currentLanguage, languageLocked);
   }, []); // No dependencies - will remain stable across renders

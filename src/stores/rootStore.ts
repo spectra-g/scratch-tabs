@@ -5,7 +5,6 @@ import { useEditorStore } from './editorStore';
 import { useWorkspaceStore } from './workspaceStore';
 import { EditorPosition, Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
-import { modelManager } from '../services/modelManager';
 import { incrementSetting } from '../db';
 import { NEW_TAB_PREFIX } from '../constants';
 
@@ -88,10 +87,13 @@ export const useRootStore = create<RootStore>((set, get) => {
   const storage = StorageProviderFactory.getProvider();
 
   useTabsStore.subscribe((state) => {
+    console.time('[Subscription] rootStore reacting to tabsStore'); // <<< ADD THIS
     set({ tabs: state.tabs });
+    console.timeEnd('[Subscription] rootStore reacting to tabsStore'); // <<< ADD THIS
   });
 
   useSplitViewStore.subscribe((state) => {
+    console.log('[RootStore] Subscription to useSplitViewStore triggered.'); // <<< ADD THIS
     if (!state.splitView) return;
     const activeTabId = state.splitView.activeSide === 'right'
       ? state.splitView.activeRightTabId
@@ -236,8 +238,6 @@ export const useRootStore = create<RootStore>((set, get) => {
       const { tabs } = get();
       const tabToRemove = tabs.find(t => t.id === id);
       if (!tabToRemove) return;
-
-      modelManager.dispose(id);
 
       // 1. Remove from splitViewStore
       useSplitViewStore.getState().removeTabFromSide(id);

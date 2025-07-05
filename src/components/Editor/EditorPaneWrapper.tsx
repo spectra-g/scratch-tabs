@@ -30,6 +30,7 @@ const PreviewLoadingFallback = () => (
 );
 
 export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
+  console.log(`[Render] EditorPaneWrapper for side: ${side}`); // <<< ADD THIS
   const [editorInstance, setEditorInstance] = React.useState<any>(null);
   
   const {

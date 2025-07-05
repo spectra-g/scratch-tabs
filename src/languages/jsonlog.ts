@@ -93,6 +93,12 @@ export class JsonLogLanguageDetector extends BaseLanguageDetector implements Lan
       }
 
       try {
+        // Safety check: don't parse very large lines
+        if (trimmedLine.length > 100_000) {
+          console.log(`JSON Log Detector: Line too large (${trimmedLine.length} bytes), skipping parse`); // <<< ADD THIS
+          continue; // Skip very large lines
+        }
+        
         const parsed = JSON.parse(trimmedLine);
         
         if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
@@ -310,6 +316,13 @@ export class JsonLogLanguageDetector extends BaseLanguageDetector implements Lan
           // Try to parse and reformat each line as JSON
           try {
             if (trimmedLine.startsWith('{') && trimmedLine.endsWith('}')) {
+              // Safety check: don't parse very large lines
+              if (trimmedLine.length > 100_000) {
+                console.log(`JSON Log Format: Line too large (${trimmedLine.length} bytes), skipping format`); // <<< ADD THIS
+                formattedLines.push(trimmedLine); // Keep original line
+                continue;
+              }
+              
               const parsed = JSON.parse(trimmedLine);
               // Format as compact JSON (no extra spaces, single line)
               formattedLines.push(JSON.stringify(parsed));

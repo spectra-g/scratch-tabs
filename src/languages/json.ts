@@ -752,6 +752,14 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
    * Works with both complete and partial content
    */
   detect(content: string): DetectionResult {
+    console.log(`JSON Detector: Called with content length: ${content.length}`); // <<< ADD THIS
+    
+    // CRITICAL FIX: Don't detect JSON for large content to prevent Monaco JSON features
+    if (content.length > 1_000_000) {
+      console.log(`JSON Detector: Content too large (${content.length} bytes), returning noMatch to prevent JSON language mode`); // <<< ADD THIS
+      return this.noMatch();
+    }
+    
     const trimmed = content.trim();
     if (trimmed.length < 2) {
       return this.noMatch();
@@ -769,10 +777,15 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
     const isPotentiallyComplete = (startsWithBrace && endsWithBrace) || (startsWithBracket && endsWithBracket);
 
     if (isPotentiallyComplete) {
+      console.log(`JSON Detector: Attempting JSON.parse for content length: ${trimmed.length}`); // <<< ADD THIS
       try {
+        console.time(`JSON.parse for ${trimmed.length} bytes`); // <<< ADD THIS
         JSON.parse(trimmed);
+        console.timeEnd(`JSON.parse for ${trimmed.length} bytes`); // <<< ADD THIS
         return { match: true, confidence: 0.98 }; // It's valid JSON.
       } catch (e) {
+        console.timeEnd(`JSON.parse for ${trimmed.length} bytes`); // <<< ADD THIS
+        console.log(`JSON Detector: JSON.parse failed, falling back to pattern matching`); // <<< ADD THIS
         // Fall through to pattern matching for invalid but JSON-like content.
       }
     }

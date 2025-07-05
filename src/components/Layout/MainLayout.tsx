@@ -306,12 +306,15 @@ const MainLayout: React.FC = () => {
         />
       )}
       {summarizeModal && (
-          <SummarizeModal
-              content={summarizeModal.content}
-              onClose={handleCloseSummarizeModal}
-              // You might pass tabId if the modal needs it for some reason
-              // tabId={summarizeModal.tabId}
-          />
+          <>
+            {console.log(`[Render] SummarizeModal with content size: ${summarizeModal.content.length}`)}
+            <SummarizeModal
+                content={summarizeModal.content}
+                onClose={handleCloseSummarizeModal}
+                // You might pass tabId if the modal needs it for some reason
+                // tabId={summarizeModal.tabId}
+            />
+          </>
       )}
       {isSearchOpen && <SearchModal />}
       <AIModelManagementModal />

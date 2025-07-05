@@ -79,11 +79,16 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
 
   setActiveTab: (id) => set({ activeTabId: id }),
 
-  updateTabContent: (id, content) => set((state) => ({
-    tabs: state.tabs.map((tab) =>
-      tab.id === id ? { ...tab, content, lastModified: Date.now() } : tab
-    ),
-  })),
+  updateTabContent: (id, content) => {
+    console.time(`[State Update] updateTabContent for tab ${id}`); // <<< ADD THIS
+    console.log(`[State Update] Updating content for tab ${id}. New content size: ${content.length} bytes.`); // <<< ADD THIS
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, content, lastModified: Date.now() } : tab
+      ),
+    }));
+    console.timeEnd(`[State Update] updateTabContent for tab ${id}`); // <<< ADD THIS
+  },
 
   updateTabLanguage: (id, language, lock = true) => set((state) => ({
     tabs: state.tabs.map((tab) =>

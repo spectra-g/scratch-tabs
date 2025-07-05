@@ -33,14 +33,19 @@ class LanguageRegistryImpl implements LanguageRegistry {
   
   detectLanguage(content: string): string {
     if (!content || !content.trim()) return 'plaintext';
-
+    console.time('LanguageDetection: Total Time'); // <<< ADD THIS
+    console.log(`LanguageDetection: Starting detection for content length: ${content.length}`); // <<< ADD THIS
+    
     if (content.length > 1_000_000) {
+      console.log(`LanguageDetection: Content too large (${content.length} bytes), returning plaintext`); // <<< ADD THIS
+      console.timeEnd('LanguageDetection: Total Time'); // <<< ADD THIS
       return 'plaintext';
     }
 
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
 
     for (const detector of this.detectors) {
+      console.log(`LanguageDetection: Running detector "${detector.id}"`); // <<< ADD THIS
       const result = detector.detect(content);
       if (result.match) {
         detectionResults.push({ detector, result });
@@ -64,7 +69,10 @@ class LanguageRegistryImpl implements LanguageRegistry {
     //    // For now, we'll just return the top one from the sort.
     // }
 
-    return detectionResults[0]?.detector.id ?? 'plaintext';
+    const finalResult = detectionResults[0]?.detector.id ?? 'plaintext';
+    console.timeEnd('LanguageDetection: Total Time'); // <<< ADD THIS
+    console.log(`LanguageDetection: Final result is "${finalResult}"`); // <<< ADD THIS
+    return finalResult;
   }
   
   /**

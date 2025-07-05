@@ -5,7 +5,6 @@ import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { usePersistenceStore } from './persistenceStore';
 import { useCacheStore } from './cacheStore';
-import { modelManager } from '../services/modelManager';
 import { incrementSetting } from '../db';
 import { WELCOME_TAB_CONTENT, NEW_TAB_PREFIX } from '../constants';
 
@@ -47,8 +46,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     loadWorkspaces: async (clearExistingTabs: boolean = false) => {
       set({ isLoading: true, error: null });
       try {
-        // Clear the model cache when loading workspaces
-        modelManager.disposeAll();
+        // Model cache is now handled by React component lifecycle
 
         const workspacesFromDB = await storage.getWorkspaces();
         let newActiveWorkspaceId: string | null = null;
@@ -257,8 +255,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           await persistCurrentState();
         }
 
-        // 2. Clear the model cache when switching workspaces
-        modelManager.disposeAll();
+        // 2. Model cache is now handled by React component lifecycle
 
         // 3. Load data for the target workspace
         const cachedData = useCacheStore.getState().cachedSplitView;
@@ -319,8 +316,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
       lockTransactions();
       try {
-        // Clear the model cache when creating a new workspace
-        modelManager.disposeAll();
+        // Model cache is now handled by React component lifecycle
 
         const newWorkspace: Workspace = {
           id: crypto.randomUUID(),
