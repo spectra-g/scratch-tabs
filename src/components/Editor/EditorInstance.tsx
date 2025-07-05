@@ -124,10 +124,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     previousContentRef.current = activeTab.content;
     
     // Clear the large content ref when switching tabs to avoid cross-tab contamination
+    console.log(`🧹 [EditorInstance] BEFORE clearing - largeContentRef length: ${largeContentRef.current.length}, switching to tab: ${activeTab.id}`);
     if (largeContentRef.current.length > 0) {
       console.log(`🧹 [EditorInstance] Clearing large content ref for new tab: ${activeTab.id}`);
       largeContentRef.current = '';
     }
+    console.log(`🧹 [EditorInstance] AFTER clearing - largeContentRef length: ${largeContentRef.current.length}`);
   }, [activeTab.id, activeTab.language]);
 
   // Effect to update context keys when AI state changes
@@ -287,6 +289,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     }
     
     // Restore large content to Monaco if it exists in the ref
+    console.log(`🎉 [EditorInstance] handleEditorDidMount - Tab: ${activeTab.id}, activeTab.content.length: ${activeTab.content.length}, largeContentRef.length: ${largeContentRef.current.length}`);
     if (largeContentRef.current && largeContentRef.current.length > 100000) {
       console.log(`🔄 [EditorInstance] Restoring large content to Monaco (${largeContentRef.current.length} bytes)`);
       setTimeout(() => {
@@ -295,6 +298,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
           console.log(`✅ [EditorInstance] Large content restored to Monaco`);
         }
       }, 0);
+    } else {
+      console.log(`❌ [EditorInstance] No large content to restore - ref empty or too small`);
     }
     
     // Auto-format tabs that were likely created from paste or file import
