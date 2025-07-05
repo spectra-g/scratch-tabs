@@ -362,7 +362,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       run: () => {
         console.log(`🔧 [EditorInstance] Batch tools action triggered for tab: ${activeTab.id}`);
         const selectedText = editor.getModel()?.getValueInRange(editor.getSelection()!) || '';
-        const fullContent = editor.getValue();
+        // For large content, get the content from the ref instead of editor.getValue()
+        const fullContent = largeContentRef.current.length > 100000 ? largeContentRef.current : editor.getValue();
         console.log(`🔧 [EditorInstance] Batch tools - Selected: ${selectedText.length}, Full: ${fullContent.length}`);
         openBatchToolsModal(fullContent, selectedText);
       }
@@ -469,6 +470,23 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       console.log(`🚀 [EditorInstance] Large content detected (${newContent.length} bytes) - storing in ref only, skipping state update`);
       largeContentRef.current = newContent;
       previousContentRef.current = newContent;
+      
+      // Still run language detection for large content (safe - doesn't involve React state)
+      if (!currentTab.isTablet) {
+        console.log(`🔍 [EditorInstance] Running language detection for large content - Tab: ${currentTabId}`);
+        const trimmedContent = newContent.trim();
+        if (trimmedContent.startsWith('/')) {
+          console.log(`📱 [EditorInstance] Tablet selector trigger detected - Query: ${trimmedContent.slice(1)}`);
+          updateTabletQuery(trimmedContent.slice(1));
+          openTabletSelector();
+        } else if (showTabletSelector) {
+          console.log(`📱 [EditorInstance] Closing tablet selector`);
+          closeTabletSelector(false);
+        }
+        console.log(`🔍 [EditorInstance] Calling detectAndSetLanguage for large content - Tab: ${currentTabId}`);
+        detectAndSetLanguage(currentTabId, newContent, prevContent, currentTab.language, currentTab.languageLocked);
+      }
+      
       console.log(`✅ [EditorInstance] Large content stored in ref for tab: ${currentTabId}`);
       console.timeEnd(`⏱️ [EditorInstance] handleEditorChange processing for ${activeTab.id}`);
       return;
