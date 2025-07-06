@@ -126,9 +126,13 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
     renameWorkspace,
     deleteWorkspace
   } = useWorkspaceStore();
-  const activeWorkspaceTabs = useRootStore(state =>
-    state.tabs.filter(tab => tab.workspaceId === activeWorkspaceId)
-  );
+  const activeWorkspaceTabs = useRootStore(state => {
+    console.time('[TabManagement] Computing activeWorkspaceTabs');
+    const tabs = state.tabs.filter(tab => tab.workspaceId === activeWorkspaceId);
+    console.log(`[TabManagement] Filtered ${tabs.length} tabs for workspace ${activeWorkspaceId}`);
+    console.timeEnd('[TabManagement] Computing activeWorkspaceTabs');
+    return tabs;
+  });
   const storage = StorageProviderFactory.getProvider();
   const [allApplicationTabs, setAllApplicationTabs] = useState<Tab[]>([]);
   const [isLoadingAllTabs, setIsLoadingAllTabs] = useState(false);

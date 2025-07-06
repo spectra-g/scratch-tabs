@@ -165,8 +165,11 @@ const MainLayout: React.FC = () => {
   };
 
     const handleOpenSummarizeModal = (tabId: string) => {
+        console.time('[MainLayout] Finding tab for summarize modal');
         // This find should be fast unless 'tabs' is gigantic
         const tab = useRootStore.getState().tabs.find(t => t.id === tabId);
+        console.log(`[MainLayout] Found tab for summarize modal: ${tab ? 'yes' : 'no'}`);
+        console.timeEnd('[MainLayout] Finding tab for summarize modal');
         if (tab && tab.content) {
             setSummarizeModal({ content: tab.content, tabId: tabId }); // This should trigger re-render quickly
         } else {

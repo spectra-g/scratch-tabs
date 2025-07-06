@@ -32,46 +32,46 @@ class LanguageRegistryImpl implements LanguageRegistry {
   }
   
   detectLanguage(content: string): string {
-    if (!content || !content.trim()) return 'plaintext';
-    console.time('LanguageDetection: Total Time'); // <<< ADD THIS
-    console.log(`LanguageDetection: Starting detection for content length: ${content.length}`); // <<< ADD THIS
-    
-    if (content.length > 1_000_000) {
-      console.log(`LanguageDetection: Content too large (${content.length} bytes), returning plaintext`); // <<< ADD THIS
-      console.timeEnd('LanguageDetection: Total Time'); // <<< ADD THIS
+    console.time('[LanguageRegistry] detectLanguage');
+    console.log(`[LanguageRegistry] Starting detection for content length: ${content.length}`);
+
+    // Early return for very large content to prevent performance issues
+    if (content.length > 100000) {
+      console.log(`[LanguageRegistry] Content too large (${content.length} bytes), returning plaintext`);
+      console.timeEnd('[LanguageRegistry] detectLanguage');
       return 'plaintext';
     }
 
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
 
+    // Run all detectors
     for (const detector of this.detectors) {
-      console.log(`LanguageDetection: Running detector "${detector.id}"`); // <<< ADD THIS
-      const result = detector.detect(content);
-      if (result.match) {
+      console.log(`[LanguageRegistry] Running detector "${detector.id}"`);
+      console.time(`[LanguageRegistry] detector ${detector.id}`);
+      try {
+        const result = detector.detect(content);
         detectionResults.push({ detector, result });
+        console.timeEnd(`[LanguageRegistry] detector ${detector.id}`);
+      } catch (error) {
+        console.error(`[LanguageRegistry] Error in detector ${detector.id}:`, error);
+        console.timeEnd(`[LanguageRegistry] detector ${detector.id}`);
       }
     }
 
-    // Sort by confidence (descending), then by priority (descending) as a tie-breaker
-    detectionResults.sort((a, b) => {
-      if (b.result.confidence !== a.result.confidence) {
-        return b.result.confidence - a.result.confidence;
+    // Find the best result
+    let bestResult = 'plaintext';
+    let bestConfidence = 0;
+
+    for (const { detector, result } of detectionResults) {
+      if (result.confidence > bestConfidence) {
+        bestConfidence = result.confidence;
+        bestResult = detector.id;
       }
-      return b.detector.priority - a.detector.priority; // Higher priority wins in a confidence tie
-    });
+    }
 
-    // Optional: Add a check for ambiguity if top scores are too close
-    // if (detectionResults.length > 1 &&
-    //     (detectionResults[0].result.confidence - detectionResults[1].result.confidence < 0.1) && // Example threshold
-    //     detectionResults[0].detector.priority === detectionResults[1].detector.priority) {
-    //    console.warn("Ambiguous detection, top two are very close:", detectionResults[0], detectionResults[1]);
-    //    // Could return plaintext, or the highest priority one even if confidence is close.
-    //    // For now, we'll just return the top one from the sort.
-    // }
-
-    const finalResult = detectionResults[0]?.detector.id ?? 'plaintext';
-    console.timeEnd('LanguageDetection: Total Time'); // <<< ADD THIS
-    console.log(`LanguageDetection: Final result is "${finalResult}"`); // <<< ADD THIS
+    const finalResult = bestConfidence > 0.5 ? bestResult : 'plaintext';
+    console.log(`[LanguageRegistry] Final result is "${finalResult}" with confidence ${bestConfidence}`);
+    console.timeEnd('[LanguageRegistry] detectLanguage');
     return finalResult;
   }
   

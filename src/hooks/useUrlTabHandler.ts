@@ -313,6 +313,12 @@ const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): 
 let handleInitialUrlExecuted = false;
 
 export const handleInitialUrl = async () => {
+    console.time('[UrlTabHandler] handleInitialUrl');
+    console.log('[UrlTabHandler] Starting initial URL processing');
+    const { tabs, setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
+    console.log(`[UrlTabHandler] Processing with ${tabs.length} existing tabs`);
+    console.timeEnd('[UrlTabHandler] handleInitialUrl');
+
     // Prevent multiple executions
     if (handleInitialUrlExecuted) {
         return;
@@ -323,7 +329,6 @@ export const handleInitialUrl = async () => {
     if (pathSegments.length > 0) {
         const urlIdentifier = pathSegments[0];
 
-        const { tabs, setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
         const { activeWorkspaceId } = useWorkspaceStore.getState();
 
         const existingTab = tabs.find(tab => generateUrlIdentifier(tab) === urlIdentifier);

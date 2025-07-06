@@ -70,7 +70,10 @@ class BroadcastManager {
         case 'WORKSPACE_STATE_UPDATED':
           // Apply update only if it's for the workspace currently active in THIS tab
           if (payload.workspaceId === currentActiveWorkspaceId) {
+            console.time('[Broadcast] Applying workspace state update');
+            console.log('[Broadcast] Applying workspace state update for workspace:', payload.workspaceId);
             if (payload.tabs) {
+              console.log(`[Broadcast] Updating ${payload.tabs.length} tabs`);
               useTabsStore.setState({ tabs: payload.tabs });
             }
             if (payload.splitView) {
@@ -81,6 +84,7 @@ class BroadcastManager {
               };
               useSplitViewStore.setState({ splitView: svWithHistory });
             }
+            console.timeEnd('[Broadcast] Applying workspace state update');
           }
           break;
 
@@ -195,13 +199,23 @@ class BroadcastManager {
     tabs?: Tab[];
     splitView?: SplitViewState;
   }) {
+    console.time('[Broadcast] broadcastWorkspaceState');
+    console.log(`[Broadcast] Broadcasting workspace state for workspace ${workspaceId}`);
+    if (state.tabs) {
+      console.log(`[Broadcast] Broadcasting ${state.tabs.length} tabs`);
+      const totalContentSize = state.tabs.reduce((sum, tab) => sum + (tab.content?.length || 0), 0);
+      console.log(`[Broadcast] Total content size being broadcast: ${totalContentSize} bytes`);
+    }
+    
     this.channel.postMessage({
       type: 'WORKSPACE_STATE_UPDATED',
       payload: {
         workspaceId,
-        ...state,
+        tabs: state.tabs,
+        splitView: state.splitView,
       },
     });
+    console.timeEnd('[Broadcast] broadcastWorkspaceState');
   }
 
   // Broadcasts changes to the overall list of workspaces

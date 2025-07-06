@@ -87,9 +87,17 @@ export const useRootStore = create<RootStore>((set, get) => {
   const storage = StorageProviderFactory.getProvider();
 
   useTabsStore.subscribe((state) => {
-    console.time('[Subscription] rootStore reacting to tabsStore'); // <<< ADD THIS
+    console.time('[Subscription] rootStore reacting to tabsStore');
+    console.log('[Subscription] rootStore: tabs state changed, updating root store');
+    console.log(`[Subscription] rootStore: Processing ${state.tabs.length} tabs`);
+    
+    console.time('[Subscription] rootStore set() call');
+    console.log('[Subscription] rootStore: About to call set()');
+    
     set({ tabs: state.tabs });
-    console.timeEnd('[Subscription] rootStore reacting to tabsStore'); // <<< ADD THIS
+    
+    console.timeEnd('[Subscription] rootStore set() call');
+    console.timeEnd('[Subscription] rootStore reacting to tabsStore');
   });
 
   useSplitViewStore.subscribe((state) => {

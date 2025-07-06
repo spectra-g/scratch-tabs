@@ -16,7 +16,13 @@ export const useEditorScrollManager = (
   const previousActiveTabIdRef = useRef<string | null>(activeTabId);
 
   // Get the current list of tabs from the store for cleanup purposes
-  const currentTabIds = useRootStore(state => new Set(state.tabs.map(tab => tab.id)));
+  const currentTabIds = useRootStore(state => {
+    console.time('[ScrollManager] Computing currentTabIds');
+    const tabIds = new Set(state.tabs.map(tab => tab.id));
+    console.log(`[ScrollManager] Computed ${tabIds.size} tab IDs for cleanup`);
+    console.timeEnd('[ScrollManager] Computing currentTabIds');
+    return tabIds;
+  });
 
   // Effect to SAVE scroll position when the active tab changes or component unmounts
   useEffect(() => {

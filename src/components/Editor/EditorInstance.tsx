@@ -11,7 +11,6 @@ import { Tablet } from '../../tablets';
 import { useAIStore } from '../../stores/aiStore';
 import { useBatchToolsStore } from '../../stores/batchToolsStore';
 import { BatchToolsModal } from '../BatchTools/BatchToolsModal';
-import { modelManager } from '../../services/modelManager';
 
 interface EditorInstanceProps {
   side: 'left' | 'right';
@@ -22,7 +21,10 @@ interface EditorInstanceProps {
 // Threshold for considering content "large" (100KB)
 const LARGE_CONTENT_THRESHOLD = 100000;
 
-export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, onEditorReady}) => {
+export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTab, onEditorReady }) => {
+  console.time(`[EditorInstance] Render for side ${side}`);
+  console.log(`[EditorInstance] Rendering for side ${side}, tab: ${activeTab.id}`);
+  
   const {
     updateTabContent,
     setCursorPosition,
@@ -41,12 +43,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     activeEditorSide: state.splitView.activeSide,
   }));
 
-  const { 
-    isCodegenReady, 
-    runCodegen, 
-    codegenResult, 
+  const {
+    isCodegenReady,
+    runCodegen,
+    codegenResult,
     activeCodegenTabId,
-    isCodegenGenerating 
+    isCodegenGenerating
   } = useAIStore(state => ({
     isCodegenReady: state.ai.isCodegenReady,
     runCodegen: state.runCodegen,
@@ -55,10 +57,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     isCodegenGenerating: state.ai.isCodegenGenerating,
   }));
 
-  const { 
-    isReady: isAiReady, 
+  const {
+    isReady: isAiReady,
     isLoading: isAiLoading,
-    summarizeTextWithModal 
+    summarizeTextWithModal
   } = useAIStore(state => ({
     isReady: state.ai.isReady,
     isLoading: state.ai.isLoading,
@@ -92,7 +94,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     // Prevent duplicate format operations
     const formatKey = `${tabId}-${language}`;
     if (pendingFormatRef.current.has(formatKey)) return;
-    
+
     pendingFormatRef.current.add(formatKey);
 
     // Auto-format the document
@@ -109,8 +111,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
   }, [activeTab.id]);
 
   // --- Custom Hooks ---
-  const {restoreScrollPosition} = useEditorScrollManager(editorRef, activeTab.id);
-  const {detectAndSetLanguage} = useLanguageDetection(updateTabLanguage, handleLanguageDetectedOnSignificantChange);
+  const { restoreScrollPosition } = useEditorScrollManager(editorRef, activeTab.id);
+  const { detectAndSetLanguage } = useLanguageDetection(updateTabLanguage, handleLanguageDetectedOnSignificantChange);
   const {
     showTabletSelector,
     tabletQuery,
@@ -131,7 +133,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     const shouldFocus =
       activeEditorSide === side &&
       ((side === 'left' && activeTab.id === useRootStore.getState().splitView.activeLeftTabId) ||
-       (side === 'right' && activeTab.id === useRootStore.getState().splitView.activeRightTabId));
+        (side === 'right' && activeTab.id === useRootStore.getState().splitView.activeRightTabId));
 
     if (shouldFocus) {
       const timer = setTimeout(() => {
@@ -149,15 +151,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     const isStreamingForThisTab = isCodegenGenerating && activeCodegenTabId === activeTab.id;
 
     if (editor && isStreamingForThisTab && codegenResult !== null) {
-        const model = editor.getModel();
-        if (model && editor.getValue() !== codegenResult) {
-            // Using executeEdits is better than setValue as it can be part of the undo stack
-            // and preserves cursor position better if the changes are not full-document.
-            editor.executeEdits('ai-stream', [{
-                range: model.getFullModelRange(),
-                text: codegenResult
-            }]);
-        }
+      const model = editor.getModel();
+      if (model && editor.getValue() !== codegenResult) {
+        // Using executeEdits is better than setValue as it can be part of the undo stack
+        // and preserves cursor position better if the changes are not full-document.
+        editor.executeEdits('ai-stream', [{
+          range: model.getFullModelRange(),
+          text: codegenResult
+        }]);
+      }
     }
   }, [isCodegenGenerating, activeCodegenTabId, codegenResult, activeTab.id]);
 
@@ -165,15 +167,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-    
+
     // Notify parent component that editor is ready
     onEditorReady?.(editor);
-    
+
     currentTabIdRef.current = activeTab.id;
     previousContentRef.current = activeTab.content;
 
     restoreScrollPosition(activeTab.id);
-    
+
     // Auto-format tabs that were likely created from paste or file import
     // First check if tab was created recently to avoid unnecessary work
     const now = Date.now();
@@ -183,7 +185,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       const isFormattableLanguage = activeTab.language !== 'plaintext';
       const isNotTablet = !activeTab.isTablet;
       const isNotLikelyDuplicate = !activeTab.title.includes('(copy)') && !activeTab.title.includes('Copy of');
-      
+
       if (hasSubstantialContent && isFormattableLanguage && isNotTablet && isNotLikelyDuplicate) {
         // Use setTimeout to ensure the model and language are fully set before formatting
         setTimeout(() => {
@@ -194,15 +196,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
         }, 100); // Small delay to ensure everything is ready
       }
     }
-    
+
     // Ctrl+K (Format)
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
-       if (!editor.hasTextFocus()) {
-           return;
-       }
-       editor.getAction('editor.action.formatDocument')?.run();
+      if (!editor.hasTextFocus()) {
+        return;
+      }
+      editor.getAction('editor.action.formatDocument')?.run();
     });
-    
+
     // Cursor Position Listener
     editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
       const currentTabIdForCursor = latestActiveTabRef.current.id;
@@ -233,11 +235,11 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     // Create context keys for AI actions (only once per editor instance)
     aiReadyContextKeyRef.current = editor.createContextKey('aiReady', isAiReady && !isAiLoading);
     codegenReadyContextKeyRef.current = editor.createContextKey('codegenReady', isCodegenReady && !isCodegenGenerating);
-    
+
     // Add AI actions
     const summarizeActionId = 'ai-summarize';
     const codegenActionId = 'ai-generate-code';
-    
+
     // Add the summarize action
     editor.addAction({
       id: summarizeActionId,
@@ -248,28 +250,28 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
       run: (ed) => {
         // Get fresh state directly from store to avoid stale state issues
         const freshAIState = useAIStore.getState().ai;
-        
+
         // Update context keys with fresh state
         if (aiReadyContextKeyRef.current) {
           const freshAiReady = freshAIState.isReady && !freshAIState.isLoading;
           aiReadyContextKeyRef.current.set(freshAiReady);
         }
-        
+
         const content = ed.getValue();
-        
+
         // Use fresh state for condition check
-        const shouldProceed = freshAIState.isReady && 
-                             !freshAIState.isLoading && 
-                             !latestActiveTabRef.current.isTablet && 
-                             content.trim().length > 0;
-                             
+        const shouldProceed = freshAIState.isReady &&
+          !freshAIState.isLoading &&
+          !latestActiveTabRef.current.isTablet &&
+          content.trim().length > 0;
+
         if (!shouldProceed) {
           return;
         }
         summarizeTextWithModal(content, latestActiveTabRef.current.id);
       },
     });
-    
+
     // Add the code generation action
     editor.addAction({
       id: codegenActionId,
@@ -294,7 +296,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
 
   const handleEditorChange = (value: string | undefined) => {
     if (value === undefined) return;
-    
+
     const newContent = value;
     const prevContent = previousContentRef.current;
     const currentTabId = activeTab.id;
@@ -314,7 +316,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     if (!activeTab.isTablet && !isCodegenGenerating) {
       detectAndSetLanguage(currentTabId, newContent, prevContent, activeTab.language, activeTab.languageLocked);
     }
-    
+
     previousContentRef.current = newContent;
   };
 
@@ -350,7 +352,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
     if (!editor) return;
 
     const selection = editor.getSelection();
-    const selectedText = selection && !selection.isEmpty() 
+    const selectedText = selection && !selection.isEmpty()
       ? editor.getModel()?.getValueInRange(selection) || ''
       : '';
 
@@ -373,8 +375,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
   }, []);
 
   // Generate a key that forces remount for large content to prevent performance issues
-  const editorKey = activeTab.content.length > LARGE_CONTENT_THRESHOLD 
-    ? `${activeTab.id}-large-${Date.now()}` 
+  const editorKey = activeTab.content.length > LARGE_CONTENT_THRESHOLD
+    ? `${activeTab.id}-large-${Date.now()}`
     : activeTab.id;
 
   return (
@@ -385,13 +387,13 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
             height="100%"
             width="100%"
             theme="vs-dark"
-           language={activeTab.language}
+            language={activeTab.language}
             value={activeTab.content}
-           onChange={handleEditorChange}
+            onChange={handleEditorChange}
             onMount={handleEditorDidMount}
             key={activeTab.id} // Key forces remount for large content
             options={{
-              minimap: {enabled: false},
+              minimap: { enabled: false },
               fontSize: 14,
               wordWrap: 'on',
               automaticLayout: true,
@@ -424,6 +426,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({side, activeTab, 
         </div>
       </div>
       <BatchToolsModal onApply={handleBatchToolsApply} />
+      {(() => {
+        console.timeEnd(`[EditorInstance] Render for side ${side}`);
+        return null;
+      })()}
     </div>
   );
 };

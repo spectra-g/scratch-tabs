@@ -29,11 +29,13 @@ export const useLanguageDetection = (
     currentLanguage: string,
     languageLocked: boolean // Whether the language is locked by the user
   ) => {
-    console.time(`LanguageDetection Logic for tab ${tabId}`); // <<< ADD THIS
+    console.time(`[LanguageDetection] performDetectionAndUpdate for tab ${tabId}`);
+    console.log(`[LanguageDetection] Starting detection for tab ${tabId}, content size: ${newContent.length}`);
     
     // --- 1. Respect Manual Lock ---
     if (languageLocked) {
-      console.timeEnd(`LanguageDetection Logic for tab ${tabId}`); // <<< ADD THIS
+      console.log(`[LanguageDetection] Language locked for tab ${tabId}, skipping detection`);
+      console.timeEnd(`[LanguageDetection] performDetectionAndUpdate for tab ${tabId}`);
       return; // User has explicitly set the language, do nothing.
     }
 
@@ -46,6 +48,8 @@ export const useLanguageDetection = (
         // Reset to plaintext and explicitly signal to remove any auto-lock
         updateTabLanguage(tabId, 'plaintext', false);
       }
+      console.log(`[LanguageDetection] Empty content for tab ${tabId}, resetting to plaintext`);
+      console.timeEnd(`[LanguageDetection] performDetectionAndUpdate for tab ${tabId}`);
       return;
     }
 
@@ -65,10 +69,14 @@ export const useLanguageDetection = (
        !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) && // Old doesn't start like the new
        lengthDifference > 5); // Add a small length diff requirement for the prefix check
 
+    console.log(`[LanguageDetection] Change analysis for tab ${tabId}: lengthDiff=${lengthDifference}, lineDiff=${lineDifference}, isSignificant=${isSignificantChange}`);
+
     // --- 4. Perform Language Detection ---
     // Always detect unless manually locked or empty
+    console.time(`[LanguageDetection] detectLanguage call for tab ${tabId}`);
     const newDetectedLanguage = detectLanguage(trimmedNewContent);
     const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent); // Use the ambiguity result from detection
+    console.timeEnd(`[LanguageDetection] detectLanguage call for tab ${tabId}`);
 
     // --- 5. Decide Whether to Update the Tab's Language ---
     let shouldUpdate = false;
@@ -96,7 +104,7 @@ export const useLanguageDetection = (
 
     // --- 6. Perform Update ---
     if (shouldUpdate) {
-      console.log(`LanguageDetection: Updating language for tab ${tabId} from "${currentLanguage}" to "${newDetectedLanguage}". Auto-lock: ${false}`); // <<< ADD THIS
+      console.log(`[LanguageDetection] Updating language for tab ${tabId} from "${currentLanguage}" to "${newDetectedLanguage}". Auto-lock: ${false}`);
       // Update the language with the lock parameter set to false to ensure user can override
       updateTabLanguage(tabId, newDetectedLanguage, false);
       
@@ -108,9 +116,9 @@ export const useLanguageDetection = (
         }, 50); // Small delay to ensure language is set before formatting
       }
     } else {
-      console.log(`LanguageDetection: No language update needed for tab ${tabId}. Current: "${currentLanguage}", Detected: "${newDetectedLanguage}".`); // <<< ADD THIS
+      console.log(`[LanguageDetection] No language update needed for tab ${tabId}. Current: "${currentLanguage}", Detected: "${newDetectedLanguage}".`);
     }
-    console.timeEnd(`LanguageDetection Logic for tab ${tabId}`); // <<< ADD THIS
+    console.timeEnd(`[LanguageDetection] performDetectionAndUpdate for tab ${tabId}`);
 
   }, [updateTabLanguage, onLanguageDetectedOnSignificantChange]); // Add callback to dependencies
 
@@ -133,7 +141,7 @@ export const useLanguageDetection = (
     currentLanguage: string,
     languageLocked: boolean
   ) => {
-    console.log(`[LanguageDetection] Queuing detection for tab ${tabId}. Content size: ${newContent.length}`); // <<< ADD THIS
+    console.log(`[LanguageDetection] Queuing detection for tab ${tabId}. Content size: ${newContent.length}`);
     // Directly invoke the latest debounced function stored in the ref
     debouncedUpdateRef.current?.(tabId, newContent, prevContent, currentLanguage, languageLocked);
   }, []); // No dependencies - will remain stable across renders

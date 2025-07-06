@@ -7,10 +7,14 @@ interface DiffModalProps {
   leftTabId: string;
   rightTabId: string;
   onClose: () => void; // The function passed from parent to close the modal
+  fromHistory?: boolean;
 }
 
-export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onClose }) => {
+export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onClose, fromHistory = false }) => {
+  console.time('[DiffModal] Component render');
+  console.log('[DiffModal] Rendering with leftTabId:', leftTabId, 'rightTabId:', rightTabId);
   const { tabs, updateTabContent } = useRootStore();
+  console.timeEnd('[DiffModal] Component render');
 
   const leftTab = tabs.find(tab => tab.id === leftTabId);
   const rightTab = tabs.find(tab => tab.id === rightTabId);

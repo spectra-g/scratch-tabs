@@ -34,7 +34,10 @@ function sanitizeFilename(name: string): string {
 // --- End Helper Function ---
 
 export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
+  console.time('[DownloadModal] Component render');
+  console.log('[DownloadModal] Rendering download modal');
   const { tabs, splitView } = useRootStore();
+  console.timeEnd('[DownloadModal] Component render');
   const [selectedTabs, setSelectedTabs] = useState<Set<string>>(new Set());
   const [isDownloading, setIsDownloading] = useState(false);
 
