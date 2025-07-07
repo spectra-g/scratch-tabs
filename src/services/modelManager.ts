@@ -271,6 +271,20 @@ class ModelManager {
       console.log(`[ModelManager] No active model for tab ${tabId}, content will be updated when model is created`);
     }
   }
+
+  public updateModelLanguage(tabId: string, language: string): void {
+    const model = this.models.get(tabId);
+    if (model && !model.isDisposed() && this.monaco) {
+      try {
+        console.log(`[ModelManager] Updating model language for tab ${tabId} to ${language}`);
+        this.monaco.editor.setModelLanguage(model, language);
+      } catch (error) {
+        console.warn(`[ModelManager] Failed to update model language for tab ${tabId}:`, error);
+      }
+    } else {
+      console.log(`[ModelManager] No active model for tab ${tabId}, language will be set when model is created`);
+    }
+  }
 }
 
 export const modelManager = new ModelManager(); 
