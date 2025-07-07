@@ -13,6 +13,7 @@ class ModelManager {
   private listeners = new Map<string, Monaco.IDisposable>();
   private storage = StorageProviderFactory.getProvider();
   private contentFetchPromises = new Map<string, Promise<string>>(); // Prevent duplicate fetches
+  private contentChangeCallbacks = new Map<string, (content: string) => void>(); // Content change callbacks
 
   public initialize(monacoInstance: typeof Monaco) {
     if (this.monaco) return;
@@ -131,7 +132,22 @@ class ModelManager {
     const listener = model.onDidChangeContent(() => {
       try {
         const newContent = model.getValue();
+        console.log(`[ModelManager] Content changed for tab ${tab.id}, new length: ${newContent.length}`);
+        
+        // Update tab content in store
         useTabsStore.getState().updateTabContent(tab.id, newContent);
+        
+        // Call registered content change callbacks
+        const callback = this.contentChangeCallbacks.get(tab.id);
+        if (callback) {
+          console.log(`[ModelManager] Calling content change callback for tab ${tab.id}`);
+          callback(newContent);
+        }
+        
+        // Note: Language detection should be handled by the EditorInstance component
+        // which uses the useLanguageDetection hook. The ModelManager should only
+        // handle model lifecycle and content synchronization.
+        
       } catch (error) {
         console.warn(`[ModelManager] Failed to update content for tab ${tab.id}:`, error);
       }
@@ -158,6 +174,7 @@ class ModelManager {
       }
       this.listeners.get(tabId)?.dispose();
       this.listeners.delete(tabId);
+      this.contentChangeCallbacks.delete(tabId); // Clean up callback
       try {
         model.dispose();
       } catch (error) {
@@ -210,14 +227,32 @@ class ModelManager {
   }
 
   public updateModelLanguage(tabId: string, language: string): void {
+    console.log(`[ModelManager] updateModelLanguage called for tab ${tabId}, language: ${language}`);
     const model = this.models.get(tabId);
     if (model && !model.isDisposed() && this.monaco) {
       try {
+        const currentLanguage = model.getLanguageId();
+        console.log(`[ModelManager] Updating model language from "${currentLanguage}" to "${language}" for tab ${tabId}`);
         this.monaco.editor.setModelLanguage(model, language);
+        console.log(`[ModelManager] ✅ Successfully updated model language to "${language}" for tab ${tabId}`);
       } catch (error) {
-        console.warn(`[ModelManager] Failed to update model language for tab ${tabId}:`, error);
+        console.warn(`[ModelManager] ❌ Failed to update model language for tab ${tabId}:`, error);
       }
+    } else {
+      console.warn(`[ModelManager] ⚠️ Cannot update model language for tab ${tabId}:`, {
+        modelExists: !!model,
+        modelDisposed: model?.isDisposed(),
+        monacoInitialized: !!this.monaco
+      });
     }
+  }
+
+  public registerContentChangeCallback(tabId: string, callback: (content: string) => void): void {
+    this.contentChangeCallbacks.set(tabId, callback);
+  }
+
+  public unregisterContentChangeCallback(tabId: string): void {
+    this.contentChangeCallbacks.delete(tabId);
   }
 
 }

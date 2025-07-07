@@ -234,6 +234,36 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     }
   }, [isCodegenGenerating, activeCodegenTabId, codegenResult, activeTabId]);
 
+  // Effect to handle tab changes and set up content change callback
+  useEffect(() => {
+    if (activeTab && !activeTab.isTablet) {
+      console.log(`[EditorInstance] Registering content change callback for tab ${activeTab.id}`);
+      
+      const contentChangeCallback = (newContent: string) => {
+        console.log(`[EditorInstance] Content change callback triggered for tab ${activeTab.id}, length: ${newContent.length}`);
+        
+        if (!useAIStore.getState().ai.isCodegenGenerating) {
+          console.log(`[EditorInstance] Triggering language detection for tab ${activeTab.id}`);
+          detectAndSetLanguage(
+            activeTab.id, 
+            newContent, 
+            activeTab.content || '', 
+            activeTab.language, 
+            activeTab.languageLocked
+          );
+        }
+      };
+      
+      modelManager.registerContentChangeCallback(activeTab.id, contentChangeCallback);
+      
+      // Cleanup function
+      return () => {
+        console.log(`[EditorInstance] Unregistering content change callback for tab ${activeTab.id}`);
+        modelManager.unregisterContentChangeCallback(activeTab.id);
+      };
+    }
+  }, [activeTab?.id, detectAndSetLanguage]);
+
   // --- SIMPLIFIED: Editor Event Handlers ---
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
     try {

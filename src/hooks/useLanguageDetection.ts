@@ -77,6 +77,13 @@ export const useLanguageDetection = (
     const newDetectedLanguage = detectLanguage(trimmedNewContent);
     const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent); // Use the ambiguity result from detection
     console.timeEnd(`[LanguageDetection] detectLanguage call for tab ${tabId}`);
+    
+    console.log(`[LanguageDetection] Detection results for tab ${tabId}:`, {
+      detectedLanguage: newDetectedLanguage,
+      isAmbiguous: newDetectionIsAmbiguous,
+      currentLanguage,
+      willUpdate: newDetectedLanguage !== currentLanguage
+    });
 
     // --- 5. Decide Whether to Update the Tab's Language ---
     let shouldUpdate = false;
@@ -101,6 +108,12 @@ export const useLanguageDetection = (
         }
       }
     }
+    
+    console.log(`[LanguageDetection] Update decision for tab ${tabId}:`, {
+      shouldUpdate,
+      shouldTriggerAutoFormat,
+      reason: isSignificantChange ? 'significant_change' : 'normal_typing'
+    });
 
     // --- 6. Perform Update ---
     if (shouldUpdate) {
@@ -125,7 +138,10 @@ export const useLanguageDetection = (
   // Effect to setup/update the debounced function when the callback changes
   useEffect(() => {
     // Create a new debounced function whenever performDetectionAndUpdate changes
-    debouncedUpdateRef.current = debounce(performDetectionAndUpdate, LANGUAGE_DETECTION_DEBOUNCE_MS);
+    debouncedUpdateRef.current = debounce((tabId: string, newContent: string, prevContent: string, currentLanguage: string, languageLocked: boolean) => {
+      console.log(`[LanguageDetection] Debounced function executed for tab ${tabId}`);
+      performDetectionAndUpdate(tabId, newContent, prevContent, currentLanguage, languageLocked);
+    }, LANGUAGE_DETECTION_DEBOUNCE_MS);
     
     return () => {
       // Cleanup: cancel any pending debounced calls
@@ -141,7 +157,13 @@ export const useLanguageDetection = (
     currentLanguage: string,
     languageLocked: boolean
   ) => {
-    console.log(`[LanguageDetection] Queuing detection for tab ${tabId}. Content size: ${newContent.length}`);
+    console.log(`[LanguageDetection] detectAndSetLanguage called for tab ${tabId}:`, {
+      newContentLength: newContent.length,
+      prevContentLength: prevContent.length,
+      currentLanguage,
+      languageLocked
+    });
+    
     // Directly invoke the latest debounced function stored in the ref
     debouncedUpdateRef.current?.(tabId, newContent, prevContent, currentLanguage, languageLocked);
   }, []); // No dependencies - will remain stable across renders
