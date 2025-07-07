@@ -1,7 +1,7 @@
 import { modelManager } from '../modelManager';
 
 // Mock the dependencies
-jest.mock('../db', () => ({
+jest.mock('../../db', () => ({
   StorageProviderFactory: {
     getProvider: jest.fn(() => ({
       getTabContent: jest.fn(() => Promise.resolve('test content')),
@@ -9,7 +9,7 @@ jest.mock('../db', () => ({
   },
 }));
 
-jest.mock('../stores/tabsStore', () => ({
+jest.mock('../../stores/tabsStore', () => ({
   useTabsStore: {
     getState: jest.fn(() => ({
       updateTabContent: jest.fn(),
@@ -29,7 +29,7 @@ describe('ModelManager', () => {
       modelManager.updateModelLanguage('non-existent-tab', 'json');
       
       expect(consoleSpy).toHaveBeenCalledWith(
-        '[ModelManager] No active model for tab non-existent-tab, language will be set when model is created'
+        '[ModelManager] No active model for tab non-existent-tab, language will be updated when model is created'
       );
       
       consoleSpy.mockRestore();
@@ -46,7 +46,7 @@ describe('ModelManager', () => {
       modelManager.updateModelLanguage('test-tab', 'json');
       
       expect(consoleSpy).toHaveBeenCalledWith(
-        '[ModelManager] No active model for tab test-tab, language will be set when model is created'
+        '[ModelManager] No active model for tab test-tab, language will be updated when model is created'
       );
       
       // Restore the original state

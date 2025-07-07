@@ -27,7 +27,6 @@ interface EditorInstanceProps {
 const tabViewStates = new Map<string, Monaco.editor.ICodeEditorViewState>();
 
 export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabId, onEditorReady }) => {
-  console.log(`[EditorInstance] Rendering for side ${side}, tab: ${activeTabId}`);
   
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
@@ -153,12 +152,14 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
           }
         }
 
-        // Get the new model from the ModelManager (with database fallback)
+        // Get the model from ModelManager (this ensures it exists and is loaded)
         const newModel = await modelManager.get(activeTab);
+        console.log(`[EditorInstance] Loaded model for tab ${activeTab.id}`);
 
-        // If the editor is not already showing this model, set it
+        // Set the model on the editor directly (following architecture)
         if (editor.getModel() !== newModel) {
           editor.setModel(newModel);
+          console.log(`[EditorInstance] Set model for tab ${activeTab.id} on editor`);
         }
 
         // Restore view state for the new tab
@@ -176,6 +177,20 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
       }
     })();
   }, [activeTabId, activeTab]);
+
+  // Cleanup effect: detach model from editor before component unmounts
+  useEffect(() => {
+    return () => {
+      const editor = editorRef.current;
+      if (editor) {
+        const currentModel = editor.getModel();
+        if (currentModel && !currentModel.isDisposed()) {
+          console.log(`[EditorInstance] Detaching model from editor before unmount, URI: ${currentModel.uri.toString()}`);
+          editor.setModel(null);
+        }
+      }
+    };
+  }, []);
 
   // Focus effect - only focus if this editor instance's side matches the globally active editor side
   useEffect(() => {
@@ -237,9 +252,14 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
       const setupInitialModel = async () => {
         if (activeTab) {
           try {
+            // Get the model from ModelManager (this ensures it exists and is loaded)
             const initialModel = await modelManager.get(activeTab);
+            console.log(`[EditorInstance] Loaded initial model for tab ${activeTab.id}`);
+            
+            // Set the model on the editor directly
             if (editor.getModel() !== initialModel) {
               editor.setModel(initialModel);
+              console.log(`[EditorInstance] Set initial model for tab ${activeTab.id} on editor`);
             }
             
             // Restore view state if it exists

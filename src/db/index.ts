@@ -224,12 +224,7 @@ export class IndexedDBStorage implements StorageProvider {
     this.lastSaveTabsTime = now;
     await this.withRetry(async () => {
       const records = tabs.map(toTabRecord);
-      console.log(`[DB] saveTabsInterval: Saving ${records.length} tabs`);
-      records.forEach(record => {
-        console.log(`[DB] saveTabsInterval: Tab ${record.id} (workspace: ${record.workspaceId}): content length=${record.content?.length || 0}`);
-      });
       await db.tabs.bulkPut(records);
-      console.log(`[DB] saveTabsInterval: Successfully saved ${records.length} tabs`);
     });
   }
 
@@ -237,9 +232,7 @@ export class IndexedDBStorage implements StorageProvider {
     this.lastSaveTabsTime = Date.now();
     await this.withRetry(async () => {
       const record = toTabRecord(tab);
-      console.log(`[DB] saveTabNow: Saving tab ${record.id} (workspace: ${record.workspaceId}): content length=${record.content?.length || 0}`);
       await db.tabs.put(record);
-      console.log(`[DB] saveTabNow: Successfully saved tab ${record.id}`);
     });
   }
 
@@ -366,9 +359,7 @@ export class IndexedDBStorage implements StorageProvider {
 
   async getTabContent(tabId: string): Promise<string | undefined> {
     return this.withRetry(async () => {
-      console.log(`[DB] Getting content for tab ${tabId}...`);
       const record = await db.tabs.get(tabId);
-      console.log(`[DB] Retrieved record for tab ${tabId}:`, record ? `content length=${record.content?.length || 0}, workspace=${record.workspaceId}` : 'null');
       return record?.content;
     });
   }

@@ -17,10 +17,7 @@ export const useEditorScrollManager = (
 
   // Get the current list of tabs from the store for cleanup purposes
   const currentTabIds = useTabsStore(state => {
-    console.time('[ScrollManager] Computing currentTabIds');
     const tabIds = new Set(state.tabs.map(tab => tab.id));
-    console.log(`[ScrollManager] Computed ${tabIds.size} tab IDs for cleanup`);
-    console.timeEnd('[ScrollManager] Computing currentTabIds');
     return tabIds;
   });
 
