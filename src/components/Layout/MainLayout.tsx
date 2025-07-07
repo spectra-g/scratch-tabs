@@ -16,7 +16,6 @@ import { SummarizeModal } from '../AI/SummarizeModal';
 import { SearchModal } from '../Search/SearchModal';
 import { AIModelManagementModal } from '../AI/AIModelManagementModal';
 import { useAIStore } from '../../stores/aiStore';
-import { shallow } from 'zustand/shallow';
 
 const MainLayout: React.FC = () => {
   // *** CRITICAL FIX: Select state from the source stores ***

@@ -3,7 +3,6 @@ import { StorageProviderFactory } from '../db';
 import { useWorkspaceStore } from './workspaceStore';
 import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
-import { Tab } from '../types';
 import { modelManager } from '../services/modelManager';
 
 interface PersistenceStore {

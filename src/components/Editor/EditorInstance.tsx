@@ -4,7 +4,6 @@ import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { useRootStore } from '../../stores';
 import { useTabsStore } from '../../stores/tabsStore';
 import { useSplitViewStore } from '../../stores/splitViewStore';
-import { Tab } from '../../types';
 import { useEditorScrollManager } from '../../hooks/useEditorScrollManager';
 import { useLanguageDetection } from '../../hooks/useLanguageDetection';
 import { useTabletSelector } from '../../hooks/useTabletSelector';

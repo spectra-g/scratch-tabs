@@ -14,7 +14,6 @@ import { getPotentialLanguageMatches } from '../../languages';
 import { LanguageSelectionPopup } from './LanguageSelectionPopup';
 import { ExtendedViewButtons } from './ExtendedViewButtons';
 import type { PopupMenuItem } from './types';
-import { modelManager } from '../../services/modelManager';
 
 interface StatusBarProps {
   editor: monaco.editor.IStandaloneCodeEditor | null,

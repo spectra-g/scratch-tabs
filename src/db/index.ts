@@ -18,23 +18,6 @@ interface TabRecord {
   previewMode?: boolean;
 }
 
-// NEW: Interface for tab metadata without content
-interface TabMetadataRecord {
-  id: string;
-  title: string;
-  language: string;
-  languageLocked: boolean;
-  isTablet?: boolean;
-  tabletState?: string;
-  lastModified: number;
-  dateCreated: number;
-  workspaceId: string;
-  cursorPosition?: { lineNumber: number; column: number };
-  isPinned?: boolean;
-  activeViewId?: string | null;
-  previewMode?: boolean;
-}
-
 interface WorkspaceRecord {
   id: string;
   name: string;

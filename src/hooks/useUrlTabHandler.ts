@@ -84,13 +84,28 @@ export const useUrlTabHandler = () => {
     function findTabByUrlIdentifier(urlIdentifier: string | undefined): { tab: Tab | undefined, side: 'left' | 'right' | null } {
         if (!urlIdentifier) return { tab: undefined, side: null };
         const normalizedParam = urlIdentifier.toLowerCase();
+        console.log('[findTabByUrlIdentifier] Searching for:', normalizedParam);
+        console.log('[findTabByUrlIdentifier] Current state:', {
+            isSplit,
+            leftTabs,
+            rightTabs,
+            totalTabs: tabs.length
+        });
+        
         // Check left tabs first
         const leftTab = tabs.find(tab => leftTabs.includes(tab.id) && (
             tab.title.toLowerCase() === normalizedParam ||
             generateUrlIdentifier(tab) === urlIdentifier ||
             tab.id === urlIdentifier
         ));
-        if (leftTab) return { tab: leftTab, side: 'left' };
+        if (leftTab) {
+            console.log('[findTabByUrlIdentifier] Found tab on LEFT side:', {
+                id: leftTab.id,
+                title: leftTab.title
+            });
+            return { tab: leftTab, side: 'left' };
+        }
+        
         // If split, check right tabs
         if (isSplit) {
             const rightTab = tabs.find(tab => rightTabs.includes(tab.id) && (
@@ -98,9 +113,17 @@ export const useUrlTabHandler = () => {
                 generateUrlIdentifier(tab) === urlIdentifier ||
                 tab.id === urlIdentifier
             ));
-            if (rightTab) return { tab: rightTab, side: 'right' };
+            if (rightTab) {
+                console.log('[findTabByUrlIdentifier] Found tab on RIGHT side:', {
+                    id: rightTab.id,
+                    title: rightTab.title
+                });
+                return { tab: rightTab, side: 'right' };
+            }
         }
+        
         // Not found
+        console.log('[findTabByUrlIdentifier] No tab found');
         return { tab: undefined, side: null };
     }
 
@@ -202,18 +225,42 @@ export const useUrlTabHandler = () => {
 
         // 1. Try to find existing tab matching the new URL
         const { tab, side } = findTabByUrlIdentifier(urlIdentifierParam);
+        console.log('[useUrlTabHandler] URL change - found tab:', tab ? {
+            id: tab.id,
+            title: tab.title,
+            side: side
+        } : null);
 
         if (tab) {
+            console.log('[useUrlTabHandler] Activating existing tab on side:', side);
             activateTab(tab, side);
         } else if (urlIdentifierParam) {
+            console.log('[useUrlTabHandler] No existing tab found, creating new one');
             // No existing tab found, create a new one
             const { activeWorkspaceId } = useWorkspaceStore.getState();
             if (activeWorkspaceId) {
                 createNewTabFromUrl(urlIdentifierParam, activeWorkspaceId).then(newTab => {
-                    const { addTab, setActiveLeftTab, setActiveSide } = useRootStore.getState();
-                    addTab(newTab, false);
-                    setActiveLeftTab(newTab.id);
-                    setActiveSide('left');
+                    console.log('[useUrlTabHandler] Created new tab from URL:', {
+                        id: newTab.id,
+                        title: newTab.title
+                    });
+                    
+                    // Determine which side to add the tab based on current split view state
+                    const currentSplitView = useSplitViewStore.getState().splitView;
+                    const shouldAddToRight = currentSplitView?.isSplit && currentSplitView?.activeSide === 'right';
+                    
+                    console.log('[useUrlTabHandler] Adding tab to side:', shouldAddToRight ? 'RIGHT' : 'LEFT');
+                    const { addTab, setActiveLeftTab, setActiveRightTab, setActiveSide } = useRootStore.getState();
+                    
+                    if (shouldAddToRight) {
+                        addTab(newTab, true); // true = right side
+                        setActiveRightTab(newTab.id);
+                        setActiveSide('right');
+                    } else {
+                        addTab(newTab, false); // false = left side
+                        setActiveLeftTab(newTab.id);
+                        setActiveSide('left');
+                    }
                 }).catch(error => {
                     console.error('[useUrlTabHandler] Failed to create tab:', error);
                 });
@@ -306,7 +353,8 @@ let handleInitialUrlExecuted = false;
 
 export const handleInitialUrl = async () => {
     const { tabs } = useTabsStore.getState();
-    const { setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
+    const { splitView } = useSplitViewStore.getState();
+    const { setActiveLeftTab, setActiveRightTab, setActiveSide, addTab, setInitialUrlProcessed } = useRootStore.getState();
 
     // Prevent multiple executions
     if (handleInitialUrlExecuted) {
@@ -315,6 +363,7 @@ export const handleInitialUrl = async () => {
     handleInitialUrlExecuted = true;
     
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    
     if (pathSegments.length > 0) {
         const urlIdentifier = pathSegments[0];
 
@@ -323,7 +372,17 @@ export const handleInitialUrl = async () => {
         const existingTab = tabs.find(tab => generateUrlIdentifier(tab) === urlIdentifier);
 
         if (existingTab) {
-            setActiveLeftTab(existingTab.id);
+            
+            // Check which side the tab is currently on
+            const isOnRightSide = splitView?.rightTabs.includes(existingTab.id);
+            
+            if (isOnRightSide) {
+                setActiveRightTab(existingTab.id);
+                setActiveSide('right');
+            } else {
+                setActiveLeftTab(existingTab.id);
+                setActiveSide('left');
+            }
         } else if (activeWorkspaceId && urlIdentifier) {
             // If no tab exists for this URL, create a new one.
             // createNewTabFromUrl will correctly handle language, tablet, or plaintext.
