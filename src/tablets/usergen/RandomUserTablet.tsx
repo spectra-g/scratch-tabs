@@ -3,6 +3,7 @@ import { Tablet, TabletState } from '../types';
 import { Editor } from '@monaco-editor/react';
 import { Users, Copy, RotateCw, Check, ExternalLink } from 'lucide-react';
 import { useRootStore } from '../../stores';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 interface GenerationResult {
@@ -86,7 +87,8 @@ export const RandomUserTablet: Tablet = {
     const [isCopied, setIsCopied] = useState(false);
     const [openedResultIndex, setOpenedResultIndex] = useState<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const { addBackgroundTab, splitView } = useRootStore();
+    const { addBackgroundTab } = useRootStore();
+    const { splitView } = useSplitViewStore();
     const { activeWorkspaceId } = useWorkspaceStore();
     const [error, setError] = useState<string | null>(null);
 

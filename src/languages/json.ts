@@ -776,15 +776,10 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
     const shouldTreatAsComplete = isPotentiallyComplete || isSampledContent;
 
     if (isPotentiallyComplete) {
-      console.log(`JSON Detector: Attempting JSON.parse for content length: ${trimmed.length}`); // <<< ADD THIS
       try {
-        console.time(`JSON.parse for ${trimmed.length} bytes`); // <<< ADD THIS
         JSON.parse(trimmed);
-        console.timeEnd(`JSON.parse for ${trimmed.length} bytes`); // <<< ADD THIS
         return { match: true, confidence: 0.98 }; // It's valid JSON.
       } catch (e) {
-        console.timeEnd(`JSON.parse for ${trimmed.length} bytes`); // <<< ADD THIS
-        console.log(`JSON Detector: JSON.parse failed, falling back to pattern matching`); // <<< ADD THIS
         // Fall through to pattern matching for invalid but JSON-like content.
       }
     }
