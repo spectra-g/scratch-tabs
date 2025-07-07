@@ -4,6 +4,8 @@ import { StorageProviderFactory } from '../../db';
 import { useSearchStore, SearchScope, SearchOptions, SearchResult } from '../../stores/searchStore';
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useTabsStore } from '../../stores/tabsStore';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { searchTabs } from '../../services/searchService';
 import { languageRegistry } from '../../languages';
 import { Tab } from '../../types';
@@ -71,7 +73,8 @@ export const useSearchEngine = (): SearchEngine => {
     error, setLoading, setError, setResults, setStatusMessage
   } = useSearchStore();
 
-  const { tabs: allTabsInCurrentWorkspace, setActiveLeftTab, setActiveRightTab, setActiveSide } = useRootStore();
+  const { tabs: allTabsInCurrentWorkspace } = useTabsStore();
+  const { setActiveLeftTab, setActiveRightTab, setActiveSide } = useRootStore();
   const { switchWorkspace, activeWorkspaceId: currentActiveWsId } = useWorkspaceStore();
 
   const storage = StorageProviderFactory.getProvider();
@@ -117,8 +120,6 @@ export const useSearchEngine = (): SearchEngine => {
   }, [titleFilter, setError]);
 
   const runSearch = useCallback(debounce(async () => {
-    console.time('[SearchEngine] runSearch');
-    console.log('[SearchEngine] Starting search operation');
     const currentQuery = useSearchStore.getState().query;
     const currentOptions = useSearchStore.getState().options;
     const currentScope = useSearchStore.getState().scope;
@@ -129,7 +130,6 @@ export const useSearchEngine = (): SearchEngine => {
       setStatusMessage('Enter text to search.');
       setResults([]);
       setLoading(false);
-      console.timeEnd('[SearchEngine] runSearch');
       return;
     }
 
@@ -145,10 +145,8 @@ export const useSearchEngine = (): SearchEngine => {
         let tabsToSearch: Tab[];
 
         if (currentScope === 'activeWorkspace') {
-          console.log(`[SearchEngine] Searching in active workspace, ${allTabsInCurrentWorkspace.length} tabs`);
           tabsToSearch = allTabsInCurrentWorkspace.filter(tab => tab.workspaceId === currentActiveWsId);
         } else { // 'allWorkspaces'
-          console.log('[SearchEngine] Searching in all workspaces');
           tabsToSearch = await storage.getTabs();
         }
 
@@ -163,7 +161,6 @@ export const useSearchEngine = (): SearchEngine => {
           filteredTabs = filteredTabs.filter(tab => langSet.has(tab.language));
         }
 
-        console.log(`[SearchEngine] Searching through ${filteredTabs.length} filtered tabs`);
         const foundResults = searchTabs(currentQuery, currentOptions, filteredTabs);
         setResults(foundResults);
 
@@ -174,7 +171,6 @@ export const useSearchEngine = (): SearchEngine => {
           setStatusMessage(`${foundResults.length} match${foundResults.length === 1 ? '' : 'es'} in ${uniqueTabs.size} file${uniqueTabs.size === 1 ? '' : 's'}`);
           setSelectedResultIndex(0);
         }
-        console.log(`[SearchEngine] Search completed, found ${foundResults.length} results`);
       } catch (e) {
         console.error("Search error:", e);
         setError(e instanceof Error ? e.message : "An unknown error occurred during search.");
@@ -182,7 +178,6 @@ export const useSearchEngine = (): SearchEngine => {
         setStatusMessage('Search failed.');
       } finally {
         setLoading(false);
-        console.timeEnd('[SearchEngine] runSearch');
       }
     }, 50);
 
@@ -193,13 +188,9 @@ export const useSearchEngine = (): SearchEngine => {
 
   // Search effect
   useEffect(() => {
-    console.time('[SearchEngine] useEffect triggered');
-    console.log('[SearchEngine] useEffect triggered, isOpen:', isOpen);
     if (isOpen) {
-      console.log('[SearchEngine] Running search due to useEffect');
       runSearch();
     }
-    console.timeEnd('[SearchEngine] useEffect triggered');
     return () => runSearch.cancel();
   }, [isOpen, query, options, scope, titleFilter, languageFilter, runSearch]);
 
@@ -249,9 +240,10 @@ export const useSearchEngine = (): SearchEngine => {
     }
 
     // At this point, the correct workspace should be active
-    const updatedRootState = useRootStore.getState();
-    const targetTabSide = updatedRootState.splitView.leftTabs.includes(result.tabId) ? 'left'
-                        : updatedRootState.splitView.rightTabs.includes(result.tabId) ? 'right'
+    const splitViewState = useSplitViewStore.getState().splitView;
+    const allCurrentTabs = useTabsStore.getState().tabs;
+    const targetTabSide = splitViewState.leftTabs.includes(result.tabId) ? 'left'
+                        : splitViewState.rightTabs.includes(result.tabId) ? 'right'
                         : null;
 
     if (targetTabSide === 'left') {
@@ -262,11 +254,10 @@ export const useSearchEngine = (): SearchEngine => {
       setActiveSide('right');
     } else {
       // Tab not found in either side of the current splitView after potential workspace switch
-      const allCurrentTabs = updatedRootState.tabs;
-      if (allCurrentTabs.find(t => t.id === result.tabId)) {
+      if (allCurrentTabs.find((t: Tab) => t.id === result.tabId)) {
         setActiveLeftTab(result.tabId); // Default to left
         setActiveSide('left');
-        if (!updatedRootState.splitView.leftTabs.includes(result.tabId)) {
+        if (!splitViewState.leftTabs.includes(result.tabId)) {
           console.warn(`Tab ${result.tabId} activated but was not in expected splitView side.`);
         }
       } else {

@@ -32,24 +32,16 @@ class LanguageRegistryImpl implements LanguageRegistry {
   }
   
   detectLanguage(content: string): string {
-    console.time('[LanguageRegistry] detectLanguage');
-    console.log(`[LanguageRegistry] Starting detection for content length: ${content.length}`);
-
-
 
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
 
     // Run all detectors
     for (const detector of this.detectors) {
-      console.log(`[LanguageRegistry] Running detector "${detector.id}"`);
-      console.time(`[LanguageRegistry] detector ${detector.id}`);
       try {
         const result = detector.detect(content);
         detectionResults.push({ detector, result });
-        console.timeEnd(`[LanguageRegistry] detector ${detector.id}`);
       } catch (error) {
         console.error(`[LanguageRegistry] Error in detector ${detector.id}:`, error);
-        console.timeEnd(`[LanguageRegistry] detector ${detector.id}`);
       }
     }
 
@@ -65,8 +57,6 @@ class LanguageRegistryImpl implements LanguageRegistry {
     }
 
     const finalResult = bestConfidence > 0.5 ? bestResult : 'plaintext';
-    console.log(`[LanguageRegistry] Final result is "${finalResult}" with confidence ${bestConfidence}`);
-    console.timeEnd('[LanguageRegistry] detectLanguage');
     return finalResult;
   }
   

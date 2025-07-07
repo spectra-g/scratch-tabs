@@ -142,15 +142,11 @@ export const useContextMenuConfig = (
   };
 
   const handleLanguageSelect = (languageId: string) => {
-    console.log(`[ContextMenu] handleLanguageSelect called for language: ${languageId}`);
     const language = languageRegistry.getById(languageId);
     if (language?.sampleContent) {
-      console.log(`[ContextMenu] Found sample content for language: ${languageId}`);
       const currentTab = tabsStore.tabs.find(t => t.id === tabId);
       if (currentTab && !currentTab.isTablet) {
         const sampleContent = language.sampleContent();
-        console.log(`[ContextMenu] Sample content length: ${sampleContent.length}`);
-        console.log(`[ContextMenu] Sample content preview: "${sampleContent.substring(0, 100)}${sampleContent.length > 100 ? '...' : ''}"`);
         
         // Update the tab content and language in the store first
         rootStore.updateTabContent(tabId, sampleContent);
@@ -159,11 +155,7 @@ export const useContextMenuConfig = (
         // Update the model content directly if the model exists
         // The model's listener will sync back to store, but content is already the same
         modelManager.updateModelContent(tabId, sampleContent);
-      } else {
-        console.log(`[ContextMenu] Tab not found or is tablet: ${tabId}`);
       }
-    } else {
-      console.log(`[ContextMenu] No sample content found for language: ${languageId}`);
     }
     closeContextMenu();
   };
