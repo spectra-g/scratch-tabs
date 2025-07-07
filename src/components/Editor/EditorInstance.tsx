@@ -143,37 +143,41 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     const editor = editorRef.current;
     const previousTabId = currentTabIdRef.current;
 
-    try {
-      // Save view state for the tab we are leaving
-      const prevModel = editor.getModel();
-      if (previousTabId && prevModel && !prevModel.isDisposed()) {
-        const viewState = editor.saveViewState();
-        if (viewState) {
-          tabViewStates.set(previousTabId, viewState);
+    const switchModel = async () => {
+      try {
+        // Save view state for the tab we are leaving
+        const prevModel = editor.getModel();
+        if (previousTabId && prevModel && !prevModel.isDisposed()) {
+          const viewState = editor.saveViewState();
+          if (viewState) {
+            tabViewStates.set(previousTabId, viewState);
+          }
         }
+
+        // Get the new model from the ModelManager (with database fallback)
+        const newModel = await modelManager.get(activeTab);
+
+        // If the editor is not already showing this model, set it
+        if (editor.getModel() !== newModel) {
+          editor.setModel(newModel);
+        }
+
+        // Restore view state for the new tab
+        const newViewState = tabViewStates.get(activeTab.id);
+        if (newViewState) {
+          editor.restoreViewState(newViewState);
+        }
+
+        // Focus the editor
+        editor.focus();
+
+        currentTabIdRef.current = activeTab.id;
+      } catch (error) {
+        console.error(`[EditorInstance] Failed to switch model for tab ${activeTab.id}:`, error);
       }
+    };
 
-      // Get the new model from the ModelManager (now synchronous!)
-      const newModel = modelManager.get(activeTab);
-
-      // If the editor is not already showing this model, set it
-      if (editor.getModel() !== newModel) {
-        editor.setModel(newModel);
-      }
-
-      // Restore view state for the new tab
-      const newViewState = tabViewStates.get(activeTab.id);
-      if (newViewState) {
-        editor.restoreViewState(newViewState);
-      }
-
-      // Focus the editor
-      editor.focus();
-
-      currentTabIdRef.current = activeTab.id;
-    } catch (error) {
-      console.error(`[EditorInstance] Failed to switch model for tab ${activeTab.id}:`, error);
-    }
+    switchModel();
   }, [activeTabId, activeTab]);
 
   // Focus effect - only focus if this editor instance's side matches the globally active editor side
@@ -232,19 +236,27 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
       // Initialize the ModelManager with Monaco
       modelManager.initialize(monaco);
 
-      // Set up the initial model
-      if (activeTab) {
-        const initialModel = modelManager.get(activeTab);
-        if (editor.getModel() !== initialModel) {
-          editor.setModel(initialModel);
+      // Set up the initial model asynchronously
+      const setupInitialModel = async () => {
+        if (activeTab) {
+          try {
+            const initialModel = await modelManager.get(activeTab);
+            if (editor.getModel() !== initialModel) {
+              editor.setModel(initialModel);
+            }
+            
+            // Restore view state if it exists
+            const initialViewState = tabViewStates.get(activeTab.id);
+            if (initialViewState) {
+              editor.restoreViewState(initialViewState);
+            }
+          } catch (error) {
+            console.error(`[EditorInstance] Failed to set up initial model for tab ${activeTab.id}:`, error);
+          }
         }
-        
-        // Restore view state if it exists
-        const initialViewState = tabViewStates.get(activeTab.id);
-        if (initialViewState) {
-          editor.restoreViewState(initialViewState);
-        }
-      }
+      };
+
+      setupInitialModel();
 
       restoreScrollPosition(activeTabId);
 
