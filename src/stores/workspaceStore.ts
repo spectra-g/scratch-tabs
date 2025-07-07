@@ -7,6 +7,7 @@ import { usePersistenceStore } from './persistenceStore';
 import { useCacheStore } from './cacheStore';
 import { incrementSetting } from '../db';
 import { WELCOME_TAB_CONTENT, NEW_TAB_PREFIX } from '../constants';
+import { modelManager } from '../services/modelManager';
 
 // Helper function to safely convert activeSide string to union type
 const parseActiveSide = (side: string | null): 'left' | 'right' | null => {
@@ -46,7 +47,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     loadWorkspaces: async (clearExistingTabs: boolean = false) => {
       set({ isLoading: true, error: null });
       try {
-        // Model cache is now handled by React component lifecycle
+        // CRITICAL FIX: Clear model cache when loading workspaces to prevent memory leaks
+        modelManager.disposeAll();
 
         const workspacesFromDB = await storage.getWorkspaces();
         let newActiveWorkspaceId: string | null = null;
@@ -160,8 +162,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     },
 
     ensureWorkspace: async (): Promise<string | null> => {
-      const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
-      lockTransactions();
       try {
         const currentWorkspaces = get().workspaces;
         const currentActiveId = get().activeWorkspaceId;
@@ -230,14 +230,12 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         console.error("[ensureWorkspace] Error:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to ensure workspace' });
         return null;
-      } finally {
-        unlockTransactions();
       }
     },
 
     switchWorkspace: async (workspaceId: string) => {
       const { workspaces, activeWorkspaceId: currentActiveWsId, isLoading } = get();
-      const { lockTransactions, unlockTransactions, saveState: persistCurrentState } = usePersistenceStore.getState();
+      const { saveState: persistCurrentState } = usePersistenceStore.getState();
 
       if (workspaceId === currentActiveWsId || isLoading) {
         return;
@@ -250,7 +248,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         return;
       }
 
-      lockTransactions(); // Lock before starting the switch process
       set({ isLoading: true, error: null });
 
       try {
@@ -259,7 +256,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           await persistCurrentState();
         }
 
-        // 2. Model cache is now handled by React component lifecycle
+        // 2. CRITICAL FIX: Clear model cache when switching workspaces to prevent memory leaks
+        modelManager.disposeAll();
 
         // 3. Load data for the target workspace
         const cachedData = useCacheStore.getState().cachedSplitView;
@@ -312,15 +310,13 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         set({ error: error instanceof Error ? error.message : 'Failed to switch workspace' });
       } finally {
         set({ isLoading: false });
-        unlockTransactions(); // Unlock after the switch process is complete
       }
     },
 
     createWorkspace: async (name: string): Promise<string | null> => {
-      const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
-      lockTransactions();
       try {
-        // Model cache is now handled by React component lifecycle
+        // CRITICAL FIX: Clear model cache when creating new workspace
+        modelManager.disposeAll();
 
         const newWorkspace: Workspace = {
           id: crypto.randomUUID(),
@@ -398,25 +394,19 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         console.error("Error creating workspace:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to create workspace' });
         return null;
-      } finally {
-        unlockTransactions();
       }
     },
 
     deleteWorkspace: async (workspaceId: string) => {
       const { workspaces, activeWorkspaceId: currentActiveId, loadWorkspaces } = get();
-      const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
-      lockTransactions();
       try {
-        await storage.deleteWorkspace(workspaceId); // This Dexie method handles its own transaction for all related data
+        await storage.deleteWorkspace(workspaceId);
 
         const remainingWorkspaces = workspaces.filter(ws => ws.id !== workspaceId);
 
         if (workspaceId === currentActiveId) {
           // If the active workspace was deleted, load remaining workspaces
-          // loadWorkspaces will pick the most recently accessed as the new active one, or create default
-          // Pass clearExistingTabs: true to ensure tabs from deleted workspace are not preserved
-          await loadWorkspaces(true); // This will handle setting a new active one or creating default
+          await loadWorkspaces(true);
         } else {
           // Just update the list of workspaces if a non-active one was deleted
           set({ workspaces: remainingWorkspaces.sort((a, b) => a.name.localeCompare(b.name)) });
@@ -424,31 +414,28 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       } catch (error) {
         console.error("Error deleting workspace:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to delete workspace' });
-      } finally {
-        unlockTransactions();
       }
     },
 
     renameWorkspace: async (workspaceId: string, newName: string) => {
-      // This is a single DB write, lock might be overkill but good for consistency if other parts of UI react immediately
-      const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
-      lockTransactions();
       try {
-        const { workspaces } = get();
-        const workspace = workspaces.find(w => w.id === workspaceId);
-        if (!workspace) return;
+        const workspace = get().workspaces.find(w => w.id === workspaceId);
+        if (!workspace) {
+          set({ error: 'Workspace not found' });
+          return;
+        }
 
-        const updatedWorkspace = { ...workspace, name: newName, lastAccessed: Date.now() };
+        const updatedWorkspace = { ...workspace, name: newName };
         await storage.saveWorkspace(updatedWorkspace);
+
         set(state => ({
-          workspaces: state.workspaces.map(w =>
+          workspaces: state.workspaces.map(w => 
             w.id === workspaceId ? updatedWorkspace : w
           ).sort((a, b) => a.name.localeCompare(b.name))
         }));
       } catch (error) {
+        console.error("Error renaming workspace:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to rename workspace' });
-      } finally {
-        unlockTransactions();
       }
     },
 

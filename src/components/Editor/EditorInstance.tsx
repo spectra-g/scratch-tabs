@@ -27,35 +27,14 @@ const LARGE_CONTENT_THRESHOLD = 100000;
 // Global storage for view states (scroll position, etc.)
 const tabViewStates = new Map<string, Monaco.editor.ICodeEditorViewState>();
 
-// Utility function to safely check if a model is disposed
-const isModelDisposed = (model: Monaco.editor.ITextModel | null): boolean => {
-  if (!model) return true;
-  try {
-    return typeof model.isDisposed === 'function' && model.isDisposed();
-  } catch {
-    return true;
-  }
-};
-
-// Utility function to safely get model value
-const getModelValue = (model: Monaco.editor.ITextModel | null): string => {
-  if (isModelDisposed(model)) return '';
-  try {
-    return model!.getValue();
-  } catch {
-    return '';
-  }
-};
-
 export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabId, onEditorReady }) => {
-  console.time(`[EditorInstance] Render for side ${side}`);
   console.log(`[EditorInstance] Rendering for side ${side}, tab: ${activeTabId}`);
   
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const currentTabIdRef = useRef<string>(activeTabId);
   
-  // Get the tab metadata, but we won't use its `content` for the editor's value prop
+  // Get the tab metadata
   const activeTab = useTabsStore(state => state.tabs.find(t => t.id === activeTabId));
 
   // Get actions from rootStore
@@ -157,68 +136,44 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     return null;
   }
 
-  // This effect manages model switching and view state restoration.
+  // SIMPLIFIED: This effect manages model switching with the corrected ModelManager
   useEffect(() => {
     if (!editorRef.current || !monacoRef.current || !activeTab) return;
 
     const editor = editorRef.current;
     const previousTabId = currentTabIdRef.current;
 
-    // Define an async function to handle the model switch
-    const switchModel = async () => {
-      try {
-        // Save view state for the tab we are leaving, only if model is not disposed
-        const prevModel = editor.getModel();
-        if (previousTabId && prevModel && !isModelDisposed(prevModel)) {
-          try {
-            const viewState = editor.saveViewState();
-            if (viewState) tabViewStates.set(previousTabId, viewState);
-          } catch (error) {
-            console.warn(`[EditorInstance] Failed to save view state for tab ${previousTabId}:`, error);
-          }
+    try {
+      // Save view state for the tab we are leaving
+      const prevModel = editor.getModel();
+      if (previousTabId && prevModel && !prevModel.isDisposed()) {
+        const viewState = editor.saveViewState();
+        if (viewState) {
+          tabViewStates.set(previousTabId, viewState);
         }
-
-        // *** NEW: Await the model from the manager ***
-        const newModel = await modelManager.get(activeTab);
-
-        if (!newModel || isModelDisposed(newModel)) {
-          console.error(`[EditorInstance] No valid model available for tab ${activeTab.id}`);
-          return;
-        }
-
-        // If the editor is not already showing this model, set it
-        if (editor.getModel() !== newModel) {
-          try {
-            editor.setModel(newModel);
-          } catch (error) {
-            console.error(`[EditorInstance] Failed to set model for tab ${activeTab.id}:`, error);
-            return;
-          }
-        }
-
-        // Only restore view state if the model is not disposed
-        const newViewState = tabViewStates.get(activeTab.id);
-        if (newViewState && !isModelDisposed(newModel)) {
-          try {
-            editor.restoreViewState(newViewState);
-          } catch (error) {
-            console.warn(`[EditorInstance] Failed to restore view state for tab ${activeTab.id}:`, error);
-          }
-        }
-
-        try {
-          editor.focus();
-        } catch (error) {
-          console.warn(`[EditorInstance] Failed to focus editor for tab ${activeTab.id}:`, error);
-        }
-
-        currentTabIdRef.current = activeTab.id;
-      } catch (error) {
-        console.error(`[EditorInstance] Failed to switch model for tab ${activeTab.id}:`, error);
       }
-    };
 
-    switchModel();
+      // Get the new model from the ModelManager (now synchronous!)
+      const newModel = modelManager.get(activeTab);
+
+      // If the editor is not already showing this model, set it
+      if (editor.getModel() !== newModel) {
+        editor.setModel(newModel);
+      }
+
+      // Restore view state for the new tab
+      const newViewState = tabViewStates.get(activeTab.id);
+      if (newViewState) {
+        editor.restoreViewState(newViewState);
+      }
+
+      // Focus the editor
+      editor.focus();
+
+      currentTabIdRef.current = activeTab.id;
+    } catch (error) {
+      console.error(`[EditorInstance] Failed to switch model for tab ${activeTab.id}:`, error);
+    }
   }, [activeTabId, activeTab]);
 
   // Focus effect - only focus if this editor instance's side matches the globally active editor side
@@ -251,13 +206,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     if (editor && isStreamingForThisTab && codegenResult !== null) {
       try {
         const model = editor.getModel();
-        if (model && !isModelDisposed(model) && getModelValue(model) !== codegenResult) {
-          // Using executeEdits is better than setValue as it can be part of the undo stack
-          // and preserves cursor position better if the changes are not full-document.
-          editor.executeEdits('ai-stream', [{
-            range: model.getFullModelRange(),
-            text: codegenResult
-          }]);
+        if (model && !model.isDisposed()) {
+          const currentContent = model.getValue();
+          if (currentContent !== codegenResult) {
+            // Using executeEdits is better than setValue as it can be part of the undo stack
+            editor.executeEdits('ai-stream', [{
+              range: model.getFullModelRange(),
+              text: codegenResult
+            }]);
+          }
         }
       } catch (error) {
         console.warn('[EditorInstance] Failed to stream AI code:', error);
@@ -265,42 +222,35 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     }
   }, [isCodegenGenerating, activeCodegenTabId, codegenResult, activeTabId]);
 
-  // --- Editor Event Handlers ---
-  const handleEditorDidMount = async (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
+  // --- SIMPLIFIED: Editor Event Handlers ---
+  const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
     try {
       editorRef.current = editor;
       monacoRef.current = monaco;
       onEditorReady?.(editor);
 
+      // Initialize the ModelManager with Monaco
       modelManager.initialize(monaco);
 
+      // Set up the initial model
       if (activeTab) {
-        try {
-          // *** NEW: Await the initial model ***
-          const initialModel = await modelManager.get(activeTab);
-          if (initialModel && !isModelDisposed(initialModel) && editor.getModel() !== initialModel) {
-            editor.setModel(initialModel);
-          }
-          const initialViewState = tabViewStates.get(activeTab.id);
-          if (initialViewState) {
-            try {
-              editor.restoreViewState(initialViewState);
-            } catch (error) {
-              console.warn('[EditorInstance] Failed to restore initial view state:', error);
-            }
-          }
-        } catch (error) {
-          console.error('[EditorInstance] Failed to set initial model:', error);
+        const initialModel = modelManager.get(activeTab);
+        if (editor.getModel() !== initialModel) {
+          editor.setModel(initialModel);
+        }
+        
+        // Restore view state if it exists
+        const initialViewState = tabViewStates.get(activeTab.id);
+        if (initialViewState) {
+          editor.restoreViewState(initialViewState);
         }
       }
 
       restoreScrollPosition(activeTabId);
 
       // Auto-format tabs that were likely created from paste or file import
-      // First check if tab was created recently to avoid unnecessary work
       const now = Date.now();
       if ((now - activeTab.dateCreated) < 500) {
-        // Only check other conditions if tab was recently created
         const content = activeTab.content || '';
         const hasSubstantialContent = content.trim().length > 50;
         const isFormattableLanguage = activeTab.language !== 'plaintext';
@@ -308,7 +258,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         const isNotLikelyDuplicate = !activeTab.title.includes('(copy)') && !activeTab.title.includes('Copy of');
 
         if (hasSubstantialContent && isFormattableLanguage && isNotTablet && isNotLikelyDuplicate) {
-          // Use setTimeout to ensure the model and language are fully set before formatting
           setTimeout(() => {
             try {
               const formatAction = editor.getAction('editor.action.formatDocument');
@@ -318,7 +267,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
             } catch (error) {
               console.warn('[EditorInstance] Failed to auto-format document:', error);
             }
-          }, 100); // Small delay to ensure everything is ready
+          }, 100);
         }
       }
 
@@ -354,11 +303,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
 
       // Clean up previous batch tools action if it exists
       if (batchToolsDisposableRef.current) {
-        try {
-          batchToolsDisposableRef.current.dispose();
-        } catch (error) {
-          console.warn('[EditorInstance] Failed to dispose batch tools action:', error);
-        }
+        batchToolsDisposableRef.current.dispose();
       }
 
       // Add Batch Tools context menu action
@@ -370,10 +315,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         run: () => {
           try {
             const model = editor.getModel();
-            const selectedText = model && !isModelDisposed(model) 
+            const selectedText = model && !model.isDisposed() 
               ? model.getValueInRange(editor.getSelection()!) || ''
               : '';
-            const fullContent = getModelValue(model);
+            const fullContent = model && !model.isDisposed() ? model.getValue() : '';
             openBatchToolsModal(fullContent, selectedText);
           } catch (error) {
             console.warn('[EditorInstance] Failed to open batch tools modal:', error);
@@ -381,7 +326,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         }
       });
 
-      // Create context keys for AI actions (only once per editor instance)
+      // Create context keys for AI actions
       try {
         aiReadyContextKeyRef.current = editor.createContextKey('aiReady', isAiReady && !isAiLoading);
         codegenReadyContextKeyRef.current = editor.createContextKey('codegenReady', isCodegenReady && !isCodegenGenerating);
@@ -390,58 +335,49 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
       }
 
       // Add AI actions
-      const summarizeActionId = 'ai-summarize';
-      const codegenActionId = 'ai-generate-code';
-
-      // Add the summarize action
       editor.addAction({
-        id: summarizeActionId,
+        id: 'ai-summarize',
         label: 'Summarize',
         contextMenuGroupId: 'navigation',
         contextMenuOrder: 1.0,
         precondition: 'aiReady',
         run: (ed) => {
           try {
-            // Get fresh state directly from store to avoid stale state issues
             const freshAIState = useAIStore.getState().ai;
-
-            // Update context keys with fresh state
             if (aiReadyContextKeyRef.current) {
               const freshAiReady = freshAIState.isReady && !freshAIState.isLoading;
               aiReadyContextKeyRef.current.set(freshAiReady);
             }
 
-            const content = getModelValue(ed.getModel());
-
+            const model = ed.getModel();
+            const content = model && !model.isDisposed() ? model.getValue() : '';
             const currentTab = latestActiveTabRef.current;
             if (!currentTab) return;
 
-            // Use fresh state for condition check
             const shouldProceed = freshAIState.isReady &&
               !freshAIState.isLoading &&
               !currentTab.isTablet &&
               content.trim().length > 0;
 
-            if (!shouldProceed) {
-              return;
+            if (shouldProceed) {
+              summarizeTextWithModal(content, currentTab.id);
             }
-            summarizeTextWithModal(content, currentTab.id);
           } catch (error) {
             console.warn('[EditorInstance] Failed to run summarize action:', error);
           }
         },
       });
 
-      // Add the code generation action
       editor.addAction({
-        id: codegenActionId,
+        id: 'ai-generate-code',
         label: 'Generate Code',
         contextMenuGroupId: 'navigation',
         contextMenuOrder: 1.5,
         precondition: 'codegenReady',
         run: (ed) => {
           try {
-            const originalValue = getModelValue(ed.getModel());
+            const model = ed.getModel();
+            const originalValue = model && !model.isDisposed() ? model.getValue() : '';
             if (!isCodegenReady || isCodegenGenerating) return;
             const currentTab = latestActiveTabRef.current;
             if (!currentTab) return;
@@ -510,7 +446,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     try {
       const selection = editor.getSelection();
       const model = editor.getModel();
-      const selectedText = selection && !selection.isEmpty() && model && !isModelDisposed(model)
+      const selectedText = selection && !selection.isEmpty() && model && !model.isDisposed()
         ? model.getValueInRange(selection) || ''
         : '';
 
@@ -522,7 +458,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         }]);
       } else {
         // Replace entire content
-        if (model && !isModelDisposed(model)) {
+        if (model && !model.isDisposed()) {
           editor.executeEdits('batch-tools', [{
             range: model.getFullModelRange(),
             text: content
@@ -534,13 +470,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     }
   }, []);
 
-  const editorKey = (activeTab.content || '').length > LARGE_CONTENT_THRESHOLD
-    ? `${activeTabId}-large-${Date.now()}`
-    : activeTabId;
-
-  // CRITICAL FIX: Disable performance-heavy features for large content
+  // Performance optimization: disable expensive features for large content
   const isLargeContent = (activeTab.content?.length || 0) > LARGE_CONTENT_THRESHOLD;
-  console.log(`[EditorInstance] Content size: ${activeTab.content?.length || 0} bytes, isLargeContent: ${isLargeContent}`);
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-850">
@@ -555,12 +486,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
             options={{
               minimap: { enabled: false },
               fontSize: 14,
-              wordWrap: isLargeContent ? 'off' : 'on', // Disable word wrap for large content
+              wordWrap: isLargeContent ? 'off' : 'on',
               automaticLayout: true,
               copyWithSyntaxHighlighting: false,
               scrollBeyondLastLine: true,
-              formatOnPaste: !isLargeContent, // Disable format on paste for large content
-              formatOnType: !isLargeContent, // Disable format on type for large content
+              formatOnPaste: !isLargeContent,
+              formatOnType: !isLargeContent,
               find: {
                 addExtraSpaceOnTop: false,
               },
@@ -575,7 +506,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
               }),
             }}
             // NO `value`, `defaultValue`, `language`, or `onChange` props!
-            // The model manager and the useEffect hook now control everything.
+            // The model manager now controls everything imperatively.
           />
           {showTabletSelector && (
             <div
@@ -597,10 +528,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         </div>
       </div>
       <BatchToolsModal onApply={handleBatchToolsApply} />
-      {(() => {
-        console.timeEnd(`[EditorInstance] Render for side ${side}`);
-        return null;
-      })()}
     </div>
   );
 };

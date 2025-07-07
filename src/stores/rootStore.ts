@@ -15,6 +15,7 @@ import {
 import { detectLanguage, isAmbiguousLanguage } from "../languages";
 import { StorageProviderFactory } from '../db';
 import { broadcastManager } from './broadcastStore';
+import { modelManager } from '../services/modelManager';
 
 // The RootStore now primarily holds ACTIONS that coordinate other stores.
 // It does NOT hold mirrored state like `tabs` or `splitView`.
@@ -148,6 +149,10 @@ export const useRootStore = create<RootStore>((set, get) => {
     removeTab: (id) => {
       const tabToRemove = useTabsStore.getState().tabs.find(t => t.id === id);
       if (!tabToRemove) return;
+      
+      // CRITICAL FIX: Dispose the model to free memory immediately
+      modelManager.dispose(id);
+      
       useSplitViewStore.getState().removeTabFromSide(id);
       useTabsStore.getState().removeTab(id);
       storage.deleteTab(id).catch(err => console.error("Failed to delete tab from DB:", err));
@@ -350,7 +355,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       try {
         const detector = languageRegistry.getById(tabToSave.language);
         const extension = detector?.getFileExtension() || 'txt';
-        const blob = new Blob([tabToSave.content], { type: 'text/plain;charset=utf-8' });
+        const blob = new Blob([tabToSave.content || ''], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;

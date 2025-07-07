@@ -4,99 +4,108 @@ import { useWorkspaceStore } from './workspaceStore';
 import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { Tab } from '../types';
+import { modelManager } from '../services/modelManager';
 
 interface PersistenceStore {
   saveState: () => Promise<void>;
-  isTransactionLocked: boolean;
-  lockTransactions: () => void;
-  unlockTransactions: () => void;
+  saveStateInterval: () => Promise<void>;
+  startPeriodicSave: () => void;
+  stopPeriodicSave: () => void;
+  saveTimer: NodeJS.Timeout | null;
 }
 
 export const usePersistenceStore = create<PersistenceStore>((set, get) => {
   const storage = StorageProviderFactory.getProvider();
 
   return {
-    isTransactionLocked: false,
-
-    lockTransactions: () => {
-      set({ isTransactionLocked: true });
-    },
-    unlockTransactions: () => {
-      set({ isTransactionLocked: false });
-    },
+    saveTimer: null,
 
     saveState: async () => {
-      console.time('[Persistence] saveState');
-      console.log('[Persistence] Starting saveState operation');
+      console.time('[Persistence] Total save time');
       
-      const { tabs } = useTabsStore.getState();
-      const { splitView } = useSplitViewStore.getState();
-      const { activeWorkspaceId } = useWorkspaceStore.getState();
-
-      console.log(`[Persistence] Found ${tabs.length} total tabs, active workspace: ${activeWorkspaceId}`);
-
       try {
-        // Filter tabs belonging to the active workspace
-        console.time('[Persistence] Filtering workspace tabs');
-        const workspaceTabs = tabs.filter((tab: Tab) => tab.workspaceId === activeWorkspaceId);
-        console.timeEnd('[Persistence] Filtering workspace tabs');
-        console.log(`[Persistence] Saving ${workspaceTabs.length} tabs for workspace ${activeWorkspaceId}`);
+        const { activeWorkspaceId } = useWorkspaceStore.getState();
+        if (!activeWorkspaceId) {
+          console.warn('[Persistence] No active workspace, skipping save');
+          return;
+        }
+
+        // CRITICAL FIX: Sync content from active models before saving
+        console.time('[Persistence] Syncing active models');
+        const { tabs } = useTabsStore.getState();
+        const debugInfo = modelManager.getDebugInfo();
         
-        // *** FIXED: Use store content as source of truth, not ModelManager ***
-        console.time('[Persistence] Preparing tabs for saving');
-        const tabsToSave = await Promise.all(workspaceTabs.map(async (tab: Tab) => {
-          console.log(`[Persistence] Tab ${tab.id}: storeContent=${tab.content ? `length ${tab.content.length}` : 'undefined'}`);
-          if (tab.content) {
-            console.log(`[Persistence] Tab ${tab.id} content preview: "${tab.content.substring(0, 100)}${tab.content.length > 100 ? '...' : ''}"`);
-          }
-          
-          let finalContent = tab.content;
-          
-          // If store has no content, try to get from database as fallback
-          if (finalContent === undefined || finalContent === null) {
-            console.log(`[Persistence] Tab ${tab.id} has no store content, trying database...`);
-            try {
-              const dbContent = await storage.getTabContent(tab.id);
-              if (dbContent !== undefined) {
-                finalContent = dbContent;
-                console.log(`[Persistence] Retrieved content from database for tab ${tab.id}, length: ${dbContent.length}`);
-              } else {
-                console.log(`[Persistence] No content found in database for tab ${tab.id}`);
-              }
-            } catch (error) {
-              console.warn(`[Persistence] Failed to get content from database for tab ${tab.id}:`, error);
+        // Update store with latest content from cached models
+        for (const tabId of debugInfo.cachedTabs) {
+          const liveContent = modelManager.getContent(tabId);
+          if (liveContent !== undefined) {
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab && tab.content !== liveContent) {
+              console.log(`[Persistence] Syncing content for tab ${tabId} (${liveContent.length} chars)`);
+              useTabsStore.getState().updateTabContent(tabId, liveContent);
             }
           }
-          
-          console.log(`[Persistence] Tab ${tab.id}: final content length=${finalContent?.length || 0}`);
-          
-          return { ...tab, content: finalContent };
-        }));
-        console.timeEnd('[Persistence] Preparing tabs for saving');
-        
-        // Only save if there's actually data for the current workspace
-        if (workspaceTabs.length > 0 || (splitView && splitView.workspaceId === activeWorkspaceId)) {
-          console.time('[Persistence] saveTabsInterval call');
-          console.log('[Persistence] Calling storage.saveTabsInterval');
-          await storage.saveTabsInterval(tabsToSave); // Use the updated tabs array
-          console.timeEnd('[Persistence] saveTabsInterval call');
-          
-          if (splitView && splitView.workspaceId === activeWorkspaceId) {
-            console.time('[Persistence] saveSplitViewInterval call');
-            console.log('[Persistence] Calling storage.saveSplitViewInterval');
-            await storage.saveSplitViewInterval({
-              ...splitView,
-              id: splitView.id || crypto.randomUUID(),
-              lastModified: Date.now()
-            });
-            console.timeEnd('[Persistence] saveSplitViewInterval call');
-          }
         }
-        console.log('[Persistence] Save completed successfully');
+        console.timeEnd('[Persistence] Syncing active models');
+
+        // Get the updated tabs (after syncing)
+        const updatedTabs = useTabsStore.getState().tabs;
+        
+        // Filter tabs for the active workspace
+        const workspaceTabs = updatedTabs.filter(tab => tab.workspaceId === activeWorkspaceId);
+        
+        console.log(`[Persistence] Saving ${workspaceTabs.length} tabs for workspace ${activeWorkspaceId}`);
+        
+        // Save tabs to database
+        await storage.saveTabsInterval(workspaceTabs);
+        
+        // Save split view state
+        const { splitView } = useSplitViewStore.getState();
+        if (splitView) {
+          await storage.saveSplitViewNow({
+            ...splitView,
+            lastModified: Date.now()
+          });
+        }
+        
+        console.log('[Persistence] State saved successfully');
       } catch (error) {
-        console.error('[saveState] Failed to save state:', error);
+        console.error('[Persistence] Failed to save state:', error);
       }
-      console.timeEnd('[Persistence] saveState');
-    }
+      
+      console.timeEnd('[Persistence] Total save time');
+    },
+
+    saveStateInterval: async () => {
+      // Use the same logic as saveState for consistency
+      await get().saveState();
+    },
+
+    startPeriodicSave: () => {
+      const { saveTimer } = get();
+      if (saveTimer) {
+        clearInterval(saveTimer);
+      }
+      
+      const newTimer = setInterval(async () => {
+        try {
+          await get().saveStateInterval();
+        } catch (error) {
+          console.error('[Persistence] Periodic save failed:', error);
+        }
+      }, 30000); // Save every 30 seconds
+      
+      set({ saveTimer: newTimer });
+      console.log('[Persistence] Started periodic save (30s intervals)');
+    },
+
+    stopPeriodicSave: () => {
+      const { saveTimer } = get();
+      if (saveTimer) {
+        clearInterval(saveTimer);
+        set({ saveTimer: null });
+        console.log('[Persistence] Stopped periodic save');
+      }
+    },
   };
 });
