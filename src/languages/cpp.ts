@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
       { pattern: /template\s*<.*?>/g, weight: 0.3, perMatch: 0.1 },
       { pattern: /\b(new|delete)\b\s+\w+/g, weight: 0.2, perMatch: 0.05 }, // new/delete keywords
       { pattern: /\b(try|catch|throw)\b/g, weight: 0.15, perMatch: 0.05 }, // Exception handling
-      { pattern: /\b\w+::\w+\b/g, weight: 0.1, perMatch: 0.02 }, // Scope resolution operator (std::cout, not ":items")
+      { pattern: /(?<!:)\b\w+::\w+\b/g, weight: 0.1, perMatch: 0.02 }, // Scope resolution operator (std::cout, not ":items")
       { pattern: /\b(auto&?|const_cast|dynamic_cast|reinterpret_cast|static_cast|nullptr|override|final|noexcept|constexpr)\b/g, weight: 0.4, perMatch: 0.15 }, // C++11 and later keywords
       { pattern: /using\s+namespace\s+std;/g, weight: 0.3, perMatch: 0.1}, // Common, though not always best practice
     ];
@@ -117,6 +117,7 @@ int main(int argc, char* argv[]) {
     for (const dp of definitivePatterns) {
       const matches = content.match(dp.pattern);
       if (matches) {
+        console.log(`[CppDetector] Pattern matched: ${dp.pattern.source}, matches:`, matches.slice(0, 3)); // Log first 3 matches
         confidenceScore += dp.weight;
         confidenceScore += Math.min(matches.length, 3) * dp.perMatch; // Cap per-match bonus
         patternsMatched++;
@@ -151,6 +152,8 @@ int main(int argc, char* argv[]) {
       { pattern: /\bpublic\s+static\s+void\s+main\s*\(String(\[\]|\s*\.\.\.)\s+\w+\)/i, weight: -0.5 }, // Java main
       { pattern: /\b(var|let|const)\s+\w+\s*=/i, weight: -0.4 }, // JS variable declarations
       { pattern: /=>\s*\{/i, weight: -0.5 }, // JS arrow function
+      { pattern: /"[^"]*":\s*\{/g, weight: -0.6 }, // JSON object keys (strong negative)
+      { pattern: /"[^"]*":\s*\[/g, weight: -0.6 }, // JSON array keys (strong negative)
     ];
 
     for (const ap of antiPatterns) {
@@ -173,6 +176,8 @@ int main(int argc, char* argv[]) {
 
     // Determine match status based on confidence threshold
     const isMatch = confidenceScore >= 0.4; // Adjust this threshold based on testing
+
+    console.log(`[CppDetector] Final confidence: ${confidenceScore.toFixed(3)}, isMatch: ${isMatch}, patternsMatched: ${patternsMatched}`);
 
     return {
       match: isMatch,
