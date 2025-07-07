@@ -31,18 +31,9 @@ const PreviewLoadingFallback = () => (
   <div className="text-gray-400 p-4 animate-pulse">Loading Preview...</div>
 );
 
-// Threshold for considering content "large" (100KB)
-const LARGE_CONTENT_THRESHOLD = 100000;
-
-// Lightweight content accessor for preview components
+// Full content accessor for preview components (removing large content guard)
 const getContentForPreview = (tab: any): string => {
   if (!tab?.content) return '';
-  
-  // For large content, show a truncated version in preview
-  if (tab.content.length > LARGE_CONTENT_THRESHOLD) {
-    return tab.content.substring(0, 50000) + '\n\n... [Content truncated for performance] ...';
-  }
-  
   return tab.content;
 };
 

@@ -21,8 +21,7 @@ interface EditorInstanceProps {
   onEditorReady?: (editor: Monaco.editor.IStandaloneCodeEditor | null) => void;
 }
 
-// Threshold for considering content "large" (100KB)
-const LARGE_CONTENT_THRESHOLD = 100000;
+
 
 // Global storage for view states (scroll position, etc.)
 const tabViewStates = new Map<string, Monaco.editor.ICodeEditorViewState>();
@@ -480,9 +479,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     }
   }, []);
 
-  // Performance optimization: disable expensive features for large content
-  const isLargeContent = (activeTab.content?.length || 0) > LARGE_CONTENT_THRESHOLD;
-
   return (
     <div className="flex flex-col h-full w-full bg-gray-850">
       <div className="flex-grow relative overflow-hidden" ref={editorContainerRef}>
@@ -496,24 +492,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
             options={{
               minimap: { enabled: false },
               fontSize: 14,
-              wordWrap: isLargeContent ? 'off' : 'on',
+              wordWrap: 'on',
               automaticLayout: true,
               copyWithSyntaxHighlighting: false,
               scrollBeyondLastLine: true,
-              formatOnPaste: !isLargeContent,
-              formatOnType: !isLargeContent,
+              formatOnPaste: true,
+              formatOnType: true,
               find: {
                 addExtraSpaceOnTop: false,
               },
-              // Additional performance optimizations for large content
-              ...(isLargeContent && {
-                renderWhitespace: 'none',
-                renderLineHighlight: 'none',
-                occurrencesHighlight: 'off',
-                selectionHighlight: false,
-                bracketPairColorization: { enabled: false },
-                guides: { bracketPairs: false },
-              }),
             }}
             // NO `value`, `defaultValue`, `language`, or `onChange` props!
             // The model manager now controls everything imperatively.

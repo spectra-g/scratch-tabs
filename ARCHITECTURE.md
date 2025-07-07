@@ -19,7 +19,7 @@ These are the non-negotiable principles of the architecture. Adhere to them to p
     *   **User Input:** `User` -> `Monaco Editor` -> `Monaco Model`
     *   **State Update:** `Monaco Model` (`onDidChangeContent`) -> `tabsStore` (updates `tab.content`)
     *   **Persistence:** `persistenceStore` (`saveState`) -> `IndexedDB`
-5.  **Performance Guardrails are Intentional:** Code that checks for content size (e.g., `LARGE_CONTENT_THRESHOLD`) is a deliberate performance optimization. It disables expensive features (like JSON validation or auto-formatting) for large files to keep the UI responsive. **Do not remove these checks without a clear performance-conscious alternative.**
+5.  **Performance Testing in Progress:** Large content guardrails have been temporarily removed as an experiment to identify which features actually cause performance issues versus which ones were preemptively protected. This will help optimize only the features that truly need performance controls.
 
 ## 3. Component & Service Responsibilities
 

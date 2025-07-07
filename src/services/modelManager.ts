@@ -6,9 +6,6 @@ import { StorageProviderFactory } from '../db';
 // The maximum number of models to keep in memory
 const MAX_MODELS = 10;
 
-// Threshold for large content (100KB) - disable expensive features
-const LARGE_CONTENT_THRESHOLD = 100000;
-
 class ModelManager {
   private monaco: typeof Monaco | null = null;
   private models = new Map<string, Monaco.editor.ITextModel>();
@@ -152,14 +149,9 @@ class ModelManager {
       existingModel.dispose();
     }
     
-    // For very large content, treat as plaintext to disable expensive features
-    let language = tab.language;
+    // Use the actual tab language (removing large content guard)
+    const language = tab.language;
     const contentLength = tabWithContent.content?.length || 0;
-    
-    if (contentLength > LARGE_CONTENT_THRESHOLD) {
-      console.log(`[ModelManager] Large content detected (${contentLength} chars), using plaintext for performance`);
-      language = 'plaintext';
-    }
 
     const model = this.monaco.editor.createModel(
       tabWithContent.content || '',  // Use content from database if needed
