@@ -754,11 +754,7 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
   detect(content: string): DetectionResult {
     console.log(`JSON Detector: Called with content length: ${content.length}`); // <<< ADD THIS
     
-    // CRITICAL FIX: Don't detect JSON for large content to prevent Monaco JSON features
-    if (content.length > 1_000_000) {
-      console.log(`JSON Detector: Content too large (${content.length} bytes), returning noMatch to prevent JSON language mode`); // <<< ADD THIS
-      return this.noMatch();
-    }
+
     
     const trimmed = content.trim();
     if (trimmed.length < 2) {

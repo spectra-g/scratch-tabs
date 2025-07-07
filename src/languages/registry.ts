@@ -35,12 +35,7 @@ class LanguageRegistryImpl implements LanguageRegistry {
     console.time('[LanguageRegistry] detectLanguage');
     console.log(`[LanguageRegistry] Starting detection for content length: ${content.length}`);
 
-    // Early return for very large content to prevent performance issues
-    if (content.length > 100000) {
-      console.log(`[LanguageRegistry] Content too large (${content.length} bytes), returning plaintext`);
-      console.timeEnd('[LanguageRegistry] detectLanguage');
-      return 'plaintext';
-    }
+
 
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
 
@@ -81,9 +76,7 @@ class LanguageRegistryImpl implements LanguageRegistry {
   isAmbiguous(content: string): boolean {
     if (!content || !content.trim()) return false;
     
-    if (content.length > 1_000_000) {
-      return false;
-    }
+
 
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
     for (const detector of this.detectors) {

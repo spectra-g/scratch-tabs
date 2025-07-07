@@ -65,11 +65,7 @@ export const useJsonOperations = (
     try {
       const content = editor.getValue();
       
-      // Safety check: don't parse very large content
-      if (content.length > 1_000_000) {
-        console.log(`JSON SortKeys: Content too large (${content.length} bytes), skipping sort`); // <<< ADD THIS
-        return;
-      }
+
       
       const json = JSON.parse(content);
 
@@ -103,11 +99,7 @@ export const useJsonOperations = (
     try {
       const content = editor.getValue();
       
-      // Safety check: don't parse very large content
-      if (content.length > 1_000_000) {
-        console.log(`JSON Flatten: Content too large (${content.length} bytes), skipping operation`);
-        return;
-      }
+
       
       const json = JSON.parse(content);
       if (typeof json !== 'object' || json === null || Array.isArray(json)) {
@@ -141,11 +133,7 @@ export const useJsonOperations = (
     try {
       const content = editor.getValue();
       
-      // Safety check: don't parse very large content
-      if (content.length > 1_000_000) {
-        console.log(`JSON Unflatten: Content too large (${content.length} bytes), skipping operation`);
-        return;
-      }
+
       
       const json = JSON.parse(content);
        if (typeof json !== 'object' || json === null || Array.isArray(json)) {
@@ -185,11 +173,7 @@ export const useJsonOperations = (
     try {
       const content = editor.getValue();
       
-      // Safety check: don't parse very large content
-      if (content.length > 1_000_000) {
-        console.log(`JSON Remove Empty: Content too large (${content.length} bytes), skipping operation`);
-        return;
-      }
+
       
       const json = JSON.parse(content);
 

@@ -24,11 +24,7 @@ export const useJsonTransformations = (
     try {
       const content = editor.getValue();
       
-      // Safety check: don't parse very large content
-      if (content.length > 1_000_000) {
-        console.log(`JSON Transform: Content too large (${content.length} bytes), skipping camelCase transform`); // <<< ADD THIS
-        return;
-      }
+
       
       const json = JSON.parse(content);
 
@@ -48,11 +44,7 @@ export const useJsonTransformations = (
     try {
       const content = editor.getValue();
       
-      // Safety check: don't parse very large content
-      if (content.length > 1_000_000) {
-        console.log(`JSON Transform: Content too large (${content.length} bytes), skipping snakeCase transform`); // <<< ADD THIS
-        return;
-      }
+
       
       const json = JSON.parse(content);
 
@@ -75,11 +67,7 @@ export const useJsonTransformations = (
     try {
       const content = editor.getValue();
       
-      // Safety check: don't parse very large content
-      if (content.length > 1_000_000) {
-        console.log(`JSON Transform: Content too large (${content.length} bytes), skipping kebabCase transform`); // <<< ADD THIS
-        return;
-      }
+
       
       const json = JSON.parse(content);
 

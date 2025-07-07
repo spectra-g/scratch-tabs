@@ -181,18 +181,12 @@ features:
     const firstFewOriginalLines = linesToAnalyze.join('\n');
 
     if (JSON_START_END_REGEX.test(trimmedContent)) {
-      // Safety check: don't parse very large content
-      if (trimmedContent.length > 1_000_000) {
-        console.log(`YAML Detector: Content too large (${trimmedContent.length} bytes), skipping JSON validation`); // <<< ADD THIS
-        // Don't penalize for large content, assume it's not JSON to avoid blocking
-      } else {
-        try {
-          JSON.parse(trimmedContent); // Check if it's valid JSON
-          // Strong penalty if it's valid JSON - this should take precedence over YAML signals
-          confidenceScore -= 1.5; // Increased penalty to ensure JSON always wins
-          strongYAMLSignal = false; // Always reset YAML signal for valid JSON
-        } catch (e) { /* Not valid JSON, no penalty from this rule */ }
-      }
+      try {
+        JSON.parse(trimmedContent); // Check if it's valid JSON
+        // Strong penalty if it's valid JSON - this should take precedence over YAML signals
+        confidenceScore -= 1.5; // Increased penalty to ensure JSON always wins
+        strongYAMLSignal = false; // Always reset YAML signal for valid JSON
+      } catch (e) { /* Not valid JSON, no penalty from this rule */ }
     }
 
     let markdownFeatureCount = 0;

@@ -22,24 +22,9 @@ interface StatusBarProps {
   side: 'left' | 'right'
 }
 
-// Threshold for considering content "large" (100KB)
-const LARGE_CONTENT_THRESHOLD = 100000000;
-
-// Lightweight content accessor that avoids expensive operations on large content
+// Simple content accessor for language detection
 const getContentForLanguageDetection = (tab: Tab): string => {
-  // If content is already in the tab object and it's small, use it
-  if (tab.content && tab.content.length <= LARGE_CONTENT_THRESHOLD) {
-    return tab.content;
-  }
-  
-  // For large content, try to get a sample from the model manager
-  if (tab.content && tab.content.length > LARGE_CONTENT_THRESHOLD) {
-    // Use only the first 10KB for language detection to avoid performance issues
-    return tab.content.substring(0, 10000);
-  }
-  
-  // Fallback to empty string
-  return '';
+  return tab.content || '';
 };
 
 export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) => {
@@ -81,21 +66,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     if (!activeTab || activeTab.isTablet) {
       return {
         potentialMatches: [],
-        contentSample: '',
-        isLargeContent: false
+        contentSample: ''
       };
     }
 
     const contentSample = getContentForLanguageDetection(activeTab);
-    const isLargeContent = (activeTab.content?.length || 0) > LARGE_CONTENT_THRESHOLD;
-    
-    // Only run language detection if content is not too large
-    const potentialMatches = isLargeContent ? [] : getPotentialLanguageMatches(contentSample);
+    const potentialMatches = getPotentialLanguageMatches(contentSample);
     
     return {
       potentialMatches,
-      contentSample,
-      isLargeContent
+      contentSample
     };
   }, [activeTab?.id, activeTab?.content, activeTab?.isTablet]);
 
@@ -115,7 +95,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
       isSeparator: false 
     })).sort((a, b) => a.name.localeCompare(b.name));
     
-    const { potentialMatches, contentSample, isLargeContent } = languageDetectionData;
+    const { potentialMatches, contentSample } = languageDetectionData;
     const isLocked = activeTab.languageLocked;
     const currentLanguageId = activeTab.language;
     const popupList: PopupMenuItem[] = [];
@@ -125,21 +105,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
                            { id: 'plaintext', name: 'Plaintext', isSeparator: false };
     const isCurrentlyPlaintext = currentLanguageId === 'plaintext';
 
-    // For large content, skip language detection and just show all languages
-    if (isLargeContent) {
-      // Add plaintext first if it's not the current language
-      if (plaintextEntry && !isCurrentlyPlaintext) {
-        popupList.push(plaintextEntry);
-      }
-      
-      // Add all other languages except plaintext and current language
-      const otherLangs = allLangs.filter(l => 
-        l.id !== 'plaintext' && l.id !== currentLanguageId
-      );
-      popupList.push(...otherLangs);
-      
-      return popupList;
-    }
+
 
     // Scenario A: Locked, empty, or no real suggestions (just plaintext)
     if (isLocked || !contentSample?.trim() || potentialMatches.length === 0 || 
@@ -228,7 +194,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     const currentLanguageObject = languageRegistry.getById(currentLanguageId);
     const currentLanguageName = currentLanguageObject?.name || currentLanguageId;
     const isLocked = activeTab.languageLocked;
-    const { potentialMatches, isLargeContent } = languageDetectionData;
+    const { potentialMatches } = languageDetectionData;
 
     let displayLabel = "Plaintext";
     let showDotIndicator = false;
@@ -240,9 +206,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
       if (hasAlternatives) {
          showDotIndicator = true; // Show a dot if alternatives exist even when locked
       }
-    } else if (isLargeContent) {
-      // For large content, just show the current language without detection
-      displayLabel = currentLanguageName;
     } else if (!languageDetectionData.contentSample?.trim()) {
       displayLabel = "Plaintext"; // Already default
     } else if (potentialMatches.length === 0 || (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
