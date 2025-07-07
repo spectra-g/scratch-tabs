@@ -752,10 +752,7 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
    * Works with both complete and partial content
    */
   detect(content: string): DetectionResult {
-    console.log(`JSON Detector: Called with content length: ${content.length}`); // <<< ADD THIS
-    
 
-    
     const trimmed = content.trim();
     if (trimmed.length < 2) {
       return this.noMatch();

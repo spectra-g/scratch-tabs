@@ -25,26 +25,47 @@ These are the non-negotiable principles of the architecture. Adhere to them to p
 
 ### `ModelManager` (`services/modelManager.ts`)
 
-This is the most critical piece of the architecture.
+The `ModelManager` is a singleton responsible for managing Monaco editor models for all open tabs. Its responsibilities include:
 
-*   **Role:** Manages a **Least Recently Used (LRU) cache** of active Monaco editor models and acts as a **Content Gateway** between the store and database.
-*   **Purpose:** To limit the number of memory-intensive Monaco models that exist at any given time, regardless of how many tabs are open, and to ensure reliable access to tab content.
-*   **Responsibilities:**
-    *   Maintain a map of `tabId -> ITextModel`.
-    *   Limit the number of stored models to `MAX_MODELS`.
-    *   **Content Gateway Functionality (NEW):**
-        *   When a model is requested via `get(tab)`, it first checks if `tab.content` is available.
-        *   If content is missing (undefined/null), it fetches the content from the database as a fallback.
-        *   Updates the `tabsStore` with fetched content to maintain consistency across the application.
-        *   Handles database errors gracefully, falling back to empty content if necessary.
-        *   Prevents duplicate database fetches through promise caching.
-    *   When a model is requested via `get(tab)`:
-        *   If it's in the cache, return it and mark it as recently used.
-        *   If not, ensure the tab has content (fetch from database if needed), then create a new model.
-    *   When the cache is full, it **evicts** the least recently used model. Before disposing the model, it ensures the `tabsStore` has its latest content.
-    *   It is the **ONLY** part of the application that should attach an `onDidChangeContent` listener to a model. This listener is responsible for updating the `tabsStore` with the latest content.
-    *   Provides a `dispose(tabId)` method to be called when a tab is permanently closed.
-    *   Provides a `disposeAll()` method to be called when switching workspaces to prevent memory leaks.
+- Creating, caching, and disposing Monaco models for each tab.
+- Ensuring only a limited number of models (default: 10) are kept in memory at once (LRU eviction).
+- Synchronizing model content with the application store and database.
+- Handling model language updates and content updates.
+- Providing debug information about the model cache.
+
+### Lifecycle and Caching
+- When a tab is opened, `ModelManager.get(tab)` returns a Monaco model for that tab, creating it if necessary.
+- If the model already exists and is not disposed, it is returned from the cache.
+- If the model is disposed or missing, a new model is created.
+- If the number of models exceeds the cache limit, the least recently used model is evicted and disposed.
+- When a model is disposed, its latest content is saved to the store.
+
+### Content Synchronization
+- Model content is kept in sync with the store via `onDidChangeContent` listeners.
+- If a tab's content is missing, ModelManager fetches it from the database and updates the store.
+
+### Error Handling
+- ModelManager methods are designed to be robust: if an error occurs (e.g., model creation fails), it logs a warning and returns a fallback (empty) model or does nothing, rather than throwing.
+- Methods like `updateModelContent` and `updateModelLanguage` are no-ops if the model does not exist or is disposed.
+
+### Singleton Usage
+- ModelManager is a singleton. Its state is global for the app session.
+- Tests and consumers should call `disposeAll()` to reset state if needed.
+
+### API
+- `get(tab: Tab): Promise<ITextModel>`: Returns or creates a model for the tab.
+- `dispose(tabId: string)`: Disposes a model and its listener.
+- `disposeAll()`: Disposes all models.
+- `updateModelContent(tabId, content)`: Updates the model's content if it exists.
+- `updateModelLanguage(tabId, language)`: Updates the model's language if it exists.
+- `getContent(tabId)`: Gets the current content of a model.
+- `getDebugInfo()`: Returns cache and LRU state for debugging.
+
+### Notes
+- ModelManager is the single source of truth for Monaco models and their lifecycle.
+- Editor components should always obtain models via ModelManager.
+- ModelManager ensures undo/redo stacks are preserved across tab switches as long as models are not disposed.
+- All error handling is internal; consumers should not expect exceptions from ModelManager methods.
 
 ### `EditorInstance.tsx`
 

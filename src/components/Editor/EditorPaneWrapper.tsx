@@ -38,7 +38,6 @@ const getContentForPreview = (tab: any): string => {
 };
 
 export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
-  console.log(`[Render] EditorPaneWrapper for side: ${side}`);
   const [editorInstance, setEditorInstance] = React.useState<any>(null);
   
   // Select only the IDs and minimal state needed for logic here

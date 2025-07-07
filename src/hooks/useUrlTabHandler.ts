@@ -140,14 +140,12 @@ export const useUrlTabHandler = () => {
 
     // Effect 1: Handles STATE changes, updates URL
     useEffect(() => {
-        console.log('[URL] State-to-URL effect triggered.'); // <<< ADD THIS
         // Completely disable URL handler when workspace is loading
         if (isLoading || !initialUrlProcessed) {
             return;
         }
 
         if (isProcessingUrlChange.current) {
-            console.log('[URL] State-to-URL effect: Bailed (isProcessingUrlChange).'); // <<< ADD THIS
             return; // Don't run if the other effect is actively processing a URL change
         }
 
@@ -159,7 +157,6 @@ export const useUrlTabHandler = () => {
             const targetPath = getTargetPath(); // Calculates path based on current state (active tab or '/')
 
             if (targetPath !== currentPath) {
-                console.log(`[URL] State-to-URL effect: Navigating from ${currentPath} to ${targetPath}`); // <<< ADD THIS
                 isUserNavigation.current = false; // Mark as app navigation BEFORE navigating
                 navigate(targetPath, { replace: true });
             }
@@ -171,7 +168,6 @@ export const useUrlTabHandler = () => {
 
     // Effect 2: Handles URL changes, updates STATE
     useEffect(() => {
-        console.log(`[URL] URL-to-State effect triggered with param: ${urlIdentifierParam}`); // <<< ADD THIS
         // Wait for workspace/tabs to finish loading before processing initial URL
         if (isLoading || !initialUrlProcessed) {
             return;
@@ -192,14 +188,12 @@ export const useUrlTabHandler = () => {
         // If isUserNavigation is false, it means the state effect just caused the navigation.
         // We should only update the prev ref and reset the flag.
         if (!isUserNavigation.current) {
-            console.log('[URL] URL-to-State effect: Bailed (isUserNavigation is false).'); // <<< ADD THIS
             prevUrlIdentifierParamRef.current = urlIdentifierParam;
             isUserNavigation.current = true; // Reset for next potential user navigation
             return; // DO NOT proceed to find/create tab
         }
 
         // --- If we reach here, it's a USER navigation to a NEW URL ---
-        console.log('[URL] URL-to-State effect: Proceeding with state update.'); // <<< ADD THIS
         isProcessingUrlChange.current = true; // Prevent state effect from interfering
         if (stateUpdateTimeout.current) {
             clearTimeout(stateUpdateTimeout.current); // Cancel pending state updates
@@ -311,12 +305,8 @@ const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): 
 let handleInitialUrlExecuted = false;
 
 export const handleInitialUrl = async () => {
-    console.time('[UrlTabHandler] handleInitialUrl');
-    console.log('[UrlTabHandler] Starting initial URL processing');
     const { tabs } = useTabsStore.getState();
     const { setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
-    console.log(`[UrlTabHandler] Processing with ${tabs.length} existing tabs`);
-    console.timeEnd('[UrlTabHandler] handleInitialUrl');
 
     // Prevent multiple executions
     if (handleInitialUrlExecuted) {

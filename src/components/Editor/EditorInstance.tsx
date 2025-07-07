@@ -154,12 +154,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
 
         // Get the model from ModelManager (this ensures it exists and is loaded)
         const newModel = await modelManager.get(activeTab);
-        console.log(`[EditorInstance] Loaded model for tab ${activeTab.id}`);
 
         // Set the model on the editor directly (following architecture)
         if (editor.getModel() !== newModel) {
           editor.setModel(newModel);
-          console.log(`[EditorInstance] Set model for tab ${activeTab.id} on editor`);
         }
 
         // Restore view state for the new tab
@@ -185,7 +183,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
       if (editor) {
         const currentModel = editor.getModel();
         if (currentModel && !currentModel.isDisposed()) {
-          console.log(`[EditorInstance] Detaching model from editor before unmount, URI: ${currentModel.uri.toString()}`);
           editor.setModel(null);
         }
       }
@@ -254,12 +251,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
           try {
             // Get the model from ModelManager (this ensures it exists and is loaded)
             const initialModel = await modelManager.get(activeTab);
-            console.log(`[EditorInstance] Loaded initial model for tab ${activeTab.id}`);
             
             // Set the model on the editor directly
             if (editor.getModel() !== initialModel) {
               editor.setModel(initialModel);
-              console.log(`[EditorInstance] Set initial model for tab ${activeTab.id} on editor`);
             }
             
             // Restore view state if it exists
