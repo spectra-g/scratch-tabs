@@ -152,11 +152,12 @@ export const useContextMenuConfig = (
         console.log(`[ContextMenu] Sample content length: ${sampleContent.length}`);
         console.log(`[ContextMenu] Sample content preview: "${sampleContent.substring(0, 100)}${sampleContent.length > 100 ? '...' : ''}"`);
         
-        // Update the tab content in the store
+        // Update the tab content and language in the store first
         rootStore.updateTabContent(tabId, sampleContent);
         rootStore.updateTabLanguage(tabId, languageId, true);
         
         // Update the model content directly if the model exists
+        // The model's listener will sync back to store, but content is already the same
         modelManager.updateModelContent(tabId, sampleContent);
       } else {
         console.log(`[ContextMenu] Tab not found or is tablet: ${tabId}`);
