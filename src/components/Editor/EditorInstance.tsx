@@ -143,7 +143,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     const editor = editorRef.current;
     const previousTabId = currentTabIdRef.current;
 
-    const switchModel = async () => {
+    (async () => {
       try {
         // Save view state for the tab we are leaving
         const prevModel = editor.getModel();
@@ -175,9 +175,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
       } catch (error) {
         console.error(`[EditorInstance] Failed to switch model for tab ${activeTab.id}:`, error);
       }
-    };
-
-    switchModel();
+    })();
   }, [activeTabId, activeTab]);
 
   // Focus effect - only focus if this editor instance's side matches the globally active editor side
