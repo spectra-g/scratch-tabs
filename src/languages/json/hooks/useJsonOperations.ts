@@ -102,6 +102,13 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON Flatten: Content too large (${content.length} bytes), skipping operation`);
+        return;
+      }
+      
       const json = JSON.parse(content);
       if (typeof json !== 'object' || json === null || Array.isArray(json)) {
          console.error('Flatten requires a JSON object.');
@@ -133,6 +140,13 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON Unflatten: Content too large (${content.length} bytes), skipping operation`);
+        return;
+      }
+      
       const json = JSON.parse(content);
        if (typeof json !== 'object' || json === null || Array.isArray(json)) {
          console.error('Unflatten requires a flat JSON object.');
@@ -170,6 +184,13 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON Remove Empty: Content too large (${content.length} bytes), skipping operation`);
+        return;
+      }
+      
       const json = JSON.parse(content);
 
       const removeEmpty = (obj: any): any => {

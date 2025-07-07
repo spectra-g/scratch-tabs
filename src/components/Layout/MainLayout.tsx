@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRootStore } from '../../stores/rootStore';
+import { useTabsStore } from '../../stores/tabsStore';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { usePersistenceStore } from '../../stores/persistenceStore';
 import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
@@ -14,20 +16,17 @@ import { SummarizeModal } from '../AI/SummarizeModal';
 import { SearchModal } from '../Search/SearchModal';
 import { AIModelManagementModal } from '../AI/AIModelManagementModal';
 import { useAIStore } from '../../stores/aiStore';
+import { shallow } from 'zustand/shallow';
 
 const MainLayout: React.FC = () => {
-  const {
-    tabs,
-    splitView,
-    activeLeftTabId,
-    activeRightTabId,
-    saveTabDataById,
-    setSplitRatio
-  } = useRootStore(state => ({
-    tabs: state.tabs,
-    splitView: state.splitView,
-    activeLeftTabId: state.splitView?.activeLeftTabId,
-    activeRightTabId: state.splitView?.activeRightTabId,
+  // *** CRITICAL FIX: Select state from the source stores ***
+  const tabCount = useTabsStore(state => state.tabs.length);
+  const splitView = useSplitViewStore(state => state.splitView);
+  const activeLeftTabId = useSplitViewStore(state => state.splitView?.activeLeftTabId);
+  const activeRightTabId = useSplitViewStore(state => state.splitView?.activeRightTabId);
+  
+  // Actions can still come from the root store
+  const { saveTabDataById, setSplitRatio } = useRootStore(state => ({
     saveTabDataById: state.saveTabDataById,
     setSplitRatio: state.setSplitRatio,
   }));
@@ -100,7 +99,7 @@ const MainLayout: React.FC = () => {
   const { isOpen: isSearchOpen, toggleSearch } = useSearchStore();
 
   const handleOpenDiffModal = (fromHistory?: boolean, explicitSide?: 'left' | 'right', explicitTabId?: string) => {
-    const currentSplitView = useRootStore.getState().splitView;
+    const currentSplitView = useSplitViewStore.getState().splitView;
     
     if (fromHistory) {
       // Determine which side we're on based on explicit side or current state
@@ -167,7 +166,7 @@ const MainLayout: React.FC = () => {
     const handleOpenSummarizeModal = (tabId: string) => {
         console.time('[MainLayout] Finding tab for summarize modal');
         // This find should be fast unless 'tabs' is gigantic
-        const tab = useRootStore.getState().tabs.find(t => t.id === tabId);
+        const tab = useTabsStore.getState().tabs.find(t => t.id === tabId);
         console.log(`[MainLayout] Found tab for summarize modal: ${tab ? 'yes' : 'no'}`);
         console.timeEnd('[MainLayout] Finding tab for summarize modal');
         if (tab && tab.content) {
@@ -252,7 +251,7 @@ const MainLayout: React.FC = () => {
         ref={containerRef}
         className="flex w-full h-full min-w-0 overflow-hidden"
       >
-        {tabs.length === 0 && workspaces.length === 0 ? (
+        {tabCount === 0 && workspaces.length === 0 ? (
           <WelcomeScreen/>
         ) : (
           <>
@@ -319,8 +318,8 @@ const MainLayout: React.FC = () => {
             />
           </>
       )}
-      {isSearchOpen && <SearchModal />}
-      <AIModelManagementModal />
+      {/* {isSearchOpen && <SearchModal />}
+      <AIModelManagementModal /> */}
     </div>
   );
 };

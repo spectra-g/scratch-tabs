@@ -86,15 +86,15 @@ export const useFilteredTabs = (
         break;
       case SORT_OPTIONS.LINES_MOST:
         result.sort((a, b) => {
-          const aLines = a.isTablet ? 0 : (a.content.split('\n').length);
-          const bLines = b.isTablet ? 0 : (b.content.split('\n').length);
+          const aLines = a.isTablet ? 0 : ((a.content || '').split('\n').length);
+          const bLines = b.isTablet ? 0 : ((b.content || '').split('\n').length);
           return bLines - aLines; // Descending order (most first)
         });
         break;
       case SORT_OPTIONS.LINES_LEAST:
         result.sort((a, b) => {
-          const aLines = a.isTablet ? 0 : (a.content.split('\n').length);
-          const bLines = b.isTablet ? 0 : (b.content.split('\n').length);
+          const aLines = a.isTablet ? 0 : ((a.content || '').split('\n').length);
+          const bLines = b.isTablet ? 0 : ((b.content || '').split('\n').length);
           return aLines - bLines; // Ascending order (least first)
         });
         break;
@@ -154,7 +154,7 @@ export const useDuplicateTabs = (
 
     currentViewTabs.forEach(tab => {
       if (!tab.isTablet) {
-        const content = tab.content.trim();
+        const content = (tab.content || '').trim();
         if (content) {
           if (!contentMap.has(content)) {
             contentMap.set(content, []);
@@ -191,7 +191,7 @@ export const useEmptyTabs = (
     return currentViewTabs.filter(tab => {
       // For regular tabs, check if content is empty
       if (!tab.isTablet) {
-        return tab.content.trim() === '';
+        return (tab.content || '').trim() === '';
       }
       // For tablets, consider them non-empty as they might have state
       return false;

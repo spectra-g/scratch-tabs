@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useRootStore } from '../stores/rootStore';
+import { useTabsStore } from '../stores/tabsStore';
+import { useSplitViewStore } from '../stores/splitViewStore';
 import { useWorkspaceStore } from '../stores/workspaceStore';
 import { Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
@@ -43,30 +45,26 @@ export const useUrlTabHandler = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // *** CRITICAL FIX: Select state from source stores ***
+    const { tabs } = useTabsStore();
+    const { splitView } = useSplitViewStore();
     const {
-        tabs,
-        activeLeftTabId,
-        activeRightTabId,
-        isSplit,
-        activeSide,
         setActiveLeftTab,
         setActiveRightTab,
         setActiveSide,
-        splitView,
         initialUrlProcessed,
     } = useRootStore(state => ({
-        tabs: state.tabs,
-        activeLeftTabId: state.splitView?.activeLeftTabId,
-        activeRightTabId: state.splitView?.activeRightTabId,
-        isSplit: state.splitView?.isSplit || false,
-        activeSide: state.splitView?.activeSide || 'left',
         setActiveLeftTab: state.setActiveLeftTab,
         setActiveRightTab: state.setActiveRightTab,
         setActiveSide: state.setActiveSide,
-        splitView: state.splitView,
-        // Get the new flag from the store
         initialUrlProcessed: state.initialUrlProcessed,
     }));
+
+    // Extract values from splitView
+    const activeLeftTabId = splitView?.activeLeftTabId;
+    const activeRightTabId = splitView?.activeRightTabId;
+    const isSplit = splitView?.isSplit || false;
+    const activeSide = splitView?.activeSide || 'left';
     const { isLoading } = useWorkspaceStore();
 
     // Split view helpers
@@ -315,7 +313,8 @@ let handleInitialUrlExecuted = false;
 export const handleInitialUrl = async () => {
     console.time('[UrlTabHandler] handleInitialUrl');
     console.log('[UrlTabHandler] Starting initial URL processing');
-    const { tabs, setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
+    const { tabs } = useTabsStore.getState();
+    const { setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
     console.log(`[UrlTabHandler] Processing with ${tabs.length} existing tabs`);
     console.timeEnd('[UrlTabHandler] handleInitialUrl');
 

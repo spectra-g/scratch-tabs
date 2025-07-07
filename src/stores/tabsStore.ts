@@ -79,41 +79,11 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
 
   setActiveTab: (id) => set({ activeTabId: id }),
 
-  updateTabContent: (id, content) => {
-    console.time(`[State Update] updateTabContent for tab ${id}`);
-    console.log(`[State Update] Updating content for tab ${id}. New content size: ${content.length} bytes.`);
-    
-    // Check if we're in development mode and if React DevTools might be interfering
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[State Update] Running in development mode, React DevTools might be active`);
-    }
-    
-    console.time(`[State Update] set() call for tab ${id}`);
-    console.log(`[State Update] About to call set() for tab ${id}`);
-    
-    set((state) => {
-      console.log(`[State Update] Inside set() callback for tab ${id}, processing ${state.tabs.length} tabs`);
-      console.time(`[State Update] map() operation for tab ${id}`);
-      
-      const newTabs = state.tabs.map((tab) => {
-        if (tab.id === id) {
-          console.log(`[State Update] Updating tab ${id} with new content`);
-          return { ...tab, content, lastModified: Date.now() };
-        }
-        return tab;
-      });
-      
-      console.timeEnd(`[State Update] map() operation for tab ${id}`);
-      console.log(`[State Update] Returning new state for tab ${id}`);
-      
-      return {
-        tabs: newTabs,
-      };
-    });
-    
-    console.timeEnd(`[State Update] set() call for tab ${id}`);
-    console.timeEnd(`[State Update] updateTabContent for tab ${id}`);
-  },
+  updateTabContent: (id, content) => set((state) => ({
+    tabs: state.tabs.map((tab) =>
+      tab.id === id ? { ...tab, content, lastModified: Date.now() } : tab
+    ),
+  })),
 
   updateTabLanguage: (id, language, lock = true) => set((state) => ({
     tabs: state.tabs.map((tab) =>

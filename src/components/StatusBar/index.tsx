@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { getLanguageStatusItem, getLanguageOptionsMenu } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
@@ -6,6 +6,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Tab } from "../../types.ts";
 import { AIStatusIcon } from '../AI/AIStatusIcon';
 import { useRootStore } from '../../stores';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { Search, Coffee } from 'lucide-react';
 import { useSearchStore } from '../../stores/searchStore';
 import { languageRegistry } from '../../languages';
@@ -13,6 +14,7 @@ import { getPotentialLanguageMatches } from '../../languages';
 import { LanguageSelectionPopup } from './LanguageSelectionPopup';
 import { ExtendedViewButtons } from './ExtendedViewButtons';
 import type { PopupMenuItem } from './types';
+import { modelManager } from '../../services/modelManager';
 
 interface StatusBarProps {
   editor: monaco.editor.IStandaloneCodeEditor | null,
@@ -20,8 +22,29 @@ interface StatusBarProps {
   side: 'left' | 'right'
 }
 
+// Threshold for considering content "large" (100KB)
+const LARGE_CONTENT_THRESHOLD = 100000;
+
+// Lightweight content accessor that avoids expensive operations on large content
+const getContentForLanguageDetection = (tab: Tab): string => {
+  // If content is already in the tab object and it's small, use it
+  if (tab.content && tab.content.length <= LARGE_CONTENT_THRESHOLD) {
+    return tab.content;
+  }
+  
+  // For large content, try to get a sample from the model manager
+  if (tab.content && tab.content.length > LARGE_CONTENT_THRESHOLD) {
+    // Use only the first 10KB for language detection to avoid performance issues
+    return tab.content.substring(0, 10000);
+  }
+  
+  // Fallback to empty string
+  return '';
+};
+
 export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) => {
-  const { splitView, updateTabLanguage } = useRootStore();
+  const { splitView } = useSplitViewStore();
+  const { updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const [tabletLabel, setTabletLabel] = useState('');
@@ -53,8 +76,31 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     getTabletLabel();
   }, [activeTab]);
 
+  // Memoize language detection to avoid expensive operations on every render
+  const languageDetectionData = useMemo(() => {
+    if (!activeTab || activeTab.isTablet) {
+      return {
+        potentialMatches: [],
+        contentSample: '',
+        isLargeContent: false
+      };
+    }
+
+    const contentSample = getContentForLanguageDetection(activeTab);
+    const isLargeContent = (activeTab.content?.length || 0) > LARGE_CONTENT_THRESHOLD;
+    
+    // Only run language detection if content is not too large
+    const potentialMatches = isLargeContent ? [] : getPotentialLanguageMatches(contentSample);
+    
+    return {
+      potentialMatches,
+      contentSample,
+      isLargeContent
+    };
+  }, [activeTab?.id, activeTab?.content, activeTab?.isTablet]);
+
   const LanguageStatusItem = activeTab && !activeTab.isTablet ? 
-    getLanguageStatusItem(activeTab.language, activeTab.content, activeTab) : null;
+    getLanguageStatusItem(activeTab.language, languageDetectionData.contentSample, activeTab) : null;
 
   const LanguageOptionsMenu = activeTab && !activeTab.isTablet ? 
     getLanguageOptionsMenu(activeTab.language, editor) : null;
@@ -69,7 +115,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
       isSeparator: false 
     })).sort((a, b) => a.name.localeCompare(b.name));
     
-    const potentialMatches = getPotentialLanguageMatches(activeTab.content);
+    const { potentialMatches, contentSample, isLargeContent } = languageDetectionData;
     const isLocked = activeTab.languageLocked;
     const currentLanguageId = activeTab.language;
     const popupList: PopupMenuItem[] = [];
@@ -79,8 +125,24 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
                            { id: 'plaintext', name: 'Plaintext', isSeparator: false };
     const isCurrentlyPlaintext = currentLanguageId === 'plaintext';
 
+    // For large content, skip language detection and just show all languages
+    if (isLargeContent) {
+      // Add plaintext first if it's not the current language
+      if (plaintextEntry && !isCurrentlyPlaintext) {
+        popupList.push(plaintextEntry);
+      }
+      
+      // Add all other languages except plaintext and current language
+      const otherLangs = allLangs.filter(l => 
+        l.id !== 'plaintext' && l.id !== currentLanguageId
+      );
+      popupList.push(...otherLangs);
+      
+      return popupList;
+    }
+
     // Scenario A: Locked, empty, or no real suggestions (just plaintext)
-    if (isLocked || !activeTab.content.trim() || potentialMatches.length === 0 || 
+    if (isLocked || !contentSample?.trim() || potentialMatches.length === 0 || 
         (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
       
       // Add plaintext first if it's not the current language
@@ -166,7 +228,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     const currentLanguageObject = languageRegistry.getById(currentLanguageId);
     const currentLanguageName = currentLanguageObject?.name || currentLanguageId;
     const isLocked = activeTab.languageLocked;
-    const potentialMatches = getPotentialLanguageMatches(activeTab.content);
+    const { potentialMatches, isLargeContent } = languageDetectionData;
 
     let displayLabel = "Plaintext";
     let showDotIndicator = false;
@@ -178,7 +240,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
       if (hasAlternatives) {
          showDotIndicator = true; // Show a dot if alternatives exist even when locked
       }
-    } else if (!activeTab.content.trim()) {
+    } else if (isLargeContent) {
+      // For large content, just show the current language without detection
+      displayLabel = currentLanguageName;
+    } else if (!languageDetectionData.contentSample?.trim()) {
       displayLabel = "Plaintext"; // Already default
     } else if (potentialMatches.length === 0 || (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
       displayLabel = "Plaintext";

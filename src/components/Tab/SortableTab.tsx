@@ -104,7 +104,10 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         }
     }, [isEditing]);
 
-    const getTabLineCount = (content: string): number => content.split('\n').length;
+    const getTabLineCount = (content: string | undefined): number => {
+        if (!content) return 0;
+        return content.split('\n').length;
+    };
     const lineCount = !tab.isTablet && tab.content ? getTabLineCount(tab.content) : 0;
     const relativeWidth = maxLineCount > 0 ? Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100 : 0;
 

@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useRootStore } from '../stores';
+import { useTabsStore } from '../stores/tabsStore';
 import { useDiffEditor } from './DiffModal/useDiffEditor';
 import { DiffModalUI } from './DiffModal/DiffModalUI';
 
@@ -13,7 +14,8 @@ interface DiffModalProps {
 export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onClose, fromHistory = false }) => {
   console.time('[DiffModal] Component render');
   console.log('[DiffModal] Rendering with leftTabId:', leftTabId, 'rightTabId:', rightTabId);
-  const { tabs, updateTabContent } = useRootStore();
+  const { tabs } = useTabsStore();
+  const { updateTabContent } = useRootStore();
   console.timeEnd('[DiffModal] Component render');
 
   const leftTab = tabs.find(tab => tab.id === leftTabId);

@@ -1,5 +1,7 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useMemo } from 'react';
 import { useRootStore } from '../../stores';
+import { useTabsStore } from '../../stores/tabsStore';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { EditorInstance } from './EditorInstance';
 import { TabletView } from '../Tab/TabletView';
 import { extendedViewRegistry } from '../../views/registry';
@@ -29,32 +31,51 @@ const PreviewLoadingFallback = () => (
   <div className="text-gray-400 p-4 animate-pulse">Loading Preview...</div>
 );
 
+// Threshold for considering content "large" (100KB)
+const LARGE_CONTENT_THRESHOLD = 100000;
+
+// Lightweight content accessor for preview components
+const getContentForPreview = (tab: any): string => {
+  if (!tab?.content) return '';
+  
+  // For large content, show a truncated version in preview
+  if (tab.content.length > LARGE_CONTENT_THRESHOLD) {
+    return tab.content.substring(0, 50000) + '\n\n... [Content truncated for performance] ...';
+  }
+  
+  return tab.content;
+};
+
 export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
-  console.log(`[Render] EditorPaneWrapper for side: ${side}`); // <<< ADD THIS
+  console.log(`[Render] EditorPaneWrapper for side: ${side}`);
   const [editorInstance, setEditorInstance] = React.useState<any>(null);
   
-  const {
-    tabs,
-    splitView,
-    updateTabState,
-    getActiveView
-  } = useRootStore();
+  // Select only the IDs and minimal state needed for logic here
+  const activeTabId = useSplitViewStore(state => 
+    side === 'left' ? state.splitView.activeLeftTabId : state.splitView.activeRightTabId
+  );
 
-  const activeTabId = side === 'left' ? splitView.activeLeftTabId : splitView.activeRightTabId;
-  const activeTab = tabs.find((tab) => tab.id === activeTabId);
+  // Get actions from rootStore
+  const { updateTabState, getActiveView } = useRootStore.getState();
+
+  // Get the specific tab object here. This is efficient.
+  const activeTab = useTabsStore(state => state.tabs.find(t => t.id === activeTabId));
+
+  // Memoize content for preview components to avoid expensive re-renders
+  const previewContent = useMemo(() => {
+    return getContentForPreview(activeTab);
+  }, [activeTab?.id, activeTab?.content]);
 
   const handleTabletStateChange = (newState: string) => {
     if (!activeTabId) return;
     updateTabState(activeTabId, {tabletState: newState});
   };
 
-  // Check for extended views
+  // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
   const extendedView = activeTab && activeViewId 
     ? extendedViewRegistry.getView(activeTab.language, activeViewId)
     : null;
-
-  // Use per-tab preview mode instead of global preview mode
   const shouldShowMarkdownPreview = activeTab?.previewMode && activeTab?.language === 'markdown';
   const shouldShowHtmlPreview = activeTab?.previewMode && activeTab?.language === 'html';
   const shouldShowPreview = shouldShowMarkdownPreview || shouldShowHtmlPreview;
@@ -89,11 +110,11 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
       >
         {/* Main Content Area */}
         <div className="flex-1 overflow-hidden">
-          {activeTab ? (
+          {activeTab && activeTabId ? (
             extendedView ? (
               // Render extended view (like CSV table editor)
               <extendedView.component
-                content={activeTab.content}
+                content={previewContent}
                 onContentChange={(newContent) => updateTabState(activeTab.id, { content: newContent })}
                 tabId={activeTab.id}
                 isActive={true}
@@ -104,11 +125,11 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
                 onChange={handleTabletStateChange}
               />
             ) : (
-              // EditorInstance without its own StatusBar
+              // Pass only the ID to EditorInstance
               <EditorInstance
                 key={activeTab.id}
                 side={side}
-                activeTab={activeTab}
+                activeTabId={activeTabId}
                 onEditorReady={setEditorInstance}
               />
             )
@@ -149,10 +170,10 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
           <div className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-gray-850" style={{ padding: shouldShowMarkdownPreview ? '1rem' : '0' }}>
             <Suspense fallback={<PreviewLoadingFallback />}>
               {shouldShowMarkdownPreview && (
-                <LazyMarkdownPreview content={activeTab.content} />
+                <LazyMarkdownPreview content={previewContent} />
               )}
               {shouldShowHtmlPreview && (
-                <LazyHtmlPreview content={activeTab.content} />
+                <LazyHtmlPreview content={previewContent} />
               )}
             </Suspense>
           </div>

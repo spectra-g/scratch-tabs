@@ -319,10 +319,10 @@ export const WorkspaceSwitcher: React.FC = () => {
         isOpen={isImportModalActive}
         onClose={closeImportModal}
       />
-      <TabManagementModal
+      {/* <TabManagementModal
         isOpen={isTabManagementModalOpen}
         onClose={() => closeTabManagementModal()}
-      />
+      /> */}
     </div>
   );
 };

@@ -22,8 +22,16 @@ export const useJsonConversions = (
   } = useJsonModals();
 
   const handleToJava = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON to Java: Content too large (${content.length} bytes), skipping conversion`);
+        return;
+      }
+      
       const json = JSON.parse(content);
       
       // Generate Java classes
@@ -45,8 +53,16 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleTreeView = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't process very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON Tree View: Content too large (${content.length} bytes), skipping operation`);
+        return;
+      }
+      
       openTreeViewModal(content);
     } catch (error) {
       console.error('Failed to convert to tree view:', error);
@@ -54,8 +70,16 @@ export const useJsonConversions = (
   }, [editor, openTreeViewModal]);
 
   const handleToTypeScript = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON to TypeScript: Content too large (${content.length} bytes), skipping conversion`);
+        return;
+      }
+      
       const json = JSON.parse(content);
 
       const tsInterfaces = generateTypeScriptInterfaces(json);
@@ -73,8 +97,16 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToPython = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON to Python: Content too large (${content.length} bytes), skipping conversion`);
+        return;
+      }
+      
       const json = JSON.parse(content);
 
       const pythonClasses = generatePythonClasses(json);
@@ -92,8 +124,16 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToGo = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON to Go: Content too large (${content.length} bytes), skipping conversion`);
+        return;
+      }
+      
       const json = JSON.parse(content);
 
       const goStructs = generateGoStructs(json);
@@ -111,8 +151,16 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToCSharp = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON to C#: Content too large (${content.length} bytes), skipping conversion`);
+        return;
+      }
+      
       const json = JSON.parse(content);
 
       const csharpClasses = generateCSharpClasses(json);
@@ -130,8 +178,16 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToCsv = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON to CSV: Content too large (${content.length} bytes), skipping conversion`);
+        return;
+      }
+      
       const json = JSON.parse(content);
       
       const result = convertToCsv(json);
@@ -153,8 +209,16 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToYaml = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON to YAML: Content too large (${content.length} bytes), skipping conversion`);
+        return;
+      }
+      
       const json = JSON.parse(content);
       
       const yaml = convertToYaml(json);
@@ -172,8 +236,16 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToXml = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON to XML: Content too large (${content.length} bytes), skipping conversion`);
+        return;
+      }
+      
       const json = JSON.parse(content);
       
       const xml = convertToXml(json);
@@ -191,8 +263,16 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleValidateSchema = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+      // Safety check: don't parse very large content
+      if (content.length > 1_000_000) {
+        console.log(`JSON Schema: Content too large (${content.length} bytes), skipping schema generation`);
+        return;
+      }
+      
       const json = JSON.parse(content);
       const schema = generateJsonSchema(json);
       

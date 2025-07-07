@@ -56,12 +56,16 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         if (workspacesFromDB && workspacesFromDB.length > 0) {
           const sortedWorkspaces = [...workspacesFromDB].sort((a, b) => b.lastAccessed - a.lastAccessed); // Sort by lastAccessed first
           newActiveWorkspaceId = sortedWorkspaces[0].id; // Most recently accessed is the default active
-          const results = await Promise.all([
-            storage.getTabsByWorkspace(newActiveWorkspaceId),
+          
+          // *** CRITICAL FIX: Load METADATA ONLY ***
+          const [tabsMetadata, fetchedRecord] = await Promise.all([
+            storage.getTabsMetadataByWorkspace(newActiveWorkspaceId), // <-- Use new method
             storage.getSplitViewByWorkspace(newActiveWorkspaceId)
           ]);
-          tabsToLoad = results[0];
-          const fetchedRecord = results[1];
+          
+          // `tabsMetadata` now contains an array of Tab objects WITHOUT the `content` property.
+          // This is lightweight and safe to put in Zustand.
+          tabsToLoad = tabsMetadata as Tab[]; // Cast to Tab[] since we'll add content later when needed
 
           if (fetchedRecord) {
             workspaceSplitView = { // Convert Record to State

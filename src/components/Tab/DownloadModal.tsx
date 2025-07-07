@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { BaseModal } from '../../languages/json/components/modals/BaseModal';
 import { Download, CheckCircle2, Circle } from 'lucide-react';
 import { Tab } from '../../types';
-import { useRootStore } from '../../stores';
-import JSZip from 'jszip';
+import { useTabsStore } from '../../stores/tabsStore';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { languageRegistry } from '../../languages';
+import JSZip from 'jszip';
 
 interface DownloadModalProps {
   onClose: () => void;
@@ -36,15 +37,16 @@ function sanitizeFilename(name: string): string {
 export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
   console.time('[DownloadModal] Component render');
   console.log('[DownloadModal] Rendering download modal');
-  const { tabs, splitView } = useRootStore();
+  const tabsStore = useTabsStore();
+  const splitViewStore = useSplitViewStore();
   console.timeEnd('[DownloadModal] Component render');
   const [selectedTabs, setSelectedTabs] = useState<Set<string>>(new Set());
   const [isDownloading, setIsDownloading] = useState(false);
 
   // Filter out tablet tabs
-  const downloadableTabs = tabs.filter(tab => !tab.isTablet);
-  const leftTabs = downloadableTabs.filter(tab => splitView.leftTabs.includes(tab.id));
-  const rightTabs = downloadableTabs.filter(tab => splitView.rightTabs.includes(tab.id));
+  const downloadableTabs = tabsStore.tabs.filter((tab: Tab) => !tab.isTablet);
+  const leftTabs = downloadableTabs.filter((tab: Tab) => splitViewStore.splitView.leftTabs.includes(tab.id));
+  const rightTabs = downloadableTabs.filter((tab: Tab) => splitViewStore.splitView.rightTabs.includes(tab.id));
 
   const toggleTab = (tabId: string) => {
     const newSelected = new Set(selectedTabs);
@@ -57,15 +59,15 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
   };
 
   const selectAll = () => {
-    setSelectedTabs(new Set(downloadableTabs.map(tab => tab.id)));
+    setSelectedTabs(new Set(downloadableTabs.map((tab: Tab) => tab.id)));
   };
 
   const selectLeftSide = () => {
-    setSelectedTabs(new Set(leftTabs.map(tab => tab.id)));
+    setSelectedTabs(new Set(leftTabs.map((tab: Tab) => tab.id)));
   };
 
   const selectRightSide = () => {
-    setSelectedTabs(new Set(rightTabs.map(tab => tab.id)));
+    setSelectedTabs(new Set(rightTabs.map((tab: Tab) => tab.id)));
   };
 
   const clearSelection = () => {
@@ -77,7 +79,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
 
     setIsDownloading(true);
     try {
-      const selectedTabObjects = downloadableTabs.filter(tab => selectedTabs.has(tab.id));
+      const selectedTabObjects = downloadableTabs.filter((tab: Tab) => selectedTabs.has(tab.id));
 
       // If only one file is selected, download it directly
       if (selectedTabObjects.length === 1) {
@@ -85,7 +87,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
         const detector = languageRegistry.getById(tab.language);
         const extension = detector?.getFileExtension() || 'txt';
         const filename = `${sanitizeFilename(tab.title)}.${extension}`;
-        const blob = new Blob([tab.content], { type: 'text/plain;charset=utf-8' }); // Added charset
+        const blob = new Blob([tab.content || ''], { type: 'text/plain;charset=utf-8' }); // Added charset
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -99,7 +101,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
         const zip = new JSZip();
         const usedFilenames = new Set<string>();
 
-        selectedTabObjects.forEach(tab => {
+        selectedTabObjects.forEach((tab: Tab) => {
           const detector = languageRegistry.getById(tab.language);
           const extension = detector?.getFileExtension() || 'txt';
 
@@ -113,7 +115,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
           }
           usedFilenames.add(finalFilename); // Mark this filename as used
 
-          zip.file(finalFilename, tab.content);
+          zip.file(finalFilename, tab.content || '');
         });
 
         // Generate and download zip
@@ -144,7 +146,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
 
   const TabList = ({ tabs }: { tabs: Tab[] }) => (
     <div className="space-y-1">
-      {tabs.map(tab => (
+      {tabs.map((tab: Tab) => (
         <button
           key={tab.id}
           onClick={() => toggleTab(tab.id)}
@@ -172,7 +174,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
           >
             Select All
           </button>
-          {splitView.isSplit && (
+          {splitViewStore.splitView.isSplit && (
             <>
               <button
                 onClick={selectLeftSide}
@@ -198,7 +200,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
 
         {/* Tab lists */}
         <div className="space-y-3">
-          {!splitView.isSplit ? (
+          {!splitViewStore.splitView.isSplit ? (
             <TabList tabs={downloadableTabs} />
           ) : (
             <div className="grid grid-cols-2 gap-3">
