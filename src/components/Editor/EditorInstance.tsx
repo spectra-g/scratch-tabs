@@ -87,6 +87,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
 
   // Add a ref to track pending format operations to avoid duplicate formatting
   const pendingFormatRef = useRef<Set<string>>(new Set());
+  
+  // Add a ref to track if the last content change was from a paste operation
+  const isPasteRef = useRef<boolean>(false);
 
   // Handler for auto-format when language is detected on significant change
   const handleLanguageDetectedOnSignificantChange = useCallback((tabId: string, language: string) => {
@@ -237,19 +240,17 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
   // Effect to handle tab changes and set up content change callback
   useEffect(() => {
     if (activeTab && !activeTab.isTablet) {
-      console.log(`[EditorInstance] Registering content change callback for tab ${activeTab.id}`);
       
-      const contentChangeCallback = (newContent: string) => {
-        console.log(`[EditorInstance] Content change callback triggered for tab ${activeTab.id}, length: ${newContent.length}`);
+      const contentChangeCallback = (newContent: string, isFromPaste: boolean = false) => {
         
         if (!useAIStore.getState().ai.isCodegenGenerating) {
-          console.log(`[EditorInstance] Triggering language detection for tab ${activeTab.id}`);
           detectAndSetLanguage(
             activeTab.id, 
             newContent, 
             activeTab.content || '', 
             activeTab.language, 
-            activeTab.languageLocked
+            activeTab.languageLocked,
+            isFromPaste
           );
         }
       };
@@ -258,7 +259,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
       
       // Cleanup function
       return () => {
-        console.log(`[EditorInstance] Unregistering content change callback for tab ${activeTab.id}`);
         modelManager.unregisterContentChangeCallback(activeTab.id);
       };
     }
@@ -351,6 +351,18 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
           }
         } catch (error) {
           console.warn('[EditorInstance] Failed to update cursor position:', error);
+        }
+      });
+
+      // Paste Detection Listener
+      editor.onDidPaste(() => {
+        try {
+          const currentTab = latestActiveTabRef.current;
+          if (currentTab) {
+            modelManager.markNextChangeAsPaste(currentTab.id);
+          }
+        } catch (error) {
+          console.warn('[EditorInstance] Failed to handle paste detection:', error);
         }
       });
 

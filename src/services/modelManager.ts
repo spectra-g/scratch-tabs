@@ -13,7 +13,8 @@ class ModelManager {
   private listeners = new Map<string, Monaco.IDisposable>();
   private storage = StorageProviderFactory.getProvider();
   private contentFetchPromises = new Map<string, Promise<string>>(); // Prevent duplicate fetches
-  private contentChangeCallbacks = new Map<string, (content: string) => void>(); // Content change callbacks
+  private contentChangeCallbacks = new Map<string, (content: string, isFromPaste?: boolean) => void>(); // Content change callbacks
+  private isPasteRef = new Map<string, boolean>(); // Track paste operations per tab
 
   public initialize(monacoInstance: typeof Monaco) {
     if (this.monaco) return;
@@ -129,10 +130,11 @@ class ModelManager {
       modelUri
     );
     this.listeners.get(tab.id)?.dispose();
-    const listener = model.onDidChangeContent(() => {
+    
+    const contentListener = model.onDidChangeContent(() => {
       try {
         const newContent = model.getValue();
-        console.log(`[ModelManager] Content changed for tab ${tab.id}, new length: ${newContent.length}`);
+        const wasFromPaste = this.isPasteRef.get(tab.id) || false;
         
         // Update tab content in store
         useTabsStore.getState().updateTabContent(tab.id, newContent);
@@ -140,8 +142,7 @@ class ModelManager {
         // Call registered content change callbacks
         const callback = this.contentChangeCallbacks.get(tab.id);
         if (callback) {
-          console.log(`[ModelManager] Calling content change callback for tab ${tab.id}`);
-          callback(newContent);
+          callback(newContent, wasFromPaste);
         }
         
         // Note: Language detection should be handled by the EditorInstance component
@@ -152,8 +153,18 @@ class ModelManager {
         console.warn(`[ModelManager] Failed to update content for tab ${tab.id}:`, error);
       }
     });
+    
+    // Store both listeners
+    const combinedListener = {
+      dispose: () => {
+        contentListener.dispose();
+        // Don't call this.listeners.get(tab.id)?.dispose() here - it would cause infinite recursion
+        // since this combinedListener IS stored in this.listeners
+      }
+    };
+    
     this.models.set(tab.id, model);
-    this.listeners.set(tab.id, listener);
+    this.listeners.set(tab.id, combinedListener);
     this.lru.add(tab.id);
     if (this.models.size > MAX_MODELS) {
       this.evict();
@@ -165,16 +176,19 @@ class ModelManager {
     const model = this.models.get(tabId);
     if (model) {
       try {
-        if (!model.isDisposed()) {
-          const finalContent = model.getValue();
-          useTabsStore.getState().updateTabContent(tabId, finalContent);
-        }
+        // Don't update store during disposal - this can cause infinite recursion
+        // The content is already saved in the store, and the tab is being removed anyway
+        // if (!model.isDisposed()) {
+        //   const finalContent = model.getValue();
+        //   useTabsStore.getState().updateTabContent(tabId, finalContent);
+        // }
       } catch (error) {
         console.warn(`[ModelManager] Failed to get final content for tab ${tabId}:`, error);
       }
       this.listeners.get(tabId)?.dispose();
       this.listeners.delete(tabId);
       this.contentChangeCallbacks.delete(tabId); // Clean up callback
+      this.isPasteRef.delete(tabId); // Clean up paste tracking
       try {
         model.dispose();
       } catch (error) {
@@ -227,14 +241,10 @@ class ModelManager {
   }
 
   public updateModelLanguage(tabId: string, language: string): void {
-    console.log(`[ModelManager] updateModelLanguage called for tab ${tabId}, language: ${language}`);
     const model = this.models.get(tabId);
     if (model && !model.isDisposed() && this.monaco) {
       try {
-        const currentLanguage = model.getLanguageId();
-        console.log(`[ModelManager] Updating model language from "${currentLanguage}" to "${language}" for tab ${tabId}`);
         this.monaco.editor.setModelLanguage(model, language);
-        console.log(`[ModelManager] ✅ Successfully updated model language to "${language}" for tab ${tabId}`);
       } catch (error) {
         console.warn(`[ModelManager] ❌ Failed to update model language for tab ${tabId}:`, error);
       }
@@ -247,12 +257,21 @@ class ModelManager {
     }
   }
 
-  public registerContentChangeCallback(tabId: string, callback: (content: string) => void): void {
+  public registerContentChangeCallback(tabId: string, callback: (content: string, isFromPaste?: boolean) => void): void {
     this.contentChangeCallbacks.set(tabId, callback);
   }
 
   public unregisterContentChangeCallback(tabId: string): void {
     this.contentChangeCallbacks.delete(tabId);
+  }
+
+  // Method to mark that the next content change for a tab is from a paste operation
+  public markNextChangeAsPaste(tabId: string): void {
+    this.isPasteRef.set(tabId, true);
+    // Clear the flag after a short delay
+    setTimeout(() => {
+      this.isPasteRef.delete(tabId);
+    }, 100);
   }
 
 }

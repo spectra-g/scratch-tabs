@@ -44,13 +44,7 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
-      // Safety check: don't parse very large content
-//       if (content.length > 1_000_000) {
-//         console.log(`JSON Minify: Content too large (${content.length} bytes), skipping minify`); // <<< ADD THIS
-//         return;
-//       }
-//
+
       const json = JSON.parse(content);
       const minifiedContent = JSON.stringify(json);
       applyEdit(minifiedContent, 'json.minify'); // Use applyEdit

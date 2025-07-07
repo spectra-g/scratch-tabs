@@ -47,7 +47,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     loadWorkspaces: async (clearExistingTabs: boolean = false) => {
       set({ isLoading: true, error: null });
       try {
-        // CRITICAL FIX: Clear model cache when loading workspaces to prevent memory leaks
         modelManager.disposeAll();
 
         const workspacesFromDB = await storage.getWorkspaces();
@@ -59,7 +58,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           const sortedWorkspaces = [...workspacesFromDB].sort((a, b) => b.lastAccessed - a.lastAccessed); // Sort by lastAccessed first
           newActiveWorkspaceId = sortedWorkspaces[0].id; // Most recently accessed is the default active
           
-          // *** CRITICAL FIX: Load FULL TABS WITH CONTENT ***
           const [tabsWithContent, fetchedRecord] = await Promise.all([
             storage.getTabsByWorkspace(newActiveWorkspaceId), // Load full tabs with content
             storage.getSplitViewByWorkspace(newActiveWorkspaceId)
@@ -255,7 +253,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           await persistCurrentState();
         }
 
-        // 2. CRITICAL FIX: Clear model cache when switching workspaces to prevent memory leaks
+        // 2. Clear model cache when switching workspaces to prevent memory leaks
         modelManager.disposeAll();
 
         // 3. Load data for the target workspace
@@ -314,7 +312,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
     createWorkspace: async (name: string): Promise<string | null> => {
       try {
-        // CRITICAL FIX: Clear model cache when creating new workspace
         modelManager.disposeAll();
 
         const newWorkspace: Workspace = {

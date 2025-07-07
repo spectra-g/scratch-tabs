@@ -18,13 +18,11 @@ import { AIModelManagementModal } from '../AI/AIModelManagementModal';
 import { useAIStore } from '../../stores/aiStore';
 
 const MainLayout: React.FC = () => {
-  // *** CRITICAL FIX: Select state from the source stores ***
   const tabCount = useTabsStore(state => state.tabs.length);
   const splitView = useSplitViewStore(state => state.splitView);
   const activeLeftTabId = useSplitViewStore(state => state.splitView?.activeLeftTabId);
   const activeRightTabId = useSplitViewStore(state => state.splitView?.activeRightTabId);
   
-  // Actions can still come from the root store
   const { saveTabDataById, setSplitRatio } = useRootStore(state => ({
     saveTabDataById: state.saveTabDataById,
     setSplitRatio: state.setSplitRatio,

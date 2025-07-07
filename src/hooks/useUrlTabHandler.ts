@@ -45,7 +45,6 @@ export const useUrlTabHandler = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // *** CRITICAL FIX: Select state from source stores ***
     const { tabs } = useTabsStore();
     const { splitView } = useSplitViewStore();
     const {

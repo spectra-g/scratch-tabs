@@ -95,7 +95,6 @@ export class JsonLogLanguageDetector extends BaseLanguageDetector implements Lan
       try {
         // Safety check: don't parse very large lines
         if (trimmedLine.length > 100_000) {
-          console.log(`JSON Log Detector: Line too large (${trimmedLine.length} bytes), skipping parse`); // <<< ADD THIS
           continue; // Skip very large lines
         }
         

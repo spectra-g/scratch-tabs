@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Archive, Plus, Filter, Pin, Copy, ExternalLink, Trash2, Edit, Check, X, Hash, LayoutGrid, List, CopyPlus, Globe } from 'lucide-react';
 import { useRootStore } from '../../stores';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { detectLanguage } from '../../languages';
 import { VaultItemCard } from './components/VaultItemCard';
@@ -83,7 +84,8 @@ export const VaultTablet: Tablet = {
   },
 
   render(state: VaultTabletState, onChange) {
-    const { addBackgroundTab, splitView } = useRootStore();
+    const { addBackgroundTab } = useRootStore();
+    const { splitView } = useSplitViewStore();
     const { activeWorkspaceId } = useWorkspaceStore();
 
     // Local state for UI interactions

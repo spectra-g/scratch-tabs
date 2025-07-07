@@ -38,12 +38,8 @@ export function registerJsonValidationProvider(monaco: any) {
   // Add validation markers to the editor
   monaco.languages.registerDocumentFormattingEditProvider('json', {
     provideDocumentFormattingEdits(model: any) {
-      console.log(`JSON Formatting Provider: Called for model ${model.uri.toString()}`); // <<< ADD THIS
       const content = model.getValue();
-      console.log(`JSON Formatting Provider: Content length: ${content.length}`); // <<< ADD THIS
-      
-
-      
+            
       const validation = validateJson(content);
 
       // Clear existing markers

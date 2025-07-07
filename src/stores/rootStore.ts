@@ -150,7 +150,6 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tabToRemove = useTabsStore.getState().tabs.find(t => t.id === id);
       if (!tabToRemove) return;
       
-      // CRITICAL FIX: Dispose the model to free memory immediately
       modelManager.dispose(id);
       
       useSplitViewStore.getState().removeTabFromSide(id);

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { StorageProviderFactory } from '../../../db';
 import { useRootStore, useCacheStore, useTabsStore } from '../../../stores';
+import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
 import { Tab } from '../../../types';
 import { languageRegistry } from '../../../languages';
@@ -118,18 +119,11 @@ export interface TabManagementEngine {
 }
 
 export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): TabManagementEngine => {
-  console.log(`[TabManagementEngine] Hook called with isOpen: ${isOpen}`);
-  
-  // *** CRITICAL FIX: Do NOT use hooks here. We will get state imperatively. ***
-  // const { removeTab, ... } = useRootStore(); // <--- REMOVE THIS
-  // const { workspaces, ... } = useWorkspaceStore(); // <--- REMOVE THIS
 
-  // *** NEW: Local state for tabs, only updated when modal opens ***
   const [localTabs, setLocalTabs] = useState<Tab[]>([]);
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
 
-  // Other states remain the same
   const storage = StorageProviderFactory.getProvider();
   const [allApplicationTabs, setAllApplicationTabs] = useState<Tab[]>([]);
   const [isLoadingAllTabs, setIsLoadingAllTabs] = useState(false);
@@ -163,18 +157,13 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
 
   // *** EFFECT: Populate local state only when modal opens ***
   useEffect(() => {
-    console.log(`[TabManagementEngine] useEffect triggered - isOpen: ${isOpen}`);
     
     if (isOpen) {
-      console.log(`[TabManagementEngine] Modal opening - fetching fresh state from stores`);
       
       // Fetch the LATEST state directly from the store when opening
       const currentActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
       const allTabs = useTabsStore.getState().tabs;
       const activeTabs = allTabs.filter(tab => tab.workspaceId === currentActiveWorkspaceId);
-      
-      console.log(`[TabManagementEngine] Fetched ${activeTabs.length} tabs for workspace ${currentActiveWorkspaceId}`);
-      console.log(`[TabManagementEngine] Total content size: ${activeTabs.reduce((sum, tab) => sum + tab.content.length, 0)} bytes`);
       
       setLocalTabs(activeTabs);
       setWorkspaces(useWorkspaceStore.getState().workspaces);
@@ -186,9 +175,7 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
       setLanguageFilter([]);
       setSortOption('current');
       
-      console.log(`[TabManagementEngine] Local state populated and UI reset`);
     } else {
-      console.log(`[TabManagementEngine] Modal closing - clearing local state`);
       // Clear local state when modal closes to free memory
       setLocalTabs([]);
       setWorkspaces([]);
@@ -199,11 +186,9 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   // Fetch ALL application tabs when modal opens
   useEffect(() => {
     if (isOpen) {
-      console.log(`[TabManagementEngine] Fetching all application tabs`);
       setIsLoadingAllTabs(true);
       storage.getTabs()
         .then(fetchedTabs => {
-          console.log(`[TabManagementEngine] Fetched ${fetchedTabs.length} total application tabs`);
           setAllApplicationTabs(fetchedTabs);
         })
         .catch(err => {
@@ -216,19 +201,16 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   }, [isOpen, storage]);
 
   const availableLanguages = useMemo(() => {
-    console.log(`[TabManagementEngine] Computing available languages from ${localTabs.length} local tabs`);
     const languages = new Set<string>();
     localTabs.forEach(tab => {
       if (tab.isTablet) languages.add('tablet');
       else languages.add(tab.language);
     });
     const result = Array.from(languages).sort();
-    console.log(`[TabManagementEngine] Available languages: ${result.join(', ')}`);
     return result;
   }, [localTabs]);
 
   const workspacesWithCounts = useMemo(() => {
-    console.log(`[TabManagementEngine] Computing workspace counts`);
     if (isLoadingAllTabs) {
       return workspaces.map(ws => ({ ...ws, tabCount: 0, isLoadingCount: true }));
     }
@@ -239,18 +221,10 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
     }));
   }, [workspaces, allApplicationTabs, isLoadingAllTabs]);
 
-  // *** MODIFIED: These hooks now use `localTabs` and will only re-run when the modal is open and its internal state changes ***
-  console.log(`[TabManagementEngine] Computing expensive operations with ${localTabs.length} local tabs`);
-  
   const filteredTabs = useFilteredTabs(localTabs, activeWorkspaceId, searchQuery, languageFilter, sortOption);
   const groupedTabs = useGroupedTabs(filteredTabs, groupOption, workspaces, languageRegistry);
   const duplicateTabs = useDuplicateTabs(localTabs, activeWorkspaceId);
   const emptyTabs = useEmptyTabs(localTabs, activeWorkspaceId);
-
-  console.log(`[TabManagementEngine] Expensive computations completed:`);
-  console.log(`  - Filtered tabs: ${filteredTabs.length}`);
-  console.log(`  - Duplicate groups: ${Object.keys(duplicateTabs).length}`);
-  console.log(`  - Empty tabs: ${emptyTabs.length}`);
 
   useModalClickOutside(modalContentRef, isOpen, () => {
     if (!confirmationDialog.isOpen) onClose();
@@ -296,7 +270,8 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   const handleDoubleClickTab = (tabId: string) => {
     const tab = localTabs.find(t => t.id === tabId);
     if (tab) {
-      const { splitView, setActiveLeftTab, setActiveRightTab } = useRootStore.getState();
+      const { splitView } = useSplitViewStore.getState();
+      const { setActiveLeftTab, setActiveRightTab } = useRootStore.getState();
       if (splitView.leftTabs.includes(tabId)) setActiveLeftTab(tabId);
       else if (splitView.rightTabs.includes(tabId)) setActiveRightTab(tabId);
       else setActiveLeftTab(tabId);
@@ -448,8 +423,6 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   };
 
   const handleDragEnd = (event: DragEndEvent) => dragEndHelper(event, setActiveDragId, setDraggedTabIds, draggedTabIds, activeWorkspaceId, filteredTabs, handleMoveToWorkspaceWithId, handleModifiedApplyCurrentOrder);
-
-  console.log(`[TabManagementEngine] Hook execution completed - returning engine object`);
 
   return {
     allApplicationTabs, isLoadingAllTabs, activeWorkspaceTabs: localTabs, workspacesWithCounts, filteredTabs,

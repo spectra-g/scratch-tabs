@@ -27,15 +27,12 @@ export const useLanguageDetection = (
     newContent: string,
     prevContent: string,
     currentLanguage: string,
-    languageLocked: boolean // Whether the language is locked by the user
+    languageLocked: boolean, // Whether the language is locked by the user
+    isFromPaste: boolean = false // Whether the content change was from a paste operation
   ) => {
-    console.time(`[LanguageDetection] performDetectionAndUpdate for tab ${tabId}`);
-    console.log(`[LanguageDetection] Starting detection for tab ${tabId}, content size: ${newContent.length}`);
     
     // --- 1. Respect Manual Lock ---
     if (languageLocked) {
-      console.log(`[LanguageDetection] Language locked for tab ${tabId}, skipping detection`);
-      console.timeEnd(`[LanguageDetection] performDetectionAndUpdate for tab ${tabId}`);
       return; // User has explicitly set the language, do nothing.
     }
 
@@ -48,8 +45,6 @@ export const useLanguageDetection = (
         // Reset to plaintext and explicitly signal to remove any auto-lock
         updateTabLanguage(tabId, 'plaintext', false);
       }
-      console.log(`[LanguageDetection] Empty content for tab ${tabId}, resetting to plaintext`);
-      console.timeEnd(`[LanguageDetection] performDetectionAndUpdate for tab ${tabId}`);
       return;
     }
 
@@ -69,22 +64,12 @@ export const useLanguageDetection = (
        !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) && // Old doesn't start like the new
        lengthDifference > 5); // Add a small length diff requirement for the prefix check
 
-    console.log(`[LanguageDetection] Change analysis for tab ${tabId}: lengthDiff=${lengthDifference}, lineDiff=${lineDifference}, isSignificant=${isSignificantChange}`);
 
     // --- 4. Perform Language Detection ---
     // Always detect unless manually locked or empty
-    console.time(`[LanguageDetection] detectLanguage call for tab ${tabId}`);
     const newDetectedLanguage = detectLanguage(trimmedNewContent);
     const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent); // Use the ambiguity result from detection
-    console.timeEnd(`[LanguageDetection] detectLanguage call for tab ${tabId}`);
     
-    console.log(`[LanguageDetection] Detection results for tab ${tabId}:`, {
-      detectedLanguage: newDetectedLanguage,
-      isAmbiguous: newDetectionIsAmbiguous,
-      currentLanguage,
-      willUpdate: newDetectedLanguage !== currentLanguage
-    });
-
     // --- 5. Decide Whether to Update the Tab's Language ---
     let shouldUpdate = false;
     let shouldTriggerAutoFormat = false;
@@ -94,7 +79,8 @@ export const useLanguageDetection = (
       // This forces re-evaluation after pastes/replaces.
       if (newDetectedLanguage !== currentLanguage) {
         shouldUpdate = true;
-        shouldTriggerAutoFormat = true; // This is the key addition - trigger auto-format on significant language changes
+        // Only trigger auto-format if this was from a paste operation, not programmatic changes
+        shouldTriggerAutoFormat = isFromPaste;
       }
     } else {
       // For normal typing (non-significant change):
@@ -108,39 +94,28 @@ export const useLanguageDetection = (
         }
       }
     }
-    
-    console.log(`[LanguageDetection] Update decision for tab ${tabId}:`, {
-      shouldUpdate,
-      shouldTriggerAutoFormat,
-      reason: isSignificantChange ? 'significant_change' : 'normal_typing'
-    });
 
     // --- 6. Perform Update ---
     if (shouldUpdate) {
-      console.log(`[LanguageDetection] Updating language for tab ${tabId} from "${currentLanguage}" to "${newDetectedLanguage}". Auto-lock: ${false}`);
       // Update the language with the lock parameter set to false to ensure user can override
       updateTabLanguage(tabId, newDetectedLanguage, false);
       
-      // Trigger auto-format if this was a significant change that resulted in language detection
+      // Trigger auto-format if this was a paste operation that resulted in language detection
       if (shouldTriggerAutoFormat) {
         // Use setTimeout to ensure the language change is processed first
         setTimeout(() => {
           onLanguageDetectedOnSignificantChange?.(tabId, newDetectedLanguage);
         }, 50); // Small delay to ensure language is set before formatting
       }
-    } else {
-      console.log(`[LanguageDetection] No language update needed for tab ${tabId}. Current: "${currentLanguage}", Detected: "${newDetectedLanguage}".`);
     }
-    console.timeEnd(`[LanguageDetection] performDetectionAndUpdate for tab ${tabId}`);
 
   }, [updateTabLanguage, onLanguageDetectedOnSignificantChange]); // Add callback to dependencies
 
   // Effect to setup/update the debounced function when the callback changes
   useEffect(() => {
     // Create a new debounced function whenever performDetectionAndUpdate changes
-    debouncedUpdateRef.current = debounce((tabId: string, newContent: string, prevContent: string, currentLanguage: string, languageLocked: boolean) => {
-      console.log(`[LanguageDetection] Debounced function executed for tab ${tabId}`);
-      performDetectionAndUpdate(tabId, newContent, prevContent, currentLanguage, languageLocked);
+    debouncedUpdateRef.current = debounce((tabId: string, newContent: string, prevContent: string, currentLanguage: string, languageLocked: boolean, isFromPaste: boolean = false) => {
+      performDetectionAndUpdate(tabId, newContent, prevContent, currentLanguage, languageLocked, isFromPaste);
     }, LANGUAGE_DETECTION_DEBOUNCE_MS);
     
     return () => {
@@ -155,17 +130,11 @@ export const useLanguageDetection = (
     newContent: string,
     prevContent: string,
     currentLanguage: string,
-    languageLocked: boolean
+    languageLocked: boolean,
+    isFromPaste: boolean = false
   ) => {
-    console.log(`[LanguageDetection] detectAndSetLanguage called for tab ${tabId}:`, {
-      newContentLength: newContent.length,
-      prevContentLength: prevContent.length,
-      currentLanguage,
-      languageLocked
-    });
-    
     // Directly invoke the latest debounced function stored in the ref
-    debouncedUpdateRef.current?.(tabId, newContent, prevContent, currentLanguage, languageLocked);
+    debouncedUpdateRef.current?.(tabId, newContent, prevContent, currentLanguage, languageLocked, isFromPaste);
   }, []); // No dependencies - will remain stable across renders
   
   return { detectAndSetLanguage };

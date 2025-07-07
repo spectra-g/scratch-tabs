@@ -117,7 +117,6 @@ int main(int argc, char* argv[]) {
     for (const dp of definitivePatterns) {
       const matches = content.match(dp.pattern);
       if (matches) {
-        console.log(`[CppDetector] Pattern matched: ${dp.pattern.source}, matches:`, matches.slice(0, 3)); // Log first 3 matches
         confidenceScore += dp.weight;
         confidenceScore += Math.min(matches.length, 3) * dp.perMatch; // Cap per-match bonus
         patternsMatched++;
@@ -176,8 +175,6 @@ int main(int argc, char* argv[]) {
 
     // Determine match status based on confidence threshold
     const isMatch = confidenceScore >= 0.4; // Adjust this threshold based on testing
-
-    console.log(`[CppDetector] Final confidence: ${confidenceScore.toFixed(3)}, isMatch: ${isMatch}, patternsMatched: ${patternsMatched}`);
 
     return {
       match: isMatch,
