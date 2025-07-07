@@ -305,4 +305,67 @@ list:
       expect(registerJsonValidationProvider).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('JSON Detection Accuracy', () => {
+    test('should correctly identify JSON content as JSON, not C++', async () => {
+      // Load the large JSON file
+      const fs = require('fs');
+      const path = require('path');
+      const jsonFilePath = path.join(process.cwd(), 'large-json.json');
+      
+      if (!fs.existsSync(jsonFilePath)) {
+        console.warn('large-json.json not found, skipping test');
+        return;
+      }
+      
+      const content = fs.readFileSync(jsonFilePath, 'utf8');
+      console.log(`Testing JSON detection on ${content.length} character file`);
+      
+      // Sample the content to first 100 lines (same as the language detection system)
+      const lines = content.split('\n');
+      const sampledContent = lines.slice(0, 100).join('\n');
+      console.log(`Using sampled content: ${sampledContent.length} characters`);
+      
+      // Get language detection results using the detector directly
+      const result = detector.detect(sampledContent);
+      console.log('Detection result:', JSON.stringify(result, null, 2));
+      
+      // JSON should be detected with high confidence
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.8);
+    });
+    
+    test('should handle JSON with nested objects and arrays correctly', () => {
+      const jsonContent = `{
+        ":items": {
+          "root": {
+            ":items": {
+              "accordion_1480775697": {
+                ":items": {
+                  "par": {
+                    ":items": {
+                      "contentfragment_8950": {
+                        ":items": {},
+                        ":itemsOrder": [],
+                        ":type": "waitrosegroceriescms/components/content/contentfragment",
+                        "columnClassNames": "aem-GridColumn--default--12 aem-GridColumn--offset--default--0",
+                        "componentId": "_content_waitrosegroceriescms_en_help-information_customer-service"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }`;
+      
+      const result = detector.detect(jsonContent);
+      console.log('Small JSON test result:', JSON.stringify(result, null, 2));
+      
+      // Should detect as JSON
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.7);
+    });
+  });
 });

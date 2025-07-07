@@ -146,7 +146,7 @@ export function generateTypeScriptInterfaces(json: any, rootInterfaceName: strin
       if (propertyInfo.isObject && value !== null) {
         // Determine the actual object(s) to analyze for the nested interface
         // If it's an array, use the first element (if any)
-        const nestedValue = propertyInfo.isArray ? (value.length > 0 ? value[0] : null) : value;
+        const nestedValue = propertyInfo.isArray ? (Array.isArray(value) && value.length > 0 ? value[0] : null) : value;
 
         // Only recurse if we have a valid, non-null, non-array object to define the nested type
         if (nestedValue && typeof nestedValue === 'object' && !Array.isArray(nestedValue)) {

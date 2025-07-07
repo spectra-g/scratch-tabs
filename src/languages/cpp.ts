@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
       { pattern: /template\s*<.*?>/g, weight: 0.3, perMatch: 0.1 },
       { pattern: /\b(new|delete)\b\s+\w+/g, weight: 0.2, perMatch: 0.05 }, // new/delete keywords
       { pattern: /\b(try|catch|throw)\b/g, weight: 0.15, perMatch: 0.05 }, // Exception handling
-      { pattern: /[\w:]+::\w+/g, weight: 0.1, perMatch: 0.02 }, // Scope resolution operator (could be C too, but common in C++)
+      { pattern: /\b\w+::\w+\b/g, weight: 0.1, perMatch: 0.02 }, // Scope resolution operator (std::cout, not ":items")
       { pattern: /\b(auto&?|const_cast|dynamic_cast|reinterpret_cast|static_cast|nullptr|override|final|noexcept|constexpr)\b/g, weight: 0.4, perMatch: 0.15 }, // C++11 and later keywords
       { pattern: /using\s+namespace\s+std;/g, weight: 0.3, perMatch: 0.1}, // Common, though not always best practice
     ];

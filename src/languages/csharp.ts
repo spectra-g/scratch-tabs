@@ -104,7 +104,7 @@ namespace MyAwesomeApp
       { pattern: /^\s*using\s+[\w.]+;/gm, weight: 0.35, perMatch: 0.1 },       // `using System;`
       { pattern: /^\s*namespace\s+[\w.]+\s*\{?/gm, weight: 0.3, perMatch: 0.05 }, // `namespace MyApp {`
       { pattern: /\bpublic\s+(sealed\s+)?class\s+\w+/g, weight: 0.25, perMatch: 0.05 },
-      { pattern: /\b(public|private|protected|internal)\s+(static\s+)?(readonly\s+)?\w+\s+\w+\s*\{.*(get;|set;).*?\}/gs, weight: 0.35, perMatch: 0.1 }, // Properties ` { get; set; }`
+      { pattern: /\b(public|private|protected|internal)\s+(static\s+)?(readonly\s+)?\w+\s+\w+\s*\{.*(get;|set;).*?\}/g, weight: 0.35, perMatch: 0.1 }, // Properties ` { get; set; }`
       { pattern: /\b(public|private|protected|internal)\s+event\s+\w+/g, weight: 0.25, perMatch: 0.05 }, // Events
       { pattern: /\b(async\s+)?Task(\s*<[^>]+>)?\b/g, weight: 0.3, perMatch: 0.05 },   // `Task`, `Task<T>`, `async Task`
       { pattern: /\bstring\[\]\s+args\b/g, weight: 0.2 },                  // `string[] args` in Main
@@ -122,7 +122,9 @@ namespace MyAwesomeApp
       const matches = content.match(dp.pattern);
       if (matches) {
         confidenceScore += dp.weight;
-        confidenceScore += Math.min(matches.length, dp.maxMatches || 5) * dp.perMatch; // Cap per-match bonus
+        if (dp.perMatch) {
+          confidenceScore += Math.min(matches.length, dp.maxMatches || 5) * dp.perMatch; // Cap per-match bonus
+        }
         patternsMatched++;
         definitiveMatchFound = true;
       }

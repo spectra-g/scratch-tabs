@@ -8,4 +8,5 @@ export type MenuItem = {
     condition?: boolean; // Optional condition to show the item
     isSeparator?: boolean; // To render a separator
     submenu?: React.ReactNode; // For nested menus like languages
+    disabled?: boolean; // Optional property to disable the menu item
 };

@@ -23,7 +23,7 @@ interface StatusBarProps {
 }
 
 // Threshold for considering content "large" (100KB)
-const LARGE_CONTENT_THRESHOLD = 100000;
+const LARGE_CONTENT_THRESHOLD = 100000000;
 
 // Lightweight content accessor that avoids expensive operations on large content
 const getContentForLanguageDetection = (tab: Tab): string => {

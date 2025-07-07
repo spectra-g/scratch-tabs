@@ -112,7 +112,7 @@ console.log("Exiting the script.");
       { pattern: /\bawait\s+\w+/g, weight: 0.25, perMatch: 0.05, specific: true },
       { pattern: /=>\s*(?:\{|[^({])?/g, weight: 0.3, perMatch: 0.05, specific: true }, // Arrow functions (block or implicit return)
       { pattern: /\bclass\s+\w+(?:\s+extends\s+\w+)?\s*\{/g, weight: 0.25, perMatch: 0.05, specific: true },
-      { pattern: /`[^`]*\$\{.*?\}[^`]*`/gs, weight: 0.4, perMatch: 0.1, specific: true }, // Template literals with interpolation
+      { pattern: /`[^`]*\$\{.*?\}[^`]*`/g, weight: 0.4, perMatch: 0.1, specific: true }, // Template literals with interpolation
       { pattern: /\b\w+\.(?:then|catch|finally)\s*\(/g, weight: 0.25, perMatch: 0.05, specific: true }, // Promise chains
       { pattern: /\b(?:document|window)\.(?:getElementById|querySelector|addEventListener|fetch|localStorage|sessionStorage)\b/g, weight: 0.2, perMatch: 0.03, specific: true }, // Browser APIs
     ];

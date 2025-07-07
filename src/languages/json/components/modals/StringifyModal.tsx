@@ -2,6 +2,7 @@ import React from 'react';
 import { BaseModal } from './BaseModal';
 import { Editor } from '@monaco-editor/react';
 import { Tab } from '../../../../types';
+import { createTab } from '../../../../utils/tabUtils';
 
 interface StringifyModalProps {
   content: string;
@@ -11,11 +12,10 @@ interface StringifyModalProps {
 
 export const StringifyModal: React.FC<StringifyModalProps> = ({ content, onClose, addTab }) => {
   const handleOpenInNewTab = () => {
-    addTab({
-      id: crypto.randomUUID(),
+    addTab(createTab({
       title: 'Stringified JSON',
       content
-    });
+    }));
     onClose();
   };
 

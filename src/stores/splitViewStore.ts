@@ -16,7 +16,7 @@ interface SplitViewStore {
   moveTabToLeft: (tabId: string) => void;
   setActiveLeftTab: (id: string) => void;
   setActiveRightTab: (id: string) => void;
-  setActiveSide: (side: string) => void;
+  setActiveSide: (side: 'left' | 'right') => void;
   setSplitRatio: (ratio: number) => void;
   addTabToSide: (tabId: string, toRightSide: boolean, activeTabId?: string) => void;
   removeTabFromSide: (tabId: string) => void;

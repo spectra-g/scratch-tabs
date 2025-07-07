@@ -58,7 +58,7 @@ example.sayHello()
             // Very Groovy specific (higher weights)
             { regex: /\bdef\s+\w+\s*=\s*/g, weight: 0.4, perMatch: 0.07 },         // def variable assignment (boosted)
             { regex: /\bdef\s+\w+\s*\([^)]*\)\s*\{/g, weight: 0.45, perMatch: 0.07 }, // def method definition (boosted)
-            { regex: /['"]{1,3}.*?\$\{.*?}.*?['"]{1,3}/gs, weight: 0.4, perMatch: 0.1 }, // String interpolation (GStrings) - very strong
+            { regex: /['"]{1,3}.*?\$\{.*?}.*?['"]{1,3}/g, weight: 0.4, perMatch: 0.1 }, // String interpolation (GStrings) - very strong
             { regex: /\bprintln\s+[^(]/g, weight: 0.35, perMatch: 0.1 },             // println without parentheses
             { regex: /\bnew\s+\w+\([^)]*:[^,}]+[^)]*\)/g, weight: 0.3, perMatch: 0.05 },// Named parameters in constructor
             { regex: /\b(assert|as|in|trait|delegate)\b/g, weight: 0.2, perMatch: 0.03 }, // Keywords more common/distinct in Groovy

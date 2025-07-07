@@ -4,6 +4,21 @@ import { useSplitViewStore } from './splitViewStore';
 import { useWorkspaceStore } from './workspaceStore';
 import { Tab, SplitViewState, Workspace } from '../types'; // Ensure these types are correct
 
+/**
+ * Generates a UUID, with fallback for environments where crypto.randomUUID is not available
+ */
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for Jest/Node.js environments
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 // Message types for type safety
 type BroadcastMessage = {
   type: 'WORKSPACE_STATE_UPDATED'; // More specific: state for a PARTICULAR workspace
@@ -50,7 +65,7 @@ class BroadcastManager {
 
   private constructor() {
     this.channel = new BroadcastChannel('scratch-tabs-sync-v2'); // New channel name for clarity
-    this.tabInstanceId = crypto.randomUUID(); // Give each tab a unique ID
+    this.tabInstanceId = generateUUID(); // Give each tab a unique ID
     this.setupListeners();
   }
 
