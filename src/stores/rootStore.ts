@@ -36,7 +36,7 @@ interface RootStore {
   updateTabOrder: (leftTabs: string[], rightTabs: string[]) => void;
   togglePreviewMode: () => void;
   splitScreen: (leftTabId: string, rightTabId?: string) => void;
-  unsplitScreen: () => void;
+  unsplitScreen: (tabId?: string) => void;
   moveTabToRight: (tabId: string) => void;
   moveTabToLeft: (tabId: string) => void;
   setActiveLeftTab: (id: string) => void;
@@ -219,19 +219,33 @@ export const useRootStore = create<RootStore>((set, get) => {
     togglePreviewMode: () => useEditorStore.getState().togglePreviewMode(),
 
     splitScreen: (leftTabId, rightTabId) => {
-      const { tabs } = useTabsStore.getState();
-      const allTabIds = tabs.map(t => t.id);
-      let targetLeftIds = allTabIds.filter(id => id !== rightTabId);
-      let targetRightId = rightTabId;
-      if (!rightTabId) {
-        targetLeftIds = allTabIds.filter(id => id !== leftTabId);
+      const { splitView } = useSplitViewStore.getState();
+      
+      // FIX: Only use tabs currently visible in the unsplit view, not all tabs from all workspaces
+      let targetLeftIds: string[];
+      let targetRightId: string;
+      
+      if (splitView.isSplit) {
+        // Already split, shouldn't happen but handle gracefully
+        return;
+      }
+      
+      if (rightTabId) {
+        // rightTabId is provided - put it on right, everything else on left
+        targetLeftIds = splitView.leftTabs.filter(id => id !== rightTabId);
+        targetRightId = rightTabId;
+      } else {
+        // leftTabId is provided (from context menu) - put it on right, everything else on left
+        targetLeftIds = splitView.leftTabs.filter(id => id !== leftTabId);
         targetRightId = leftTabId;
       }
+      
       if (!targetRightId) return;
+      
       useSplitViewStore.getState().splitScreen(targetLeftIds, targetRightId);
     },
 
-    unsplitScreen: () => useSplitViewStore.getState().unsplitScreen(),
+    unsplitScreen: (tabId) => useSplitViewStore.getState().unsplitScreen(tabId),
     moveTabToRight: (tabId) => useSplitViewStore.getState().moveTabToRight(tabId),
     moveTabToLeft: (tabId) => useSplitViewStore.getState().moveTabToLeft(tabId),
     setActiveLeftTab: (id) => useSplitViewStore.getState().setActiveLeftTab(id),

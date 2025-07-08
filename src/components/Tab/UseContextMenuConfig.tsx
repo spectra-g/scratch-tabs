@@ -373,7 +373,7 @@ Add any other context about the problem here.
       id: 'unsplit',
       label: 'Unsplit',
       icon: Maximize,
-      action: () => handleSimpleAction(rootStore.unsplitScreen),
+      action: () => handleSimpleAction(rootStore.unsplitScreen, tabId),
       condition: canUnsplit,
     },
     { id: 'sep2', isSeparator: true, condition: canDownload },

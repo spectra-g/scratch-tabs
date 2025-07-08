@@ -11,7 +11,7 @@ interface SplitViewStore {
   splitView: SplitViewState;
   setSplitView: (splitView: Partial<SplitViewState>) => void;
   splitScreen: (leftTabIds: string[], rightTabId: string) => void;
-  unsplitScreen: () => void;
+  unsplitScreen: (tabId?: string) => void;
   moveTabToRight: (tabId: string) => void;
   moveTabToLeft: (tabId: string) => void;
   setActiveLeftTab: (id: string) => void;
@@ -76,11 +76,18 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
     };
   }),
 
-  unsplitScreen: () => set((state) => {
+  unsplitScreen: (tabId?: string) => set((state) => {
     if (!state.splitView.isSplit) return state;
     const allTabs = [...state.splitView.leftTabs, ...state.splitView.rightTabs];
-    const activeId = state.splitView.activeLeftTabId;
-    const finalActiveId = activeId || allTabs[0] || null;
+    
+    // FIX: Use the provided tabId as the active tab if it's valid, otherwise fallback to current logic
+    let finalActiveId: string | null = null;
+    if (tabId && allTabs.includes(tabId)) {
+      finalActiveId = tabId;
+    } else {
+      finalActiveId = state.splitView.activeLeftTabId || allTabs[0] || null;
+    }
+    
     return {
       splitView: {
         ...state.splitView,
