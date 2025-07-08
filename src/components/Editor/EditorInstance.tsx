@@ -55,6 +55,28 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     }
   );
 
+  // SEPARATE: Get tab data without cursor position to prevent unnecessary effect triggers
+  const activeTabWithoutCursor = useStoreWithEqualityFn(
+    useTabsStore,
+    state => {
+      const tab = state.tabs.find(t => t.id === activeTabId);
+      return tab || null;
+    },
+    (prev, next) => {
+      // Exclude cursor position from equality check to prevent restoreViewState disruption
+      if (!prev && !next) return true;
+      if (!prev || !next) return false;
+      return (
+        prev.id === next.id &&
+        prev.content === next.content &&
+        prev.language === next.language &&
+        prev.title === next.title &&
+        prev.isTablet === next.isTablet
+        // Note: cursorPosition deliberately excluded
+      );
+    }
+  );
+
   // Get actions from rootStore
   const {
     updateTabContent,
@@ -130,13 +152,13 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
   } = useTabletSelector(editorRef, editorContainerRef, activeTabId, updateTabContent);
 
   // Guard against the tab being removed while a render is queued
-  if (!activeTab) {
+  if (!activeTabWithoutCursor) {
     return null;
   }
 
   // SIMPLIFIED: This effect manages model switching with the corrected ModelManager
   useEffect(() => {
-    if (!editorRef.current || !monacoRef.current || !activeTab) return;
+    if (!editorRef.current || !monacoRef.current || !activeTabWithoutCursor) return;
 
     const editor = editorRef.current;
     const previousTabId = currentTabIdRef.current;
@@ -153,7 +175,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         }
 
         // Get the model from ModelManager (this ensures it exists and is loaded)
-        const newModel = await modelManager.get(activeTab);
+        const newModel = await modelManager.get(activeTabWithoutCursor);
 
         // Set the model on the editor directly (following architecture)
         if (editor.getModel() !== newModel) {
@@ -161,7 +183,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         }
 
         // Restore view state for the new tab
-        const newViewState = tabViewStates.get(activeTab.id);
+        const newViewState = tabViewStates.get(activeTabWithoutCursor.id);
         if (newViewState) {
           editor.restoreViewState(newViewState);
         }
@@ -169,12 +191,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         // Focus the editor
         editor.focus();
 
-        currentTabIdRef.current = activeTab.id;
+        currentTabIdRef.current = activeTabWithoutCursor.id;
       } catch (error) {
-        console.error(`[EditorInstance] Failed to switch model for tab ${activeTab.id}:`, error);
+        console.error(`[EditorInstance] Failed to switch model for tab ${activeTabWithoutCursor.id}:`, error);
       }
     })();
-  }, [activeTabId, activeTab]);
+  }, [activeTabId, activeTabWithoutCursor]);
 
   // Cleanup effect: detach model from editor before component unmounts
   useEffect(() => {
@@ -259,7 +281,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
               editor.setModel(initialModel);
             }
             
-            // Restore view state if it exists
+            // Restore view state if it exists (this is safe during initial setup)
             const initialViewState = tabViewStates.get(activeTab.id);
             if (initialViewState) {
               editor.restoreViewState(initialViewState);
@@ -276,7 +298,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
 
       // Auto-format tabs that were likely created from paste or file import
       const now = Date.now();
-      if ((now - activeTab.dateCreated) < 500) {
+      if (activeTab && (now - activeTab.dateCreated) < 500) {
         const content = activeTab.content || '';
         const hasSubstantialContent = content.trim().length > 50;
         const isFormattableLanguage = activeTab.language !== 'plaintext';
