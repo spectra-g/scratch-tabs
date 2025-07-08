@@ -3,7 +3,6 @@ import { StorageProviderFactory } from '../db';
 import { useWorkspaceStore } from './workspaceStore';
 import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
-import { modelManager } from '../services/modelManager';
 
 interface PersistenceStore {
   saveState: () => Promise<void>;
@@ -20,45 +19,30 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
     saveTimer: null,
 
     saveState: async () => {
-     
       try {
         const { activeWorkspaceId } = useWorkspaceStore.getState();
         if (!activeWorkspaceId) {
           return;
         }
 
+        // Get the LATEST state from the stores
         const { tabs } = useTabsStore.getState();
-        const debugInfo = modelManager.getDebugInfo();
-        
-        // Update store with latest content from cached models
-        for (const tabId of debugInfo.cachedTabs) {
-          const liveContent = modelManager.getContent(tabId);
-          if (liveContent !== undefined) {
-            const tab = tabs.find(t => t.id === tabId);
-            if (tab && tab.content !== liveContent) {
-              useTabsStore.getState().updateTabContent(tabId, liveContent);
-            }
-          }
-        }
-
-        // Get the updated tabs (after syncing)
-        const updatedTabs = useTabsStore.getState().tabs;
-        
-        // Filter tabs for the active workspace
-        const workspaceTabs = updatedTabs.filter(tab => tab.workspaceId === activeWorkspaceId);
-               
-        // Save tabs to database
-        await storage.saveTabsInterval(workspaceTabs);
-        
-        // Save split view state
         const { splitView } = useSplitViewStore.getState();
-        if (splitView) {
+
+        // The tabs in tabsStore are the source of truth for persistence.
+        // The ModelManager's listeners have already updated them.
+        const workspaceTabs = tabs.filter(tab => tab.workspaceId === activeWorkspaceId);
+        
+        if (workspaceTabs.length > 0) {
+          await storage.saveTabsInterval(workspaceTabs);
+        }
+        
+        if (splitView && splitView.workspaceId === activeWorkspaceId) {
           await storage.saveSplitViewNow({
             ...splitView,
             lastModified: Date.now()
           });
         }
-        
       } catch (error) {
         console.error('[Persistence] Failed to save state:', error);
       }

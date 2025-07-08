@@ -1,10 +1,16 @@
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Tab } from '../types';
 import { useTabsStore } from '../stores/tabsStore';
+import { useRootStore } from '../stores/rootStore';
 import { StorageProviderFactory } from '../db';
+import { detectLanguage, isAmbiguousLanguage } from '../languages';
 
 // The maximum number of models to keep in memory
 const MAX_MODELS = 10;
+
+// Constants for language detection
+const SIGNIFICANT_LENGTH_DIFFERENCE = 30;
+const SIGNIFICANT_LINE_DIFFERENCE = 5;
 
 class ModelManager {
   private monaco: typeof Monaco | null = null;
@@ -13,8 +19,9 @@ class ModelManager {
   private listeners = new Map<string, Monaco.IDisposable>();
   private storage = StorageProviderFactory.getProvider();
   private contentFetchPromises = new Map<string, Promise<string>>(); // Prevent duplicate fetches
-  private contentChangeCallbacks = new Map<string, (content: string, isFromPaste?: boolean) => void>(); // Content change callbacks
   private isPasteRef = new Map<string, boolean>(); // Track paste operations per tab
+  private lastContent = new Map<string, string>(); // Track previous content for significant change detection
+  private formatActionQueue = new Set<string>(); // Track pending format operations
 
   public initialize(monacoInstance: typeof Monaco) {
     if (this.monaco) return;
@@ -88,6 +95,119 @@ class ModelManager {
     }
   }
 
+  /**
+   * Handles language detection and auto-formatting logic
+   */
+  private handleLanguageDetection(tabId: string, newContent: string, prevContent: string, isFromPaste: boolean = false) {
+    try {
+      const currentTab = useTabsStore.getState().tabs.find(t => t.id === tabId);
+      if (!currentTab || currentTab.languageLocked) {
+        return; // Skip if tab not found or language is locked
+      }
+
+      const trimmedNewContent = newContent.trim();
+      const trimmedOldContent = prevContent.trim();
+
+      // Handle empty content
+      if (trimmedNewContent.length === 0) {
+        if (currentTab.language !== 'plaintext') {
+          useRootStore.getState().updateTabLanguage(tabId, 'plaintext', false);
+        }
+        return;
+      }
+
+      // Determine if the change is significant
+      const lengthDifference = Math.abs(trimmedNewContent.length - trimmedOldContent.length);
+      const newLines = trimmedNewContent.split('\n');
+      const oldLines = trimmedOldContent.split('\n');
+      const lineDifference = Math.abs(newLines.length - oldLines.length);
+
+      const isSignificantChange =
+        lengthDifference > SIGNIFICANT_LENGTH_DIFFERENCE ||
+        lineDifference > SIGNIFICANT_LINE_DIFFERENCE ||
+        (trimmedNewContent.length > 0 && trimmedOldContent.length > 0 &&
+         !trimmedNewContent.startsWith(trimmedOldContent.substring(0, 10)) &&
+         !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) &&
+         lengthDifference > 5);
+
+      // Perform language detection
+      const newDetectedLanguage = detectLanguage(trimmedNewContent);
+      const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent);
+      
+      // Decide whether to update the tab's language
+      let shouldUpdate = false;
+      let shouldTriggerAutoFormat = false;
+
+      if (isSignificantChange) {
+        // On significant changes, ALWAYS update if the detected language is different from current
+        if (newDetectedLanguage !== currentTab.language) {
+          shouldUpdate = true;
+          // Only trigger auto-format if this was from a paste operation, not programmatic changes
+          shouldTriggerAutoFormat = isFromPaste;
+        }
+      } else {
+        // For normal typing (non-significant change):
+        // Only update if the detected language is different and we're in plaintext or detection is confident
+        if (newDetectedLanguage !== currentTab.language) {
+          if (currentTab.language === 'plaintext' || !newDetectionIsAmbiguous) {
+            shouldUpdate = true;
+            // Don't trigger auto-format for regular typing-induced language changes
+          }
+        }
+      }
+
+      // Perform update
+      if (shouldUpdate) {
+        useRootStore.getState().updateTabLanguage(tabId, newDetectedLanguage, false);
+        
+        // Trigger auto-format if this was a paste operation that resulted in language detection
+        if (shouldTriggerAutoFormat) {
+          setTimeout(() => {
+            this.triggerAutoFormat(tabId, newDetectedLanguage);
+          }, 50); // Small delay to ensure language is set before formatting
+        }
+      }
+    } catch (error) {
+      console.warn(`[ModelManager] Failed to handle language detection for tab ${tabId}:`, error);
+    }
+  }
+
+  /**
+   * Triggers auto-format for a specific tab
+   */
+  private triggerAutoFormat(tabId: string, language: string) {
+    try {
+      const model = this.models.get(tabId);
+      if (!model || model.isDisposed()) return;
+
+      // Prevent duplicate format operations
+      const formatKey = `${tabId}-${language}`;
+      if (this.formatActionQueue.has(formatKey)) return;
+
+      this.formatActionQueue.add(formatKey);
+
+      // Find the editor instance that has this model
+      // This is a bit of a hack, but Monaco doesn't provide a direct way to get the editor from a model
+      const editors = this.monaco?.editor.getEditors() || [];
+      const editor = editors.find(e => e.getModel() === model);
+
+      if (editor) {
+        const formatAction = editor.getAction('editor.action.formatDocument');
+        if (formatAction) {
+          formatAction.run().finally(() => {
+            this.formatActionQueue.delete(formatKey);
+          });
+        } else {
+          this.formatActionQueue.delete(formatKey);
+        }
+      } else {
+        this.formatActionQueue.delete(formatKey);
+      }
+    } catch (error) {
+      console.warn(`[ModelManager] Failed to trigger auto-format for tab ${tabId}:`, error);
+    }
+  }
+
   private evict() {
     if (this.models.size < MAX_MODELS) return;
 
@@ -119,52 +239,39 @@ class ModelManager {
     }
 
     const tabWithContent = await this.ensureTabContent(tab);
+    const content = tabWithContent.content || '';
+    this.lastContent.set(tab.id, content); // Set initial content for comparison
+
     const modelUri = this.monaco.Uri.parse(`inmemory://model/${tab.id}`);
     const existingModel = this.monaco.editor.getModel(modelUri);
     if (existingModel) {
       existingModel.dispose();
     }
-    const model = this.monaco.editor.createModel(
-      tabWithContent.content || '',
-      tab.language,
-      modelUri
-    );
+
+    const model = this.monaco.editor.createModel(content, tab.language, modelUri);
     this.listeners.get(tab.id)?.dispose();
     
     const contentListener = model.onDidChangeContent(() => {
       try {
         const newContent = model.getValue();
+        const prevContent = this.lastContent.get(tab.id) || '';
         const wasFromPaste = this.isPasteRef.get(tab.id) || false;
         
         // Update tab content in store
         useTabsStore.getState().updateTabContent(tab.id, newContent);
+        this.lastContent.set(tab.id, newContent);
         
-        // Call registered content change callbacks
-        const callback = this.contentChangeCallbacks.get(tab.id);
-        if (callback) {
-          callback(newContent, wasFromPaste);
-        }
-        
-        // Note: Language detection should be handled by the EditorInstance component
-        // which uses the useLanguageDetection hook. The ModelManager should only
-        // handle model lifecycle and content synchronization.
+        // Handle language detection and auto-formatting
+        this.handleLanguageDetection(tab.id, newContent, prevContent, wasFromPaste);
         
       } catch (error) {
         console.warn(`[ModelManager] Failed to update content for tab ${tab.id}:`, error);
       }
     });
     
-    // Store both listeners
-    const combinedListener = {
-      dispose: () => {
-        contentListener.dispose();
-        // Don't call this.listeners.get(tab.id)?.dispose() here - it would cause infinite recursion
-        // since this combinedListener IS stored in this.listeners
-      }
-    };
-    
+    // Store the listener
     this.models.set(tab.id, model);
-    this.listeners.set(tab.id, combinedListener);
+    this.listeners.set(tab.id, contentListener);
     this.lru.add(tab.id);
     if (this.models.size > MAX_MODELS) {
       this.evict();
@@ -176,18 +283,18 @@ class ModelManager {
     const model = this.models.get(tabId);
     if (model) {
       try {
-        // Don't update store during disposal - this can cause infinite recursion
-        // The content is already saved in the store, and the tab is being removed anyway
-        // if (!model.isDisposed()) {
-        //   const finalContent = model.getValue();
-        //   useTabsStore.getState().updateTabContent(tabId, finalContent);
-        // }
+        // Save final content before disposal if model is not disposed
+        if (!model.isDisposed()) {
+          const finalContent = model.getValue();
+          useTabsStore.getState().updateTabContent(tabId, finalContent);
+        }
       } catch (error) {
         console.warn(`[ModelManager] Failed to get final content for tab ${tabId}:`, error);
       }
+      
       this.listeners.get(tabId)?.dispose();
       this.listeners.delete(tabId);
-      this.contentChangeCallbacks.delete(tabId); // Clean up callback
+      this.lastContent.delete(tabId); // Clean up content tracking
       this.isPasteRef.delete(tabId); // Clean up paste tracking
       try {
         model.dispose();
@@ -255,14 +362,6 @@ class ModelManager {
         monacoInitialized: !!this.monaco
       });
     }
-  }
-
-  public registerContentChangeCallback(tabId: string, callback: (content: string, isFromPaste?: boolean) => void): void {
-    this.contentChangeCallbacks.set(tabId, callback);
-  }
-
-  public unregisterContentChangeCallback(tabId: string): void {
-    this.contentChangeCallbacks.delete(tabId);
   }
 
   // Method to mark that the next content change for a tab is from a paste operation

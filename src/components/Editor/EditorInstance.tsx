@@ -5,7 +5,6 @@ import { useRootStore } from '../../stores';
 import { useTabsStore } from '../../stores/tabsStore';
 import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useEditorScrollManager } from '../../hooks/useEditorScrollManager';
-import { useLanguageDetection } from '../../hooks/useLanguageDetection';
 import { useTabletSelector } from '../../hooks/useTabletSelector';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
@@ -41,7 +40,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     setActiveLeftTab,
     setActiveRightTab,
     updateTabState,
-    updateTabLanguage,
   } = useRootStore.getState();
 
   // Get activeEditorSide from splitViewStore
@@ -85,44 +83,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     latestActiveTabRef.current = activeTab;
   }, [activeTab]);
 
-  // Add a ref to track pending format operations to avoid duplicate formatting
-  const pendingFormatRef = useRef<Set<string>>(new Set());
-  
-  // Add a ref to track if the last content change was from a paste operation
-  const isPasteRef = useRef<boolean>(false);
 
-  // Handler for auto-format when language is detected on significant change
-  const handleLanguageDetectedOnSignificantChange = useCallback((tabId: string, language: string) => {
-    const editor = editorRef.current;
-    if (!editor || tabId !== activeTabId) return;
-
-    // Prevent duplicate format operations
-    const formatKey = `${tabId}-${language}`;
-    if (pendingFormatRef.current.has(formatKey)) return;
-
-    pendingFormatRef.current.add(formatKey);
-
-    // Auto-format the document
-    try {
-      const formatAction = editor.getAction('editor.action.formatDocument');
-      if (formatAction) {
-        formatAction.run().finally(() => {
-          // Clean up the pending format tracking
-          pendingFormatRef.current.delete(formatKey);
-        });
-      } else {
-        // Clean up even if format action fails
-        pendingFormatRef.current.delete(formatKey);
-      }
-    } catch (error) {
-      console.warn('[EditorInstance] Failed to format document:', error);
-      pendingFormatRef.current.delete(formatKey);
-    }
-  }, [activeTabId]);
 
   // --- Custom Hooks ---
   const { restoreScrollPosition } = useEditorScrollManager(editorRef, activeTabId);
-  const { detectAndSetLanguage } = useLanguageDetection(updateTabLanguage, handleLanguageDetectedOnSignificantChange);
   const {
     showTabletSelector,
     tabletQuery,
@@ -237,32 +201,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     }
   }, [isCodegenGenerating, activeCodegenTabId, codegenResult, activeTabId]);
 
-  // Effect to handle tab changes and set up content change callback
-  useEffect(() => {
-    if (activeTab && !activeTab.isTablet) {
-      
-      const contentChangeCallback = (newContent: string, isFromPaste: boolean = false) => {
-        
-        if (!useAIStore.getState().ai.isCodegenGenerating) {
-          detectAndSetLanguage(
-            activeTab.id, 
-            newContent, 
-            activeTab.content || '', 
-            activeTab.language, 
-            activeTab.languageLocked,
-            isFromPaste
-          );
-        }
-      };
-      
-      modelManager.registerContentChangeCallback(activeTab.id, contentChangeCallback);
-      
-      // Cleanup function
-      return () => {
-        modelManager.unregisterContentChangeCallback(activeTab.id);
-      };
-    }
-  }, [activeTab?.id, detectAndSetLanguage]);
+
 
   // --- SIMPLIFIED: Editor Event Handlers ---
   const handleEditorDidMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
