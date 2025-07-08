@@ -16,7 +16,6 @@ describe('Language Detection Performance Tests', () => {
     // Function to generate large JSON content (~1.5MB, ~30,000 lines)
     function generateLargeJsonContent(): string {
       const targetSize = 1.5 * 1024 * 1024; // 1.5MB in bytes
-      const targetLines = 30000;
       
       // Create a base object structure that we'll repeat
       const baseObject = {
@@ -123,7 +122,6 @@ describe('Language Detection Performance Tests', () => {
       
       // Check if we need to adjust the size
       const currentSize = jsonString.length;
-      const currentLines = jsonString.split('\n').length;
       
       if (currentSize > targetSize * 1.1) { // If we're more than 10% over target
         // Reduce the number of objects to get closer to target size
@@ -263,7 +261,7 @@ describe('Language Detection Performance Tests', () => {
         
         // Run detection multiple times to check for memory leaks
         for (let i = 0; i < 5; i++) {
-          const result = getPotentialLanguageMatches(largeJsonContent);
+          getPotentialLanguageMatches(largeJsonContent);
           // Force garbage collection if available
           if (global.gc) global.gc();
         }

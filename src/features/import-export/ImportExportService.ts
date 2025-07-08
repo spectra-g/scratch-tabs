@@ -1,6 +1,5 @@
 import { db, StorageProviderFactory } from '../../db';
 import { Workspace, Tab, SplitViewState } from '../../types';
-import { useWorkspaceStore } from '../../stores/workspaceStore';
 import {
   ExportFileContent,
   ExportData,

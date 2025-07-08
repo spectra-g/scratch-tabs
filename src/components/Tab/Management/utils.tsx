@@ -3,7 +3,6 @@ import { useTabsStore } from '../../../stores/tabsStore';
 import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { StorageProviderFactory } from '../../../db';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
-import { usePersistenceStore } from '../../../stores/persistenceStore';
 import { broadcastManager } from '../../../stores/broadcastStore';
 
 /**
