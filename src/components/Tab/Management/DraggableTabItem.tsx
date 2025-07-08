@@ -40,10 +40,7 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
 }) => {
   // Count tabs in the same workspace to determine if this is the only tab
   const allApplicationTabs = useTabsStore(state => {
-    console.time('[DraggableTabItem] Computing allApplicationTabs');
     const tabs = state.tabs;
-    console.log(`[DraggableTabItem] Computed ${tabs.length} total application tabs`);
-    console.timeEnd('[DraggableTabItem] Computing allApplicationTabs');
     return tabs;
   });
   const tabsInSameWorkspace = allApplicationTabs.filter((t: Tab) => t.workspaceId === tab.workspaceId);
