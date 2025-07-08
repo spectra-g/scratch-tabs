@@ -145,13 +145,6 @@ export const useResizeHandler = ({
 
   // Start resize operation
   const startResize = useCallback((shape: Shape, mousePoint: Point, handle: string) => {
-    console.log('🔍 [ResizeHandler] Starting resize:', {
-      shapeId: shape.id,
-      shapeType: shape.type,
-      handle,
-      mousePoint
-    });
-
     // For shapes with center coordinates, we need to calculate the bounding box
     // and then convert back to center-based coordinates for resize calculations
     let originalBounds;
@@ -177,8 +170,6 @@ export const useResizeHandler = ({
       };
     }
 
-    console.log('🔍 [ResizeHandler] Original bounds:', originalBounds);
-
     setResizeState({
       resizeMode: 'resize',
       resizeHandle: handle,
@@ -193,22 +184,13 @@ export const useResizeHandler = ({
   // Update resize operation
   const updateResize = useCallback((mousePoint: Point) => {
     if (resizeState.resizeMode !== 'resize' || !resizeState.resizeHandle || !resizeState.resizeStartData) {
-      console.log('🔍 [ResizeHandler] No resize state, skipping update');
       return;
     }
 
     const { shape, startPoint, originalBounds } = resizeState.resizeStartData;
     const deltaX = mousePoint.x - startPoint.x;
     const deltaY = mousePoint.y - startPoint.y;
-    
-    console.log('🔍 [ResizeHandler] Updating resize:', {
-      shapeId: shape.id,
-      shapeType: shape.type,
-      handle: resizeState.resizeHandle,
-      delta: { x: deltaX, y: deltaY },
-      mousePoint
-    });
-    
+
     const newBounds = calculateResizeBounds(
       originalBounds,
       resizeState.resizeHandle,
@@ -216,8 +198,6 @@ export const useResizeHandler = ({
       deltaY,
       shape.type
     );
-
-    console.log('🔍 [ResizeHandler] New bounds:', newBounds);
 
     // Calculate updates based on shape type
     let updates: Partial<Shape> = {};
@@ -233,7 +213,6 @@ export const useResizeHandler = ({
           width: newBounds.width,
           height: newBounds.height
         } as Partial<Shape & { x: number; y: number; width: number; height: number }>;
-        console.log('🔍 [ResizeHandler] Poly shape updates:', updates);
         break;
       }
       case 'circle': {
@@ -242,7 +221,6 @@ export const useResizeHandler = ({
           y: newBounds.y + newBounds.radius!,
           radius: newBounds.radius
         } as Partial<Shape & { x: number; y: number; radius: number }>;
-        console.log('🔍 [ResizeHandler] Circle updates:', updates);
         break;
       }
       case 'text': {
@@ -251,22 +229,19 @@ export const useResizeHandler = ({
           y: newBounds.y + newBounds.height / 2,
           fontSize: Math.max(8, Math.min(newBounds.width, newBounds.height))
         } as Partial<Shape & { x: number; y: number; fontSize: number }>;
-        console.log('🔍 [ResizeHandler] Text updates:', updates);
         break;
       }
     }
 
     // Apply updates immediately for real-time feedback
     if (Object.keys(updates).length > 0) {
-      console.log('🔍 [ResizeHandler] Calling onUpdateShape with:', updates);
       onUpdateShape(shape.id, updates);
     }
   }, [resizeState, calculateResizeBounds, onUpdateShape]);
 
   // End resize operation
   const endResize = useCallback((mousePoint: Point) => {
-    console.log('🔍 [ResizeHandler] Ending resize');
-    
+
     if (resizeState.resizeMode !== 'resize' || !resizeState.resizeHandle || !resizeState.resizeStartData) {
       return;
     }
