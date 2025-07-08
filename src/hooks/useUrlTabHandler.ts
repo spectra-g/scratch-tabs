@@ -83,14 +83,7 @@ export const useUrlTabHandler = () => {
     function findTabByUrlIdentifier(urlIdentifier: string | undefined): { tab: Tab | undefined, side: 'left' | 'right' | null } {
         if (!urlIdentifier) return { tab: undefined, side: null };
         const normalizedParam = urlIdentifier.toLowerCase();
-        console.log('[findTabByUrlIdentifier] Searching for:', normalizedParam);
-        console.log('[findTabByUrlIdentifier] Current state:', {
-            isSplit,
-            leftTabs,
-            rightTabs,
-            totalTabs: tabs.length
-        });
-        
+
         // Check left tabs first
         const leftTab = tabs.find(tab => leftTabs.includes(tab.id) && (
             tab.title.toLowerCase() === normalizedParam ||
@@ -98,10 +91,6 @@ export const useUrlTabHandler = () => {
             tab.id === urlIdentifier
         ));
         if (leftTab) {
-            console.log('[findTabByUrlIdentifier] Found tab on LEFT side:', {
-                id: leftTab.id,
-                title: leftTab.title
-            });
             return { tab: leftTab, side: 'left' };
         }
         
@@ -113,16 +102,11 @@ export const useUrlTabHandler = () => {
                 tab.id === urlIdentifier
             ));
             if (rightTab) {
-                console.log('[findTabByUrlIdentifier] Found tab on RIGHT side:', {
-                    id: rightTab.id,
-                    title: rightTab.title
-                });
                 return { tab: rightTab, side: 'right' };
             }
         }
         
         // Not found
-        console.log('[findTabByUrlIdentifier] No tab found');
         return { tab: undefined, side: null };
     }
 
@@ -224,31 +208,19 @@ export const useUrlTabHandler = () => {
 
         // 1. Try to find existing tab matching the new URL
         const { tab, side } = findTabByUrlIdentifier(urlIdentifierParam);
-        console.log('[useUrlTabHandler] URL change - found tab:', tab ? {
-            id: tab.id,
-            title: tab.title,
-            side: side
-        } : null);
 
         if (tab) {
-            console.log('[useUrlTabHandler] Activating existing tab on side:', side);
             activateTab(tab, side);
         } else if (urlIdentifierParam) {
-            console.log('[useUrlTabHandler] No existing tab found, creating new one');
             // No existing tab found, create a new one
             const { activeWorkspaceId } = useWorkspaceStore.getState();
             if (activeWorkspaceId) {
                 createNewTabFromUrl(urlIdentifierParam, activeWorkspaceId).then(newTab => {
-                    console.log('[useUrlTabHandler] Created new tab from URL:', {
-                        id: newTab.id,
-                        title: newTab.title
-                    });
-                    
+
                     // Determine which side to add the tab based on current split view state
                     const currentSplitView = useSplitViewStore.getState().splitView;
                     const shouldAddToRight = currentSplitView?.isSplit && currentSplitView?.activeSide === 'right';
                     
-                    console.log('[useUrlTabHandler] Adding tab to side:', shouldAddToRight ? 'RIGHT' : 'LEFT');
                     const { addTab, setActiveLeftTab, setActiveRightTab, setActiveSide } = useRootStore.getState();
                     
                     if (shouldAddToRight) {

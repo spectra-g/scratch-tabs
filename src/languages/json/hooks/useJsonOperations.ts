@@ -343,7 +343,6 @@ export const useJsonOperations = (
       const extractedJsons = extractJsonFromText(content);
       
       if (extractedJsons.length === 0) {
-        console.log('No JSON found in content');
         return;
       }
       

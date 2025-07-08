@@ -317,7 +317,6 @@ export class JsonLogLanguageDetector extends BaseLanguageDetector implements Lan
             if (trimmedLine.startsWith('{') && trimmedLine.endsWith('}')) {
               // Safety check: don't parse very large lines
               if (trimmedLine.length > 100_000) {
-                console.log(`JSON Log Format: Line too large (${trimmedLine.length} bytes), skipping format`); // <<< ADD THIS
                 formattedLines.push(trimmedLine); // Keep original line
                 continue;
               }

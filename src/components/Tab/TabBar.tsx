@@ -32,7 +32,6 @@ interface TooltipContent {
 }
 
 export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, onOpenSummaryModal }) => {
-    // *** CRITICAL FIX: Select state from source stores ***
     const { tabs } = useTabsStore();
     const { splitView } = useSplitViewStore();
     const {

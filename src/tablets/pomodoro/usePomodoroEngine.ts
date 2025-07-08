@@ -123,7 +123,7 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
     if (state.status !== 'running') {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
-      document.title = 'DevToolbox'; // Reset title when not running
+      document.title = 'Scratch Tabs'; // Reset title when not running
       return;
     }
 
