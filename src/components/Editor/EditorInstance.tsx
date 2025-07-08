@@ -12,6 +12,8 @@ import { useAIStore } from '../../stores/aiStore';
 import { useBatchToolsStore } from '../../stores/batchToolsStore';
 import { BatchToolsModal } from '../BatchTools/BatchToolsModal';
 import { modelManager } from '../../services/modelManager';
+import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { shallow } from 'zustand/shallow';
 
 interface EditorInstanceProps {
   side: 'left' | 'right';
@@ -30,8 +32,28 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
   const monacoRef = useRef<typeof Monaco | null>(null);
   const currentTabIdRef = useRef<string>(activeTabId);
   
-  // Get the tab metadata
-  const activeTab = useTabsStore(state => state.tabs.find(t => t.id === activeTabId));
+  // FIX: Use useStoreWithEqualityFn with proper equality check for tab metadata
+  const activeTab = useStoreWithEqualityFn(
+    useTabsStore,
+    state => {
+      const tab = state.tabs.find(t => t.id === activeTabId);
+      return tab || null;
+    },
+    (prev, next) => {
+      // Custom equality check - only re-render if the tab actually changed
+      if (!prev && !next) return true;
+      if (!prev || !next) return false;
+      return (
+        prev.id === next.id &&
+        prev.content === next.content &&
+        prev.language === next.language &&
+        prev.title === next.title &&
+        prev.isTablet === next.isTablet &&
+        prev.cursorPosition?.lineNumber === next.cursorPosition?.lineNumber &&
+        prev.cursorPosition?.column === next.cursorPosition?.column
+      );
+    }
+  );
 
   // Get actions from rootStore
   const {
@@ -42,33 +64,45 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     updateTabState,
   } = useRootStore.getState();
 
-  // Get activeEditorSide from splitViewStore
-  const { splitView } = useSplitViewStore();
-  const activeEditorSide = splitView?.activeSide;
+  // FIX: Use useStoreWithEqualityFn for activeEditorSide only
+  const activeEditorSide = useStoreWithEqualityFn(
+    useSplitViewStore,
+    state => state.splitView?.activeSide,
+    shallow
+  );
 
+  // FIX: Use useStoreWithEqualityFn for AI store with specific properties
   const {
     isCodegenReady,
     runCodegen,
     codegenResult,
     activeCodegenTabId,
     isCodegenGenerating
-  } = useAIStore(state => ({
-    isCodegenReady: state.ai.isCodegenReady,
-    runCodegen: state.runCodegen,
-    codegenResult: state.ai.codegenResult,
-    activeCodegenTabId: state.ai.activeCodegenTabId,
-    isCodegenGenerating: state.ai.isCodegenGenerating,
-  }));
+  } = useStoreWithEqualityFn(
+    useAIStore,
+    state => ({
+      isCodegenReady: state.ai.isCodegenReady,
+      runCodegen: state.runCodegen,
+      codegenResult: state.ai.codegenResult,
+      activeCodegenTabId: state.ai.activeCodegenTabId,
+      isCodegenGenerating: state.ai.isCodegenGenerating,
+    }),
+    shallow
+  );
 
   const {
     isReady: isAiReady,
     isLoading: isAiLoading,
     summarizeTextWithModal
-  } = useAIStore(state => ({
-    isReady: state.ai.isReady,
-    isLoading: state.ai.isLoading,
-    summarizeTextWithModal: state.summarizeTextWithModal,
-  }));
+  } = useStoreWithEqualityFn(
+    useAIStore,
+    state => ({
+      isReady: state.ai.isReady,
+      isLoading: state.ai.isLoading,
+      summarizeTextWithModal: state.summarizeTextWithModal,
+    }),
+    shallow
+  );
 
   const { openModal: openBatchToolsModal } = useBatchToolsStore();
 

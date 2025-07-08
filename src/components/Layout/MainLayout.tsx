@@ -16,22 +16,59 @@ import { SummarizeModal } from '../AI/SummarizeModal';
 import { SearchModal } from '../Search/SearchModal';
 import { AIModelManagementModal } from '../AI/AIModelManagementModal';
 import { useAIStore } from '../../stores/aiStore';
+import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { shallow } from 'zustand/shallow';
 
 const MainLayout: React.FC = () => {
+  // FIX: Use selective subscription for tab count only
   const tabCount = useTabsStore(state => state.tabs.length);
-  const splitView = useSplitViewStore(state => state.splitView);
-  const activeLeftTabId = useSplitViewStore(state => state.splitView?.activeLeftTabId);
-  const activeRightTabId = useSplitViewStore(state => state.splitView?.activeRightTabId);
   
-  const { saveTabDataById, setSplitRatio } = useRootStore(state => ({
-    saveTabDataById: state.saveTabDataById,
-    setSplitRatio: state.setSplitRatio,
-  }));
+  // FIX: Use useStoreWithEqualityFn for split view with shallow comparison
+  const { splitView, activeLeftTabId, activeRightTabId } = useStoreWithEqualityFn(
+    useSplitViewStore,
+    state => ({
+      splitView: state.splitView,
+      activeLeftTabId: state.splitView?.activeLeftTabId,
+      activeRightTabId: state.splitView?.activeRightTabId,
+    }),
+    shallow
+  );
+  
+  // FIX: Use useStoreWithEqualityFn for root store actions
+  const { saveTabDataById, setSplitRatio } = useStoreWithEqualityFn(
+    useRootStore,
+    state => ({
+      saveTabDataById: state.saveTabDataById,
+      setSplitRatio: state.setSplitRatio,
+    }),
+    shallow
+  );
 
-  const { loadWorkspaces, workspaces } = useWorkspaceStore();
-  const { saveState } = usePersistenceStore(); // Get saveState function
+  // FIX: Use useStoreWithEqualityFn for workspace store
+  const { loadWorkspaces, workspaces } = useStoreWithEqualityFn(
+    useWorkspaceStore,
+    state => ({
+      loadWorkspaces: state.loadWorkspaces,
+      workspaces: state.workspaces,
+    }),
+    shallow
+  );
+  
+  // FIX: Use useStoreWithEqualityFn for persistence store
+  const { saveState } = useStoreWithEqualityFn(
+    usePersistenceStore,
+    state => ({ saveState: state.saveState }),
+    shallow
+  );
+  
   const [isAppInitialized, setIsAppInitialized] = useState(false);
-  const { setSummaryModalCallback } = useAIStore();
+  
+  // FIX: Use useStoreWithEqualityFn for AI store
+  const { setSummaryModalCallback } = useStoreWithEqualityFn(
+    useAIStore,
+    state => ({ setSummaryModalCallback: state.setSummaryModalCallback }),
+    shallow
+  );
 
   function setRealHeight() {
     document.documentElement.style.setProperty('--real-vh', `${window.innerHeight * 0.01}px`);

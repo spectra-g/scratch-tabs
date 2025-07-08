@@ -8,6 +8,8 @@ import { extendedViewRegistry } from '../../views/registry';
 import { StatusBar } from '../StatusBar';
 import { useMarkdownPreviewResizer } from '../../hooks/useMarkdownPreviewResizer';
 import { PreviewDivider } from '../Preview/PreviewDivider';
+import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { shallow } from 'zustand/shallow';
 
 interface EditorPaneWrapperProps {
   side: 'left' | 'right';
@@ -40,16 +42,38 @@ const getContentForPreview = (tab: any): string => {
 export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
   const [editorInstance, setEditorInstance] = React.useState<any>(null);
   
-  // Select only the IDs and minimal state needed for logic here
-  const activeTabId = useSplitViewStore(state => 
-    side === 'left' ? state.splitView.activeLeftTabId : state.splitView.activeRightTabId
+  // FIX: Use useStoreWithEqualityFn with shallow comparison to prevent unnecessary re-renders
+  const activeTabId = useStoreWithEqualityFn(
+    useSplitViewStore,
+    state => side === 'left' ? state.splitView.activeLeftTabId : state.splitView.activeRightTabId,
+    shallow
   );
 
   // Get actions from rootStore
   const { updateTabState, getActiveView } = useRootStore.getState();
 
-  // Get the specific tab object here. This is efficient.
-  const activeTab = useTabsStore(state => state.tabs.find(t => t.id === activeTabId));
+  // FIX: Use useStoreWithEqualityFn with proper equality check
+  const activeTab = useStoreWithEqualityFn(
+    useTabsStore,
+    state => {
+      const tab = state.tabs.find(t => t.id === activeTabId);
+      return tab || null;
+    },
+    (prev, next) => {
+      // Custom equality check - only re-render if the tab actually changed
+      if (!prev && !next) return true;
+      if (!prev || !next) return false;
+      return (
+        prev.id === next.id &&
+        prev.content === next.content &&
+        prev.language === next.language &&
+        prev.title === next.title &&
+        prev.isTablet === next.isTablet &&
+        prev.previewMode === next.previewMode &&
+        prev.tabletState === next.tabletState
+      );
+    }
+  );
 
   // Memoize content for preview components to avoid expensive re-renders
   const previewContent = useMemo(() => {
