@@ -7,15 +7,186 @@ describe('Language Detection Performance Tests', () => {
     let largeJsonContent: string;
     
     beforeAll(async () => {
-      // Load the actual large JSON file
-      const fs = require('fs');
-      const path = require('path');
-      largeJsonContent = fs.readFileSync(
-        path.join(__dirname, '../../../large-json.json'), 
-        'utf8'
-      );
-      console.log(`Test content size: ${largeJsonContent.length} characters`);
+      // Generate a large JSON file dynamically instead of loading from file
+      largeJsonContent = generateLargeJsonContent();
+      console.log(`Generated test content size: ${largeJsonContent.length} characters (${(largeJsonContent.length / 1024 / 1024).toFixed(2)}MB)`);
+      console.log(`Generated test content lines: ${largeJsonContent.split('\n').length}`);
     });
+
+    // Function to generate large JSON content (~1.5MB, ~30,000 lines)
+    function generateLargeJsonContent(): string {
+      const targetSize = 1.5 * 1024 * 1024; // 1.5MB in bytes
+      const targetLines = 30000;
+      
+      // Create a base object structure that we'll repeat
+      const baseObject = {
+        id: "sample-id",
+        name: "Sample Item",
+        description: "This is a sample description for testing purposes",
+        metadata: {
+          created: "2024-01-01T00:00:00Z",
+          updated: "2024-01-01T00:00:00Z",
+          version: "1.0.0",
+          tags: ["test", "sample", "performance"],
+          properties: {
+            type: "test-item",
+            category: "performance-testing",
+            priority: "high",
+            status: "active"
+          }
+        },
+        data: {
+          values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          strings: ["alpha", "beta", "gamma", "delta", "epsilon"],
+          nested: {
+            level1: {
+              level2: {
+                level3: {
+                  value: "deeply nested value",
+                  array: [1, 2, 3, 4, 5]
+                }
+              }
+            }
+          }
+        },
+        settings: {
+          enabled: true,
+          timeout: 5000,
+          retries: 3,
+          options: {
+            cache: true,
+            compress: false,
+            validate: true
+          }
+        }
+      };
+
+      // Calculate how many objects we need to reach target size
+      const singleObject = JSON.stringify(baseObject);
+      const objectsNeeded = Math.ceil(targetSize / singleObject.length);
+      
+      // Generate the large JSON array
+      const largeArray = [];
+      for (let i = 0; i < objectsNeeded; i++) {
+        // Create a unique object for each iteration
+        const uniqueObject = {
+          ...baseObject,
+          id: `item-${i.toString().padStart(6, '0')}`,
+          name: `Sample Item ${i}`,
+          description: `This is sample item number ${i} for performance testing`,
+          metadata: {
+            ...baseObject.metadata,
+            created: new Date(Date.now() - i * 1000).toISOString(),
+            updated: new Date().toISOString(),
+            properties: {
+              ...baseObject.metadata.properties,
+              index: i,
+              hash: `hash-${i.toString(16)}`
+            }
+          },
+          data: {
+            ...baseObject.data,
+            values: Array.from({length: 10}, (_, j) => i + j),
+            strings: [`item-${i}-alpha`, `item-${i}-beta`, `item-${i}-gamma`],
+            nested: {
+              ...baseObject.data.nested,
+              level1: {
+                ...baseObject.data.nested.level1,
+                level2: {
+                  ...baseObject.data.nested.level1.level2,
+                  level3: {
+                    ...baseObject.data.nested.level1.level2.level3,
+                    value: `deeply nested value for item ${i}`,
+                    array: Array.from({length: 5}, (_, j) => i * 10 + j)
+                  }
+                }
+              }
+            }
+          },
+          settings: {
+            ...baseObject.settings,
+            timeout: 5000 + i,
+            retries: 3 + (i % 5),
+            options: {
+              ...baseObject.settings.options,
+              cache: i % 2 === 0,
+              compress: i % 3 === 0
+            }
+          }
+        };
+        
+        largeArray.push(uniqueObject);
+      }
+
+      // Convert to JSON string with pretty formatting to increase line count
+      const jsonString = JSON.stringify(largeArray, null, 2);
+      
+      // Check if we need to adjust the size
+      const currentSize = jsonString.length;
+      const currentLines = jsonString.split('\n').length;
+      
+      if (currentSize > targetSize * 1.1) { // If we're more than 10% over target
+        // Reduce the number of objects to get closer to target size
+        const reductionFactor = targetSize / currentSize;
+        const newObjectCount = Math.floor(objectsNeeded * reductionFactor);
+        
+        // Regenerate with fewer objects
+        const reducedArray = [];
+        for (let i = 0; i < newObjectCount; i++) {
+          const uniqueObject = {
+            ...baseObject,
+            id: `item-${i.toString().padStart(6, '0')}`,
+            name: `Sample Item ${i}`,
+            description: `This is sample item number ${i} for performance testing`,
+            metadata: {
+              ...baseObject.metadata,
+              created: new Date(Date.now() - i * 1000).toISOString(),
+              updated: new Date().toISOString(),
+              properties: {
+                ...baseObject.metadata.properties,
+                index: i,
+                hash: `hash-${i.toString(16)}`
+              }
+            },
+            data: {
+              ...baseObject.data,
+              values: Array.from({length: 10}, (_, j) => i + j),
+              strings: [`item-${i}-alpha`, `item-${i}-beta`, `item-${i}-gamma`],
+              nested: {
+                ...baseObject.data.nested,
+                level1: {
+                  ...baseObject.data.nested.level1,
+                  level2: {
+                    ...baseObject.data.nested.level1.level2,
+                    level3: {
+                      ...baseObject.data.nested.level1.level2.level3,
+                      value: `deeply nested value for item ${i}`,
+                      array: Array.from({length: 5}, (_, j) => i * 10 + j)
+                    }
+                  }
+                }
+              }
+            },
+            settings: {
+              ...baseObject.settings,
+              timeout: 5000 + i,
+              retries: 3 + (i % 5),
+              options: {
+                ...baseObject.settings.options,
+                cache: i % 2 === 0,
+                compress: i % 3 === 0
+              }
+            }
+          };
+          
+          reducedArray.push(uniqueObject);
+        }
+        
+        return JSON.stringify(reducedArray, null, 2);
+      }
+      
+      return jsonString;
+    }
   
     describe('Performance Issue Verification', () => {
       
