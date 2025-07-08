@@ -148,7 +148,7 @@ export const WorkspaceSwitcher: React.FC = () => {
       {isOpen && (
         <div
           ref={containerRef}
-          className="fixed w-64 bg-gray-800/95 backdrop-blur border border-gray-700/50 rounded-lg shadow-2xl overflow-hidden"
+          className="fixed w-64 bg-gray-800/95 backdrop-blur border border-gray-700/50 rounded-lg shadow-2xl overflow-hidden flex flex-col"
           style={{
             top: (buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 4 : 40),
             right: '8px',
@@ -158,120 +158,127 @@ export const WorkspaceSwitcher: React.FC = () => {
           }}
         >
           {/* Header */}
-          <div className="px-3 py-2 border-b border-gray-700/50">
+          <div className="px-3 py-2 border-b border-gray-700/50 flex-shrink-0">
             <h3 className="text-sm font-medium text-gray-200">Workspaces</h3>
           </div>
 
-          {/* Workspace List */}
-          <div className="py-1 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(80vh - 100px)' }}>
-            {workspaces.map(workspace => (
-              <div
-                key={workspace.id}
-                className={`group relative flex items-center justify-between px-3 py-2 hover:bg-gray-700/50 transition-colors cursor-pointer ${workspace.id === activeWorkspaceId ? 'bg-gray-700/30' : ''
-                  }`}
-                onClick={() => handleSwitchWorkspace(workspace.id)}
-              >
-                {editingId === workspace.id ? (
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleRenameWorkspace(workspace.id);
-                      if (e.key === 'Escape') {
-                        setEditingId(null);
-                        setEditingName('');
-                      }
-                    }}
-                    onBlur={() => handleRenameWorkspace(workspace.id)}
-                    className="flex-1 bg-gray-900/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200"
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <>
-                    <span className="flex-1 text-left text-sm text-gray-200 truncate">
-                      {workspace.name} {typeof tabCounts[workspace.id] === 'number' ? <span className="text-gray-400">({tabCounts[workspace.id]})</span> : null}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setShowContextMenu({
-                          id: workspace.id,
-                          x: rect.right,
-                          y: rect.top
-                        });
+          {/* Workspace List - Scrollable */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+            <div className="py-1">
+              {workspaces.map(workspace => (
+                <div
+                  key={workspace.id}
+                  className={`group relative flex items-center justify-between px-3 py-2 hover:bg-gray-700/50 transition-colors cursor-pointer ${workspace.id === activeWorkspaceId ? 'bg-gray-700/30' : ''
+                    }`}
+                  onClick={() => handleSwitchWorkspace(workspace.id)}
+                >
+                  {editingId === workspace.id ? (
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRenameWorkspace(workspace.id);
+                        if (e.key === 'Escape') {
+                          setEditingId(null);
+                          setEditingName('');
+                        }
                       }}
-                      className="p-1 text-gray-400 hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreHorizontal size={14} />
-                    </button>
-                  </>
-                )}
-              </div>
-            ))}
+                      onBlur={() => handleRenameWorkspace(workspace.id)}
+                      className="flex-1 bg-gray-900/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200"
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <>
+                      <span className="flex-1 text-left text-sm text-gray-200 truncate">
+                        {workspace.name} {typeof tabCounts[workspace.id] === 'number' ? <span className="text-gray-400">({tabCounts[workspace.id]})</span> : null}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setShowContextMenu({
+                            id: workspace.id,
+                            x: rect.right,
+                            y: rect.top
+                          });
+                        }}
+                        className="p-1 text-gray-400 hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreHorizontal size={14} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Create New Workspace */}
-          <div className="px-3 py-2 border-t border-gray-700/50">
-            {isCreating ? (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={newWorkspaceName}
-                  onChange={(e) => setNewWorkspaceName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreateWorkspace();
-                    if (e.key === 'Escape') {
-                      setIsCreating(false);
-                      setNewWorkspaceName('');
-                    }
+          {/* Bottom Actions - Always Visible */}
+          <div className="flex-shrink-0">
+            {/* Create New Workspace */}
+            <div className="px-3 py-2 border-t border-gray-700/50">
+              {isCreating ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={newWorkspaceName}
+                    onChange={(e) => setNewWorkspaceName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreateWorkspace();
+                      if (e.key === 'Escape') {
+                        setIsCreating(false);
+                        setNewWorkspaceName('');
+                      }
+                    }}
+                    placeholder="Workspace name..."
+                    className="flex-1 bg-gray-900/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200"
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsCreating(true);
                   }}
-                  placeholder="Workspace name..."
-                  className="flex-1 bg-gray-900/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200"
-                  autoFocus
-                />
-              </div>
-            ) : (
+                  className="w-full text-left text-sm text-gray-400 hover:text-gray-200 flex items-center space-x-2"
+                >
+                  <Plus size={14} />
+                  <span>New Workspace</span>
+                </button>
+              )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="px-1 py-1 border-t border-gray-700/50">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsCreating(true);
+                onClick={() => {
+                  openTabManagementModal();
+                  setIsOpen(false);
                 }}
-                className="w-full text-left text-sm text-gray-400 hover:text-gray-200 flex items-center space-x-2"
+                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
               >
-                <Plus size={14} />
-                <span>New Workspace</span>
+                <ListTodo size={14} />
+                <span>Manage Tabs...</span>
               </button>
-            )}
-          </div>
-          <div className="px-1 py-1 border-t border-gray-700/50"> {/* Section for Import/Export */}
-            <button
-              onClick={() => {
-                openTabManagementModal();
-                setIsOpen(false);
-              }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
-            >
-              <ListTodo size={14} />
-              <span>Manage Tabs...</span>
-            </button>
-            <button
-              onClick={() => { setIsExportModalOpen(true); setIsOpen(false); }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
-            >
-              <Download size={14} />
-              <span>Export Workspaces...</span>
-            </button>
-            <button
-              onClick={() => { openImportModal(); setIsOpen(false); }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
-            >
-              <Upload size={14} />
-              <span>Import Workspaces...</span>
-            </button>
+              <button
+                onClick={() => { setIsExportModalOpen(true); setIsOpen(false); }}
+                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
+              >
+                <Download size={14} />
+                <span>Export Workspaces...</span>
+              </button>
+              <button
+                onClick={() => { openImportModal(); setIsOpen(false); }}
+                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
+              >
+                <Upload size={14} />
+                <span>Import Workspaces...</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
