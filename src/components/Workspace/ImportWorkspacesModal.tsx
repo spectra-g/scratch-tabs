@@ -53,8 +53,23 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({ is
   });
 
   const handleClose = () => {
-    // If we're closing from the summary step, update the workspace list
-    if (step === 'summary') {
+    // If we're closing from the summary step, update the workspace list and switch to imported workspace
+    if (step === 'summary' && summary && summary.importedWorkspaces.length > 0) {
+      // First, load all workspaces to get the updated list
+      workspaceStore.loadWorkspaces().then(() => {
+        // Find the most recently imported workspace (it will have the highest lastAccessed timestamp)
+        const { workspaces } = useWorkspaceStore.getState();
+        if (workspaces.length > 0) {
+          // Sort by lastAccessed to find the most recently imported workspace
+          const sortedWorkspaces = [...workspaces].sort((a, b) => b.lastAccessed - a.lastAccessed);
+          const mostRecentWorkspace = sortedWorkspaces[0];
+          
+          // Switch to the most recently imported workspace
+          useWorkspaceStore.getState().switchWorkspace(mostRecentWorkspace.id);
+        }
+      });
+    } else if (step === 'summary') {
+      // If no workspaces were imported, just refresh the workspace list
       workspaceStore.loadWorkspaces();
     }
     setStep('selectFile');
