@@ -4,7 +4,6 @@ import { languageRegistry } from './registry';
 import { registerJsonValidationProvider } from './json/validation';
 import { JsonStatusItem } from './json/StatusItem';
 import { JsonOptionsMenu } from './json/JsonOptionsMenu';
-import * as monaco from 'monaco-editor';
 
 // Lazy-loaded faker instance
 let fakerInstance: any = null;
@@ -752,6 +751,7 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
    * Works with both complete and partial content
    */
   detect(content: string): DetectionResult {
+
     const trimmed = content.trim();
     if (trimmed.length < 2) {
       return this.noMatch();
@@ -767,6 +767,12 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
     const endsWithBrace = trimmed.endsWith('}');
     const endsWithBracket = trimmed.endsWith(']');
     const isPotentiallyComplete = (startsWithBrace && endsWithBrace) || (startsWithBracket && endsWithBracket);
+    
+    // Special case: if content is sampled (large but truncated), treat as potentially complete
+    // This helps with the performance fix where we sample large JSON files
+    // For sampled content, we expect it to be around 5000-6000 characters
+    const isSampledContent = content.length >= 5000 && content.length <= 7000;
+    const shouldTreatAsComplete = isPotentiallyComplete || isSampledContent;
 
     if (isPotentiallyComplete) {
       try {
@@ -777,19 +783,39 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
       }
     }
 
-    let confidenceScore = isPotentiallyComplete ? 0.3 : 0.4;
+    let confidenceScore = shouldTreatAsComplete ? 0.3 : 0.4;
     let specificJsonPatternsHit = 0;
     
     const jsonPatterns = this.getJsonPatterns();
     for (const p of jsonPatterns) {
       const matches = trimmed.match(p.pattern);
       if (matches) {
-        confidenceScore += (p.weight / (isPotentiallyComplete ? 1.5 : 1));
+        confidenceScore += (p.weight / (shouldTreatAsComplete ? 1.5 : 1));
         if (p.perMatch) {
           confidenceScore += Math.min(matches.length, 5) * (p.perMatch / 2);
         }
         if (p.specific) {
           specificJsonPatternsHit++;
+        }
+      }
+    }
+    
+    // Boost confidence for clear JSON structure patterns
+    if (startsWithBrace) {
+      // Count JSON key-value pairs
+      const keyValueMatches = trimmed.match(/"[^"\\]*(?:\\.[^"\\]*)*"\s*:/g);
+      if (keyValueMatches && keyValueMatches.length >= 5) {
+        confidenceScore += (shouldTreatAsComplete ? 0.3 : 0.15); // Strong boost for complete JSON, moderate for partial
+      } else if (keyValueMatches && keyValueMatches.length >= 2) {
+        confidenceScore += (shouldTreatAsComplete ? 0.2 : 0.1); // Moderate boost for complete JSON, small for partial
+      }
+      
+      // Additional boost for nested structure (only for complete JSON)
+      if (shouldTreatAsComplete) {
+        const nestedObjectCount = (trimmed.match(/:\s*\{/g) || []).length;
+        const nestedArrayCount = (trimmed.match(/:\s*\[/g) || []).length;
+        if (nestedObjectCount + nestedArrayCount >= 3) {
+          confidenceScore += 0.15; // Boost for complex nested structure
         }
       }
     }
@@ -815,7 +841,7 @@ export class JsonLanguageDetector extends BaseLanguageDetector implements Langua
         }
     }
 
-    const confidenceCap = isPotentiallyComplete ? 0.7 : 0.75;
+    const confidenceCap = shouldTreatAsComplete ? 0.95 : 0.75; // Lower cap for partial JSON
     confidenceScore = Math.min(confidenceCap, Math.max(0.0, confidenceScore));
 
     const isMatch = confidenceScore >= 0.3;

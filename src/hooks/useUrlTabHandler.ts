@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useRootStore } from '../stores/rootStore';
+import { useTabsStore } from '../stores/tabsStore';
+import { useSplitViewStore } from '../stores/splitViewStore';
 import { useWorkspaceStore } from '../stores/workspaceStore';
 import { Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
@@ -43,30 +45,25 @@ export const useUrlTabHandler = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const { tabs } = useTabsStore();
+    const { splitView } = useSplitViewStore();
     const {
-        tabs,
-        activeLeftTabId,
-        activeRightTabId,
-        isSplit,
-        activeSide,
         setActiveLeftTab,
         setActiveRightTab,
         setActiveSide,
-        splitView,
         initialUrlProcessed,
     } = useRootStore(state => ({
-        tabs: state.tabs,
-        activeLeftTabId: state.splitView?.activeLeftTabId,
-        activeRightTabId: state.splitView?.activeRightTabId,
-        isSplit: state.splitView?.isSplit || false,
-        activeSide: state.splitView?.activeSide || 'left',
         setActiveLeftTab: state.setActiveLeftTab,
         setActiveRightTab: state.setActiveRightTab,
         setActiveSide: state.setActiveSide,
-        splitView: state.splitView,
-        // Get the new flag from the store
         initialUrlProcessed: state.initialUrlProcessed,
     }));
+
+    // Extract values from splitView
+    const activeLeftTabId = splitView?.activeLeftTabId;
+    const activeRightTabId = splitView?.activeRightTabId;
+    const isSplit = splitView?.isSplit || false;
+    const activeSide = splitView?.activeSide || 'left';
     const { isLoading } = useWorkspaceStore();
 
     // Split view helpers
@@ -86,13 +83,17 @@ export const useUrlTabHandler = () => {
     function findTabByUrlIdentifier(urlIdentifier: string | undefined): { tab: Tab | undefined, side: 'left' | 'right' | null } {
         if (!urlIdentifier) return { tab: undefined, side: null };
         const normalizedParam = urlIdentifier.toLowerCase();
+
         // Check left tabs first
         const leftTab = tabs.find(tab => leftTabs.includes(tab.id) && (
             tab.title.toLowerCase() === normalizedParam ||
             generateUrlIdentifier(tab) === urlIdentifier ||
             tab.id === urlIdentifier
         ));
-        if (leftTab) return { tab: leftTab, side: 'left' };
+        if (leftTab) {
+            return { tab: leftTab, side: 'left' };
+        }
+        
         // If split, check right tabs
         if (isSplit) {
             const rightTab = tabs.find(tab => rightTabs.includes(tab.id) && (
@@ -100,8 +101,11 @@ export const useUrlTabHandler = () => {
                 generateUrlIdentifier(tab) === urlIdentifier ||
                 tab.id === urlIdentifier
             ));
-            if (rightTab) return { tab: rightTab, side: 'right' };
+            if (rightTab) {
+                return { tab: rightTab, side: 'right' };
+            }
         }
+        
         // Not found
         return { tab: undefined, side: null };
     }
@@ -212,10 +216,22 @@ export const useUrlTabHandler = () => {
             const { activeWorkspaceId } = useWorkspaceStore.getState();
             if (activeWorkspaceId) {
                 createNewTabFromUrl(urlIdentifierParam, activeWorkspaceId).then(newTab => {
-                    const { addTab, setActiveLeftTab, setActiveSide } = useRootStore.getState();
-                    addTab(newTab, false);
-                    setActiveLeftTab(newTab.id);
-                    setActiveSide('left');
+
+                    // Determine which side to add the tab based on current split view state
+                    const currentSplitView = useSplitViewStore.getState().splitView;
+                    const shouldAddToRight = currentSplitView?.isSplit && currentSplitView?.activeSide === 'right';
+                    
+                    const { addTab, setActiveLeftTab, setActiveRightTab, setActiveSide } = useRootStore.getState();
+                    
+                    if (shouldAddToRight) {
+                        addTab(newTab, true); // true = right side
+                        setActiveRightTab(newTab.id);
+                        setActiveSide('right');
+                    } else {
+                        addTab(newTab, false); // false = left side
+                        setActiveLeftTab(newTab.id);
+                        setActiveSide('left');
+                    }
                 }).catch(error => {
                     console.error('[useUrlTabHandler] Failed to create tab:', error);
                 });
@@ -307,6 +323,10 @@ const createNewTabFromUrl = async (urlIdentifier: string, workspaceId: string): 
 let handleInitialUrlExecuted = false;
 
 export const handleInitialUrl = async () => {
+    const { tabs } = useTabsStore.getState();
+    const { splitView } = useSplitViewStore.getState();
+    const { setActiveLeftTab, setActiveRightTab, setActiveSide, addTab, setInitialUrlProcessed } = useRootStore.getState();
+
     // Prevent multiple executions
     if (handleInitialUrlExecuted) {
         return;
@@ -314,16 +334,26 @@ export const handleInitialUrl = async () => {
     handleInitialUrlExecuted = true;
     
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    
     if (pathSegments.length > 0) {
         const urlIdentifier = pathSegments[0];
 
-        const { tabs, setActiveLeftTab, addTab, setInitialUrlProcessed } = useRootStore.getState();
         const { activeWorkspaceId } = useWorkspaceStore.getState();
 
         const existingTab = tabs.find(tab => generateUrlIdentifier(tab) === urlIdentifier);
 
         if (existingTab) {
-            setActiveLeftTab(existingTab.id);
+            
+            // Check which side the tab is currently on
+            const isOnRightSide = splitView?.rightTabs.includes(existingTab.id);
+            
+            if (isOnRightSide) {
+                setActiveRightTab(existingTab.id);
+                setActiveSide('right');
+            } else {
+                setActiveLeftTab(existingTab.id);
+                setActiveSide('left');
+            }
         } else if (activeWorkspaceId && urlIdentifier) {
             // If no tab exists for this URL, create a new one.
             // createNewTabFromUrl will correctly handle language, tablet, or plaintext.

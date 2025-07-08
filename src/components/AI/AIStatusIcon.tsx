@@ -3,14 +3,19 @@ import { Brain } from 'lucide-react';
 import { useAIStore } from '../../stores/aiStore';
 import { useModalStore } from '../../stores/modalStore';
 import { AITooltip } from './AIToolTip';
+import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { shallow } from 'zustand/shallow';
 
 export const AIStatusIcon: React.FC = () => {
+  // FIX: Use useStoreWithEqualityFn with shallow comparison to prevent unnecessary re-renders
   const {
     isReady, isLoading, error, progress, progressStatus, files,
     isCodegenReady, isCodegenLoading, codegenProgress, codegenProgressStatus, codegenError, codegenFiles
-  } = useAIStore(state => ({
+  } = useStoreWithEqualityFn(
+    useAIStore,
+    state => ({
       isReady: state.ai.isReady,
-      isLoading: state.ai.isLoading, // Use this for pulse/disabled
+      isLoading: state.ai.isLoading,
       error: state.ai.error,
       progress: state.ai.progress,
       progressStatus: state.ai.progressStatus,
@@ -21,7 +26,9 @@ export const AIStatusIcon: React.FC = () => {
       codegenProgressStatus: state.ai.codegenProgressStatus,
       codegenError: state.ai.codegenError,
       codegenFiles: state.ai.codegenFiles,
-  }));
+    }),
+    shallow
+  );
 
   const { openAIModelManagementModal } = useModalStore();
 

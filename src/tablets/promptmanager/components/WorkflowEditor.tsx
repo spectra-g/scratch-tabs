@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Plus, Trash2, GripVertical, Tag as TagIcon, Check, X, Copy, CheckSquare, Square, ExternalLink } from 'lucide-react';
 import { Workflow, WorkflowStep, Prompt, Tag } from '../types';
 import { useRootStore } from '../../../stores';
+import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
 
 interface PromptSelectorProps {
@@ -97,7 +98,8 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Get stores for opening tabs
-  const { addBackgroundTab, splitView } = useRootStore();
+  const { addBackgroundTab } = useRootStore();
+  const { splitView } = useSplitViewStore();
   const { activeWorkspaceId } = useWorkspaceStore();
 
   // Auto-enter edit mode for new workflows

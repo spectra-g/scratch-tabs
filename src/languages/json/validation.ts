@@ -16,6 +16,8 @@ export function validateJson(content: string): JsonValidationResult {
     return { isValid: true };
   }
 
+
+
   try {
     JSON.parse(content);
     return { isValid: true };
@@ -37,6 +39,7 @@ export function registerJsonValidationProvider(monaco: any) {
   monaco.languages.registerDocumentFormattingEditProvider('json', {
     provideDocumentFormattingEdits(model: any) {
       const content = model.getValue();
+            
       const validation = validateJson(content);
 
       // Clear existing markers
@@ -56,6 +59,8 @@ export function registerJsonValidationProvider(monaco: any) {
 
       // Return formatted JSON if valid
       if (validation.isValid && content.trim()) {
+
+        
         try {
           const formatted = JSON.stringify(JSON.parse(content), null, 2);
           return [{

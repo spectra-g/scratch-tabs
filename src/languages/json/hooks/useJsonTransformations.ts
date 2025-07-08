@@ -20,8 +20,12 @@ export const useJsonTransformations = (
   }, []);
 
   const handleToCamelCase = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const toCamelCase = (str: string): string => {
@@ -36,8 +40,12 @@ export const useJsonTransformations = (
   }, [editor, transformKeys]);
 
   const handleToSnakeCase = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const toSnakeCase = (str: string): string => {
@@ -55,8 +63,12 @@ export const useJsonTransformations = (
   }, [editor, transformKeys]);
 
   const handleToKebabCase = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const toKebabCase = (str: string): string => {

@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useRootStore } from '../../stores';
+import { useTabsStore } from '../../stores/tabsStore';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { TabletSelector } from '../../tablets';
 import { TabContextMenu } from "./TabContextMenu";
 import { TabActions } from './TabActions';
@@ -30,9 +32,9 @@ interface TooltipContent {
 }
 
 export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, onOpenSummaryModal }) => {
+    const { tabs } = useTabsStore();
+    const { splitView } = useSplitViewStore();
     const {
-        tabs,
-        splitView,
         removeTab,
         updateTabTitle,
         setActiveLeftTab,
@@ -97,7 +99,8 @@ export const TabBar: React.FC<TabBarProps> = ({ side = 'left', onOpenDiffModal, 
 
     const visibleTabs = tabIds.map(id => findTab(id)).filter(Boolean) as typeof tabs;
 
-    const getTabLineCount = (content: string): number => {
+    const getTabLineCount = (content: string | undefined): number => {
+        if (!content) return 1; // Default to 1 line if content is undefined
         return content.split('\n').length;
     };
 

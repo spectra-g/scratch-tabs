@@ -1,10 +1,25 @@
 import { Tab } from '../types';
 
 /**
+ * Generates a UUID, with fallback for environments where crypto.randomUUID is not available
+ */
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for Jest/Node.js environments
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
  * Generates a new unique ID for a tab
  */
 export function generateTabId(): string {
-  return crypto.randomUUID();
+  return generateUUID();
 }
 
 /**
@@ -18,6 +33,10 @@ export function createTab(options: Partial<Tab> = {}): Tab {
     content: '',
     language: 'plaintext',
     languageLocked: false,
+    cursorPosition: { lineNumber: 1, column: 1 },
+    dateCreated: Date.now(),
+    lastModified: Date.now(),
+    workspaceId: '',
     ...options
   };
 }
@@ -40,7 +59,7 @@ export function duplicateTab(tab: Tab, suffix: string = " (copy)"): Tab {
  * @param tab The tab to check
  */
 export function isTabEmpty(tab: Tab): boolean {
-  return tab.isTablet ? false : tab.content.trim() === '';
+  return tab.isTablet ? false : (tab.content || '').trim() === '';
 }
 
 /**

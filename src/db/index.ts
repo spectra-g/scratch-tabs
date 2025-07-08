@@ -1,4 +1,4 @@
-import Dexie, { Table } from 'dexie';
+import Dexie from 'dexie';
 import { Tab, Workspace, WorkspaceLink, SplitViewRecord } from '../types';
 
 interface TabRecord {
@@ -12,6 +12,10 @@ interface TabRecord {
   lastModified: number;
   dateCreated: number;
   workspaceId: string;
+  cursorPosition?: { lineNumber: number; column: number };
+  isPinned?: boolean;
+  activeViewId?: string | null;
+  previewMode?: boolean;
 }
 
 interface WorkspaceRecord {
@@ -29,10 +33,10 @@ interface SettingsRecord {
 }
 
 export class ScratchTabsDB extends Dexie {
-  tabs!: Table<TabRecord>;
-  splitView!: Table<SplitViewRecord>;
-  workspaces!: Table<WorkspaceRecord>;
-  settings!: Table<SettingsRecord>;
+  tabs!: Dexie.Table<TabRecord>;
+  splitView!: Dexie.Table<SplitViewRecord>;
+  workspaces!: Dexie.Table<WorkspaceRecord>;
+  settings!: Dexie.Table<SettingsRecord>;
 
   constructor() {
     super('ScratchTabsDB');
@@ -56,7 +60,7 @@ export class ScratchTabsDB extends Dexie {
     });
   }
 
-  private async upgradeToV2(tx: Dexie.Transaction): Promise<void> {
+  private async upgradeToV2(tx: any): Promise<void> {
     // First check if there are any existing tabs that need migration
     const existingTabs = await tx.table('tabs').toArray();
 
@@ -73,13 +77,13 @@ export class ScratchTabsDB extends Dexie {
       await tx.table('workspaces').add(defaultWorkspace);
 
       // Update existing tabs with the workspace ID
-      await Promise.all(existingTabs.map(tab =>
+      await Promise.all(existingTabs.map((tab: any) =>
         tx.table('tabs').update(tab.id, { workspaceId: defaultWorkspace.id })
       ));
 
       // Update split views if they exist
       const splitViews = await tx.table('splitView').toArray();
-      await Promise.all(splitViews.map(sv =>
+      await Promise.all(splitViews.map((sv: any) =>
         tx.table('splitView').update(sv.id, { workspaceId: defaultWorkspace.id })
       ));
     }
@@ -101,6 +105,7 @@ export const db = new ScratchTabsDB();
 
 const toTabRecord = (tab: Tab): TabRecord => ({
   ...tab,
+  content: tab.content || '',
   lastModified: tab.lastModified,
   dateCreated: tab.dateCreated,
   workspaceId: tab.workspaceId
@@ -110,6 +115,19 @@ const toTab = (record: TabRecord): Tab => {
   const now = Date.now();
   return {
     ...record,
+    dateCreated: record.dateCreated || now,
+    lastModified: record.lastModified || now,
+    cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },
+    workspaceId: record.workspaceId
+  };
+};
+
+// NEW: Convert record to tab metadata (without content)
+const toTabMetadata = (record: TabRecord): Omit<Tab, 'content'> => {
+  const now = Date.now();
+  const { content, ...metadata } = record;
+  return {
+    ...metadata,
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },
@@ -133,6 +151,9 @@ export interface StorageProvider {
   getTabsByWorkspace(workspaceId: string): Promise<Tab[]>;
   getSplitViewByWorkspace(workspaceId: string): Promise<SplitViewRecord | null>;
   deleteSplitViewByWorkspace(workspaceId: string): Promise<void>;
+  // NEW: Methods for lazy loading
+  getTabsMetadataByWorkspace(workspaceId: string): Promise<Omit<Tab, 'content'>[]>;
+  getTabContent(tabId: string): Promise<string | undefined>;
 }
 
 export class IndexedDBStorage implements StorageProvider {
@@ -193,7 +214,8 @@ export class IndexedDBStorage implements StorageProvider {
   async saveTabNow(tab: Tab): Promise<void> {
     this.lastSaveTabsTime = Date.now();
     await this.withRetry(async () => {
-      await db.tabs.put(toTabRecord(tab));
+      const record = toTabRecord(tab);
+      await db.tabs.put(record);
     });
   }
 
@@ -213,7 +235,8 @@ export class IndexedDBStorage implements StorageProvider {
 
   async getSplitView(): Promise<SplitViewRecord | null> {
     return this.withRetry(async () => {
-      return await db.splitView.get('default');
+      const result = await db.splitView.get('default');
+      return result || null;
     });
   }
 
@@ -251,7 +274,8 @@ export class IndexedDBStorage implements StorageProvider {
 
   async getWorkspace(id: string): Promise<Workspace | null> {
     return this.withRetry(async () => {
-      return await db.workspaces.get(id);
+      const result = await db.workspaces.get(id);
+      return result || null;
     });
   }
 
@@ -297,13 +321,29 @@ export class IndexedDBStorage implements StorageProvider {
 
   async getSplitViewByWorkspace(workspaceId: string): Promise<SplitViewRecord | null> {
     return this.withRetry(async () => {
-      return await db.splitView.where('workspaceId').equals(workspaceId).first();
+      const result = await db.splitView.where('workspaceId').equals(workspaceId).first();
+      return result || null;
     });
   }
 
   async deleteSplitViewByWorkspace(workspaceId: string): Promise<void> {
     await this.withRetry(async () => {
       await db.splitView.where('workspaceId').equals(workspaceId).delete();
+    });
+  }
+
+  // NEW: Methods for lazy loading
+  async getTabsMetadataByWorkspace(workspaceId: string): Promise<Omit<Tab, 'content'>[]> {
+    return this.withRetry(async () => {
+      const records = await db.tabs.where('workspaceId').equals(workspaceId).toArray();
+      return records.map(toTabMetadata);
+    });
+  }
+
+  async getTabContent(tabId: string): Promise<string | undefined> {
+    return this.withRetry(async () => {
+      const record = await db.tabs.get(tabId);
+      return record?.content;
     });
   }
 }

@@ -3,6 +3,7 @@ import { EditorPosition, Tab } from '../types';
 import { duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
 import { useWorkspaceStore } from './workspaceStore';
 import { incrementSetting } from '../db';
+import { modelManager } from '../services/modelManager';
 
 interface TabsStore {
   tabs: Tab[];
@@ -85,11 +86,21 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     ),
   })),
 
-  updateTabLanguage: (id, language, lock = true) => set((state) => ({
-    tabs: state.tabs.map((tab) =>
-      tab.id === id ? { ...tab, language, languageLocked: lock } : tab
-    ),
-  })),
+  updateTabLanguage: (id, language, lock = true) => set((state) => {
+    
+    // Update the model language if the model exists
+    try {
+      modelManager.updateModelLanguage(id, language);
+    } catch (error) {
+      console.warn(`[TabsStore] ❌ Failed to update model language for tab ${id}:`, error);
+    }
+    
+    return {
+      tabs: state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, language, languageLocked: lock } : tab
+      ),
+    };
+  }),
 
   updateTabTitle: (id, title) => set((state) => ({
     tabs: state.tabs.map((tab) =>

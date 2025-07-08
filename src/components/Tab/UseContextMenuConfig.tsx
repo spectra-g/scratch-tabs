@@ -1,4 +1,6 @@
-import { useRootStore } from "../../stores";
+import { useTabsStore } from "../../stores/tabsStore";
+import { useSplitViewStore } from "../../stores/splitViewStore";
+import { useRootStore } from "../../stores/rootStore";
 import { useBatchToolsStore } from '../../stores/batchToolsStore';
 import {
   ChevronLeft, ChevronLeftSquare, ChevronRight, ChevronRightSquare, Copy, Edit3, FileCode, GitCompare,
@@ -9,6 +11,7 @@ import { languageRegistry } from '../../languages';
 import { MenuItem } from './types';
 import { useState, useCallback } from 'react';
 import { ContextMenuAction, TabSide } from '../../constants';
+import { modelManager } from '../../services/modelManager';
 
 // Helper function to get the confirmation button text based on action type
 const getConfirmButtonText = (type: string | null): string => {
@@ -39,7 +42,9 @@ export const useContextMenuConfig = (
   handleOpenDownloadAllModal?: () => void,
   startEditingTab?: (tabId: string) => void
 ): UseContextMenuConfigReturn => {
-  const store = useRootStore();
+  const tabsStore = useTabsStore();
+  const splitViewStore = useSplitViewStore();
+  const rootStore = useRootStore();
 
   const [confirmationState, setConfirmationState] = useState<{
     type: 'close' | 'closeAllExcept' | 'closeTabsToLeft' | 'closeTabsToRight';
@@ -47,15 +52,15 @@ export const useContextMenuConfig = (
     targetTabId: string;
   } | null>(null);
 
-  const tab = store.tabs.find(t => t.id === tabId);
+  const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
 
-  const currentTabList = isRightSide ? store.splitView.rightTabs : store.splitView.leftTabs;
+  const currentTabList = isRightSide ? splitViewStore.splitView.rightTabs : splitViewStore.splitView.leftTabs;
   const tabIndex = currentTabList.indexOf(tabId);
-  const canSplit = !store.splitView.isSplit && store.tabs.length >= 2;
-  const canDuplicateAndSplit = !store.splitView.isSplit && store.tabs.length === 1;
-  const canMoveRight = store.splitView.isSplit && !isRightSide && store.splitView.leftTabs.length > 1;
-  const canMoveLeft = store.splitView.isSplit && isRightSide && store.splitView.rightTabs.length > 1;
-  const canUnsplit = store.splitView.isSplit && isRightSide;
+  const canSplit = !splitViewStore.splitView.isSplit && tabsStore.tabs.length >= 2;
+  const canDuplicateAndSplit = !splitViewStore.splitView.isSplit && tabsStore.tabs.length === 1;
+  const canMoveRight = splitViewStore.splitView.isSplit && !isRightSide && splitViewStore.splitView.leftTabs.length > 1;
+  const canMoveLeft = splitViewStore.splitView.isSplit && isRightSide && splitViewStore.splitView.rightTabs.length > 1;
+  const canUnsplit = splitViewStore.splitView.isSplit && isRightSide;
   const canShowFromSample = !!tab && !tab.isTablet;
   const canCloseToLeft = tabIndex > 0;
   const canCloseToRight = tabIndex < currentTabList.length - 1;
@@ -64,11 +69,11 @@ export const useContextMenuConfig = (
   const isPinned = tab?.isPinned || false;
   const canDownload = !!tab && !tab.isTablet;
   const canRename = !!tab;
-  const history = isRightSide ? store.splitView.rightTabHistory : store.splitView.leftTabHistory;
+  const history = isRightSide ? splitViewStore.splitView.rightTabHistory : splitViewStore.splitView.leftTabHistory;
   const canCompareWithPrevious = history && history.length >= 2 && !tab?.isTablet;
   const canGroupTypes = (() => {
     if (currentTabList.length < 3) return false;
-    const tabLanguages = currentTabList.map(id => store.tabs.find(t => t.id === id)?.language || '');
+    const tabLanguages = currentTabList.map((id: string) => tabsStore.tabs.find((t: any) => t.id === id)?.language || '');
     const uniqueLanguages = new Set(tabLanguages);
     if (uniqueLanguages.size < 2) return false;
     let currentLanguage = tabLanguages[0];
@@ -82,10 +87,10 @@ export const useContextMenuConfig = (
     return languageChangePoints > uniqueLanguages.size - 1;
   })();
   const canCompare = (() => {
-    if (!store.splitView.isSplit) return false;
-    const currentTab = store.tabs.find(t => t.id === tabId);
-    const otherSideTabId = isRightSide ? store.splitView.activeLeftTabId : store.splitView.activeRightTabId;
-    const otherSideTab = store.tabs.find(t => t.id === otherSideTabId);
+    if (!splitViewStore.splitView.isSplit) return false;
+    const currentTab = tabsStore.tabs.find((t: any) => t.id === tabId);
+    const otherSideTabId = isRightSide ? splitViewStore.splitView.activeLeftTabId : splitViewStore.splitView.activeRightTabId;
+    const otherSideTab = tabsStore.tabs.find((t: any) => t.id === otherSideTabId);
     return currentTab && otherSideTab && !currentTab.isTablet && !otherSideTab.isTablet;
   })();
 
@@ -103,19 +108,19 @@ export const useContextMenuConfig = (
     const { type, targetTabId } = confirmationState;
 
     if (type === 'close') {
-      store.removeTab(targetTabId);
+      rootStore.removeTab(targetTabId);
     } else if (type === 'closeAllExcept') {
-      store.closeAllExcept(targetTabId, isRightSide);
+      rootStore.closeAllExcept(targetTabId, isRightSide);
     } else if (type === 'closeTabsToLeft') {
-      store.closeTabsToLeft(targetTabId, isRightSide);
+      rootStore.closeTabsToLeft(targetTabId, isRightSide);
     } else if (type === 'closeTabsToRight') {
-      store.closeTabsToRight(targetTabId, isRightSide);
+      rootStore.closeTabsToRight(targetTabId, isRightSide);
     }
 
     setConfirmationState(null); // Hide dialog
     closeContextMenu(); // <<<< NOW close the context menu after the action is done
 
-  }, [confirmationState, isRightSide, store, closeContextMenu]);
+  }, [confirmationState, isRightSide, rootStore, closeContextMenu]);
 
   const cancelConfirmation = useCallback(() => {
     setConfirmationState(null); // Hide dialog
@@ -139,10 +144,17 @@ export const useContextMenuConfig = (
   const handleLanguageSelect = (languageId: string) => {
     const language = languageRegistry.getById(languageId);
     if (language?.sampleContent) {
-      const currentTab = store.tabs.find(t => t.id === tabId);
+      const currentTab = tabsStore.tabs.find(t => t.id === tabId);
       if (currentTab && !currentTab.isTablet) {
-        store.updateTabContent(tabId, language.sampleContent());
-        store.updateTabLanguage(tabId, languageId, true);
+        const sampleContent = language.sampleContent();
+        
+        // Update the tab content and language in the store first
+        rootStore.updateTabContent(tabId, sampleContent);
+        rootStore.updateTabLanguage(tabId, languageId, true);
+        
+        // Update the model content directly if the model exists
+        // The model's listener will sync back to store, but content is already the same
+        modelManager.updateModelContent(tabId, sampleContent);
       }
     }
     closeContextMenu();
@@ -150,7 +162,7 @@ export const useContextMenuConfig = (
 
   const handleCompareFromClipboard = async () => {
     try {
-      await store.compareFromClipboard(tabId, isRightSide);
+      await rootStore.compareFromClipboard(tabId, isRightSide);
       closeContextMenu('compareClipboard', tabId);
     } catch (error) {
       console.error('[Error] Failed to compare from clipboard:', error);
@@ -178,7 +190,7 @@ export const useContextMenuConfig = (
     }
     const detector = languageRegistry.getById(tab.language);
     const extension = detector?.getFileExtension() || 'txt';
-    const blob = new Blob([tab.content], { type: 'text/plain' });
+    const blob = new Blob([tab.content || ''], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -250,7 +262,7 @@ Add any other context about the problem here.
   const handleCopyContent = async () => {
     if (tab && !tab.isTablet) {
       try {
-        await navigator.clipboard.writeText(tab.content);
+        await navigator.clipboard.writeText(tab.content || '');
       } catch (error) {
         console.error('Failed to copy content to clipboard:', error);
       }
@@ -260,7 +272,7 @@ Add any other context about the problem here.
 
   const handleOpenTransformations = () => {
     if (tab && !tab.isTablet) {
-      useBatchToolsStore.getState().openModal(tab.content);
+      useBatchToolsStore.getState().openModal(tab.content || '');
     }
     closeContextMenu();
   };
@@ -298,13 +310,13 @@ Add any other context about the problem here.
       id: 'duplicate',
       label: 'Duplicate tab',
       icon: Copy,
-      action: () => handleSimpleAction(store.duplicateTab, tabId, isRightSide),
+      action: () => handleSimpleAction(rootStore.duplicateTab, tabId, isRightSide),
     },
     {
       id: 'duplicateAndSplit',
       label: 'Duplicate and split',
       icon: Split,
-      action: () => handleSimpleAction(store.duplicateAndSplitTab, tabId),
+      action: () => handleSimpleAction(rootStore.duplicateAndSplitTab, tabId),
       condition: canDuplicateAndSplit
     },
     {
@@ -332,7 +344,7 @@ Add any other context about the problem here.
       id: 'groupTypes',
       label: 'Group tabs by type',
       icon: Layers,
-      action: () => handleSimpleAction(store.groupTabsByType, isRightSide),
+      action: () => handleSimpleAction(rootStore.groupTabsByType, isRightSide),
       condition: canGroupTypes
     },
     { id: 'sep1', isSeparator: true, condition: canSplit || canMoveRight || canMoveLeft || canUnsplit },
@@ -340,28 +352,28 @@ Add any other context about the problem here.
       id: 'split',
       label: 'Split',
       icon: ChevronRight,
-      action: () => handleSimpleAction(store.splitScreen, tabId),
+      action: () => handleSimpleAction(rootStore.splitScreen, tabId),
       condition: canSplit,
     },
     {
       id: 'moveRight',
       label: 'Move right',
       icon: ChevronRight,
-      action: () => handleSimpleAction(store.moveTabToRight, tabId),
+      action: () => handleSimpleAction(rootStore.moveTabToRight, tabId),
       condition: canMoveRight,
     },
     {
       id: 'moveLeft',
       label: 'Move left',
       icon: ChevronLeft,
-      action: () => handleSimpleAction(store.moveTabToLeft, tabId),
+      action: () => handleSimpleAction(rootStore.moveTabToLeft, tabId),
       condition: canMoveLeft,
     },
     {
       id: 'unsplit',
       label: 'Unsplit',
       icon: Maximize,
-      action: () => handleSimpleAction(store.unsplitScreen),
+      action: () => handleSimpleAction(rootStore.unsplitScreen, tabId),
       condition: canUnsplit,
     },
     { id: 'sep2', isSeparator: true, condition: canDownload },
@@ -374,17 +386,39 @@ Add any other context about the problem here.
     },
     {
       id: 'downloadAll',
-      label: 'Download All...',
+      label: 'Download all tabs',
       icon: Download,
-      action: handleDownloadAll, // Assuming this handles menu close or modal takes over
-      condition: canDownload, // Or a more specific condition if needed
+      action: handleDownloadAll,
+      condition: canDownload,
     },
-    { id: 'sep3', isSeparator: true, condition: canCloseToLeft || canCloseToRight || canCloseAllExcept || true /* for Close and Pin */ },
+    { id: 'sep3', isSeparator: true, condition: canCloseToLeft || canCloseToRight || canCloseAllExcept },
+    {
+      id: 'closeToLeft',
+      label: 'Close tabs to the left',
+      icon: ChevronLeftSquare,
+      action: () => handleRequestConfirmation('closeTabsToLeft', 'This will close all tabs to the left of the current tab. This action cannot be undone.', tabId),
+      condition: canCloseToLeft,
+    },
+    {
+      id: 'closeToRight',
+      label: 'Close tabs to the right',
+      icon: ChevronRightSquare,
+      action: () => handleRequestConfirmation('closeTabsToRight', 'This will close all tabs to the right of the current tab. This action cannot be undone.', tabId),
+      condition: canCloseToRight,
+    },
+    {
+      id: 'closeAllExcept',
+      label: 'Close all other tabs',
+      icon: XCircle,
+      action: () => handleRequestConfirmation('closeAllExcept', 'This will close all tabs except the current one. This action cannot be undone.', tabId),
+      condition: canCloseAllExcept,
+    },
+    { id: 'sep4', isSeparator: true },
     {
       id: 'pin',
       label: isPinned ? 'Unpin Tab' : 'Pin Tab',
       icon: Pin,
-      action: () => handleSimpleAction(store.toggleTabPin, tabId),
+      action: () => handleSimpleAction(rootStore.toggleTabPin, tabId),
     },
     {
       id: 'close',
@@ -399,40 +433,6 @@ Add any other context about the problem here.
       },
 
     },
-    {
-      id: 'closeAllExcept',
-      label: 'Close all except this',
-      icon: XCircle,
-      action: () => handleRequestConfirmation(
-        'closeAllExcept',
-        `Close all tabs except "${tab?.title || 'current'}"? This action cannot be undone.`,
-        tabId
-      ),
-      condition: canCloseAllExcept,
-    },
-    {
-      id: 'closeAllLeft',
-      label: 'Close tabs to the left',
-      icon: ChevronLeftSquare,
-      action: () => handleRequestConfirmation(
-        'closeTabsToLeft',
-        'Close all tabs to the left? This action cannot be undone.',
-        tabId
-      ),
-      condition: canCloseToLeft,
-    },
-    {
-      id: 'closeAllRight',
-      label: 'Close tabs to the right',
-      icon: ChevronRightSquare,
-      action: () => handleRequestConfirmation(
-        'closeTabsToRight',
-        'Close all tabs to the right? This action cannot be undone.',
-        tabId
-      ),
-      condition: canCloseToRight,
-    },
-    { id: 'sep4', isSeparator: true },
     {
       id: 'reportIssue',
       label: 'Report issue',

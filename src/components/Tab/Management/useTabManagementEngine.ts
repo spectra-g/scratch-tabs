@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { DragEndEvent, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { StorageProviderFactory } from '../../../db';
-import { useRootStore, useCacheStore } from '../../../stores';
+import { useRootStore, useCacheStore, useTabsStore } from '../../../stores';
+import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
 import { Tab } from '../../../types';
 import { languageRegistry } from '../../../languages';
@@ -118,23 +119,15 @@ export interface TabManagementEngine {
 }
 
 export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): TabManagementEngine => {
-  const { removeTab, updateTabTitle, toggleTabPin, duplicateTab, updateTabTitle: updateTabTitleInStore } = useRootStore();
-  const {
-    workspaces,
-    activeWorkspaceId,
-    createWorkspace,
-    renameWorkspace,
-    deleteWorkspace
-  } = useWorkspaceStore();
-  const activeWorkspaceTabs = useRootStore(state =>
-    state.tabs.filter(tab => tab.workspaceId === activeWorkspaceId)
-  );
+
+  const [localTabs, setLocalTabs] = useState<Tab[]>([]);
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+
   const storage = StorageProviderFactory.getProvider();
   const [allApplicationTabs, setAllApplicationTabs] = useState<Tab[]>([]);
   const [isLoadingAllTabs, setIsLoadingAllTabs] = useState(false);
   const [editingTabIdForModal, setEditingTabIdForModal] = useState<string | null>(null);
-
-  // Local state
   const [selectedTabIds, setSelectedTabIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [languageFilter, setLanguageFilter] = useState<string[]>([]);
@@ -150,56 +143,47 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   const [renameBasePattern, setRenameBasePattern] = useState('');
   const [renameSuffixPattern, setRenameSuffixPattern] = useState(' {d}');
   const modalContentRef = useRef<HTMLDivElement>(null);
-  const { switchWorkspace: switchWorkspaceFromStore } = useWorkspaceStore();
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [draggedTabIds, setDraggedTabIds] = useState<Set<string>>(new Set());
   const [activeDragItemData, setActiveDragItemData] = useState<Tab | null>(null);
   const { cacheSplitViewForWorkspace } = useCacheStore();
   const { isLocked: isTabManagementActionInProgress, withLock: withActionLock } = useActionLock();
 
-  // Confirmation dialogs
   const [confirmationDialog, setConfirmationDialog] = useState<ConfirmationDialog>({
-    isOpen: false,
-    title: '',
-    message: '',
-    confirmText: 'Confirm',
-    cancelText: 'Cancel',
-    onConfirm: () => { },
-    isDestructive: false
+    isOpen: false, title: '', message: '', confirmText: 'Confirm', cancelText: 'Cancel', onConfirm: () => {}, isDestructive: false
   });
+  
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  // Setup DnD sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    })
-  );
-
-  // Reset state when modal opens/closes
+  // *** EFFECT: Populate local state only when modal opens ***
   useEffect(() => {
+    
     if (isOpen) {
+      
+      // Fetch the LATEST state directly from the store when opening
+      const currentActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+      const allTabs = useTabsStore.getState().tabs;
+      const activeTabs = allTabs.filter(tab => tab.workspaceId === currentActiveWorkspaceId);
+      
+      setLocalTabs(activeTabs);
+      setWorkspaces(useWorkspaceStore.getState().workspaces);
+      setActiveWorkspaceId(currentActiveWorkspaceId);
+      
+      // Reset other UI states
       setSelectedTabIds(new Set());
       setSearchQuery('');
       setLanguageFilter([]);
+      setSortOption('current');
+      
+    } else {
+      // Clear local state when modal closes to free memory
+      setLocalTabs([]);
+      setWorkspaces([]);
+      setActiveWorkspaceId(null);
     }
-  }, [isOpen]);
+  }, [isOpen]); // This effect ONLY runs when the modal opens or closes
 
-  // Get available languages from tabs
-  const availableLanguages = useMemo(() => {
-    const languages = new Set<string>();
-    activeWorkspaceTabs.forEach(tab => {
-      if (tab.isTablet) {
-        languages.add('tablet');
-      } else {
-        languages.add(tab.language);
-      }
-    });
-    return Array.from(languages).sort();
-  }, [activeWorkspaceTabs]);
-
-  // Fetch ALL tabs when modal opens or workspaces change
+  // Fetch ALL application tabs when modal opens
   useEffect(() => {
     if (isOpen) {
       setIsLoadingAllTabs(true);
@@ -208,7 +192,7 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
           setAllApplicationTabs(fetchedTabs);
         })
         .catch(err => {
-          console.error("Failed to fetch all tabs for management modal:", err);
+          console.error("[TabManagementEngine] Failed to fetch all tabs:", err);
         })
         .finally(() => {
           setIsLoadingAllTabs(false);
@@ -216,145 +200,96 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
     }
   }, [isOpen, storage]);
 
-  // Get workspace tab counts using allApplicationTabs
+  const availableLanguages = useMemo(() => {
+    const languages = new Set<string>();
+    localTabs.forEach(tab => {
+      if (tab.isTablet) languages.add('tablet');
+      else languages.add(tab.language);
+    });
+    const result = Array.from(languages).sort();
+    return result;
+  }, [localTabs]);
+
   const workspacesWithCounts = useMemo(() => {
     if (isLoadingAllTabs) {
       return workspaces.map(ws => ({ ...ws, tabCount: 0, isLoadingCount: true }));
     }
-    return workspaces.map(workspace => {
-      const tabCount = allApplicationTabs.filter(tab => tab.workspaceId === workspace.id).length;
-      return { ...workspace, tabCount, isLoadingCount: false };
-    });
+    return workspaces.map(ws => ({
+      ...ws,
+      tabCount: allApplicationTabs.filter(tab => tab.workspaceId === ws.id).length,
+      isLoadingCount: false,
+    }));
   }, [workspaces, allApplicationTabs, isLoadingAllTabs]);
 
-  // Get filtered and sorted tabs
-  const filteredTabs = useFilteredTabs(
-    activeWorkspaceTabs, 
-    activeWorkspaceId, 
-    searchQuery, 
-    languageFilter, 
-    sortOption
-  );
-
-  // Group tabs based on grouping option
+  const filteredTabs = useFilteredTabs(localTabs, activeWorkspaceId, searchQuery, languageFilter, sortOption);
   const groupedTabs = useGroupedTabs(filteredTabs, groupOption, workspaces, languageRegistry);
+  const duplicateTabs = useDuplicateTabs(localTabs, activeWorkspaceId);
+  const emptyTabs = useEmptyTabs(localTabs, activeWorkspaceId);
 
-  // Check if there are any duplicate tabs
-  const duplicateTabs = useDuplicateTabs(activeWorkspaceTabs, activeWorkspaceId);
-
-  // Check if there are any empty tabs
-  const emptyTabs = useEmptyTabs(activeWorkspaceTabs, activeWorkspaceId);
-
-  // Apply the custom click outside hook
   useModalClickOutside(modalContentRef, isOpen, () => {
-    if (!confirmationDialog.isOpen) { // Only close if no confirmation is active
-      onClose();
-    }
+    if (!confirmationDialog.isOpen) onClose();
   });
 
-  // Reset selected tabs when switching workspaces
   useEffect(() => {
     setSelectedTabIds(new Set());
   }, [activeWorkspaceId]);
 
-  // Create a wrapper function that provides the old interface but uses the new action lock
-  const setTabManagementActionInProgress = (value: boolean) => {
-    // This is a no-op since we're using the action lock hook instead
-    // The action lock is managed automatically by withActionLock
-  };
+  const setTabManagementActionInProgress = (value: boolean) => {};
 
-  // Create handler for moving tabs to another workspace
   const handleMoveToWorkspaceWithId = createMoveToWorkspaceWithIdHandler(
-    activeWorkspaceId,
-    allApplicationTabs,
-    setTabManagementActionInProgress,
-    setAllApplicationTabs,
-    setDraggedTabIds,
-    cacheSplitViewForWorkspace
+    activeWorkspaceId, allApplicationTabs, setTabManagementActionInProgress,
+    setAllApplicationTabs, setDraggedTabIds, cacheSplitViewForWorkspace
   );
 
-  // Event handlers
-  const handleStartEditingTab = (tabId: string) => {
-    setEditingTabIdForModal(tabId);
-  };
-
+  const handleStartEditingTab = (tabId: string) => setEditingTabIdForModal(tabId);
+  
   const handleSaveTabTitle = (tabId: string, newTitle: string) => {
-    updateTabTitleInStore(tabId, newTitle);
+    useRootStore.getState().updateTabTitle(tabId, newTitle);
     setEditingTabIdForModal(null);
   };
-
-  const handleCancelEditingTab = () => {
-    setEditingTabIdForModal(null);
-  };
+  
+  const handleCancelEditingTab = () => setEditingTabIdForModal(null);
 
   const handleSelectTab = (tabId: string, multiSelect: boolean) => {
     setSelectedTabIds(prev => {
       const newSelection = new Set(prev);
-
       if (multiSelect) {
-        // Toggle selection
-        if (newSelection.has(tabId)) {
-          newSelection.delete(tabId);
-        } else {
-          newSelection.add(tabId);
-        }
+        if (newSelection.has(tabId)) newSelection.delete(tabId);
+        else newSelection.add(tabId);
       } else {
-        // Single selection
         newSelection.clear();
         newSelection.add(tabId);
       }
-
       return newSelection;
     });
   };
 
-  const handleSelectAll = () => {
-    const allTabIds = new Set(filteredTabs.map(tab => tab.id));
-    setSelectedTabIds(allTabIds);
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedTabIds(new Set());
-  };
+  const handleSelectAll = () => setSelectedTabIds(new Set(filteredTabs.map(tab => tab.id)));
+  const handleDeselectAll = () => setSelectedTabIds(new Set());
 
   const handleDoubleClickTab = (tabId: string) => {
-    // Open the tab and close the modal
-    const tab = activeWorkspaceTabs.find(t => t.id === tabId);
+    const tab = localTabs.find(t => t.id === tabId);
     if (tab) {
-      // Determine which side to activate
-      const { splitView, setActiveLeftTab, setActiveRightTab } = useRootStore.getState();
-
-      if (splitView.leftTabs.includes(tabId)) {
-        setActiveLeftTab(tabId);
-      } else if (splitView.rightTabs.includes(tabId)) {
-        setActiveRightTab(tabId);
-      } else {
-        // Default to left side if not found in either
-        setActiveLeftTab(tabId);
-      }
-
+      const { splitView } = useSplitViewStore.getState();
+      const { setActiveLeftTab, setActiveRightTab } = useRootStore.getState();
+      if (splitView.leftTabs.includes(tabId)) setActiveLeftTab(tabId);
+      else if (splitView.rightTabs.includes(tabId)) setActiveRightTab(tabId);
+      else setActiveLeftTab(tabId);
       onClose();
     }
   };
 
   const handleModifiedApplyCurrentOrder = (eventOrTabs: React.MouseEvent<HTMLButtonElement> | Tab[]) => {
-    const newSortOption = applyCurrentOrderHelper(eventOrTabs, filteredTabs);
-    setSortOption(newSortOption as SortOption);
+    setSortOption(applyCurrentOrderHelper(eventOrTabs, filteredTabs) as SortOption);
   };
 
   const handleCloseTabs = () => {
     if (selectedTabIds.size === 0) return;
-
     setConfirmationDialog({
-      isOpen: true,
-      title: 'Close Tabs',
-      message: `Are you sure you want to close ${selectedTabIds.size} tab(s)? This action cannot be undone.`,
-      confirmText: 'Close Tabs',
-      cancelText: 'Cancel',
+      isOpen: true, title: 'Close Tabs', message: `Are you sure you want to close ${selectedTabIds.size} tab(s)? This action cannot be undone.`,
+      confirmText: 'Close Tabs', cancelText: 'Cancel',
       onConfirm: () => {
-        selectedTabIds.forEach(id => {
-          removeTab(id);
-        });
+        selectedTabIds.forEach(id => useRootStore.getState().removeTab(id));
         setSelectedTabIds(new Set());
         setConfirmationDialog(prev => ({ ...prev, isOpen: false }));
       },
@@ -364,21 +299,14 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
 
   const handleTogglePinSelectedTabs = () => {
     if (selectedTabIds.size === 0) return;
-
-    // Determine if we are pinning or unpinning based on the first selected tab's current state
     let actionIsPin = false;
-    const firstSelectedTabId = Array.from(selectedTabIds)[0];
-    const firstTab = activeWorkspaceTabs.find(t => t.id === firstSelectedTabId);
-    if (firstTab) {
-      actionIsPin = !firstTab.isPinned;
-    }
-
+    const firstTab = localTabs.find(t => t.id === Array.from(selectedTabIds)[0]);
+    if (firstTab) actionIsPin = !firstTab.isPinned;
     selectedTabIds.forEach(id => {
-      // Only toggle if the action aligns or if it's a single selection
-      const tab = activeWorkspaceTabs.find(t => t.id === id);
+      const tab = localTabs.find(t => t.id === id);
       if (tab) {
         if (selectedTabIds.size === 1 || (actionIsPin && !tab.isPinned) || (!actionIsPin && tab.isPinned)) {
-          toggleTabPin(id);
+          useRootStore.getState().toggleTabPin(id);
         }
       }
     });
@@ -386,121 +314,69 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
 
   const handleDuplicateTabs = () => {
     if (selectedTabIds.size === 0) return;
-
-    // Simply duplicate all selected tabs with "(copy)" suffix
-    const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
-
-    selectedTabs.forEach(tab => {
-      const newTabId = duplicateTab(tab.id, false);
-      const newTitle = `${tab.title} (copy)`;
-      updateTabTitle(newTabId, newTitle);
+    const selected = localTabs.filter(tab => selectedTabIds.has(tab.id));
+    selected.forEach(tab => {
+      const newTabId = useRootStore.getState().duplicateTab(tab.id, false);
+      useRootStore.getState().updateTabTitle(newTabId, `${tab.title} (copy)`);
     });
-
-    // Clear selection after duplication
     setSelectedTabIds(new Set());
   };
 
   const handleBulkRename = () => {
     if (selectedTabIds.size === 0 || !renameBasePattern.trim()) return;
-
-    const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
-
-    selectedTabs.forEach((tab, index) => {
-      // Replace {d} in the suffix with the tab's index+1
+    const selected = localTabs.filter(tab => selectedTabIds.has(tab.id));
+    selected.forEach((tab, index) => {
       const suffix = renameSuffixPattern.replace('{d}', (index + 1).toString());
       const newTitle = renameBasePattern.trim() + suffix;
-      updateTabTitle(tab.id, newTitle);
+      useRootStore.getState().updateTabTitle(tab.id, newTitle);
     });
-
     setShowRenameOptions(false);
     setRenameBasePattern('');
-    // Keep the suffix pattern for next time
-
-    // Clear selection after renaming
     setSelectedTabIds(new Set());
   };
 
   const handleMergeTabs = () => {
     if (selectedTabIds.size < 2) return;
-
-    const selectedTabs = activeWorkspaceTabs.filter(tab => selectedTabIds.has(tab.id));
-
-    // Check if all selected tabs are text-based (not tablets)
-    const allTextBased = selectedTabs.every(tab => !tab.isTablet);
-
-    if (!allTextBased) {
-      alert('Only text-based tabs can be merged. Please deselect any tablet tabs.');
+    const selected = localTabs.filter(tab => selectedTabIds.has(tab.id));
+    if (!selected.every(tab => !tab.isTablet)) {
+      alert('Only text-based tabs can be merged.');
       return;
     }
-
-    // Sort tabs by title before merging
-    const sortedTabs = [...selectedTabs].sort((a, b) => a.title.localeCompare(b.title));
-
-    // Process the delimiter to handle escape sequences
-    let processedDelimiter = mergeDelimiter;
-    if (mergeDelimiter === '\\n\\n') {
-      processedDelimiter = '\n\n';
-    } else if (mergeDelimiter === '\\n') {
-      processedDelimiter = '\n';
-    } else if (mergeDelimiter === '\\n---\\n') {
-      processedDelimiter = '\n---\n';
-    }
-
-    // Merge content with the specified delimiter
-    const mergedContent = sortedTabs.map(tab => tab.content).join(processedDelimiter);
-
-    // Create a new tab with the merged content
-    const { addTab } = useRootStore.getState();
-
-    addTab({
-      id: crypto.randomUUID(),
-      title: 'Merged Tabs',
-      content: mergedContent,
-      language: 'plaintext', // Default to plaintext
-      languageLocked: false,
-      cursorPosition: { lineNumber: 1, column: 1 },
-      dateCreated: Date.now(),
-      lastModified: Date.now(),
-      workspaceId: activeWorkspaceId || ''
+    const sorted = [...selected].sort((a, b) => a.title.localeCompare(b.title));
+    let processedDelimiter = mergeDelimiter.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+    const mergedContent = sorted.map(tab => tab.content).join(processedDelimiter);
+    useRootStore.getState().addTab({
+      id: crypto.randomUUID(), title: 'Merged Tabs', content: mergedContent, language: 'plaintext',
+      languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 }, dateCreated: Date.now(),
+      lastModified: Date.now(), workspaceId: activeWorkspaceId || ''
     });
-
-    // Delete the original tabs
-    selectedTabIds.forEach(id => {
-      removeTab(id);
-    });
-
+    selectedTabIds.forEach(id => useRootStore.getState().removeTab(id));
     setShowMergeOptions(false);
     setSelectedTabIds(new Set());
   };
 
   const handleCreateWorkspace = () => {
     if (!newWorkspaceName.trim()) return;
-
-    createWorkspace(newWorkspaceName.trim());
+    useWorkspaceStore.getState().createWorkspace(newWorkspaceName.trim());
     setNewWorkspaceName('');
     setIsCreatingWorkspace(false);
   };
 
   const handleRenameWorkspace = () => {
     if (!editingWorkspaceId || !editingWorkspaceName.trim()) return;
-
-    renameWorkspace(editingWorkspaceId, editingWorkspaceName.trim());
+    useWorkspaceStore.getState().renameWorkspace(editingWorkspaceId, editingWorkspaceName.trim());
     setEditingWorkspaceId(null);
     setEditingWorkspaceName('');
   };
 
   const handleDeleteWorkspace = (workspaceId: string) => {
-    const workspace = workspaces.find(w => w.id === workspaceId);
+    const workspace = useWorkspaceStore.getState().workspaces.find(w => w.id === workspaceId);
     if (!workspace) return;
-
     setConfirmationDialog({
-      isOpen: true,
-      title: 'Delete Workspace',
-      message: `Are you sure you want to delete the workspace "${workspace.name}"? All tabs in this workspace will be permanently deleted.`,
-      confirmText: 'Delete Workspace',
-      cancelText: 'Cancel',
+      isOpen: true, title: 'Delete Workspace', message: `Are you sure you want to delete "${workspace.name}"? All its tabs will be deleted.`,
+      confirmText: 'Delete Workspace', cancelText: 'Cancel',
       onConfirm: () => {
-        deleteWorkspace(workspaceId);
+        useWorkspaceStore.getState().deleteWorkspace(workspaceId);
         setConfirmationDialog(prev => ({ ...prev, isOpen: false }));
       },
       isDestructive: true
@@ -508,27 +384,16 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
   };
 
   const handleRemoveDuplicates = () => {
-    const duplicateGroups = Object.values(duplicateTabs);
-    if (duplicateGroups.length === 0) return;
-
+    const groups = Object.values(duplicateTabs);
+    if (groups.length === 0) return;
     setConfirmationDialog({
-      isOpen: true,
-      title: 'Remove Duplicate Tabs',
-      message: `Found ${duplicateGroups.length} groups of duplicate tabs. Do you want to keep only the newest tab from each group and remove the rest?`,
-      confirmText: 'Remove Duplicates',
-      cancelText: 'Cancel',
+      isOpen: true, title: 'Remove Duplicate Tabs', message: `Found ${groups.length} groups of duplicates. Keep the newest from each group?`,
+      confirmText: 'Remove Duplicates', cancelText: 'Cancel',
       onConfirm: () => {
-        // For each group of duplicates, keep the newest and remove the rest
-        duplicateGroups.forEach(group => {
-          // Sort by lastModified (descending)
-          const sorted = [...group].sort((a, b) => b.lastModified - a.lastModified);
-
-          // Keep the first one (newest) and remove the rest
-          for (let i = 1; i < sorted.length; i++) {
-            removeTab(sorted[i].id);
-          }
+        groups.forEach(group => {
+          const sorted = [...(group as Tab[])].sort((a, b) => b.lastModified - a.lastModified);
+          for (let i = 1; i < sorted.length; i++) useRootStore.getState().removeTab(sorted[i].id);
         });
-
         setConfirmationDialog(prev => ({ ...prev, isOpen: false }));
       }
     });
@@ -536,144 +401,42 @@ export const useTabManagementEngine = (isOpen: boolean, onClose: () => void): Ta
 
   const handleRemoveEmptyTabs = () => {
     if (emptyTabs.length === 0) return;
-
-    // Directly remove all empty tabs without confirmation
-    emptyTabs.forEach(tab => {
-      removeTab(tab.id);
-    });
+    emptyTabs.forEach(tab => useRootStore.getState().removeTab(tab.id));
   };
-
+  
   const handleSwitchWorkspaceAndKeepModal = (workspaceId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    
-    if (workspaceId === activeWorkspaceId) {
-      return;
-    }
-
     withActionLock(async () => {
-      await switchWorkspaceFromStore(workspaceId);
-      setSelectedTabIds(new Set());
+        await useWorkspaceStore.getState().switchWorkspace(workspaceId);
     });
   };
 
-  const handleBaseModalClose = () => {
-    closeModalHelper(onClose, isTabManagementActionInProgress);
-  };
-
+  const handleBaseModalClose = () => closeModalHelper(onClose, isTabManagementActionInProgress);
+  
   const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const tabId = active.id as string;
-    const draggedTab = allApplicationTabs.find(t => t.id === tabId);
-
-    if (!draggedTab) return;
-
-    setActiveDragId(tabId);
-    setActiveDragItemData(draggedTab || null);
-
-    // Use the existing selectedTabIds if the tab is part of the selection,
-    // otherwise create a new set with just this tab
-    const newDraggedIds = selectedTabIds.has(tabId) ? new Set(selectedTabIds) : new Set([tabId]);
-    setDraggedTabIds(newDraggedIds);
+      const { active } = event;
+      const tabId = active.id as string;
+      const draggedTab = allApplicationTabs.find(t => t.id === tabId);
+      if (!draggedTab) return;
+      setActiveDragId(tabId);
+      setActiveDragItemData(draggedTab);
+      setDraggedTabIds(selectedTabIds.has(tabId) ? new Set(selectedTabIds) : new Set([tabId]));
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    dragEndHelper(
-      event,
-      setActiveDragId,
-      setDraggedTabIds,
-      draggedTabIds,
-      activeWorkspaceId,
-      filteredTabs,
-      handleMoveToWorkspaceWithId,
-      handleModifiedApplyCurrentOrder
-    );
-  };
+  const handleDragEnd = (event: DragEndEvent) => dragEndHelper(event, setActiveDragId, setDraggedTabIds, draggedTabIds, activeWorkspaceId, filteredTabs, handleMoveToWorkspaceWithId, handleModifiedApplyCurrentOrder);
 
   return {
-    // Data state
-    allApplicationTabs,
-    isLoadingAllTabs,
-    activeWorkspaceTabs,
-    workspacesWithCounts,
-    filteredTabs,
-    groupedTabs,
-    duplicateTabs,
-    emptyTabs,
-    availableLanguages,
-    
-    // UI state
-    selectedTabIds,
-    searchQuery,
-    languageFilter,
-    sortOption,
-    groupOption,
-    editingTabIdForModal,
-    newWorkspaceName,
-    isCreatingWorkspace,
-    editingWorkspaceId,
-    editingWorkspaceName,
-    showMergeOptions,
-    mergeDelimiter,
-    showRenameOptions,
-    renameBasePattern,
-    renameSuffixPattern,
-    
-    // Drag & Drop state
-    activeDragId,
-    draggedTabIds,
-    activeDragItemData,
-    sensors,
-    
-    // Confirmation dialog state
-    confirmationDialog,
-    
-    // Refs
-    modalContentRef,
-    
-    // Store data
-    workspaces,
-    activeWorkspaceId,
-    isTabManagementActionInProgress,
-    
-    // Setters
-    setSelectedTabIds,
-    setSearchQuery,
-    setLanguageFilter,
-    setSortOption,
-    setGroupOption,
-    setNewWorkspaceName,
-    setIsCreatingWorkspace,
-    setEditingWorkspaceId,
-    setEditingWorkspaceName,
-    setShowMergeOptions,
-    setMergeDelimiter,
-    setShowRenameOptions,
-    setRenameBasePattern,
-    setRenameSuffixPattern,
-    setConfirmationDialog,
-    
-    // Event handlers
-    handleStartEditingTab,
-    handleSaveTabTitle,
-    handleCancelEditingTab,
-    handleSelectTab,
-    handleSelectAll,
-    handleDeselectAll,
-    handleDoubleClickTab,
-    handleModifiedApplyCurrentOrder,
-    handleCloseTabs,
-    handleTogglePinSelectedTabs,
-    handleDuplicateTabs,
-    handleBulkRename,
-    handleMergeTabs,
-    handleCreateWorkspace,
-    handleRenameWorkspace,
-    handleDeleteWorkspace,
-    handleRemoveDuplicates,
-    handleRemoveEmptyTabs,
-    handleSwitchWorkspaceAndKeepModal,
-    handleBaseModalClose,
-    handleDragStart,
-    handleDragEnd,
+    allApplicationTabs, isLoadingAllTabs, activeWorkspaceTabs: localTabs, workspacesWithCounts, filteredTabs,
+    groupedTabs, duplicateTabs, emptyTabs, availableLanguages, selectedTabIds, searchQuery, languageFilter,
+    sortOption, groupOption, editingTabIdForModal, newWorkspaceName, isCreatingWorkspace, editingWorkspaceId,
+    editingWorkspaceName, showMergeOptions, mergeDelimiter, showRenameOptions, renameBasePattern, renameSuffixPattern,
+    activeDragId, draggedTabIds, activeDragItemData, sensors, confirmationDialog, modalContentRef, workspaces,
+    activeWorkspaceId, isTabManagementActionInProgress, setSelectedTabIds, setSearchQuery, setLanguageFilter,
+    setSortOption, setGroupOption, setNewWorkspaceName, setIsCreatingWorkspace, setEditingWorkspaceId,
+    setEditingWorkspaceName, setShowMergeOptions, setMergeDelimiter, setShowRenameOptions, setRenameBasePattern,
+    setRenameSuffixPattern, setConfirmationDialog, handleStartEditingTab, handleSaveTabTitle, handleCancelEditingTab,
+    handleSelectTab, handleSelectAll, handleDeselectAll, handleDoubleClickTab, handleModifiedApplyCurrentOrder,
+    handleCloseTabs, handleTogglePinSelectedTabs, handleDuplicateTabs, handleBulkRename, handleMergeTabs,
+    handleCreateWorkspace, handleRenameWorkspace, handleDeleteWorkspace, handleRemoveDuplicates, handleRemoveEmptyTabs,
+    handleSwitchWorkspaceAndKeepModal, handleBaseModalClose, handleDragStart, handleDragEnd
   };
 }; 

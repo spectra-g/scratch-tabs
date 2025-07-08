@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Edit, Pin, ChevronDown, ChevronRight } from 'lucide-react';
 import { useSplitViewStore } from '../../../stores/splitViewStore';
-import { useRootStore } from '../../../stores';
+import { useTabsStore } from '../../../stores/tabsStore';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { Tab } from '../../../types';
 import { languageRegistry } from '../../../languages';
@@ -39,8 +39,11 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
   isDraggingOverlay = false, // Default to false
 }) => {
   // Count tabs in the same workspace to determine if this is the only tab
-  const allApplicationTabs = useRootStore(state => state.tabs);
-  const tabsInSameWorkspace = allApplicationTabs.filter(t => t.workspaceId === tab.workspaceId);
+  const allApplicationTabs = useTabsStore(state => {
+    const tabs = state.tabs;
+    return tabs;
+  });
+  const tabsInSameWorkspace = allApplicationTabs.filter((t: Tab) => t.workspaceId === tab.workspaceId);
   const isOnlyTabInWorkspace = tabsInSameWorkspace.length === 1;
 
   const {
@@ -117,8 +120,9 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
     if (tab.isTablet) {
       return `${tab.title}\nType: Tablet\nLast Modified: ${new Date(tab.lastModified).toLocaleString()}`;
     }
-    const firstLines = tab.content.split('\n').slice(0, 5).join('\n'); // Show first 5 lines for brevity
-    const moreLinesIndicator = tab.content.split('\n').length > 5 ? "\n..." : "";
+    const content = tab.content || '';
+    const firstLines = content.split('\n').slice(0, 5).join('\n'); // Show first 5 lines for brevity
+    const moreLinesIndicator = content.split('\n').length > 5 ? "\n..." : "";
     return `${tab.title}\nType: ${getLanguageLabel()}\nLast Modified: ${new Date(tab.lastModified).toLocaleString()}\n\n${firstLines}${moreLinesIndicator}`;
   };
 

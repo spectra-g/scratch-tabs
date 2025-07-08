@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useRootStore } from '../stores';
+import { useTabsStore } from '../stores/tabsStore';
 import { useDiffEditor } from './DiffModal/useDiffEditor';
 import { DiffModalUI } from './DiffModal/DiffModalUI';
 
@@ -7,10 +8,12 @@ interface DiffModalProps {
   leftTabId: string;
   rightTabId: string;
   onClose: () => void; // The function passed from parent to close the modal
+  fromHistory?: boolean;
 }
 
-export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onClose }) => {
-  const { tabs, updateTabContent } = useRootStore();
+export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onClose, fromHistory = false }) => {
+  const { tabs } = useTabsStore();
+  const { updateTabContent } = useRootStore();
 
   const leftTab = tabs.find(tab => tab.id === leftTabId);
   const rightTab = tabs.find(tab => tab.id === rightTabId);

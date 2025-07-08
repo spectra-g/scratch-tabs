@@ -27,8 +27,10 @@ export const useLanguageDetection = (
     newContent: string,
     prevContent: string,
     currentLanguage: string,
-    languageLocked: boolean // Whether the language is locked by the user
+    languageLocked: boolean, // Whether the language is locked by the user
+    isFromPaste: boolean = false // Whether the content change was from a paste operation
   ) => {
+    
     // --- 1. Respect Manual Lock ---
     if (languageLocked) {
       return; // User has explicitly set the language, do nothing.
@@ -62,11 +64,12 @@ export const useLanguageDetection = (
        !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) && // Old doesn't start like the new
        lengthDifference > 5); // Add a small length diff requirement for the prefix check
 
+
     // --- 4. Perform Language Detection ---
     // Always detect unless manually locked or empty
     const newDetectedLanguage = detectLanguage(trimmedNewContent);
     const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent); // Use the ambiguity result from detection
-
+    
     // --- 5. Decide Whether to Update the Tab's Language ---
     let shouldUpdate = false;
     let shouldTriggerAutoFormat = false;
@@ -76,7 +79,8 @@ export const useLanguageDetection = (
       // This forces re-evaluation after pastes/replaces.
       if (newDetectedLanguage !== currentLanguage) {
         shouldUpdate = true;
-        shouldTriggerAutoFormat = true; // This is the key addition - trigger auto-format on significant language changes
+        // Only trigger auto-format if this was from a paste operation, not programmatic changes
+        shouldTriggerAutoFormat = isFromPaste;
       }
     } else {
       // For normal typing (non-significant change):
@@ -96,7 +100,7 @@ export const useLanguageDetection = (
       // Update the language with the lock parameter set to false to ensure user can override
       updateTabLanguage(tabId, newDetectedLanguage, false);
       
-      // Trigger auto-format if this was a significant change that resulted in language detection
+      // Trigger auto-format if this was a paste operation that resulted in language detection
       if (shouldTriggerAutoFormat) {
         // Use setTimeout to ensure the language change is processed first
         setTimeout(() => {
@@ -110,7 +114,9 @@ export const useLanguageDetection = (
   // Effect to setup/update the debounced function when the callback changes
   useEffect(() => {
     // Create a new debounced function whenever performDetectionAndUpdate changes
-    debouncedUpdateRef.current = debounce(performDetectionAndUpdate, LANGUAGE_DETECTION_DEBOUNCE_MS);
+    debouncedUpdateRef.current = debounce((tabId: string, newContent: string, prevContent: string, currentLanguage: string, languageLocked: boolean, isFromPaste: boolean = false) => {
+      performDetectionAndUpdate(tabId, newContent, prevContent, currentLanguage, languageLocked, isFromPaste);
+    }, LANGUAGE_DETECTION_DEBOUNCE_MS);
     
     return () => {
       // Cleanup: cancel any pending debounced calls
@@ -124,10 +130,11 @@ export const useLanguageDetection = (
     newContent: string,
     prevContent: string,
     currentLanguage: string,
-    languageLocked: boolean
+    languageLocked: boolean,
+    isFromPaste: boolean = false
   ) => {
     // Directly invoke the latest debounced function stored in the ref
-    debouncedUpdateRef.current?.(tabId, newContent, prevContent, currentLanguage, languageLocked);
+    debouncedUpdateRef.current?.(tabId, newContent, prevContent, currentLanguage, languageLocked, isFromPaste);
   }, []); // No dependencies - will remain stable across renders
   
   return { detectAndSetLanguage };

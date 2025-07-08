@@ -75,7 +75,7 @@ export class JavaLanguageDetector extends BaseLanguageDetector {
             /=>\s*[{]/i, // Arrow function with block
             /=>\s*[^({]/i, // Arrow function with implicit return
             /\b(const|let)\s+\w+\s*=/i, // const/let
-            /`.*?\$\{.*?\}.*?`/s, // Template literals
+            /`.*?\$\{.*?\}.*?`/g, // Template literals
         ];
         if (jsAntiPatterns.some(pattern => pattern.test(content))) {
           // If strong JS syntax is found, significantly reduce confidence or bail

@@ -7,11 +7,50 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
   const timerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const onChangeRef = useRef(onChange);
+  const pendingStateRef = useRef<PomodoroState | null>(null);
+  const debounceTimeoutRef = useRef<number | null>(null);
 
   // Update the ref when onChange changes
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+
+  // Effect to propagate state changes to parent with debouncing
+  useEffect(() => {
+    if (pendingStateRef.current) {
+      // Clear any existing timeout
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      
+      // Debounce rapid state changes (e.g., timer updates) but allow immediate updates for user actions
+      const isTimerUpdate = pendingStateRef.current.status === 'running' && 
+                           state.status === 'running' && 
+                           pendingStateRef.current.currentSession.timeRemaining !== state.currentSession.timeRemaining;
+      
+      if (isTimerUpdate) {
+        // Debounce timer updates to reduce frequency
+        debounceTimeoutRef.current = window.setTimeout(() => {
+          onChangeRef.current(pendingStateRef.current!);
+          pendingStateRef.current = null;
+          debounceTimeoutRef.current = null;
+        }, 100); // 100ms debounce for timer updates
+      } else {
+        // Immediate update for user actions
+        onChangeRef.current(pendingStateRef.current);
+        pendingStateRef.current = null;
+      }
+    }
+  });
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Initialize Audio object only once
   useEffect(() => {
@@ -22,6 +61,11 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
       // Preload the audio
       audioRef.current.load();
     }
+  }, []);
+
+  // Helper function to queue state change for parent
+  const queueStateChange = useCallback((newState: PomodoroState) => {
+    pendingStateRef.current = newState;
   }, []);
 
   const startNextSession = useCallback((completedSession: PomodoroSession) => {
@@ -69,17 +113,17 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
           todayStats: newTodayStats,
       };
 
-      // Notify parent of the change
-      onChangeRef.current(newState);
+      // Queue the state change for parent instead of calling onChange directly
+      queueStateChange(newState);
       return newState;
     });
-  }, []);
+  }, [queueStateChange]);
 
   useEffect(() => {
     if (state.status !== 'running') {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
-      document.title = 'DevToolbox'; // Reset title when not running
+      document.title = 'Scratch Tabs'; // Reset title when not running
       return;
     }
 
@@ -90,7 +134,7 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
           ...s, 
           currentSession: {...s.currentSession, startTime: Date.now()}
         };
-        onChangeRef.current(newState);
+        queueStateChange(newState);
         return newState;
       });
     }
@@ -141,8 +185,8 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
             currentSession: { ...prevState.currentSession, timeRemaining }
         };
         
-        // Notify parent of the change
-        onChangeRef.current(newState);
+        // Queue the state change for parent instead of calling onChange directly
+        queueStateChange(newState);
         return newState;
       });
     }, 1000);
@@ -151,9 +195,9 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
       if (timerRef.current) clearInterval(timerRef.current);
       document.title = 'Scratch Tabs';
     };
-  }, [state.status, state.currentSession.startTime, state.currentSession.duration, state.currentSession.type, state.soundEnabled]);
+  }, [state.status, state.currentSession.startTime, state.currentSession.duration, state.currentSession.type, state.soundEnabled, startNextSession, queueStateChange]);
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     const now = Date.now();
     setState(prevState => {
       const newState: PomodoroState = {
@@ -164,20 +208,20 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
           startTime: prevState.status === 'paused' ? now - (prevState.currentSession.duration - prevState.currentSession.timeRemaining) * 1000 : now,
         }
       };
-      onChangeRef.current(newState);
+      queueStateChange(newState);
       return newState;
     });
-  };
+  }, [queueStateChange]);
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     setState(prevState => {
       const newState: PomodoroState = { ...prevState, status: 'paused' };
-      onChangeRef.current(newState);
+      queueStateChange(newState);
       return newState;
     });
-  };
+  }, [queueStateChange]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     const { settings, currentSession } = state;
     const duration = currentSession.type === 'focus' ? settings.focusDuration * 60 : currentSession.type === 'shortBreak' ? settings.shortBreakDuration * 60 : settings.longBreakDuration * 60;
 
@@ -187,16 +231,16 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
         status: 'idle',
         currentSession: { ...prevState.currentSession, duration, timeRemaining: duration, startTime: 0, pauseTime: 0, totalPausedTime: 0 }
       };
-      onChangeRef.current(newState);
+      queueStateChange(newState);
       return newState;
     });
-  };
+  }, [state.settings, state.currentSession.type, queueStateChange]);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     startNextSession({ ...state.currentSession, endTime: Date.now(), completed: false });
-  };
+  }, [state.currentSession, startNextSession]);
 
-  const handleSettingsChange = (newSettings: PomodoroSettingsType) => {
+  const handleSettingsChange = useCallback((newSettings: PomodoroSettingsType) => {
     setState(prevState => {
         const newDuration = prevState.currentSession.type === 'focus' ? newSettings.focusDuration * 60 : prevState.currentSession.duration;
         const newState: PomodoroState = {
@@ -205,37 +249,37 @@ export const usePomodoroEngine = (initialState: PomodoroState, onChange: (newSta
             status: 'idle',
             currentSession: { ...prevState.currentSession, duration: newDuration, timeRemaining: newDuration, startTime: 0, pauseTime: 0, totalPausedTime: 0 }
         };
-        onChangeRef.current(newState);
+        queueStateChange(newState);
         return newState;
     });
-  };
+  }, [queueStateChange]);
 
-  const setSessionGoal = (goal: string) => {
+  const setSessionGoal = useCallback((goal: string) => {
     setState(prevState => {
       const newState: PomodoroState = {
           ...prevState,
           currentSession: { ...prevState.currentSession, goal }
       };
-      onChangeRef.current(newState);
+      queueStateChange(newState);
       return newState;
     });
-  };
+  }, [queueStateChange]);
 
-  const toggleSound = () => {
+  const toggleSound = useCallback(() => {
     setState(prevState => {
       const newState: PomodoroState = { ...prevState, soundEnabled: !prevState.soundEnabled };
-      onChangeRef.current(newState);
+      queueStateChange(newState);
       return newState;
     });
-  };
+  }, [queueStateChange]);
 
-  const changeView = (view: 'timer' | 'settings' | 'stats') => {
+  const changeView = useCallback((view: 'timer' | 'settings' | 'stats') => {
     setState(prevState => {
       const newState: PomodoroState = { ...prevState, activeView: view };
-      onChangeRef.current(newState);
+      queueStateChange(newState);
       return newState;
     });
-  };
+  }, [queueStateChange]);
 
   return {
     state,

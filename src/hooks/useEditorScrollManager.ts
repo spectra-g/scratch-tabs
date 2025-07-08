@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { useRootStore } from '../stores'; // To get the list of current tabs for cleanup
+import { useTabsStore } from '../stores/tabsStore'; // To get the list of current tabs for cleanup
 
 // Store scroll positions outside the hook's state, using a ref
 // This persists across re-renders without causing them.
@@ -16,7 +16,10 @@ export const useEditorScrollManager = (
   const previousActiveTabIdRef = useRef<string | null>(activeTabId);
 
   // Get the current list of tabs from the store for cleanup purposes
-  const currentTabIds = useRootStore(state => new Set(state.tabs.map(tab => tab.id)));
+  const currentTabIds = useTabsStore(state => {
+    const tabIds = new Set(state.tabs.map(tab => tab.id));
+    return tabIds;
+  });
 
   // Effect to SAVE scroll position when the active tab changes or component unmounts
   useEffect(() => {

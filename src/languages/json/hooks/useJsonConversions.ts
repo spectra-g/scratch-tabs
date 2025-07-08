@@ -22,8 +22,12 @@ export const useJsonConversions = (
   } = useJsonModals();
 
   const handleToJava = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
       
       // Generate Java classes
@@ -45,8 +49,12 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleTreeView = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       openTreeViewModal(content);
     } catch (error) {
       console.error('Failed to convert to tree view:', error);
@@ -54,8 +62,12 @@ export const useJsonConversions = (
   }, [editor, openTreeViewModal]);
 
   const handleToTypeScript = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const tsInterfaces = generateTypeScriptInterfaces(json);
@@ -73,8 +85,12 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToPython = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const pythonClasses = generatePythonClasses(json);
@@ -92,8 +108,12 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToGo = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const goStructs = generateGoStructs(json);
@@ -111,8 +131,12 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToCSharp = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const csharpClasses = generateCSharpClasses(json);
@@ -130,8 +154,12 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToCsv = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
       
       const result = convertToCsv(json);
@@ -153,8 +181,12 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToYaml = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
       
       const yaml = convertToYaml(json);
@@ -172,8 +204,12 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleToXml = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
       
       const xml = convertToXml(json);
@@ -191,8 +227,12 @@ export const useJsonConversions = (
   }, [editor, openCodeGenerationModal, addTab]);
 
   const handleValidateSchema = useCallback(() => {
+    if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
       const schema = generateJsonSchema(json);
       

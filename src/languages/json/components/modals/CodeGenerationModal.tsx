@@ -68,6 +68,18 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
     [tabs, activeTabId]
   );
 
+  // Safeguard for large content in generated code
+  const displayContent = React.useMemo(() => {
+    if (!activeTab?.content) return '';
+    
+    // If content is very large, truncate it for display
+    if (activeTab.content.length > 100000) {
+      return activeTab.content.substring(0, 50000) + '\n\n... [Content truncated for performance] ...';
+    }
+    
+    return activeTab.content;
+  }, [activeTab?.content]);
+
   return (
     <BaseModal title="Generated Code" onClose={onClose}>
       <div className="flex flex-col h-[70vh]">
@@ -121,7 +133,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
                 <Editor
                   height="100%"
                   language={activeTab.language}
-                  value={activeTab.content}
+                  value={displayContent}
                   theme="vs-dark"
                   options={{
                     readOnly: true,

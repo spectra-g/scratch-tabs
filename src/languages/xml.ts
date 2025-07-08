@@ -188,7 +188,7 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
     // to do correctly due to nesting, attributes, comments, CDATA, PIs, etc.
     // The one you had is a good starting point for a heuristic indenter.
     monaco.languages.registerDocumentFormattingEditProvider(languageId, {
-        provideDocumentFormattingEdits(model: any, options: monaco.languages.FormattingOptions) {
+        provideDocumentFormattingEdits(model: any, options: any) {
             const content = model.getValue();
             const indentChar = options.insertSpaces ? ' '.repeat(options.tabSize) : '\t';
             let formattedXml = '';
@@ -196,9 +196,9 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
             // Regex to split XML by tags, keeping delimiters. It's complex.
             // This regex tries to handle: tags, comments, PIs, CDATA, DOCTYPE
             const tagRegex = /(<\?xml.*?\?>|<!DOCTYPE[^>]*>|<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?]]>|<[^>]+>)/g;
-            const parts = content.split(tagRegex).filter(part => part && part.trim() !== '');
+            const parts = content.split(tagRegex).filter((part: string) => part && part.trim() !== '');
 
-            parts.forEach((part, index) => {
+            parts.forEach((part: string, index: number) => {
                 const trimmedPart = part.trim();
                 let currentLineIndented = false;
 

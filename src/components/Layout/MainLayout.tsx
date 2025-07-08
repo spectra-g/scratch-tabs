@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRootStore } from '../../stores/rootStore';
+import { useTabsStore } from '../../stores/tabsStore';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { usePersistenceStore } from '../../stores/persistenceStore';
 import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
@@ -14,28 +16,59 @@ import { SummarizeModal } from '../AI/SummarizeModal';
 import { SearchModal } from '../Search/SearchModal';
 import { AIModelManagementModal } from '../AI/AIModelManagementModal';
 import { useAIStore } from '../../stores/aiStore';
+import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { shallow } from 'zustand/shallow';
 
 const MainLayout: React.FC = () => {
-  const {
-    tabs,
-    splitView,
-    activeLeftTabId,
-    activeRightTabId,
-    saveTabDataById,
-    setSplitRatio
-  } = useRootStore(state => ({
-    tabs: state.tabs,
-    splitView: state.splitView,
-    activeLeftTabId: state.splitView?.activeLeftTabId,
-    activeRightTabId: state.splitView?.activeRightTabId,
-    saveTabDataById: state.saveTabDataById,
-    setSplitRatio: state.setSplitRatio,
-  }));
+  // FIX: Use selective subscription for tab count only
+  const tabCount = useTabsStore(state => state.tabs.length);
+  
+  // FIX: Use useStoreWithEqualityFn for split view with shallow comparison
+  const { splitView, activeLeftTabId, activeRightTabId } = useStoreWithEqualityFn(
+    useSplitViewStore,
+    state => ({
+      splitView: state.splitView,
+      activeLeftTabId: state.splitView?.activeLeftTabId,
+      activeRightTabId: state.splitView?.activeRightTabId,
+    }),
+    shallow
+  );
+  
+  // FIX: Use useStoreWithEqualityFn for root store actions
+  const { saveTabDataById, setSplitRatio } = useStoreWithEqualityFn(
+    useRootStore,
+    state => ({
+      saveTabDataById: state.saveTabDataById,
+      setSplitRatio: state.setSplitRatio,
+    }),
+    shallow
+  );
 
-  const { loadWorkspaces, workspaces } = useWorkspaceStore();
-  const { saveState } = usePersistenceStore(); // Get saveState function
+  // FIX: Use useStoreWithEqualityFn for workspace store
+  const { loadWorkspaces, workspaces } = useStoreWithEqualityFn(
+    useWorkspaceStore,
+    state => ({
+      loadWorkspaces: state.loadWorkspaces,
+      workspaces: state.workspaces,
+    }),
+    shallow
+  );
+  
+  // FIX: Use useStoreWithEqualityFn for persistence store
+  const { saveState } = useStoreWithEqualityFn(
+    usePersistenceStore,
+    state => ({ saveState: state.saveState }),
+    shallow
+  );
+  
   const [isAppInitialized, setIsAppInitialized] = useState(false);
-  const { setSummaryModalCallback } = useAIStore();
+  
+  // FIX: Use useStoreWithEqualityFn for AI store
+  const { setSummaryModalCallback } = useStoreWithEqualityFn(
+    useAIStore,
+    state => ({ setSummaryModalCallback: state.setSummaryModalCallback }),
+    shallow
+  );
 
   function setRealHeight() {
     document.documentElement.style.setProperty('--real-vh', `${window.innerHeight * 0.01}px`);
@@ -100,7 +133,7 @@ const MainLayout: React.FC = () => {
   const { isOpen: isSearchOpen, toggleSearch } = useSearchStore();
 
   const handleOpenDiffModal = (fromHistory?: boolean, explicitSide?: 'left' | 'right', explicitTabId?: string) => {
-    const currentSplitView = useRootStore.getState().splitView;
+    const currentSplitView = useSplitViewStore.getState().splitView;
     
     if (fromHistory) {
       // Determine which side we're on based on explicit side or current state
@@ -166,7 +199,7 @@ const MainLayout: React.FC = () => {
 
     const handleOpenSummarizeModal = (tabId: string) => {
         // This find should be fast unless 'tabs' is gigantic
-        const tab = useRootStore.getState().tabs.find(t => t.id === tabId);
+        const tab = useTabsStore.getState().tabs.find(t => t.id === tabId);
         if (tab && tab.content) {
             setSummarizeModal({ content: tab.content, tabId: tabId }); // This should trigger re-render quickly
         } else {
@@ -249,7 +282,7 @@ const MainLayout: React.FC = () => {
         ref={containerRef}
         className="flex w-full h-full min-w-0 overflow-hidden"
       >
-        {tabs.length === 0 && workspaces.length === 0 ? (
+        {tabCount === 0 && workspaces.length === 0 ? (
           <WelcomeScreen/>
         ) : (
           <>
@@ -306,12 +339,12 @@ const MainLayout: React.FC = () => {
         />
       )}
       {summarizeModal && (
-          <SummarizeModal
-              content={summarizeModal.content}
-              onClose={handleCloseSummarizeModal}
-              // You might pass tabId if the modal needs it for some reason
-              // tabId={summarizeModal.tabId}
-          />
+          <>
+            <SummarizeModal
+                content={summarizeModal.content}
+                onClose={handleCloseSummarizeModal}
+            />
+          </>
       )}
       {isSearchOpen && <SearchModal />}
       <AIModelManagementModal />

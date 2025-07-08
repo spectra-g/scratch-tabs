@@ -4,6 +4,8 @@ import { StorageProviderFactory } from '../../db';
 import { useSearchStore, SearchScope, SearchOptions, SearchResult } from '../../stores/searchStore';
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useTabsStore } from '../../stores/tabsStore';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { searchTabs } from '../../services/searchService';
 import { languageRegistry } from '../../languages';
 import { Tab } from '../../types';
@@ -71,7 +73,8 @@ export const useSearchEngine = (): SearchEngine => {
     error, setLoading, setError, setResults, setStatusMessage
   } = useSearchStore();
 
-  const { tabs: allTabsInCurrentWorkspace, setActiveLeftTab, setActiveRightTab, setActiveSide } = useRootStore();
+  const { tabs: allTabsInCurrentWorkspace } = useTabsStore();
+  const { setActiveLeftTab, setActiveRightTab, setActiveSide } = useRootStore();
   const { switchWorkspace, activeWorkspaceId: currentActiveWsId } = useWorkspaceStore();
 
   const storage = StorageProviderFactory.getProvider();
@@ -237,9 +240,10 @@ export const useSearchEngine = (): SearchEngine => {
     }
 
     // At this point, the correct workspace should be active
-    const updatedRootState = useRootStore.getState();
-    const targetTabSide = updatedRootState.splitView.leftTabs.includes(result.tabId) ? 'left'
-                        : updatedRootState.splitView.rightTabs.includes(result.tabId) ? 'right'
+    const splitViewState = useSplitViewStore.getState().splitView;
+    const allCurrentTabs = useTabsStore.getState().tabs;
+    const targetTabSide = splitViewState.leftTabs.includes(result.tabId) ? 'left'
+                        : splitViewState.rightTabs.includes(result.tabId) ? 'right'
                         : null;
 
     if (targetTabSide === 'left') {
@@ -250,11 +254,10 @@ export const useSearchEngine = (): SearchEngine => {
       setActiveSide('right');
     } else {
       // Tab not found in either side of the current splitView after potential workspace switch
-      const allCurrentTabs = updatedRootState.tabs;
-      if (allCurrentTabs.find(t => t.id === result.tabId)) {
+      if (allCurrentTabs.find((t: Tab) => t.id === result.tabId)) {
         setActiveLeftTab(result.tabId); // Default to left
         setActiveSide('left');
-        if (!updatedRootState.splitView.leftTabs.includes(result.tabId)) {
+        if (!splitViewState.leftTabs.includes(result.tabId)) {
           console.warn(`Tab ${result.tabId} activated but was not in expected splitView side.`);
         }
       } else {

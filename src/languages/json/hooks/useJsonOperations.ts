@@ -44,6 +44,7 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
+
       const json = JSON.parse(content);
       const minifiedContent = JSON.stringify(json);
       applyEdit(minifiedContent, 'json.minify'); // Use applyEdit
@@ -57,6 +58,9 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const sortObjectKeys = (obj: any): any => {
@@ -88,6 +92,9 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
       if (typeof json !== 'object' || json === null || Array.isArray(json)) {
          console.error('Flatten requires a JSON object.');
@@ -119,6 +126,9 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
        if (typeof json !== 'object' || json === null || Array.isArray(json)) {
          console.error('Unflatten requires a flat JSON object.');
@@ -156,6 +166,9 @@ export const useJsonOperations = (
     if (!editor) return;
     try {
       const content = editor.getValue();
+      
+
+      
       const json = JSON.parse(content);
 
       const removeEmpty = (obj: any): any => {
@@ -330,7 +343,6 @@ export const useJsonOperations = (
       const extractedJsons = extractJsonFromText(content);
       
       if (extractedJsons.length === 0) {
-        console.log('No JSON found in content');
         return;
       }
       

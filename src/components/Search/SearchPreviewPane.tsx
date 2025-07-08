@@ -104,7 +104,7 @@ export const SearchPreviewPane: React.FC<SearchPreviewPaneProps> = ({ tab, selec
                     );
                     currentEditor.revealLineInCenterIfOutsideViewport(lineNumber, currentMonaco.editor.ScrollType.Smooth);
                 } else {
-                    console.warn(`Invalid lineNumber (${lineNumber}) or model not ready for highlighting in tab ${tab.id}`);
+                    console.warn(`Invalid lineNumber (${lineNumber}) or model not ready for highlighting in tab ${tab?.id || 'unknown'}`);
                     decorationsRef.current = currentEditor.deltaDecorations(decorationsRef.current, []);
                 }
             }, 50); // Small delay (e.g., 50ms)
@@ -139,7 +139,7 @@ export const SearchPreviewPane: React.FC<SearchPreviewPaneProps> = ({ tab, selec
                 scrollBeyondLastLine: false,
                 padding: { top: 8, bottom: 8 },
                 renderLineHighlight: 'none',
-                occurrencesHighlight: false,
+                occurrencesHighlight: 'off',
             }}
         />
     );

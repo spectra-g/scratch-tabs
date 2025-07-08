@@ -32,39 +32,32 @@ class LanguageRegistryImpl implements LanguageRegistry {
   }
   
   detectLanguage(content: string): string {
-    if (!content || !content.trim()) return 'plaintext';
-
-    if (content.length > 1_000_000) {
-      return 'plaintext';
-    }
 
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
 
+    // Run all detectors
     for (const detector of this.detectors) {
-      const result = detector.detect(content);
-      if (result.match) {
+      try {
+        const result = detector.detect(content);
         detectionResults.push({ detector, result });
+      } catch (error) {
+        console.error(`[LanguageRegistry] Error in detector ${detector.id}:`, error);
       }
     }
 
-    // Sort by confidence (descending), then by priority (descending) as a tie-breaker
-    detectionResults.sort((a, b) => {
-      if (b.result.confidence !== a.result.confidence) {
-        return b.result.confidence - a.result.confidence;
+    // Find the best result
+    let bestResult = 'plaintext';
+    let bestConfidence = 0;
+
+    for (const { detector, result } of detectionResults) {
+      if (result.confidence > bestConfidence) {
+        bestConfidence = result.confidence;
+        bestResult = detector.id;
       }
-      return b.detector.priority - a.detector.priority; // Higher priority wins in a confidence tie
-    });
+    }
 
-    // Optional: Add a check for ambiguity if top scores are too close
-    // if (detectionResults.length > 1 &&
-    //     (detectionResults[0].result.confidence - detectionResults[1].result.confidence < 0.1) && // Example threshold
-    //     detectionResults[0].detector.priority === detectionResults[1].detector.priority) {
-    //    console.warn("Ambiguous detection, top two are very close:", detectionResults[0], detectionResults[1]);
-    //    // Could return plaintext, or the highest priority one even if confidence is close.
-    //    // For now, we'll just return the top one from the sort.
-    // }
-
-    return detectionResults[0]?.detector.id ?? 'plaintext';
+    const finalResult = bestConfidence > 0.5 ? bestResult : 'plaintext';
+    return finalResult;
   }
   
   /**
@@ -73,9 +66,7 @@ class LanguageRegistryImpl implements LanguageRegistry {
   isAmbiguous(content: string): boolean {
     if (!content || !content.trim()) return false;
     
-    if (content.length > 1_000_000) {
-      return false;
-    }
+
 
     const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
     for (const detector of this.detectors) {

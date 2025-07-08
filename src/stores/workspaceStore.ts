@@ -5,9 +5,9 @@ import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { usePersistenceStore } from './persistenceStore';
 import { useCacheStore } from './cacheStore';
-import { modelManager } from '../services/modelManager';
 import { incrementSetting } from '../db';
 import { WELCOME_TAB_CONTENT, NEW_TAB_PREFIX } from '../constants';
+import { modelManager } from '../services/modelManager';
 
 // Helper function to safely convert activeSide string to union type
 const parseActiveSide = (side: string | null): 'left' | 'right' | null => {
@@ -44,113 +44,76 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     isLoading: false,
     error: null,
 
-    loadWorkspaces: async (clearExistingTabs: boolean = false) => {
+    loadWorkspaces: async (clearExistingTabs = false) => {
+      const { activeWorkspaceId: currentActiveWsId } = get();
+      
       set({ isLoading: true, error: null });
+
       try {
-        // Clear the model cache when loading workspaces
-        modelManager.disposeAll();
+        const workspaces = await storage.getWorkspaces();
+        
+        // Sort workspaces by lastAccessed (most recent first)
+        const sortedWorkspaces = workspaces.sort((a, b) => b.lastAccessed - a.lastAccessed);
 
-        const workspacesFromDB = await storage.getWorkspaces();
-        let newActiveWorkspaceId: string | null = null;
-        let tabsToLoad: Tab[] = [];
-        let workspaceSplitView: SplitViewState | null = null;
+        // Determine which workspace to activate
+        let workspaceToActivate: Workspace | null = null;
+        
+        if (sortedWorkspaces.length > 0) {
+          // If we have a current active workspace, try to keep it
+          if (currentActiveWsId && sortedWorkspaces.some(w => w.id === currentActiveWsId)) {
+            workspaceToActivate = sortedWorkspaces.find(w => w.id === currentActiveWsId) || null;
+          } else {
+            // Otherwise, activate the most recently accessed workspace
+            workspaceToActivate = sortedWorkspaces[0];
+          }
+        }
 
-        if (workspacesFromDB && workspacesFromDB.length > 0) {
-          const sortedWorkspaces = [...workspacesFromDB].sort((a, b) => b.lastAccessed - a.lastAccessed); // Sort by lastAccessed first
-          newActiveWorkspaceId = sortedWorkspaces[0].id; // Most recently accessed is the default active
-          const results = await Promise.all([
-            storage.getTabsByWorkspace(newActiveWorkspaceId),
-            storage.getSplitViewByWorkspace(newActiveWorkspaceId)
+        // Update the workspace list
+        set(state => ({
+          workspaces: sortedWorkspaces,
+          activeWorkspaceId: workspaceToActivate?.id || null,
+        }));
+
+        // Load data for the active workspace
+        if (workspaceToActivate) {
+          const [tabs, splitView] = await Promise.all([
+            storage.getTabsByWorkspace(workspaceToActivate.id),
+            storage.getSplitViewByWorkspace(workspaceToActivate.id)
           ]);
-          tabsToLoad = results[0];
-          const fetchedRecord = results[1];
 
-          if (fetchedRecord) {
-            workspaceSplitView = { // Convert Record to State
-              id: fetchedRecord.id,
-              isSplit: fetchedRecord.isSplit,
-              leftTabs: fetchedRecord.leftTabs,
-              rightTabs: fetchedRecord.rightTabs,
-              activeLeftTabId: fetchedRecord.activeLeftTabId,
-              activeRightTabId: fetchedRecord.activeRightTabId,
-              activeSide: parseActiveSide(fetchedRecord.activeSide),
-              splitRatio: fetchedRecord.splitRatio,
-              workspaceId: fetchedRecord.workspaceId,
-              leftTabHistory: fetchedRecord.leftTabHistory || [], // Use persisted history
-              rightTabHistory: fetchedRecord.rightTabHistory || [] // Use persisted history
-            };
+          if (clearExistingTabs) {
+            useTabsStore.setState({ tabs });
           } else {
-            // If no split view record, create a default one for this workspace
-            workspaceSplitView = useSplitViewStore.getState().createDefaultSplitViewState(newActiveWorkspaceId);
-            await storage.saveSplitViewNow({ ...workspaceSplitView, lastModified: Date.now() });
-          }
-
-          // Update lastAccessed for the determined active workspace
-          const activeWsIndex = sortedWorkspaces.findIndex(ws => ws.id === newActiveWorkspaceId);
-          if (activeWsIndex > -1) {
-            const updatedActiveWs = { ...sortedWorkspaces[activeWsIndex], lastAccessed: Date.now() };
-            await storage.saveWorkspace(updatedActiveWs); // Save update to DB
-            sortedWorkspaces[activeWsIndex] = updatedActiveWs;
-          }
-          set({ workspaces: sortedWorkspaces.sort((a, b) => a.name.localeCompare(b.name)), activeWorkspaceId: newActiveWorkspaceId });
-          
-          // Check if there are existing tabs that should be preserved (e.g., created by URL handler)
-          // But only if we're not clearing existing tabs (e.g., during workspace deletion)
-          const currentTabs = useTabsStore.getState().tabs;
-          const currentSplitView = useSplitViewStore.getState().splitView;
-          const currentActiveLeftTabId = currentSplitView?.activeLeftTabId;
-          
-          let newTabsToPreserve: Tab[] = [];
-          
-          if (!clearExistingTabs) {
-            const existingTabIds = new Set(tabsToLoad.map(tab => tab.id));
-            newTabsToPreserve = currentTabs.filter(tab => !existingTabIds.has(tab.id));
-          }
-          if (newTabsToPreserve.length > 0) {
-            // Merge loaded tabs with newly created tabs
-            const mergedTabs = [...tabsToLoad, ...newTabsToPreserve];
+            // Merge with existing tabs instead of replacing
+            const existingTabs = useTabsStore.getState().tabs;
+            const mergedTabs = [...existingTabs, ...tabs];
             useTabsStore.setState({ tabs: mergedTabs });
-            
-            // Update split view to include the new tabs in the left pane
-            const newTabIds = newTabsToPreserve.map(tab => tab.id);
-            workspaceSplitView.leftTabs = [...workspaceSplitView.leftTabs, ...newTabIds];
-          } else {
-            if (clearExistingTabs) {
-              // When clearing existing tabs, set the activeTabId from the splitView
-              useTabsStore.setState({ 
-                tabs: tabsToLoad,
-                activeTabId: workspaceSplitView?.activeLeftTabId || tabsToLoad[0]?.id || null
-              });
-            } else {
-              useTabsStore.setState({ tabs: tabsToLoad });
-            }
           }
-          
-          // Always check if we should preserve the current active tab (for both new and existing tabs)
-          // But only if we're not clearing existing tabs (during workspace deletion)
-          if (!clearExistingTabs && currentActiveLeftTabId && currentActiveLeftTabId !== workspaceSplitView?.activeLeftTabId) {
-            // Check if the current active tab exists in our final tab list
-            const finalTabs = newTabsToPreserve.length > 0 ? [...tabsToLoad, ...newTabsToPreserve] : tabsToLoad;
-            const activeTabExists = finalTabs.some(tab => tab.id === currentActiveLeftTabId);
 
-            if (activeTabExists && workspaceSplitView) {
-              workspaceSplitView.activeLeftTabId = currentActiveLeftTabId;
-              
-              // Also ensure the active tab is in the left pane
-              if (!workspaceSplitView.leftTabs.includes(currentActiveLeftTabId)) {
-                workspaceSplitView.leftTabs = [...workspaceSplitView.leftTabs, currentActiveLeftTabId];
-              }
-            }
+          if (splitView) {
+            const finalSplitViewState: SplitViewState = {
+              id: splitView.id,
+              isSplit: splitView.isSplit,
+              leftTabs: splitView.leftTabs || [],
+              rightTabs: splitView.rightTabs || [],
+              activeLeftTabId: splitView.activeLeftTabId,
+              activeRightTabId: splitView.activeRightTabId,
+              activeSide: parseActiveSide(splitView.activeSide),
+              splitRatio: splitView.splitRatio,
+              workspaceId: splitView.workspaceId,
+              leftTabHistory: splitView.leftTabHistory || [],
+              rightTabHistory: splitView.rightTabHistory || []
+            };
+            useSplitViewStore.setState({ splitView: finalSplitViewState });
           }
-          
-          useSplitViewStore.setState({ splitView: workspaceSplitView });
         } else {
-          set({ workspaces: [], activeWorkspaceId: null });
+          // Clear all data if no workspace to activate
           useTabsStore.setState({ tabs: [] });
           useSplitViewStore.setState({ splitView: undefined });
         }
+
       } catch (error) {
-        console.error("Error during workspace load:", error);
+        console.error("Error loading workspaces:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to load workspaces' });
       } finally {
         set({ isLoading: false });
@@ -158,8 +121,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     },
 
     ensureWorkspace: async (): Promise<string | null> => {
-      const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
-      lockTransactions();
       try {
         const currentWorkspaces = get().workspaces;
         const currentActiveId = get().activeWorkspaceId;
@@ -228,14 +189,12 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         console.error("[ensureWorkspace] Error:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to ensure workspace' });
         return null;
-      } finally {
-        unlockTransactions();
       }
     },
 
     switchWorkspace: async (workspaceId: string) => {
       const { workspaces, activeWorkspaceId: currentActiveWsId, isLoading } = get();
-      const { lockTransactions, unlockTransactions, saveState: persistCurrentState } = usePersistenceStore.getState();
+      const { saveState: persistCurrentState } = usePersistenceStore.getState();
 
       if (workspaceId === currentActiveWsId || isLoading) {
         return;
@@ -248,7 +207,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         return;
       }
 
-      lockTransactions(); // Lock before starting the switch process
       set({ isLoading: true, error: null });
 
       try {
@@ -257,7 +215,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           await persistCurrentState();
         }
 
-        // 2. Clear the model cache when switching workspaces
+        // 2. Clear model cache when switching workspaces to prevent memory leaks
         modelManager.disposeAll();
 
         // 3. Load data for the target workspace
@@ -311,15 +269,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         set({ error: error instanceof Error ? error.message : 'Failed to switch workspace' });
       } finally {
         set({ isLoading: false });
-        unlockTransactions(); // Unlock after the switch process is complete
       }
     },
 
     createWorkspace: async (name: string): Promise<string | null> => {
-      const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
-      lockTransactions();
       try {
-        // Clear the model cache when creating a new workspace
         modelManager.disposeAll();
 
         const newWorkspace: Workspace = {
@@ -398,25 +352,19 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         console.error("Error creating workspace:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to create workspace' });
         return null;
-      } finally {
-        unlockTransactions();
       }
     },
 
     deleteWorkspace: async (workspaceId: string) => {
       const { workspaces, activeWorkspaceId: currentActiveId, loadWorkspaces } = get();
-      const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
-      lockTransactions();
       try {
-        await storage.deleteWorkspace(workspaceId); // This Dexie method handles its own transaction for all related data
+        await storage.deleteWorkspace(workspaceId);
 
         const remainingWorkspaces = workspaces.filter(ws => ws.id !== workspaceId);
 
         if (workspaceId === currentActiveId) {
           // If the active workspace was deleted, load remaining workspaces
-          // loadWorkspaces will pick the most recently accessed as the new active one, or create default
-          // Pass clearExistingTabs: true to ensure tabs from deleted workspace are not preserved
-          await loadWorkspaces(true); // This will handle setting a new active one or creating default
+          await loadWorkspaces(true);
         } else {
           // Just update the list of workspaces if a non-active one was deleted
           set({ workspaces: remainingWorkspaces.sort((a, b) => a.name.localeCompare(b.name)) });
@@ -424,31 +372,28 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       } catch (error) {
         console.error("Error deleting workspace:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to delete workspace' });
-      } finally {
-        unlockTransactions();
       }
     },
 
     renameWorkspace: async (workspaceId: string, newName: string) => {
-      // This is a single DB write, lock might be overkill but good for consistency if other parts of UI react immediately
-      const { lockTransactions, unlockTransactions } = usePersistenceStore.getState();
-      lockTransactions();
       try {
-        const { workspaces } = get();
-        const workspace = workspaces.find(w => w.id === workspaceId);
-        if (!workspace) return;
+        const workspace = get().workspaces.find(w => w.id === workspaceId);
+        if (!workspace) {
+          set({ error: 'Workspace not found' });
+          return;
+        }
 
-        const updatedWorkspace = { ...workspace, name: newName, lastAccessed: Date.now() };
+        const updatedWorkspace = { ...workspace, name: newName };
         await storage.saveWorkspace(updatedWorkspace);
+
         set(state => ({
-          workspaces: state.workspaces.map(w =>
+          workspaces: state.workspaces.map(w => 
             w.id === workspaceId ? updatedWorkspace : w
           ).sort((a, b) => a.name.localeCompare(b.name))
         }));
       } catch (error) {
+        console.error("Error renaming workspace:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to rename workspace' });
-      } finally {
-        unlockTransactions();
       }
     },
 

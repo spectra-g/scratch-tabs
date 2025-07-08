@@ -4,6 +4,7 @@ import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import { useDebounce } from '../../../../hooks/useDebounce';
 import { useRootStore } from '../../../../stores';
 import { useWorkspaceStore } from '../../../../stores/workspaceStore';
+import { useSplitViewStore } from '../../../../stores/splitViewStore';
 import { detectLanguage } from '../../../../languages'; 
 
 // --- Interfaces ---
@@ -169,8 +170,9 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
     const [lastValidEvaluatedPath, setLastValidEvaluatedPath] = useState<string | null>(null);
     const [openedItemId, setOpenedItemId] = useState<string | null>(null);
 
-    const { addBackgroundTab, splitView } = useRootStore();
+    const { addBackgroundTab } = useRootStore();
     const { activeWorkspaceId } = useWorkspaceStore();
+    const { splitView } = useSplitViewStore();
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Memoize parsed JSON
@@ -361,7 +363,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
         // Determine pane side via ancestor data attribute
         const paneElem = containerRef.current?.closest('[data-editor-pane-side]');
         const sideAttr = paneElem?.getAttribute('data-editor-pane-side');
-        const isRightSideLocal = splitView.isSplit && sideAttr === 'right';
+        const isRightSideLocal = splitView?.isSplit && sideAttr === 'right';
 
         let content: string;
         if (typeof value === 'object' && value !== null) {

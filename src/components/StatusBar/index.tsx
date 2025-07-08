@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { getLanguageStatusItem, getLanguageOptionsMenu } from './LanguageStatusItems';
 import { Macro } from '../Macro';
 import { tabletRegistry } from '../../tablets';
@@ -6,6 +6,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Tab } from "../../types.ts";
 import { AIStatusIcon } from '../AI/AIStatusIcon';
 import { useRootStore } from '../../stores';
+import { useSplitViewStore } from '../../stores/splitViewStore';
 import { Search, Coffee } from 'lucide-react';
 import { useSearchStore } from '../../stores/searchStore';
 import { languageRegistry } from '../../languages';
@@ -20,8 +21,14 @@ interface StatusBarProps {
   side: 'left' | 'right'
 }
 
+// Simple content accessor for language detection
+const getContentForLanguageDetection = (tab: Tab): string => {
+  return tab.content || '';
+};
+
 export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) => {
-  const { splitView, updateTabLanguage } = useRootStore();
+  const { splitView } = useSplitViewStore();
+  const { updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const [tabletLabel, setTabletLabel] = useState('');
@@ -53,8 +60,26 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     getTabletLabel();
   }, [activeTab]);
 
+  // Memoize language detection to avoid expensive operations on every render
+  const languageDetectionData = useMemo(() => {
+    if (!activeTab || activeTab.isTablet) {
+      return {
+        potentialMatches: [],
+        contentSample: ''
+      };
+    }
+
+    const contentSample = getContentForLanguageDetection(activeTab);
+    const potentialMatches = getPotentialLanguageMatches(contentSample);
+    
+    return {
+      potentialMatches,
+      contentSample
+    };
+  }, [activeTab?.id, activeTab?.content, activeTab?.isTablet]);
+
   const LanguageStatusItem = activeTab && !activeTab.isTablet ? 
-    getLanguageStatusItem(activeTab.language, activeTab.content, activeTab) : null;
+    getLanguageStatusItem(activeTab.language, languageDetectionData.contentSample, activeTab) : null;
 
   const LanguageOptionsMenu = activeTab && !activeTab.isTablet ? 
     getLanguageOptionsMenu(activeTab.language, editor) : null;
@@ -69,7 +94,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
       isSeparator: false 
     })).sort((a, b) => a.name.localeCompare(b.name));
     
-    const potentialMatches = getPotentialLanguageMatches(activeTab.content);
+    const { potentialMatches, contentSample } = languageDetectionData;
     const isLocked = activeTab.languageLocked;
     const currentLanguageId = activeTab.language;
     const popupList: PopupMenuItem[] = [];
@@ -79,8 +104,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
                            { id: 'plaintext', name: 'Plaintext', isSeparator: false };
     const isCurrentlyPlaintext = currentLanguageId === 'plaintext';
 
+
+
     // Scenario A: Locked, empty, or no real suggestions (just plaintext)
-    if (isLocked || !activeTab.content.trim() || potentialMatches.length === 0 || 
+    if (isLocked || !contentSample?.trim() || potentialMatches.length === 0 || 
         (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
       
       // Add plaintext first if it's not the current language
@@ -166,7 +193,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     const currentLanguageObject = languageRegistry.getById(currentLanguageId);
     const currentLanguageName = currentLanguageObject?.name || currentLanguageId;
     const isLocked = activeTab.languageLocked;
-    const potentialMatches = getPotentialLanguageMatches(activeTab.content);
+    const { potentialMatches } = languageDetectionData;
 
     let displayLabel = "Plaintext";
     let showDotIndicator = false;
@@ -178,7 +205,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
       if (hasAlternatives) {
          showDotIndicator = true; // Show a dot if alternatives exist even when locked
       }
-    } else if (!activeTab.content.trim()) {
+    } else if (!languageDetectionData.contentSample?.trim()) {
       displayLabel = "Plaintext"; // Already default
     } else if (potentialMatches.length === 0 || (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
       displayLabel = "Plaintext";

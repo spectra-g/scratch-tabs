@@ -32,27 +32,19 @@ export const useDragHandler = ({
   });
 
   // Helper: snap a value to the nearest grid
-  const snapToGridValue = useCallback((value: number, grid: number) => 
-    gridSnappingEnabled ? Math.round(value / grid) * grid : value, 
+  const snapToGridValue = useCallback((value: number, grid: number) =>
+    gridSnappingEnabled ? Math.round(value / grid) * grid : value,
     [gridSnappingEnabled]
   );
 
   // Start dragging a shape
   const startDrag = useCallback((shape: Shape, mousePoint: Point) => {
-    console.log('🔍 [DragHandler] Starting drag:', {
-      shapeId: shape.id,
-      shapeType: shape.type,
-      mousePoint,
-      shapeCenter: getShapeCenter(shape)
-    });
 
     const center = getShapeCenter(shape);
     const offset = {
       x: mousePoint.x - center.x,
       y: mousePoint.y - center.y
     };
-
-    console.log('🔍 [DragHandler] Calculated offset:', offset);
 
     setDragState({
       draggingShapeId: shape.id,
@@ -66,13 +58,11 @@ export const useDragHandler = ({
   // Update drag position
   const updateDrag = useCallback((mousePoint: Point) => {
     if (!dragState.draggingShapeId || !dragState.dragOffset) {
-      console.log('🔍 [DragHandler] No drag state, skipping update');
       return;
     }
 
     const shape = shapes.find(s => s.id === dragState.draggingShapeId);
     if (!shape) {
-      console.log('🔍 [DragHandler] Shape not found:', dragState.draggingShapeId);
       return;
     }
 
@@ -83,7 +73,6 @@ export const useDragHandler = ({
     );
 
     if (distance > 5 && !dragState.hasMoved) {
-      console.log('🔍 [DragHandler] Marking as moved, distance:', distance);
       setDragState(prev => ({ ...prev, hasMoved: true }));
     }
 
@@ -91,16 +80,9 @@ export const useDragHandler = ({
     const newCenterX = snapToGridValue(mousePoint.x - dragState.dragOffset.x, 20);
     const newCenterY = snapToGridValue(mousePoint.y - dragState.dragOffset.y, 20);
 
-    console.log('🔍 [DragHandler] Updating drag:', {
-      mousePoint,
-      offset: dragState.dragOffset,
-      newCenter: { x: newCenterX, y: newCenterY },
-      gridSnappingEnabled
-    });
-
     // Calculate the updated shape for real-time visual feedback
     let updatedShape = { ...shape };
-    
+
     switch (shape.type) {
       case 'rectangle':
       case 'square': {
@@ -152,7 +134,7 @@ export const useDragHandler = ({
     setDragState(prev => {
       // Calculate drag guides based on the actual shape edges
       let dragGuides = null;
-      
+
       if (updatedShape) {
         switch (updatedShape.type) {
           case 'rectangle':
@@ -204,13 +186,13 @@ export const useDragHandler = ({
             // For lines and arrows, use the bounding box of all points
             const lineShape = updatedShape as Shape & { points?: Point[]; from?: Point; to?: Point };
             let points: Point[] = [];
-            
+
             if (lineShape.points) {
               points = lineShape.points;
             } else if (lineShape.from && lineShape.to) {
               points = [lineShape.from, lineShape.to];
             }
-            
+
             if (points.length > 0) {
               const xCoords = points.map(p => p.x);
               const yCoords = points.map(p => p.y);
@@ -236,10 +218,6 @@ export const useDragHandler = ({
 
   // End dragging and apply changes
   const endDrag = useCallback((mousePoint: Point) => {
-    console.log('🔍 [DragHandler] Ending drag:', {
-      hasMoved: dragState.hasMoved,
-      draggingShapeId: dragState.draggingShapeId
-    });
 
     if (!dragState.draggingShapeId || !dragState.dragOffset) {
       return { wasClick: false };
@@ -252,7 +230,6 @@ export const useDragHandler = ({
 
     // If we haven't moved much, treat as a click
     if (!dragState.hasMoved) {
-      console.log('🔍 [DragHandler] Treating as click');
       if (onShapeClick) {
         onShapeClick(shape, mousePoint);
       }
@@ -271,12 +248,6 @@ export const useDragHandler = ({
     const newCenterX = snapToGridValue(mousePoint.x - dragState.dragOffset.x, 20);
     const newCenterY = snapToGridValue(mousePoint.y - dragState.dragOffset.y, 20);
 
-    console.log('🔍 [DragHandler] Applying drag changes:', {
-      shapeType: shape.type,
-      oldCenter: center,
-      newCenter: { x: newCenterX, y: newCenterY }
-    });
-
     // Calculate updates based on shape type
     let updates: Partial<Shape> = {};
 
@@ -288,7 +259,6 @@ export const useDragHandler = ({
           x: newCenterX - boxShape.width / 2,
           y: newCenterY - boxShape.height / 2
         } as Partial<Shape & { x: number; y: number }>;
-        console.log('🔍 [DragHandler] Rectangle updates:', updates);
         break;
       }
       case 'diamond':
@@ -300,7 +270,6 @@ export const useDragHandler = ({
           x: newCenterX,
           y: newCenterY
         } as Partial<Shape & { x: number; y: number }>;
-        console.log('🔍 [DragHandler] Center-based shape updates:', updates);
         break;
       }
       case 'arrow': {
@@ -311,7 +280,6 @@ export const useDragHandler = ({
           from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
           to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy }
         } as Partial<Shape & { from: Point; to: Point }>;
-        console.log('🔍 [DragHandler] Arrow updates:', updates);
         break;
       }
       case 'line': {
@@ -322,14 +290,12 @@ export const useDragHandler = ({
         updates = {
           points: lineShape.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
         } as Partial<Shape & { points: Point[] }>;
-        console.log('🔍 [DragHandler] Line updates:', updates);
         break;
       }
     }
 
     // Apply the updates
     if (Object.keys(updates).length > 0) {
-      console.log('🔍 [DragHandler] Calling onUpdateShape with:', updates);
       onUpdateShape(dragState.draggingShapeId, updates);
     }
 
@@ -359,16 +325,16 @@ export const useDragHandler = ({
   return {
     // State
     dragState,
-    
+
     // Actions
     startDrag,
     updateDrag,
     endDrag,
     cancelDrag,
-    
+
     // Computed values
     isDragging: dragState.draggingShapeId !== null,
     draggedShape: dragState.draggedShape,
     dragGuides: dragState.dragGuides
   };
-}; 
+};

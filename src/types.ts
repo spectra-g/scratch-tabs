@@ -1,7 +1,7 @@
 export interface Tab {
   id: string;
   title: string;
-  content: string;
+  content?: string;
   language: string;
   languageLocked: boolean;
   isTablet?: boolean;

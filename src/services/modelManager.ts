@@ -1,232 +1,378 @@
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Tab } from '../types';
+import { useTabsStore } from '../stores/tabsStore';
+import { useRootStore } from '../stores/rootStore';
+import { StorageProviderFactory } from '../db';
+import { detectLanguage, isAmbiguousLanguage } from '../languages';
 
-// The maximum number of models to keep in memory. Adjust as needed.
-const MAX_MODELS = 5;
+// The maximum number of models to keep in memory
+const MAX_MODELS = 10;
 
-interface ModelMetadata {
-  model: Monaco.editor.ITextModel;
-  lastAccessed: number;
-  lastEdited: number;
-  hasBeenEdited: boolean;
-}
+// Constants for language detection
+const SIGNIFICANT_LENGTH_DIFFERENCE = 30;
+const SIGNIFICANT_LINE_DIFFERENCE = 5;
 
 class ModelManager {
-  private models: Map<string, ModelMetadata> = new Map();
   private monaco: typeof Monaco | null = null;
-  private visibleTabIds: Set<string> = new Set();
-  
-  // Callback functions to be provided by the store or component
-  private onModelCreated: ((model: Monaco.editor.ITextModel, tabId: string) => void) | null = null;
+  private models = new Map<string, Monaco.editor.ITextModel>();
+  private lru = new Set<string>(); // Simple Set acts as LRU list
+  private listeners = new Map<string, Monaco.IDisposable>();
+  private storage = StorageProviderFactory.getProvider();
+  private contentFetchPromises = new Map<string, Promise<string>>(); // Prevent duplicate fetches
+  private isPasteRef = new Map<string, boolean>(); // Track paste operations per tab
+  private lastContent = new Map<string, string>(); // Track previous content for significant change detection
+  private formatActionQueue = new Set<string>(); // Track pending format operations
 
-  public initialize(monacoInstance: typeof Monaco, onModelCreatedCallback: (model: Monaco.editor.ITextModel, tabId: string) => void) {
+  public initialize(monacoInstance: typeof Monaco) {
+    if (this.monaco) return;
     this.monaco = monacoInstance;
-    this.onModelCreated = onModelCreatedCallback;
   }
 
   /**
-   * Sets the currently visible tab IDs to prevent them from being evicted
+   * Checks if tab content is available and valid for model creation
    */
-  public setVisibleTabIds(visibleTabIds: string[]) {
-    this.visibleTabIds = new Set(visibleTabIds);
+  private isContentAvailable(tab: Tab): boolean {
+    return tab.content !== undefined && tab.content !== null;
   }
 
   /**
-   * Gets a model from the cache or creates it if it doesn't exist.
-   * Manages the Modified LRU cache eviction policy.
+   * Fetches tab content from database with deduplication
    */
-  public get(tab: Tab, visibleTabIds?: string[]): Monaco.editor.ITextModel {
-    if (!this.monaco) {
-      throw new Error("ModelManager not initialized. Call initialize() first.");
+  private async fetchContentFromDatabase(tabId: string): Promise<string> {
+    // Check if we're already fetching this content
+    const existingPromise = this.contentFetchPromises.get(tabId);
+    if (existingPromise) {
+      return existingPromise;
     }
 
-    // Update visible tab IDs if provided
-    if (visibleTabIds) {
-      this.setVisibleTabIds(visibleTabIds);
+    // Create new fetch promise
+    const fetchPromise = this.storage.getTabContent(tabId)
+      .then(content => {
+        return content || '';
+      })
+      .catch(error => {
+        console.error(`[ModelManager] ❌ Failed to fetch content from DB for tab ${tabId}:`, error);
+        return ''; // Return empty string as fallback
+      })
+      .finally(() => {
+        // Clean up the promise from cache
+        this.contentFetchPromises.delete(tabId);
+      });
+
+    // Cache the promise to prevent duplicate requests
+    this.contentFetchPromises.set(tabId, fetchPromise);
+    
+    return fetchPromise;
+  }
+
+  /**
+   * Ensures tab has content, fetching from database if necessary
+   */
+  private async ensureTabContent(tab: Tab): Promise<Tab> {
+    if (this.isContentAvailable(tab)) {
+      return tab; // Content already available
     }
-    
-    const now = Date.now();
-    
-    // 1. Check if model is already in the cache
-    if (this.models.has(tab.id)) {
-      const metadata = this.models.get(tab.id)!;
-      const model = metadata.model;
+
+    try {
+      const fetchedContent = await this.fetchContentFromDatabase(tab.id);
       
-      // If the model is disposed, remove it and create a new one
-      if (model.isDisposed()) {
-        this.models.delete(tab.id);
-        // Proceed to create a new model below
+      // Update the store with fetched content to maintain consistency
+      useTabsStore.getState().updateTabContent(tab.id, fetchedContent);
+      
+      // Return updated tab object
+      return {
+        ...tab,
+        content: fetchedContent
+      };
+    } catch (error) {
+      console.error(`[ModelManager] Failed to ensure content for tab ${tab.id}:`, error);
+      
+      // Return tab with empty content as fallback
+      return {
+        ...tab,
+        content: ''
+      };
+    }
+  }
+
+  /**
+   * Handles language detection and auto-formatting logic
+   */
+  private handleLanguageDetection(tabId: string, newContent: string, prevContent: string, isFromPaste: boolean = false) {
+    try {
+      const currentTab = useTabsStore.getState().tabs.find(t => t.id === tabId);
+      if (!currentTab || currentTab.languageLocked) {
+        return; // Skip if tab not found or language is locked
+      }
+
+      const trimmedNewContent = newContent.trim();
+      const trimmedOldContent = prevContent.trim();
+
+      // Handle empty content
+      if (trimmedNewContent.length === 0) {
+        if (currentTab.language !== 'plaintext') {
+          useRootStore.getState().updateTabLanguage(tabId, 'plaintext', false);
+        }
+        return;
+      }
+
+      // Determine if the change is significant
+      const lengthDifference = Math.abs(trimmedNewContent.length - trimmedOldContent.length);
+      const newLines = trimmedNewContent.split('\n');
+      const oldLines = trimmedOldContent.split('\n');
+      const lineDifference = Math.abs(newLines.length - oldLines.length);
+
+      const isSignificantChange =
+        lengthDifference > SIGNIFICANT_LENGTH_DIFFERENCE ||
+        lineDifference > SIGNIFICANT_LINE_DIFFERENCE ||
+        (trimmedNewContent.length > 0 && trimmedOldContent.length > 0 &&
+         !trimmedNewContent.startsWith(trimmedOldContent.substring(0, 10)) &&
+         !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) &&
+         lengthDifference > 5);
+
+      // Perform language detection
+      const newDetectedLanguage = detectLanguage(trimmedNewContent);
+      const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent);
+      
+      // Decide whether to update the tab's language
+      let shouldUpdate = false;
+      let shouldTriggerAutoFormat = false;
+
+      if (isSignificantChange) {
+        // On significant changes, ALWAYS update if the detected language is different from current
+        if (newDetectedLanguage !== currentTab.language) {
+          shouldUpdate = true;
+          // Only trigger auto-format if this was from a paste operation, not programmatic changes
+          shouldTriggerAutoFormat = isFromPaste;
+        }
       } else {
-        // Update last accessed time
-        metadata.lastAccessed = now;
+        // For normal typing (non-significant change):
+        // Only update if the detected language is different and we're in plaintext or detection is confident
+        if (newDetectedLanguage !== currentTab.language) {
+          if (currentTab.language === 'plaintext' || !newDetectionIsAmbiguous) {
+            shouldUpdate = true;
+            // Don't trigger auto-format for regular typing-induced language changes
+          }
+        }
+      }
+
+      // Perform update
+      if (shouldUpdate) {
+        useRootStore.getState().updateTabLanguage(tabId, newDetectedLanguage, false);
         
-        // Move it to the end to mark it as most recently used
-        this.models.delete(tab.id);
-        this.models.set(tab.id, metadata);
-
-        // Ensure content and language are up-to-date
-        if (model.getValue() !== tab.content) {
-          model.setValue(tab.content);
+        // Trigger auto-format if this was a paste operation that resulted in language detection
+        if (shouldTriggerAutoFormat) {
+          setTimeout(() => {
+            this.triggerAutoFormat(tabId, newDetectedLanguage);
+          }, 50); // Small delay to ensure language is set before formatting
         }
-        if (model.getLanguageId() !== tab.language) {
-          this.monaco.editor.setModelLanguage(model, tab.language);
-        }
-
-        return model;
       }
+    } catch (error) {
+      console.warn(`[ModelManager] Failed to handle language detection for tab ${tabId}:`, error);
     }
-
-    // 2. If not in cache, create it
-    // Check if we need to evict the least recently used model
-    if (this.models.size >= MAX_MODELS) {
-      this.evict();
-    }
-    
-    // Create new model
-    const newModel = this.monaco.editor.createModel(tab.content, tab.language);
-    
-    // Create metadata with initial state
-    const metadata: ModelMetadata = {
-      model: newModel,
-      lastAccessed: now,
-      lastEdited: tab.lastModified, // Use tab's lastModified as initial edit time
-      hasBeenEdited: tab.lastModified > tab.dateCreated, // Check if tab was modified after creation
-    };
-    
-    this.models.set(tab.id, metadata);
-
-    // Attach listeners or other setup via the callback
-    this.onModelCreated?.(newModel, tab.id);
-
-    return newModel;
   }
 
   /**
-   * Marks a model as having been edited
+   * Triggers auto-format for a specific tab
    */
-  public markAsEdited(tabId: string) {
-    const metadata = this.models.get(tabId);
-    if (metadata) {
-      metadata.lastEdited = Date.now();
-      metadata.hasBeenEdited = true;
+  private triggerAutoFormat(tabId: string, language: string) {
+    try {
+      const model = this.models.get(tabId);
+      if (!model || model.isDisposed()) return;
+
+      // Prevent duplicate format operations
+      const formatKey = `${tabId}-${language}`;
+      if (this.formatActionQueue.has(formatKey)) return;
+
+      this.formatActionQueue.add(formatKey);
+
+      // Find the editor instance that has this model
+      // This is a bit of a hack, but Monaco doesn't provide a direct way to get the editor from a model
+      const editors = this.monaco?.editor.getEditors() || [];
+      const editor = editors.find(e => e.getModel() === model);
+
+      if (editor) {
+        const formatAction = editor.getAction('editor.action.formatDocument');
+        if (formatAction) {
+          formatAction.run().finally(() => {
+            this.formatActionQueue.delete(formatKey);
+          });
+        } else {
+          this.formatActionQueue.delete(formatKey);
+        }
+      } else {
+        this.formatActionQueue.delete(formatKey);
+      }
+    } catch (error) {
+      console.warn(`[ModelManager] Failed to trigger auto-format for tab ${tabId}:`, error);
     }
   }
-  
-  /**
-   * Evicts the least recently used model from the cache.
-   * Uses Modified LRU: prioritizes keeping edited tabs over viewed-only tabs.
-   */
+
   private evict() {
-    let candidateForEviction: string | undefined;
-    let candidateScore = -1; // Lower score = higher priority for eviction
-    
-    for (const [tabId, metadata] of this.models) {
-      // Skip if this tab is currently visible
-      if (this.visibleTabIds.has(tabId)) {
-        continue;
-      }
-      
-      // Calculate eviction score
-      // Priority order:
-      // 1. Non-edited tabs (score: 0)
-      // 2. Edited tabs (score: 1 + time factor)
-      let score = 0;
-      
-      if (metadata.hasBeenEdited) {
-        // For edited tabs, score based on how long ago they were edited
-        // More recent edits = higher score = lower priority for eviction
-        const hoursSinceEdit = (Date.now() - metadata.lastEdited) / (1000 * 60 * 60);
-        score = 1 + Math.max(0, 24 - hoursSinceEdit); // Max 24 hours of "protection"
-      }
-      
-      // If this candidate has a lower score (higher eviction priority), select it
-      if (score < candidateScore || candidateScore === -1) {
-        candidateScore = score;
-        candidateForEviction = tabId;
-      }
-    }
-    
-    // If all models are visible, we have to evict the oldest one anyway
-    if (!candidateForEviction) {
-      candidateForEviction = this.models.keys().next().value;
-    }
-    
-    if (candidateForEviction) {
-      const metadata = this.models.get(candidateForEviction);
-      if (metadata) {
-        metadata.model.dispose(); // This is the crucial memory-freeing step!
-        this.models.delete(candidateForEviction);
-      }
+    if (this.models.size < MAX_MODELS) return;
+
+    // The first item in a Set (when iterated) is the oldest one added
+    const lruTabId = this.lru.values().next().value;
+    if (lruTabId) {
+      this.dispose(lruTabId);
     }
   }
 
-  /**
-   * Explicitly disposes a model, e.g., when a tab is closed or converted to tablet.
-   */
-  public dispose(tabId: string) {
-    if (this.models.has(tabId)) {
-      const metadata = this.models.get(tabId);
-      if (metadata && !metadata.model.isDisposed()) {
-        metadata.model.dispose();
-      }
-      this.models.delete(tabId);
+  public async get(tab: Tab): Promise<Monaco.editor.ITextModel> {
+    if (!this.monaco) {
+      throw new Error('ModelManager not initialized');
     }
-  }
 
-  /**
-   * Handles cleanup when a tab is converted to a tablet.
-   * This is a convenience method that does the same as dispose.
-   */
-  public handleTabletConversion(tabId: string) {
-    this.dispose(tabId);
-  }
+    // Check if we have a cached model
+    if (this.models.has(tab.id)) {
+      const model = this.models.get(tab.id)!;
+      if (!model.isDisposed()) {
+        this.lru.delete(tab.id);
+        this.lru.add(tab.id);
+        return model;
+      } else {
+        this.models.delete(tab.id);
+        this.lru.delete(tab.id);
+        this.listeners.get(tab.id)?.dispose();
+        this.listeners.delete(tab.id);
+      }
+    }
 
-  /**
-   * Disposes all models. Called on application shutdown.
-   */
-  public disposeAll() {
-    this.models.forEach((metadata) => {
-      if (!metadata.model.isDisposed()) {
-        metadata.model.dispose();
+    const tabWithContent = await this.ensureTabContent(tab);
+    const content = tabWithContent.content || '';
+    this.lastContent.set(tab.id, content); // Set initial content for comparison
+
+    const modelUri = this.monaco.Uri.parse(`inmemory://model/${tab.id}`);
+    const existingModel = this.monaco.editor.getModel(modelUri);
+    if (existingModel) {
+      existingModel.dispose();
+    }
+
+    const model = this.monaco.editor.createModel(content, tab.language, modelUri);
+    this.listeners.get(tab.id)?.dispose();
+    
+    const contentListener = model.onDidChangeContent(() => {
+      try {
+        const newContent = model.getValue();
+        const prevContent = this.lastContent.get(tab.id) || '';
+        const wasFromPaste = this.isPasteRef.get(tab.id) || false;
+        
+        // Update tab content in store
+        useTabsStore.getState().updateTabContent(tab.id, newContent);
+        this.lastContent.set(tab.id, newContent);
+        
+        // Handle language detection and auto-formatting
+        this.handleLanguageDetection(tab.id, newContent, prevContent, wasFromPaste);
+        
+      } catch (error) {
+        console.warn(`[ModelManager] Failed to update content for tab ${tab.id}:`, error);
       }
     });
-    this.models.clear();
-    this.visibleTabIds.clear();
-  }
-
-  /**
-   * Gets the current number of models in the cache.
-   */
-  public getCacheSize(): number {
-    return this.models.size;
-  }
-
-  /**
-   * Gets the maximum number of models allowed in the cache.
-   */
-  public getMaxCacheSize(): number {
-    return MAX_MODELS;
-  }
-
-  /**
-   * Gets debug information about the cache state
-   */
-  public getDebugInfo() {
-    const info = Array.from(this.models.entries()).map(([tabId, metadata]) => ({
-      tabId,
-      hasBeenEdited: metadata.hasBeenEdited,
-      lastEdited: new Date(metadata.lastEdited).toISOString(),
-      lastAccessed: new Date(metadata.lastAccessed).toISOString(),
-      isVisible: this.visibleTabIds.has(tabId),
-    }));
     
+    // Store the listener
+    this.models.set(tab.id, model);
+    this.listeners.set(tab.id, contentListener);
+    this.lru.add(tab.id);
+    if (this.models.size > MAX_MODELS) {
+      this.evict();
+    }
+    return model;
+  }
+
+  public dispose(tabId: string) {
+    const model = this.models.get(tabId);
+    if (model) {
+      try {
+        // Save final content before disposal if model is not disposed
+        if (!model.isDisposed()) {
+          const finalContent = model.getValue();
+          useTabsStore.getState().updateTabContent(tabId, finalContent);
+        }
+      } catch (error) {
+        console.warn(`[ModelManager] Failed to get final content for tab ${tabId}:`, error);
+      }
+      
+      this.listeners.get(tabId)?.dispose();
+      this.listeners.delete(tabId);
+      this.lastContent.delete(tabId); // Clean up content tracking
+      this.isPasteRef.delete(tabId); // Clean up paste tracking
+      try {
+        model.dispose();
+      } catch (error) {
+        console.warn(`[ModelManager] Failed to dispose model for tab ${tabId}:`, error);
+      }
+      this.models.delete(tabId);
+      this.lru.delete(tabId);
+    }
+  }
+
+  public disposeAll() {
+    // Convert to array to avoid modification during iteration
+    const tabIds = Array.from(this.models.keys());
+    tabIds.forEach(tabId => this.dispose(tabId));
+  }
+
+  // Helper methods for debugging
+  public getDebugInfo() {
     return {
-      cacheSize: this.models.size,
-      maxSize: MAX_MODELS,
-      models: info,
+      modelCount: this.models.size,
+      maxModels: MAX_MODELS,
+      cachedTabs: Array.from(this.models.keys()),
+      lruOrder: Array.from(this.lru)
     };
   }
+
+  public getContent(tabId: string): string | undefined {
+    const model = this.models.get(tabId);
+    if (model && !model.isDisposed()) {
+      try {
+        return model.getValue();
+      } catch (error) {
+        console.warn(`[ModelManager] Failed to get content for tab ${tabId}:`, error);
+        return undefined;
+      }
+    }
+    return undefined;
+  }
+
+  public updateModelContent(tabId: string, content: string): void {
+    const model = this.models.get(tabId);
+    if (model && !model.isDisposed()) {
+      try {
+        model.setValue(content);
+        // The onDidChangeContent listener will automatically sync this back to the store
+      } catch (error) {
+        console.warn(`[ModelManager] Failed to update model content for tab ${tabId}:`, error);
+      }
+    }
+  }
+
+  public updateModelLanguage(tabId: string, language: string): void {
+    const model = this.models.get(tabId);
+    if (model && !model.isDisposed() && this.monaco) {
+      try {
+        this.monaco.editor.setModelLanguage(model, language);
+      } catch (error) {
+        console.warn(`[ModelManager] ❌ Failed to update model language for tab ${tabId}:`, error);
+      }
+    } else {
+      console.warn(`[ModelManager] ⚠️ Cannot update model language for tab ${tabId}:`, {
+        modelExists: !!model,
+        modelDisposed: model?.isDisposed(),
+        monacoInitialized: !!this.monaco
+      });
+    }
+  }
+
+  // Method to mark that the next content change for a tab is from a paste operation
+  public markNextChangeAsPaste(tabId: string): void {
+    this.isPasteRef.set(tabId, true);
+    // Clear the flag after a short delay
+    setTimeout(() => {
+      this.isPasteRef.delete(tabId);
+    }, 100);
+  }
+
 }
 
-// Export a singleton instance
 export const modelManager = new ModelManager(); 

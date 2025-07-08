@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Tablet, TabletState } from '../types';
 import { Timer, Settings, BarChart2, Play, Pause, RotateCcw, SkipForward, Volume2, VolumeX, Coffee, Brain, ListChecks } from 'lucide-react';
 import { PomodoroTimer } from './components/PomodoroTimer';
@@ -20,16 +20,19 @@ const PomodoroTabletUI: React.FC<{
   onChange: (state: PomodoroTabletState) => void;
   tabletId: string;
 }> = ({ state, onChange, tabletId }) => {
-  const {
-    state: data,
-    handleStart, handlePause, handleReset, handleSkip, handleSettingsChange,
-    setSessionGoal, toggleSound, changeView
-  } = usePomodoroEngine(state.data, (newData) => {
+  // Memoize the onChange handler to prevent unnecessary re-renders
+  const handleStateChange = useCallback((newData: PomodoroState) => {
     onChange({
       ...state,
       data: newData
     });
-  });
+  }, [onChange, state]);
+
+  const {
+    state: data,
+    handleStart, handlePause, handleReset, handleSkip, handleSettingsChange,
+    setSessionGoal, toggleSound, changeView
+  } = usePomodoroEngine(state.data, handleStateChange);
 
   const { status, currentSession, todayStats, activeView, soundEnabled } = data;
 
