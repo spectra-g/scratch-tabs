@@ -27,7 +27,7 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
   } = engine;
 
   return (
-    <div className="fixed inset-8 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
+    <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden w-full max-w-7xl h-full max-h-[90vh] mx-4">
       {/* Header */}
       <div className="flex items-center justify-between bg-gray-700 px-4 py-2 border-b border-gray-600 flex-wrap">
         <h2 
