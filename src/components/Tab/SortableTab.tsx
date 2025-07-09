@@ -112,8 +112,13 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     const relativeWidth = maxLineCount > 0 ? Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100 : 0;
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') onEditSubmit();
-        else if (e.key === 'Escape') onEditCancel();
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            onEditSubmit();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            onEditCancel();
+        }
         
         // Prevent event propagation for all keys to ensure spaces work
         e.stopPropagation();
