@@ -32,48 +32,14 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
   const monacoRef = useRef<typeof Monaco | null>(null);
   const currentTabIdRef = useRef<string>(activeTabId);
   
-  // FIX: Use useStoreWithEqualityFn with proper equality check for tab metadata
-  const activeTab = useStoreWithEqualityFn(
-    useTabsStore,
-    state => {
-      const tab = state.tabs.find(t => t.id === activeTabId);
-      return tab || null;
-    },
-    (prev, next) => {
-      // Custom equality check - only re-render if the tab actually changed
-      if (!prev && !next) return true;
-      if (!prev || !next) return false;
-      return (
-        prev.id === next.id &&
-        prev.content === next.content &&
-        prev.language === next.language &&
-        prev.title === next.title &&
-        prev.isTablet === next.isTablet
-      );
-    }
-  );
+  // Get active tab using standard Zustand approach (simplified since cursor position is no longer in state)
+  const activeTab = useTabsStore(state => {
+    const tab = state.tabs.find(t => t.id === activeTabId);
+    return tab || null;
+  });
 
-  // SEPARATE: Get tab data without cursor position to prevent unnecessary effect triggers
-  const activeTabWithoutCursor = useStoreWithEqualityFn(
-    useTabsStore,
-    state => {
-      const tab = state.tabs.find(t => t.id === activeTabId);
-      return tab || null;
-    },
-    (prev, next) => {
-      // Exclude cursor position from equality check to prevent restoreViewState disruption
-      if (!prev && !next) return true;
-      if (!prev || !next) return false;
-      return (
-        prev.id === next.id &&
-        prev.content === next.content &&
-        prev.language === next.language &&
-        prev.title === next.title &&
-        prev.isTablet === next.isTablet
-        // Note: cursorPosition deliberately excluded
-      );
-    }
-  );
+  // This can now be simplified since cursor position is no longer in React state
+  const activeTabWithoutCursor = activeTab;
 
   // Get actions from rootStore
   const {

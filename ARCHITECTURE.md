@@ -91,7 +91,47 @@ To solve the original bug where JSON minify operations triggered unwanted auto-f
 - `updateModelLanguage(tabId, language)`: Updates the model's language if it exists.
 - `getContent(tabId)`: Gets the current content of a model.
 - `markNextChangeAsPaste(tabId)`: Marks the next content change as originating from a paste operation.
+- `registerCursorPositionListener(tabId, editor)`: Sets up cursor position listening and debounced persistence for a tab.
+- `unregisterCursorPositionListener(tabId)`: Cleans up cursor position listening for a tab.
 - `getDebugInfo()`: Returns cache and LRU state for debugging.
+
+#### Cursor Position Management
+
+**CRITICAL ARCHITECTURAL DECISION:** Cursor position is **NOT stored in React state** to prevent performance issues and undo functionality disruption.
+
+**The Architecture:**
+1. **Monaco Editor's Native View State:** Primary source of truth for cursor position, scroll, selection, and folded regions
+2. **ModelManager Persistence:** Debounced database persistence (1-second delay) for cursor position recovery across sessions
+3. **No React State:** Cursor position changes do not trigger React re-renders or Zustand state updates
+
+**Implementation Details:**
+- **View State Management:** `EditorInstance` uses Monaco's native `saveViewState()` and `restoreViewState()` for immediate UI needs (tab switching)
+- **Persistence Layer:** `ModelManager.registerCursorPositionListener()` sets up debounced persistence to database via `storage.updateTabCursor()`
+- **Performance Benefit:** Eliminates cursor-position-triggered re-render cascades that were interfering with Monaco's undo system
+- **Undo Fix:** The removal of cursor position from React state resolved the critical undo functionality issue
+
+**Previous Architecture Issue:**
+Before this fix, cursor position was stored in React state, causing:
+- High-frequency state updates on every cursor movement
+- React re-renders cascading through the component tree
+- Interference with Monaco Editor's internal undo operations
+- Performance degradation from unnecessary component updates
+
+**Data Flow:**
+```
+User moves cursor → Monaco Editor (immediate UI update)
+                  ↓
+                  onDidChangeCursorPosition → ModelManager (debounced)
+                  ↓
+                  Database persistence (1-second delay)
+```
+
+**View State Recovery:**
+```
+Tab Switch → EditorInstance.saveViewState() → tabViewStates Map (immediate)
+Tab Restore → EditorInstance.restoreViewState() → Monaco Editor (immediate)
+Session Restore → Database → Monaco Editor (on startup)
+```
 
 #### Notes
 - **Single Source of Truth:** ModelManager is the definitive source for Monaco models, their lifecycle, and all content-related operations.
@@ -107,13 +147,15 @@ To solve the original bug where JSON minify operations triggered unwanted auto-f
 *   **Responsibilities:**
     *   It receives an `activeTabId` as a prop.
     *   In a `useEffect` hook that runs when `activeTabId` changes, it:
-        1.  Saves the view state (scroll position, cursor) of the *previous* tab's model.
+        1.  Saves the view state (scroll position, cursor, selection, folded regions) of the *previous* tab's model using Monaco's native `saveViewState()`.
         2.  Asks the `ModelManager` for the model corresponding to the *new* `activeTabId`.
         3.  Sets this new model on its internal Monaco editor instance (`editor.setModel(newModel)`).
-        4.  Restores the view state for the new tab, if it exists.
+        4.  Restores the view state for the new tab using Monaco's native `restoreViewState()`, if it exists.
+    *   **Cursor Position Management:** Registers cursor position listening with `ModelManager` for debounced database persistence (does NOT update React state).
     *   **Paste Detection:** Captures `onDidPaste` events and notifies `ModelManager` via `markNextChangeAsPaste()`.
     *   **MUST NOT** receive `tab.content` as a prop and pass it to the `<Editor>` component's `value` prop. The model is managed imperatively.
     *   **MUST NOT** handle content change callbacks directly. All content logic is centralized in `ModelManager`.
+    *   **MUST NOT** store cursor position in React state. All cursor position logic is handled by Monaco's view state and ModelManager's persistence layer.
     *   It can receive the full `activeTab` object for metadata (like language, title) but should rely on the model for content.
 
 ### Zustand Stores
@@ -168,7 +210,7 @@ This flow is critical to the performance of the application and demonstrates the
     *   Handles auto-formatting if appropriate (paste operations only)
     *   Updates internal content tracking for future comparisons
 5.  The `content` property in the `tabsStore` for that specific tab is updated.
-6.  **Crucially, no major re-renders occur.** The `EditorInstance` is not re-rendered because it doesn't depend on `tab.content`. The `TabBar` might re-render if it depends on `tab.content` for something like a line count indicator, but this is a small, localized update.
+6.  **Crucially, no major re-renders occur.** The `EditorInstance` is not re-rendered because it doesn't depend on `tab.content`. Cursor position changes also do not trigger re-renders as they are handled by Monaco's native view state. The `TabBar` might re-render if it depends on `tab.content` for something like a line count indicator, but this is a small, localized update.
 7.  Periodically, `persistenceStore.saveState()` runs, reads the up-to-date content from `tabsStore`, and saves it to `IndexedDB`.
 
 This flow ensures that typing is always responsive, as it's handled entirely by Monaco, with only a lightweight state update happening in the background through the centralized handler.
@@ -223,6 +265,8 @@ The centralized ModelManager architecture provides several key benefits:
 - **Reduces Component Complexity:** EditorInstance is simplified to focus only on view concerns
 - **Optimizes Memory Usage:** Efficient model caching with LRU eviction
 - **Prevents Unnecessary Re-renders:** Content changes don't trigger React re-renders
+- **Cursor Position Optimization:** Cursor movements no longer trigger React state updates or component re-renders
+- **Undo System Restoration:** Removing cursor position from React state fixed Monaco Editor's undo functionality
 
 ### Maintainability Benefits  
 - **Single Source of Truth:** All content logic centralized in ModelManager
