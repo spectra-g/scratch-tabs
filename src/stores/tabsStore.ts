@@ -20,7 +20,6 @@ interface TabsStore {
   updateTabState: (id: string, updates: Partial<Tab>) => void;
   duplicateTab: (tabId: string) => string;
 
-  removeTabsByWorkspace: (workspaceId: string) => void;
 }
 
 // Helper function to initialize a tab with default values
@@ -167,7 +166,4 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     return newTab.id;
   },
 
-  removeTabsByWorkspace: (workspaceId) => set(state => ({
-    tabs: state.tabs.filter(tab => tab.workspaceId !== workspaceId)
-  })),
 }));
