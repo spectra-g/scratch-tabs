@@ -13,6 +13,7 @@ import { languageRegistry } from '../../languages';
 import { getPotentialLanguageMatches } from '../../languages';
 import { LanguageSelectionPopup } from './LanguageSelectionPopup';
 import { ExtendedViewButtons } from './ExtendedViewButtons';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import type { PopupMenuItem } from './types';
 
 interface StatusBarProps {
@@ -33,6 +34,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const [tabletLabel, setTabletLabel] = useState('');
   const languageLabelRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const showAIIcon = (!splitView.isSplit && side === 'left') || (splitView.isSplit && side === 'right');
 
@@ -283,7 +285,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
             </button> }
 
         {showAIIcon && <AIStatusIcon />}
-        <Macro editor={editor}/>
+        {!isMobile && <Macro editor={editor}/>}
       </div>
     </div>
   );
