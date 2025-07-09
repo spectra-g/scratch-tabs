@@ -410,7 +410,22 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           lastAccessed: Date.now(),
         };
 
-        const newTab: Tab = {
+        // Create a welcome tab for new workspaces
+        const welcomeTab: Tab = {
+          id: crypto.randomUUID(),
+          title: 'Welcome to Scratch Tabs',
+          content: WELCOME_TAB_CONTENT,
+          language: 'markdown',
+          languageLocked: true,
+          workspaceId: newWorkspace.id,
+          dateCreated: Date.now(),
+          lastModified: Date.now(),
+          cursorPosition: { lineNumber: 1, column: 1 },
+          previewMode: true, // Show markdown preview by default
+        };
+
+        // Create a scratch tab
+        const scratchTab: Tab = {
           id: crypto.randomUUID(),
           title: `${NEW_TAB_PREFIX} 1`,
           content: '',
@@ -423,13 +438,14 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         };
         
         const newSplitView = useSplitViewStore.getState().createDefaultSplitViewState(newWorkspace.id);
-        newSplitView.leftTabs = [newTab.id];
-        newSplitView.activeLeftTabId = newTab.id;
-        newSplitView.leftTabHistory = [newTab.id];
+        newSplitView.leftTabs = [welcomeTab.id, scratchTab.id];
+        newSplitView.activeLeftTabId = scratchTab.id; // Make the scratch tab active
+        newSplitView.leftTabHistory = [welcomeTab.id, scratchTab.id];
 
         await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
           await storage.saveWorkspace(newWorkspace);
-          await storage.saveTabNow(newTab);
+          await storage.saveTabNow(welcomeTab);
+          await storage.saveTabNow(scratchTab);
           await storage.saveSplitViewNow(newSplitView as SplitViewRecord);
         });
 
