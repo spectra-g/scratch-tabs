@@ -22,6 +22,8 @@ class ModelManager {
   private isPasteRef = new Map<string, boolean>(); // Track paste operations per tab
   private lastContent = new Map<string, string>(); // Track previous content for significant change detection
   private formatActionQueue = new Set<string>(); // Track pending format operations
+  private cursorPositionListeners = new Map<string, Monaco.IDisposable>(); // Track cursor position listeners
+  private debouncedCursorPersistence = new Map<string, NodeJS.Timeout>(); // Debounced cursor position saves
 
   public initialize(monacoInstance: typeof Monaco) {
     if (this.monaco) return;
@@ -208,6 +210,75 @@ class ModelManager {
     }
   }
 
+  /**
+   * Handles debounced cursor position persistence
+   */
+  private debouncedSaveCursorPosition(tabId: string, cursorPosition: { lineNumber: number; column: number }) {
+    // Clear existing timeout for this tab
+    const existingTimeout = this.debouncedCursorPersistence.get(tabId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Set new debounced timeout (save after 1 second of no cursor movement)
+    const timeout = setTimeout(async () => {
+      try {
+        await this.storage.updateTabCursor(tabId, cursorPosition);
+        this.debouncedCursorPersistence.delete(tabId);
+      } catch (error) {
+        console.warn(`[ModelManager] Failed to persist cursor position for tab ${tabId}:`, error);
+      }
+    }, 1000);
+
+    this.debouncedCursorPersistence.set(tabId, timeout);
+  }
+
+  /**
+   * Sets up cursor position listener for a model
+   */
+  private setupCursorPositionListener(tabId: string, editor: Monaco.editor.IStandaloneCodeEditor) {
+    // Clean up existing listener
+    this.cursorPositionListeners.get(tabId)?.dispose();
+
+    const cursorListener = editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
+      try {
+        // Only persist to database (debounced), don't update React state
+        this.debouncedSaveCursorPosition(tabId, {
+          lineNumber: e.position.lineNumber,
+          column: e.position.column,
+        });
+      } catch (error) {
+        console.warn(`[ModelManager] Failed to handle cursor position change for tab ${tabId}:`, error);
+      }
+    });
+
+    this.cursorPositionListeners.set(tabId, cursorListener);
+  }
+
+  /**
+   * Registers cursor position listening for an editor instance
+   * Call this from EditorInstance when the editor is ready
+   */
+  public registerCursorPositionListener(tabId: string, editor: Monaco.editor.IStandaloneCodeEditor): void {
+    this.setupCursorPositionListener(tabId, editor);
+  }
+
+  /**
+   * Unregisters cursor position listening for a tab
+   */
+  public unregisterCursorPositionListener(tabId: string): void {
+    // Clear any pending debounced save
+    const existingTimeout = this.debouncedCursorPersistence.get(tabId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      this.debouncedCursorPersistence.delete(tabId);
+    }
+
+    // Dispose the cursor position listener
+    this.cursorPositionListeners.get(tabId)?.dispose();
+    this.cursorPositionListeners.delete(tabId);
+  }
+
   private evict() {
     if (this.models.size < MAX_MODELS) return;
 
@@ -296,6 +367,10 @@ class ModelManager {
       this.listeners.delete(tabId);
       this.lastContent.delete(tabId); // Clean up content tracking
       this.isPasteRef.delete(tabId); // Clean up paste tracking
+      
+      // Clean up cursor position listeners
+      this.unregisterCursorPositionListener(tabId);
+      
       try {
         model.dispose();
       } catch (error) {

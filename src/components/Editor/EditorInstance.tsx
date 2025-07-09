@@ -48,9 +48,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         prev.content === next.content &&
         prev.language === next.language &&
         prev.title === next.title &&
-        prev.isTablet === next.isTablet &&
-        prev.cursorPosition?.lineNumber === next.cursorPosition?.lineNumber &&
-        prev.cursorPosition?.column === next.cursorPosition?.column
+        prev.isTablet === next.isTablet
       );
     }
   );
@@ -80,7 +78,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
   // Get actions from rootStore
   const {
     updateTabContent,
-    setCursorPosition,
     setActiveLeftTab,
     setActiveRightTab,
     updateTabState,
@@ -334,20 +331,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         }
       });
 
-      // Cursor Position Listener
-      editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
-        try {
-          const currentTab = latestActiveTabRef.current;
-          if (currentTab) {
-            setCursorPosition(currentTab.id, {
-              lineNumber: e.position.lineNumber,
-              column: e.position.column,
-            });
-          }
-        } catch (error) {
-          console.warn('[EditorInstance] Failed to update cursor position:', error);
-        }
-      });
+      // Cursor Position Listener - NOW MANAGED BY MODELMANAGER
+      if (activeTab) {
+        modelManager.registerCursorPositionListener(activeTab.id, editor);
+      }
 
       // Paste Detection Listener
       editor.onDidPaste(() => {

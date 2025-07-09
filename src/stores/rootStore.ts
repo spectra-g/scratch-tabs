@@ -3,7 +3,7 @@ import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
 import { useEditorStore } from './editorStore';
 import { useWorkspaceStore } from './workspaceStore';
-import { EditorPosition, Tab } from '../types';
+import { Tab } from '../types';
 import { languageRegistry } from '../languages/registry';
 import { incrementSetting } from '../db';
 import { NEW_TAB_PREFIX } from '../constants';
@@ -48,7 +48,7 @@ interface RootStore {
   closeAllExcept: (tabId: string, isRightSide: boolean) => void;
   duplicateTab: (tabId: string, isRightSide: boolean) => string;
   duplicateAndSplitTab: (tabId: string) => string;
-  setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
+
   groupTabsByType: (isRightSide: boolean) => void;
   canAddNewTab: (toRightSide?: boolean) => boolean;
   compareFromClipboard: (originalTabId: string, isRightSide: boolean) => Promise<void>;
@@ -296,7 +296,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       });
       return newTabId;
     },
-    setCursorPosition: (tabId, cursorPosition) => useTabsStore.getState().setCursorPosition(tabId, cursorPosition),
+
     groupTabsByType: (isRightSide) => { // Logic might move to splitViewStore
       const { tabs } = useTabsStore.getState();
       const { splitView, setSplitView } = useSplitViewStore.getState();

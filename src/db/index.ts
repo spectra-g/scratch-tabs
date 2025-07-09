@@ -151,9 +151,9 @@ export interface StorageProvider {
   getTabsByWorkspace(workspaceId: string): Promise<Tab[]>;
   getSplitViewByWorkspace(workspaceId: string): Promise<SplitViewRecord | null>;
   deleteSplitViewByWorkspace(workspaceId: string): Promise<void>;
-  // NEW: Methods for lazy loading
   getTabsMetadataByWorkspace(workspaceId: string): Promise<Omit<Tab, 'content'>[]>;
   getTabContent(tabId: string): Promise<string | undefined>;
+  updateTabCursor(tabId: string, cursorPosition: { lineNumber: number; column: number }): Promise<void>;
 }
 
 export class IndexedDBStorage implements StorageProvider {
@@ -344,6 +344,12 @@ export class IndexedDBStorage implements StorageProvider {
     return this.withRetry(async () => {
       const record = await db.tabs.get(tabId);
       return record?.content;
+    });
+  }
+
+  async updateTabCursor(tabId: string, cursorPosition: { lineNumber: number; column: number }): Promise<void> {
+    await this.withRetry(async () => {
+      await db.tabs.update(tabId, { cursorPosition });
     });
   }
 }

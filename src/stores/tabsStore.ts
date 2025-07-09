@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { EditorPosition, Tab } from '../types';
+import { Tab } from '../types';
 import { duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
 import { useWorkspaceStore } from './workspaceStore';
 import { incrementSetting } from '../db';
@@ -19,7 +19,7 @@ interface TabsStore {
   updateTabTitle: (id: string, title: string) => void;
   updateTabState: (id: string, updates: Partial<Tab>) => void;
   duplicateTab: (tabId: string) => string;
-  setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
+
   removeTabsByWorkspace: (workspaceId: string) => void;
 }
 
@@ -48,11 +48,7 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
   tabs: [],
   activeTabId: null,
 
-  setCursorPosition: (tabId, cursorPosition) => set((state) => ({
-    tabs: state.tabs.map((tab) =>
-      tab.id === tabId ? { ...tab, cursorPosition } : tab
-    ),
-  })),
+
 
   addTab: (tab) => set((state) => ({
     tabs: [...state.tabs, initializeTab(tab)],
