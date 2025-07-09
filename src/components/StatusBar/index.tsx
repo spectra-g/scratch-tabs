@@ -22,12 +22,52 @@ interface StatusBarProps {
   side: 'left' | 'right'
 }
 
-// Simple content accessor for language detection
+// Helper function to get content for language detection
 const getContentForLanguageDetection = (tab: Tab): string => {
-  return tab.content || '';
+  if (!tab.content) return '';
+  return tab.content.length > 1000 ? tab.content.substring(0, 1000) : tab.content;
+};
+
+// Custom hook to get real-time cursor position from Monaco editor
+const useCursorPosition = (editor: monaco.editor.IStandaloneCodeEditor | null) => {
+  const [cursorPosition, setCursorPosition] = useState({ lineNumber: 1, column: 1 });
+  const listenerRef = useRef<monaco.IDisposable | null>(null);
+
+  useEffect(() => {
+    if (!editor) {
+      setCursorPosition({ lineNumber: 1, column: 1 });
+      return;
+    }
+
+    // Get initial cursor position
+    const position = editor.getPosition();
+    if (position) {
+      setCursorPosition({
+        lineNumber: position.lineNumber,
+        column: position.column
+      });
+    }
+
+    // Set up cursor position listener
+    listenerRef.current = editor.onDidChangeCursorPosition((e) => {
+      setCursorPosition({
+        lineNumber: e.position.lineNumber,
+        column: e.position.column
+      });
+    });
+
+    return () => {
+      listenerRef.current?.dispose();
+    };
+  }, [editor]);
+
+  return cursorPosition;
 };
 
 export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) => {
+  // Get real-time cursor position from editor
+  const realTimeCursorPosition = useCursorPosition(editor);
+
   const { splitView } = useSplitViewStore();
   const { updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
@@ -253,7 +293,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
           <>
             {!activeTab.isTablet && (
               <span>
-                Ln {activeTab.cursorPosition.lineNumber}, Col {activeTab.cursorPosition.column}
+                Ln {realTimeCursorPosition.lineNumber}, Col {realTimeCursorPosition.column}
               </span>
             )}
             <div className="p-0.5 flex items-center space-x-2">
