@@ -75,7 +75,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-gray-850 rounded-lg shadow-2xl w-[95vw] h-[90vh] max-w-7xl flex flex-col border border-gray-700/60">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700/60 bg-gradient-to-b from-gray-800 to-gray-850">
