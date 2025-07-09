@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { EditorPosition, Tab } from '../types';
+import { Tab } from '../types';
 import { duplicateTab as duplicateTabUtil } from '../utils/tabUtils';
 import { useWorkspaceStore } from './workspaceStore';
 import { incrementSetting } from '../db';
@@ -19,8 +19,7 @@ interface TabsStore {
   updateTabTitle: (id: string, title: string) => void;
   updateTabState: (id: string, updates: Partial<Tab>) => void;
   duplicateTab: (tabId: string) => string;
-  setCursorPosition: (tabId: string, cursorPosition: EditorPosition) => void;
-  removeTabsByWorkspace: (workspaceId: string) => void;
+
 }
 
 // Helper function to initialize a tab with default values
@@ -48,20 +47,33 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
   tabs: [],
   activeTabId: null,
 
-  setCursorPosition: (tabId, cursorPosition) => set((state) => ({
-    tabs: state.tabs.map((tab) =>
-      tab.id === tabId ? { ...tab, cursorPosition } : tab
-    ),
-  })),
 
-  addTab: (tab) => set((state) => ({
-    tabs: [...state.tabs, initializeTab(tab)],
-    activeTabId: tab.id,
-  })),
 
-  addBackgroundTab: (tab) => set((state) => ({
-    tabs: [...state.tabs, initializeTab(tab)],
-  })),
+  addTab: (tab) => set((state) => {
+    const existingTab = state.tabs.find(t => t.id === tab.id);
+    if (existingTab) {
+      return {
+        tabs: state.tabs.map(t => (t.id === tab.id ? { ...t, ...initializeTab(tab) } : t)),
+        activeTabId: tab.id,
+      };
+    }
+    return {
+      tabs: [...state.tabs, initializeTab(tab)],
+      activeTabId: tab.id,
+    };
+  }),
+
+  addBackgroundTab: (tab) => set((state) => {
+    const existingTab = state.tabs.find(t => t.id === tab.id);
+    if (existingTab) {
+      return {
+        tabs: state.tabs.map(t => (t.id === tab.id ? { ...t, ...initializeTab(tab) } : t)),
+      };
+    }
+    return {
+      tabs: [...state.tabs, initializeTab(tab)],
+    };
+  }),
 
   removeTab: (id) => set((state) => {
     const newTabs = state.tabs.filter((tab) => tab.id !== id);
@@ -80,11 +92,13 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
 
   setActiveTab: (id) => set({ activeTabId: id }),
 
-  updateTabContent: (id, content) => set((state) => ({
-    tabs: state.tabs.map((tab) =>
-      tab.id === id ? { ...tab, content, lastModified: Date.now() } : tab
-    ),
-  })),
+  updateTabContent: (id, content) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, content, lastModified: Date.now() } : tab
+      ),
+    }));
+  },
 
   updateTabLanguage: (id, language, lock = true) => set((state) => {
     
@@ -108,11 +122,23 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     ),
   })),
 
-  updateTabState: (id, updates) => set((state) => ({
-    tabs: state.tabs.map((tab) =>
-      tab.id === id ? { ...tab, ...updates, lastModified: Date.now() } : tab
-    ),
-  })),
+  updateTabState: (id, updates) => set((state) => {
+    const tabExists = state.tabs.some(tab => tab.id === id);
+    if (tabExists) {
+      return {
+        tabs: state.tabs.map((tab) =>
+          tab.id === id ? { ...tab, ...updates, lastModified: Date.now() } : tab
+        ),
+      };
+    } else {
+      // If tab doesn't exist, create it.
+      // This can happen in race conditions during tab creation.
+      const newTab = initializeTab({ id, ...updates } as Tab);
+      return {
+        tabs: [...state.tabs, newTab],
+      };
+    }
+  }),
 
   duplicateTab: (tabId) => {
     const state = get();
@@ -140,7 +166,4 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     return newTab.id;
   },
 
-  removeTabsByWorkspace: (workspaceId) => set(state => ({
-    tabs: state.tabs.filter(tab => tab.workspaceId !== workspaceId)
-  })),
 }));

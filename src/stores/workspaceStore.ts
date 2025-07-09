@@ -8,6 +8,7 @@ import { useCacheStore } from './cacheStore';
 import { incrementSetting } from '../db';
 import { WELCOME_TAB_CONTENT, NEW_TAB_PREFIX } from '../constants';
 import { modelManager } from '../services/modelManager';
+import { broadcastManager } from './broadcastStore';
 
 // Helper function to safely convert activeSide string to union type
 const parseActiveSide = (side: string | null): 'left' | 'right' | null => {
@@ -23,7 +24,7 @@ interface WorkspaceStore {
   isLoading: boolean;
   error: string | null;
 
-  loadWorkspaces: (clearExistingTabs?: boolean) => Promise<void>;
+  loadWorkspaces: () => Promise<void>;
   ensureWorkspace: () => Promise<string | null>;
   createWorkspace: (name: string) => Promise<string | null>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
@@ -44,7 +45,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     isLoading: false,
     error: null,
 
-    loadWorkspaces: async (clearExistingTabs = false) => {
+    loadWorkspaces: async () => {
       const { activeWorkspaceId: currentActiveWsId } = get();
       
       set({ isLoading: true, error: null });
@@ -81,14 +82,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             storage.getSplitViewByWorkspace(workspaceToActivate.id)
           ]);
 
-          if (clearExistingTabs) {
-            useTabsStore.setState({ tabs });
-          } else {
-            // Merge with existing tabs instead of replacing
-            const existingTabs = useTabsStore.getState().tabs;
-            const mergedTabs = [...existingTabs, ...tabs];
-            useTabsStore.setState({ tabs: mergedTabs });
-          }
+          // Always replace existing tabs when loading a workspace
+          useTabsStore.setState({ tabs });
 
           if (splitView) {
             const finalSplitViewState: SplitViewState = {
@@ -148,7 +143,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             previewMode: true, // Show markdown preview by default
           };
 
-          const initialSplitViewState = useSplitViewStore.getState().createDefaultSplitViewState(defaultWorkspace.id);
+          const initialSplitViewState: SplitViewState = useSplitViewStore.getState().createDefaultSplitViewState(defaultWorkspace.id);
           initialSplitViewState.leftTabs = [welcomeTab.id];
           initialSplitViewState.activeLeftTabId = welcomeTab.id;
           initialSplitViewState.leftTabHistory = [welcomeTab.id];
@@ -193,10 +188,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     },
 
     switchWorkspace: async (workspaceId: string) => {
-      const { workspaces, activeWorkspaceId: currentActiveWsId, isLoading } = get();
+      const { workspaces, activeWorkspaceId: currentActiveWsId } = get();
       const { saveState: persistCurrentState } = usePersistenceStore.getState();
 
-      if (workspaceId === currentActiveWsId || isLoading) {
+      // Only prevent switching if we're already on the target workspace
+      if (workspaceId === currentActiveWsId) {
         return;
       }
 
@@ -210,15 +206,27 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       set({ isLoading: true, error: null });
 
       try {
-        // 1. Persist the state of the current workspace before switching
+        // 1. Save content from all active models BEFORE persisting state
+        const { tabs } = useTabsStore.getState();
+        const currentWorkspaceTabs = tabs.filter(tab => tab.workspaceId === currentActiveWsId);
+        
+        // Save content from all models that might not have been saved yet
+        currentWorkspaceTabs.forEach(tab => {
+          const liveContent = modelManager.getContent(tab.id);
+          if (liveContent !== undefined && liveContent !== tab.content) {
+            useTabsStore.getState().updateTabContent(tab.id, liveContent);
+          }
+        });
+
+        // 2. Persist the state of the current workspace before switching (only if we have an active workspace)
         if (currentActiveWsId) {
           await persistCurrentState();
         }
 
-        // 2. Clear model cache when switching workspaces to prevent memory leaks
+        // 3. Clear model cache when switching workspaces to prevent memory leaks
         modelManager.disposeAll();
 
-        // 3. Load data for the target workspace
+        // 4. Load data for the target workspace
         const cachedData = useCacheStore.getState().cachedSplitView;
         let splitViewToLoad: SplitViewRecord | null = null;
 
@@ -236,18 +244,18 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           return;
         }
 
-        // 4. Update lastAccessed timestamp for the target workspace
+        // 5. Update lastAccessed timestamp for the target workspace
         const updatedTargetWorkspace = { ...targetWorkspace, lastAccessed: Date.now() };
         await storage.saveWorkspace(updatedTargetWorkspace);
 
-        // 5. Update Zustand stores
+        // 6. Update Zustand stores
         set(state => ({
           workspaces: state.workspaces.map(w =>
             w.id === workspaceId ? updatedTargetWorkspace : w
           ).sort((a, b) => a.name.localeCompare(b.name)), // Keep sorted
           activeWorkspaceId: workspaceId,
         }));
-
+        
         useTabsStore.setState({ tabs: tabsToLoad });
         const finalSplitViewState: SplitViewState = { // Convert record to state
           id: splitViewToLoad.id,
@@ -259,32 +267,163 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           activeSide: parseActiveSide(splitViewToLoad.activeSide),
           splitRatio: splitViewToLoad.splitRatio,
           workspaceId: splitViewToLoad.workspaceId,
-          leftTabHistory: splitViewToLoad.leftTabHistory || [], // Use persisted history
-          rightTabHistory: splitViewToLoad.rightTabHistory || [] // Use persisted history
+          leftTabHistory: splitViewToLoad.leftTabHistory || [],
+          rightTabHistory: splitViewToLoad.rightTabHistory || []
         };
         useSplitViewStore.setState({ splitView: finalSplitViewState });
-
+        
+        // Update the active tab ID based on the loaded split view state
+        const newActiveTabId = finalSplitViewState.activeSide === 'right'
+          ? finalSplitViewState.activeRightTabId
+          : finalSplitViewState.activeLeftTabId;
+        useTabsStore.setState({ activeTabId: newActiveTabId });
+        
       } catch (error) {
-        console.error("Error switching workspace:", error);
+        console.error(`[switchWorkspace] Error:`, error);
         set({ error: error instanceof Error ? error.message : 'Failed to switch workspace' });
       } finally {
         set({ isLoading: false });
       }
     },
 
-    createWorkspace: async (name: string): Promise<string | null> => {
+    renameWorkspace: async (workspaceId: string, newName: string) => {
       try {
-        modelManager.disposeAll();
+        const workspace = get().workspaces.find(w => w.id === workspaceId);
+        if (workspace) {
+          const updatedWorkspace = { ...workspace, name: newName };
+          await storage.saveWorkspace(updatedWorkspace);
+          set(state => ({
+            workspaces: state.workspaces.map(w =>
+              w.id === workspaceId ? updatedWorkspace : w
+            ),
+          }));
+          
+          // Broadcast workspace rename
+          broadcastManager.broadcastWorkspaceList(get().workspaces, workspaceId);
+        }
+      } catch (error) {
+        console.error("Failed to rename workspace:", error);
+        set({ error: error instanceof Error ? error.message : 'Failed to rename workspace' });
+      }
+    },
 
+    deleteWorkspace: async (workspaceId: string) => {
+      const { workspaces, activeWorkspaceId, switchWorkspace } = get();
+
+      set({ isLoading: true });
+      try {
+        await storage.deleteWorkspace(workspaceId);
+
+        // If the deleted workspace was active, switch to another one
+        if (activeWorkspaceId === workspaceId) {
+          const remainingWorkspaces = workspaces.filter(w => w.id !== workspaceId)
+            .sort((a, b) => b.lastAccessed - a.lastAccessed);
+          
+          if (remainingWorkspaces.length > 0) {
+            await switchWorkspace(remainingWorkspaces[0].id);
+          } else {
+            // No workspaces left, clear all state to show welcome screen
+            set({ 
+              workspaces: [], 
+              activeWorkspaceId: null 
+            });
+            useTabsStore.setState({ tabs: [] });
+            useSplitViewStore.setState({ 
+              splitView: useSplitViewStore.getState().createDefaultSplitViewState() 
+            });
+          }
+        }
+        
+        // Update the workspaces list in the state
+        set(state => ({
+          workspaces: state.workspaces.filter(w => w.id !== workspaceId),
+        }));
+
+        // Broadcast workspace deletion
+        broadcastManager.broadcastWorkspaceDeletion(workspaceId);
+
+      } catch (error) {
+        console.error("Failed to delete workspace:", error);
+        set({ error: error instanceof Error ? error.message : 'Failed to delete workspace' });
+      } finally {
+        set({ isLoading: false });
+      }
+    },
+
+    updateWorkspaceNotes: async (workspaceId: string, notes: string) => {
+      try {
+        const workspace = get().workspaces.find(w => w.id === workspaceId);
+        if (workspace) {
+          const updatedWorkspace = { ...workspace, notes };
+          await storage.saveWorkspace(updatedWorkspace);
+          set(state => ({
+            workspaces: state.workspaces.map(w =>
+              w.id === workspaceId ? updatedWorkspace : w
+            ),
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to update workspace notes:", error);
+        set({ error: error instanceof Error ? error.message : 'Failed to update notes' });
+      }
+    },
+
+    addWorkspaceLink: async (workspaceId: string, url: string, title?: string) => {
+      try {
+        const workspace = get().workspaces.find(w => w.id === workspaceId);
+        if (workspace) {
+          const newLink = { id: crypto.randomUUID(), url, title: title || url };
+          const updatedWorkspace = {
+            ...workspace,
+            links: [...(workspace.links || []), newLink],
+          };
+          await storage.saveWorkspace(updatedWorkspace);
+          set(state => ({
+            workspaces: state.workspaces.map(w =>
+              w.id === workspaceId ? updatedWorkspace : w
+            ),
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to add workspace link:", error);
+        set({ error: error instanceof Error ? error.message : 'Failed to add link' });
+      }
+    },
+
+    removeWorkspaceLink: async (workspaceId: string, linkId: string) => {
+      try {
+        const workspace = get().workspaces.find(w => w.id === workspaceId);
+        if (workspace && workspace.links) {
+          const updatedWorkspace = {
+            ...workspace,
+            links: workspace.links.filter(link => link.id !== linkId),
+          };
+          await storage.saveWorkspace(updatedWorkspace);
+          set(state => ({
+            workspaces: state.workspaces.map(w =>
+              w.id === workspaceId ? updatedWorkspace : w
+            ),
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to remove workspace link:", error);
+        set({ error: error instanceof Error ? error.message : 'Failed to remove link' });
+      }
+    },
+
+    createWorkspace: async (name: string): Promise<string | null> => {
+      set({ isLoading: true });
+      try {
         const newWorkspace: Workspace = {
           id: crypto.randomUUID(),
           name,
           links: [],
           createdAt: Date.now(),
-          lastAccessed: Date.now()
+          lastAccessed: Date.now(),
         };
 
-        const initialTab: Tab = {
+        // Create a welcome tab for new workspaces
+        const welcomeTab: Tab = {
           id: crypto.randomUUID(),
           title: 'Welcome to Scratch Tabs',
           content: WELCOME_TAB_CONTENT,
@@ -297,8 +436,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           previewMode: true, // Show markdown preview by default
         };
 
-        // Create a "new 1" tab as well
-        const newTab: Tab = {
+        // Create a scratch tab
+        const scratchTab: Tab = {
           id: crypto.randomUUID(),
           title: `${NEW_TAB_PREFIX} 1`,
           content: '',
@@ -308,92 +447,39 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           dateCreated: Date.now(),
           lastModified: Date.now(),
           cursorPosition: { lineNumber: 1, column: 1 },
-          previewMode: false,
         };
+        
+        const newSplitView = useSplitViewStore.getState().createDefaultSplitViewState(newWorkspace.id);
+        newSplitView.leftTabs = [welcomeTab.id, scratchTab.id];
+        newSplitView.activeLeftTabId = scratchTab.id; // Make the scratch tab active
+        newSplitView.leftTabHistory = [welcomeTab.id, scratchTab.id];
 
-        const initialSplitViewState = useSplitViewStore.getState().createDefaultSplitViewState(newWorkspace.id);
-        initialSplitViewState.leftTabs = [initialTab.id, newTab.id];
-        initialSplitViewState.activeLeftTabId = newTab.id; // Make the new tab active
-        initialSplitViewState.leftTabHistory = [initialTab.id, newTab.id];
-
-        const initialSplitViewRecord: SplitViewRecord = {
-          ...initialSplitViewState,
-          lastModified: Date.now(),
-          leftTabHistory: initialSplitViewState.leftTabHistory,
-          rightTabHistory: initialSplitViewState.rightTabHistory
-        };
-
-        // Use a Dexie transaction for atomicity
         await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
           await storage.saveWorkspace(newWorkspace);
-          await storage.saveTabNow(initialTab);
-          await storage.saveTabNow(newTab);
-          await storage.saveSplitViewNow(initialSplitViewRecord);
+          await storage.saveTabNow(welcomeTab);
+          await storage.saveTabNow(scratchTab);
+          await storage.saveSplitViewNow(newSplitView as SplitViewRecord);
         });
 
-        // Increment the total tabs created counter
-        incrementSetting('tabs.created.total').catch(err => 
-          console.error("Failed to increment tab counter:", err)
-        );
-
-        // Update Zustand state AFTER successful DB transaction
+        // Update the state with the new workspace
         set(state => ({
-          workspaces: [...state.workspaces, newWorkspace].sort((a, b) => a.name.localeCompare(b.name)),
-          activeWorkspaceId: newWorkspace.id, 
-          isLoading: false
+          workspaces: [...state.workspaces, newWorkspace],
         }));
-
-        // Directly update other stores with the new workspace's initial state
-        useTabsStore.setState({ tabs: [initialTab, newTab], activeTabId: newTab.id });
-        useSplitViewStore.setState({ splitView: initialSplitViewState });
+        
+        // Broadcast workspace creation with the updated workspace list
+        const currentState = get();
+        broadcastManager.broadcastWorkspaceList(currentState.workspaces, newWorkspace.id);
+        
+        // Switch to the new workspace
+        await get().switchWorkspace(newWorkspace.id);
 
         return newWorkspace.id;
       } catch (error) {
-        console.error("Error creating workspace:", error);
+        console.error("Failed to create new workspace:", error);
         set({ error: error instanceof Error ? error.message : 'Failed to create workspace' });
         return null;
-      }
-    },
-
-    deleteWorkspace: async (workspaceId: string) => {
-      const { workspaces, activeWorkspaceId: currentActiveId, loadWorkspaces } = get();
-      try {
-        await storage.deleteWorkspace(workspaceId);
-
-        const remainingWorkspaces = workspaces.filter(ws => ws.id !== workspaceId);
-
-        if (workspaceId === currentActiveId) {
-          // If the active workspace was deleted, load remaining workspaces
-          await loadWorkspaces(true);
-        } else {
-          // Just update the list of workspaces if a non-active one was deleted
-          set({ workspaces: remainingWorkspaces.sort((a, b) => a.name.localeCompare(b.name)) });
-        }
-      } catch (error) {
-        console.error("Error deleting workspace:", error);
-        set({ error: error instanceof Error ? error.message : 'Failed to delete workspace' });
-      }
-    },
-
-    renameWorkspace: async (workspaceId: string, newName: string) => {
-      try {
-        const workspace = get().workspaces.find(w => w.id === workspaceId);
-        if (!workspace) {
-          set({ error: 'Workspace not found' });
-          return;
-        }
-
-        const updatedWorkspace = { ...workspace, name: newName };
-        await storage.saveWorkspace(updatedWorkspace);
-
-        set(state => ({
-          workspaces: state.workspaces.map(w => 
-            w.id === workspaceId ? updatedWorkspace : w
-          ).sort((a, b) => a.name.localeCompare(b.name))
-        }));
-      } catch (error) {
-        console.error("Error renaming workspace:", error);
-        set({ error: error instanceof Error ? error.message : 'Failed to rename workspace' });
+      } finally {
+        set({ isLoading: false });
       }
     },
 
@@ -401,52 +487,5 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       const { workspaces, activeWorkspaceId } = get();
       return workspaces.find(w => w.id === activeWorkspaceId);
     },
-
-    // updateWorkspaceNotes, addWorkspaceLink, removeWorkspaceLink can remain similar,
-    // consider if they need locking if they trigger complex UI updates that might race with saveState.
-    // For now, assuming they are simple enough.
-    updateWorkspaceNotes: async (workspaceId: string, notes: string) => {
-      const { workspaces } = get();
-      const workspace = workspaces.find(w => w.id === workspaceId);
-      if (!workspace) return;
-      try {
-        const updatedWorkspace = { ...workspace, notes };
-        await storage.saveWorkspace(updatedWorkspace);
-        set(state => ({
-          workspaces: state.workspaces.map(w => w.id === workspaceId ? updatedWorkspace : w)
-        }));
-      } catch (error) {
-        set({ error: error instanceof Error ? error.message : 'Failed to update notes' });
-      }
-    },
-    addWorkspaceLink: async (workspaceId: string, url: string, title?: string) => {
-      const { workspaces } = get();
-      const workspace = workspaces.find(w => w.id === workspaceId);
-      if (!workspace) return;
-      try {
-        const newLink = { id: crypto.randomUUID(), url, title };
-        const updatedWorkspace = { ...workspace, links: [...(workspace.links || []), newLink] };
-        await storage.saveWorkspace(updatedWorkspace);
-        set(state => ({
-          workspaces: state.workspaces.map(w => w.id === workspaceId ? updatedWorkspace : w)
-        }));
-      } catch (error) {
-        set({ error: error instanceof Error ? error.message : 'Failed to add link' });
-      }
-    },
-    removeWorkspaceLink: async (workspaceId: string, linkId: string) => {
-      const { workspaces } = get();
-      const workspace = workspaces.find(w => w.id === workspaceId);
-      if (!workspace || !workspace.links) return;
-      try {
-        const updatedWorkspace = { ...workspace, links: workspace.links.filter(link => link.id !== linkId) };
-        await storage.saveWorkspace(updatedWorkspace);
-        set(state => ({
-          workspaces: state.workspaces.map(w => w.id === workspaceId ? updatedWorkspace : w)
-        }));
-      } catch (error) {
-        set({ error: error instanceof Error ? error.message : 'Failed to remove link' });
-      }
-    },
   };
-});
+}); 

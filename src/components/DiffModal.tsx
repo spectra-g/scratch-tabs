@@ -54,11 +54,13 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
   }
 
   return (
-    <DiffModalUI 
-      leftTabTitle={leftTab.title}
-      rightTabTitle={rightTab.title}
-      engine={engine}
-      onClose={handleCloseAndSave}
-    />
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
+      <DiffModalUI 
+        leftTabTitle={leftTab.title}
+        rightTabTitle={rightTab.title}
+        engine={engine}
+        onClose={handleCloseAndSave}
+      />
+    </div>
   );
 };

@@ -13,6 +13,7 @@ import { languageRegistry } from '../../languages';
 import { getPotentialLanguageMatches } from '../../languages';
 import { LanguageSelectionPopup } from './LanguageSelectionPopup';
 import { ExtendedViewButtons } from './ExtendedViewButtons';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import type { PopupMenuItem } from './types';
 
 interface StatusBarProps {
@@ -21,18 +22,59 @@ interface StatusBarProps {
   side: 'left' | 'right'
 }
 
-// Simple content accessor for language detection
+// Helper function to get content for language detection
 const getContentForLanguageDetection = (tab: Tab): string => {
-  return tab.content || '';
+  if (!tab.content) return '';
+  return tab.content.length > 1000 ? tab.content.substring(0, 1000) : tab.content;
+};
+
+// Custom hook to get real-time cursor position from Monaco editor
+const useCursorPosition = (editor: monaco.editor.IStandaloneCodeEditor | null) => {
+  const [cursorPosition, setCursorPosition] = useState({ lineNumber: 1, column: 1 });
+  const listenerRef = useRef<monaco.IDisposable | null>(null);
+
+  useEffect(() => {
+    if (!editor) {
+      setCursorPosition({ lineNumber: 1, column: 1 });
+      return;
+    }
+
+    // Get initial cursor position
+    const position = editor.getPosition();
+    if (position) {
+      setCursorPosition({
+        lineNumber: position.lineNumber,
+        column: position.column
+      });
+    }
+
+    // Set up cursor position listener
+    listenerRef.current = editor.onDidChangeCursorPosition((e) => {
+      setCursorPosition({
+        lineNumber: e.position.lineNumber,
+        column: e.position.column
+      });
+    });
+
+    return () => {
+      listenerRef.current?.dispose();
+    };
+  }, [editor]);
+
+  return cursorPosition;
 };
 
 export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) => {
+  // Get real-time cursor position from editor
+  const realTimeCursorPosition = useCursorPosition(editor);
+
   const { splitView } = useSplitViewStore();
   const { updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const [tabletLabel, setTabletLabel] = useState('');
   const languageLabelRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const showAIIcon = (!splitView.isSplit && side === 'left') || (splitView.isSplit && side === 'right');
 
@@ -251,7 +293,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
           <>
             {!activeTab.isTablet && (
               <span>
-                Ln {activeTab.cursorPosition.lineNumber}, Col {activeTab.cursorPosition.column}
+                Ln {realTimeCursorPosition.lineNumber}, Col {realTimeCursorPosition.column}
               </span>
             )}
             <div className="p-0.5 flex items-center space-x-2">
@@ -283,7 +325,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
             </button> }
 
         {showAIIcon && <AIStatusIcon />}
-        <Macro editor={editor}/>
+        {!isMobile && <Macro editor={editor}/>}
       </div>
     </div>
   );

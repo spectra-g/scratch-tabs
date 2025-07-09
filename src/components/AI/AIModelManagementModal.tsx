@@ -242,7 +242,7 @@ export const AIModelManagementModal: React.FC = () => {
               <CheckCircle size={48} className="text-green-400 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-100 mb-2">AI Features are Ready!</h2>
               <p className="text-gray-400 mb-6">
-                You can now use AI features, such as right-clicking a tab to get a summary{ENABLE_CODEGEN_WORKER ? ' or generate code' : ''}.
+                You can now use AI features, such as right-clicking on selected content to get a summary{ENABLE_CODEGEN_WORKER ? ' or generate code' : ''}.
               </p>
             </div>
 

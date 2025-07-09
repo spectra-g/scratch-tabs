@@ -132,10 +132,15 @@ class BroadcastManager {
               // it's being called reactively.
               WStore.switchWorkspace(newActiveId).catch(err => console.error("Error auto-switching workspace after delete:", err));
             } else {
-              // No workspaces left, clear out state
-              useWorkspaceStore.setState({ activeWorkspaceId: null });
+              // No workspaces left, clear out state to show welcome screen
+              useWorkspaceStore.setState({ 
+                workspaces: [], 
+                activeWorkspaceId: null 
+              });
               useTabsStore.setState({ tabs: [] });
-              useSplitViewStore.setState({ splitView: useSplitViewStore.getState().createDefaultSplitViewState() });
+              useSplitViewStore.setState({ 
+                splitView: useSplitViewStore.getState().createDefaultSplitViewState() 
+              });
             }
           }
           break;
