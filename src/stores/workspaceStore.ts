@@ -24,7 +24,7 @@ interface WorkspaceStore {
   isLoading: boolean;
   error: string | null;
 
-  loadWorkspaces: (clearExistingTabs?: boolean) => Promise<void>;
+  loadWorkspaces: () => Promise<void>;
   ensureWorkspace: () => Promise<string | null>;
   createWorkspace: (name: string) => Promise<string | null>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
@@ -45,7 +45,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     isLoading: false,
     error: null,
 
-    loadWorkspaces: async (clearExistingTabs = false) => {
+    loadWorkspaces: async () => {
       const { activeWorkspaceId: currentActiveWsId } = get();
       
       set({ isLoading: true, error: null });

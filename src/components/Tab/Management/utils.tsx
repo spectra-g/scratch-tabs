@@ -191,7 +191,7 @@ export const moveTabsToWorkspace = async (
     // 4. Refresh Modal State
     const refreshedAllTabsFromDBForModal = await storage.getTabs();
     setAllApplicationTabs(refreshedAllTabsFromDBForModal);
-    await useWorkspaceStore.getState().loadWorkspaces(false);
+    await useWorkspaceStore.getState().loadWorkspaces();
 
     // 5. Refresh Main UI State
     const mainUIActiveWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;

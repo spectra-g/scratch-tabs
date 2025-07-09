@@ -6,10 +6,11 @@ import { useTabsStore } from '../../stores/tabsStore';
 import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useEditorScrollManager } from '../../hooks/useEditorScrollManager';
 import { useTabletSelector } from '../../hooks/useTabletSelector';
+import { useEditorActions } from '../../hooks/useEditorActions';
+import { useEditorAI } from '../../hooks/useEditorAI';
 import { TabletSelector } from '../../tablets';
 import { Tablet } from '../../tablets';
 import { useAIStore } from '../../stores/aiStore';
-import { useBatchToolsStore } from '../../stores/batchToolsStore';
 import { BatchToolsModal } from '../BatchTools/BatchToolsModal';
 import { modelManager } from '../../services/modelManager';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
@@ -59,7 +60,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
   // FIX: Use useStoreWithEqualityFn for AI store with specific properties
   const {
     isCodegenReady,
-    runCodegen,
     codegenResult,
     activeCodegenTabId,
     isCodegenGenerating
@@ -67,7 +67,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     useAIStore,
     state => ({
       isCodegenReady: state.ai.isCodegenReady,
-      runCodegen: state.runCodegen,
       codegenResult: state.ai.codegenResult,
       activeCodegenTabId: state.ai.activeCodegenTabId,
       isCodegenGenerating: state.ai.isCodegenGenerating,
@@ -78,22 +77,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
   const {
     isReady: isAiReady,
     isLoading: isAiLoading,
-    summarizeTextWithModal
   } = useStoreWithEqualityFn(
     useAIStore,
     state => ({
       isReady: state.ai.isReady,
       isLoading: state.ai.isLoading,
-      summarizeTextWithModal: state.summarizeTextWithModal,
     }),
     shallow
   );
 
-  const { openModal: openBatchToolsModal } = useBatchToolsStore();
-
-  const batchToolsDisposableRef = useRef<Monaco.IDisposable | null>(null);
-  const aiReadyContextKeyRef = useRef<Monaco.editor.IContextKey<boolean> | null>(null);
-  const codegenReadyContextKeyRef = useRef<Monaco.editor.IContextKey<boolean> | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
   // --- Ref to hold the latest activeTab data ---
@@ -113,6 +105,27 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     tabletSelectorContainerRef,
     closeTabletSelector,
   } = useTabletSelector(editorRef, editorContainerRef, activeTabId, updateTabContent);
+
+  // Editor Actions Hook
+  useEditorActions({
+    editor: editorRef.current,
+    monaco: monacoRef.current,
+    activeTabId,
+    latestActiveTabRef,
+    isAiReady,
+    isAiLoading,
+    isCodegenReady,
+    isCodegenGenerating,
+  });
+
+  // Editor AI Hook
+  useEditorAI({
+    editor: editorRef.current,
+    activeTabId,
+    isCodegenGenerating,
+    activeCodegenTabId,
+    codegenResult,
+  });
 
   // Guard against the tab being removed while a render is queued
   if (!activeTabWithoutCursor) {
@@ -196,29 +209,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
     }
   }, [side, activeTabId, activeEditorSide]);
 
-  // Effect to stream AI code generation into the editor
-  useEffect(() => {
-    const editor = editorRef.current;
-    const isStreamingForThisTab = isCodegenGenerating && activeCodegenTabId === activeTabId;
 
-    if (editor && isStreamingForThisTab && codegenResult !== null) {
-      try {
-        const model = editor.getModel();
-        if (model && !model.isDisposed()) {
-          const currentContent = model.getValue();
-          if (currentContent !== codegenResult) {
-            // Using executeEdits is better than setValue as it can be part of the undo stack
-            editor.executeEdits('ai-stream', [{
-              range: model.getFullModelRange(),
-              text: codegenResult
-            }]);
-          }
-        }
-      } catch (error) {
-        console.warn('[EditorInstance] Failed to stream AI code:', error);
-      }
-    }
-  }, [isCodegenGenerating, activeCodegenTabId, codegenResult, activeTabId]);
 
 
 
@@ -282,21 +273,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         }
       }
 
-      // Ctrl+K (Format)
-      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
-        try {
-          if (!editor.hasTextFocus()) {
-            return;
-          }
-          const formatAction = editor.getAction('editor.action.formatDocument');
-          if (formatAction) {
-            formatAction.run();
-          }
-        } catch (error) {
-          console.warn('[EditorInstance] Failed to format document via Ctrl+K:', error);
-        }
-      });
-
       // Cursor Position Listener - NOW MANAGED BY MODELMANAGER
       if (activeTab) {
         modelManager.registerCursorPositionListener(activeTab.id, editor);
@@ -312,101 +288,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({ side, activeTabI
         } catch (error) {
           console.warn('[EditorInstance] Failed to handle paste detection:', error);
         }
-      });
-
-      // Clean up previous batch tools action if it exists
-      if (batchToolsDisposableRef.current) {
-        batchToolsDisposableRef.current.dispose();
-      }
-
-      // Add Batch Tools context menu action
-      batchToolsDisposableRef.current = editor.addAction({
-        id: 'batch-tools',
-        label: 'Transformations',
-        contextMenuGroupId: 'navigation',
-        contextMenuOrder: 2.5,
-        run: () => {
-          try {
-            const model = editor.getModel();
-            const selectedText = model && !model.isDisposed() 
-              ? model.getValueInRange(editor.getSelection()!) || ''
-              : '';
-            const fullContent = model && !model.isDisposed() ? model.getValue() : '';
-            openBatchToolsModal(fullContent, selectedText);
-          } catch (error) {
-            console.warn('[EditorInstance] Failed to open batch tools modal:', error);
-          }
-        }
-      });
-
-      // Create context keys for AI actions
-      try {
-        aiReadyContextKeyRef.current = editor.createContextKey('aiReady', isAiReady && !isAiLoading);
-        codegenReadyContextKeyRef.current = editor.createContextKey('codegenReady', isCodegenReady && !isCodegenGenerating);
-      } catch (error) {
-        console.warn('[EditorInstance] Failed to create context keys:', error);
-      }
-
-      // Add AI actions
-      editor.addAction({
-        id: 'ai-summarize',
-        label: 'Summarize',
-        contextMenuGroupId: 'navigation',
-        contextMenuOrder: 1.0,
-        precondition: 'aiReady',
-        run: (ed) => {
-          try {
-            const freshAIState = useAIStore.getState().ai;
-            if (aiReadyContextKeyRef.current) {
-              const freshAiReady = freshAIState.isReady && !freshAIState.isLoading;
-              aiReadyContextKeyRef.current.set(freshAiReady);
-            }
-
-            const model = ed.getModel();
-            const content = model && !model.isDisposed() ? model.getValue() : '';
-            const currentTab = latestActiveTabRef.current;
-            if (!currentTab) return;
-
-            const shouldProceed = freshAIState.isReady &&
-              !freshAIState.isLoading &&
-              !currentTab.isTablet &&
-              content.trim().length > 0;
-
-            if (shouldProceed) {
-              summarizeTextWithModal(content, currentTab.id);
-            }
-          } catch (error) {
-            console.warn('[EditorInstance] Failed to run summarize action:', error);
-          }
-        },
-      });
-
-      editor.addAction({
-        id: 'ai-generate-code',
-        label: 'Generate Code',
-        contextMenuGroupId: 'navigation',
-        contextMenuOrder: 1.5,
-        precondition: 'codegenReady',
-        run: (ed) => {
-          try {
-            const model = ed.getModel();
-            const originalValue = model && !model.isDisposed() ? model.getValue() : '';
-            if (!isCodegenReady || isCodegenGenerating) return;
-            const currentTab = latestActiveTabRef.current;
-            if (!currentTab) return;
-            
-            runCodegen({
-              tabId: currentTab.id,
-              text: originalValue,
-              max_new_tokens: 128,
-              temperature: 0.5,
-              top_k: 5,
-              do_sample: false,
-            });
-          } catch (error) {
-            console.warn('[EditorInstance] Failed to run codegen action:', error);
-          }
-        },
       });
     } catch (error) {
       console.error('[EditorInstance] Failed to mount editor:', error);
