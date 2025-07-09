@@ -3,21 +3,16 @@ import { StorageProviderFactory } from '../db';
 import { useWorkspaceStore } from './workspaceStore';
 import { useTabsStore } from './tabsStore';
 import { useSplitViewStore } from './splitViewStore';
+import { modelManager } from '../services/modelManager';
 
 interface PersistenceStore {
   saveState: () => Promise<void>;
-  saveStateInterval: () => Promise<void>;
-  startPeriodicSave: () => void;
-  stopPeriodicSave: () => void;
-  saveTimer: NodeJS.Timeout | null;
 }
 
 export const usePersistenceStore = create<PersistenceStore>((set, get) => {
   const storage = StorageProviderFactory.getProvider();
 
   return {
-    saveTimer: null,
-
     saveState: async () => {
       try {
         const { activeWorkspaceId } = useWorkspaceStore.getState();
@@ -33,8 +28,19 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
         // The ModelManager's listeners have already updated them.
         const workspaceTabs = tabs.filter(tab => tab.workspaceId === activeWorkspaceId);
         
-        if (workspaceTabs.length > 0) {
-          await storage.saveTabsInterval(workspaceTabs);
+        // ARCHITECTURAL FIX: Get live content from ModelManager for any active models
+        const tabsToSave = workspaceTabs.map(tab => {
+          const liveContent = modelManager.getContent(tab.id);
+      
+          if (liveContent !== null) {
+              return { ...tab, content: liveContent };
+          } else {
+              return tab;
+          }
+        });
+
+        if (tabsToSave.length > 0) {
+          await storage.saveTabsInterval(tabsToSave);
         }
         
         if (splitView && splitView.workspaceId === activeWorkspaceId) {
@@ -45,36 +51,6 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
         }
       } catch (error) {
         console.error('[Persistence] Failed to save state:', error);
-      }
-    },
-
-    saveStateInterval: async () => {
-      // Use the same logic as saveState for consistency
-      await get().saveState();
-    },
-
-    startPeriodicSave: () => {
-      const { saveTimer } = get();
-      if (saveTimer) {
-        clearInterval(saveTimer);
-      }
-      
-      const newTimer = setInterval(async () => {
-        try {
-          await get().saveStateInterval();
-        } catch (error) {
-          console.error('[Persistence] Periodic save failed:', error);
-        }
-      }, 30000); // Save every 30 seconds
-      
-      set({ saveTimer: newTimer });
-    },
-
-    stopPeriodicSave: () => {
-      const { saveTimer } = get();
-      if (saveTimer) {
-        clearInterval(saveTimer);
-        set({ saveTimer: null });
       }
     },
   };

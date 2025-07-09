@@ -50,14 +50,31 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
 
 
 
-  addTab: (tab) => set((state) => ({
-    tabs: [...state.tabs, initializeTab(tab)],
-    activeTabId: tab.id,
-  })),
+  addTab: (tab) => set((state) => {
+    const existingTab = state.tabs.find(t => t.id === tab.id);
+    if (existingTab) {
+      return {
+        tabs: state.tabs.map(t => (t.id === tab.id ? { ...t, ...initializeTab(tab) } : t)),
+        activeTabId: tab.id,
+      };
+    }
+    return {
+      tabs: [...state.tabs, initializeTab(tab)],
+      activeTabId: tab.id,
+    };
+  }),
 
-  addBackgroundTab: (tab) => set((state) => ({
-    tabs: [...state.tabs, initializeTab(tab)],
-  })),
+  addBackgroundTab: (tab) => set((state) => {
+    const existingTab = state.tabs.find(t => t.id === tab.id);
+    if (existingTab) {
+      return {
+        tabs: state.tabs.map(t => (t.id === tab.id ? { ...t, ...initializeTab(tab) } : t)),
+      };
+    }
+    return {
+      tabs: [...state.tabs, initializeTab(tab)],
+    };
+  }),
 
   removeTab: (id) => set((state) => {
     const newTabs = state.tabs.filter((tab) => tab.id !== id);
@@ -76,11 +93,13 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
 
   setActiveTab: (id) => set({ activeTabId: id }),
 
-  updateTabContent: (id, content) => set((state) => ({
-    tabs: state.tabs.map((tab) =>
-      tab.id === id ? { ...tab, content, lastModified: Date.now() } : tab
-    ),
-  })),
+  updateTabContent: (id, content) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, content, lastModified: Date.now() } : tab
+      ),
+    }));
+  },
 
   updateTabLanguage: (id, language, lock = true) => set((state) => {
     
@@ -104,11 +123,23 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     ),
   })),
 
-  updateTabState: (id, updates) => set((state) => ({
-    tabs: state.tabs.map((tab) =>
-      tab.id === id ? { ...tab, ...updates, lastModified: Date.now() } : tab
-    ),
-  })),
+  updateTabState: (id, updates) => set((state) => {
+    const tabExists = state.tabs.some(tab => tab.id === id);
+    if (tabExists) {
+      return {
+        tabs: state.tabs.map((tab) =>
+          tab.id === id ? { ...tab, ...updates, lastModified: Date.now() } : tab
+        ),
+      };
+    } else {
+      // If tab doesn't exist, create it.
+      // This can happen in race conditions during tab creation.
+      const newTab = initializeTab({ id, ...updates } as Tab);
+      return {
+        tabs: [...state.tabs, newTab],
+      };
+    }
+  }),
 
   duplicateTab: (tabId) => {
     const state = get();

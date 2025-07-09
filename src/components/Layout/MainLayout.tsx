@@ -85,7 +85,7 @@ const MainLayout: React.FC = () => {
       console.error('[MainLayout] Failed to initialize workspace store:', error);
       setIsAppInitialized(true);
     });
-  }, []);
+  }, [loadWorkspaces]);
 
   // Set up AI summary modal callback
   useEffect(() => {
@@ -95,15 +95,18 @@ const MainLayout: React.FC = () => {
     };
   }, [setSummaryModalCallback]);
 
-     useEffect(() => {
-       const saveInterval = setInterval(() => {
-         saveState(); // Call saveState periodically
-       }, 10000); // e.g., every 10 seconds
+  // Set up periodic save interval
+  useEffect(() => {
+    const saveInterval = setInterval(() => {
+      // Use getState to ensure we always get the latest version of the saveState function
+      // and prevent issues with stale closures.
+      usePersistenceStore.getState().saveState();
+    }, 5000); // Save every 5 seconds
 
-       return () => {
-         clearInterval(saveInterval); // Cleanup interval on unmount
-       };
-     }, [saveState]); // Depend on saveState
+    return () => {
+      clearInterval(saveInterval); // Cleanup interval on unmount
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount
 
 
   const [diffModal, setDiffModal] = React.useState<{
@@ -247,23 +250,19 @@ const MainLayout: React.FC = () => {
                 }
             }
         }
-
         if (focusedEditorSide) {
-          const tabIdToSave = focusedEditorSide === 'left' ? activeLeftTabId : activeRightTabId;
+            const tabIdToSave = focusedEditorSide === 'left' ? activeLeftTabId : activeRightTabId;
 
-          if (tabIdToSave) {
-            saveTabDataById(tabIdToSave);
-          }
+            if (tabIdToSave) {
+              saveTabDataById(tabIdToSave);
+            }
         }
-      }
+    }
     };
-
     window.addEventListener('keydown', handleKeyDown);
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [toggleSearch, activeLeftTabId, activeRightTabId, saveTabDataById, saveState]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [saveState, toggleSearch, activeLeftTabId, activeRightTabId, saveTabDataById]);
 
   useUrlTabHandler();
 
@@ -341,8 +340,8 @@ const MainLayout: React.FC = () => {
       {summarizeModal && (
           <>
             <SummarizeModal
-                content={summarizeModal.content}
-                onClose={handleCloseSummarizeModal}
+                  content={summarizeModal.content}
+                  onClose={handleCloseSummarizeModal}
             />
           </>
       )}

@@ -397,17 +397,12 @@ class ModelManager {
     };
   }
 
-  public getContent(tabId: string): string | undefined {
+  public getContent(tabId: string): string | null {
     const model = this.models.get(tabId);
     if (model && !model.isDisposed()) {
-      try {
-        return model.getValue();
-      } catch (error) {
-        console.warn(`[ModelManager] Failed to get content for tab ${tabId}:`, error);
-        return undefined;
-      }
+      return model.getValue();
     }
-    return undefined;
+    return null;
   }
 
   public updateModelContent(tabId: string, content: string): void {
