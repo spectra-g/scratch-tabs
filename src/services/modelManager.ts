@@ -397,12 +397,12 @@ class ModelManager {
     };
   }
 
-  public getContent(tabId: string): string | null {
+  public getContent(tabId: string): string | undefined {
     const model = this.models.get(tabId);
     if (model && !model.isDisposed()) {
       return model.getValue();
     }
-    return null;
+    return undefined;
   }
 
   public updateModelContent(tabId: string, content: string): void {

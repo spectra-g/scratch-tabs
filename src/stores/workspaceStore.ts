@@ -8,6 +8,7 @@ import { useCacheStore } from './cacheStore';
 import { incrementSetting } from '../db';
 import { WELCOME_TAB_CONTENT, NEW_TAB_PREFIX } from '../constants';
 import { modelManager } from '../services/modelManager';
+import { broadcastManager } from './broadcastStore';
 
 // Helper function to safely convert activeSide string to union type
 const parseActiveSide = (side: string | null): 'left' | 'right' | null => {
@@ -187,10 +188,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     },
 
     switchWorkspace: async (workspaceId: string) => {
-      const { workspaces, activeWorkspaceId: currentActiveWsId, isLoading } = get();
+      const { workspaces, activeWorkspaceId: currentActiveWsId } = get();
       const { saveState: persistCurrentState } = usePersistenceStore.getState();
 
-      if (workspaceId === currentActiveWsId || isLoading) {
+      // Only prevent switching if we're already on the target workspace
+      if (workspaceId === currentActiveWsId) {
         return;
       }
 
@@ -204,7 +206,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       set({ isLoading: true, error: null });
 
       try {
-        // 1. Persist the state of the current workspace before switching
+        // 1. Persist the state of the current workspace before switching (only if we have an active workspace)
         if (currentActiveWsId) {
           await persistCurrentState();
         }
@@ -283,6 +285,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
               w.id === workspaceId ? updatedWorkspace : w
             ),
           }));
+          
+          // Broadcast workspace rename
+          broadcastManager.broadcastWorkspaceList(get().workspaces, workspaceId);
         }
       } catch (error) {
         console.error("Failed to rename workspace:", error);
@@ -292,11 +297,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
     deleteWorkspace: async (workspaceId: string) => {
       const { workspaces, activeWorkspaceId, switchWorkspace } = get();
-
-      if (workspaces.length <= 1) {
-        console.warn("Cannot delete the last workspace.");
-        return;
-      }
 
       set({ isLoading: true });
       try {
@@ -309,6 +309,16 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           
           if (remainingWorkspaces.length > 0) {
             await switchWorkspace(remainingWorkspaces[0].id);
+          } else {
+            // No workspaces left, clear all state to show welcome screen
+            set({ 
+              workspaces: [], 
+              activeWorkspaceId: null 
+            });
+            useTabsStore.setState({ tabs: [] });
+            useSplitViewStore.setState({ 
+              splitView: useSplitViewStore.getState().createDefaultSplitViewState() 
+            });
           }
         }
         
@@ -316,6 +326,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         set(state => ({
           workspaces: state.workspaces.filter(w => w.id !== workspaceId),
         }));
+
+        // Broadcast workspace deletion
+        broadcastManager.broadcastWorkspaceDeletion(workspaceId);
 
       } catch (error) {
         console.error("Failed to delete workspace:", error);
@@ -402,6 +415,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           title: `${NEW_TAB_PREFIX} 1`,
           content: '',
           language: 'plaintext',
+          languageLocked: false,
           workspaceId: newWorkspace.id,
           dateCreated: Date.now(),
           lastModified: Date.now(),
@@ -419,10 +433,16 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           await storage.saveSplitViewNow(newSplitView as SplitViewRecord);
         });
 
+        // Update the state with the new workspace
         set(state => ({
           workspaces: [...state.workspaces, newWorkspace],
         }));
         
+        // Broadcast workspace creation with the updated workspace list
+        const currentState = get();
+        broadcastManager.broadcastWorkspaceList(currentState.workspaces, newWorkspace.id);
+        
+        // Switch to the new workspace
         await get().switchWorkspace(newWorkspace.id);
 
         return newWorkspace.id;
