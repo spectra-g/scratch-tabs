@@ -206,15 +206,27 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       set({ isLoading: true, error: null });
 
       try {
-        // 1. Persist the state of the current workspace before switching (only if we have an active workspace)
+        // 1. Save content from all active models BEFORE persisting state
+        const { tabs } = useTabsStore.getState();
+        const currentWorkspaceTabs = tabs.filter(tab => tab.workspaceId === currentActiveWsId);
+        
+        // Save content from all models that might not have been saved yet
+        currentWorkspaceTabs.forEach(tab => {
+          const liveContent = modelManager.getContent(tab.id);
+          if (liveContent !== undefined && liveContent !== tab.content) {
+            useTabsStore.getState().updateTabContent(tab.id, liveContent);
+          }
+        });
+
+        // 2. Persist the state of the current workspace before switching (only if we have an active workspace)
         if (currentActiveWsId) {
           await persistCurrentState();
         }
 
-        // 2. Clear model cache when switching workspaces to prevent memory leaks
+        // 3. Clear model cache when switching workspaces to prevent memory leaks
         modelManager.disposeAll();
 
-        // 3. Load data for the target workspace
+        // 4. Load data for the target workspace
         const cachedData = useCacheStore.getState().cachedSplitView;
         let splitViewToLoad: SplitViewRecord | null = null;
 
@@ -232,11 +244,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           return;
         }
 
-        // 4. Update lastAccessed timestamp for the target workspace
+        // 5. Update lastAccessed timestamp for the target workspace
         const updatedTargetWorkspace = { ...targetWorkspace, lastAccessed: Date.now() };
         await storage.saveWorkspace(updatedTargetWorkspace);
 
-        // 5. Update Zustand stores
+        // 6. Update Zustand stores
         set(state => ({
           workspaces: state.workspaces.map(w =>
             w.id === workspaceId ? updatedTargetWorkspace : w

@@ -32,7 +32,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
         const tabsToSave = workspaceTabs.map(tab => {
           const liveContent = modelManager.getContent(tab.id);
       
-          if (liveContent !== null) {
+          if (liveContent !== undefined) {
               return { ...tab, content: liveContent };
           } else {
               return tab;

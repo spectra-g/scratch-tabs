@@ -101,7 +101,7 @@ const MainLayout: React.FC = () => {
       // Use getState to ensure we always get the latest version of the saveState function
       // and prevent issues with stale closures.
       usePersistenceStore.getState().saveState();
-    }, 5000); // Save every 5 seconds
+    }, 2500); // Save every 2.5 seconds
 
     return () => {
       clearInterval(saveInterval); // Cleanup interval on unmount
