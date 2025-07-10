@@ -77,6 +77,9 @@ export class E2EWorld extends World {
     // Use the same selector as expectTabExistsAndNotActive
     const tab = this.page.locator(`[role="button"]:has-text("${tabTitle}")`);
     await tab.first().click();
+    // After switching tabs, focus the editor
+    const editorLocator = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
+    await editorLocator.focus();
   }
 
   async typeInEditor(content: any) {
@@ -446,6 +449,57 @@ export class E2EWorld extends World {
     
     // Type the content
     await editorLocator.fill(content);
+  }
+
+  async typeText(text: string) {
+    // Type text into the active editor (append to existing content)
+    const editorLocator = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
+    await editorLocator.focus();
+    await editorLocator.type(text);
+  }
+
+  async waitForSeconds(seconds: number) {
+    // Wait for the specified number of seconds
+    await this.page.waitForTimeout(seconds * 1000);
+  }
+
+  async pressCtrlZ() {
+    // Press Ctrl+Z to trigger undo using Monaco's action system
+    console.log('Pressing Ctrl+Z for undo...');
+    
+    try {
+      // Use Monaco's action system to trigger undo
+      await this.page.evaluate(() => {
+        const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
+        if (editor && (window as any).monaco) {
+          const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) => 
+            e.getDomNode() === editor
+          );
+          if (editorInstance) {
+            // Use Monaco's undo action
+            const undoAction = editorInstance.getAction('undo');
+            if (undoAction) {
+              undoAction.run();
+              console.log('Triggered Monaco undo action');
+            } else {
+              console.log('Undo action not found, trying keyboard shortcut');
+              // Fallback to keyboard shortcut
+              editorInstance.trigger('keyboard', 'undo', {});
+            }
+          }
+        }
+      });
+      
+      // Wait a moment for undo to take effect
+   //   await this.page.waitForTimeout(500);
+      
+    } catch (error) {
+      console.error('Error pressing Ctrl+Z:', error);
+    }
+    
+    // Log the current content after undo
+    const content = await this.getMonacoEditorContent();
+    console.log(`Content after undo: "${content}"`);
   }
 
   async expectFirst10LinesContainJson() {

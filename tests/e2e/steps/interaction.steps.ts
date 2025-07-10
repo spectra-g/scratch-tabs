@@ -84,4 +84,20 @@ When('I generate a 1.5MB JSON file and set it to clipboard', async function() {
 
 When('I type the following markdown content into the editor:', async function(content) {
   await this.typeMarkdownContent(content);
+});
+
+When('I type {string} into the editor', async function(text) {
+  await this.typeText(text);
+});
+
+When('I wait for {int} second', async function(seconds) {
+  await this.waitForSeconds(seconds);
+});
+
+When('I wait for {int} seconds', async function(seconds) {
+  await this.waitForSeconds(seconds);
+});
+
+When('I press Ctrl+Z', async function() {
+  await this.pressCtrlZ();
 }); 

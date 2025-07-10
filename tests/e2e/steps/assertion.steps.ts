@@ -62,4 +62,8 @@ Then('the status bar language should be {string}', async function(language) {
 
 Then('the status bar should show a green validation tick', async function() {
   await this.expectStatusBarValidationTick();
+});
+
+Then('the active editor content should be {string}', async function(expectedContent) {
+  await this.expectEditorContentToEqual(expectedContent);
 }); 
