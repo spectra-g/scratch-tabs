@@ -1,10 +1,10 @@
-import React from 'react';
-import { Tablet, TabletState } from '../types';
-import { OpenMetricsUI } from './OpenMetricsUI';
-import { MetricSample, Snapshot } from './types';
+import React from "react";
+import { Tablet, TabletState } from "../types";
+import { OpenMetricsUI } from "./OpenMetricsUI";
+import { MetricSample, Snapshot } from "./types";
 
 interface OpenMetricsTabletState extends TabletState {
-  type: 'openmetrics';
+  type: "openmetrics";
   data: {
     rawText: string;
     snapshots: Snapshot[];
@@ -13,29 +13,36 @@ interface OpenMetricsTabletState extends TabletState {
     selectedMetricName: string | null;
     selectedLabels: Record<string, string>;
     chartConfig: {
-      type: 'bar' | 'line' | 'pie';
+      type: "bar" | "line" | "pie";
       groupByLabels: string[];
     };
     queryString: string;
-    activeTab: 'editor' | 'explorer' | 'diff' | 'chart' | 'query';
+    activeTab: "editor" | "explorer" | "diff" | "chart" | "query";
   };
 }
 
 export const OpenMetricsTablet: Tablet = {
-  id: 'openmetrics',
-  label: 'OpenMetrics Viewer',
-  keywords: ['metrics', 'prometheus', 'openmetrics', 'monitoring', 'prom', 'exposition'],
+  id: "openmetrics",
+  label: "OpenMetrics Viewer",
+  keywords: [
+    "metrics",
+    "prometheus",
+    "openmetrics",
+    "monitoring",
+    "prom",
+    "exposition",
+  ],
 
   createInitialState(): OpenMetricsTabletState {
     const initialSnapshot: Snapshot = {
-      id: 'initial',
-      name: 'Initial',
+      id: "initial",
+      name: "Initial",
       createdAt: Date.now(),
-      metrics: []
+      metrics: [],
     };
 
     return {
-      type: 'openmetrics',
+      type: "openmetrics",
       data: {
         rawText: `# HELP http_requests_total The total number of HTTP requests.
 # TYPE http_requests_total counter
@@ -59,17 +66,17 @@ process_cpu_seconds_total 29323.04
 process_resident_memory_bytes 2478268416
 # EOF`,
         snapshots: [initialSnapshot],
-        activeSnapshotId: 'initial',
+        activeSnapshotId: "initial",
         compareSnapshotId: null,
         selectedMetricName: null,
         selectedLabels: {},
         chartConfig: {
-          type: 'bar',
-          groupByLabels: []
+          type: "bar",
+          groupByLabels: [],
         },
-        queryString: '',
-        activeTab: 'editor'
-      }
+        queryString: "",
+        activeTab: "editor",
+      },
     };
   },
 
@@ -80,11 +87,11 @@ process_resident_memory_bytes 2478268416
   deserializeState(json: string): TabletState {
     try {
       const parsed = JSON.parse(json);
-      if (parsed.type === 'openmetrics' && parsed.data) {
+      if (parsed.type === "openmetrics" && parsed.data) {
         return parsed as OpenMetricsTabletState;
       }
     } catch (e) {
-      console.error('Failed to deserialize OpenMetrics state:', e);
+      console.error("Failed to deserialize OpenMetrics state:", e);
     }
     return this.createInitialState();
   },
@@ -92,15 +99,15 @@ process_resident_memory_bytes 2478268416
   render(state: TabletState, onChange: (state: TabletState) => void) {
     const typedState = state as OpenMetricsTabletState;
     return (
-      <OpenMetricsUI 
-        state={typedState.data} 
+      <OpenMetricsUI
+        state={typedState.data}
         onChange={(newData) => {
           onChange({
             ...typedState,
-            data: newData
+            data: newData,
           });
         }}
       />
     );
-  }
+  },
 };

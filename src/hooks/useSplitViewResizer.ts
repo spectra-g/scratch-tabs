@@ -1,5 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { debounce } from '../utils/domUtils';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+import { debounce } from "../utils/domUtils";
 
 // Type for the callback function to update the ratio in the parent state (e.g., Zustand store)
 type SetSplitRatioCallback = (ratio: number) => void;
@@ -19,7 +25,7 @@ export const useSplitViewResizer = (
   isSplitEnabled: boolean, // Is the split view currently active?
   initialRatioValue: number, // The ratio controlled by the parent state
   setSplitRatioCallback: SetSplitRatioCallback, // Function to update parent state
-  options: UseSplitViewResizerOptions = {}
+  options: UseSplitViewResizerOptions = {},
 ) => {
   const {
     minRatio = DEFAULT_MIN_RATIO,
@@ -65,10 +71,11 @@ export const useSplitViewResizer = (
 
   // Debounced function to update the parent state
   const debouncedSetRatio = useMemo(
-    () => debounce((ratio: number) => {
-      callbackRef.current(ratio);
-    }, debounceMs),
-    [debounceMs]
+    () =>
+      debounce((ratio: number) => {
+        callbackRef.current(ratio);
+      }, debounceMs),
+    [debounceMs],
   );
 
   // Cleanup debouncer on unmount
@@ -78,26 +85,30 @@ export const useSplitViewResizer = (
     };
   }, [debouncedSetRatio]);
 
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      // --- CHECK REF ---
+      if (
+        !isDraggingRef.current ||
+        !containerRef.current ||
+        !isSplitEnabledRef.current
+      ) {
+        return;
+      }
+      event.preventDefault();
+      const rect = containerRef.current.getBoundingClientRect();
+      const containerWidth = rect.width;
+      if (containerWidth <= 0) return;
+      const mouseX = event.clientX - rect.left;
+      let newRatio = mouseX / containerWidth;
+      newRatio = Math.max(minRatio, Math.min(maxRatio, newRatio));
 
-  const handleMouseMove = useCallback((event: MouseEvent) => {
-    // --- CHECK REF ---
-    if (!isDraggingRef.current || !containerRef.current || !isSplitEnabledRef.current) {
-      return;
-    }
-    event.preventDefault();
-    const rect = containerRef.current.getBoundingClientRect();
-    const containerWidth = rect.width;
-    if (containerWidth <= 0) return;
-    const mouseX = event.clientX - rect.left;
-    let newRatio = mouseX / containerWidth;
-    newRatio = Math.max(minRatio, Math.min(maxRatio, newRatio));
-
-    setCurrentRatio(newRatio); // Update state for styles
-    latestRatioRef.current = newRatio; // Update ref for final value
-    debouncedSetRatio(newRatio);
-
-  }, [minRatio, maxRatio, debouncedSetRatio]);
-
+      setCurrentRatio(newRatio); // Update state for styles
+      latestRatioRef.current = newRatio; // Update ref for final value
+      debouncedSetRatio(newRatio);
+    },
+    [minRatio, maxRatio, debouncedSetRatio],
+  );
 
   const handleMouseUp = useCallback(() => {
     // --- CHECK REF ---
@@ -106,80 +117,78 @@ export const useSplitViewResizer = (
     const finalRatio = latestRatioRef.current;
 
     setDragging(false); // --- USE HELPER ---
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    document.body.style.cursor = '';
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "";
 
     debouncedSetRatio.cancel();
     callbackRef.current(finalRatio);
-
   }, [handleMouseMove, debouncedSetRatio, setDragging]);
 
+  const handleMouseDown = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!isSplitEnabledRef.current) return;
+      if (event.button !== 0) return;
+      event.preventDefault();
 
-  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!isSplitEnabledRef.current) return;
-    if (event.button !== 0) return;
-    event.preventDefault();
-
-    latestRatioRef.current = currentRatio; // Initialize latest ratio ref
-    setDragging(true); // --- USE HELPER ---
-    document.body.style.cursor = 'col-resize';
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-  }, [handleMouseMove, handleMouseUp, currentRatio, setDragging]);
-
+      latestRatioRef.current = currentRatio; // Initialize latest ratio ref
+      setDragging(true); // --- USE HELPER ---
+      document.body.style.cursor = "col-resize";
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    },
+    [handleMouseMove, handleMouseUp, currentRatio, setDragging],
+  );
 
   // Calculate pane styles based on the currentRatio STATE (for visual feedback)
   const paneStyles = useMemo(() => {
     if (!isSplitEnabled) {
       return {
-        leftPaneStyle: { 
-          flex: '1 1 auto', 
+        leftPaneStyle: {
+          flex: "1 1 auto",
           minWidth: 0,
-          width: '100%',
-          maxWidth: '100%'
+          width: "100%",
+          maxWidth: "100%",
         },
-        rightPaneStyle: { 
-          flex: '0 0 0', 
-          display: 'none',
+        rightPaneStyle: {
+          flex: "0 0 0",
+          display: "none",
           minWidth: 0,
-          width: '0%'
+          width: "0%",
         },
       };
     }
     const leftPercent = Math.max(15, Math.min(85, currentRatio * 100));
     const rightPercent = 100 - leftPercent;
-    
 
-    
     return {
-      leftPaneStyle: { 
-        flex: `0 0 ${leftPercent}%`, 
+      leftPaneStyle: {
+        flex: `0 0 ${leftPercent}%`,
         minWidth: 0,
         width: `${leftPercent}%`,
         maxWidth: `${leftPercent}%`,
-        boxSizing: 'border-box' as const
+        boxSizing: "border-box" as const,
       },
-      rightPaneStyle: { 
-        flex: `0 0 ${rightPercent}%`, 
+      rightPaneStyle: {
+        flex: `0 0 ${rightPercent}%`,
         minWidth: 0,
         width: `${rightPercent}%`,
         maxWidth: `${rightPercent}%`,
-        boxSizing: 'border-box' as const
+        boxSizing: "border-box" as const,
       },
     };
   }, [currentRatio, isSplitEnabled]);
 
-
   // Props to be spread onto the divider element
-  const dividerProps = useMemo(() => ({
-    onMouseDown: handleMouseDown,
-    style: {
-      cursor: isSplitEnabled ? 'col-resize' : 'default',
-    }
-  }), [handleMouseDown, isSplitEnabled]); // Keep handleMouseDown dependency
-
+  const dividerProps = useMemo(
+    () => ({
+      onMouseDown: handleMouseDown,
+      style: {
+        cursor: isSplitEnabled ? "col-resize" : "default",
+      },
+    }),
+    [handleMouseDown, isSplitEnabled],
+  ); // Keep handleMouseDown dependency
 
   return {
     containerRef,

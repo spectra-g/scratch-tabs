@@ -7,8 +7,8 @@ class MockDexie {
   version(version) {
     return {
       stores: () => ({
-        upgrade: () => this
-      })
+        upgrade: () => this,
+      }),
     };
   }
 
@@ -20,12 +20,12 @@ class MockDexie {
       where: jest.fn(() => ({
         equals: jest.fn(() => ({
           toArray: jest.fn(() => Promise.resolve([])),
-          first: jest.fn(() => Promise.resolve(null))
-        }))
+          first: jest.fn(() => Promise.resolve(null)),
+        })),
       })),
       toArray: jest.fn(() => Promise.resolve([])),
       delete: jest.fn(),
-      clear: jest.fn()
+      clear: jest.fn(),
     };
   }
 
@@ -43,4 +43,4 @@ class MockDexie {
 }
 
 module.exports = MockDexie;
-module.exports.default = MockDexie; 
+module.exports.default = MockDexie;

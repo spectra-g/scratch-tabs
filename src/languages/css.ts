@@ -1,14 +1,17 @@
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types';
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
 
 /**
  * CSS language detector
  */
-export class CssLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'css';
-  name = 'CSS';
-  extensions = ['css', 'scss', 'less'];
+export class CssLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "css";
+  name = "CSS";
+  extensions = ["css", "scss", "less"];
   priority = 4;
 
   sampleContent(): string {
@@ -85,16 +88,31 @@ a:hover {
     const selectorLineRegex = /^\s*\w[\w\-]*\s*\{$/; // h1 {
     const declarationLineRegex = /^\s*[\w\-]+\s*:\s*[^;]+;\s*$/; // color: red;
     const commentLineRegex = /^\s*\/\*.*\*\/\s*$/; // /* comment */
-    
+
     // Common CSS properties (almost always CSS)
     const commonCssProperties = new Set([
-      'color', 'background', 'background-color', 'margin', 'padding', 
-      'font-size', 'font-family', 'font-weight', 'text-align', 'display',
-      'width', 'height', 'border', 'position', 'top', 'left', 'right', 'bottom'
+      "color",
+      "background",
+      "background-color",
+      "margin",
+      "padding",
+      "font-size",
+      "font-family",
+      "font-weight",
+      "text-align",
+      "display",
+      "width",
+      "height",
+      "border",
+      "position",
+      "top",
+      "left",
+      "right",
+      "bottom",
     ]);
-    
+
     // Split into lines and analyze
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     let selectorLineCount = 0;
     let declarationLineCount = 0;
     let commonPropertyCount = 0;
@@ -110,7 +128,7 @@ a:hover {
       }
 
       // Skip closing braces (don't count them as they're common in many languages)
-      if (trimmedLine === '}') {
+      if (trimmedLine === "}") {
         continue;
       }
 
@@ -126,26 +144,26 @@ a:hover {
       if (declarationLineRegex.test(trimmedLine)) {
         declarationLineCount++;
         confidenceScore += 0.2; // Good signal
-        
+
         // Extract property name to check if it's common CSS
         const propertyMatch = trimmedLine.match(/^\s*([\w\-]+)\s*:/);
         if (propertyMatch) {
           const propertyName = propertyMatch[1].toLowerCase();
-          
+
           // Check for common CSS properties
           if (commonCssProperties.has(propertyName)) {
             commonPropertyCount++;
             confidenceScore += 0.15; // Bonus for common CSS properties
             strongCssSignal = true;
           }
-          
+
           // Check for hyphenated property names (common in CSS)
-          if (propertyName.includes('-')) {
+          if (propertyName.includes("-")) {
             hyphenatedPropertyCount++;
             confidenceScore += 0.1; // Bonus for hyphenated properties
           }
         }
-        
+
         patternsMatched++;
       }
     }
@@ -166,7 +184,7 @@ a:hover {
     if (/\b(function|var|let|const|return|import|export)\b/.test(content)) {
       confidenceScore -= 0.4; // JavaScript keywords
     }
-    
+
     if (/"[\w\-]+"\s*:/.test(content) && !selectorLineCount) {
       confidenceScore -= 0.3; // JSON-like quoted keys without CSS selectors
     }
@@ -178,19 +196,24 @@ a:hover {
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
     // Simple matching criteria
-    const isMatch = (selectorLineCount >= 1 && declarationLineCount >= 1) || // At least one selector and one declaration
-                   (declarationLineCount >= 3 && commonPropertyCount >= 1) ||  // Multiple declarations with common CSS properties
-                   (strongCssSignal && confidenceScore >= 0.4);
+    const isMatch =
+      (selectorLineCount >= 1 && declarationLineCount >= 1) || // At least one selector and one declaration
+      (declarationLineCount >= 3 && commonPropertyCount >= 1) || // Multiple declarations with common CSS properties
+      (strongCssSignal && confidenceScore >= 0.4);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongCssSignal && selectorLineCount >= 1 && commonPropertyCount >= 1
+      matchedDefinitive:
+        isMatch &&
+        strongCssSignal &&
+        selectorLineCount >= 1 &&
+        commonPropertyCount >= 1,
     };
   }
 
   getFileExtension(): string {
-    return 'css';
+    return "css";
   }
 
   registerProvider(monaco: any): void {

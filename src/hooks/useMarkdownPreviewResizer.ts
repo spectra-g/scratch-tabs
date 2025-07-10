@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { debounce } from '../utils/domUtils';
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { debounce } from "../utils/domUtils";
 
 interface UseMarkdownPreviewResizerOptions {
   minRatio?: number; // Minimum ratio for the editor pane (e.g., 0.2 for 20%)
@@ -14,7 +14,7 @@ const DEFAULT_INITIAL_RATIO = 0.5; // 50-50 split
 
 export const useMarkdownPreviewResizer = (
   isPreviewEnabled: boolean, // Is the preview currently active?
-  options: UseMarkdownPreviewResizerOptions = {}
+  options: UseMarkdownPreviewResizerOptions = {},
 ) => {
   const {
     minRatio = DEFAULT_MIN_RATIO,
@@ -46,10 +46,11 @@ export const useMarkdownPreviewResizer = (
 
   // Debounced function for smooth visual updates during drag
   const debouncedSetRatio = useMemo(
-    () => debounce((ratio: number) => {
-      setCurrentRatio(ratio);
-    }, debounceMs),
-    [debounceMs]
+    () =>
+      debounce((ratio: number) => {
+        setCurrentRatio(ratio);
+      }, debounceMs),
+    [debounceMs],
   );
 
   // Cleanup debouncer on unmount
@@ -59,91 +60,107 @@ export const useMarkdownPreviewResizer = (
     };
   }, [debouncedSetRatio]);
 
-  const handleMouseMove = useCallback((event: MouseEvent) => {
-    if (!isDraggingRef.current || !containerRef.current || !isPreviewEnabledRef.current) {
-      return;
-    }
-    event.preventDefault();
-    const rect = containerRef.current.getBoundingClientRect();
-    const containerWidth = rect.width;
-    if (containerWidth <= 0) return;
-    
-    const mouseX = event.clientX - rect.left;
-    let newRatio = mouseX / containerWidth;
-    newRatio = Math.max(minRatio, Math.min(maxRatio, newRatio));
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      if (
+        !isDraggingRef.current ||
+        !containerRef.current ||
+        !isPreviewEnabledRef.current
+      ) {
+        return;
+      }
+      event.preventDefault();
+      const rect = containerRef.current.getBoundingClientRect();
+      const containerWidth = rect.width;
+      if (containerWidth <= 0) return;
 
-    // Update immediately for smooth dragging
-    setCurrentRatio(newRatio);
-  }, [minRatio, maxRatio]);
+      const mouseX = event.clientX - rect.left;
+      let newRatio = mouseX / containerWidth;
+      newRatio = Math.max(minRatio, Math.min(maxRatio, newRatio));
+
+      // Update immediately for smooth dragging
+      setCurrentRatio(newRatio);
+    },
+    [minRatio, maxRatio],
+  );
 
   const handleMouseUp = useCallback(() => {
     if (!isDraggingRef.current) return;
 
     setDragging(false);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
   }, [handleMouseMove, setDragging]);
 
-  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!isPreviewEnabledRef.current) return;
-    if (event.button !== 0) return; // Only left mouse button
-    event.preventDefault();
+  const handleMouseDown = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!isPreviewEnabledRef.current) return;
+      if (event.button !== 0) return; // Only left mouse button
+      event.preventDefault();
 
-    setDragging(true);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none'; // Prevent text selection while dragging
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [handleMouseMove, handleMouseUp, setDragging]);
+      setDragging(true);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none"; // Prevent text selection while dragging
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    },
+    [handleMouseMove, handleMouseUp, setDragging],
+  );
 
   // Calculate pane styles based on the currentRatio
   const paneStyles = useMemo(() => {
     if (!isPreviewEnabled) {
       return {
-        editorStyle: { 
-          flex: '1 1 auto', 
+        editorStyle: {
+          flex: "1 1 auto",
           minWidth: 0,
-          width: '100%'
+          width: "100%",
         },
-        previewStyle: { 
-          flex: '0 0 0', 
-          display: 'none',
+        previewStyle: {
+          flex: "0 0 0",
+          display: "none",
           minWidth: 0,
-          width: '0%'
+          width: "0%",
         },
       };
     }
 
-    const editorPercent = Math.max(minRatio * 100, Math.min(maxRatio * 100, currentRatio * 100));
+    const editorPercent = Math.max(
+      minRatio * 100,
+      Math.min(maxRatio * 100, currentRatio * 100),
+    );
     const previewPercent = 100 - editorPercent;
-    
+
     return {
-      editorStyle: { 
-        flex: `0 0 ${editorPercent}%`, 
+      editorStyle: {
+        flex: `0 0 ${editorPercent}%`,
         minWidth: 0,
         width: `${editorPercent}%`,
         maxWidth: `${editorPercent}%`,
-        boxSizing: 'border-box' as const
+        boxSizing: "border-box" as const,
       },
-      previewStyle: { 
-        flex: `0 0 ${previewPercent}%`, 
+      previewStyle: {
+        flex: `0 0 ${previewPercent}%`,
         minWidth: 0,
         width: `${previewPercent}%`,
         maxWidth: `${previewPercent}%`,
-        boxSizing: 'border-box' as const
+        boxSizing: "border-box" as const,
       },
     };
   }, [currentRatio, isPreviewEnabled, minRatio, maxRatio]);
 
   // Props to be spread onto the divider element
-  const dividerProps = useMemo(() => ({
-    onMouseDown: handleMouseDown,
-    style: {
-      cursor: isPreviewEnabled ? 'col-resize' : 'default',
-    }
-  }), [handleMouseDown, isPreviewEnabled]);
+  const dividerProps = useMemo(
+    () => ({
+      onMouseDown: handleMouseDown,
+      style: {
+        cursor: isPreviewEnabled ? "col-resize" : "default",
+      },
+    }),
+    [handleMouseDown, isPreviewEnabled],
+  );
 
   return {
     containerRef,
@@ -152,4 +169,4 @@ export const useMarkdownPreviewResizer = (
     dividerProps,
     isDragging,
   };
-}; 
+};

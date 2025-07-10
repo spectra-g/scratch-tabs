@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface TabTooltipProps {
   content: {
@@ -12,24 +12,29 @@ interface TabTooltipProps {
   visible: boolean;
 }
 
-export const TabTooltip: React.FC<TabTooltipProps> = ({ content, position, visible }) => {
+export const TabTooltip: React.FC<TabTooltipProps> = ({
+  content,
+  position,
+  visible,
+}) => {
   if (!visible || !position || !content) {
     return null;
   }
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString(undefined, {
-       dateStyle: 'short', timeStyle: 'medium'
+      dateStyle: "short",
+      timeStyle: "medium",
     });
   };
 
   const style: React.CSSProperties = {
-    position: 'fixed',
+    position: "fixed",
     left: `${position.x}px`,
     top: `${position.y}px`,
-    transform: 'translateX(-50%) translateY(10px)',
+    transform: "translateX(-50%) translateY(10px)",
     zIndex: 100,
-    pointerEvents: 'none',
+    pointerEvents: "none",
   };
 
   return (
@@ -47,16 +52,25 @@ export const TabTooltip: React.FC<TabTooltipProps> = ({ content, position, visib
           {content.lineCount !== undefined && (
             <div>
               <span className="text-gray-400 mr-1">Lines:</span>
-              <span className="text-gray-100 font-medium">{content.lineCount}</span> {/* Brighter Value */}
+              <span className="text-gray-100 font-medium">
+                {content.lineCount}
+              </span>{" "}
+              {/* Brighter Value */}
             </div>
           )}
           <div>
             <span className="text-gray-400 mr-1">Created:</span>
-            <span className="text-gray-100 font-medium">{formatDate(content.dateCreated)}</span> {/* Brighter Value */}
+            <span className="text-gray-100 font-medium">
+              {formatDate(content.dateCreated)}
+            </span>{" "}
+            {/* Brighter Value */}
           </div>
           <div>
             <span className="text-gray-400 mr-1">Modified:</span>
-            <span className="text-gray-100 font-medium">{formatDate(content.lastModified)}</span> {/* Brighter Value */}
+            <span className="text-gray-100 font-medium">
+              {formatDate(content.lastModified)}
+            </span>{" "}
+            {/* Brighter Value */}
           </div>
         </div>
       </div>

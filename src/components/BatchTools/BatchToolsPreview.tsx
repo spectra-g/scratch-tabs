@@ -1,15 +1,15 @@
-import React, { useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useMemo } from "react";
+import { Loader2 } from "lucide-react";
 
 interface BatchToolsPreviewProps {
   originalContent: string;
   transformedContent: string;
-  previewMode: 'unified' | 'side-by-side';
+  previewMode: "unified" | "side-by-side";
   isProcessing: boolean;
 }
 
 interface DiffLine {
-  type: 'unchanged' | 'added' | 'removed';
+  type: "unchanged" | "added" | "removed";
   content: string;
   lineNumber?: number;
 }
@@ -18,41 +18,41 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
   originalContent,
   transformedContent,
   previewMode,
-  isProcessing
+  isProcessing,
 }) => {
   const diff = useMemo(() => {
-    if (previewMode === 'side-by-side') {
+    if (previewMode === "side-by-side") {
       return null; // Side-by-side doesn't need diff computation
     }
 
     // Simple unified diff
-    const originalLines = originalContent.split('\n');
-    const transformedLines = transformedContent.split('\n');
+    const originalLines = originalContent.split("\n");
+    const transformedLines = transformedContent.split("\n");
     const diffLines: DiffLine[] = [];
 
     const maxLines = Math.max(originalLines.length, transformedLines.length);
-    
+
     for (let i = 0; i < maxLines; i++) {
-      const originalLine = originalLines[i] || '';
-      const transformedLine = transformedLines[i] || '';
-      
+      const originalLine = originalLines[i] || "";
+      const transformedLine = transformedLines[i] || "";
+
       if (originalLine === transformedLine) {
         diffLines.push({
-          type: 'unchanged',
+          type: "unchanged",
           content: originalLine,
           lineNumber: i + 1,
         });
       } else {
         if (originalLine && originalLine !== transformedLine) {
           diffLines.push({
-            type: 'removed',
+            type: "removed",
             content: originalLine,
             lineNumber: i + 1,
           });
         }
         if (transformedLine && transformedLine !== originalLine) {
           diffLines.push({
-            type: 'added',
+            type: "added",
             content: transformedLine,
             lineNumber: i + 1,
           });
@@ -63,7 +63,7 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
     return diffLines;
   }, [originalContent, transformedContent, previewMode]);
 
-  if (previewMode === 'side-by-side') {
+  if (previewMode === "side-by-side") {
     return (
       <div className="grid grid-cols-2 gap-4 h-full">
         {/* Original */}
@@ -71,12 +71,14 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
           <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">
             <h3 className="text-sm font-medium text-gray-300">Original</h3>
             <span className="text-xs text-gray-500">
-              {originalContent.split('\n').length} lines
+              {originalContent.split("\n").length} lines
             </span>
           </div>
           <div className="flex-1 overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
             <pre className="p-3 text-sm text-gray-300 whitespace-pre-wrap break-words">
-              {originalContent || <span className="text-gray-500 italic">No content</span>}
+              {originalContent || (
+                <span className="text-gray-500 italic">No content</span>
+              )}
             </pre>
           </div>
         </div>
@@ -86,18 +88,22 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
           <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">
             <h3 className="text-sm font-medium text-gray-300">Transformed</h3>
             <span className="text-xs text-gray-500">
-              {transformedContent.split('\n').length} lines
+              {transformedContent.split("\n").length} lines
             </span>
           </div>
           <div className="flex-1 overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
             {isProcessing ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                <span className="ml-2 text-gray-400">Processing transformations...</span>
+                <span className="ml-2 text-gray-400">
+                  Processing transformations...
+                </span>
               </div>
             ) : (
               <pre className="p-3 text-sm text-gray-300 whitespace-pre-wrap break-words">
-                {transformedContent || <span className="text-gray-500 italic">No content</span>}
+                {transformedContent || (
+                  <span className="text-gray-500 italic">No content</span>
+                )}
               </pre>
             )}
           </div>
@@ -111,7 +117,9 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-400">Processing transformations...</span>
+        <span className="ml-2 text-gray-400">
+          Processing transformations...
+        </span>
       </div>
     );
   }
@@ -124,7 +132,7 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
           {diff?.length || 0} changes
         </span>
       </div>
-      
+
       <div className="flex-1 overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
         {diff && diff.length > 0 ? (
           <div className="text-sm">
@@ -132,18 +140,22 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
               <div
                 key={index}
                 className={`px-3 py-1 flex ${
-                  line.type === 'added'
-                    ? 'bg-green-900/30 text-green-300'
-                    : line.type === 'removed'
-                    ? 'bg-red-900/30 text-red-300'
-                    : 'text-gray-300'
+                  line.type === "added"
+                    ? "bg-green-900/30 text-green-300"
+                    : line.type === "removed"
+                      ? "bg-red-900/30 text-red-300"
+                      : "text-gray-300"
                 }`}
               >
                 <span className="w-8 flex-shrink-0 text-gray-500 text-right mr-3">
                   {line.lineNumber}
                 </span>
                 <span className="w-4 flex-shrink-0 text-center">
-                  {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : ' '}
+                  {line.type === "added"
+                    ? "+"
+                    : line.type === "removed"
+                      ? "-"
+                      : " "}
                 </span>
                 <span className="flex-1 whitespace-pre-wrap break-words">
                   {line.content}
@@ -159,4 +171,4 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
       </div>
     </div>
   );
-}; 
+};

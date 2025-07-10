@@ -1,5 +1,11 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, ExternalLink, X, Archive, RefreshCw } from 'lucide-react';
+import { Component, ErrorInfo, ReactNode } from "react";
+import {
+  AlertTriangle,
+  ExternalLink,
+  X,
+  Archive,
+  RefreshCw,
+} from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -23,47 +29,47 @@ export class TabletErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { 
-      hasError: true, 
+    return {
+      hasError: true,
       error,
-      errorTime: new Date()
+      errorTime: new Date(),
     };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Tablet Error Boundary caught an error:', error, errorInfo);
+    console.error("Tablet Error Boundary caught an error:", error, errorInfo);
     this.setState({
       error,
       errorInfo,
-      errorTime: new Date()
+      errorTime: new Date(),
     });
   }
 
   private generateGitHubIssueUrl = (): string => {
     const { tabletType, tabletId } = this.props;
     const { error, errorInfo, errorTime } = this.state;
-    
+
     const title = `Tablet Rendering Error: ${tabletType}`;
-    
+
     const body = `**Problem Description**
 A tablet failed to render and caused the app to become unusable.
 
 **Tablet Details**
 - **Type**: ${tabletType}
 - **ID**: ${tabletId}
-- **Error Time**: ${errorTime?.toISOString() || 'Unknown'}
+- **Error Time**: ${errorTime?.toISOString() || "Unknown"}
 - **Browser**: ${navigator.userAgent}
 
 **Error Information**
-- **Error Message**: ${error?.message || 'Unknown error'}
+- **Error Message**: ${error?.message || "Unknown error"}
 - **Error Stack**: 
 \`\`\`
-${error?.stack || 'No stack trace available'}
+${error?.stack || "No stack trace available"}
 \`\`\`
 
 **Component Stack**:
 \`\`\`
-${errorInfo?.componentStack || 'No component stack available'}
+${errorInfo?.componentStack || "No component stack available"}
 \`\`\`
 
 **Additional Context**
@@ -76,7 +82,7 @@ The tablet should render normally without breaking the entire application.
     const params = new URLSearchParams({
       title,
       body,
-      labels: 'bug,tablet-error'
+      labels: "bug,tablet-error",
     });
 
     return `https://github.com/spectra-g/scratch-tabs-feedback/issues/new?${params.toString()}`;
@@ -90,28 +96,36 @@ The tablet should render normally without breaking the entire application.
   public render() {
     if (this.state.hasError) {
       const githubUrl = this.generateGitHubIssueUrl();
-      
+
       return (
         <div className="h-full bg-gray-900 text-gray-100 p-6 overflow-y-auto custom-scrollbar">
           <div className="max-w-2xl mx-auto flex flex-col justify-center min-h-full">
             <div className="flex items-center gap-3 mb-6">
               <AlertTriangle className="text-red-400" size={32} />
               <div>
-                <h2 className="text-xl font-semibold text-red-400">Tablet Error</h2>
-                <p className="text-gray-300">Something went wrong with this {this.props.tabletType} tablet</p>
+                <h2 className="text-xl font-semibold text-red-400">
+                  Tablet Error
+                </h2>
+                <p className="text-gray-300">
+                  Something went wrong with this {this.props.tabletType} tablet
+                </p>
               </div>
             </div>
 
             <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
               <p className="text-gray-300 leading-relaxed">
-                We apologize for the inconvenience. This tablet encountered an error and couldn't render properly. 
-                To help us fix this issue and prevent it from happening again, please consider reporting it.
+                We apologize for the inconvenience. This tablet encountered an
+                error and couldn't render properly. To help us fix this issue
+                and prevent it from happening again, please consider reporting
+                it.
               </p>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-200">Recovery Options:</h3>
-              
+              <h3 className="text-lg font-medium text-gray-200">
+                Recovery Options:
+              </h3>
+
               <div className="grid gap-3">
                 {this.props.onRetry && (
                   <button
@@ -121,7 +135,9 @@ The tablet should render normally without breaking the entire application.
                     <RefreshCw size={18} />
                     <div className="text-left">
                       <div className="font-medium">Try Again</div>
-                      <div className="text-sm text-blue-200">Attempt to reload this tablet</div>
+                      <div className="text-sm text-blue-200">
+                        Attempt to reload this tablet
+                      </div>
                     </div>
                   </button>
                 )}
@@ -135,15 +151,22 @@ The tablet should render normally without breaking the entire application.
                   <ExternalLink size={18} />
                   <div className="text-left">
                     <div className="font-medium">Report Issue on GitHub</div>
-                    <div className="text-sm text-green-200">Help us fix this by reporting the error (recommended)</div>
+                    <div className="text-sm text-green-200">
+                      Help us fix this by reporting the error (recommended)
+                    </div>
                   </div>
                 </a>
 
                 <div className="flex items-center gap-3 w-full p-3 bg-yellow-600/20 border border-yellow-600/50 rounded-lg">
                   <Archive size={18} className="text-yellow-400" />
                   <div className="text-left">
-                    <div className="font-medium text-yellow-200">Move to a 'Recovery' Workspace</div>
-                    <div className="text-sm text-yellow-300">Manually drag this tab to a different workspace to keep it out of the way</div>
+                    <div className="font-medium text-yellow-200">
+                      Move to a 'Recovery' Workspace
+                    </div>
+                    <div className="text-sm text-yellow-300">
+                      Manually drag this tab to a different workspace to keep it
+                      out of the way
+                    </div>
                   </div>
                 </div>
 
@@ -155,19 +178,30 @@ The tablet should render normally without breaking the entire application.
                     <X size={18} />
                     <div className="text-left">
                       <div className="font-medium">Close This Tab</div>
-                      <div className="text-sm text-red-200">Remove this tab and create a fresh one</div>
+                      <div className="text-sm text-red-200">
+                        Remove this tab and create a fresh one
+                      </div>
                     </div>
                   </button>
                 )}
               </div>
 
               <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
-                <h4 className="font-medium text-gray-200 mb-2">What happens next?</h4>
+                <h4 className="font-medium text-gray-200 mb-2">
+                  What happens next?
+                </h4>
                 <ul className="text-sm text-gray-400 space-y-1">
-                  <li>• If you report the issue, our team will investigate and provide a fix</li>
-                  <li>• You can continue using other tabs and features normally</li>
+                  <li>
+                    • If you report the issue, our team will investigate and
+                    provide a fix
+                  </li>
+                  <li>
+                    • You can continue using other tabs and features normally
+                  </li>
                   <li>• Your data in other tabs is safe and unaffected</li>
-                  <li>• Check back on the GitHub issue for updates and solutions</li>
+                  <li>
+                    • Check back on the GitHub issue for updates and solutions
+                  </li>
                 </ul>
               </div>
 
@@ -177,11 +211,15 @@ The tablet should render normally without breaking the entire application.
                     Technical Details (for debugging)
                   </summary>
                   <div className="mt-2 p-3 bg-gray-800 rounded border border-gray-700 text-xs font-mono text-gray-400">
-                    <div><strong>Error:</strong> {this.state.error.message}</div>
+                    <div>
+                      <strong>Error:</strong> {this.state.error.message}
+                    </div>
                     {this.state.error.stack && (
                       <div className="mt-2">
                         <strong>Stack:</strong>
-                        <pre className="whitespace-pre-wrap mt-1">{this.state.error.stack}</pre>
+                        <pre className="whitespace-pre-wrap mt-1">
+                          {this.state.error.stack}
+                        </pre>
                       </div>
                     )}
                   </div>
@@ -195,4 +233,4 @@ The tablet should render normally without breaking the entire application.
 
     return this.props.children;
   }
-} 
+}

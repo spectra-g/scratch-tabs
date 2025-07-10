@@ -1,5 +1,5 @@
 export const pythonSnippet = {
-  name: 'Python',
+  name: "Python",
   code: `def calculate_fibonacci(n):
     if n <= 0:
         return []
@@ -21,5 +21,5 @@ def main():
         print(f"{i + 1}: {num}")
 
 if __name__ == "__main__":
-    main()`
+    main()`,
 };

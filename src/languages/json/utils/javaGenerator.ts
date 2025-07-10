@@ -13,8 +13,8 @@ interface PropertyInfo {
 function toPascalCase(str: string): string {
   return str
     .split(/[^a-zA-Z0-9]/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('');
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join("");
 }
 
 function toCamelCase(str: string): string {
@@ -23,39 +23,63 @@ function toCamelCase(str: string): string {
 }
 
 function getJavaType(value: any, propertyName: string): PropertyInfo {
-  if (value === null) return { name: propertyName, type: 'Object', isArray: false, isObject: false };
-  
+  if (value === null)
+    return {
+      name: propertyName,
+      type: "Object",
+      isArray: false,
+      isObject: false,
+    };
+
   if (Array.isArray(value)) {
-    const elementType = value.length > 0 ? getJavaType(value[0], propertyName) : { type: 'Object', isObject: false };
+    const elementType =
+      value.length > 0
+        ? getJavaType(value[0], propertyName)
+        : { type: "Object", isObject: false };
     return {
       name: propertyName,
       type: elementType.type,
       isArray: true,
-      isObject: elementType.isObject
+      isObject: elementType.isObject,
     };
   }
 
   switch (typeof value) {
-    case 'string':
-      return { name: propertyName, type: 'String', isArray: false, isObject: false };
-    case 'number':
+    case "string":
       return {
         name: propertyName,
-        type: Number.isInteger(value) ? 'Integer' : 'Double',
+        type: "String",
         isArray: false,
-        isObject: false
+        isObject: false,
       };
-    case 'boolean':
-      return { name: propertyName, type: 'Boolean', isArray: false, isObject: false };
-    case 'object':
+    case "number":
+      return {
+        name: propertyName,
+        type: Number.isInteger(value) ? "Integer" : "Double",
+        isArray: false,
+        isObject: false,
+      };
+    case "boolean":
+      return {
+        name: propertyName,
+        type: "Boolean",
+        isArray: false,
+        isObject: false,
+      };
+    case "object":
       return {
         name: propertyName,
         type: toPascalCase(propertyName),
         isArray: false,
-        isObject: true
+        isObject: true,
       };
     default:
-      return { name: propertyName, type: 'Object', isArray: false, isObject: false };
+      return {
+        name: propertyName,
+        type: "Object",
+        isArray: false,
+        isObject: false,
+      };
   }
 }
 
@@ -63,31 +87,31 @@ function generateImports(properties: PropertyInfo[]): string {
   const imports = new Set<string>();
 
   // Add imports based on property types
-  properties.forEach(prop => {
+  properties.forEach((prop) => {
     if (prop.isArray) {
-      imports.add('import java.util.List;');
-      imports.add('import java.util.ArrayList;');
+      imports.add("import java.util.List;");
+      imports.add("import java.util.ArrayList;");
     }
   });
 
   // Add common imports
-  imports.add('import java.util.Objects;');
+  imports.add("import java.util.Objects;");
 
-  return Array.from(imports).sort().join('\n');
+  return Array.from(imports).sort().join("\n");
 }
 
 function generateProperties(properties: PropertyInfo[]): string {
   return properties
-    .map(prop => {
+    .map((prop) => {
       const type = prop.isArray ? `List<${prop.type}>` : prop.type;
       return `    private ${type} ${toCamelCase(prop.name)};`;
     })
-    .join('\n');
+    .join("\n");
 }
 
 function generateGettersAndSetters(properties: PropertyInfo[]): string {
   return properties
-    .map(prop => {
+    .map((prop) => {
       const pascalName = toPascalCase(prop.name);
       const camelName = toCamelCase(prop.name);
       const type = prop.isArray ? `List<${prop.type}>` : prop.type;
@@ -101,17 +125,23 @@ function generateGettersAndSetters(properties: PropertyInfo[]): string {
         this.${camelName} = ${camelName};
     }`;
     })
-    .join('\n');
+    .join("\n");
 }
 
-function generateEqualsAndHashCode(className: string, properties: PropertyInfo[]): string {
+function generateEqualsAndHashCode(
+  className: string,
+  properties: PropertyInfo[],
+): string {
   const equalsComparisons = properties
-    .map(prop => `Objects.equals(${toCamelCase(prop.name)}, that.${toCamelCase(prop.name)})`)
-    .join(' &&\n                ');
+    .map(
+      (prop) =>
+        `Objects.equals(${toCamelCase(prop.name)}, that.${toCamelCase(prop.name)})`,
+    )
+    .join(" &&\n                ");
 
   const hashCodeFields = properties
-    .map(prop => toCamelCase(prop.name))
-    .join(', ');
+    .map((prop) => toCamelCase(prop.name))
+    .join(", ");
 
   return `
     @Override
@@ -128,9 +158,12 @@ function generateEqualsAndHashCode(className: string, properties: PropertyInfo[]
     }`;
 }
 
-function generateToString(className: string, properties: PropertyInfo[]): string {
+function generateToString(
+  className: string,
+  properties: PropertyInfo[],
+): string {
   const fields = properties
-    .map(prop => `"${toCamelCase(prop.name)}=" + ${toCamelCase(prop.name)}`)
+    .map((prop) => `"${toCamelCase(prop.name)}=" + ${toCamelCase(prop.name)}`)
     .join(' + ", " + ');
 
   return `
@@ -140,7 +173,10 @@ function generateToString(className: string, properties: PropertyInfo[]): string
     }`;
 }
 
-export function generateJavaClasses(json: any, rootClassName: string = 'Root'): JavaClass[] {
+export function generateJavaClasses(
+  json: any,
+  rootClassName: string = "Root",
+): JavaClass[] {
   const classes: JavaClass[] = [];
   const processedTypes = new Set<string>();
 
@@ -159,10 +195,10 @@ export function generateJavaClasses(json: any, rootClassName: string = 'Root'): 
       // Collect nested objects for processing
       if (propertyInfo.isObject) {
         const nestedValue = propertyInfo.isArray ? value[0] : value;
-        if (nestedValue && typeof nestedValue === 'object') {
+        if (nestedValue && typeof nestedValue === "object") {
           nestedObjects.push({
             obj: nestedValue,
-            className: propertyInfo.type
+            className: propertyInfo.type,
           });
         }
       }

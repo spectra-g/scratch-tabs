@@ -1,21 +1,29 @@
-export type ShapeType = 'line' | 'rectangle' | 'circle' | 'diamond' | 'arrow' | 'text' | 'triangle' | 'square';
-export type ShapeSnapMode = 'dark' | 'light';
-export type ShapeSnapTool = 'draw' | 'select' | 'text' | 'eraser';
+export type ShapeType =
+  | "line"
+  | "rectangle"
+  | "circle"
+  | "diamond"
+  | "arrow"
+  | "text"
+  | "triangle"
+  | "square";
+export type ShapeSnapMode = "dark" | "light";
+export type ShapeSnapTool = "draw" | "select" | "text" | "eraser";
 
 // Arrow tip styles for lines
-export type ArrowTipStyle = 
-  | 'none'           // No arrow tip
-  | 'simple'         // Two angled lines forming an arrow
-  | 'filled-triangle' // Filled triangle
-  | 'outline-triangle' // Non-filled triangle
-  | 'filled-circle'  // Filled circle
-  | 'outline-circle' // Non-filled circle
-  | 'filled-diamond' // Filled diamond
-  | 'outline-diamond' // Non-filled diamond
-  | 'cross-circle'   // Circle with cross inside
-  | 'dot'            // Simple dot
-  | 'arrowhead'      // Classic arrowhead
-  | 'double-line';   // Double line arrow
+export type ArrowTipStyle =
+  | "none" // No arrow tip
+  | "simple" // Two angled lines forming an arrow
+  | "filled-triangle" // Filled triangle
+  | "outline-triangle" // Non-filled triangle
+  | "filled-circle" // Filled circle
+  | "outline-circle" // Non-filled circle
+  | "filled-diamond" // Filled diamond
+  | "outline-diamond" // Non-filled diamond
+  | "cross-circle" // Circle with cross inside
+  | "dot" // Simple dot
+  | "arrowhead" // Classic arrowhead
+  | "double-line"; // Double line arrow
 
 export interface Point {
   x: number;
@@ -37,15 +45,15 @@ export interface BaseShape {
 }
 
 export interface LineShape extends BaseShape {
-  type: 'line';
+  type: "line";
   points: Point[];
   arrowTipStart?: ArrowTipStyle; // Arrow tip style for the start of the line
-  arrowTipEnd?: ArrowTipStyle;   // Arrow tip style for the end of the line
-  arrowTipSize?: number;         // Size of the arrow tips (default: 10)
+  arrowTipEnd?: ArrowTipStyle; // Arrow tip style for the end of the line
+  arrowTipSize?: number; // Size of the arrow tips (default: 10)
 }
 
 export interface RectangleShape extends BaseShape {
-  type: 'rectangle';
+  type: "rectangle";
   x: number;
   y: number;
   width: number;
@@ -53,14 +61,14 @@ export interface RectangleShape extends BaseShape {
 }
 
 export interface CircleShape extends BaseShape {
-  type: 'circle';
+  type: "circle";
   x: number;
   y: number;
   radius: number;
 }
 
 export interface DiamondShape extends BaseShape {
-  type: 'diamond';
+  type: "diamond";
   x: number;
   y: number;
   width: number;
@@ -68,13 +76,13 @@ export interface DiamondShape extends BaseShape {
 }
 
 export interface ArrowShape extends BaseShape {
-  type: 'arrow';
+  type: "arrow";
   from: Point;
   to: Point;
 }
 
 export interface TextShape extends BaseShape {
-  type: 'text';
+  type: "text";
   x: number;
   y: number;
   text: string;
@@ -82,7 +90,7 @@ export interface TextShape extends BaseShape {
 }
 
 export interface SquareShape extends BaseShape {
-  type: 'square';
+  type: "square";
   x: number;
   y: number;
   width: number;
@@ -90,14 +98,22 @@ export interface SquareShape extends BaseShape {
 }
 
 export interface TriangleShape extends BaseShape {
-  type: 'triangle';
+  type: "triangle";
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-export type Shape = LineShape | RectangleShape | CircleShape | DiamondShape | ArrowShape | TextShape | SquareShape | TriangleShape;
+export type Shape =
+  | LineShape
+  | RectangleShape
+  | CircleShape
+  | DiamondShape
+  | ArrowShape
+  | TextShape
+  | SquareShape
+  | TriangleShape;
 
 export interface CanvasSettings {
   background: string;

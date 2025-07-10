@@ -1,8 +1,8 @@
-import React from 'react';
-import { BaseModal } from './BaseModal';
-import { Editor } from '@monaco-editor/react';
-import { Tab } from '../../../../types';
-import { createTab } from '../../../../utils/tabUtils';
+import React from "react";
+import { BaseModal } from "./BaseModal";
+import { Editor } from "@monaco-editor/react";
+import { Tab } from "../../../../types";
+import { createTab } from "../../../../utils/tabUtils";
 
 interface StringifyModalProps {
   content: string;
@@ -10,12 +10,18 @@ interface StringifyModalProps {
   addTab: (tab: Tab) => void;
 }
 
-export const StringifyModal: React.FC<StringifyModalProps> = ({ content, onClose, addTab }) => {
+export const StringifyModal: React.FC<StringifyModalProps> = ({
+  content,
+  onClose,
+  addTab,
+}) => {
   const handleOpenInNewTab = () => {
-    addTab(createTab({
-      title: 'Stringified JSON',
-      content
-    }));
+    addTab(
+      createTab({
+        title: "Stringified JSON",
+        content,
+      }),
+    );
     onClose();
   };
 
@@ -31,7 +37,7 @@ export const StringifyModal: React.FC<StringifyModalProps> = ({ content, onClose
             readOnly: true,
             minimap: { enabled: false },
             fontSize: 14,
-            wordWrap: 'on'
+            wordWrap: "on",
           }}
         />
         <div className="flex justify-end space-x-3">

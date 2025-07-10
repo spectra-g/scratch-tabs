@@ -2,13 +2,18 @@ export interface ComparisonOptions {
   arraySampleCount?: number;
   strictArrayLength?: boolean;
   caseSensitiveKeys?: boolean;
-  arrayComparisonStrategy?: 'strict' | 'union' | 'discriminator';
+  arrayComparisonStrategy?: "strict" | "union" | "discriminator";
   discriminatorField?: string;
 }
 
 export interface DiffItem {
   path: string;
-  type: 'MISSING_KEY_LEFT' | 'MISSING_KEY_RIGHT' | 'TYPE_MISMATCH' | 'ARRAY_LENGTH_MISMATCH' | 'POLYMORPHIC_ARRAY';
+  type:
+    | "MISSING_KEY_LEFT"
+    | "MISSING_KEY_RIGHT"
+    | "TYPE_MISMATCH"
+    | "ARRAY_LENGTH_MISMATCH"
+    | "POLYMORPHIC_ARRAY";
   message: string;
   leftValueType?: string;
   rightValueType?: string;
@@ -19,9 +24,9 @@ export interface DiffItem {
 export interface DiffTreeNode {
   path: string;
   name: string;
-  type: 'object' | 'array' | 'primitive';
+  type: "object" | "array" | "primitive";
   hasDiff: boolean;
-  diffType?: DiffItem['type'];
+  diffType?: DiffItem["type"];
   children?: DiffTreeNode[];
   leftValue?: any;
   rightValue?: any;
@@ -47,17 +52,17 @@ const DEFAULT_OPTIONS: Required<ComparisonOptions> = {
   arraySampleCount: 3,
   strictArrayLength: false,
   caseSensitiveKeys: true,
-  arrayComparisonStrategy: 'strict',
-  discriminatorField: '',
+  arrayComparisonStrategy: "strict",
+  discriminatorField: "",
 };
 
 /**
  * Get the type of a value as a string
  */
 function getValueType(value: any): string {
-  if (value === null) return 'null';
-  if (Array.isArray(value)) return 'array';
-  if (typeof value === 'object') return 'object';
+  if (value === null) return "null";
+  if (Array.isArray(value)) return "array";
+  if (typeof value === "object") return "object";
   return typeof value;
 }
 
@@ -81,11 +86,11 @@ function hasUniformArrayStructure(arr: any[], sampleCount: number): boolean {
   }
 
   // If they're objects, check if they have the same keys
-  if (firstElementType === 'object' && firstElement !== null) {
+  if (firstElementType === "object" && firstElement !== null) {
     const firstKeys = Object.keys(firstElement).sort();
     for (let i = 1; i < sampleSize; i++) {
       const element = arr[i];
-      if (element === null || typeof element !== 'object') {
+      if (element === null || typeof element !== "object") {
         return false;
       }
       const elementKeys = Object.keys(element).sort();
@@ -109,14 +114,14 @@ function hasUniformArrayStructure(arr: any[], sampleCount: number): boolean {
 function buildUnionObject(arr: any[]): Record<string, string> {
   const union: Record<string, string> = {};
   for (const el of arr) {
-    if (el && typeof el === 'object' && !Array.isArray(el)) {
+    if (el && typeof el === "object" && !Array.isArray(el)) {
       for (const key of Object.keys(el)) {
         const type = getValueType(el[key]);
         // If already present, keep as 'optional' if types differ
         if (!(key in union)) {
           union[key] = type;
         } else if (union[key] !== type) {
-          union[key] = 'mixed';
+          union[key] = "mixed";
         }
       }
     }
@@ -127,12 +132,15 @@ function buildUnionObject(arr: any[]): Record<string, string> {
 /**
  * Group array elements by discriminator field value
  */
-function groupByDiscriminator(arr: any[], discriminator: string): Record<string, any[]> {
+function groupByDiscriminator(
+  arr: any[],
+  discriminator: string,
+): Record<string, any[]> {
   const groups: Record<string, any[]> = {};
   for (const el of arr) {
-    if (el && typeof el === 'object' && !Array.isArray(el)) {
+    if (el && typeof el === "object" && !Array.isArray(el)) {
       const key = el[discriminator];
-      const groupKey = key !== undefined ? String(key) : '__undefined__';
+      const groupKey = key !== undefined ? String(key) : "__undefined__";
       if (!groups[groupKey]) groups[groupKey] = [];
       groups[groupKey].push(el);
     }
@@ -148,7 +156,7 @@ function compareValues(
   right: any,
   path: string,
   options: Required<ComparisonOptions>,
-  diffList: DiffItem[]
+  diffList: DiffItem[],
 ): DiffTreeNode {
   const leftType = getValueType(left);
   const rightType = getValueType(right);
@@ -157,7 +165,7 @@ function compareValues(
   if (leftType !== rightType) {
     const diffItem: DiffItem = {
       path,
-      type: 'TYPE_MISMATCH',
+      type: "TYPE_MISMATCH",
       message: `Type mismatch: Source is '${leftType}', Target is '${rightType}'.`,
       leftValueType: leftType,
       rightValueType: rightType,
@@ -168,10 +176,11 @@ function compareValues(
 
     return {
       path,
-      name: path.split('/').pop() || '',
-      type: leftType === 'object' || leftType === 'array' ? leftType : 'primitive',
+      name: path.split("/").pop() || "",
+      type:
+        leftType === "object" || leftType === "array" ? leftType : "primitive",
       hasDiff: true,
-      diffType: 'TYPE_MISMATCH',
+      diffType: "TYPE_MISMATCH",
       leftValue: left,
       rightValue: right,
       leftValueType: leftType,
@@ -180,11 +189,11 @@ function compareValues(
   }
 
   // Handle null values
-  if (leftType === 'null') {
+  if (leftType === "null") {
     return {
       path,
-      name: path.split('/').pop() || '',
-      type: 'primitive',
+      name: path.split("/").pop() || "",
+      type: "primitive",
       hasDiff: false,
       leftValue: left,
       rightValue: right,
@@ -194,11 +203,11 @@ function compareValues(
   }
 
   // Handle primitives
-  if (leftType !== 'object' && leftType !== 'array') {
+  if (leftType !== "object" && leftType !== "array") {
     return {
       path,
-      name: path.split('/').pop() || '',
-      type: 'primitive',
+      name: path.split("/").pop() || "",
+      type: "primitive",
       hasDiff: false,
       leftValue: left,
       rightValue: right,
@@ -208,16 +217,22 @@ function compareValues(
   }
 
   // Handle arrays
-  if (leftType === 'array') {
+  if (leftType === "array") {
     const leftArray = left as any[];
     const rightArray = right as any[];
 
     // --- DISCRIMINATOR STRATEGY ---
-    if (options.arrayComparisonStrategy === 'discriminator' && options.discriminatorField) {
+    if (
+      options.arrayComparisonStrategy === "discriminator" &&
+      options.discriminatorField
+    ) {
       const discriminator = options.discriminatorField;
       const leftGroups = groupByDiscriminator(leftArray, discriminator);
       const rightGroups = groupByDiscriminator(rightArray, discriminator);
-      const allGroupKeys = new Set([...Object.keys(leftGroups), ...Object.keys(rightGroups)]);
+      const allGroupKeys = new Set([
+        ...Object.keys(leftGroups),
+        ...Object.keys(rightGroups),
+      ]);
       const children: DiffTreeNode[] = [];
       for (const groupKey of allGroupKeys) {
         const leftGroup = leftGroups[groupKey] || [];
@@ -239,7 +254,7 @@ function compareValues(
               if (leftKeyType !== rightKeyType) {
                 diffList.push({
                   path: keyPath,
-                  type: 'TYPE_MISMATCH',
+                  type: "TYPE_MISMATCH",
                   message: `Type mismatch in discriminator group '${groupKey}': Source is '${leftKeyType}', Target is '${rightKeyType}'.`,
                   leftValueType: leftKeyType,
                   rightValueType: rightKeyType,
@@ -247,9 +262,9 @@ function compareValues(
                 groupChildren.push({
                   path: keyPath,
                   name: key,
-                  type: 'primitive',
+                  type: "primitive",
                   hasDiff: true,
-                  diffType: 'TYPE_MISMATCH',
+                  diffType: "TYPE_MISMATCH",
                   leftValueType: leftKeyType,
                   rightValueType: rightKeyType,
                 });
@@ -257,7 +272,7 @@ function compareValues(
                 groupChildren.push({
                   path: keyPath,
                   name: key,
-                  type: 'primitive',
+                  type: "primitive",
                   hasDiff: false,
                   leftValueType: leftKeyType,
                   rightValueType: rightKeyType,
@@ -266,109 +281,109 @@ function compareValues(
             } else if (leftKeyType) {
               diffList.push({
                 path: keyPath,
-                type: 'MISSING_KEY_RIGHT',
+                type: "MISSING_KEY_RIGHT",
                 message: `Key '${key}' is missing in the Target group '${groupKey}'.`,
                 leftValueType: leftKeyType,
-                rightValueType: 'undefined',
+                rightValueType: "undefined",
               });
               groupChildren.push({
                 path: keyPath,
                 name: key,
-                type: 'primitive',
+                type: "primitive",
                 hasDiff: true,
-                diffType: 'MISSING_KEY_RIGHT',
+                diffType: "MISSING_KEY_RIGHT",
                 leftValueType: leftKeyType,
-                rightValueType: 'undefined',
+                rightValueType: "undefined",
               });
             } else if (rightKeyType) {
               diffList.push({
                 path: keyPath,
-                type: 'MISSING_KEY_LEFT',
+                type: "MISSING_KEY_LEFT",
                 message: `Key '${key}' is missing in the Source group '${groupKey}'.`,
-                leftValueType: 'undefined',
+                leftValueType: "undefined",
                 rightValueType: rightKeyType,
               });
               groupChildren.push({
                 path: keyPath,
                 name: key,
-                type: 'primitive',
+                type: "primitive",
                 hasDiff: true,
-                diffType: 'MISSING_KEY_LEFT',
-                leftValueType: 'undefined',
+                diffType: "MISSING_KEY_LEFT",
+                leftValueType: "undefined",
                 rightValueType: rightKeyType,
               });
             }
           }
-          const hasDiff = groupChildren.some(child => child.hasDiff);
+          const hasDiff = groupChildren.some((child) => child.hasDiff);
           children.push({
             path: groupPath,
             name: `{${discriminator}=${groupKey}}`,
-            type: 'object',
+            type: "object",
             hasDiff,
             children: groupChildren,
             leftValue: leftUnion,
             rightValue: rightUnion,
-            leftValueType: 'object',
-            rightValueType: 'object',
+            leftValueType: "object",
+            rightValueType: "object",
           });
         } else if (leftGroup.length) {
           // Group missing in target
           diffList.push({
             path: groupPath,
-            type: 'MISSING_KEY_RIGHT',
+            type: "MISSING_KEY_RIGHT",
             message: `Discriminator group '${groupKey}' is missing in the Target array.`,
-            leftValueType: 'object',
-            rightValueType: 'undefined',
+            leftValueType: "object",
+            rightValueType: "undefined",
           });
           children.push({
             path: groupPath,
             name: `{${discriminator}=${groupKey}}`,
-            type: 'object',
+            type: "object",
             hasDiff: true,
-            diffType: 'MISSING_KEY_RIGHT',
+            diffType: "MISSING_KEY_RIGHT",
             leftValue: leftGroup,
             rightValue: undefined,
-            leftValueType: 'object',
-            rightValueType: 'undefined',
+            leftValueType: "object",
+            rightValueType: "undefined",
           });
         } else if (rightGroup.length) {
           // Group missing in source
           diffList.push({
             path: groupPath,
-            type: 'MISSING_KEY_LEFT',
+            type: "MISSING_KEY_LEFT",
             message: `Discriminator group '${groupKey}' is missing in the Source array.`,
-            leftValueType: 'undefined',
-            rightValueType: 'object',
+            leftValueType: "undefined",
+            rightValueType: "object",
           });
           children.push({
             path: groupPath,
             name: `{${discriminator}=${groupKey}}`,
-            type: 'object',
+            type: "object",
             hasDiff: true,
-            diffType: 'MISSING_KEY_LEFT',
+            diffType: "MISSING_KEY_LEFT",
             leftValue: undefined,
             rightValue: rightGroup,
-            leftValueType: 'undefined',
-            rightValueType: 'object',
+            leftValueType: "undefined",
+            rightValueType: "object",
           });
         }
       }
-      const hasDiff = children.some(child => child.hasDiff);
+      const hasDiff = children.some((child) => child.hasDiff);
       return {
         path: `${path}[]/{${discriminator}=*}`,
         name: `{${discriminator}=*}`,
-        type: 'object',
+        type: "object",
         hasDiff,
         children,
         leftValue: leftGroups,
         rightValue: rightGroups,
-        leftValueType: 'object',
-        rightValueType: 'object',
+        leftValueType: "object",
+        rightValueType: "object",
       };
     }
 
     // --- UNION STRATEGY ---
-    if (options.arrayComparisonStrategy === 'union') {
+    if (options.arrayComparisonStrategy === "union") {
       // Build union objects for both arrays
       const leftUnion = buildUnionObject(leftArray);
       const rightUnion = buildUnionObject(rightArray);
@@ -386,7 +401,7 @@ function compareValues(
           if (leftKeyType !== rightKeyType) {
             diffList.push({
               path: keyPath,
-              type: 'TYPE_MISMATCH',
+              type: "TYPE_MISMATCH",
               message: `Type mismatch in union: Source is '${leftKeyType}', Target is '${rightKeyType}'.`,
               leftValueType: leftKeyType,
               rightValueType: rightKeyType,
@@ -394,9 +409,9 @@ function compareValues(
             children.push({
               path: keyPath,
               name: key,
-              type: 'primitive',
+              type: "primitive",
               hasDiff: true,
-              diffType: 'TYPE_MISMATCH',
+              diffType: "TYPE_MISMATCH",
               leftValueType: leftKeyType,
               rightValueType: rightKeyType,
             });
@@ -404,7 +419,7 @@ function compareValues(
             children.push({
               path: keyPath,
               name: key,
-              type: 'primitive',
+              type: "primitive",
               hasDiff: false,
               leftValueType: leftKeyType,
               rightValueType: rightKeyType,
@@ -413,50 +428,50 @@ function compareValues(
         } else if (leftKeyType) {
           diffList.push({
             path: keyPath,
-            type: 'MISSING_KEY_RIGHT',
+            type: "MISSING_KEY_RIGHT",
             message: `Key '${key}' is missing in the Target union.`,
             leftValueType: leftKeyType,
-            rightValueType: 'undefined',
+            rightValueType: "undefined",
           });
           children.push({
             path: keyPath,
             name: key,
-            type: 'primitive',
+            type: "primitive",
             hasDiff: true,
-            diffType: 'MISSING_KEY_RIGHT',
+            diffType: "MISSING_KEY_RIGHT",
             leftValueType: leftKeyType,
-            rightValueType: 'undefined',
+            rightValueType: "undefined",
           });
         } else if (rightKeyType) {
           diffList.push({
             path: keyPath,
-            type: 'MISSING_KEY_LEFT',
+            type: "MISSING_KEY_LEFT",
             message: `Key '${key}' is missing in the Source union.`,
-            leftValueType: 'undefined',
+            leftValueType: "undefined",
             rightValueType: rightKeyType,
           });
           children.push({
             path: keyPath,
             name: key,
-            type: 'primitive',
+            type: "primitive",
             hasDiff: true,
-            diffType: 'MISSING_KEY_LEFT',
-            leftValueType: 'undefined',
+            diffType: "MISSING_KEY_LEFT",
+            leftValueType: "undefined",
             rightValueType: rightKeyType,
           });
         }
       }
-      const hasDiff = children.some(child => child.hasDiff);
+      const hasDiff = children.some((child) => child.hasDiff);
       return {
         path: unionPath,
-        name: '{union}',
-        type: 'object',
+        name: "{union}",
+        type: "object",
         hasDiff,
         children,
         leftValue: leftUnion,
         rightValue: rightUnion,
-        leftValueType: 'object',
-        rightValueType: 'object',
+        leftValueType: "object",
+        rightValueType: "object",
       };
     }
 
@@ -465,7 +480,7 @@ function compareValues(
     if (options.strictArrayLength && leftArray.length !== rightArray.length) {
       const diffItem: DiffItem = {
         path,
-        type: 'ARRAY_LENGTH_MISMATCH',
+        type: "ARRAY_LENGTH_MISMATCH",
         message: `Array length mismatch: Source has ${leftArray.length} elements, Target has ${rightArray.length} elements.`,
         leftValueType: leftType,
         rightValueType: rightType,
@@ -476,10 +491,10 @@ function compareValues(
 
       return {
         path,
-        name: path.split('/').pop() || '',
-        type: 'array' as const,
+        name: path.split("/").pop() || "",
+        type: "array" as const,
         hasDiff: true,
-        diffType: 'ARRAY_LENGTH_MISMATCH',
+        diffType: "ARRAY_LENGTH_MISMATCH",
         leftValue: leftArray.length,
         rightValue: rightArray.length,
         leftValueType: leftType,
@@ -491,7 +506,7 @@ function compareValues(
     if (!hasUniformArrayStructure(leftArray, options.arraySampleCount)) {
       const diffItem: DiffItem = {
         path,
-        type: 'POLYMORPHIC_ARRAY',
+        type: "POLYMORPHIC_ARRAY",
         message: `Polymorphic array found at path ${path}. Structural comparison is limited.`,
         leftValueType: leftType,
         rightValueType: rightType,
@@ -502,10 +517,10 @@ function compareValues(
 
       return {
         path,
-        name: path.split('/').pop() || '',
-        type: 'array' as const,
+        name: path.split("/").pop() || "",
+        type: "array" as const,
         hasDiff: true,
-        diffType: 'POLYMORPHIC_ARRAY',
+        diffType: "POLYMORPHIC_ARRAY",
         leftValue: leftArray,
         rightValue: rightArray,
         leftValueType: leftType,
@@ -524,44 +539,53 @@ function compareValues(
       const elementPath = `${path}/[${i}]`;
 
       if (leftElement !== undefined && rightElement !== undefined) {
-        const childNode = compareValues(leftElement, rightElement, elementPath, options, diffList);
+        const childNode = compareValues(
+          leftElement,
+          rightElement,
+          elementPath,
+          options,
+          diffList,
+        );
         children.push(childNode);
       } else if (leftElement !== undefined) {
         // Missing in right
         const diffItem: DiffItem = {
           path: elementPath,
-          type: 'MISSING_KEY_RIGHT',
+          type: "MISSING_KEY_RIGHT",
           message: `Array element at index ${i} is missing in the Target JSON.`,
           leftValueType: getValueType(leftElement),
-          rightValueType: 'undefined',
+          rightValueType: "undefined",
           leftValue: leftElement,
           rightValue: undefined,
         };
         diffList.push(diffItem);
 
         const elementType = getValueType(leftElement);
-        const nodeType: 'object' | 'array' | 'primitive' = 
-          elementType === 'object' ? 'object' : 
-          elementType === 'array' ? 'array' : 'primitive';
+        const nodeType: "object" | "array" | "primitive" =
+          elementType === "object"
+            ? "object"
+            : elementType === "array"
+              ? "array"
+              : "primitive";
 
         children.push({
           path: elementPath,
           name: `[${i}]`,
           type: nodeType,
           hasDiff: true,
-          diffType: 'MISSING_KEY_RIGHT',
+          diffType: "MISSING_KEY_RIGHT",
           leftValue: leftElement,
           rightValue: undefined,
           leftValueType: getValueType(leftElement),
-          rightValueType: 'undefined',
+          rightValueType: "undefined",
         });
       } else if (rightElement !== undefined) {
         // Missing in left
         const diffItem: DiffItem = {
           path: elementPath,
-          type: 'MISSING_KEY_LEFT',
+          type: "MISSING_KEY_LEFT",
           message: `Array element at index ${i} is missing in the Source JSON.`,
-          leftValueType: 'undefined',
+          leftValueType: "undefined",
           rightValueType: getValueType(rightElement),
           leftValue: undefined,
           rightValue: rightElement,
@@ -569,30 +593,33 @@ function compareValues(
         diffList.push(diffItem);
 
         const elementType = getValueType(rightElement);
-        const nodeType: 'object' | 'array' | 'primitive' = 
-          elementType === 'object' ? 'object' : 
-          elementType === 'array' ? 'array' : 'primitive';
+        const nodeType: "object" | "array" | "primitive" =
+          elementType === "object"
+            ? "object"
+            : elementType === "array"
+              ? "array"
+              : "primitive";
 
         children.push({
           path: elementPath,
           name: `[${i}]`,
           type: nodeType,
           hasDiff: true,
-          diffType: 'MISSING_KEY_LEFT',
+          diffType: "MISSING_KEY_LEFT",
           leftValue: undefined,
           rightValue: rightElement,
-          leftValueType: 'undefined',
+          leftValueType: "undefined",
           rightValueType: getValueType(rightElement),
         });
       }
     }
 
-    const hasDiff = children.some(child => child.hasDiff);
+    const hasDiff = children.some((child) => child.hasDiff);
 
     return {
       path,
-      name: path.split('/').pop() || '',
-      type: 'array' as const,
+      name: path.split("/").pop() || "",
+      type: "array" as const,
       hasDiff,
       children,
       leftValue: leftArray,
@@ -610,9 +637,10 @@ function compareValues(
   const rightKeys = Object.keys(rightObj);
 
   // Normalize keys if case-insensitive comparison is enabled
-  const normalizeKey = (key: string) => options.caseSensitiveKeys ? key : key.toLowerCase();
-  const leftKeyMap = new Map(leftKeys.map(key => [normalizeKey(key), key]));
-  const rightKeyMap = new Map(rightKeys.map(key => [normalizeKey(key), key]));
+  const normalizeKey = (key: string) =>
+    options.caseSensitiveKeys ? key : key.toLowerCase();
+  const leftKeyMap = new Map(leftKeys.map((key) => [normalizeKey(key), key]));
+  const rightKeyMap = new Map(rightKeys.map((key) => [normalizeKey(key), key]));
 
   const allKeys = new Set([...leftKeyMap.keys(), ...rightKeyMap.keys()]);
   const children: DiffTreeNode[] = [];
@@ -621,79 +649,91 @@ function compareValues(
     const leftKey = leftKeyMap.get(normalizedKey);
     const rightKey = rightKeyMap.get(normalizedKey);
     const displayKey = leftKey || rightKey || normalizedKey;
-    const keyPath = path === '/' ? `/${displayKey}` : `${path}/${displayKey}`;
+    const keyPath = path === "/" ? `/${displayKey}` : `${path}/${displayKey}`;
 
     if (leftKey && rightKey) {
       // Key exists in both objects
-      const childNode = compareValues(leftObj[leftKey], rightObj[rightKey], keyPath, options, diffList);
+      const childNode = compareValues(
+        leftObj[leftKey],
+        rightObj[rightKey],
+        keyPath,
+        options,
+        diffList,
+      );
       children.push(childNode);
     } else if (leftKey) {
       // Key missing in right object
       const diffItem: DiffItem = {
         path: keyPath,
-        type: 'MISSING_KEY_RIGHT',
+        type: "MISSING_KEY_RIGHT",
         message: `Key '${displayKey}' is missing in the Target JSON.`,
         leftValueType: getValueType(leftObj[leftKey]),
-        rightValueType: 'undefined',
+        rightValueType: "undefined",
         leftValue: leftObj[leftKey],
         rightValue: undefined,
       };
       diffList.push(diffItem);
 
-        const leftValueType = getValueType(leftObj[leftKey]);
-        const leftNodeType: 'object' | 'array' | 'primitive' = 
-          leftValueType === 'object' ? 'object' : 
-          leftValueType === 'array' ? 'array' : 'primitive';
+      const leftValueType = getValueType(leftObj[leftKey]);
+      const leftNodeType: "object" | "array" | "primitive" =
+        leftValueType === "object"
+          ? "object"
+          : leftValueType === "array"
+            ? "array"
+            : "primitive";
 
-        children.push({
-          path: keyPath,
-          name: displayKey,
-          type: leftNodeType,
-          hasDiff: true,
-          diffType: 'MISSING_KEY_RIGHT',
-          leftValue: leftObj[leftKey],
-          rightValue: undefined,
-          leftValueType: getValueType(leftObj[leftKey]),
-          rightValueType: 'undefined',
-        });
+      children.push({
+        path: keyPath,
+        name: displayKey,
+        type: leftNodeType,
+        hasDiff: true,
+        diffType: "MISSING_KEY_RIGHT",
+        leftValue: leftObj[leftKey],
+        rightValue: undefined,
+        leftValueType: getValueType(leftObj[leftKey]),
+        rightValueType: "undefined",
+      });
     } else if (rightKey) {
       // Key missing in left object
       const diffItem: DiffItem = {
         path: keyPath,
-        type: 'MISSING_KEY_LEFT',
+        type: "MISSING_KEY_LEFT",
         message: `Key '${displayKey}' is missing in the Source JSON.`,
-        leftValueType: 'undefined',
+        leftValueType: "undefined",
         rightValueType: getValueType(rightObj[rightKey]),
         leftValue: undefined,
         rightValue: rightObj[rightKey],
       };
       diffList.push(diffItem);
 
-        const rightValueType = getValueType(rightObj[rightKey]);
-        const rightNodeType: 'object' | 'array' | 'primitive' = 
-          rightValueType === 'object' ? 'object' : 
-          rightValueType === 'array' ? 'array' : 'primitive';
+      const rightValueType = getValueType(rightObj[rightKey]);
+      const rightNodeType: "object" | "array" | "primitive" =
+        rightValueType === "object"
+          ? "object"
+          : rightValueType === "array"
+            ? "array"
+            : "primitive";
 
-        children.push({
-          path: keyPath,
-          name: displayKey,
-          type: rightNodeType,
-          hasDiff: true,
-          diffType: 'MISSING_KEY_LEFT',
-          leftValue: undefined,
-          rightValue: rightObj[rightKey],
-          leftValueType: 'undefined',
-          rightValueType: getValueType(rightObj[rightKey]),
-        });
+      children.push({
+        path: keyPath,
+        name: displayKey,
+        type: rightNodeType,
+        hasDiff: true,
+        diffType: "MISSING_KEY_LEFT",
+        leftValue: undefined,
+        rightValue: rightObj[rightKey],
+        leftValueType: "undefined",
+        rightValueType: getValueType(rightObj[rightKey]),
+      });
     }
   }
 
-  const hasDiff = children.some(child => child.hasDiff);
+  const hasDiff = children.some((child) => child.hasDiff);
 
   return {
     path,
-    name: path.split('/').pop() || '',
-    type: 'object',
+    name: path.split("/").pop() || "",
+    type: "object",
     hasDiff,
     children,
     leftValue: leftObj,
@@ -709,37 +749,52 @@ function compareValues(
 export function compareStructures(
   jsonA: any,
   jsonB: any,
-  options: ComparisonOptions = {}
+  options: ComparisonOptions = {},
 ): ComparisonResult {
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
   const diffList: DiffItem[] = [];
 
   // Parse JSON if strings are provided
   let parsedA: any, parsedB: any;
-  
+
   try {
-    parsedA = typeof jsonA === 'string' ? JSON.parse(jsonA) : jsonA;
+    parsedA = typeof jsonA === "string" ? JSON.parse(jsonA) : jsonA;
   } catch (error) {
-    throw new Error(`Invalid JSON A: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Invalid JSON A: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 
   try {
-    parsedB = typeof jsonB === 'string' ? JSON.parse(jsonB) : jsonB;
+    parsedB = typeof jsonB === "string" ? JSON.parse(jsonB) : jsonB;
   } catch (error) {
-    throw new Error(`Invalid JSON B: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Invalid JSON B: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 
   // Start comparison from root
-  const diffTree = compareValues(parsedA, parsedB, '/', mergedOptions, diffList);
+  const diffTree = compareValues(
+    parsedA,
+    parsedB,
+    "/",
+    mergedOptions,
+    diffList,
+  );
 
   // Calculate summary
   const summary = {
     totalDifferences: diffList.length,
-    missingKeysLeft: diffList.filter(d => d.type === 'MISSING_KEY_LEFT').length,
-    missingKeysRight: diffList.filter(d => d.type === 'MISSING_KEY_RIGHT').length,
-    typeMismatches: diffList.filter(d => d.type === 'TYPE_MISMATCH').length,
-    arrayLengthMismatches: diffList.filter(d => d.type === 'ARRAY_LENGTH_MISMATCH').length,
-    polymorphicArrays: diffList.filter(d => d.type === 'POLYMORPHIC_ARRAY').length,
+    missingKeysLeft: diffList.filter((d) => d.type === "MISSING_KEY_LEFT")
+      .length,
+    missingKeysRight: diffList.filter((d) => d.type === "MISSING_KEY_RIGHT")
+      .length,
+    typeMismatches: diffList.filter((d) => d.type === "TYPE_MISMATCH").length,
+    arrayLengthMismatches: diffList.filter(
+      (d) => d.type === "ARRAY_LENGTH_MISMATCH",
+    ).length,
+    polymorphicArrays: diffList.filter((d) => d.type === "POLYMORPHIC_ARRAY")
+      .length,
   };
 
   return {
@@ -748,4 +803,4 @@ export function compareStructures(
     diffList,
     summary,
   };
-} 
+}

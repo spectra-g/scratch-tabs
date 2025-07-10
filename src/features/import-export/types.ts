@@ -1,4 +1,4 @@
-import { Workspace, Tab, SplitViewState } from '../../types';
+import { Workspace, Tab, SplitViewState } from "../../types";
 
 export interface ExportData {
   workspaces: Workspace[];
@@ -15,7 +15,7 @@ export interface ExportFileContent {
 export interface ImportSummaryItem {
   name: string;
   tabCount: number;
-  status: 'imported' | 'merged' | 'skipped'; // Or more granular status
+  status: "imported" | "merged" | "skipped"; // Or more granular status
   reason?: string;
 }
 

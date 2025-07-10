@@ -27,7 +27,7 @@ export interface SplitViewRecord {
   rightTabs: string[];
   activeLeftTabId: string | null;
   activeRightTabId: string | null;
-  activeSide: 'left' | 'right' | null;
+  activeSide: "left" | "right" | null;
   splitRatio: number;
   workspaceId: string;
   lastModified: number;
@@ -42,7 +42,7 @@ export interface SplitViewState {
   rightTabs: string[];
   activeLeftTabId: string | null;
   activeRightTabId: string | null;
-  activeSide: 'left' | 'right' | null;
+  activeSide: "left" | "right" | null;
   splitRatio: number;
   leftTabHistory: string[];
   rightTabHistory: string[];
@@ -64,4 +64,7 @@ export interface Workspace {
   lastAccessed: number;
 }
 
-export type ResizeObserverCallback = (entries: ResizeObserverEntry[], observer: ResizeObserver) => void;
+export type ResizeObserverCallback = (
+  entries: ResizeObserverEntry[],
+  observer: ResizeObserver,
+) => void;

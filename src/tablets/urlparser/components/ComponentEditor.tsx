@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
-import { Eye, EyeOff, AlertTriangle, Info, Copy } from 'lucide-react';
-import { UrlComponents, UrlWarning } from '../types';
-import { decodeComponent } from '../utils/urlUtils';
+import React, { useState, useCallback } from "react";
+import { Eye, EyeOff, AlertTriangle, Info, Copy } from "lucide-react";
+import { UrlComponents, UrlWarning } from "../types";
+import { decodeComponent } from "../utils/urlUtils";
 
 interface ComponentEditorProps {
   label: string;
@@ -24,25 +24,25 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
   isEncoded,
   onChange,
   onToggleEncoding,
-  sensitive = false
+  sensitive = false,
 }) => {
   const [revealed, setRevealed] = useState(!sensitive);
   const [isCopied, setIsCopied] = useState(false);
-  
+
   // Get warnings for this component
-  const componentWarnings = warnings.filter(w => w.component === component);
-  const hasError = componentWarnings.some(w => w.type === 'error');
-  const hasWarning = componentWarnings.some(w => w.type === 'warning');
-  
+  const componentWarnings = warnings.filter((w) => w.component === component);
+  const hasError = componentWarnings.some((w) => w.type === "error");
+  const hasWarning = componentWarnings.some((w) => w.type === "warning");
+
   // Display value (decoded or encoded)
   const displayValue = isEncoded ? value : decodeComponent(value, component);
-  
+
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(displayValue);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   }, [displayValue]);
-  
+
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
@@ -52,12 +52,20 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
         </div>
         <div className="flex items-center space-x-1">
           {hasError && (
-            <div className="text-red-500" title={componentWarnings.find(w => w.type === 'error')?.message}>
+            <div
+              className="text-red-500"
+              title={componentWarnings.find((w) => w.type === "error")?.message}
+            >
               <AlertTriangle size={14} />
             </div>
           )}
           {!hasError && hasWarning && (
-            <div className="text-yellow-500" title={componentWarnings.find(w => w.type === 'warning')?.message}>
+            <div
+              className="text-yellow-500"
+              title={
+                componentWarnings.find((w) => w.type === "warning")?.message
+              }
+            >
               <AlertTriangle size={14} />
             </div>
           )}
@@ -79,17 +87,21 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
           </button>
         </div>
       </div>
-      
+
       <div className="relative">
         <input
           type={revealed ? "text" : "password"}
           value={displayValue}
           onChange={(e) => onChange(e.target.value, component)}
           className={`w-full bg-gray-800 border ${
-            hasError ? 'border-red-500' : hasWarning ? 'border-yellow-500' : 'border-gray-700'
+            hasError
+              ? "border-red-500"
+              : hasWarning
+                ? "border-yellow-500"
+                : "border-gray-700"
           } rounded-md px-3 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500`}
         />
-        
+
         {sensitive && (
           <button
             onClick={() => setRevealed(!revealed)}
@@ -100,18 +112,18 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
           </button>
         )}
       </div>
-      
+
       {componentWarnings.length > 0 && (
         <div className="mt-1 text-xs">
           {componentWarnings.map((warning, index) => (
-            <div 
+            <div
               key={index}
               className={`flex items-start mt-1 ${
-                warning.type === 'error' ? 'text-red-400' : 'text-yellow-400'
+                warning.type === "error" ? "text-red-400" : "text-yellow-400"
               }`}
             >
               <div className="flex-shrink-0 mt-0.5">
-                {warning.type === 'error' ? (
+                {warning.type === "error" ? (
                   <AlertTriangle size={12} />
                 ) : (
                   <Info size={12} />

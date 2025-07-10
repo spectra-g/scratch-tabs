@@ -1,8 +1,20 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { X, Upload, FileText, AlertCircle, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { VaultItem } from '../types';
-import { ImportSource, parseImportData, getImportSourceInfo } from '../utils/importParsers';
-import { detectContentType } from '../utils/contentTypeUtils';
+import React, { useState, useCallback, useMemo } from "react";
+import {
+  X,
+  Upload,
+  FileText,
+  AlertCircle,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { VaultItem } from "../types";
+import {
+  ImportSource,
+  parseImportData,
+  getImportSourceInfo,
+} from "../utils/importParsers";
+import { detectContentType } from "../utils/contentTypeUtils";
 
 interface VaultImportModalProps {
   onImport: (items: VaultItem[]) => void;
@@ -13,10 +25,11 @@ interface VaultImportModalProps {
 export const VaultImportModal: React.FC<VaultImportModalProps> = ({
   onImport,
   onClose,
-  existingItems
+  existingItems,
 }) => {
-  const [selectedSource, setSelectedSource] = useState<ImportSource>('terminal-history');
-  const [rawContent, setRawContent] = useState('');
+  const [selectedSource, setSelectedSource] =
+    useState<ImportSource>("terminal-history");
+  const [rawContent, setRawContent] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -30,41 +43,47 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
 
   // Generate full VaultItem objects from parsed data
   const previewItems = useMemo(() => {
-    return parseResult.items.map((partialItem): VaultItem => ({
-      id: crypto.randomUUID(),
-      title: partialItem.title || 'Untitled',
-      content: partialItem.content || '',
-      contentType: partialItem.contentType || detectContentType(partialItem.content || ''),
-      labels: partialItem.labels || [],
-      createdTimestamp: Date.now(),
-      modifiedTimestamp: Date.now(),
-      isPinned: false,
-      usageCount: 0,
-      lastUsedTimestamp: Date.now()
-    }));
+    return parseResult.items.map(
+      (partialItem): VaultItem => ({
+        id: crypto.randomUUID(),
+        title: partialItem.title || "Untitled",
+        content: partialItem.content || "",
+        contentType:
+          partialItem.contentType ||
+          detectContentType(partialItem.content || ""),
+        labels: partialItem.labels || [],
+        createdTimestamp: Date.now(),
+        modifiedTimestamp: Date.now(),
+        isPinned: false,
+        usageCount: 0,
+        lastUsedTimestamp: Date.now(),
+      }),
+    );
   }, [parseResult.items]);
 
   // Check for duplicates (both against existing items and within preview items)
   const duplicateItems = useMemo(() => {
-    const existingContentSet = new Set(existingItems.map(item => item.content.trim()));
+    const existingContentSet = new Set(
+      existingItems.map((item) => item.content.trim()),
+    );
     const previewContentSet = new Set<string>();
     const duplicates: VaultItem[] = [];
 
-    previewItems.forEach(item => {
+    previewItems.forEach((item) => {
       const content = item.content.trim();
-      
+
       // Check if it exists in the vault
       if (existingContentSet.has(content)) {
         duplicates.push(item);
         return;
       }
-      
+
       // Check if it's a duplicate within the preview items
       if (previewContentSet.has(content)) {
         duplicates.push(item);
         return;
       }
-      
+
       previewContentSet.add(content);
     });
 
@@ -72,23 +91,25 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
   }, [previewItems, existingItems]);
 
   const uniqueItems = useMemo(() => {
-    const existingContentSet = new Set(existingItems.map(item => item.content.trim()));
+    const existingContentSet = new Set(
+      existingItems.map((item) => item.content.trim()),
+    );
     const seenContent = new Set<string>();
     const unique: VaultItem[] = [];
 
-    previewItems.forEach(item => {
+    previewItems.forEach((item) => {
       const content = item.content.trim();
-      
+
       // Skip if it exists in the vault
       if (existingContentSet.has(content)) {
         return;
       }
-      
+
       // Skip if we've already seen this content in preview items
       if (seenContent.has(content)) {
         return;
       }
-      
+
       seenContent.add(content);
       unique.push(item);
     });
@@ -96,27 +117,30 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
     return unique;
   }, [previewItems, existingItems]);
 
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFileUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      setRawContent(content);
-    };
-    reader.readAsText(file);
-  }, []);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setRawContent(content);
+      };
+      reader.readAsText(file);
+    },
+    [],
+  );
 
   const handleImport = useCallback(() => {
     if (uniqueItems.length === 0) return;
-    
+
     setIsProcessing(true);
     try {
       onImport(uniqueItems);
       onClose();
     } catch (error) {
-      console.error('Import failed:', error);
+      console.error("Import failed:", error);
     } finally {
       setIsProcessing(false);
     }
@@ -130,8 +154,12 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <div>
-            <h2 className="text-xl font-semibold text-gray-100">Import Items</h2>
-            <p className="text-sm text-gray-400 mt-1">Import data from various sources into your vault</p>
+            <h2 className="text-xl font-semibold text-gray-100">
+              Import Items
+            </h2>
+            <p className="text-sm text-gray-400 mt-1">
+              Import data from various sources into your vault
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -152,22 +180,28 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                 </label>
                 <select
                   value={selectedSource}
-                  onChange={(e) => setSelectedSource(e.target.value as ImportSource)}
+                  onChange={(e) =>
+                    setSelectedSource(e.target.value as ImportSource)
+                  }
                   className="w-full bg-gray-800 border border-gray-600 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:border-blue-500"
                 >
                   <option value="terminal-history">Terminal History</option>
                   <option value="vscode-snippets">VS Code Snippets</option>
                   <option value="markdown-notes">Markdown Notes</option>
                 </select>
-                <p className="text-xs text-gray-400 mt-1">{sourceInfo.description}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {sourceInfo.description}
+                </p>
               </div>
 
               {/* File Upload or Text Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {sourceInfo.acceptsFiles ? 'Upload File or Paste Content' : 'Paste Content'}
+                  {sourceInfo.acceptsFiles
+                    ? "Upload File or Paste Content"
+                    : "Paste Content"}
                 </label>
-                
+
                 {sourceInfo.acceptsFiles && (
                   <div className="mb-3">
                     <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors">
@@ -177,12 +211,14 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                           Click to upload or drag and drop
                         </span>
                         <span className="text-xs text-gray-500">
-                          {sourceInfo.fileExtensions?.join(', ')}
+                          {sourceInfo.fileExtensions?.join(", ")}
                         </span>
                       </div>
                       <input
                         type="file"
-                        accept={sourceInfo.fileExtensions?.map(ext => ext).join(',')}
+                        accept={sourceInfo.fileExtensions
+                          ?.map((ext) => ext)
+                          .join(",")}
                         onChange={handleFileUpload}
                         className="hidden"
                       />
@@ -203,7 +239,9 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                 <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
                   <div className="flex items-center mb-2">
                     <AlertCircle size={16} className="text-red-400 mr-2" />
-                    <span className="text-sm font-medium text-red-400">Parsing Errors</span>
+                    <span className="text-sm font-medium text-red-400">
+                      Parsing Errors
+                    </span>
                   </div>
                   <ul className="text-xs text-red-300 space-y-1">
                     {parseResult.errors.map((error, index) => (
@@ -222,8 +260,12 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                   onClick={() => setShowPreview(!showPreview)}
                   className="flex items-center text-sm text-gray-400 hover:text-gray-200"
                 >
-                  {showPreview ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  {showPreview ? 'Hide' : 'Show'} Preview
+                  {showPreview ? (
+                    <ChevronUp size={16} />
+                  ) : (
+                    <ChevronDown size={16} />
+                  )}
+                  {showPreview ? "Hide" : "Show"} Preview
                 </button>
               </div>
 
@@ -232,15 +274,21 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                   {/* Summary Stats */}
                   <div className="grid grid-cols-3 gap-3 text-sm">
                     <div className="bg-gray-800 rounded-md p-3 text-center">
-                      <div className="text-lg font-semibold text-blue-400">{previewItems.length}</div>
+                      <div className="text-lg font-semibold text-blue-400">
+                        {previewItems.length}
+                      </div>
                       <div className="text-gray-400">Total Items</div>
                     </div>
                     <div className="bg-gray-800 rounded-md p-3 text-center">
-                      <div className="text-lg font-semibold text-green-400">{uniqueItems.length}</div>
+                      <div className="text-lg font-semibold text-green-400">
+                        {uniqueItems.length}
+                      </div>
                       <div className="text-gray-400">New Items</div>
                     </div>
                     <div className="bg-gray-800 rounded-md p-3 text-center">
-                      <div className="text-lg font-semibold text-yellow-400">{duplicateItems.length}</div>
+                      <div className="text-lg font-semibold text-yellow-400">
+                        {duplicateItems.length}
+                      </div>
                       <div className="text-gray-400">Duplicates</div>
                     </div>
                   </div>
@@ -249,11 +297,18 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                   {duplicateItems.length > 0 && (
                     <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-md p-3">
                       <div className="flex items-center mb-2">
-                        <AlertCircle size={16} className="text-yellow-400 mr-2" />
-                        <span className="text-sm font-medium text-yellow-400">Duplicate Items Found</span>
+                        <AlertCircle
+                          size={16}
+                          className="text-yellow-400 mr-2"
+                        />
+                        <span className="text-sm font-medium text-yellow-400">
+                          Duplicate Items Found
+                        </span>
                       </div>
                       <p className="text-xs text-yellow-300">
-                        {duplicateItems.length} items are duplicates (either existing in vault or repeated in import) and will be skipped.
+                        {duplicateItems.length} items are duplicates (either
+                        existing in vault or repeated in import) and will be
+                        skipped.
                       </p>
                     </div>
                   )}
@@ -261,34 +316,42 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                   {/* Items Preview */}
                   <div className="max-h-96 overflow-auto custom-scrollbar space-y-2">
                     {previewItems.map((item, index) => {
-                      const isDuplicate = duplicateItems.some(dup => dup.content === item.content);
-                      const duplicateCount = previewItems.filter(p => p.content.trim() === item.content.trim()).length;
+                      const isDuplicate = duplicateItems.some(
+                        (dup) => dup.content === item.content,
+                      );
+                      const duplicateCount = previewItems.filter(
+                        (p) => p.content.trim() === item.content.trim(),
+                      ).length;
                       return (
                         <div
                           key={index}
                           className={`p-3 rounded-md border ${
                             isDuplicate
-                              ? 'bg-gray-800/50 border-gray-600 text-gray-500'
-                              : 'bg-gray-800 border-gray-700 text-gray-200'
+                              ? "bg-gray-800/50 border-gray-600 text-gray-500"
+                              : "bg-gray-800 border-gray-700 text-gray-200"
                           }`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-2 mb-1">
                                 <FileText size={14} className="text-gray-400" />
-                                <span className="font-medium truncate">{item.title}</span>
+                                <span className="font-medium truncate">
+                                  {item.title}
+                                </span>
                                 {isDuplicate && (
                                   <span className="text-xs bg-gray-600 text-gray-300 px-1.5 py-0.5 rounded">
-                                    {duplicateCount > 1 ? `Duplicate (${duplicateCount})` : 'Duplicate'}
+                                    {duplicateCount > 1
+                                      ? `Duplicate (${duplicateCount})`
+                                      : "Duplicate"}
                                   </span>
                                 )}
                               </div>
                               <div className="text-xs text-gray-400 mb-1">
-                                {item.contentType} • {item.labels.join(', ')}
+                                {item.contentType} • {item.labels.join(", ")}
                               </div>
                               <div className="text-xs text-gray-500 truncate">
                                 {item.content.substring(0, 100)}
-                                {item.content.length > 100 && '...'}
+                                {item.content.length > 100 && "..."}
                               </div>
                             </div>
                           </div>
@@ -343,4 +406,4 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
       </div>
     </div>
   );
-}; 
+};

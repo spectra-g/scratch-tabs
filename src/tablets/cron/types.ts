@@ -1,10 +1,10 @@
-export type CronDialect = 
-  | 'unix' 
-  | 'quartz' 
-  | 'aws' 
-  | 'spring' 
-  | 'crontab' 
-  | 'jenkins';
+export type CronDialect =
+  | "unix"
+  | "quartz"
+  | "aws"
+  | "spring"
+  | "crontab"
+  | "jenkins";
 
 export interface CronExpression {
   raw: string;
@@ -19,7 +19,7 @@ export interface CronExpression {
 
 export interface TimeZone {
   name: string;
-  type: 'local' | 'utc' | 'custom';
+  type: "local" | "utc" | "custom";
 }
 
 export interface CronPattern {
@@ -36,9 +36,9 @@ export interface CronExecution {
 }
 
 export interface CronValidationError {
-  field: keyof CronExpression | 'global';
+  field: keyof CronExpression | "global";
   message: string;
-  type: 'error' | 'warning';
+  type: "error" | "warning";
 }
 
 export interface CronDialectInfo {

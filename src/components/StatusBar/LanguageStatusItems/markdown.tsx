@@ -1,11 +1,14 @@
-import React from 'react';
-import { Eye, Edit2 } from 'lucide-react';
-import { useRootStore } from '../../../stores';
-import { StatusItemProps } from '../types';
+import React from "react";
+import { Eye, Edit2 } from "lucide-react";
+import { useRootStore } from "../../../stores";
+import { StatusItemProps } from "../types";
 
-export const MarkdownStatusItem: React.FC<StatusItemProps> = ({ content, activeTab }) => {
+export const MarkdownStatusItem: React.FC<StatusItemProps> = ({
+  content,
+  activeTab,
+}) => {
   const { updateTabState } = useRootStore();
-  
+
   const togglePreviewMode = () => {
     if (activeTab) {
       updateTabState(activeTab.id, { previewMode: !activeTab.previewMode });

@@ -23,7 +23,7 @@ export interface Base64Stats {
 export interface HistoryItem {
   id: string;
   timestamp: number;
-  action: 'encode' | 'decode';
+  action: "encode" | "decode";
   input: string;
   output: string;
   format: string;
@@ -31,11 +31,11 @@ export interface HistoryItem {
 }
 
 export interface Base64TabletState {
-  type: 'base64';
+  type: "base64";
   data: {
     input: string;
     output: string;
-    mode: 'encode' | 'decode' | 'line-by-line';
+    mode: "encode" | "decode" | "line-by-line";
     selectedFormat: string;
     selectedEncoding: string;
     wrapOutput: boolean;
@@ -43,6 +43,6 @@ export interface Base64TabletState {
     history: HistoryItem[];
     error: string | null;
     isDragging: boolean;
-    layout: 'horizontal' | 'vertical';
+    layout: "horizontal" | "vertical";
   };
 }

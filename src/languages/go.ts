@@ -1,14 +1,17 @@
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types';
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
 
 /**
  * Go language detector
  */
-export class GoLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'go'; // Monaco's built-in ID for Go
-  name = 'Go';
-  extensions = ['go'];
+export class GoLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "go"; // Monaco's built-in ID for Go
+  name = "Go";
+  extensions = ["go"];
   priority = 7; // High priority due to distinctive syntax (e.g., package, func, import style)
 
   sampleContent(): string {
@@ -69,7 +72,7 @@ func main() {
    * Detects if the given content matches Go patterns and returns a confidence score.
    */
   detect(content: string): DetectionResult {
-    if (!content || content.trim().length < 10) { 
+    if (!content || content.trim().length < 10) {
       return { match: false, confidence: 0.0 };
     }
 
@@ -82,9 +85,21 @@ func main() {
       { pattern: /^\s*package\s+[a-zA-Z_][a-zA-Z0-9_]*/m, weight: 0.4 },
       { pattern: /^\s*import\s+\(/m, weight: 0.3 },
       { pattern: /^\s*import\s+["'][\w./-]+["']/m, weight: 0.25 },
-      { pattern: /\bfunc\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(/g, weight: 0.25, perMatch: 0.05 },
-      { pattern: /\btype\s+[A-Z][a-zA-Z0-9_]*\s+(?:struct|interface)\b/g, weight: 0.2, perMatch: 0.05 },
-      { pattern: /\bfunc\s*\(\s*[\w\s*]+\s+[A-Z][\w*]*\s*\)\s+[a-zA-Z_]/g, weight: 0.25, perMatch: 0.05 },
+      {
+        pattern: /\bfunc\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(/g,
+        weight: 0.25,
+        perMatch: 0.05,
+      },
+      {
+        pattern: /\btype\s+[A-Z][a-zA-Z0-9_]*\s+(?:struct|interface)\b/g,
+        weight: 0.2,
+        perMatch: 0.05,
+      },
+      {
+        pattern: /\bfunc\s*\(\s*[\w\s*]+\s+[A-Z][\w*]*\s*\)\s+[a-zA-Z_]/g,
+        weight: 0.25,
+        perMatch: 0.05,
+      },
     ];
 
     for (const dp of definitivePatterns) {
@@ -92,7 +107,7 @@ func main() {
       if (matches) {
         confidenceScore += dp.weight;
         if (dp.perMatch) {
-            confidenceScore += Math.min(matches.length, 3) * dp.perMatch;
+          confidenceScore += Math.min(matches.length, 3) * dp.perMatch;
         }
         patternsMatched++;
         strongSignalFound = true;
@@ -103,10 +118,22 @@ func main() {
     const commonPatterns = [
       { pattern: /\b(var|const)\s+\w+/g, weight: 0.1, perMatch: 0.02 },
       { pattern: /:=/g, weight: 0.15, perMatch: 0.03 },
-      { pattern: /\b(if|for|switch|case|default|select|goto|defer|go|range)\b/g, weight: 0.1, perMatch: 0.02 },
+      {
+        pattern: /\b(if|for|switch|case|default|select|goto|defer|go|range)\b/g,
+        weight: 0.1,
+        perMatch: 0.02,
+      },
       { pattern: /\bmake\s*\(/g, weight: 0.1, perMatch: 0.03 },
-      { pattern: /\b(chan|map|slice|append|cap|len|new|close|panic|recover)\b/g, weight: 0.15, perMatch: 0.03 },
-      { pattern: /\bfmt\.(Print|Scan|Error|Fprint|Sprint|Sscan)/g, weight: 0.15, perMatch: 0.03 },
+      {
+        pattern: /\b(chan|map|slice|append|cap|len|new|close|panic|recover)\b/g,
+        weight: 0.15,
+        perMatch: 0.03,
+      },
+      {
+        pattern: /\bfmt\.(Print|Scan|Error|Fprint|Sprint|Sscan)/g,
+        weight: 0.15,
+        perMatch: 0.03,
+      },
       { pattern: /\blog\.(Print|Fatal|Panic)/g, weight: 0.1, perMatch: 0.02 },
       { pattern: /^\s*}\s*(else|elseif)\b/m, weight: 0.05 }, // Go only has `else if` or `else`
       { pattern: /`[^`]*`/g, weight: 0.05, perMatch: 0.01 },
@@ -117,7 +144,7 @@ func main() {
       if (matches) {
         confidenceScore += cp.weight;
         if (cp.perMatch) {
-            confidenceScore += Math.min(matches.length, 5) * cp.perMatch;
+          confidenceScore += Math.min(matches.length, 5) * cp.perMatch;
         }
         patternsMatched++;
       }
@@ -138,7 +165,7 @@ func main() {
       { pattern: /console\.log/i, weight: -0.3 },
       { pattern: /=>/i, weight: -0.4 }, // Adjusted from -0.5 as it could appear in comments.
       { pattern: /@\w+/i, weight: -0.3 },
-      { pattern: /public\s+|private\s+|protected\s+/i, weight: -0.3 }
+      { pattern: /public\s+|private\s+|protected\s+/i, weight: -0.3 },
     ];
 
     for (const ap of antiPatterns) {
@@ -149,17 +176,22 @@ func main() {
 
     // 5. Final Adjustments and Clamping
     if (patternsMatched > 3 && strongSignalFound) {
-        confidenceScore += 0.1;
+      confidenceScore += 0.1;
     }
     // Corrected logic for main package and function:
-    if (content.includes("package main") && /\bfunc\s+main\s*\(\s*\)/m.test(content)) {
-        confidenceScore += 0.15; // Strong indication of a runnable Go program
-        strongSignalFound = true; // This combination is a very strong signal
+    if (
+      content.includes("package main") &&
+      /\bfunc\s+main\s*\(\s*\)/m.test(content)
+    ) {
+      confidenceScore += 0.15; // Strong indication of a runnable Go program
+      strongSignalFound = true; // This combination is a very strong signal
     }
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    const isMatch = (strongSignalFound && confidenceScore >= 0.4) || (patternsMatched >= 3 && confidenceScore >= 0.5);
+    const isMatch =
+      (strongSignalFound && confidenceScore >= 0.4) ||
+      (patternsMatched >= 3 && confidenceScore >= 0.5);
 
     return {
       match: isMatch,
@@ -185,7 +217,7 @@ func main() {
   */
 
   getFileExtension(): string {
-      return 'go';
+    return "go";
   }
 
   registerProvider(monaco: any): void {
@@ -193,7 +225,11 @@ func main() {
 
     // Monaco has excellent built-in support for 'go'
     // Typically, no custom Monarch tokenizer or formatter is needed.
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+    if (
+      !monaco.languages
+        .getLanguages()
+        .some((lang: any) => lang.id === languageId)
+    ) {
       monaco.languages.register({ id: languageId });
     }
 
@@ -205,30 +241,37 @@ func main() {
         // A truly good Go formatter would invoke `gofmt` or a similar tool.
         // This is a placeholder for a very basic heuristic indentation.
         const content = model.getValue();
-        const lines = content.split('\n');
+        const lines = content.split("\n");
         let indentLevel = 0;
-        const indentChar = '\t'; // Go typically uses tabs
+        const indentChar = "\t"; // Go typically uses tabs
 
         const formattedLines = lines.map((line: string) => {
           let trimmedLine = line.trim();
-          let currentIndent = '';
+          let currentIndent = "";
 
           // Handle lines that decrease indent (heuristic)
-          if (trimmedLine.startsWith('}') || trimmedLine.startsWith(')') || trimmedLine.startsWith(']')) {
+          if (
+            trimmedLine.startsWith("}") ||
+            trimmedLine.startsWith(")") ||
+            trimmedLine.startsWith("]")
+          ) {
             indentLevel = Math.max(0, indentLevel - 1);
           }
           // Handle 'case' and 'default' which often align with switch or previous case
           if (trimmedLine.match(/^(case\b|default\b)/) && indentLevel > 0) {
-            currentIndent = indentChar.repeat(Math.max(0, indentLevel -1));
+            currentIndent = indentChar.repeat(Math.max(0, indentLevel - 1));
           } else {
             currentIndent = indentChar.repeat(indentLevel);
           }
 
-
-          const formattedLine = trimmedLine ? currentIndent + trimmedLine : '';
+          const formattedLine = trimmedLine ? currentIndent + trimmedLine : "";
 
           // Handle lines that increase indent (heuristic)
-          if (trimmedLine.endsWith('{') || trimmedLine.endsWith('(') || trimmedLine.endsWith('[')) {
+          if (
+            trimmedLine.endsWith("{") ||
+            trimmedLine.endsWith("(") ||
+            trimmedLine.endsWith("[")
+          ) {
             indentLevel++;
           }
           // Specific for Go's switch/select cases
@@ -236,15 +279,18 @@ func main() {
             indentLevel++;
           }
 
-
           return formattedLine;
         });
 
-        return [{
-          range: model.getFullModelRange(),
-          text: formattedLines.join('\n').trimEnd() + (content.endsWith('\n') ? '\n' : '') // Preserve trailing newline if present
-        }];
-      }
+        return [
+          {
+            range: model.getFullModelRange(),
+            text:
+              formattedLines.join("\n").trimEnd() +
+              (content.endsWith("\n") ? "\n" : ""), // Preserve trailing newline if present
+          },
+        ];
+      },
     });
   }
 }

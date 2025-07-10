@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { X, BarChart3, Hash, Type, Calculator } from 'lucide-react';
-import { CsvColumnStats } from '../types';
+import * as React from "react";
+import { X, BarChart3, Hash, Type, Calculator } from "lucide-react";
+import { CsvColumnStats } from "../types";
 
 interface ColumnStatsPopoverProps {
   columnName: string;
@@ -13,7 +13,7 @@ export const ColumnStatsPopover: React.FC<ColumnStatsPopoverProps> = ({
   columnName,
   stats,
   onClose,
-  position
+  position,
 }) => {
   const formatNumber = (num: number, decimals: number = 2): string => {
     return Number.isInteger(num) ? num.toString() : num.toFixed(decimals);
@@ -21,22 +21,28 @@ export const ColumnStatsPopover: React.FC<ColumnStatsPopoverProps> = ({
 
   const getDataTypeIcon = () => {
     switch (stats.dataType) {
-      case 'number': return <Calculator size={16} className="text-blue-400" />;
-      case 'string': return <Type size={16} className="text-green-400" />;
-      case 'mixed': return <Hash size={16} className="text-yellow-400" />;
+      case "number":
+        return <Calculator size={16} className="text-blue-400" />;
+      case "string":
+        return <Type size={16} className="text-green-400" />;
+      case "mixed":
+        return <Hash size={16} className="text-yellow-400" />;
     }
   };
 
   const getDataTypeColor = () => {
     switch (stats.dataType) {
-      case 'number': return 'text-blue-400';
-      case 'string': return 'text-green-400';
-      case 'mixed': return 'text-yellow-400';
+      case "number":
+        return "text-blue-400";
+      case "string":
+        return "text-green-400";
+      case "mixed":
+        return "text-yellow-400";
     }
   };
 
   return (
-    <div 
+    <div
       className="fixed z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl min-w-[320px] max-w-[400px]"
       style={{
         left: Math.min(position.x, window.innerWidth - 420),
@@ -61,23 +67,39 @@ export const ColumnStatsPopover: React.FC<ColumnStatsPopoverProps> = ({
         {/* Basic Stats */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-700/30 rounded p-3">
-            <div className="text-xs text-gray-400 uppercase tracking-wide">Total Records</div>
-            <div className="text-lg font-semibold text-gray-200">{stats.count.toLocaleString()}</div>
+            <div className="text-xs text-gray-400 uppercase tracking-wide">
+              Total Records
+            </div>
+            <div className="text-lg font-semibold text-gray-200">
+              {stats.count.toLocaleString()}
+            </div>
           </div>
           <div className="bg-gray-700/30 rounded p-3">
-            <div className="text-xs text-gray-400 uppercase tracking-wide">Unique Values</div>
-            <div className="text-lg font-semibold text-gray-200">{stats.unique.toLocaleString()}</div>
+            <div className="text-xs text-gray-400 uppercase tracking-wide">
+              Unique Values
+            </div>
+            <div className="text-lg font-semibold text-gray-200">
+              {stats.unique.toLocaleString()}
+            </div>
           </div>
           <div className="bg-gray-700/30 rounded p-3">
-            <div className="text-xs text-gray-400 uppercase tracking-wide">Empty Cells</div>
-            <div className="text-lg font-semibold text-gray-200">{stats.empty.toLocaleString()}</div>
+            <div className="text-xs text-gray-400 uppercase tracking-wide">
+              Empty Cells
+            </div>
+            <div className="text-lg font-semibold text-gray-200">
+              {stats.empty.toLocaleString()}
+            </div>
           </div>
           <div className="bg-gray-700/30 rounded p-3">
             <div className="flex items-center space-x-1">
               {getDataTypeIcon()}
-              <div className="text-xs text-gray-400 uppercase tracking-wide">Data Type</div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide">
+                Data Type
+              </div>
             </div>
-            <div className={`text-lg font-semibold capitalize ${getDataTypeColor()}`}>
+            <div
+              className={`text-lg font-semibold capitalize ${getDataTypeColor()}`}
+            >
               {stats.dataType}
             </div>
           </div>
@@ -93,27 +115,39 @@ export const ColumnStatsPopover: React.FC<ColumnStatsPopoverProps> = ({
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Min:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.numericStats.min)}</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.numericStats.min)}
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Max:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.numericStats.max)}</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.numericStats.max)}
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Sum:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.numericStats.sum)}</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.numericStats.sum)}
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Average:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.numericStats.average)}</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.numericStats.average)}
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Median:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.numericStats.median)}</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.numericStats.median)}
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Std Dev:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.numericStats.standardDeviation)}</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.numericStats.standardDeviation)}
+                </span>
               </div>
             </div>
           </div>
@@ -129,15 +163,21 @@ export const ColumnStatsPopover: React.FC<ColumnStatsPopoverProps> = ({
             <div className="grid grid-cols-1 gap-2 text-sm">
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Min Length:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.stringStats.minLength, 0)} chars</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.stringStats.minLength, 0)} chars
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Max Length:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.stringStats.maxLength, 0)} chars</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.stringStats.maxLength, 0)} chars
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-400">Avg Length:</span>
-                <span className="text-gray-200 font-mono">{formatNumber(stats.stringStats.avgLength, 1)} chars</span>
+                <span className="text-gray-200 font-mono">
+                  {formatNumber(stats.stringStats.avgLength, 1)} chars
+                </span>
               </div>
             </div>
           </div>
@@ -176,14 +216,23 @@ export const ColumnStatsPopover: React.FC<ColumnStatsPopoverProps> = ({
         {/* Most Common Value */}
         {stats.mostCommon && (
           <div className="bg-blue-500/10 border border-blue-500/30 rounded p-3">
-            <div className="text-xs text-blue-400 uppercase tracking-wide mb-1">Most Common Value</div>
-            <div className="font-mono text-sm text-gray-200 mb-1">{stats.mostCommon.value}</div>
+            <div className="text-xs text-blue-400 uppercase tracking-wide mb-1">
+              Most Common Value
+            </div>
+            <div className="font-mono text-sm text-gray-200 mb-1">
+              {stats.mostCommon.value}
+            </div>
             <div className="text-xs text-gray-400">
-              Appears {stats.mostCommon.count} times ({formatNumber((stats.mostCommon.count / (stats.count - stats.empty)) * 100, 1)}%)
+              Appears {stats.mostCommon.count} times (
+              {formatNumber(
+                (stats.mostCommon.count / (stats.count - stats.empty)) * 100,
+                1,
+              )}
+              %)
             </div>
           </div>
         )}
       </div>
     </div>
   );
-}; 
+};

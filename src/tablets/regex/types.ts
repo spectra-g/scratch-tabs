@@ -30,7 +30,14 @@ export interface RegexSnippet {
 }
 
 export interface RegexExplanation {
-  type: 'literal' | 'group' | 'quantifier' | 'assertion' | 'character-class' | 'anchor' | 'escape';
+  type:
+    | "literal"
+    | "group"
+    | "quantifier"
+    | "assertion"
+    | "character-class"
+    | "anchor"
+    | "escape";
   value: string;
   description: string;
   start: number;
@@ -65,5 +72,5 @@ export interface RegexTesterData {
   notes: string;
 }
 
-export type MatchMode = 'first' | 'all' | 'multiline';
-export type ViewMode = 'test' | 'explain' | 'diff' | 'export'; 
+export type MatchMode = "first" | "all" | "multiline";
+export type ViewMode = "test" | "explain" | "diff" | "export";

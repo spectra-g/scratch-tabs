@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Editor } from '@monaco-editor/react';
-import { X, Play, Upload, Download, Copy, Check } from 'lucide-react';
-import { MappingConfig, MappingDirection } from '../types';
-import { transformJson } from '../utils/mappingUtils';
-import { isValidJson, formatJson } from '../utils/jsonUtils';
-import { readFileAsText, downloadStringAsFile } from '../utils/fileUtils';
+import React, { useState, useEffect } from "react";
+import { Editor } from "@monaco-editor/react";
+import { X, Play, Upload, Download, Copy, Check } from "lucide-react";
+import { MappingConfig, MappingDirection } from "../types";
+import { transformJson } from "../utils/mappingUtils";
+import { isValidJson, formatJson } from "../utils/jsonUtils";
+import { readFileAsText, downloadStringAsFile } from "../utils/fileUtils";
 
 interface TestMappingModalProps {
   mapping: MappingConfig;
@@ -15,105 +15,109 @@ interface TestMappingModalProps {
 export const TestMappingModal: React.FC<TestMappingModalProps> = ({
   mapping,
   initialInput,
-  onClose
+  onClose,
 }) => {
   const [input, setInput] = useState(initialInput || mapping.sourceJson);
-  const [output, setOutput] = useState('');
-  const [direction] = useState<MappingDirection>('sourceToTarget'); // Fixed direction
+  const [output, setOutput] = useState("");
+  const [direction] = useState<MappingDirection>("sourceToTarget"); // Fixed direction
   const [error, setError] = useState<string | null>(null);
   const [isTransforming, setIsTransforming] = useState(false);
   const [inputCopied, setInputCopied] = useState(false);
   const [outputCopied, setOutputCopied] = useState(false);
-  
+
   // Transform when the component mounts
   useEffect(() => {
     handleTransform();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
+
   const handleInputChange = (value: string | undefined) => {
-    setInput(value || '');
+    setInput(value || "");
     setError(null);
   };
-  
+
   const handleTransform = () => {
     if (!input) {
-      setError('Please enter input JSON');
+      setError("Please enter input JSON");
       return;
     }
-    
+
     if (!isValidJson(input)) {
-      setError('Invalid JSON input');
+      setError("Invalid JSON input");
       return;
     }
-    
+
     setIsTransforming(true);
     setError(null);
-    
+
     try {
       const inputData = JSON.parse(input);
       const result = transformJson(inputData, mapping.rules, direction);
       setOutput(JSON.stringify(result, null, 2));
     } catch (error) {
-      console.error('Error transforming JSON:', error);
-      setError(error instanceof Error ? error.message : 'Error transforming JSON');
-      setOutput('');
+      console.error("Error transforming JSON:", error);
+      setError(
+        error instanceof Error ? error.message : "Error transforming JSON",
+      );
+      setOutput("");
     } finally {
       setIsTransforming(false);
     }
   };
-  
-  const handleLoadInputFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleLoadInputFile = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     try {
       const content = await readFileAsText(file);
       if (isValidJson(content)) {
         setInput(formatJson(content));
         setError(null);
       } else {
-        setError('Invalid JSON file');
+        setError("Invalid JSON file");
       }
     } catch (error) {
-      setError('Error reading file');
+      setError("Error reading file");
     }
-    
+
     // Reset the input value so the same file can be selected again
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleCopyInput = async () => {
     if (!input) return;
-    
+
     try {
       await navigator.clipboard.writeText(input);
       setInputCopied(true);
       setTimeout(() => setInputCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy input:', error);
+      console.error("Failed to copy input:", error);
     }
   };
 
   const handleCopyOutput = async () => {
     if (!output) return;
-    
+
     try {
       await navigator.clipboard.writeText(output);
       setOutputCopied(true);
       setTimeout(() => setOutputCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy output:', error);
+      console.error("Failed to copy output:", error);
     }
   };
-  
+
   const handleDownloadOutput = () => {
     if (!output) return;
-    
-    const filename = `${mapping.name.replace(/\s+/g, '_')}_output.json`;
+
+    const filename = `${mapping.name.replace(/\s+/g, "_")}_output.json`;
     downloadStringAsFile(output, filename);
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden">
@@ -129,7 +133,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
             <X size={24} />
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">
           <div className="space-y-6">
@@ -158,11 +162,13 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                       className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
                     >
                       {inputCopied ? <Check size={14} /> : <Copy size={14} />}
-                      <span>{inputCopied ? 'Copied!' : 'Copy'}</span>
+                      <span>{inputCopied ? "Copied!" : "Copy"}</span>
                     </button>
                   </div>
                 </div>
-                <div className={`border rounded-md overflow-hidden ${error ? 'border-red-500/50' : 'border-gray-700/50'}`}>
+                <div
+                  className={`border rounded-md overflow-hidden ${error ? "border-red-500/50" : "border-gray-700/50"}`}
+                >
                   <Editor
                     height="400px"
                     language="json"
@@ -172,16 +178,14 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                     options={{
                       minimap: { enabled: false },
                       fontSize: 14,
-                      wordWrap: 'on',
+                      wordWrap: "on",
                       padding: { top: 8, bottom: 8 },
                     }}
                   />
                 </div>
-                {error && (
-                  <p className="mt-1 text-xs text-red-400">{error}</p>
-                )}
+                {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
               </div>
-              
+
               {/* Output */}
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -202,8 +206,12 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                           onClick={handleCopyOutput}
                           className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
                         >
-                          {outputCopied ? <Check size={14} /> : <Copy size={14} />}
-                          <span>{outputCopied ? 'Copied!' : 'Copy'}</span>
+                          {outputCopied ? (
+                            <Check size={14} />
+                          ) : (
+                            <Copy size={14} />
+                          )}
+                          <span>{outputCopied ? "Copied!" : "Copy"}</span>
                         </button>
                       </>
                     )}
@@ -218,9 +226,9 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                     options={{
                       minimap: { enabled: false },
                       fontSize: 14,
-                      wordWrap: 'on',
+                      wordWrap: "on",
                       padding: { top: 8, bottom: 8 },
-                      readOnly: true
+                      readOnly: true,
                     }}
                   />
                 </div>
@@ -228,7 +236,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
             </div>
           </div>
         </div>
-        
+
         {/* Footer */}
         <div className="flex justify-end px-6 py-4 border-t border-gray-700/50">
           <button
@@ -236,15 +244,16 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
             disabled={!input || isTransforming}
             className={`
               flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium
-              ${!input || isTransforming
-                ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+              ${
+                !input || isTransforming
+                  ? "bg-gray-700/50 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
               }
               transition-colors
             `}
           >
-            <Play size={14} className={isTransforming ? 'animate-spin' : ''} />
-            <span>{isTransforming ? 'Transforming...' : 'Transform'}</span>
+            <Play size={14} className={isTransforming ? "animate-spin" : ""} />
+            <span>{isTransforming ? "Transforming..." : "Transform"}</span>
           </button>
         </div>
       </div>

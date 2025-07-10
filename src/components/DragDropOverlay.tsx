@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Upload } from 'lucide-react';
-import { useRootStore } from '../stores';
-import { useSplitViewStore } from '../stores/splitViewStore';
-import { useModalStore } from '../stores/modalStore';
-import { languageRegistry } from '../languages';
+import React, { useState, useEffect, useCallback } from "react";
+import { Upload } from "lucide-react";
+import { useRootStore } from "../stores";
+import { useSplitViewStore } from "../stores/splitViewStore";
+import { useModalStore } from "../stores/modalStore";
+import { languageRegistry } from "../languages";
 
 const readFileAsText = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -19,7 +19,10 @@ interface FileSystemEntry {
   isDirectory: boolean;
   name: string;
   fullPath: string;
-  file: (successCallback: (file: File) => void, errorCallback?: (error: Error) => void) => void;
+  file: (
+    successCallback: (file: File) => void,
+    errorCallback?: (error: Error) => void,
+  ) => void;
   createReader: () => FileSystemDirectoryReader;
 }
 
@@ -36,22 +39,22 @@ interface FileSystemDirectoryEntry extends FileSystemEntry {
 interface FileSystemDirectoryReader {
   readEntries: (
     successCallback: (entries: FileSystemEntry[]) => void,
-    errorCallback?: (error: Error) => void
+    errorCallback?: (error: Error) => void,
   ) => void;
 }
 
 const detectLanguageFromFileName = (fileName: string): string => {
-  if (!fileName) return 'plaintext';
-  
-  const extension = fileName.split('.').pop()?.toLowerCase();
-  if (!extension) return 'plaintext';
-  
+  if (!fileName) return "plaintext";
+
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  if (!extension) return "plaintext";
+
   // Try to find a matching language detector by its supported extensions
-  const detector = languageRegistry.getAll().find(detector => 
-    detector.extensions.includes(extension)
-  );
-  
-  return detector?.id || 'plaintext';
+  const detector = languageRegistry
+    .getAll()
+    .find((detector) => detector.extensions.includes(extension));
+
+  return detector?.id || "plaintext";
 };
 
 const DragDropOverlay: React.FC = () => {
@@ -61,7 +64,9 @@ const DragDropOverlay: React.FC = () => {
   const { splitView } = useSplitViewStore();
   const { isImportModalActive } = useModalStore();
 
-  const readAllDirectoryEntries = async (directoryEntry: FileSystemDirectoryEntry): Promise<File[]> => {
+  const readAllDirectoryEntries = async (
+    directoryEntry: FileSystemDirectoryEntry,
+  ): Promise<File[]> => {
     const directoryReader = directoryEntry.createReader();
     let allEntries: FileSystemEntry[] = [];
 
@@ -81,7 +86,7 @@ const DragDropOverlay: React.FC = () => {
               resolve([]); // No more entries
             }
           },
-          (err) => reject(err)
+          (err) => reject(err),
         );
       });
     };
@@ -90,8 +95,8 @@ const DragDropOverlay: React.FC = () => {
     // A more robust loop for readEntries if it returns batches:
     let currentBatch = await readBatch();
     while (currentBatch.length > 0) {
-        // allEntries is already populated by the side effect in readBatch
-        currentBatch = await readBatch(); // Try to read more
+      // allEntries is already populated by the side effect in readBatch
+      currentBatch = await readBatch(); // Try to read more
     }
 
     const files: File[] = [];
@@ -103,7 +108,9 @@ const DragDropOverlay: React.FC = () => {
         files.push(file);
       } else if (entry.isDirectory) {
         // Recursively read subdirectories
-        const subFiles = await readAllDirectoryEntries(entry as FileSystemDirectoryEntry);
+        const subFiles = await readAllDirectoryEntries(
+          entry as FileSystemDirectoryEntry,
+        );
         files.push(...subFiles);
       }
     }
@@ -132,18 +139,19 @@ const DragDropOverlay: React.FC = () => {
         // Check if any item is a file or directory
         let containsFilesOrFolders = false;
         if (e.dataTransfer.items) {
-            for (let i = 0; i < e.dataTransfer.items.length; i++) {
-                if (e.dataTransfer.items[i].kind === 'file') {
-                    containsFilesOrFolders = true;
-                    break;
-                }
+          for (let i = 0; i < e.dataTransfer.items.length; i++) {
+            if (e.dataTransfer.items[i].kind === "file") {
+              containsFilesOrFolders = true;
+              break;
             }
-        } else if (e.dataTransfer.files.length > 0) { // Fallback for older browsers or different drop types
-            containsFilesOrFolders = true;
+          }
+        } else if (e.dataTransfer.files.length > 0) {
+          // Fallback for older browsers or different drop types
+          containsFilesOrFolders = true;
         }
 
         if (containsFilesOrFolders) {
-            setIsDragging(true);
+          setIsDragging(true);
         }
       }
     };
@@ -151,7 +159,10 @@ const DragDropOverlay: React.FC = () => {
     const handleDragLeave = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (e.relatedTarget === null || (e.relatedTarget as Node).nodeName === 'HTML') {
+      if (
+        e.relatedTarget === null ||
+        (e.relatedTarget as Node).nodeName === "HTML"
+      ) {
         setIsDragging(false);
       }
     };
@@ -171,58 +182,67 @@ const DragDropOverlay: React.FC = () => {
       try {
         const promises = [];
         for (let i = 0; i < e.dataTransfer.items.length; i++) {
-          if (e.dataTransfer.items[i].kind === 'file') { // Process only file kinds (which include directories via webkitGetAsEntry)
+          if (e.dataTransfer.items[i].kind === "file") {
+            // Process only file kinds (which include directories via webkitGetAsEntry)
             promises.push(processDroppedItem(e.dataTransfer.items[i]));
           }
         }
         const results = await Promise.all(promises);
-        results.forEach(fileList => allFiles.push(...fileList));
+        results.forEach((fileList) => allFiles.push(...fileList));
 
         if (allFiles.length > 0) {
-          const toRightSide = splitView?.activeSide === 'right' || false;
+          const toRightSide = splitView?.activeSide === "right" || false;
           for (const file of allFiles) {
             try {
               const fileContent = await readFileAsText(file);
               const fileName = file.name.replace(/\.[^/.]+$/, ""); // Title without extension
-              
+
               // Detect language from file extension
               const language = detectLanguageFromFileName(file.name);
-              
+
               // TODO: Add a small delay or batch tab creation if many files are dropped
               // to avoid overwhelming the system or hitting rate limits if any.
-              handleNewPopulatedTab({
-                id: crypto.randomUUID(),
-                title: fileName,
-                content: fileContent,
-                language: language,
-                languageLocked: language !== 'plaintext', // Only lock if we detected a specific language
-                cursorPosition: { lineNumber: 1, column: 1 },
-                dateCreated: Date.now(),
-                lastModified: Date.now(),
-                workspaceId: '', // Empty string, will be handled by handleNewPopulatedTab
-              }, toRightSide);
+              handleNewPopulatedTab(
+                {
+                  id: crypto.randomUUID(),
+                  title: fileName,
+                  content: fileContent,
+                  language: language,
+                  languageLocked: language !== "plaintext", // Only lock if we detected a specific language
+                  cursorPosition: { lineNumber: 1, column: 1 },
+                  dateCreated: Date.now(),
+                  lastModified: Date.now(),
+                  workspaceId: "", // Empty string, will be handled by handleNewPopulatedTab
+                },
+                toRightSide,
+              );
             } catch (fileReadError) {
               console.error(`Error reading file ${file.name}:`, fileReadError);
             }
           }
         }
       } catch (error) {
-        console.error('Error processing dropped items:', error);
+        console.error("Error processing dropped items:", error);
       } finally {
         setIsProcessingDrop(false);
       }
     };
 
-    document.addEventListener('dragover', handleDragOver);
-    document.addEventListener('dragleave', handleDragLeave);
-    document.addEventListener('drop', handleDrop);
+    document.addEventListener("dragover", handleDragOver);
+    document.addEventListener("dragleave", handleDragLeave);
+    document.addEventListener("drop", handleDrop);
 
     return () => {
-      document.removeEventListener('dragover', handleDragOver);
-      document.removeEventListener('dragleave', handleDragLeave);
-      document.removeEventListener('drop', handleDrop);
+      document.removeEventListener("dragover", handleDragOver);
+      document.removeEventListener("dragleave", handleDragLeave);
+      document.removeEventListener("drop", handleDrop);
     };
-  }, [isImportModalActive, handleNewPopulatedTab, splitView?.activeSide, processDroppedItem]);
+  }, [
+    isImportModalActive,
+    handleNewPopulatedTab,
+    splitView?.activeSide,
+    processDroppedItem,
+  ]);
 
   if (isImportModalActive || (!isDragging && !isProcessingDrop)) {
     return null;
@@ -234,13 +254,19 @@ const DragDropOverlay: React.FC = () => {
         {isProcessingDrop ? (
           <div className="flex flex-col items-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-gray-200 text-lg font-medium">Processing dropped items...</p>
+            <p className="text-gray-200 text-lg font-medium">
+              Processing dropped items...
+            </p>
           </div>
         ) : (
           <div className="flex flex-col items-center">
             <Upload size={48} className="text-blue-400 mb-4" />
-            <p className="text-gray-200 text-lg font-medium">Drop files or folders to open</p>
-            <p className="text-gray-400 mt-2">Content will be opened in new tabs</p>
+            <p className="text-gray-200 text-lg font-medium">
+              Drop files or folders to open
+            </p>
+            <p className="text-gray-400 mt-2">
+              Content will be opened in new tabs
+            </p>
           </div>
         )}
       </div>

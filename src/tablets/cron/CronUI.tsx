@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { CronHeader } from './components/CronHeader';
-import { CronTabs } from './components/CronTabs';
-import { NaturalLanguageBuilder } from './components/NaturalLanguageBuilder';
-import { SegmentedBuilder } from './components/SegmentedBuilder';
-import { RawExpressionInput } from './components/RawExpressionInput';
-import { ExecutionPreview } from './components/ExecutionPreview';
-import { CronPatternLibrary } from './components/CronPatternLibrary';
-import { CronCodeExporter } from './components/CronCodeExporter';
-import { CronVisualizer } from './components/CronVisualizer';
-import { useCronEngine } from './hooks/useCronEngine';
-import { CronExpression, CronDialect, CronPattern, TimeZone } from './types';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { CronHeader } from "./components/CronHeader";
+import { CronTabs } from "./components/CronTabs";
+import { NaturalLanguageBuilder } from "./components/NaturalLanguageBuilder";
+import { SegmentedBuilder } from "./components/SegmentedBuilder";
+import { RawExpressionInput } from "./components/RawExpressionInput";
+import { ExecutionPreview } from "./components/ExecutionPreview";
+import { CronPatternLibrary } from "./components/CronPatternLibrary";
+import { CronCodeExporter } from "./components/CronCodeExporter";
+import { CronVisualizer } from "./components/CronVisualizer";
+import { useCronEngine } from "./hooks/useCronEngine";
+import { CronExpression, CronDialect, CronPattern, TimeZone } from "./types";
 
 interface CronUIProps {
   state: {
@@ -18,9 +18,9 @@ interface CronUIProps {
     timezone: TimeZone;
     savedPatterns: CronPattern[];
     history: CronExpression[];
-    activeTab: 'natural' | 'segmented' | 'raw';
+    activeTab: "natural" | "segmented" | "raw";
   };
-  onChange: (newState: CronUIProps['state']) => void;
+  onChange: (newState: CronUIProps["state"]) => void;
 }
 
 export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
@@ -40,77 +40,103 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
     exportToICS,
     exportToCSV,
     exportToJSON,
-    copyAllTimes
-  } = useCronEngine(state.expression, state.dialect, state.timezone, state.savedPatterns);
+    copyAllTimes,
+  } = useCronEngine(
+    state.expression,
+    state.dialect,
+    state.timezone,
+    state.savedPatterns,
+  );
 
   // Handle expression changes from user input
-  const handleExpressionChange = useCallback((newExpression: string | CronExpression) => {
-    const updatedExpression = updateExpression(newExpression);
-    onChange({
-      ...state,
-      expression: updatedExpression
-    });
-  }, [state, onChange, updateExpression]);
+  const handleExpressionChange = useCallback(
+    (newExpression: string | CronExpression) => {
+      const updatedExpression = updateExpression(newExpression);
+      onChange({
+        ...state,
+        expression: updatedExpression,
+      });
+    },
+    [state, onChange, updateExpression],
+  );
 
   // Update expression when dialect changes
-  const handleDialectChange = useCallback((newDialect: CronDialect) => {
-    const convertedExpression = updateDialect(newDialect);
-    onChange({
-      ...state,
-      dialect: newDialect,
-      expression: convertedExpression
-    });
-  }, [state, onChange, updateDialect]);
+  const handleDialectChange = useCallback(
+    (newDialect: CronDialect) => {
+      const convertedExpression = updateDialect(newDialect);
+      onChange({
+        ...state,
+        dialect: newDialect,
+        expression: convertedExpression,
+      });
+    },
+    [state, onChange, updateDialect],
+  );
 
   // Update timezone
-  const handleTimezoneChange = useCallback((timezone: TimeZone) => {
-    onChange({
-      ...state,
-      timezone
-    });
-  }, [state, onChange]);
+  const handleTimezoneChange = useCallback(
+    (timezone: TimeZone) => {
+      onChange({
+        ...state,
+        timezone,
+      });
+    },
+    [state, onChange],
+  );
 
   // Save a pattern
-  const handleSavePattern = useCallback((name: string, description?: string) => {
-    const newPattern = savePattern(name, description);
-    onChange({
-      ...state,
-      savedPatterns: [...state.savedPatterns, newPattern]
-    });
-  }, [state, onChange, savePattern]);
+  const handleSavePattern = useCallback(
+    (name: string, description?: string) => {
+      const newPattern = savePattern(name, description);
+      onChange({
+        ...state,
+        savedPatterns: [...state.savedPatterns, newPattern],
+      });
+    },
+    [state, onChange, savePattern],
+  );
 
   // Delete a pattern
-  const handleDeletePattern = useCallback((id: string) => {
-    deletePattern(id);
-    onChange({
-      ...state,
-      savedPatterns: state.savedPatterns.filter(p => p.id !== id)
-    });
-  }, [state, onChange, deletePattern]);
+  const handleDeletePattern = useCallback(
+    (id: string) => {
+      deletePattern(id);
+      onChange({
+        ...state,
+        savedPatterns: state.savedPatterns.filter((p) => p.id !== id),
+      });
+    },
+    [state, onChange, deletePattern],
+  );
 
   // Load a pattern
-  const handleLoadPattern = useCallback((pattern: CronPattern) => {
-    const newExpression = updateExpression(pattern.expression);
-    const convertedExpression = updateDialect(pattern.dialect);
-    onChange({
-      ...state,
-      expression: convertedExpression,
-      dialect: pattern.dialect
-    });
-    setShowPatternLibrary(false);
-  }, [state, onChange, updateExpression, updateDialect]);
+  const handleLoadPattern = useCallback(
+    (pattern: CronPattern) => {
+      const newExpression = updateExpression(pattern.expression);
+      const convertedExpression = updateDialect(pattern.dialect);
+      onChange({
+        ...state,
+        expression: convertedExpression,
+        dialect: pattern.dialect,
+      });
+      setShowPatternLibrary(false);
+    },
+    [state, onChange, updateExpression, updateDialect],
+  );
 
   // Update active tab
-  const handleTabChange = useCallback((tab: 'natural' | 'segmented' | 'raw') => {
-    onChange({
-      ...state,
-      activeTab: tab
-    });
-  }, [state, onChange]);
+  const handleTabChange = useCallback(
+    (tab: "natural" | "segmented" | "raw") => {
+      onChange({
+        ...state,
+        activeTab: tab,
+      });
+    },
+    [state, onChange],
+  );
 
   return (
     <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
-      <CronHeader 
+      <CronHeader
         dialect={state.dialect}
         onDialectChange={handleDialectChange}
         timezone={state.timezone}
@@ -121,33 +147,30 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
       />
 
       <div className="flex-1 overflow-auto p-4 space-y-6 custom-scrollbar">
-        <CronTabs 
-          activeTab={state.activeTab} 
-          onTabChange={handleTabChange}
-        />
+        <CronTabs activeTab={state.activeTab} onTabChange={handleTabChange} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
-            {state.activeTab === 'natural' && (
-              <NaturalLanguageBuilder 
+            {state.activeTab === "natural" && (
+              <NaturalLanguageBuilder
                 expression={state.expression}
                 dialect={state.dialect}
                 onExpressionChange={handleExpressionChange}
                 validationErrors={validationErrors}
               />
             )}
-            
-            {state.activeTab === 'segmented' && (
-              <SegmentedBuilder 
+
+            {state.activeTab === "segmented" && (
+              <SegmentedBuilder
                 expression={state.expression}
                 dialect={state.dialect}
                 onExpressionChange={handleExpressionChange}
                 validationErrors={validationErrors}
               />
             )}
-            
-            {state.activeTab === 'raw' && (
-              <RawExpressionInput 
+
+            {state.activeTab === "raw" && (
+              <RawExpressionInput
                 expression={state.expression.raw}
                 dialect={state.dialect}
                 onExpressionChange={(raw) => handleExpressionChange(raw)}
@@ -157,13 +180,15 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
             )}
 
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h3 className="text-sm font-medium text-gray-300 mb-2">Human-Readable Translation</h3>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">
+                Human-Readable Translation
+              </h3>
               <p className="text-gray-200">{humanReadable}</p>
             </div>
           </div>
 
           <div>
-            <ExecutionPreview 
+            <ExecutionPreview
               executions={nextExecutions}
               timezone={state.timezone}
               onExportToICS={exportToICS}

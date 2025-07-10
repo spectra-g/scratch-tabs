@@ -1,5 +1,5 @@
 export const rubySnippet = {
-  name: 'Ruby',
+  name: "Ruby",
   code: `class TodoList
     def initialize
         @tasks = []
@@ -44,5 +44,5 @@ list.add_task("Take a break", :low)
 list.complete_task(0)
 
 # Display the list
-list.display_tasks`
+list.display_tasks`,
 };

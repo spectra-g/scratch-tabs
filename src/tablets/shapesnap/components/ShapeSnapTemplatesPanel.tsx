@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
-import { Layers, X, FileText } from 'lucide-react';
-import { ShapeSnapTemplate } from '../types';
-import { defaultShapeSnapTemplates } from '../data/defaultTemplates';
+import React, { useState } from "react";
+import { Layers, X, FileText } from "lucide-react";
+import { ShapeSnapTemplate } from "../types";
+import { defaultShapeSnapTemplates } from "../data/defaultTemplates";
 
 interface ShapeSnapTemplatesPanelProps {
   onApplyTemplate: (template: ShapeSnapTemplate) => void;
   onClose: () => void;
 }
 
-export const ShapeSnapTemplatesPanel: React.FC<ShapeSnapTemplatesPanelProps> = ({
-  onApplyTemplate,
-  onClose
-}) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  
+export const ShapeSnapTemplatesPanel: React.FC<
+  ShapeSnapTemplatesPanelProps
+> = ({ onApplyTemplate, onClose }) => {
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
   // Only built-in templates for now
   const allTemplates = defaultShapeSnapTemplates;
-  
+
   // Get unique categories
-  const categories = ['all', ...new Set(allTemplates.map(t => t.category))];
-  
+  const categories = ["all", ...new Set(allTemplates.map((t) => t.category))];
+
   // Filter templates by category
-  const filteredTemplates = selectedCategory === 'all' 
-    ? allTemplates 
-    : allTemplates.filter(t => t.category === selectedCategory);
+  const filteredTemplates =
+    selectedCategory === "all"
+      ? allTemplates
+      : allTemplates.filter((t) => t.category === selectedCategory);
 
   const handleApplyTemplate = (template: ShapeSnapTemplate) => {
     onApplyTemplate(template);
@@ -53,15 +53,13 @@ export const ShapeSnapTemplatesPanel: React.FC<ShapeSnapTemplatesPanelProps> = (
           onChange={(e) => setSelectedCategory(e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-gray-200 text-sm focus:outline-none focus:border-blue-500"
         >
-          {categories.map(category => (
+          {categories.map((category) => (
             <option key={category} value={category}>
-              {category === 'all' ? 'All Categories' : category}
+              {category === "all" ? "All Categories" : category}
             </option>
           ))}
         </select>
       </div>
-
-
 
       {/* Templates List */}
       <div className="flex-1 overflow-y-auto">
@@ -72,7 +70,7 @@ export const ShapeSnapTemplatesPanel: React.FC<ShapeSnapTemplatesPanelProps> = (
               <p>No templates found</p>
             </div>
           ) : (
-            filteredTemplates.map(template => (
+            filteredTemplates.map((template) => (
               <div
                 key={template.id}
                 className="group bg-gray-700 hover:bg-gray-600 rounded-lg p-3 cursor-pointer transition-colors"
@@ -80,15 +78,22 @@ export const ShapeSnapTemplatesPanel: React.FC<ShapeSnapTemplatesPanelProps> = (
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-200 text-sm">{template.title}</h4>
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">{template.description}</p>
+                    <h4 className="font-medium text-gray-200 text-sm">
+                      {template.title}
+                    </h4>
+                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                      {template.description}
+                    </p>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-blue-400">{template.category}</span>
+                      <span className="text-xs text-blue-400">
+                        {template.category}
+                      </span>
                     </div>
                   </div>
                 </div>
                 <div className="mt-2 text-xs text-gray-500">
-                  {template.shapes.length} shape{template.shapes.length !== 1 ? 's' : ''}
+                  {template.shapes.length} shape
+                  {template.shapes.length !== 1 ? "s" : ""}
                 </div>
               </div>
             ))
@@ -97,4 +102,4 @@ export const ShapeSnapTemplatesPanel: React.FC<ShapeSnapTemplatesPanelProps> = (
       </div>
     </div>
   );
-}; 
+};

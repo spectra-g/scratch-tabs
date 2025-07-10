@@ -1,24 +1,24 @@
-import React, { useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { AlertTriangle } from 'lucide-react';
+import React, { useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { AlertTriangle } from "lucide-react";
 
 interface Base64OutputProps {
   value: string;
   isValid: boolean;
-  mode: 'encode' | 'decode' | 'line-by-line';
+  mode: "encode" | "decode" | "line-by-line";
 }
 
 export const Base64Output: React.FC<Base64OutputProps> = ({
   value,
   isValid,
-  mode
+  mode,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [value]);
@@ -30,13 +30,13 @@ export const Base64Output: React.FC<Base64OutputProps> = ({
         value={value}
         readOnly
         className={`w-full h-full min-h-[200px] bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors resize-none font-mono ${
-          !isValid && mode === 'decode' ? 'border-yellow-500/50' : ''
+          !isValid && mode === "decode" ? "border-yellow-500/50" : ""
         }`}
         spellCheck={false}
       />
-      
+
       {/* Invalid Base64 warning */}
-      {!isValid && mode === 'decode' && value && (
+      {!isValid && mode === "decode" && value && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

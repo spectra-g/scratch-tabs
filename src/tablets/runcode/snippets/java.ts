@@ -1,5 +1,5 @@
 export const javaSnippet = {
-  name: 'Java',
+  name: "Java",
   code: `import java.util.Arrays;
 
 public class Main {
@@ -34,5 +34,5 @@ public class Main {
         System.out.println("\\nSorted array:");
         System.out.println(Arrays.toString(numbers));
     }
-}`
+}`,
 };

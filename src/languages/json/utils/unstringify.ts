@@ -6,8 +6,10 @@ export function unstringifyJson(input: string): string {
 
   // If input starts with a quote but not ends, or ends but not starts, try to fix
   const trimmed = input.trim();
-  if ((trimmed.startsWith('"') && !trimmed.endsWith('"')) ||
-      (!trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+  if (
+    (trimmed.startsWith('"') && !trimmed.endsWith('"')) ||
+    (!trimmed.startsWith('"') && trimmed.endsWith('"'))
+  ) {
     if (!trimmed.startsWith('"')) {
       attempts.push('"' + trimmed);
     }
@@ -20,12 +22,14 @@ export function unstringifyJson(input: string): string {
     try {
       parsed = JSON.parse(attempt);
       // If the result is a string, try to parse it again as JSON
-      if (typeof parsed === 'string') {
+      if (typeof parsed === "string") {
         try {
           const unstringified = JSON.parse(parsed);
           return JSON.stringify(unstringified, null, 2);
         } catch (e) {
-          lastError = new Error('Input is a string, but not valid stringified JSON.');
+          lastError = new Error(
+            "Input is a string, but not valid stringified JSON.",
+          );
           continue;
         }
       }
@@ -37,5 +41,5 @@ export function unstringifyJson(input: string): string {
     }
   }
 
-  throw new Error('Input is not valid JSON or stringified JSON.');
-} 
+  throw new Error("Input is not valid JSON or stringified JSON.");
+}

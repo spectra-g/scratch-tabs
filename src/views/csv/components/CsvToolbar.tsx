@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { useState, useCallback } from 'react';
+import * as React from "react";
+import { useState, useCallback } from "react";
 import {
   RotateCcw,
   AlertTriangle,
@@ -13,8 +13,8 @@ import {
   Database,
   Code,
   ChevronDown,
-} from 'lucide-react';
-import { CsvDiagnostic, CsvSnapshot } from '../types';
+} from "lucide-react";
+import { CsvDiagnostic, CsvSnapshot } from "../types";
 
 interface DuplicateGroup {
   rowString: string;
@@ -28,7 +28,7 @@ interface CsvToolbarProps {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
-  
+
   // Snapshots
   snapshots: CsvSnapshot[];
   showSnapshotsPanel: boolean;
@@ -36,7 +36,7 @@ interface CsvToolbarProps {
   onCreateSnapshot: (name: string) => void;
   onRestoreSnapshot: (id: string) => void;
   onDeleteSnapshot: (id: string) => void;
-  
+
   // Duplicates
   duplicateGroups: DuplicateGroup[];
   showDuplicatesOnly: boolean;
@@ -44,13 +44,13 @@ interface CsvToolbarProps {
   onToggleDuplicatesOnly: (show: boolean) => void;
   onRemoveDuplicates: () => void;
   onClearDuplicates: () => void;
-  
+
   // Export
   onExportCsv: () => void;
   onExportJson: () => void;
   onExportMarkdown: () => void;
   onExportSql: (tableName: string) => void;
-  
+
   // Data info
   rowCount: number;
   columnCount: number;
@@ -80,10 +80,10 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   rowCount,
   columnCount,
   diagnostics,
-  isValid
+  isValid,
 }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
-  const [sqlTableName, setSqlTableName] = useState('my_table');
+  const [sqlTableName, setSqlTableName] = useState("my_table");
 
   const handleExportSql = useCallback(() => {
     onExportSql(sqlTableName);
@@ -109,61 +109,64 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
     <div className="flex-none border-b border-gray-700 p-3 flex items-center justify-between">
       <div className="flex items-center space-x-2">
         {/* Undo/Redo */}
-        <button 
-          onClick={onUndo} 
-          disabled={!canUndo} 
+        <button
+          onClick={onUndo}
+          disabled={!canUndo}
           title="Undo"
-          className={`p-2 rounded ${canUndo ? 'hover:bg-gray-700' : 'opacity-50 cursor-not-allowed'}`}
+          className={`p-2 rounded ${canUndo ? "hover:bg-gray-700" : "opacity-50 cursor-not-allowed"}`}
         >
           <RotateCcw size={16} />
         </button>
-        <button 
-          onClick={onRedo} 
-          disabled={!canRedo} 
-          title="Redo" 
-          className={`p-2 rounded transform scale-x-[-1] ${canRedo ? 'hover:bg-gray-700' : 'opacity-50 cursor-not-allowed'}`}
+        <button
+          onClick={onRedo}
+          disabled={!canRedo}
+          title="Redo"
+          className={`p-2 rounded transform scale-x-[-1] ${canRedo ? "hover:bg-gray-700" : "opacity-50 cursor-not-allowed"}`}
         >
           <RotateCcw size={16} />
         </button>
-        
+
         <div className="w-px h-6 bg-gray-700 mx-2" />
-        
+
         {/* Snapshots */}
-        <button 
-          onClick={() => onCreateSnapshot(`Snapshot ${snapshots.length + 1}`)} 
+        <button
+          onClick={() => onCreateSnapshot(`Snapshot ${snapshots.length + 1}`)}
           title="Create snapshot"
           className="p-2 rounded hover:bg-gray-700"
         >
           <Camera size={16} />
         </button>
         {snapshots.length > 0 && (
-          <button 
+          <button
             onClick={() => onToggleSnapshotsPanel(!showSnapshotsPanel)}
             title="Manage snapshots"
-            className={`p-2 rounded ${showSnapshotsPanel ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-gray-700'}`}
+            className={`p-2 rounded ${showSnapshotsPanel ? "bg-blue-500/20 text-blue-400" : "hover:bg-gray-700"}`}
           >
             <History size={16} />
           </button>
         )}
-        
+
         <div className="w-px h-6 bg-gray-700 mx-2" />
-        
+
         {/* Export Dropdown */}
         <div className="relative">
-          <button 
+          <button
             onClick={() => setShowExportMenu(!showExportMenu)}
             title="Export data"
-            className={`flex items-center space-x-1 px-3 py-2 rounded ${showExportMenu ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-gray-700'}`}
+            className={`flex items-center space-x-1 px-3 py-2 rounded ${showExportMenu ? "bg-blue-500/20 text-blue-400" : "hover:bg-gray-700"}`}
           >
             <Download size={16} />
             <span className="text-sm">Export</span>
-            <ChevronDown size={12} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              size={12}
+              className={`transition-transform ${showExportMenu ? "rotate-180" : ""}`}
+            />
           </button>
-          
+
           {showExportMenu && (
             <>
-              <div 
-                className="fixed inset-0 z-30" 
+              <div
+                className="fixed inset-0 z-30"
                 onClick={() => setShowExportMenu(false)}
               />
               <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px]">
@@ -200,7 +203,9 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
                   </button>
                   <div className="border-t border-gray-700 my-1" />
                   <div className="px-3 py-2">
-                    <label className="block text-xs text-gray-400 mb-1">SQL Table Name:</label>
+                    <label className="block text-xs text-gray-400 mb-1">
+                      SQL Table Name:
+                    </label>
                     <input
                       type="text"
                       value={sqlTableName}
@@ -219,20 +224,22 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
                       <Database size={16} className="text-orange-400" />
                       <span>SQL</span>
                     </div>
-                    <span className="text-xs text-gray-500">{sqlTableName || 'table'}_inserts.sql</span>
+                    <span className="text-xs text-gray-500">
+                      {sqlTableName || "table"}_inserts.sql
+                    </span>
                   </button>
                 </div>
               </div>
             </>
           )}
         </div>
-        
+
         <div className="w-px h-6 bg-gray-700 mx-2" />
-        
+
         {/* Duplicates Controls */}
         {duplicateGroups.length === 0 ? (
-          <button 
-            onClick={onFindDuplicates} 
+          <button
+            onClick={onFindDuplicates}
             title="Find duplicate rows"
             className="p-2 rounded hover:bg-gray-700"
           >
@@ -240,25 +247,27 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           </button>
         ) : (
           <div className="flex items-center space-x-2">
-            <button 
+            <button
               onClick={() => onToggleDuplicatesOnly(!showDuplicatesOnly)}
-              title={showDuplicatesOnly ? "Show all rows" : "Show only duplicates"}
+              title={
+                showDuplicatesOnly ? "Show all rows" : "Show only duplicates"
+              }
               className={`px-3 py-1 rounded text-sm ${
-                showDuplicatesOnly 
-                  ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                showDuplicatesOnly
+                  ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
             >
-              {showDuplicatesOnly ? 'Show All' : 'Duplicates Only'}
+              {showDuplicatesOnly ? "Show All" : "Duplicates Only"}
             </button>
-            <button 
+            <button
               onClick={onRemoveDuplicates}
               title="Remove duplicate rows (keep first occurrence)"
               className="px-3 py-1 rounded text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30"
             >
               Remove Duplicates
             </button>
-            <button 
+            <button
               onClick={onClearDuplicates}
               title="Clear duplicate analysis"
               className="p-1 rounded hover:bg-gray-700 text-gray-400"
@@ -268,20 +277,30 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Status Info */}
       <div className="flex items-center space-x-4 text-sm text-gray-400">
-        <span>{rowCount} rows × {columnCount} columns</span>
+        <span>
+          {rowCount} rows × {columnCount} columns
+        </span>
         {duplicateGroups.length > 0 && (
           <span className="text-yellow-400">
-            {duplicateGroups.reduce((sum, group) => sum + group.count, 0)} duplicate rows in {duplicateGroups.length} groups
+            {duplicateGroups.reduce((sum, group) => sum + group.count, 0)}{" "}
+            duplicate rows in {duplicateGroups.length} groups
           </span>
         )}
         <div className="flex items-center space-x-1">
-          {isValid ? <CheckCircle size={16} className="text-green-400" /> : <AlertTriangle size={16} className="text-yellow-400" />}
-          <span className="text-xs">{diagnostics.filter(d=>d.type==='error').length} errors, {diagnostics.filter(d=>d.type==='warning').length} warnings</span>
+          {isValid ? (
+            <CheckCircle size={16} className="text-green-400" />
+          ) : (
+            <AlertTriangle size={16} className="text-yellow-400" />
+          )}
+          <span className="text-xs">
+            {diagnostics.filter((d) => d.type === "error").length} errors,{" "}
+            {diagnostics.filter((d) => d.type === "warning").length} warnings
+          </span>
         </div>
       </div>
     </div>
   );
-}; 
+};

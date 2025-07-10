@@ -1,11 +1,11 @@
-import React, { useRef, useEffect, useCallback } from 'react';
-import { useRootStore } from '../../stores';
-import { useTabletSelector } from '../../hooks/useTabletSelector';
-import { TabletSelector } from '../../tablets';
-import { Tablet } from '../../tablets';
-import { TabActions } from '../Tab/TabActions';
-import { FileText, Layers, Upload, FolderOpen, File } from 'lucide-react';
-import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import React, { useRef, useEffect, useCallback } from "react";
+import { useRootStore } from "../../stores";
+import { useTabletSelector } from "../../hooks/useTabletSelector";
+import { TabletSelector } from "../../tablets";
+import { Tablet } from "../../tablets";
+import { TabActions } from "../Tab/TabActions";
+import { FileText, Layers, Upload, FolderOpen, File } from "lucide-react";
+import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 export const WelcomeScreen: React.FC = () => {
   const { handleNewTab, handleNewPopulatedTab } = useRootStore();
@@ -19,45 +19,48 @@ export const WelcomeScreen: React.FC = () => {
     tabletSelectorContainerRef,
     openTabletSelector,
     closeTabletSelector,
-  } = useTabletSelector(
-    editorRef,
-    welcomeRef,
-    null,
-    undefined
-  );
+  } = useTabletSelector(editorRef, welcomeRef, null, undefined);
 
   const handleDoubleClick = useCallback(() => {
     handleNewTab(false);
   }, [handleNewTab]);
 
-  const handlePaste = useCallback(async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    const text = e.clipboardData.getData('text');
-    if (text) {
-      handleNewTab(false, text);
-    }
-  }, [handleNewTab]);
+  const handlePaste = useCallback(
+    async (e: React.ClipboardEvent<HTMLDivElement>) => {
+      const text = e.clipboardData.getData("text");
+      if (text) {
+        handleNewTab(false, text);
+      }
+    },
+    [handleNewTab],
+  );
 
-  const handleTabletSelect = useCallback((tablet: Tablet) => {
-    const state = tablet.createInitialState();
-    const serializedState = tablet.serializeState ? tablet.serializeState(state) : JSON.stringify(state);
-    const now = Date.now();
+  const handleTabletSelect = useCallback(
+    (tablet: Tablet) => {
+      const state = tablet.createInitialState();
+      const serializedState = tablet.serializeState
+        ? tablet.serializeState(state)
+        : JSON.stringify(state);
+      const now = Date.now();
 
-    handleNewPopulatedTab({
-      id: crypto.randomUUID(),
-      title: tablet.label,
-      content: '',
-      language: 'plaintext',
-      languageLocked: true,
-      isTablet: true,
-      tabletState: serializedState,
-      cursorPosition: { lineNumber: 1, column: 1 },
-      dateCreated: now,
-      lastModified: now,
-      workspaceId: '', // Will be set by the store
-    });
+      handleNewPopulatedTab({
+        id: crypto.randomUUID(),
+        title: tablet.label,
+        content: "",
+        language: "plaintext",
+        languageLocked: true,
+        isTablet: true,
+        tabletState: serializedState,
+        cursorPosition: { lineNumber: 1, column: 1 },
+        dateCreated: now,
+        lastModified: now,
+        workspaceId: "", // Will be set by the store
+      });
 
-    closeTabletSelector(false);
-  }, [handleNewPopulatedTab, closeTabletSelector]);
+      closeTabletSelector(false);
+    },
+    [handleNewPopulatedTab, closeTabletSelector],
+  );
 
   const handleCreateNewTab = useCallback(() => {
     handleNewTab(false);
@@ -67,12 +70,14 @@ export const WelcomeScreen: React.FC = () => {
     // Center the tablet selector on the screen for welcome screen
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const selectorWidth = window.innerWidth >= 1024 ? 700 : window.innerWidth >= 768 ? 600 : 384;
-    const selectorHeight = window.innerHeight >= 1024 ? 600 : window.innerHeight >= 768 ? 500 : 384;
-    
+    const selectorWidth =
+      window.innerWidth >= 1024 ? 700 : window.innerWidth >= 768 ? 600 : 384;
+    const selectorHeight =
+      window.innerHeight >= 1024 ? 600 : window.innerHeight >= 768 ? 500 : 384;
+
     const centerX = (viewportWidth - selectorWidth) / 2;
     const centerY = (viewportHeight - selectorHeight) / 2;
-    
+
     openTabletSelector({ x: centerX, y: centerY });
   }, [openTabletSelector]);
 
@@ -83,17 +88,17 @@ export const WelcomeScreen: React.FC = () => {
         handleNewTab(false, text);
       }
     } catch (err) {
-      console.error('Failed to read from clipboard:', err);
+      console.error("Failed to read from clipboard:", err);
       // Fallback: could show a message to user that they should use Ctrl+V instead
     }
   }, [handleNewTab]);
 
   const handleOpenFile = useCallback(() => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '*/*'; // Accept all file types
-    input.style.display = 'none';
-    
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "*/*"; // Accept all file types
+    input.style.display = "none";
+
     input.onchange = (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
@@ -102,10 +107,10 @@ export const WelcomeScreen: React.FC = () => {
           const content = e.target?.result as string;
           if (content) {
             // Extract filename without extension for tab title
-            const fileName = file.name.replace(/\.[^/.]+$/, '');
+            const fileName = file.name.replace(/\.[^/.]+$/, "");
             handleNewTab(false, content);
             // Update the tab title after creation
-            // Note: This is a simplified approach - in a real implementation 
+            // Note: This is a simplified approach - in a real implementation
             // you might want to wait for the tab to be created and then update its title
           }
         };
@@ -114,7 +119,7 @@ export const WelcomeScreen: React.FC = () => {
       // Clean up
       document.body.removeChild(input);
     };
-    
+
     document.body.appendChild(input);
     input.click();
   }, [handleNewTab]);
@@ -122,56 +127,59 @@ export const WelcomeScreen: React.FC = () => {
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (
-        e.key === '/' &&
+        e.key === "/" &&
         !showTabletSelector &&
-        !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
+        !(
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        )
       ) {
         e.preventDefault();
         handleOpenTabletSelector();
       }
     };
 
-    document.addEventListener('keydown', handleGlobalKeyDown);
+    document.addEventListener("keydown", handleGlobalKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleGlobalKeyDown);
+      document.removeEventListener("keydown", handleGlobalKeyDown);
     };
   }, [showTabletSelector, handleOpenTabletSelector]);
 
   const actions = [
     {
       icon: FileText,
-      title: 'Start scratching',
-      action: 'Double-click anywhere',
+      title: "Start scratching",
+      action: "Double-click anywhere",
       onClick: handleCreateNewTab,
-      clickable: true
+      clickable: true,
     },
     {
       icon: File,
-      title: 'Open file',
-      action: 'Open file from your computer',
+      title: "Open file",
+      action: "Open file from your computer",
       onClick: handleOpenFile,
-      clickable: true
+      clickable: true,
     },
     {
       icon: Layers,
-      title: 'Open specialized tablet',
-      action: 'Press / key',
+      title: "Open specialized tablet",
+      action: "Press / key",
       onClick: handleOpenTabletSelector,
-      clickable: true
+      clickable: true,
     },
     {
       icon: Upload,
-      title: 'Import from clipboard',
-      action: 'Paste text here',
+      title: "Import from clipboard",
+      action: "Paste text here",
       onClick: handleImportFromClipboard,
-      clickable: true
+      clickable: true,
     },
     {
       icon: FolderOpen,
-      title: 'Drag a file',
-      action: 'Drop a file here to open',
+      title: "Drag a file",
+      action: "Drop a file here to open",
       onClick: () => {}, // Handled by drag and drop
-      clickable: false
+      clickable: false,
     },
   ];
 
@@ -184,12 +192,22 @@ export const WelcomeScreen: React.FC = () => {
             // Center the tablet selector on the screen for welcome screen
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
-            const selectorWidth = window.innerWidth >= 1024 ? 700 : window.innerWidth >= 768 ? 600 : 384;
-            const selectorHeight = window.innerHeight >= 1024 ? 600 : window.innerHeight >= 768 ? 500 : 384;
-            
+            const selectorWidth =
+              window.innerWidth >= 1024
+                ? 700
+                : window.innerWidth >= 768
+                  ? 600
+                  : 384;
+            const selectorHeight =
+              window.innerHeight >= 1024
+                ? 600
+                : window.innerHeight >= 768
+                  ? 500
+                  : 384;
+
             const centerX = (viewportWidth - selectorWidth) / 2;
             const centerY = (viewportHeight - selectorHeight) / 2;
-            
+
             openTabletSelector({ x: centerX, y: centerY });
           }}
           tabletButtonRef={tabletButtonRef}
@@ -206,13 +224,13 @@ export const WelcomeScreen: React.FC = () => {
       >
         {/* Header */}
         <div className="text-center mb-12 w-full">
-                          <div className="flex items-center justify-center w-full">
-              <img
-                src="/favicon-gray.svg"
-                alt="Scratch Tabs Logo"
-                className="w-7 h-7 mr-4 flex-shrink-0"
-              />
-              <h1 className="text-3xl font-light text-gray-100">Scratch Tabs</h1>
+          <div className="flex items-center justify-center w-full">
+            <img
+              src="/favicon-gray.svg"
+              alt="Scratch Tabs Logo"
+              className="w-7 h-7 mr-4 flex-shrink-0"
+            />
+            <h1 className="text-3xl font-light text-gray-100">Scratch Tabs</h1>
           </div>
           <p className="text-gray-400 text-sm mt-2">Version 1.0</p>
         </div>
@@ -279,7 +297,7 @@ export const WelcomeScreen: React.FC = () => {
         <div
           ref={tabletSelectorContainerRef}
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: `${selectorPosition.x}px`,
             top: `${selectorPosition.y}px`,
             zIndex: 50,

@@ -1,7 +1,10 @@
-import React from 'react';
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { SortableTab } from './SortableTab';
-import { Tab } from '../../types';
+import React from "react";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { SortableTab } from "./SortableTab";
+import { Tab } from "../../types";
 
 interface SortableTabListProps {
   tabs: Tab[];
@@ -14,7 +17,10 @@ interface SortableTabListProps {
   onTabClick: (tabId: string) => void;
   onTabClose: (tabId: string) => void;
   onTabDoubleClick: (tab: Tab, e: React.MouseEvent<HTMLDivElement>) => void;
-  onTabContextMenu: (e: React.MouseEvent<HTMLDivElement>, tabId: string) => void;
+  onTabContextMenu: (
+    e: React.MouseEvent<HTMLDivElement>,
+    tabId: string,
+  ) => void;
   onEditChange: (value: string) => void;
   onEditSubmit: () => void;
   onEditCancel: () => void;
@@ -40,18 +46,18 @@ export const SortableTabList: React.FC<SortableTabListProps> = ({
   onEditCancel,
   onMouseEnterTab,
   onMouseLeaveTab,
-  onForceHideTooltip
+  onForceHideTooltip,
 }) => {
   // Only tabs that match the pinned state are shown
-  const filteredTabs = tabs.filter(tab => !!tab.isPinned === isPinned);
-  const filteredIds = tabIds.filter(id => {
-    const tab = tabs.find(t => t.id === id);
+  const filteredTabs = tabs.filter((tab) => !!tab.isPinned === isPinned);
+  const filteredIds = tabIds.filter((id) => {
+    const tab = tabs.find((t) => t.id === id);
     return tab && !!tab.isPinned === isPinned;
   });
 
   return (
-    <SortableContext 
-      items={filteredIds} 
+    <SortableContext
+      items={filteredIds}
       strategy={horizontalListSortingStrategy}
     >
       <div className="flex">
@@ -82,4 +88,4 @@ export const SortableTabList: React.FC<SortableTabListProps> = ({
       </div>
     </SortableContext>
   );
-}; 
+};

@@ -1,9 +1,9 @@
-import * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { Tab } from '../types';
-import { useTabsStore } from '../stores/tabsStore';
-import { useRootStore } from '../stores/rootStore';
-import { StorageProviderFactory } from '../db';
-import { detectLanguage, isAmbiguousLanguage } from '../languages';
+import * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { Tab } from "../types";
+import { useTabsStore } from "../stores/tabsStore";
+import { useRootStore } from "../stores/rootStore";
+import { StorageProviderFactory } from "../db";
+import { detectLanguage, isAmbiguousLanguage } from "../languages";
 
 // The maximum number of models to keep in memory
 const MAX_MODELS = 10;
@@ -48,13 +48,17 @@ class ModelManager {
     }
 
     // Create new fetch promise
-    const fetchPromise = this.storage.getTabContent(tabId)
-      .then(content => {
-        return content || '';
+    const fetchPromise = this.storage
+      .getTabContent(tabId)
+      .then((content) => {
+        return content || "";
       })
-      .catch(error => {
-        console.error(`[ModelManager] ❌ Failed to fetch content from DB for tab ${tabId}:`, error);
-        return ''; // Return empty string as fallback
+      .catch((error) => {
+        console.error(
+          `[ModelManager] ❌ Failed to fetch content from DB for tab ${tabId}:`,
+          error,
+        );
+        return ""; // Return empty string as fallback
       })
       .finally(() => {
         // Clean up the promise from cache
@@ -63,7 +67,7 @@ class ModelManager {
 
     // Cache the promise to prevent duplicate requests
     this.contentFetchPromises.set(tabId, fetchPromise);
-    
+
     return fetchPromise;
   }
 
@@ -77,22 +81,25 @@ class ModelManager {
 
     try {
       const fetchedContent = await this.fetchContentFromDatabase(tab.id);
-      
+
       // Update the store with fetched content to maintain consistency
       useTabsStore.getState().updateTabContent(tab.id, fetchedContent);
-      
+
       // Return updated tab object
       return {
         ...tab,
-        content: fetchedContent
+        content: fetchedContent,
       };
     } catch (error) {
-      console.error(`[ModelManager] Failed to ensure content for tab ${tab.id}:`, error);
-      
+      console.error(
+        `[ModelManager] Failed to ensure content for tab ${tab.id}:`,
+        error,
+      );
+
       // Return tab with empty content as fallback
       return {
         ...tab,
-        content: ''
+        content: "",
       };
     }
   }
@@ -100,9 +107,16 @@ class ModelManager {
   /**
    * Handles language detection and auto-formatting logic
    */
-  private handleLanguageDetection(tabId: string, newContent: string, prevContent: string, isFromPaste: boolean = false) {
+  private handleLanguageDetection(
+    tabId: string,
+    newContent: string,
+    prevContent: string,
+    isFromPaste: boolean = false,
+  ) {
     try {
-      const currentTab = useTabsStore.getState().tabs.find(t => t.id === tabId);
+      const currentTab = useTabsStore
+        .getState()
+        .tabs.find((t) => t.id === tabId);
       if (!currentTab || currentTab.languageLocked) {
         return; // Skip if tab not found or language is locked
       }
@@ -112,30 +126,33 @@ class ModelManager {
 
       // Handle empty content
       if (trimmedNewContent.length === 0) {
-        if (currentTab.language !== 'plaintext') {
-          useRootStore.getState().updateTabLanguage(tabId, 'plaintext', false);
+        if (currentTab.language !== "plaintext") {
+          useRootStore.getState().updateTabLanguage(tabId, "plaintext", false);
         }
         return;
       }
 
       // Determine if the change is significant
-      const lengthDifference = Math.abs(trimmedNewContent.length - trimmedOldContent.length);
-      const newLines = trimmedNewContent.split('\n');
-      const oldLines = trimmedOldContent.split('\n');
+      const lengthDifference = Math.abs(
+        trimmedNewContent.length - trimmedOldContent.length,
+      );
+      const newLines = trimmedNewContent.split("\n");
+      const oldLines = trimmedOldContent.split("\n");
       const lineDifference = Math.abs(newLines.length - oldLines.length);
 
       const isSignificantChange =
         lengthDifference > SIGNIFICANT_LENGTH_DIFFERENCE ||
         lineDifference > SIGNIFICANT_LINE_DIFFERENCE ||
-        (trimmedNewContent.length > 0 && trimmedOldContent.length > 0 &&
-         !trimmedNewContent.startsWith(trimmedOldContent.substring(0, 10)) &&
-         !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) &&
-         lengthDifference > 5);
+        (trimmedNewContent.length > 0 &&
+          trimmedOldContent.length > 0 &&
+          !trimmedNewContent.startsWith(trimmedOldContent.substring(0, 10)) &&
+          !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) &&
+          lengthDifference > 5);
 
       // Perform language detection
       const newDetectedLanguage = detectLanguage(trimmedNewContent);
       const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent);
-      
+
       // Decide whether to update the tab's language
       let shouldUpdate = false;
       let shouldTriggerAutoFormat = false;
@@ -151,7 +168,7 @@ class ModelManager {
         // For normal typing (non-significant change):
         // Only update if the detected language is different and we're in plaintext or detection is confident
         if (newDetectedLanguage !== currentTab.language) {
-          if (currentTab.language === 'plaintext' || !newDetectionIsAmbiguous) {
+          if (currentTab.language === "plaintext" || !newDetectionIsAmbiguous) {
             shouldUpdate = true;
             // Don't trigger auto-format for regular typing-induced language changes
           }
@@ -160,8 +177,10 @@ class ModelManager {
 
       // Perform update
       if (shouldUpdate) {
-        useRootStore.getState().updateTabLanguage(tabId, newDetectedLanguage, false);
-        
+        useRootStore
+          .getState()
+          .updateTabLanguage(tabId, newDetectedLanguage, false);
+
         // Trigger auto-format if this was a paste operation that resulted in language detection
         if (shouldTriggerAutoFormat) {
           setTimeout(() => {
@@ -170,7 +189,10 @@ class ModelManager {
         }
       }
     } catch (error) {
-      console.warn(`[ModelManager] Failed to handle language detection for tab ${tabId}:`, error);
+      console.warn(
+        `[ModelManager] Failed to handle language detection for tab ${tabId}:`,
+        error,
+      );
     }
   }
 
@@ -191,10 +213,10 @@ class ModelManager {
       // Find the editor instance that has this model
       // This is a bit of a hack, but Monaco doesn't provide a direct way to get the editor from a model
       const editors = this.monaco?.editor.getEditors() || [];
-      const editor = editors.find(e => e.getModel() === model);
+      const editor = editors.find((e) => e.getModel() === model);
 
       if (editor) {
-        const formatAction = editor.getAction('editor.action.formatDocument');
+        const formatAction = editor.getAction("editor.action.formatDocument");
         if (formatAction) {
           formatAction.run().finally(() => {
             this.formatActionQueue.delete(formatKey);
@@ -206,14 +228,20 @@ class ModelManager {
         this.formatActionQueue.delete(formatKey);
       }
     } catch (error) {
-      console.warn(`[ModelManager] Failed to trigger auto-format for tab ${tabId}:`, error);
+      console.warn(
+        `[ModelManager] Failed to trigger auto-format for tab ${tabId}:`,
+        error,
+      );
     }
   }
 
   /**
    * Handles debounced cursor position persistence
    */
-  private debouncedSaveCursorPosition(tabId: string, cursorPosition: { lineNumber: number; column: number }) {
+  private debouncedSaveCursorPosition(
+    tabId: string,
+    cursorPosition: { lineNumber: number; column: number },
+  ) {
     // Clear existing timeout for this tab
     const existingTimeout = this.debouncedCursorPersistence.get(tabId);
     if (existingTimeout) {
@@ -226,7 +254,10 @@ class ModelManager {
         await this.storage.updateTabCursor(tabId, cursorPosition);
         this.debouncedCursorPersistence.delete(tabId);
       } catch (error) {
-        console.warn(`[ModelManager] Failed to persist cursor position for tab ${tabId}:`, error);
+        console.warn(
+          `[ModelManager] Failed to persist cursor position for tab ${tabId}:`,
+          error,
+        );
       }
     }, 1000);
 
@@ -236,21 +267,29 @@ class ModelManager {
   /**
    * Sets up cursor position listener for a model
    */
-  private setupCursorPositionListener(tabId: string, editor: Monaco.editor.IStandaloneCodeEditor) {
+  private setupCursorPositionListener(
+    tabId: string,
+    editor: Monaco.editor.IStandaloneCodeEditor,
+  ) {
     // Clean up existing listener
     this.cursorPositionListeners.get(tabId)?.dispose();
 
-    const cursorListener = editor.onDidChangeCursorPosition((e: Monaco.editor.ICursorPositionChangedEvent) => {
-      try {
-        // Only persist to database (debounced), don't update React state
-        this.debouncedSaveCursorPosition(tabId, {
-          lineNumber: e.position.lineNumber,
-          column: e.position.column,
-        });
-      } catch (error) {
-        console.warn(`[ModelManager] Failed to handle cursor position change for tab ${tabId}:`, error);
-      }
-    });
+    const cursorListener = editor.onDidChangeCursorPosition(
+      (e: Monaco.editor.ICursorPositionChangedEvent) => {
+        try {
+          // Only persist to database (debounced), don't update React state
+          this.debouncedSaveCursorPosition(tabId, {
+            lineNumber: e.position.lineNumber,
+            column: e.position.column,
+          });
+        } catch (error) {
+          console.warn(
+            `[ModelManager] Failed to handle cursor position change for tab ${tabId}:`,
+            error,
+          );
+        }
+      },
+    );
 
     this.cursorPositionListeners.set(tabId, cursorListener);
   }
@@ -259,7 +298,10 @@ class ModelManager {
    * Registers cursor position listening for an editor instance
    * Call this from EditorInstance when the editor is ready
    */
-  public registerCursorPositionListener(tabId: string, editor: Monaco.editor.IStandaloneCodeEditor): void {
+  public registerCursorPositionListener(
+    tabId: string,
+    editor: Monaco.editor.IStandaloneCodeEditor,
+  ): void {
     this.setupCursorPositionListener(tabId, editor);
   }
 
@@ -291,7 +333,7 @@ class ModelManager {
 
   public async get(tab: Tab): Promise<Monaco.editor.ITextModel> {
     if (!this.monaco) {
-      throw new Error('ModelManager not initialized');
+      throw new Error("ModelManager not initialized");
     }
 
     // Check if we have a cached model
@@ -310,7 +352,7 @@ class ModelManager {
     }
 
     const tabWithContent = await this.ensureTabContent(tab);
-    const content = tabWithContent.content || '';
+    const content = tabWithContent.content || "";
     this.lastContent.set(tab.id, content); // Set initial content for comparison
 
     const modelUri = this.monaco.Uri.parse(`inmemory://model/${tab.id}`);
@@ -319,27 +361,38 @@ class ModelManager {
       existingModel.dispose();
     }
 
-    const model = this.monaco.editor.createModel(content, tab.language, modelUri);
+    const model = this.monaco.editor.createModel(
+      content,
+      tab.language,
+      modelUri,
+    );
     this.listeners.get(tab.id)?.dispose();
-    
+
     const contentListener = model.onDidChangeContent(() => {
       try {
         const newContent = model.getValue();
-        const prevContent = this.lastContent.get(tab.id) || '';
+        const prevContent = this.lastContent.get(tab.id) || "";
         const wasFromPaste = this.isPasteRef.get(tab.id) || false;
-        
+
         // Update tab content in store
         useTabsStore.getState().updateTabContent(tab.id, newContent);
         this.lastContent.set(tab.id, newContent);
-        
+
         // Handle language detection and auto-formatting
-        this.handleLanguageDetection(tab.id, newContent, prevContent, wasFromPaste);
-        
+        this.handleLanguageDetection(
+          tab.id,
+          newContent,
+          prevContent,
+          wasFromPaste,
+        );
       } catch (error) {
-        console.warn(`[ModelManager] Failed to update content for tab ${tab.id}:`, error);
+        console.warn(
+          `[ModelManager] Failed to update content for tab ${tab.id}:`,
+          error,
+        );
       }
     });
-    
+
     // Store the listener
     this.models.set(tab.id, model);
     this.listeners.set(tab.id, contentListener);
@@ -360,21 +413,27 @@ class ModelManager {
           useTabsStore.getState().updateTabContent(tabId, finalContent);
         }
       } catch (error) {
-        console.warn(`[ModelManager] Failed to get final content for tab ${tabId}:`, error);
+        console.warn(
+          `[ModelManager] Failed to get final content for tab ${tabId}:`,
+          error,
+        );
       }
-      
+
       this.listeners.get(tabId)?.dispose();
       this.listeners.delete(tabId);
       this.lastContent.delete(tabId); // Clean up content tracking
       this.isPasteRef.delete(tabId); // Clean up paste tracking
-      
+
       // Clean up cursor position listeners
       this.unregisterCursorPositionListener(tabId);
-      
+
       try {
         model.dispose();
       } catch (error) {
-        console.warn(`[ModelManager] Failed to dispose model for tab ${tabId}:`, error);
+        console.warn(
+          `[ModelManager] Failed to dispose model for tab ${tabId}:`,
+          error,
+        );
       }
       this.models.delete(tabId);
       this.lru.delete(tabId);
@@ -384,7 +443,7 @@ class ModelManager {
   public disposeAll() {
     // Convert to array to avoid modification during iteration
     const tabIds = Array.from(this.models.keys());
-    tabIds.forEach(tabId => this.dispose(tabId));
+    tabIds.forEach((tabId) => this.dispose(tabId));
   }
 
   // Helper methods for debugging
@@ -393,7 +452,7 @@ class ModelManager {
       modelCount: this.models.size,
       maxModels: MAX_MODELS,
       cachedTabs: Array.from(this.models.keys()),
-      lruOrder: Array.from(this.lru)
+      lruOrder: Array.from(this.lru),
     };
   }
 
@@ -412,7 +471,10 @@ class ModelManager {
         model.setValue(content);
         // The onDidChangeContent listener will automatically sync this back to the store
       } catch (error) {
-        console.warn(`[ModelManager] Failed to update model content for tab ${tabId}:`, error);
+        console.warn(
+          `[ModelManager] Failed to update model content for tab ${tabId}:`,
+          error,
+        );
       }
     }
   }
@@ -423,14 +485,20 @@ class ModelManager {
       try {
         this.monaco.editor.setModelLanguage(model, language);
       } catch (error) {
-        console.warn(`[ModelManager] ❌ Failed to update model language for tab ${tabId}:`, error);
+        console.warn(
+          `[ModelManager] ❌ Failed to update model language for tab ${tabId}:`,
+          error,
+        );
       }
     } else {
-      console.warn(`[ModelManager] ⚠️ Cannot update model language for tab ${tabId}:`, {
-        modelExists: !!model,
-        modelDisposed: model?.isDisposed(),
-        monacoInitialized: !!this.monaco
-      });
+      console.warn(
+        `[ModelManager] ⚠️ Cannot update model language for tab ${tabId}:`,
+        {
+          modelExists: !!model,
+          modelDisposed: model?.isDisposed(),
+          monacoInitialized: !!this.monaco,
+        },
+      );
     }
   }
 
@@ -442,7 +510,6 @@ class ModelManager {
       this.isPasteRef.delete(tabId);
     }, 100);
   }
-
 }
 
-export const modelManager = new ModelManager(); 
+export const modelManager = new ModelManager();

@@ -23,16 +23,19 @@ A powerful tool for comparing the structural differences between two JSON object
 ### Using the Interface
 
 #### Two-Panel Layout
+
 - **Left Panel**: Source JSON (read-only) - Your current editor content
 - **Right Panel**: Target JSON (editable) - Paste or type the JSON to compare against
 
 #### Options Panel
+
 - **Array Sample Count**: Number of array elements to inspect (default: 3)
 - **Strict Array Length**: Report differences if arrays have different lengths
 - **Case Sensitive Keys**: Treat keys with different cases as different
 - **Sync Scroll**: Synchronize scrolling between both editors
 
 #### Results Section
+
 - **Status Header**: Shows whether structures match or differ
 - **Structure Tree**: Interactive tree view of the JSON structure with highlighted differences
 - **Detailed List**: Complete list of all differences with paths and descriptions
@@ -62,7 +65,7 @@ The comparison algorithm works recursively:
 
 1. **Type Check**: Compare data types at each path
 2. **Object Comparison**: Compare key sets and recursively compare values
-3. **Array Comparison**: 
+3. **Array Comparison**:
    - Check for uniform structure (all elements have same structure)
    - Sample array elements based on configuration
    - Compare representative elements
@@ -79,9 +82,9 @@ The comparison algorithm works recursively:
 
 ```typescript
 interface ComparisonOptions {
-  arraySampleCount?: number;    // Default: 3
-  strictArrayLength?: boolean;  // Default: false
-  caseSensitiveKeys?: boolean;  // Default: true
+  arraySampleCount?: number; // Default: 3
+  strictArrayLength?: boolean; // Default: false
+  caseSensitiveKeys?: boolean; // Default: true
 }
 ```
 
@@ -90,6 +93,7 @@ interface ComparisonOptions {
 ### Basic Object Comparison
 
 **Source:**
+
 ```json
 {
   "name": "John",
@@ -99,6 +103,7 @@ interface ComparisonOptions {
 ```
 
 **Target:**
+
 ```json
 {
   "name": "Jane",
@@ -111,19 +116,18 @@ interface ComparisonOptions {
 ### Array Structure Comparison
 
 **Source:**
+
 ```json
 [
-  {"name": "John", "age": 30},
-  {"name": "Jane", "age": 25}
+  { "name": "John", "age": 30 },
+  { "name": "Jane", "age": 25 }
 ]
 ```
 
 **Target:**
+
 ```json
-[
-  {"name": "Bob"},
-  {"name": "Alice"}
-]
+[{ "name": "Bob" }, { "name": "Alice" }]
 ```
 
 **Result:** `MISSING_KEY_RIGHT` at `/[0]/age` and `/[1]/age`
@@ -131,6 +135,7 @@ interface ComparisonOptions {
 ### Type Mismatch
 
 **Source:**
+
 ```json
 {
   "count": "123"
@@ -138,6 +143,7 @@ interface ComparisonOptions {
 ```
 
 **Target:**
+
 ```json
 {
   "count": 123
@@ -153,11 +159,13 @@ interface ComparisonOptions {
 Main function for comparing JSON structures.
 
 **Parameters:**
+
 - `jsonA`: Source JSON (string or object)
 - `jsonB`: Target JSON (string or object)
 - `options`: Optional configuration object
 
 **Returns:**
+
 ```typescript
 interface ComparisonResult {
   matches: boolean;
@@ -195,4 +203,4 @@ interface ComparisonResult {
 - **Schema Generation**: Generate JSON schemas from structural analysis
 - **Visual Diff**: Enhanced visual representation of differences
 - **Batch Processing**: Compare multiple JSON files at once
-- **Custom Rules**: User-defined comparison rules and patterns 
+- **Custom Rules**: User-defined comparison rules and patterns

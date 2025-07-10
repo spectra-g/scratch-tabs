@@ -1,28 +1,28 @@
-import { renderHook, act } from '@testing-library/react';
-import { useDragHandler } from '../hooks/useDragHandler';
-import { Shape, Point } from '../types';
+import { renderHook, act } from "@testing-library/react";
+import { useDragHandler } from "../hooks/useDragHandler";
+import { Shape, Point } from "../types";
 
-describe('useDragHandler', () => {
+describe("useDragHandler", () => {
   const mockShapes: Shape[] = [
     {
-      id: 'rect-1',
-      type: 'rectangle',
+      id: "rect-1",
+      type: "rectangle",
       x: 100,
       y: 100,
       width: 50,
       height: 30,
-      style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-      zIndex: 1
+      style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+      zIndex: 1,
     } as Shape,
     {
-      id: 'circle-1',
-      type: 'circle',
+      id: "circle-1",
+      type: "circle",
       x: 200,
       y: 200,
       radius: 25,
-      style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-      zIndex: 2
-    } as Shape
+      style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+      zIndex: 2,
+    } as Shape,
   ];
 
   const mockOnUpdateShape = jest.fn();
@@ -32,13 +32,13 @@ describe('useDragHandler', () => {
     jest.clearAllMocks();
   });
 
-  describe('initial state', () => {
-    it('should initialize with default state', () => {
+  describe("initial state", () => {
+    it("should initialize with default state", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       expect(result.current.dragState).toEqual({
@@ -46,7 +46,7 @@ describe('useDragHandler', () => {
         dragOffset: null,
         draggedShape: null,
         hasMoved: false,
-        dragGuides: null
+        dragGuides: null,
       });
       expect(result.current.isDragging).toBe(false);
       expect(result.current.draggedShape).toBe(null);
@@ -54,13 +54,13 @@ describe('useDragHandler', () => {
     });
   });
 
-  describe('startDrag', () => {
-    it('should start dragging a rectangle shape', () => {
+  describe("startDrag", () => {
+    it("should start dragging a rectangle shape", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const shape = mockShapes[0];
@@ -70,18 +70,18 @@ describe('useDragHandler', () => {
         result.current.startDrag(shape, mousePoint);
       });
 
-      expect(result.current.dragState.draggingShapeId).toBe('rect-1');
+      expect(result.current.dragState.draggingShapeId).toBe("rect-1");
       expect(result.current.dragState.draggedShape).toBe(shape);
       expect(result.current.dragState.hasMoved).toBe(false);
       expect(result.current.isDragging).toBe(true);
     });
 
-    it('should start dragging a circle shape', () => {
+    it("should start dragging a circle shape", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const shape = mockShapes[1];
@@ -91,19 +91,19 @@ describe('useDragHandler', () => {
         result.current.startDrag(shape, mousePoint);
       });
 
-      expect(result.current.dragState.draggingShapeId).toBe('circle-1');
+      expect(result.current.dragState.draggingShapeId).toBe("circle-1");
       expect(result.current.dragState.draggedShape).toBe(shape);
       expect(result.current.isDragging).toBe(true);
     });
   });
 
-  describe('updateDrag', () => {
-    it('should update drag position and mark as moved', () => {
+  describe("updateDrag", () => {
+    it("should update drag position and mark as moved", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const shape = mockShapes[0];
@@ -122,12 +122,12 @@ describe('useDragHandler', () => {
       expect(result.current.dragGuides).toBeDefined();
     });
 
-    it('should not update if not dragging', () => {
+    it("should not update if not dragging", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const movePoint = { x: 120, y: 120 };
@@ -141,14 +141,14 @@ describe('useDragHandler', () => {
     });
   });
 
-  describe('endDrag', () => {
-    it('should handle click (no movement)', () => {
+  describe("endDrag", () => {
+    it("should handle click (no movement)", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       const shape = mockShapes[0];
@@ -168,12 +168,12 @@ describe('useDragHandler', () => {
       expect(mockOnUpdateShape).not.toHaveBeenCalled();
     });
 
-    it('should handle drag with movement', () => {
+    it("should handle drag with movement", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const shape = mockShapes[0];
@@ -193,19 +193,22 @@ describe('useDragHandler', () => {
         expect(result2.wasClick).toBe(false);
       });
 
-      expect(mockOnUpdateShape).toHaveBeenCalledWith('rect-1', expect.objectContaining({
-        x: expect.any(Number),
-        y: expect.any(Number)
-      }));
+      expect(mockOnUpdateShape).toHaveBeenCalledWith(
+        "rect-1",
+        expect.objectContaining({
+          x: expect.any(Number),
+          y: expect.any(Number),
+        }),
+      );
       expect(result.current.isDragging).toBe(false);
     });
 
-    it('should handle circle drag correctly', () => {
+    it("should handle circle drag correctly", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const shape = mockShapes[1];
@@ -224,20 +227,23 @@ describe('useDragHandler', () => {
         result.current.endDrag(endPoint);
       });
 
-      expect(mockOnUpdateShape).toHaveBeenCalledWith('circle-1', expect.objectContaining({
-        x: expect.any(Number),
-        y: expect.any(Number)
-      }));
+      expect(mockOnUpdateShape).toHaveBeenCalledWith(
+        "circle-1",
+        expect.objectContaining({
+          x: expect.any(Number),
+          y: expect.any(Number),
+        }),
+      );
     });
   });
 
-  describe('cancelDrag', () => {
-    it('should cancel drag operation', () => {
+  describe("cancelDrag", () => {
+    it("should cancel drag operation", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const shape = mockShapes[0];
@@ -259,14 +265,14 @@ describe('useDragHandler', () => {
     });
   });
 
-  describe('grid snapping', () => {
-    it('should snap to grid when enabled', () => {
+  describe("grid snapping", () => {
+    it("should snap to grid when enabled", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
           gridSnappingEnabled: true,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const shape = mockShapes[0];
@@ -286,19 +292,22 @@ describe('useDragHandler', () => {
       });
 
       // Should snap to nearest 20px grid
-      expect(mockOnUpdateShape).toHaveBeenCalledWith('rect-1', expect.objectContaining({
-        x: expect.any(Number),
-        y: expect.any(Number)
-      }));
+      expect(mockOnUpdateShape).toHaveBeenCalledWith(
+        "rect-1",
+        expect.objectContaining({
+          x: expect.any(Number),
+          y: expect.any(Number),
+        }),
+      );
     });
 
-    it('should not snap to grid when disabled', () => {
+    it("should not snap to grid when disabled", () => {
       const { result } = renderHook(() =>
         useDragHandler({
           shapes: mockShapes,
           gridSnappingEnabled: false,
-          onUpdateShape: mockOnUpdateShape
-        })
+          onUpdateShape: mockOnUpdateShape,
+        }),
       );
 
       const shape = mockShapes[0];
@@ -317,10 +326,13 @@ describe('useDragHandler', () => {
         result.current.endDrag(endPoint);
       });
 
-      expect(mockOnUpdateShape).toHaveBeenCalledWith('rect-1', expect.objectContaining({
-        x: expect.any(Number),
-        y: expect.any(Number)
-      }));
+      expect(mockOnUpdateShape).toHaveBeenCalledWith(
+        "rect-1",
+        expect.objectContaining({
+          x: expect.any(Number),
+          y: expect.any(Number),
+        }),
+      );
     });
   });
-}); 
+});

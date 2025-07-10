@@ -1,6 +1,18 @@
-import React, { useState } from 'react';
-import { TransformationConfig } from '../../stores/batchToolsStore';
-import { ChevronDown, ChevronRight, Sparkles, Type, Tag, Link, Settings, Copy, Search, RotateCcw, SortAsc } from 'lucide-react';
+import React, { useState } from "react";
+import { TransformationConfig } from "../../stores/batchToolsStore";
+import {
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
+  Type,
+  Tag,
+  Link,
+  Settings,
+  Copy,
+  Search,
+  RotateCcw,
+  SortAsc,
+} from "lucide-react";
 
 interface BatchToolsConfigProps {
   config: TransformationConfig;
@@ -13,7 +25,11 @@ interface ConfigSectionProps {
   defaultExpanded?: boolean;
 }
 
-const ConfigSection: React.FC<ConfigSectionProps> = ({ title, children, defaultExpanded = false }) => {
+const ConfigSection: React.FC<ConfigSectionProps> = ({
+  title,
+  children,
+  defaultExpanded = false,
+}) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
@@ -29,11 +45,7 @@ const ConfigSection: React.FC<ConfigSectionProps> = ({ title, children, defaultE
           <ChevronRight className="w-4 h-4 text-gray-400" />
         )}
       </button>
-      {isExpanded && (
-        <div className="mt-2 space-y-3 px-3">
-          {children}
-        </div>
-      )}
+      {isExpanded && <div className="mt-2 space-y-3 px-3">{children}</div>}
     </div>
   );
 };
@@ -45,7 +57,12 @@ interface CheckboxProps {
   description?: string;
 }
 
-const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onChange, description }) => (
+const Checkbox: React.FC<CheckboxProps> = ({
+  label,
+  checked,
+  onChange,
+  description,
+}) => (
   <label className="flex items-start space-x-2 cursor-pointer group">
     <input
       type="checkbox"
@@ -54,8 +71,12 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onChange, descripti
       className="mt-0.5 w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors"
     />
     <div>
-      <span className="text-sm text-gray-300 group-hover:text-gray-200 transition-colors">{label}</span>
-      {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+      <span className="text-sm text-gray-300 group-hover:text-gray-200 transition-colors">
+        {label}
+      </span>
+      {description && (
+        <p className="text-xs text-gray-400 mt-1">{description}</p>
+      )}
     </div>
   </label>
 );
@@ -68,9 +89,17 @@ interface TextInputProps {
   description?: string;
 }
 
-const TextInput: React.FC<TextInputProps> = ({ label, value, onChange, placeholder, description }) => (
+const TextInput: React.FC<TextInputProps> = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  description,
+}) => (
   <div>
-    <label className="block text-xs font-medium text-gray-300 mb-1">{label}</label>
+    <label className="block text-xs font-medium text-gray-300 mb-1">
+      {label}
+    </label>
     <input
       type="text"
       value={value}
@@ -91,9 +120,18 @@ interface NumberInputProps {
   description?: string;
 }
 
-const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, max, description }) => (
+const NumberInput: React.FC<NumberInputProps> = ({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  description,
+}) => (
   <div>
-    <label className="block text-xs font-medium text-gray-300 mb-1">{label}</label>
+    <label className="block text-xs font-medium text-gray-300 mb-1">
+      {label}
+    </label>
     <input
       type="number"
       value={value}
@@ -114,16 +152,28 @@ interface SelectProps {
   description?: string;
 }
 
-const Select: React.FC<SelectProps> = ({ label, value, onChange, options, description }) => (
+const Select: React.FC<SelectProps> = ({
+  label,
+  value,
+  onChange,
+  options,
+  description,
+}) => (
   <div>
-    <label className="block text-xs font-medium text-gray-300 mb-1">{label}</label>
+    <label className="block text-xs font-medium text-gray-300 mb-1">
+      {label}
+    </label>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors cursor-pointer"
     >
       {options.map((option) => (
-        <option key={option.value} value={option.value} className="bg-gray-700 text-gray-200">
+        <option
+          key={option.value}
+          value={option.value}
+          className="bg-gray-700 text-gray-200"
+        >
           {option.label}
         </option>
       ))}
@@ -132,23 +182,33 @@ const Select: React.FC<SelectProps> = ({ label, value, onChange, options, descri
   </div>
 );
 
-export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onChange }) => {
+export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
+  config,
+  onChange,
+}) => {
   return (
     <div className="space-y-4">
       {/* Condition */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Search className="w-4 h-4 text-yellow-400" /><span>Apply When (Optional)</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-yellow-400" />
+            <span>Apply When (Optional)</span>
+          </div>
+        }
+      >
         <div className="space-y-3">
           <Select
             label="Condition type"
-            value={config.condition?.type || 'none'}
+            value={config.condition?.type || "none"}
             onChange={(value) => {
-              if (value === 'none') {
+              if (value === "none") {
                 onChange({ condition: false });
               } else {
                 onChange({
                   condition: {
                     type: value as any,
-                    value: '',
+                    value: "",
                     lineNumber: 1,
                     startLine: 1,
                     endLine: 10,
@@ -158,55 +218,68 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
               }
             }}
             options={[
-              { value: 'none', label: 'Apply to all lines' },
-              { value: 'contains', label: 'Line contains text' },
-              { value: 'not-contains', label: 'Line does not contain text' },
-              { value: 'starts-with', label: 'Line starts with text' },
-              { value: 'ends-with', label: 'Line ends with text' },
-              { value: 'regex', label: 'Line matches regex' },
-              { value: 'blank', label: 'Line is blank' },
-              { value: 'not-blank', label: 'Line is not blank' },
-              { value: 'line-number', label: 'Specific line number' },
-              { value: 'line-range', label: 'Line number range' },
-              { value: 'every-nth', label: 'Every Nth line' },
+              { value: "none", label: "Apply to all lines" },
+              { value: "contains", label: "Line contains text" },
+              { value: "not-contains", label: "Line does not contain text" },
+              { value: "starts-with", label: "Line starts with text" },
+              { value: "ends-with", label: "Line ends with text" },
+              { value: "regex", label: "Line matches regex" },
+              { value: "blank", label: "Line is blank" },
+              { value: "not-blank", label: "Line is not blank" },
+              { value: "line-number", label: "Specific line number" },
+              { value: "line-range", label: "Line number range" },
+              { value: "every-nth", label: "Every Nth line" },
             ]}
             description="Choose when to apply the transformations below"
           />
 
-          {config.condition && config.condition !== false && ['contains', 'not-contains', 'starts-with', 'ends-with', 'regex'].includes(config.condition.type) && (
-            <TextInput
-              label={config.condition.type === 'regex' ? 'Regular expression' : 'Text to match'}
-              value={config.condition.value || ''}
-              onChange={(value) =>
-                onChange({
-                  condition: { 
-                    type: config.condition!.type,
-                    value,
-                    lineNumber: config.condition!.lineNumber,
-                    startLine: config.condition!.startLine,
-                    endLine: config.condition!.endLine,
-                    nthInterval: config.condition!.nthInterval,
-                  },
-                })
-              }
-              placeholder={
-                config.condition.type === 'regex'
-                  ? 'Enter regex pattern...'
-                  : config.condition.type === 'contains' || config.condition.type === 'not-contains'
-                    ? 'Enter text to search for...'
-                    : config.condition.type === 'starts-with'
-                      ? 'Enter starting text...'
-                      : 'Enter ending text...'
-              }
-              description={
-                config.condition.type === 'regex'
-                  ? 'JavaScript regex pattern (case-insensitive)'
-                  : 'Text matching is case-sensitive'
-              }
-            />
-          )}
+          {config.condition &&
+            config.condition !== false &&
+            [
+              "contains",
+              "not-contains",
+              "starts-with",
+              "ends-with",
+              "regex",
+            ].includes(config.condition.type) && (
+              <TextInput
+                label={
+                  config.condition.type === "regex"
+                    ? "Regular expression"
+                    : "Text to match"
+                }
+                value={config.condition.value || ""}
+                onChange={(value) =>
+                  onChange({
+                    condition: {
+                      type: config.condition!.type,
+                      value,
+                      lineNumber: config.condition!.lineNumber,
+                      startLine: config.condition!.startLine,
+                      endLine: config.condition!.endLine,
+                      nthInterval: config.condition!.nthInterval,
+                    },
+                  })
+                }
+                placeholder={
+                  config.condition.type === "regex"
+                    ? "Enter regex pattern..."
+                    : config.condition.type === "contains" ||
+                        config.condition.type === "not-contains"
+                      ? "Enter text to search for..."
+                      : config.condition.type === "starts-with"
+                        ? "Enter starting text..."
+                        : "Enter ending text..."
+                }
+                description={
+                  config.condition.type === "regex"
+                    ? "JavaScript regex pattern (case-insensitive)"
+                    : "Text matching is case-sensitive"
+                }
+              />
+            )}
 
-          {config.condition && config.condition.type === 'line-number' && (
+          {config.condition && config.condition.type === "line-number" && (
             <NumberInput
               label="Line number"
               value={config.condition.lineNumber || 1}
@@ -221,7 +294,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
             />
           )}
 
-          {config.condition && config.condition.type === 'line-range' && (
+          {config.condition && config.condition.type === "line-range" && (
             <>
               <NumberInput
                 label="Start line"
@@ -250,7 +323,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
             </>
           )}
 
-          {config.condition && config.condition.type === 'every-nth' && (
+          {config.condition && config.condition.type === "every-nth" && (
             <NumberInput
               label="Every Nth line"
               value={config.condition.nthInterval || 2}
@@ -268,7 +341,15 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
       </ConfigSection>
 
       {/* Whitespace & Cleanup */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Sparkles className="w-4 h-4 text-blue-400" /><span>Whitespace & Cleanup</span></div>} defaultExpanded>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Sparkles className="w-4 h-4 text-blue-400" />
+            <span>Whitespace & Cleanup</span>
+          </div>
+        }
+        defaultExpanded
+      >
         <Checkbox
           label="Trim whitespace"
           checked={!!config.trim}
@@ -278,12 +359,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
 
         <Select
           label="Remove extra whitespace"
-          value={config.removeExtraWhitespace || 'false'}
-          onChange={(value) => onChange({ removeExtraWhitespace: value === 'false' ? false : value as any })}
+          value={config.removeExtraWhitespace || "false"}
+          onChange={(value) =>
+            onChange({
+              removeExtraWhitespace: value === "false" ? false : (value as any),
+            })
+          }
           options={[
-            { value: 'false', label: 'No change' },
-            { value: 'preserve-single', label: 'Preserve single spaces' },
-            { value: 'remove-all', label: 'Remove all whitespace' },
+            { value: "false", label: "No change" },
+            { value: "preserve-single", label: "Preserve single spaces" },
+            { value: "remove-all", label: "Remove all whitespace" },
           ]}
         />
 
@@ -303,19 +388,28 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
       </ConfigSection>
 
       {/* Sorting & Line Order */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><SortAsc className="w-4 h-4 text-blue-400" /><span>Sorting & Line Order</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <SortAsc className="w-4 h-4 text-blue-400" />
+            <span>Sorting & Line Order</span>
+          </div>
+        }
+      >
         <Select
           label="Sort lines"
-          value={config.sortLines || 'false'}
-          onChange={(value) => onChange({ sortLines: value === 'false' ? false : value as any })}
+          value={config.sortLines || "false"}
+          onChange={(value) =>
+            onChange({ sortLines: value === "false" ? false : (value as any) })
+          }
           options={[
-            { value: 'false', label: 'No sorting' },
-            { value: 'asc', label: 'A to Z' },
-            { value: 'desc', label: 'Z to A' },
-            { value: 'natural', label: 'Natural sort (file1, file2, file10)' },
-            { value: 'numeric-asc', label: 'Numeric ascending' },
-            { value: 'numeric-desc', label: 'Numeric descending' },
-            { value: 'length', label: 'Sort by line length' },
+            { value: "false", label: "No sorting" },
+            { value: "asc", label: "A to Z" },
+            { value: "desc", label: "Z to A" },
+            { value: "natural", label: "Natural sort (file1, file2, file10)" },
+            { value: "numeric-asc", label: "Numeric ascending" },
+            { value: "numeric-desc", label: "Numeric descending" },
+            { value: "length", label: "Sort by line length" },
           ]}
         />
 
@@ -342,32 +436,50 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
       </ConfigSection>
 
       {/* Case Conversion */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Type className="w-4 h-4 text-blue-400" /><span>Case Conversion</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Type className="w-4 h-4 text-blue-400" />
+            <span>Case Conversion</span>
+          </div>
+        }
+      >
         <Select
           label="Case transformation"
-          value={config.caseTransform || 'false'}
-          onChange={(value) => onChange({ caseTransform: value === 'false' ? false : value as any })}
+          value={config.caseTransform || "false"}
+          onChange={(value) =>
+            onChange({
+              caseTransform: value === "false" ? false : (value as any),
+            })
+          }
           options={[
-            { value: 'false', label: 'No change' },
-            { value: 'upper', label: 'UPPERCASE' },
-            { value: 'lower', label: 'lowercase' },
-            { value: 'title', label: 'Title Case' },
-            { value: 'sentence', label: 'Sentence case' },
-            { value: 'camel', label: 'camelCase' },
-            { value: 'pascal', label: 'PascalCase' },
-            { value: 'kebab', label: 'kebab-case' },
-            { value: 'snake', label: 'snake_case' },
-            { value: 'invert', label: 'InVeRt CaSe' },
-            { value: 'alternating', label: 'aLtErNaTiNg CaSe' },
+            { value: "false", label: "No change" },
+            { value: "upper", label: "UPPERCASE" },
+            { value: "lower", label: "lowercase" },
+            { value: "title", label: "Title Case" },
+            { value: "sentence", label: "Sentence case" },
+            { value: "camel", label: "camelCase" },
+            { value: "pascal", label: "PascalCase" },
+            { value: "kebab", label: "kebab-case" },
+            { value: "snake", label: "snake_case" },
+            { value: "invert", label: "InVeRt CaSe" },
+            { value: "alternating", label: "aLtErNaTiNg CaSe" },
           ]}
         />
       </ConfigSection>
 
       {/* Prefix/Suffix & Numbering */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Tag className="w-4 h-4 text-blue-400" /><span>Prefix/Suffix & Numbering</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Tag className="w-4 h-4 text-blue-400" />
+            <span>Prefix/Suffix & Numbering</span>
+          </div>
+        }
+      >
         <TextInput
           label="Add prefix"
-          value={config.addPrefix || ''}
+          value={config.addPrefix || ""}
           onChange={(value) => onChange({ addPrefix: value || undefined })}
           placeholder="Enter prefix text..."
           description="Text to add at the beginning of each line"
@@ -375,7 +487,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
 
         <TextInput
           label="Add suffix"
-          value={config.addSuffix || ''}
+          value={config.addSuffix || ""}
           onChange={(value) => onChange({ addSuffix: value || undefined })}
           placeholder="Enter suffix text..."
           description="Text to add at the end of each line"
@@ -383,26 +495,40 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
 
         <Select
           label="Number lines"
-          value={config.numberLines === false || config.numberLines === undefined ? 'none' : config.numberLines}
+          value={
+            config.numberLines === false || config.numberLines === undefined
+              ? "none"
+              : config.numberLines
+          }
           onChange={(value) => {
-            const newValue = value === 'none' ? false : value as 'numeric' | 'roman' | 'alpha';
+            const newValue =
+              value === "none"
+                ? false
+                : (value as "numeric" | "roman" | "alpha");
             onChange({ numberLines: newValue });
           }}
           options={[
-            { value: 'none', label: 'No numbering' },
-            { value: 'numeric', label: 'Numeric (1., 2., 3., ...)' },
-            { value: 'roman', label: 'Roman (I., II., III., ...)' },
-            { value: 'alpha', label: 'Alphabetic (A., B., C., ...)' },
+            { value: "none", label: "No numbering" },
+            { value: "numeric", label: "Numeric (1., 2., 3., ...)" },
+            { value: "roman", label: "Roman (I., II., III., ...)" },
+            { value: "alpha", label: "Alphabetic (A., B., C., ...)" },
           ]}
           description="Add line numbers in different formats"
         />
       </ConfigSection>
 
       {/* Join/Split Lines */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Link className="w-4 h-4 text-blue-400" /><span>Join / Split Lines</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Link className="w-4 h-4 text-blue-400" />
+            <span>Join / Split Lines</span>
+          </div>
+        }
+      >
         <TextInput
           label="Join lines with separator"
-          value={config.joinLines || ''}
+          value={config.joinLines || ""}
           onChange={(value) => onChange({ joinLines: value || false })}
           placeholder="Enter separator (e.g., ', ', ' | ')"
           description="Join all lines into one with the specified separator"
@@ -410,7 +536,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
 
         <TextInput
           label="Split lines by delimiter"
-          value={config.splitLines || ''}
+          value={config.splitLines || ""}
           onChange={(value) => onChange({ splitLines: value || false })}
           placeholder="Enter delimiter (e.g., ',', ';')"
           description="Split each line by the specified delimiter"
@@ -418,28 +544,35 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
       </ConfigSection>
 
       {/* Indentation */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Settings className="w-4 h-4 text-blue-400" /><span>Indentation</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Settings className="w-4 h-4 text-blue-400" />
+            <span>Indentation</span>
+          </div>
+        }
+      >
         <div className="space-y-3">
           <Select
             label="Indentation action"
-            value={config.changeIndentation?.action || 'none'}
+            value={config.changeIndentation?.action || "none"}
             onChange={(value) => {
-              if (value === 'none') {
+              if (value === "none") {
                 onChange({ changeIndentation: false });
               } else {
                 onChange({
                   changeIndentation: {
-                    action: value as 'add' | 'remove',
+                    action: value as "add" | "remove",
                     amount: config.changeIndentation?.amount || 1,
-                    type: config.changeIndentation?.type || 'spaces',
+                    type: config.changeIndentation?.type || "spaces",
                   },
                 });
               }
             }}
             options={[
-              { value: 'none', label: 'No change' },
-              { value: 'add', label: 'Add indentation' },
-              { value: 'remove', label: 'Remove indentation' },
+              { value: "none", label: "No change" },
+              { value: "add", label: "Add indentation" },
+              { value: "remove", label: "Remove indentation" },
             ]}
           />
 
@@ -463,12 +596,15 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
                 value={config.changeIndentation.type}
                 onChange={(type) =>
                   onChange({
-                    changeIndentation: { ...config.changeIndentation!, type: type as 'tabs' | 'spaces' },
+                    changeIndentation: {
+                      ...config.changeIndentation!,
+                      type: type as "tabs" | "spaces",
+                    },
                   })
                 }
                 options={[
-                  { value: 'spaces', label: 'Spaces' },
-                  { value: 'tabs', label: 'Tabs' },
+                  { value: "spaces", label: "Spaces" },
+                  { value: "tabs", label: "Tabs" },
                 ]}
               />
             </>
@@ -477,11 +613,20 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
       </ConfigSection>
 
       {/* Duplicate / Pad */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Copy className="w-4 h-4 text-blue-400" /><span>Duplicate / Pad</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Copy className="w-4 h-4 text-blue-400" />
+            <span>Duplicate / Pad</span>
+          </div>
+        }
+      >
         <NumberInput
           label="Duplicate each line N times"
           value={config.duplicateLines || 1}
-          onChange={(value) => onChange({ duplicateLines: value > 1 ? value : false })}
+          onChange={(value) =>
+            onChange({ duplicateLines: value > 1 ? value : false })
+          }
           min={1}
           max={100}
           description="Set to 1 for no duplication"
@@ -496,8 +641,8 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
                 onChange({
                   padLines: {
                     length: 20,
-                    align: 'left',
-                    char: ' ',
+                    align: "left",
+                    char: " ",
                   },
                 });
               } else {
@@ -526,13 +671,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
                 value={config.padLines.align}
                 onChange={(align) =>
                   onChange({
-                    padLines: { ...config.padLines!, align: align as 'left' | 'right' | 'center' },
+                    padLines: {
+                      ...config.padLines!,
+                      align: align as "left" | "right" | "center",
+                    },
                   })
                 }
                 options={[
-                  { value: 'left', label: 'Left (pad right)' },
-                  { value: 'right', label: 'Right (pad left)' },
-                  { value: 'center', label: 'Center' },
+                  { value: "left", label: "Left (pad right)" },
+                  { value: "right", label: "Right (pad left)" },
+                  { value: "center", label: "Center" },
                 ]}
               />
 
@@ -541,7 +689,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
                 value={config.padLines.char}
                 onChange={(char) =>
                   onChange({
-                    padLines: { ...config.padLines!, char: char || ' ' },
+                    padLines: { ...config.padLines!, char: char || " " },
                   })
                 }
                 placeholder="Enter padding character"
@@ -553,7 +701,14 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
       </ConfigSection>
 
       {/* Filtering & Selection */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Search className="w-4 h-4 text-blue-400" /><span>Filtering & Selection</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-blue-400" />
+            <span>Filtering & Selection</span>
+          </div>
+        }
+      >
         <div className="space-y-3">
           <Checkbox
             label="Filter by RegEx"
@@ -562,7 +717,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
               if (checked) {
                 onChange({
                   filterByRegex: {
-                    pattern: '',
+                    pattern: "",
                     caseSensitive: true,
                   },
                 });
@@ -577,7 +732,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
             <>
               <TextInput
                 label="Regular expression pattern"
-                value={config.filterByRegex.pattern || ''}
+                value={config.filterByRegex.pattern || ""}
                 onChange={(value) =>
                   onChange({
                     filterByRegex: { ...config.filterByRegex!, pattern: value },
@@ -592,7 +747,10 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
                 checked={config.filterByRegex.caseSensitive !== false}
                 onChange={(checked) =>
                   onChange({
-                    filterByRegex: { ...config.filterByRegex!, caseSensitive: checked },
+                    filterByRegex: {
+                      ...config.filterByRegex!,
+                      caseSensitive: checked,
+                    },
                   })
                 }
                 description="Match case exactly (uncheck for case-insensitive matching)"
@@ -609,9 +767,9 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
               if (checked) {
                 onChange({
                   filterByKeyword: {
-                    keyword: '',
-                    action: 'keep',
-                    position: 'contains',
+                    keyword: "",
+                    action: "keep",
+                    position: "contains",
                   },
                 });
               } else {
@@ -638,27 +796,33 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
                 value={config.filterByKeyword.action}
                 onChange={(action) =>
                   onChange({
-                    filterByKeyword: { ...config.filterByKeyword!, action: action as 'keep' | 'remove' },
+                    filterByKeyword: {
+                      ...config.filterByKeyword!,
+                      action: action as "keep" | "remove",
+                    },
                   })
                 }
                 options={[
-                  { value: 'keep', label: 'Keep matching lines' },
-                  { value: 'remove', label: 'Remove matching lines' },
+                  { value: "keep", label: "Keep matching lines" },
+                  { value: "remove", label: "Remove matching lines" },
                 ]}
               />
 
               <Select
                 label="Position"
-                value={config.filterByKeyword.position || 'contains'}
+                value={config.filterByKeyword.position || "contains"}
                 onChange={(position) =>
                   onChange({
-                    filterByKeyword: { ...config.filterByKeyword!, position: position as 'contains' | 'starts' | 'ends' },
+                    filterByKeyword: {
+                      ...config.filterByKeyword!,
+                      position: position as "contains" | "starts" | "ends",
+                    },
                   })
                 }
                 options={[
-                  { value: 'contains', label: 'Contains keyword' },
-                  { value: 'starts', label: 'Starts with keyword' },
-                  { value: 'ends', label: 'Ends with keyword' },
+                  { value: "contains", label: "Contains keyword" },
+                  { value: "starts", label: "Starts with keyword" },
+                  { value: "ends", label: "Ends with keyword" },
                 ]}
               />
             </>
@@ -668,7 +832,9 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
         <NumberInput
           label="Keep first N lines"
           value={config.keepFirstNLines || 0}
-          onChange={(value) => onChange({ keepFirstNLines: value > 0 ? value : false })}
+          onChange={(value) =>
+            onChange({ keepFirstNLines: value > 0 ? value : false })
+          }
           min={0}
           max={10000}
           description="Set to 0 to keep all lines"
@@ -677,7 +843,9 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
         <NumberInput
           label="Keep last N lines"
           value={config.keepLastNLines || 0}
-          onChange={(value) => onChange({ keepLastNLines: value > 0 ? value : false })}
+          onChange={(value) =>
+            onChange({ keepLastNLines: value > 0 ? value : false })
+          }
           min={0}
           max={10000}
           description="Set to 0 to keep all lines"
@@ -685,33 +853,50 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
       </ConfigSection>
 
       {/* Other Formatting */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><RotateCcw className="w-4 h-4 text-blue-400" /><span>Other Formatting</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <RotateCcw className="w-4 h-4 text-blue-400" />
+            <span>Other Formatting</span>
+          </div>
+        }
+      >
         <Select
           label="Convert tabs/spaces"
-          value={config.convertTabsSpaces || 'false'}
-          onChange={(value) => onChange({ convertTabsSpaces: value === 'false' ? false : value as any })}
+          value={config.convertTabsSpaces || "false"}
+          onChange={(value) =>
+            onChange({
+              convertTabsSpaces: value === "false" ? false : (value as any),
+            })
+          }
           options={[
-            { value: 'false', label: 'No change' },
-            { value: 'tabs-to-spaces', label: 'Tabs to spaces' },
-            { value: 'spaces-to-tabs', label: 'Spaces to tabs' },
+            { value: "false", label: "No change" },
+            { value: "tabs-to-spaces", label: "Tabs to spaces" },
+            { value: "spaces-to-tabs", label: "Spaces to tabs" },
           ]}
         />
 
         <Select
           label="Normalize line endings"
-          value={config.normalizeLineEndings || 'false'}
-          onChange={(value) => onChange({ normalizeLineEndings: value === 'false' ? false : value as any })}
+          value={config.normalizeLineEndings || "false"}
+          onChange={(value) =>
+            onChange({
+              normalizeLineEndings: value === "false" ? false : (value as any),
+            })
+          }
           options={[
-            { value: 'false', label: 'No change' },
-            { value: 'lf', label: 'Unix (LF)' },
-            { value: 'crlf', label: 'Windows (CRLF)' },
+            { value: "false", label: "No change" },
+            { value: "lf", label: "Unix (LF)" },
+            { value: "crlf", label: "Windows (CRLF)" },
           ]}
         />
 
         <NumberInput
           label="Wrap lines at width"
           value={config.wrapLines || 0}
-          onChange={(value) => onChange({ wrapLines: value > 0 ? value : false })}
+          onChange={(value) =>
+            onChange({ wrapLines: value > 0 ? value : false })
+          }
           min={0}
           max={500}
           description="Set to 0 for no wrapping"
@@ -719,7 +904,14 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
       </ConfigSection>
 
       {/* Advanced Transformations */}
-      <ConfigSection title={<div className="flex items-center space-x-2"><Settings className="w-4 h-4 text-purple-400" /><span>Advanced Transformations</span></div>}>
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Settings className="w-4 h-4 text-purple-400" />
+            <span>Advanced Transformations</span>
+          </div>
+        }
+      >
         <div className="space-y-3">
           <Checkbox
             label="Find & Replace with Regex"
@@ -728,9 +920,9 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
               if (checked) {
                 onChange({
                   findReplaceRegex: {
-                    find: '',
-                    replace: '',
-                    flags: 'g',
+                    find: "",
+                    replace: "",
+                    flags: "g",
                   },
                 });
               } else {
@@ -768,7 +960,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
 
               <TextInput
                 label="Flags"
-                value={config.findReplaceRegex.flags || 'g'}
+                value={config.findReplaceRegex.flags || "g"}
                 onChange={(flags) =>
                   onChange({
                     findReplaceRegex: { ...config.findReplaceRegex!, flags },
@@ -788,7 +980,8 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
             onChange={(checked) => {
               if (checked) {
                 onChange({
-                  javascriptSnippet: 'return lines.filter(line => line.length > 10).join("\\n");',
+                  javascriptSnippet:
+                    'return lines.filter(line => line.length > 10).join("\\n");',
                 });
               } else {
                 onChange({ javascriptSnippet: false });
@@ -800,10 +993,14 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
           {config.javascriptSnippet && (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">JavaScript Code</label>
+                <label className="block text-xs font-medium text-gray-300 mb-1">
+                  JavaScript Code
+                </label>
                 <textarea
                   value={config.javascriptSnippet}
-                  onChange={(e) => onChange({ javascriptSnippet: e.target.value })}
+                  onChange={(e) =>
+                    onChange({ javascriptSnippet: e.target.value })
+                  }
                   placeholder="return lines.filter(line => line.length > 10).join('\\n');"
                   className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-500 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors font-mono"
                   rows={4}
@@ -811,9 +1008,18 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({ config, onCh
                 <div className="mt-1 text-xs text-gray-400">
                   <p className="mb-1">Available variables:</p>
                   <ul className="list-disc list-inside space-y-0.5 text-gray-500">
-                    <li><code className="text-blue-400">text</code> - full text content</li>
-                    <li><code className="text-blue-400">lines</code> - array of lines</li>
-                    <li><code className="text-blue-400">selection</code> - selected text</li>
+                    <li>
+                      <code className="text-blue-400">text</code> - full text
+                      content
+                    </li>
+                    <li>
+                      <code className="text-blue-400">lines</code> - array of
+                      lines
+                    </li>
+                    <li>
+                      <code className="text-blue-400">selection</code> -
+                      selected text
+                    </li>
                   </ul>
                   <p className="mt-1">Return a string or array of lines</p>
                 </div>

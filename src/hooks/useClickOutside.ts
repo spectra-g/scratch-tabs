@@ -1,7 +1,10 @@
 // src/hooks/useClickOutside.ts
-import { useEffect, RefObject } from 'react';
+import { useEffect, RefObject } from "react";
 
-export function useClickOutside(refs: RefObject<HTMLElement>[] | RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) {
+export function useClickOutside(
+  refs: RefObject<HTMLElement>[] | RefObject<HTMLElement>,
+  handler: (event: MouseEvent | TouchEvent) => void,
+) {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
       // Check if the click target is a valid Node
@@ -13,7 +16,7 @@ export function useClickOutside(refs: RefObject<HTMLElement>[] | RefObject<HTMLE
       const refsArray = Array.isArray(refs) ? refs : [refs];
 
       // Check if the click was inside any of the refs
-      const clickedInside = refsArray.some(ref => {
+      const clickedInside = refsArray.some((ref) => {
         return ref.current && ref.current.contains(event.target as Node);
       });
 
@@ -24,12 +27,12 @@ export function useClickOutside(refs: RefObject<HTMLElement>[] | RefObject<HTMLE
     };
 
     // Use capture phase to ensure we get the event before other handlers
-    document.addEventListener('mousedown', listener, true);
-    document.addEventListener('touchstart', listener, true);
+    document.addEventListener("mousedown", listener, true);
+    document.addEventListener("touchstart", listener, true);
 
     return () => {
-      document.removeEventListener('mousedown', listener, true);
-      document.removeEventListener('touchstart', listener, true);
+      document.removeEventListener("mousedown", listener, true);
+      document.removeEventListener("touchstart", listener, true);
     };
   }, [refs, handler]);
 }

@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { CsvTableViewer } from '../components/CsvTableViewer';
+import { render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { CsvTableViewer } from "../components/CsvTableViewer";
 
 // Mock getBoundingClientRect to provide dimensions for virtualization
 const mockGetBoundingClientRect = jest.fn(() => ({
@@ -16,7 +16,7 @@ const mockGetBoundingClientRect = jest.fn(() => ({
 }));
 
 // Apply the mock to all elements
-Object.defineProperty(Element.prototype, 'getBoundingClientRect', {
+Object.defineProperty(Element.prototype, "getBoundingClientRect", {
   value: mockGetBoundingClientRect,
 });
 
@@ -26,87 +26,87 @@ const sampleCsv = `Name,Age,City
 John Doe,28,New York
 Jane Smith,32,San Francisco`;
 
-describe('CsvTableViewer', () => {
+describe("CsvTableViewer", () => {
   beforeEach(() => {
     mockOnContentChange.mockClear();
   });
 
-  it('should render CSV data in a table', () => {
+  it("should render CSV data in a table", () => {
     render(
       <CsvTableViewer
         content={sampleCsv}
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
-      />
+      />,
     );
 
     // Test that headers are rendered (these are always visible)
-    expect(screen.getByText('Name')).toBeInTheDocument();
-    expect(screen.getByText('Age')).toBeInTheDocument();
-    expect(screen.getByText('City')).toBeInTheDocument();
-    
+    expect(screen.getByText("Name")).toBeInTheDocument();
+    expect(screen.getByText("Age")).toBeInTheDocument();
+    expect(screen.getByText("City")).toBeInTheDocument();
+
     // Test that the table structure exists
-    expect(screen.getByRole('button', { name: /undo/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /redo/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /redo/i })).toBeInTheDocument();
   });
 
-  it('should show loading state', () => {
+  it("should show loading state", () => {
     render(
       <CsvTableViewer
         content=""
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
-      />
+      />,
     );
 
     // The component should handle empty content gracefully
-    expect(screen.queryByText('Parsing CSV...')).not.toBeInTheDocument();
+    expect(screen.queryByText("Parsing CSV...")).not.toBeInTheDocument();
   });
 
-  it('should display row and column counts', () => {
+  it("should display row and column counts", () => {
     render(
       <CsvTableViewer
         content={sampleCsv}
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
-      />
+      />,
     );
 
-    expect(screen.getByText('2 rows × 3 columns')).toBeInTheDocument();
+    expect(screen.getByText("2 rows × 3 columns")).toBeInTheDocument();
   });
 
-  it('should show undo/redo buttons', () => {
+  it("should show undo/redo buttons", () => {
     render(
       <CsvTableViewer
         content={sampleCsv}
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
-      />
+      />,
     );
 
-    expect(screen.getByTitle('Undo')).toBeInTheDocument();
-    expect(screen.getByTitle('Redo')).toBeInTheDocument();
+    expect(screen.getByTitle("Undo")).toBeInTheDocument();
+    expect(screen.getByTitle("Redo")).toBeInTheDocument();
   });
 
-  it('should show add row/column buttons', () => {
+  it("should show add row/column buttons", () => {
     render(
       <CsvTableViewer
         content={sampleCsv}
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
-      />
+      />,
     );
 
     // Test that column action buttons are visible in headers (these are always rendered)
-    expect(screen.getAllByTitle('Add column after').length).toBeGreaterThan(0);
-    
+    expect(screen.getAllByTitle("Add column after").length).toBeGreaterThan(0);
+
     // Test that the toolbar has the expected functionality
-    expect(screen.getByTitle('Create snapshot')).toBeInTheDocument();
-    expect(screen.getByTitle('Find duplicate rows')).toBeInTheDocument();
+    expect(screen.getByTitle("Create snapshot")).toBeInTheDocument();
+    expect(screen.getByTitle("Find duplicate rows")).toBeInTheDocument();
   });
-}); 
+});

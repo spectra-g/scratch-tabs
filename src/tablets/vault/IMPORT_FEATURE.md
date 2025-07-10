@@ -14,6 +14,7 @@ The Knowledge Vault now supports importing items from various external sources. 
 ## Supported Import Sources
 
 ### Terminal History
+
 - **Format**: Bash/zsh history output
 - **Example**:
   ```
@@ -28,6 +29,7 @@ The Knowledge Vault now supports importing items from various external sources. 
   - Sets content type to "script"
 
 ### VS Code Snippets
+
 - **Format**: VS Code snippets.json file content
 - **Example**:
   ```json
@@ -49,15 +51,19 @@ The Knowledge Vault now supports importing items from various external sources. 
   - Sets content type to "code"
 
 ### Markdown Notes
+
 - **Format**: Markdown content separated by horizontal rules (`---`)
 - **Example**:
+
   ```markdown
   # Note 1
+
   This is the first note content.
 
   ---
 
   # Note 2
+
   This is the second note content.
 
   ---
@@ -65,6 +71,7 @@ The Knowledge Vault now supports importing items from various external sources. 
   Note 3
   This note has no header.
   ```
+
 - **Features**:
   - Splits content by horizontal rules
   - Uses first line as title (removes markdown headers)
@@ -74,21 +81,25 @@ The Knowledge Vault now supports importing items from various external sources. 
 ## Features
 
 ### Duplicate Detection
+
 - The import system automatically detects duplicate items based on content
 - Duplicates are highlighted in the preview and skipped during import
 - Only unique items are added to your vault
 
 ### Preview System
+
 - See a preview of all items that will be created
 - View summary statistics (total items, new items, duplicates)
 - Toggle preview visibility to save space
 
 ### Error Handling
+
 - Parsing errors are displayed with specific details
 - Invalid formats are handled gracefully
 - Empty or malformed content is skipped
 
 ### Content Type Detection
+
 - Automatically detects appropriate content types
 - Uses existing content type detection logic
 - Ensures proper categorization of imported items
@@ -96,6 +107,7 @@ The Knowledge Vault now supports importing items from various external sources. 
 ## Technical Implementation
 
 ### File Structure
+
 ```
 src/tablets/vault/
 ├── utils/
@@ -126,6 +138,7 @@ src/tablets/vault/
    - Duplicate detection and item addition
 
 ### Data Flow
+
 1. User clicks "Import Items" → Opens import modal
 2. User selects source and provides content → Parsers process data
 3. Preview shows parsed items → User reviews and confirms
@@ -142,8 +155,9 @@ src/tablets/vault/
 ## Future Enhancements
 
 Potential improvements for future versions:
+
 - Support for more import sources (JSON, CSV, etc.)
 - Custom import templates
 - Batch import from multiple sources
 - Import/export of vault structure and organization
-- Integration with external services (GitHub Gists, etc.) 
+- Integration with external services (GitHub Gists, etc.)

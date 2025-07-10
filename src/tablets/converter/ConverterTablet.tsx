@@ -1,52 +1,55 @@
-import React, { useState } from 'react';
-import { Tablet, TabletState } from '../types';
-import { ArrowUpDown } from 'lucide-react';
-import { ConverterSection } from './components/ConverterSection';
-import { EncodeDecode } from './sections/EncodeDecode';
-import { Hashing } from './sections/Hashing';
-import { NumberConversion } from './sections/NumberConversion';
-import { TextConversion } from './sections/TextConversion';
-import { DateTimeConversion } from './sections/DateTimeConversion';
-import { ColorConversion } from './sections/ColorConversion';
-import { NetworkingConversion } from './sections/NetworkingConversion';
+import React, { useState } from "react";
+import { Tablet, TabletState } from "../types";
+import { ArrowUpDown } from "lucide-react";
+import { ConverterSection } from "./components/ConverterSection";
+import { EncodeDecode } from "./sections/EncodeDecode";
+import { Hashing } from "./sections/Hashing";
+import { NumberConversion } from "./sections/NumberConversion";
+import { TextConversion } from "./sections/TextConversion";
+import { DateTimeConversion } from "./sections/DateTimeConversion";
+import { ColorConversion } from "./sections/ColorConversion";
+import { NetworkingConversion } from "./sections/NetworkingConversion";
 
 interface ConverterState extends TabletState {
-  type: 'converter';
+  type: "converter";
   data: {
     activeSection: string;
     sectionData: {
-      'encode-decode': { inputs: Record<string, string> };
-      'hashing': { input: string };
-      'number': { inputs: Record<string, string> };
-      'text': { inputs: Record<string, string> };
-      'datetime': { inputs: Record<string, string> };
-      'color': { inputs: Record<string, string> };
-      'networking': { inputs: Record<string, string> };
+      "encode-decode": { inputs: Record<string, string> };
+      hashing: { input: string };
+      number: { inputs: Record<string, string> };
+      text: { inputs: Record<string, string> };
+      datetime: { inputs: Record<string, string> };
+      color: { inputs: Record<string, string> };
+      networking: { inputs: Record<string, string> };
     };
   };
 }
 
 const sections = [
-  { id: 'encode-decode', label: 'Encode / Decode', component: EncodeDecode },
-  { id: 'hashing', label: 'Hashing', component: Hashing },
-  { id: 'number', label: 'Number', component: NumberConversion },
-  { id: 'text', label: 'Text', component: TextConversion },
-  { id: 'datetime', label: 'Date & Time', component: DateTimeConversion },
-  { id: 'color', label: 'Color', component: ColorConversion },
-  { id: 'networking', label: 'Networking', component: NetworkingConversion },
+  { id: "encode-decode", label: "Encode / Decode", component: EncodeDecode },
+  { id: "hashing", label: "Hashing", component: Hashing },
+  { id: "number", label: "Number", component: NumberConversion },
+  { id: "text", label: "Text", component: TextConversion },
+  { id: "datetime", label: "Date & Time", component: DateTimeConversion },
+  { id: "color", label: "Color", component: ColorConversion },
+  { id: "networking", label: "Networking", component: NetworkingConversion },
 ];
 
 // Separate React component for the converter UI
-const ConverterUI: React.FC<{ state: ConverterState; onChange: (state: ConverterState) => void }> = ({ state, onChange }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const ConverterUI: React.FC<{
+  state: ConverterState;
+  onChange: (state: ConverterState) => void;
+}> = ({ state, onChange }) => {
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSectionChange = (sectionId: string) => {
     onChange({
       ...state,
       data: {
         ...state.data,
-        activeSection: sectionId
-      }
+        activeSection: sectionId,
+      },
     });
   };
 
@@ -57,15 +60,20 @@ const ConverterUI: React.FC<{ state: ConverterState; onChange: (state: Converter
         ...state.data,
         sectionData: {
           ...state.data.sectionData,
-          [sectionId]: data
-        }
-      }
+          [sectionId]: data,
+        },
+      },
     });
   };
 
-  const activeSection = sections.find(section => section.id === state.data.activeSection);
+  const activeSection = sections.find(
+    (section) => section.id === state.data.activeSection,
+  );
   const ActiveComponent = activeSection?.component;
-  const sectionData = state.data.sectionData[state.data.activeSection as keyof typeof state.data.sectionData];
+  const sectionData =
+    state.data.sectionData[
+      state.data.activeSection as keyof typeof state.data.sectionData
+    ];
 
   return (
     <div className="h-full bg-gray-900 flex">
@@ -90,15 +98,16 @@ const ConverterUI: React.FC<{ state: ConverterState; onChange: (state: Converter
         {/* Section List */}
         <div className="flex-1 overflow-auto custom-scrollbar">
           <div className="p-2">
-            {sections.map(section => (
+            {sections.map((section) => (
               <button
                 key={section.id}
                 onClick={() => handleSectionChange(section.id)}
                 className={`
                   w-full text-left px-3 py-2 rounded-md text-sm transition-colors
-                  ${state.data.activeSection === section.id
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'text-gray-300 hover:bg-gray-800/50'
+                  ${
+                    state.data.activeSection === section.id
+                      ? "bg-blue-500/20 text-blue-400"
+                      : "text-gray-300 hover:bg-gray-800/50"
                   }
                 `}
               >
@@ -113,10 +122,12 @@ const ConverterUI: React.FC<{ state: ConverterState; onChange: (state: Converter
       <div className="flex-1 overflow-auto custom-scrollbar">
         {ActiveComponent && (
           <ConverterSection>
-            <ActiveComponent 
-              searchQuery={searchQuery} 
+            <ActiveComponent
+              searchQuery={searchQuery}
               data={sectionData as any}
-              onDataChange={(data: any) => handleSectionDataChange(state.data.activeSection, data)}
+              onDataChange={(data: any) =>
+                handleSectionDataChange(state.data.activeSection, data)
+              }
             />
           </ConverterSection>
         )}
@@ -126,25 +137,25 @@ const ConverterUI: React.FC<{ state: ConverterState; onChange: (state: Converter
 };
 
 export const ConverterTablet: Tablet = {
-  id: 'converter',
-  label: 'Converter',
-  keywords: ['convert', 'encode', 'decode', 'hash', 'transform', 'format'],
+  id: "converter",
+  label: "Converter",
+  keywords: ["convert", "encode", "decode", "hash", "transform", "format"],
 
   createInitialState(): ConverterState {
     return {
-      type: 'converter',
+      type: "converter",
       data: {
         activeSection: sections[0].id,
         sectionData: {
-          'encode-decode': { inputs: {} },
-          'hashing': { input: '' },
-          'number': { inputs: {} },
-          'text': { inputs: {} },
-          'datetime': { inputs: {} },
-          'color': { inputs: {} },
-          'networking': { inputs: {} },
-        }
-      }
+          "encode-decode": { inputs: {} },
+          hashing: { input: "" },
+          number: { inputs: {} },
+          text: { inputs: {} },
+          datetime: { inputs: {} },
+          color: { inputs: {} },
+          networking: { inputs: {} },
+        },
+      },
     };
   },
 
@@ -158,5 +169,5 @@ export const ConverterTablet: Tablet = {
 
   render(state: ConverterState, onChange) {
     return <ConverterUI state={state} onChange={onChange} />;
-  }
+  },
 };

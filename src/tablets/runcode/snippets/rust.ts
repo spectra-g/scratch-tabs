@@ -1,5 +1,5 @@
 export const rustSnippet = {
-  name: 'Rust',
+  name: "Rust",
   code: `fn calculate_stats(numbers: &[i32]) -> (f64, i32, i32) {
     if numbers.is_empty() {
         return (0.0, 0, 0);
@@ -28,5 +28,5 @@ fn main() {
     println!("Average: {:.2}", average);
     println!("Minimum: {}", minimum);
     println!("Maximum: {}", maximum);
-}`
+}`,
 };

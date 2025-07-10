@@ -1,5 +1,5 @@
-import React from 'react';
-import { DroppableWorkspaceItem, Workspace } from './DroppableWorkspaceItem';
+import React from "react";
+import { DroppableWorkspaceItem, Workspace } from "./DroppableWorkspaceItem";
 
 export interface WorkspaceSidebarProps {
   workspaces: Array<Workspace & { isLoadingCount?: boolean }>;
@@ -14,11 +14,11 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
   activeWorkspaceId,
   onSelect,
   onRename,
-  onDelete
+  onDelete,
 }) => {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar">
-      {workspaces.map(workspace => (
+      {workspaces.map((workspace) => (
         <DroppableWorkspaceItem
           key={workspace.id}
           workspace={workspace}
@@ -31,4 +31,4 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
       ))}
     </div>
   );
-}; 
+};

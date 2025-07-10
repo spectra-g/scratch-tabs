@@ -1,8 +1,8 @@
-import React, { useCallback } from 'react';
-import { useRootStore } from '../stores';
-import { useTabsStore } from '../stores/tabsStore';
-import { useDiffEditor } from './DiffModal/useDiffEditor';
-import { DiffModalUI } from './DiffModal/DiffModalUI';
+import React, { useCallback } from "react";
+import { useRootStore } from "../stores";
+import { useTabsStore } from "../stores/tabsStore";
+import { useDiffEditor } from "./DiffModal/useDiffEditor";
+import { DiffModalUI } from "./DiffModal/DiffModalUI";
 
 interface DiffModalProps {
   leftTabId: string;
@@ -11,19 +11,24 @@ interface DiffModalProps {
   fromHistory?: boolean;
 }
 
-export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onClose, fromHistory = false }) => {
+export const DiffModal: React.FC<DiffModalProps> = ({
+  leftTabId,
+  rightTabId,
+  onClose,
+  fromHistory = false,
+}) => {
   const { tabs } = useTabsStore();
   const { updateTabContent } = useRootStore();
 
-  const leftTab = tabs.find(tab => tab.id === leftTabId);
-  const rightTab = tabs.find(tab => tab.id === rightTabId);
+  const leftTab = tabs.find((tab) => tab.id === leftTabId);
+  const rightTab = tabs.find((tab) => tab.id === rightTabId);
 
   const engine = useDiffEditor(
-    leftTab?.content || '',
-    rightTab?.content || '',
-    leftTab?.language || 'plaintext',
+    leftTab?.content || "",
+    rightTab?.content || "",
+    leftTab?.language || "plaintext",
     leftTabId,
-    rightTabId
+    rightTabId,
   );
 
   // Close and Save Handler
@@ -33,21 +38,39 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
 
     // Get final content from the current history state
     const finalState = engine.changeHistory[engine.currentHistoryIndex];
-    const finalLeftContent = finalState?.leftContent ?? engine.getCurrentLeftContent();
-    const finalRightContent = finalState?.rightContent ?? engine.getCurrentRightContent();
+    const finalLeftContent =
+      finalState?.leftContent ?? engine.getCurrentLeftContent();
+    const finalRightContent =
+      finalState?.rightContent ?? engine.getCurrentRightContent();
 
     // Check if tabs and content exist and if content actually changed from original tab state
-    if (leftTab && finalLeftContent !== undefined && leftTab.content !== finalLeftContent) {
+    if (
+      leftTab &&
+      finalLeftContent !== undefined &&
+      leftTab.content !== finalLeftContent
+    ) {
       updateTabContent(leftTabId, finalLeftContent);
     }
 
-    if (rightTab && finalRightContent !== undefined && rightTab.content !== finalRightContent) {
+    if (
+      rightTab &&
+      finalRightContent !== undefined &&
+      rightTab.content !== finalRightContent
+    ) {
       updateTabContent(rightTabId, finalRightContent);
     }
 
     // Call the original onClose handler passed from the parent
     onClose();
-  }, [leftTab, rightTab, leftTabId, rightTabId, updateTabContent, onClose, engine]);
+  }, [
+    leftTab,
+    rightTab,
+    leftTabId,
+    rightTabId,
+    updateTabContent,
+    onClose,
+    engine,
+  ]);
 
   if (!leftTab || !rightTab) {
     return null;
@@ -55,7 +78,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ leftTabId, rightTabId, onC
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
-      <DiffModalUI 
+      <DiffModalUI
         leftTabTitle={leftTab.title}
         rightTabTitle={rightTab.title}
         engine={engine}

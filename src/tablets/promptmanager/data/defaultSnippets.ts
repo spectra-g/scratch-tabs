@@ -1,10 +1,10 @@
-import { Snippet } from '../types';
+import { Snippet } from "../types";
 
 export const defaultSnippets: Snippet[] = [
   {
-    id: 'snippet-ux-checklist',
-    title: 'Developer-grade UX Checklist',
-    category: 'UX',
+    id: "snippet-ux-checklist",
+    title: "Developer-grade UX Checklist",
+    category: "UX",
     content: `## UX Checklist
 - [ ] Responsive design works on all target devices
 - [ ] Keyboard navigation is fully supported
@@ -16,12 +16,12 @@ export const defaultSnippets: Snippet[] = [
 - [ ] Color contrast meets WCAG AA standards
 - [ ] Critical actions have confirmation steps
 - [ ] Success messages confirm completed actions`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'snippet-code-review-criteria',
-    title: 'Code Review Criteria',
-    category: 'Development',
+    id: "snippet-code-review-criteria",
+    title: "Code Review Criteria",
+    category: "Development",
     content: `## Code Review Criteria
 1. **Correctness**: Does the code correctly implement the requirements?
 2. **Maintainability**: Is the code easy to understand and modify?
@@ -33,12 +33,12 @@ export const defaultSnippets: Snippet[] = [
 8. **Edge Cases**: Are edge cases considered?
 9. **Consistency**: Does the code follow project conventions?
 10. **Reusability**: Could any parts be made more reusable?`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'snippet-persona-template',
-    title: 'User Persona Template',
-    category: 'Product',
+    id: "snippet-persona-template",
+    title: "User Persona Template",
+    category: "Product",
     content: `## User Persona: [Name]
 
 ### Demographics
@@ -67,12 +67,12 @@ export const defaultSnippets: Snippet[] = [
 
 ### Quote
 "[A quote that captures their attitude or need]"`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'snippet-api-endpoint',
-    title: 'API Endpoint Documentation',
-    category: 'Development',
+    id: "snippet-api-endpoint",
+    title: "API Endpoint Documentation",
+    category: "Development",
     content: `### Endpoint: \`[HTTP Method] [Path]\`
 
 **Description**: [Brief description of what this endpoint does]
@@ -118,12 +118,12 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
     "property2": "value2"
   }'
 \`\`\``,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'snippet-test-cases',
-    title: 'Test Cases Template',
-    category: 'Development',
+    id: "snippet-test-cases",
+    title: "Test Cases Template",
+    category: "Development",
     content: `## Test Cases for [Feature]
 
 ### Test Case 1: [Test Case Name]
@@ -149,12 +149,12 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
 - **Actual Result**: [What actually happened]
 - **Status**: [Pass/Fail]
 - **Notes**: [Any additional notes]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'snippet-meeting-agenda',
-    title: 'Meeting Agenda Template',
-    category: 'Productivity',
+    id: "snippet-meeting-agenda",
+    title: "Meeting Agenda Template",
+    category: "Productivity",
     content: `# Meeting Agenda: [Meeting Title]
 
 **Date**: [Date]
@@ -194,12 +194,12 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
 
 ## Next Steps
 - [To be filled during/after the meeting]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'snippet-ai-constraints',
-    title: 'AI Constraints',
-    category: 'AI',
+    id: "snippet-ai-constraints",
+    title: "AI Constraints",
+    category: "AI",
     content: `## AI Constraints
 
 1. **Knowledge Cutoff**: Your knowledge has a cutoff date of [date]. Do not pretend to know information beyond this date.
@@ -217,12 +217,12 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
 7. **Citations**: When providing factual information, cite sources when possible.
 
 8. **Transparency**: Be transparent about being an AI assistant.`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'snippet-persona-traits',
-    title: 'AI Persona Traits',
-    category: 'AI',
+    id: "snippet-persona-traits",
+    title: "AI Persona Traits",
+    category: "AI",
     content: `## AI Persona Traits
 
 ### Personality Dimensions
@@ -238,6 +238,6 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
 - **Pacing**: [Direct/Methodical/Exploratory]
 - **Vocabulary**: [Simple/Moderate/Advanced]
 - **Structure**: [Linear/Flexible/Conversational]`,
-    isBuiltIn: true
-  }
+    isBuiltIn: true,
+  },
 ];

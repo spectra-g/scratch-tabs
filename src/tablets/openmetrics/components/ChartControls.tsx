@@ -1,15 +1,15 @@
-import React from 'react';
-import { BarChart, LineChart, PieChart, Tag, X } from 'lucide-react';
+import React from "react";
+import { BarChart, LineChart, PieChart, Tag, X } from "lucide-react";
 
 interface ChartControlsProps {
   metricNames: string[];
   selectedMetricName: string | null;
   availableLabelKeys: string[];
   groupByLabels: string[];
-  chartType: 'bar' | 'line' | 'pie';
+  chartType: "bar" | "line" | "pie";
   onSelectMetric: (metricName: string) => void;
   onToggleGroupByLabel: (labelKey: string) => void;
-  onSetChartType: (type: 'bar' | 'line' | 'pie') => void;
+  onSetChartType: (type: "bar" | "line" | "pie") => void;
 }
 
 export const ChartControls: React.FC<ChartControlsProps> = ({
@@ -20,54 +20,56 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
   chartType,
   onSelectMetric,
   onToggleGroupByLabel,
-  onSetChartType
+  onSetChartType,
 }) => {
-  const [searchTerm, setSearchTerm] = React.useState('');
-  
+  const [searchTerm, setSearchTerm] = React.useState("");
+
   // Filter metric names by search term
   const filteredMetricNames = React.useMemo(() => {
     if (!searchTerm) return metricNames;
     const term = searchTerm.toLowerCase();
-    return metricNames.filter(name => name.toLowerCase().includes(term));
+    return metricNames.filter((name) => name.toLowerCase().includes(term));
   }, [metricNames, searchTerm]);
 
   return (
     <div className="p-3 border-b border-gray-700">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3">
         <div className="mb-2 md:mb-0">
-          <h3 className="text-sm font-medium text-gray-300">Chart Configuration</h3>
+          <h3 className="text-sm font-medium text-gray-300">
+            Chart Configuration
+          </h3>
           {selectedMetricName && (
             <div className="text-xs text-gray-400 mt-1">
               {selectedMetricName}
             </div>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => onSetChartType('bar')}
-            className={`p-2 rounded ${chartType === 'bar' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700'}`}
+            onClick={() => onSetChartType("bar")}
+            className={`p-2 rounded ${chartType === "bar" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
             title="Bar Chart"
           >
             <BarChart size={16} />
           </button>
           <button
-            onClick={() => onSetChartType('line')}
-            className={`p-2 rounded ${chartType === 'line' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700'}`}
+            onClick={() => onSetChartType("line")}
+            className={`p-2 rounded ${chartType === "line" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
             title="Line Chart"
           >
             <LineChart size={16} />
           </button>
           <button
-            onClick={() => onSetChartType('pie')}
-            className={`p-2 rounded ${chartType === 'pie' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700'}`}
+            onClick={() => onSetChartType("pie")}
+            className={`p-2 rounded ${chartType === "pie" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
             title="Pie Chart"
           >
             <PieChart size={16} />
           </button>
         </div>
       </div>
-      
+
       <div className="flex flex-col md:flex-row md:space-x-4">
         {/* Metric selector */}
         <div className="w-full md:w-1/3 mb-3 md:mb-0">
@@ -82,7 +84,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={() => setSearchTerm("")}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
               >
                 <X size={14} />
@@ -93,11 +95,13 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
             {filteredMetricNames.length === 0 ? (
               <div className="p-2 text-sm text-gray-500">No metrics found</div>
             ) : (
-              filteredMetricNames.map(name => (
+              filteredMetricNames.map((name) => (
                 <div
                   key={name}
                   className={`p-2 text-sm cursor-pointer hover:bg-gray-700 ${
-                    name === selectedMetricName ? 'bg-blue-500/20 text-blue-400' : 'text-gray-300'
+                    name === selectedMetricName
+                      ? "bg-blue-500/20 text-blue-400"
+                      : "text-gray-300"
                   }`}
                   onClick={() => onSelectMetric(name)}
                 >
@@ -107,14 +111,17 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
             )}
           </div>
         </div>
-        
+
         {/* Group by selector */}
         {selectedMetricName && availableLabelKeys.length > 0 && (
           <div className="w-full md:w-1/3">
             <div className="text-xs text-gray-400 mb-1">Group By Labels</div>
             <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
-              {availableLabelKeys.map(labelKey => (
-                <div key={labelKey} className="flex items-center mb-1 last:mb-0">
+              {availableLabelKeys.map((labelKey) => (
+                <div
+                  key={labelKey}
+                  className="flex items-center mb-1 last:mb-0"
+                >
                   <input
                     type="checkbox"
                     id={`group-by-${labelKey}`}
@@ -122,7 +129,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
                     onChange={() => onToggleGroupByLabel(labelKey)}
                     className="mr-2"
                   />
-                  <label 
+                  <label
                     htmlFor={`group-by-${labelKey}`}
                     className="text-sm text-gray-300 flex items-center"
                   >

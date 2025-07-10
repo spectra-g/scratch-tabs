@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { BaseModal } from '../../languages/json/components/modals/BaseModal';
-import { Download, CheckCircle2, Circle } from 'lucide-react';
-import { Tab } from '../../types';
-import { useTabsStore } from '../../stores/tabsStore';
-import { useSplitViewStore } from '../../stores/splitViewStore';
-import { languageRegistry } from '../../languages';
-import JSZip from 'jszip';
+import React, { useState } from "react";
+import { BaseModal } from "../../languages/json/components/modals/BaseModal";
+import { Download, CheckCircle2, Circle } from "lucide-react";
+import { Tab } from "../../types";
+import { useTabsStore } from "../../stores/tabsStore";
+import { useSplitViewStore } from "../../stores/splitViewStore";
+import { languageRegistry } from "../../languages";
+import JSZip from "jszip";
 
 interface DownloadModalProps {
   onClose: () => void;
@@ -16,17 +16,17 @@ interface DownloadModalProps {
 // Replaces forbidden characters with an underscore.
 function sanitizeFilename(name: string): string {
   if (!name) {
-    return 'untitled'; // Handle empty or null names
+    return "untitled"; // Handle empty or null names
   }
   // Remove or replace characters like / \ : * ? " < > |
-  const sanitized = name.replace(/[\\/:*?"<>|]/g, '_');
+  const sanitized = name.replace(/[\\/:*?"<>|]/g, "_");
   // Replace multiple consecutive underscores with a single one
-  const collapsedUnderscores = sanitized.replace(/_+/g, '_');
+  const collapsedUnderscores = sanitized.replace(/_+/g, "_");
   // Trim leading/trailing whitespace and underscores
-  const trimmed = collapsedUnderscores.trim().replace(/^_+|_+$/g, '');
+  const trimmed = collapsedUnderscores.trim().replace(/^_+|_+$/g, "");
   // Prevent filenames that are just dots or empty after sanitization
-  if (trimmed === '' || /^\.+$/.test(trimmed)) {
-    return 'untitled';
+  if (trimmed === "" || /^\.+$/.test(trimmed)) {
+    return "untitled";
   }
   // Limit filename length (optional, but good practice)
   const maxLength = 200;
@@ -42,8 +42,12 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
 
   // Filter out tablet tabs
   const downloadableTabs = tabsStore.tabs.filter((tab: Tab) => !tab.isTablet);
-  const leftTabs = downloadableTabs.filter((tab: Tab) => splitViewStore.splitView.leftTabs.includes(tab.id));
-  const rightTabs = downloadableTabs.filter((tab: Tab) => splitViewStore.splitView.rightTabs.includes(tab.id));
+  const leftTabs = downloadableTabs.filter((tab: Tab) =>
+    splitViewStore.splitView.leftTabs.includes(tab.id),
+  );
+  const rightTabs = downloadableTabs.filter((tab: Tab) =>
+    splitViewStore.splitView.rightTabs.includes(tab.id),
+  );
 
   const toggleTab = (tabId: string) => {
     const newSelected = new Set(selectedTabs);
@@ -76,17 +80,21 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
 
     setIsDownloading(true);
     try {
-      const selectedTabObjects = downloadableTabs.filter((tab: Tab) => selectedTabs.has(tab.id));
+      const selectedTabObjects = downloadableTabs.filter((tab: Tab) =>
+        selectedTabs.has(tab.id),
+      );
 
       // If only one file is selected, download it directly
       if (selectedTabObjects.length === 1) {
         const tab = selectedTabObjects[0];
         const detector = languageRegistry.getById(tab.language);
-        const extension = detector?.getFileExtension() || 'txt';
+        const extension = detector?.getFileExtension() || "txt";
         const filename = `${sanitizeFilename(tab.title)}.${extension}`;
-        const blob = new Blob([tab.content || ''], { type: 'text/plain;charset=utf-8' }); // Added charset
+        const blob = new Blob([tab.content || ""], {
+          type: "text/plain;charset=utf-8",
+        }); // Added charset
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = filename;
         document.body.appendChild(a);
@@ -100,7 +108,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
 
         selectedTabObjects.forEach((tab: Tab) => {
           const detector = languageRegistry.getById(tab.language);
-          const extension = detector?.getFileExtension() || 'txt';
+          const extension = detector?.getFileExtension() || "txt";
 
           const baseFilename = sanitizeFilename(tab.title);
           let finalFilename = `${baseFilename}.${extension}`;
@@ -112,28 +120,28 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
           }
           usedFilenames.add(finalFilename); // Mark this filename as used
 
-          zip.file(finalFilename, tab.content || '');
+          zip.file(finalFilename, tab.content || "");
         });
 
         // Generate and download zip
         const content = await zip.generateAsync({
-          type: 'blob',
+          type: "blob",
           compression: "DEFLATE",
           compressionOptions: {
-              level: 6
-          }
-         });
+            level: 6,
+          },
+        });
         const url = URL.createObjectURL(content);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = 'scratch-tabs-export.zip';
+        a.download = "scratch-tabs-export.zip";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Failed to download files:', error);
+      console.error("Failed to download files:", error);
       // Consider adding user feedback here, e.g., a toast notification
     } finally {
       setIsDownloading(false);
@@ -155,7 +163,11 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
             <Circle size={16} className="text-gray-400 flex-shrink-0" />
           )}
           <span className="flex-1 truncate min-w-0">{tab.title}</span>
-          <span className="text-xs text-gray-400 flex-shrink-0">.{languageRegistry.getById(tab.language)?.getFileExtension() || 'txt'}</span>
+          <span className="text-xs text-gray-400 flex-shrink-0">
+            .
+            {languageRegistry.getById(tab.language)?.getFileExtension() ||
+              "txt"}
+          </span>
         </button>
       ))}
     </div>
@@ -202,11 +214,15 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Left Side</h3>
+                <h3 className="text-sm font-medium text-gray-300 mb-2">
+                  Left Side
+                </h3>
                 <TabList tabs={leftTabs} />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Right Side</h3>
+                <h3 className="text-sm font-medium text-gray-300 mb-2">
+                  Right Side
+                </h3>
                 <TabList tabs={rightTabs} />
               </div>
             </div>
@@ -222,8 +238,9 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
             <Download size={16} />
             <span>
               {isDownloading
-                ? 'Downloading...'
-                : `Download ${selectedTabs.size === 1 ? 'File' : `${selectedTabs.size} Files`}`} {/* Show count */}
+                ? "Downloading..."
+                : `Download ${selectedTabs.size === 1 ? "File" : `${selectedTabs.size} Files`}`}{" "}
+              {/* Show count */}
             </span>
           </button>
         </div>

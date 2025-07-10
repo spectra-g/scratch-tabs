@@ -1,39 +1,41 @@
-import { LanguageDetector, LanguageRegistry, DetectionResult } from './types';
+import { LanguageDetector, LanguageRegistry, DetectionResult } from "./types";
 
 /**
  * Registry for language detectors
  */
 class LanguageRegistryImpl implements LanguageRegistry {
   private detectors: LanguageDetector[] = [];
-  
+
   /**
    * Register a language detector
    */
   register(detector: LanguageDetector): void {
-    const exists = this.detectors.some(d => d.id === detector.id);
+    const exists = this.detectors.some((d) => d.id === detector.id);
     if (!exists) {
       this.detectors.push(detector);
       this.detectors.sort((a, b) => b.priority - a.priority);
     }
   }
-  
+
   /**
    * Get all registered language detectors
    */
   getAll(): LanguageDetector[] {
     return [...this.detectors];
   }
-  
+
   /**
    * Get a language detector by ID
    */
   getById(id: string): LanguageDetector | undefined {
-    return this.detectors.find(detector => detector.id === id);
+    return this.detectors.find((detector) => detector.id === id);
   }
-  
-  detectLanguage(content: string): string {
 
-    const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
+  detectLanguage(content: string): string {
+    const detectionResults: Array<{
+      detector: LanguageDetector;
+      result: DetectionResult;
+    }> = [];
 
     // Run all detectors
     for (const detector of this.detectors) {
@@ -41,12 +43,15 @@ class LanguageRegistryImpl implements LanguageRegistry {
         const result = detector.detect(content);
         detectionResults.push({ detector, result });
       } catch (error) {
-        console.error(`[LanguageRegistry] Error in detector ${detector.id}:`, error);
+        console.error(
+          `[LanguageRegistry] Error in detector ${detector.id}:`,
+          error,
+        );
       }
     }
 
     // Find the best result
-    let bestResult = 'plaintext';
+    let bestResult = "plaintext";
     let bestConfidence = 0;
 
     for (const { detector, result } of detectionResults) {
@@ -56,22 +61,24 @@ class LanguageRegistryImpl implements LanguageRegistry {
       }
     }
 
-    const finalResult = bestConfidence > 0.5 ? bestResult : 'plaintext';
+    const finalResult = bestConfidence > 0.5 ? bestResult : "plaintext";
     return finalResult;
   }
-  
+
   /**
    * Check if content is ambiguous (matches multiple languages)
    */
   isAmbiguous(content: string): boolean {
     if (!content || !content.trim()) return false;
-    
 
-
-    const detectionResults: Array<{ detector: LanguageDetector; result: DetectionResult }> = [];
+    const detectionResults: Array<{
+      detector: LanguageDetector;
+      result: DetectionResult;
+    }> = [];
     for (const detector of this.detectors) {
       const result = detector.detect(content);
-      if (result.match && result.confidence > 0.3) { // Only consider reasonably confident matches
+      if (result.match && result.confidence > 0.3) {
+        // Only consider reasonably confident matches
         detectionResults.push({ detector, result });
       }
     }
@@ -91,46 +98,56 @@ class LanguageRegistryImpl implements LanguageRegistry {
     // 1. Top match confidence is high enough (e.g., > 0.5)
     // 2. Second match confidence is also reasonably high (e.g., > 0.4)
     // 3. The difference in confidence is small (e.g., < 0.15)
-    if (topMatch.result.confidence > 0.5 &&
-        secondMatch.result.confidence > 0.4 &&
-        (topMatch.result.confidence - secondMatch.result.confidence) < 0.15) {
+    if (
+      topMatch.result.confidence > 0.5 &&
+      secondMatch.result.confidence > 0.4 &&
+      topMatch.result.confidence - secondMatch.result.confidence < 0.15
+    ) {
       // Further tie-breaking by priority if confidence is extremely close
-      if (Math.abs(topMatch.result.confidence - secondMatch.result.confidence) < 0.05 &&
-          topMatch.detector.priority !== secondMatch.detector.priority) {
-          return false; // Priority breaks the tie
+      if (
+        Math.abs(topMatch.result.confidence - secondMatch.result.confidence) <
+          0.05 &&
+        topMatch.detector.priority !== secondMatch.detector.priority
+      ) {
+        return false; // Priority breaks the tie
       }
       return true;
     }
 
     return false;
   }
-  
+
   /**
    * Initialize all language providers with Monaco
    */
   initializeProviders(monaco: any): void {
-    this.detectors.forEach(detector => {
+    this.detectors.forEach((detector) => {
       detector.registerProvider(monaco);
     });
   }
-  
+
   /**
    * Get potential language matches for content
    */
-  getPotentialMatches(content: string, limit: number = 5): Array<{
+  getPotentialMatches(
+    content: string,
+    limit: number = 5,
+  ): Array<{
     id: string;
     name: string;
     score: number;
   }> {
     if (!content || !content.trim()) {
       // For empty content, return plaintext as the only match
-      const plaintext = this.getById('plaintext');
+      const plaintext = this.getById("plaintext");
       if (plaintext) {
-        return [{
-          id: 'plaintext',
-          name: plaintext.name,
-          score: 1.0
-        }];
+        return [
+          {
+            id: "plaintext",
+            name: plaintext.name,
+            score: 1.0,
+          },
+        ];
       }
       return [];
     }
@@ -148,7 +165,7 @@ class LanguageRegistryImpl implements LanguageRegistry {
         detectionResults.push({
           id: detector.id,
           name: detector.name,
-          score: result.confidence
+          score: result.confidence,
         });
       }
     }
@@ -162,4 +179,4 @@ class LanguageRegistryImpl implements LanguageRegistry {
 }
 
 // Create and export a singleton instance
-export const languageRegistry = new LanguageRegistryImpl(); 
+export const languageRegistry = new LanguageRegistryImpl();

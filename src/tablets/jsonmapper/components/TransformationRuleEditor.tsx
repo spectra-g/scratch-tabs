@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Editor } from '@monaco-editor/react';
-import { X, Save } from 'lucide-react';
-import { MappingRule, TransformationType } from '../types';
-import { jsonPathToReadablePath, readablePathToJsonPath, getValueByPath } from '../utils/jsonUtils';
+import React, { useState, useEffect } from "react";
+import { Editor } from "@monaco-editor/react";
+import { X, Save } from "lucide-react";
+import { MappingRule, TransformationType } from "../types";
+import {
+  jsonPathToReadablePath,
+  readablePathToJsonPath,
+  getValueByPath,
+} from "../utils/jsonUtils";
 
 interface TransformationRuleEditorProps {
   rule: MappingRule;
@@ -12,33 +16,36 @@ interface TransformationRuleEditorProps {
   targetJson: string;
 }
 
-export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> = ({
-  rule,
-  onSave,
-  onCancel,
-  sourceJson,
-  targetJson
-}) => {
-  const [sourcePath, setSourcePath] = useState(jsonPathToReadablePath(rule.sourcePath));
-  const [targetPath, setTargetPath] = useState(jsonPathToReadablePath(rule.targetPath));
-  const [transformationType, setTransformationType] = useState<TransformationType>(rule.transformationType);
+export const TransformationRuleEditor: React.FC<
+  TransformationRuleEditorProps
+> = ({ rule, onSave, onCancel, sourceJson, targetJson }) => {
+  const [sourcePath, setSourcePath] = useState(
+    jsonPathToReadablePath(rule.sourcePath),
+  );
+  const [targetPath, setTargetPath] = useState(
+    jsonPathToReadablePath(rule.targetPath),
+  );
+  const [transformationType, setTransformationType] =
+    useState<TransformationType>(rule.transformationType);
   const [transformation, setTransformation] = useState(rule.transformation);
   const [sourceValue, setSourceValue] = useState<any>(null);
   const [targetValue, setTargetValue] = useState<any>(null);
   const [previewValue, setPreviewValue] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Builtin transformation state
-  const [selectedBuiltin, setSelectedBuiltin] = useState('');
-  const [builtinParams, setBuiltinParams] = useState<{ [key: string]: string }>({});
-  
+  const [selectedBuiltin, setSelectedBuiltin] = useState("");
+  const [builtinParams, setBuiltinParams] = useState<{ [key: string]: string }>(
+    {},
+  );
+
   // Preserve builtin state when switching modes
   const [savedBuiltinState, setSavedBuiltinState] = useState<{
     selectedBuiltin: string;
     builtinParams: { [key: string]: string };
     transformation: string;
-  }>({ selectedBuiltin: '', builtinParams: {}, transformation: '' });
-  
+  }>({ selectedBuiltin: "", builtinParams: {}, transformation: "" });
+
   // Load source and target values when the component mounts
   useEffect(() => {
     try {
@@ -49,7 +56,7 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
           setSourceValue(value);
         }
       }
-      
+
       if (targetJson) {
         const targetData = JSON.parse(targetJson);
         if (rule.targetPath) {
@@ -58,46 +65,50 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
         }
       }
     } catch (error) {
-      console.error('Error loading values:', error);
+      console.error("Error loading values:", error);
     }
   }, [rule.sourcePath, rule.targetPath, sourceJson, targetJson]);
 
   // Initialize builtin transformation from existing rule
   useEffect(() => {
-    if (transformationType === 'builtin' && transformation) {
+    if (transformationType === "builtin" && transformation) {
       // Parse existing builtin transformation
       const match = transformation.match(/^(\w+)\((.*)\)$/);
       if (match) {
         const [, funcName, argsStr] = match;
         setSelectedBuiltin(funcName);
-        
+
         // Parse parameters
         const params: { [key: string]: string } = {};
         if (argsStr) {
-          const args = argsStr.split(',').map(arg => arg.trim().replace(/['"]/g, ''));
+          const args = argsStr
+            .split(",")
+            .map((arg) => arg.trim().replace(/['"]/g, ""));
           switch (funcName) {
-            case 'substring':
-              params.start = args[0] || '0';
-              params.end = args[1] || '';
+            case "substring":
+              params.start = args[0] || "0";
+              params.end = args[1] || "";
               break;
-            case 'append':
-            case 'prepend':
-              params.text = args[0] || '';
+            case "append":
+            case "prepend":
+              params.text = args[0] || "";
               break;
-            case 'join':
-              params.separator = args[0] || ',';
+            case "join":
+              params.separator = args[0] || ",";
               break;
-            case 'toFixed':
-              params.decimals = args[0] || '0';
+            case "toFixed":
+              params.decimals = args[0] || "0";
               break;
-            case 'add':
-            case 'subtract':
-            case 'multiply':
-            case 'divide':
-              params.value = args[0] || (funcName === 'divide' || funcName === 'multiply' ? '1' : '0');
+            case "add":
+            case "subtract":
+            case "multiply":
+            case "divide":
+              params.value =
+                args[0] ||
+                (funcName === "divide" || funcName === "multiply" ? "1" : "0");
               break;
-            case 'default':
-              params.defaultValue = args[0] || '';
+            case "default":
+              params.defaultValue = args[0] || "";
               break;
           }
         }
@@ -108,69 +119,71 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
 
   // Update transformation string when builtin params change
   useEffect(() => {
-    if (transformationType === 'builtin' && selectedBuiltin) {
-      let transformationStr = '';
+    if (transformationType === "builtin" && selectedBuiltin) {
+      let transformationStr = "";
       switch (selectedBuiltin) {
-        case 'toUpperCase':
-        case 'toLowerCase':
-        case 'capitalize':
-        case 'trim':
-        case 'toNumber':
-        case 'toString':
-        case 'toBoolean':
-        case 'formatDate':
-        case 'toTimestamp':
-        case 'firstElement':
-        case 'lastElement':
-        case 'round':
-        case 'floor':
-        case 'ceil':
-        case 'not':
-        case 'isEmpty':
-        case 'isNull':
-        case 'length':
+        case "toUpperCase":
+        case "toLowerCase":
+        case "capitalize":
+        case "trim":
+        case "toNumber":
+        case "toString":
+        case "toBoolean":
+        case "formatDate":
+        case "toTimestamp":
+        case "firstElement":
+        case "lastElement":
+        case "round":
+        case "floor":
+        case "ceil":
+        case "not":
+        case "isEmpty":
+        case "isNull":
+        case "length":
           transformationStr = `${selectedBuiltin}()`;
           break;
-        case 'substring':
-          const start = builtinParams.start || '0';
-          const end = builtinParams.end || '';
-          transformationStr = end ? `${selectedBuiltin}(${start}, ${end})` : `${selectedBuiltin}(${start})`;
+        case "substring":
+          const start = builtinParams.start || "0";
+          const end = builtinParams.end || "";
+          transformationStr = end
+            ? `${selectedBuiltin}(${start}, ${end})`
+            : `${selectedBuiltin}(${start})`;
           break;
-        case 'append':
-          transformationStr = `${selectedBuiltin}("${builtinParams.text || ''}")`;
+        case "append":
+          transformationStr = `${selectedBuiltin}("${builtinParams.text || ""}")`;
           break;
-        case 'prepend':
-          transformationStr = `${selectedBuiltin}("${builtinParams.text || ''}")`;
+        case "prepend":
+          transformationStr = `${selectedBuiltin}("${builtinParams.text || ""}")`;
           break;
-        case 'join':
-          transformationStr = `${selectedBuiltin}("${builtinParams.separator || ','}")`;
+        case "join":
+          transformationStr = `${selectedBuiltin}("${builtinParams.separator || ","}")`;
           break;
-        case 'toFixed':
-          transformationStr = `${selectedBuiltin}(${builtinParams.decimals || '0'})`;
+        case "toFixed":
+          transformationStr = `${selectedBuiltin}(${builtinParams.decimals || "0"})`;
           break;
-        case 'add':
-        case 'subtract':
-        case 'multiply':
-        case 'divide':
-          transformationStr = `${selectedBuiltin}(${builtinParams.value || (selectedBuiltin === 'divide' || selectedBuiltin === 'multiply' ? '1' : '0')})`;
+        case "add":
+        case "subtract":
+        case "multiply":
+        case "divide":
+          transformationStr = `${selectedBuiltin}(${builtinParams.value || (selectedBuiltin === "divide" || selectedBuiltin === "multiply" ? "1" : "0")})`;
           break;
-        case 'default':
-          transformationStr = `${selectedBuiltin}("${builtinParams.defaultValue || ''}")`;
+        case "default":
+          transformationStr = `${selectedBuiltin}("${builtinParams.defaultValue || ""}")`;
           break;
       }
       setTransformation(transformationStr);
     }
   }, [transformationType, selectedBuiltin, builtinParams]);
-  
+
   // Update preview when transformation changes
   useEffect(() => {
     if (sourceValue === null) return;
-    
+
     try {
-      if (transformationType === 'none') {
+      if (transformationType === "none") {
         setPreviewValue(sourceValue);
         setError(null);
-      } else if (transformationType === 'builtin') {
+      } else if (transformationType === "builtin") {
         // If no transformation is selected yet, show source value
         if (!transformation || !selectedBuiltin) {
           setPreviewValue(sourceValue);
@@ -179,157 +192,173 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
         }
 
         // Apply built-in transformation
-        const [funcName, ...args] = transformation.split('(');
-        const argsStr = args.join('(').replace(/\)$/, '');
-        const parsedArgs = argsStr ? argsStr.split(',').map(arg => arg.trim().replace(/['"]/g, '')) : [];
-        
+        const [funcName, ...args] = transformation.split("(");
+        const argsStr = args.join("(").replace(/\)$/, "");
+        const parsedArgs = argsStr
+          ? argsStr.split(",").map((arg) => arg.trim().replace(/['"]/g, ""))
+          : [];
+
         switch (funcName.trim()) {
-          case 'toUpperCase':
+          case "toUpperCase":
             setPreviewValue(String(sourceValue).toUpperCase());
             setError(null);
             break;
-          case 'toLowerCase':
+          case "toLowerCase":
             setPreviewValue(String(sourceValue).toLowerCase());
             setError(null);
             break;
-          case 'capitalize':
+          case "capitalize":
             const str = String(sourceValue);
-            setPreviewValue(str.charAt(0).toUpperCase() + str.slice(1).toLowerCase());
+            setPreviewValue(
+              str.charAt(0).toUpperCase() + str.slice(1).toLowerCase(),
+            );
             setError(null);
             break;
-          case 'trim':
+          case "trim":
             setPreviewValue(String(sourceValue).trim());
             setError(null);
             break;
-          case 'substring':
-            const start = parseInt(parsedArgs[0] || '0');
+          case "substring":
+            const start = parseInt(parsedArgs[0] || "0");
             const end = parsedArgs[1] ? parseInt(parsedArgs[1]) : undefined;
             setPreviewValue(String(sourceValue).substring(start, end));
             setError(null);
             break;
-          case 'append':
-            setPreviewValue(String(sourceValue) + (parsedArgs[0] || ''));
+          case "append":
+            setPreviewValue(String(sourceValue) + (parsedArgs[0] || ""));
             setError(null);
             break;
-          case 'prepend':
-            setPreviewValue((parsedArgs[0] || '') + String(sourceValue));
+          case "prepend":
+            setPreviewValue((parsedArgs[0] || "") + String(sourceValue));
             setError(null);
             break;
-          case 'length':
-            setPreviewValue((Array.isArray(sourceValue) || typeof sourceValue === 'string') ? sourceValue.length : 0);
+          case "length":
+            setPreviewValue(
+              Array.isArray(sourceValue) || typeof sourceValue === "string"
+                ? sourceValue.length
+                : 0,
+            );
             setError(null);
             break;
-          case 'toNumber':
+          case "toNumber":
             setPreviewValue(Number(sourceValue));
             setError(null);
             break;
-          case 'toString':
+          case "toString":
             setPreviewValue(String(sourceValue));
             setError(null);
             break;
-          case 'toBoolean':
+          case "toBoolean":
             setPreviewValue(Boolean(sourceValue));
             setError(null);
             break;
-          case 'round':
+          case "round":
             setPreviewValue(Math.round(Number(sourceValue)));
             setError(null);
             break;
-          case 'floor':
+          case "floor":
             setPreviewValue(Math.floor(Number(sourceValue)));
             setError(null);
             break;
-          case 'ceil':
+          case "ceil":
             setPreviewValue(Math.ceil(Number(sourceValue)));
             setError(null);
             break;
-          case 'toFixed':
-            const decimals = parseInt(parsedArgs[0] || '0');
+          case "toFixed":
+            const decimals = parseInt(parsedArgs[0] || "0");
             setPreviewValue(Number(sourceValue).toFixed(decimals));
             setError(null);
             break;
-          case 'add':
+          case "add":
             setPreviewValue(Number(sourceValue) + Number(parsedArgs[0] || 0));
             setError(null);
             break;
-          case 'subtract':
+          case "subtract":
             setPreviewValue(Number(sourceValue) - Number(parsedArgs[0] || 0));
             setError(null);
             break;
-          case 'multiply':
+          case "multiply":
             setPreviewValue(Number(sourceValue) * Number(parsedArgs[0] || 1));
             setError(null);
             break;
-          case 'divide':
+          case "divide":
             const divisor = Number(parsedArgs[0] || 1);
             if (divisor === 0) {
-              setError('Cannot divide by zero');
+              setError("Cannot divide by zero");
               setPreviewValue(sourceValue);
             } else {
               setPreviewValue(Number(sourceValue) / divisor);
               setError(null);
             }
             break;
-          case 'not':
+          case "not":
             setPreviewValue(!sourceValue);
             setError(null);
             break;
-          case 'isEmpty':
-            setPreviewValue(sourceValue === null || sourceValue === undefined || sourceValue === '' || 
-                           (Array.isArray(sourceValue) && sourceValue.length === 0));
+          case "isEmpty":
+            setPreviewValue(
+              sourceValue === null ||
+                sourceValue === undefined ||
+                sourceValue === "" ||
+                (Array.isArray(sourceValue) && sourceValue.length === 0),
+            );
             setError(null);
             break;
-          case 'isNull':
+          case "isNull":
             setPreviewValue(sourceValue === null || sourceValue === undefined);
             setError(null);
             break;
-          case 'default':
-            const defaultValue = parsedArgs[0] || '';
-            setPreviewValue(sourceValue === null || sourceValue === undefined ? defaultValue : sourceValue);
+          case "default":
+            const defaultValue = parsedArgs[0] || "";
+            setPreviewValue(
+              sourceValue === null || sourceValue === undefined
+                ? defaultValue
+                : sourceValue,
+            );
             setError(null);
             break;
-          case 'formatDate':
+          case "formatDate":
             try {
               setPreviewValue(new Date(sourceValue).toISOString());
               setError(null);
             } catch (error) {
-              setError('Invalid date');
+              setError("Invalid date");
               setPreviewValue(null);
             }
             break;
-          case 'toTimestamp':
+          case "toTimestamp":
             try {
               setPreviewValue(new Date(sourceValue).getTime());
               setError(null);
             } catch (error) {
-              setError('Invalid date');
+              setError("Invalid date");
               setPreviewValue(null);
             }
             break;
-          case 'join':
+          case "join":
             if (Array.isArray(sourceValue)) {
-              setPreviewValue(sourceValue.join(parsedArgs[0] || ','));
+              setPreviewValue(sourceValue.join(parsedArgs[0] || ","));
               setError(null);
             } else {
-              setError('Source value is not an array');
+              setError("Source value is not an array");
               setPreviewValue(sourceValue);
             }
             break;
-          case 'firstElement':
+          case "firstElement":
             if (Array.isArray(sourceValue) && sourceValue.length > 0) {
               setPreviewValue(sourceValue[0]);
               setError(null);
             } else {
-              setError('Source value is not an array or is empty');
+              setError("Source value is not an array or is empty");
               setPreviewValue(null);
             }
             break;
-          case 'lastElement':
+          case "lastElement":
             if (Array.isArray(sourceValue) && sourceValue.length > 0) {
               setPreviewValue(sourceValue[sourceValue.length - 1]);
               setError(null);
             } else {
-              setError('Source value is not an array or is empty');
+              setError("Source value is not an array or is empty");
               setPreviewValue(null);
             }
             break;
@@ -337,153 +366,171 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
             setPreviewValue(sourceValue);
             setError(null);
         }
-      } else if (transformationType === 'custom') {
+      } else if (transformationType === "custom") {
         try {
           // Create a function from the transformation string
           const transformFn = new Function(
-            'sourceValue',
-            'sourceObject',
-            `"use strict"; return (${transformation});`
+            "sourceValue",
+            "sourceObject",
+            `"use strict"; return (${transformation});`,
           );
-          
+
           // Execute the function with the source value
           const sourceData = sourceJson ? JSON.parse(sourceJson) : {};
           const result = transformFn(sourceValue, sourceData);
-          
+
           // FIX: Wrap the result in a function to prevent React's functional update behavior
           setPreviewValue(() => result);
           setError(null);
         } catch (error) {
-          console.error('Error applying custom transformation:', error);
-          setError(error instanceof Error ? error.message : 'Invalid transformation');
+          console.error("Error applying custom transformation:", error);
+          setError(
+            error instanceof Error ? error.message : "Invalid transformation",
+          );
           setPreviewValue(null);
         }
       }
     } catch (error) {
-      console.error('Error updating preview:', error);
-      setError(error instanceof Error ? error.message : 'Error updating preview');
+      console.error("Error updating preview:", error);
+      setError(
+        error instanceof Error ? error.message : "Error updating preview",
+      );
     }
-  }, [sourceValue, transformationType, transformation, sourceJson, selectedBuiltin]);
+  }, [
+    sourceValue,
+    transformationType,
+    transformation,
+    sourceJson,
+    selectedBuiltin,
+  ]);
 
   const handleTransformationTypeChange = (newType: TransformationType) => {
     // Save current builtin state when leaving builtin mode
-    if (transformationType === 'builtin' && newType !== 'builtin') {
+    if (transformationType === "builtin" && newType !== "builtin") {
       setSavedBuiltinState({
         selectedBuiltin,
         builtinParams,
-        transformation
+        transformation,
       });
     }
 
     setTransformationType(newType);
-    
+
     // Convert between transformation types
-    if (newType === 'custom' && transformationType === 'builtin' && selectedBuiltin) {
+    if (
+      newType === "custom" &&
+      transformationType === "builtin" &&
+      selectedBuiltin
+    ) {
       // Convert builtin to custom JavaScript
-      let customCode = '';
+      let customCode = "";
       switch (selectedBuiltin) {
-        case 'toUpperCase':
-          customCode = 'sourceValue.toUpperCase()';
+        case "toUpperCase":
+          customCode = "sourceValue.toUpperCase()";
           break;
-        case 'toLowerCase':
-          customCode = 'sourceValue.toLowerCase()';
+        case "toLowerCase":
+          customCode = "sourceValue.toLowerCase()";
           break;
-        case 'capitalize':
-          customCode = 'sourceValue.charAt(0).toUpperCase() + sourceValue.slice(1).toLowerCase()';
+        case "capitalize":
+          customCode =
+            "sourceValue.charAt(0).toUpperCase() + sourceValue.slice(1).toLowerCase()";
           break;
-        case 'trim':
-          customCode = 'sourceValue.trim()';
+        case "trim":
+          customCode = "sourceValue.trim()";
           break;
-        case 'substring':
-          const start = builtinParams.start || '0';
-          const end = builtinParams.end || '';
-          customCode = end ? `sourceValue.substring(${start}, ${end})` : `sourceValue.substring(${start})`;
+        case "substring":
+          const start = builtinParams.start || "0";
+          const end = builtinParams.end || "";
+          customCode = end
+            ? `sourceValue.substring(${start}, ${end})`
+            : `sourceValue.substring(${start})`;
           break;
-        case 'append':
-          customCode = `sourceValue + "${builtinParams.text || ''}"`;
+        case "append":
+          customCode = `sourceValue + "${builtinParams.text || ""}"`;
           break;
-        case 'prepend':
-          customCode = `"${builtinParams.text || ''}" + sourceValue`;
+        case "prepend":
+          customCode = `"${builtinParams.text || ""}" + sourceValue`;
           break;
-        case 'length':
-          customCode = 'sourceValue.length';
+        case "length":
+          customCode = "sourceValue.length";
           break;
-        case 'toNumber':
-          customCode = 'Number(sourceValue)';
+        case "toNumber":
+          customCode = "Number(sourceValue)";
           break;
-        case 'toString':
-          customCode = 'String(sourceValue)';
+        case "toString":
+          customCode = "String(sourceValue)";
           break;
-        case 'toBoolean':
-          customCode = 'Boolean(sourceValue)';
+        case "toBoolean":
+          customCode = "Boolean(sourceValue)";
           break;
-        case 'round':
-          customCode = 'Math.round(sourceValue)';
+        case "round":
+          customCode = "Math.round(sourceValue)";
           break;
-        case 'floor':
-          customCode = 'Math.floor(sourceValue)';
+        case "floor":
+          customCode = "Math.floor(sourceValue)";
           break;
-        case 'ceil':
-          customCode = 'Math.ceil(sourceValue)';
+        case "ceil":
+          customCode = "Math.ceil(sourceValue)";
           break;
-        case 'toFixed':
-          customCode = `sourceValue.toFixed(${builtinParams.decimals || '0'})`;
+        case "toFixed":
+          customCode = `sourceValue.toFixed(${builtinParams.decimals || "0"})`;
           break;
-        case 'add':
-          customCode = `sourceValue + ${builtinParams.value || '0'}`;
+        case "add":
+          customCode = `sourceValue + ${builtinParams.value || "0"}`;
           break;
-        case 'subtract':
-          customCode = `sourceValue - ${builtinParams.value || '0'}`;
+        case "subtract":
+          customCode = `sourceValue - ${builtinParams.value || "0"}`;
           break;
-        case 'multiply':
-          customCode = `sourceValue * ${builtinParams.value || '1'}`;
+        case "multiply":
+          customCode = `sourceValue * ${builtinParams.value || "1"}`;
           break;
-        case 'divide':
-          customCode = `sourceValue / ${builtinParams.value || '1'}`;
+        case "divide":
+          customCode = `sourceValue / ${builtinParams.value || "1"}`;
           break;
-        case 'not':
-          customCode = '!sourceValue';
+        case "not":
+          customCode = "!sourceValue";
           break;
-        case 'isEmpty':
-          customCode = 'sourceValue === null || sourceValue === undefined || sourceValue === "" || (Array.isArray(sourceValue) && sourceValue.length === 0)';
+        case "isEmpty":
+          customCode =
+            'sourceValue === null || sourceValue === undefined || sourceValue === "" || (Array.isArray(sourceValue) && sourceValue.length === 0)';
           break;
-        case 'isNull':
-          customCode = 'sourceValue === null || sourceValue === undefined';
+        case "isNull":
+          customCode = "sourceValue === null || sourceValue === undefined";
           break;
-        case 'default':
-          customCode = `sourceValue === null || sourceValue === undefined ? "${builtinParams.defaultValue || ''}" : sourceValue`;
+        case "default":
+          customCode = `sourceValue === null || sourceValue === undefined ? "${builtinParams.defaultValue || ""}" : sourceValue`;
           break;
-        case 'formatDate':
-          customCode = 'new Date(sourceValue).toISOString()';
+        case "formatDate":
+          customCode = "new Date(sourceValue).toISOString()";
           break;
-        case 'toTimestamp':
-          customCode = 'new Date(sourceValue).getTime()';
+        case "toTimestamp":
+          customCode = "new Date(sourceValue).getTime()";
           break;
-        case 'join':
-          customCode = `sourceValue.join("${builtinParams.separator || ','}")`;
+        case "join":
+          customCode = `sourceValue.join("${builtinParams.separator || ","}")`;
           break;
-        case 'firstElement':
-          customCode = 'sourceValue[0]';
+        case "firstElement":
+          customCode = "sourceValue[0]";
           break;
-        case 'lastElement':
-          customCode = 'sourceValue[sourceValue.length - 1]';
+        case "lastElement":
+          customCode = "sourceValue[sourceValue.length - 1]";
           break;
         default:
-          customCode = 'sourceValue';
+          customCode = "sourceValue";
       }
       setTransformation(customCode);
-    } else if (newType === 'none') {
-      setTransformation('');
-    } else if (newType === 'builtin') {
+    } else if (newType === "none") {
+      setTransformation("");
+    } else if (newType === "builtin") {
       // Restore previous builtin state if available
       if (savedBuiltinState.selectedBuiltin) {
         setSelectedBuiltin(savedBuiltinState.selectedBuiltin);
         setBuiltinParams(savedBuiltinState.builtinParams);
         setTransformation(savedBuiltinState.transformation);
       } else {
-        setSelectedBuiltin('');
+        setSelectedBuiltin("");
         setBuiltinParams({});
-        setTransformation('');
+        setTransformation("");
       }
     }
   };
@@ -494,122 +541,161 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
   };
 
   const handleBuiltinParamChange = (param: string, value: string) => {
-    setBuiltinParams(prev => ({ ...prev, [param]: value }));
+    setBuiltinParams((prev) => ({ ...prev, [param]: value }));
   };
-  
+
   const handleSave = () => {
     try {
-      const normalizedSourcePath = sourcePath ? readablePathToJsonPath(sourcePath) : '';
-      const normalizedTargetPath = targetPath ? readablePathToJsonPath(targetPath) : '';
-      
+      const normalizedSourcePath = sourcePath
+        ? readablePathToJsonPath(sourcePath)
+        : "";
+      const normalizedTargetPath = targetPath
+        ? readablePathToJsonPath(targetPath)
+        : "";
+
       onSave({
         ...rule,
         sourcePath: normalizedSourcePath,
         targetPath: normalizedTargetPath,
         transformationType,
         transformation,
-        isUserDefined: true
+        isUserDefined: true,
       });
     } catch (error) {
-      console.error('Error saving rule:', error);
-      setError(error instanceof Error ? error.message : 'Error saving rule');
+      console.error("Error saving rule:", error);
+      setError(error instanceof Error ? error.message : "Error saving rule");
     }
   };
 
   const renderBuiltinParams = () => {
     switch (selectedBuiltin) {
-      case 'substring':
+      case "substring":
         return (
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Start Index</label>
+              <label className="block text-xs text-gray-400 mb-1">
+                Start Index
+              </label>
               <input
                 type="number"
-                value={builtinParams.start || '0'}
-                onChange={(e) => handleBuiltinParamChange('start', e.target.value)}
+                value={builtinParams.start || "0"}
+                onChange={(e) =>
+                  handleBuiltinParamChange("start", e.target.value)
+                }
                 className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">End Index (optional)</label>
+              <label className="block text-xs text-gray-400 mb-1">
+                End Index (optional)
+              </label>
               <input
                 type="number"
-                value={builtinParams.end || ''}
-                onChange={(e) => handleBuiltinParamChange('end', e.target.value)}
+                value={builtinParams.end || ""}
+                onChange={(e) =>
+                  handleBuiltinParamChange("end", e.target.value)
+                }
                 className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
                 placeholder="end"
               />
             </div>
           </div>
         );
-      case 'append':
-      case 'prepend':
+      case "append":
+      case "prepend":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">Text to {selectedBuiltin}</label>
+            <label className="block text-xs text-gray-400 mb-1">
+              Text to {selectedBuiltin}
+            </label>
             <input
               type="text"
-              value={builtinParams.text || ''}
-              onChange={(e) => handleBuiltinParamChange('text', e.target.value)}
+              value={builtinParams.text || ""}
+              onChange={(e) => handleBuiltinParamChange("text", e.target.value)}
               className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
               placeholder="Enter text..."
             />
           </div>
         );
-      case 'join':
+      case "join":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">Separator</label>
+            <label className="block text-xs text-gray-400 mb-1">
+              Separator
+            </label>
             <input
               type="text"
-              value={builtinParams.separator || ','}
-              onChange={(e) => handleBuiltinParamChange('separator', e.target.value)}
+              value={builtinParams.separator || ","}
+              onChange={(e) =>
+                handleBuiltinParamChange("separator", e.target.value)
+              }
               className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
               placeholder=","
             />
           </div>
         );
-      case 'toFixed':
+      case "toFixed":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">Decimal Places</label>
+            <label className="block text-xs text-gray-400 mb-1">
+              Decimal Places
+            </label>
             <input
               type="number"
               min="0"
               max="20"
-              value={builtinParams.decimals || '0'}
-              onChange={(e) => handleBuiltinParamChange('decimals', e.target.value)}
+              value={builtinParams.decimals || "0"}
+              onChange={(e) =>
+                handleBuiltinParamChange("decimals", e.target.value)
+              }
               className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
               placeholder="0"
             />
           </div>
         );
-      case 'add':
-      case 'subtract':
-      case 'multiply':
-      case 'divide':
+      case "add":
+      case "subtract":
+      case "multiply":
+      case "divide":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">Value to {selectedBuiltin}</label>
+            <label className="block text-xs text-gray-400 mb-1">
+              Value to {selectedBuiltin}
+            </label>
             <input
               type="number"
               step="any"
-              value={builtinParams.value || (selectedBuiltin === 'divide' || selectedBuiltin === 'multiply' ? '1' : '0')}
-              onChange={(e) => handleBuiltinParamChange('value', e.target.value)}
+              value={
+                builtinParams.value ||
+                (selectedBuiltin === "divide" || selectedBuiltin === "multiply"
+                  ? "1"
+                  : "0")
+              }
+              onChange={(e) =>
+                handleBuiltinParamChange("value", e.target.value)
+              }
               className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
-              placeholder={selectedBuiltin === 'divide' || selectedBuiltin === 'multiply' ? '1' : '0'}
+              placeholder={
+                selectedBuiltin === "divide" || selectedBuiltin === "multiply"
+                  ? "1"
+                  : "0"
+              }
             />
           </div>
         );
-      case 'default':
+      case "default":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">Default Value</label>
+            <label className="block text-xs text-gray-400 mb-1">
+              Default Value
+            </label>
             <input
               type="text"
-              value={builtinParams.defaultValue || ''}
-              onChange={(e) => handleBuiltinParamChange('defaultValue', e.target.value)}
+              value={builtinParams.defaultValue || ""}
+              onChange={(e) =>
+                handleBuiltinParamChange("defaultValue", e.target.value)
+              }
               className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
               placeholder="Enter default value..."
             />
@@ -619,7 +705,7 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
         return null;
     }
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
@@ -635,7 +721,7 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
             <X size={24} />
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">
           <div className="space-y-6">
@@ -654,12 +740,13 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                 />
                 {sourceValue !== null && (
                   <div className="mt-2">
-                    <div className="text-xs text-gray-400 mb-1">Source Value:</div>
+                    <div className="text-xs text-gray-400 mb-1">
+                      Source Value:
+                    </div>
                     <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
-                      {typeof sourceValue === 'object'
+                      {typeof sourceValue === "object"
                         ? JSON.stringify(sourceValue, null, 2)
-                        : String(sourceValue)
-                      }
+                        : String(sourceValue)}
                     </div>
                   </div>
                 )}
@@ -677,18 +764,19 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                 />
                 {targetValue !== null && (
                   <div className="mt-2">
-                    <div className="text-xs text-gray-400 mb-1">Target Value:</div>
+                    <div className="text-xs text-gray-400 mb-1">
+                      Target Value:
+                    </div>
                     <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
-                      {typeof targetValue === 'object'
+                      {typeof targetValue === "object"
                         ? JSON.stringify(targetValue, null, 2)
-                        : String(targetValue)
-                      }
+                        : String(targetValue)}
                     </div>
                   </div>
                 )}
               </div>
             </div>
-            
+
             {/* Transformation */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -698,8 +786,8 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                 <label className="flex items-center">
                   <input
                     type="radio"
-                    checked={transformationType === 'none'}
-                    onChange={() => handleTransformationTypeChange('none')}
+                    checked={transformationType === "none"}
+                    onChange={() => handleTransformationTypeChange("none")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-300">None</span>
@@ -707,8 +795,8 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                 <label className="flex items-center">
                   <input
                     type="radio"
-                    checked={transformationType === 'builtin'}
-                    onChange={() => handleTransformationTypeChange('builtin')}
+                    checked={transformationType === "builtin"}
+                    onChange={() => handleTransformationTypeChange("builtin")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-300">Built-in</span>
@@ -716,15 +804,15 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                 <label className="flex items-center">
                   <input
                     type="radio"
-                    checked={transformationType === 'custom'}
-                    onChange={() => handleTransformationTypeChange('custom')}
+                    checked={transformationType === "custom"}
+                    onChange={() => handleTransformationTypeChange("custom")}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-300">Custom</span>
                 </label>
               </div>
-              
-              {transformationType === 'builtin' && (
+
+              {transformationType === "builtin" && (
                 <div className="mb-4">
                   <select
                     value={selectedBuiltin}
@@ -775,18 +863,28 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                       <option value="lastElement">lastElement()</option>
                     </optgroup>
                   </select>
-                  
+
                   {renderBuiltinParams()}
                 </div>
               )}
-              
-              {transformationType === 'custom' && (
+
+              {transformationType === "custom" && (
                 <div className="mb-4">
                   <div className="text-xs text-gray-400 mb-1">
                     Enter a JavaScript expression. You have access to:
                     <ul className="list-disc list-inside mt-1 ml-2">
-                      <li><code className="bg-gray-700/50 px-1 rounded">sourceValue</code> - The value at the source path</li>
-                      <li><code className="bg-gray-700/50 px-1 rounded">sourceObject</code> - The entire source object</li>
+                      <li>
+                        <code className="bg-gray-700/50 px-1 rounded">
+                          sourceValue
+                        </code>{" "}
+                        - The value at the source path
+                      </li>
+                      <li>
+                        <code className="bg-gray-700/50 px-1 rounded">
+                          sourceObject
+                        </code>{" "}
+                        - The entire source object
+                      </li>
                     </ul>
                   </div>
                   <div className="border border-gray-700/50 rounded-md overflow-hidden">
@@ -794,29 +892,33 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
                       height="150px"
                       language="javascript"
                       value={transformation}
-                      onChange={(value) => setTransformation(value || '')}
+                      onChange={(value) => setTransformation(value || "")}
                       theme="vs-dark"
                       options={{
                         minimap: { enabled: false },
                         fontSize: 14,
-                        wordWrap: 'on',
+                        wordWrap: "on",
                         padding: { top: 8, bottom: 8 },
                       }}
                     />
                   </div>
                 </div>
               )}
-              
+
               {/* Preview - Always visible */}
               <div>
-                <div className="text-xs text-gray-400 mb-1">Transformation Preview:</div>
+                <div className="text-xs text-gray-400 mb-1">
+                  Transformation Preview:
+                </div>
                 <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
                   {error ? (
                     <span className="text-red-400">{error}</span>
                   ) : previewValue !== null ? (
-                    typeof previewValue === 'object'
-                      ? JSON.stringify(previewValue, null, 2)
-                      : String(previewValue)
+                    typeof previewValue === "object" ? (
+                      JSON.stringify(previewValue, null, 2)
+                    ) : (
+                      String(previewValue)
+                    )
                   ) : (
                     <span className="text-gray-500">No preview available</span>
                   )}
@@ -825,7 +927,7 @@ export const TransformationRuleEditor: React.FC<TransformationRuleEditorProps> =
             </div>
           </div>
         </div>
-        
+
         {/* Footer */}
         <div className="flex justify-end px-6 py-4 border-t border-gray-700/50">
           <button

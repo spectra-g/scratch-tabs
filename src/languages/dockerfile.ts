@@ -1,14 +1,17 @@
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types';
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
 
 /**
  * Dockerfile language detector
  */
-export class DockerfileLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'dockerfile'; // Monaco's built-in ID for Dockerfiles
-  name = 'Dockerfile';
-  extensions = ['dockerfile', 'Dockerfile']; // Common naming conventions
+export class DockerfileLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "dockerfile"; // Monaco's built-in ID for Dockerfiles
+  name = "Dockerfile";
+  extensions = ["dockerfile", "Dockerfile"]; // Common naming conventions
   priority = 6; // High priority due to distinctive syntax
 
   sampleContent(): string {
@@ -62,7 +65,8 @@ ARG BUILD_NUMBER=1
    * Detects if the given content matches Dockerfile patterns and returns a confidence score.
    */
   detect(content: string): DetectionResult {
-    if (!content || content.trim().length < 5) { // e.g., "FROM "
+    if (!content || content.trim().length < 5) {
+      // e.g., "FROM "
       return this.noMatch();
     }
 
@@ -74,12 +78,30 @@ ARG BUILD_NUMBER=1
     // 1. Check for common Dockerfile instructions (case-insensitive for instruction name)
     //    Instructions should generally be at the start of a line (after optional whitespace/comments).
     const instructions = [
-      "FROM", "RUN", "CMD", "ENTRYPOINT", "COPY", "ADD", "WORKDIR", "ENV",
-      "EXPOSE", "VOLUME", "USER", "ARG", "LABEL", "ONBUILD", "STOPSIGNAL",
-      "HEALTHCHECK", "SHELL", "MAINTAINER" // MAINTAINER is deprecated but might appear
+      "FROM",
+      "RUN",
+      "CMD",
+      "ENTRYPOINT",
+      "COPY",
+      "ADD",
+      "WORKDIR",
+      "ENV",
+      "EXPOSE",
+      "VOLUME",
+      "USER",
+      "ARG",
+      "LABEL",
+      "ONBUILD",
+      "STOPSIGNAL",
+      "HEALTHCHECK",
+      "SHELL",
+      "MAINTAINER", // MAINTAINER is deprecated but might appear
     ];
 
-    const instructionRegex = new RegExp(`^\\s*(?:#.*\\n\\s*)*(${instructions.join('|')})\\s+`, "gim");
+    const instructionRegex = new RegExp(
+      `^\\s*(?:#.*\\n\\s*)*(${instructions.join("|")})\\s+`,
+      "gim",
+    );
     let match;
     while ((match = instructionRegex.exec(content)) !== null) {
       instructionCount++;
@@ -114,8 +136,14 @@ ARG BUILD_NUMBER=1
     //    If it looks strongly like another language, reduce confidence.
     const antiPatterns = [
       { pattern: /<\w.*?>/g, weight: -0.5 }, // HTML/XML tags
-      { pattern: /\b(function|class|public\s+static\s+void\s+main)\b/i, weight: -0.4 }, // JS/Java keywords
-      { pattern: /^\s*import\s+[\w.*]+(?:from\s*['"].*['"])?;?/im, weight: -0.3}, // Most import styles
+      {
+        pattern: /\b(function|class|public\s+static\s+void\s+main)\b/i,
+        weight: -0.4,
+      }, // JS/Java keywords
+      {
+        pattern: /^\s*import\s+[\w.*]+(?:from\s*['"].*['"])?;?/im,
+        weight: -0.3,
+      }, // Most import styles
     ];
 
     for (const ap of antiPatterns) {
@@ -137,16 +165,19 @@ ARG BUILD_NUMBER=1
     };
   }
 
-
   getFileExtension(): string {
-    return 'dockerfile'; // Or just empty if the name is typically "Dockerfile"
+    return "dockerfile"; // Or just empty if the name is typically "Dockerfile"
   }
 
   registerProvider(monaco: any): void {
     const languageId = this.id; // 'dockerfile'
 
     // Monaco has built-in support for 'dockerfile'
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+    if (
+      !monaco.languages
+        .getLanguages()
+        .some((lang: any) => lang.id === languageId)
+    ) {
       monaco.languages.register({ id: languageId });
     }
 

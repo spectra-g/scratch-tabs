@@ -1,4 +1,4 @@
-import { Shape, ShapeSnapData, Point } from '../types';
+import { Shape, ShapeSnapData, Point } from "../types";
 
 export interface Command {
   execute(): void;
@@ -13,9 +13,9 @@ export abstract class BaseCommand implements Command {
   public description: string;
 
   constructor(
-    getState: () => ShapeSnapData, 
+    getState: () => ShapeSnapData,
     onChange: (newState: ShapeSnapData) => void,
-    description: string
+    description: string,
   ) {
     this.getState = getState;
     this.onChange = onChange;
@@ -24,7 +24,7 @@ export abstract class BaseCommand implements Command {
 
   abstract execute(): void;
   abstract undo(): void;
-  
+
   canUndo(): boolean {
     return true;
   }
@@ -38,22 +38,25 @@ export abstract class BaseCommand implements Command {
     const newHistory = newState.history.slice(0, newState.historyIndex + 1);
     newHistory.push([...newState.shapes]);
     const newHistoryIndex = newHistory.length - 1;
-    
+
     this.onChange({
       ...newState,
       history: newHistory,
-      historyIndex: newHistoryIndex
+      historyIndex: newHistoryIndex,
     });
   }
 
   protected addToHistory(shapes: Shape[]): void {
     const currentState = this.state;
-    const newHistory = currentState.history.slice(0, currentState.historyIndex + 1);
+    const newHistory = currentState.history.slice(
+      0,
+      currentState.historyIndex + 1,
+    );
     newHistory.push([...shapes]);
     this.updateState({
       ...currentState,
       history: newHistory,
-      historyIndex: newHistory.length - 1
+      historyIndex: newHistory.length - 1,
     });
   }
 }
@@ -65,7 +68,7 @@ export class AddShapeCommand extends BaseCommand {
   constructor(
     getState: () => ShapeSnapData,
     onChange: (newState: ShapeSnapData) => void,
-    shape: Shape
+    shape: Shape,
   ) {
     super(getState, onChange, `Add ${shape.type}`);
     this.shape = shape;
@@ -76,7 +79,7 @@ export class AddShapeCommand extends BaseCommand {
       const newShapes = [...this.state.shapes, this.shape];
       this.updateState({
         ...this.state,
-        shapes: newShapes
+        shapes: newShapes,
       });
       this.shapeAdded = true;
     }
@@ -84,10 +87,10 @@ export class AddShapeCommand extends BaseCommand {
 
   undo(): void {
     if (this.shapeAdded) {
-      const newShapes = this.state.shapes.filter(s => s.id !== this.shape.id);
+      const newShapes = this.state.shapes.filter((s) => s.id !== this.shape.id);
       this.updateState({
         ...this.state,
-        shapes: newShapes
+        shapes: newShapes,
       });
       this.shapeAdded = false;
     }
@@ -103,7 +106,7 @@ export class UpdateShapeCommand extends BaseCommand {
     getState: () => ShapeSnapData,
     onChange: (newState: ShapeSnapData) => void,
     shapeId: string,
-    updates: Partial<Shape>
+    updates: Partial<Shape>,
   ) {
     super(getState, onChange, `Update ${shapeId}`);
     this.shapeId = shapeId;
@@ -111,7 +114,9 @@ export class UpdateShapeCommand extends BaseCommand {
   }
 
   execute(): void {
-    const shapeIndex = this.state.shapes.findIndex(s => s.id === this.shapeId);
+    const shapeIndex = this.state.shapes.findIndex(
+      (s) => s.id === this.shapeId,
+    );
     if (shapeIndex === -1) return;
 
     // Store original shape for undo
@@ -120,19 +125,21 @@ export class UpdateShapeCommand extends BaseCommand {
     const updatedShapes = [...this.state.shapes];
     updatedShapes[shapeIndex] = {
       ...updatedShapes[shapeIndex],
-      ...this.updates
+      ...this.updates,
     } as Shape;
 
     this.updateState({
       ...this.state,
-      shapes: updatedShapes
+      shapes: updatedShapes,
     });
   }
 
   undo(): void {
     if (!this.originalShape) return;
 
-    const shapeIndex = this.state.shapes.findIndex(s => s.id === this.shapeId);
+    const shapeIndex = this.state.shapes.findIndex(
+      (s) => s.id === this.shapeId,
+    );
     if (shapeIndex === -1) return;
 
     const updatedShapes = [...this.state.shapes];
@@ -140,7 +147,7 @@ export class UpdateShapeCommand extends BaseCommand {
 
     this.updateState({
       ...this.state,
-      shapes: updatedShapes
+      shapes: updatedShapes,
     });
   }
 }
@@ -153,25 +160,29 @@ export class DeleteShapeCommand extends BaseCommand {
   constructor(
     getState: () => ShapeSnapData,
     onChange: (newState: ShapeSnapData) => void,
-    shapeId: string
+    shapeId: string,
   ) {
     super(getState, onChange, `Delete shape`);
     this.shapeId = shapeId;
   }
 
   execute(): void {
-    const shapeIndex = this.state.shapes.findIndex(s => s.id === this.shapeId);
+    const shapeIndex = this.state.shapes.findIndex(
+      (s) => s.id === this.shapeId,
+    );
     if (shapeIndex === -1) return;
 
     // Store deleted shape and index for undo
     this.deletedShape = { ...this.state.shapes[shapeIndex] };
     this.originalIndex = shapeIndex;
 
-    const newShapes = this.state.shapes.filter(s => s.id !== this.shapeId);
+    const newShapes = this.state.shapes.filter((s) => s.id !== this.shapeId);
     this.updateState({
       ...this.state,
       shapes: newShapes,
-      selectedShapeIds: (this.state.selectedShapeIds || []).filter(id => id !== this.shapeId)
+      selectedShapeIds: (this.state.selectedShapeIds || []).filter(
+        (id) => id !== this.shapeId,
+      ),
     });
   }
 
@@ -183,7 +194,7 @@ export class DeleteShapeCommand extends BaseCommand {
 
     this.updateState({
       ...this.state,
-      shapes: newShapes
+      shapes: newShapes,
     });
   }
 }
@@ -195,7 +206,7 @@ export class DeleteSelectedShapesCommand extends BaseCommand {
   constructor(
     getState: () => ShapeSnapData,
     onChange: (newState: ShapeSnapData) => void,
-    selectedShapeIds: string[]
+    selectedShapeIds: string[],
   ) {
     super(getState, onChange, `Delete ${selectedShapeIds.length} shapes`);
     this.selectedShapeIds = selectedShapeIds;
@@ -204,17 +215,21 @@ export class DeleteSelectedShapesCommand extends BaseCommand {
   execute(): void {
     // Store deleted shapes and their indices for undo
     this.deletedShapes = this.selectedShapeIds
-      .map(id => {
-        const index = this.state.shapes.findIndex(s => s.id === id);
-        return index !== -1 ? { shape: { ...this.state.shapes[index] }, index } : null;
+      .map((id) => {
+        const index = this.state.shapes.findIndex((s) => s.id === id);
+        return index !== -1
+          ? { shape: { ...this.state.shapes[index] }, index }
+          : null;
       })
       .filter(Boolean) as { shape: Shape; index: number }[];
 
-    const newShapes = this.state.shapes.filter(s => !this.selectedShapeIds.includes(s.id));
+    const newShapes = this.state.shapes.filter(
+      (s) => !this.selectedShapeIds.includes(s.id),
+    );
     this.updateState({
       ...this.state,
       shapes: newShapes,
-      selectedShapeIds: []
+      selectedShapeIds: [],
     });
   }
 
@@ -236,7 +251,7 @@ export class DeleteSelectedShapesCommand extends BaseCommand {
 
     this.updateState({
       ...currentState,
-      shapes: newShapes
+      shapes: newShapes,
     });
   }
 }
@@ -250,7 +265,7 @@ export class MoveShapeCommand extends BaseCommand {
     getState: () => ShapeSnapData,
     onChange: (newState: ShapeSnapData) => void,
     shapeId: string,
-    delta: Point
+    delta: Point,
   ) {
     super(getState, onChange, `Move shape`);
     this.shapeId = shapeId;
@@ -258,11 +273,13 @@ export class MoveShapeCommand extends BaseCommand {
   }
 
   execute(): void {
-    const shapeIndex = this.state.shapes.findIndex(s => s.id === this.shapeId);
+    const shapeIndex = this.state.shapes.findIndex(
+      (s) => s.id === this.shapeId,
+    );
     if (shapeIndex === -1) return;
 
     const shape = this.state.shapes[shapeIndex];
-    
+
     // Store original position for undo
     if (!this.originalPosition) {
       this.originalPosition = this.getShapePosition(shape);
@@ -273,21 +290,23 @@ export class MoveShapeCommand extends BaseCommand {
 
     this.updateState({
       ...this.state,
-      shapes: updatedShapes
+      shapes: updatedShapes,
     });
   }
 
   undo(): void {
     if (!this.originalPosition) return;
 
-    const shapeIndex = this.state.shapes.findIndex(s => s.id === this.shapeId);
+    const shapeIndex = this.state.shapes.findIndex(
+      (s) => s.id === this.shapeId,
+    );
     if (shapeIndex === -1) return;
 
     const shape = this.state.shapes[shapeIndex];
     const currentPosition = this.getShapePosition(shape);
     const undoDelta = {
       x: this.originalPosition.x - currentPosition.x,
-      y: this.originalPosition.y - currentPosition.y
+      y: this.originalPosition.y - currentPosition.y,
     };
 
     const updatedShapes = [...this.state.shapes];
@@ -295,15 +314,15 @@ export class MoveShapeCommand extends BaseCommand {
 
     this.updateState({
       ...this.state,
-      shapes: updatedShapes
+      shapes: updatedShapes,
     });
   }
 
   private getShapePosition(shape: Shape): Point {
     switch (shape.type) {
-      case 'line':
+      case "line":
         return shape.points[0] || { x: 0, y: 0 };
-      case 'arrow':
+      case "arrow":
         return shape.from;
       default:
         return { x: (shape as any).x || 0, y: (shape as any).y || 0 };
@@ -312,22 +331,22 @@ export class MoveShapeCommand extends BaseCommand {
 
   private moveShape(shape: Shape, delta: Point): Shape {
     const newShape = { ...shape };
-    
+
     switch (shape.type) {
-      case 'line':
-        (newShape as any).points = shape.points.map(p => ({ 
-          x: p.x + delta.x, 
-          y: p.y + delta.y 
+      case "line":
+        (newShape as any).points = shape.points.map((p) => ({
+          x: p.x + delta.x,
+          y: p.y + delta.y,
         }));
         break;
-      case 'arrow':
-        (newShape as any).from = { 
-          x: shape.from.x + delta.x, 
-          y: shape.from.y + delta.y 
+      case "arrow":
+        (newShape as any).from = {
+          x: shape.from.x + delta.x,
+          y: shape.from.y + delta.y,
         };
-        (newShape as any).to = { 
-          x: shape.to.x + delta.x, 
-          y: shape.to.y + delta.y 
+        (newShape as any).to = {
+          x: shape.to.x + delta.x,
+          y: shape.to.y + delta.y,
         };
         break;
       default:
@@ -335,7 +354,7 @@ export class MoveShapeCommand extends BaseCommand {
         (newShape as any).y = (shape as any).y + delta.y;
         break;
     }
-    
+
     return newShape;
   }
 }
@@ -347,7 +366,7 @@ export class AddMultipleShapesCommand extends BaseCommand {
   constructor(
     getState: () => ShapeSnapData,
     onChange: (newState: ShapeSnapData) => void,
-    shapes: Shape[]
+    shapes: Shape[],
   ) {
     super(getState, onChange, `Add ${shapes.length} shapes`);
     this.shapes = shapes;
@@ -358,7 +377,7 @@ export class AddMultipleShapesCommand extends BaseCommand {
       const newShapes = [...this.state.shapes, ...this.shapes];
       this.updateState({
         ...this.state,
-        shapes: newShapes
+        shapes: newShapes,
       });
       this.shapesAdded = true;
     }
@@ -366,10 +385,12 @@ export class AddMultipleShapesCommand extends BaseCommand {
 
   undo(): void {
     if (this.shapesAdded) {
-      const newShapes = this.state.shapes.filter(s => !this.shapes.some(added => added.id === s.id));
+      const newShapes = this.state.shapes.filter(
+        (s) => !this.shapes.some((added) => added.id === s.id),
+      );
       this.updateState({
         ...this.state,
-        shapes: newShapes
+        shapes: newShapes,
       });
       this.shapesAdded = false;
     }
@@ -383,10 +404,10 @@ export class CommandManager {
   executeCommand(command: Command): void {
     // Remove any commands after the current index (for redo branching)
     this.commands = this.commands.slice(0, this.currentIndex + 1);
-    
+
     // Execute the command
     command.execute();
-    
+
     // Add to command history
     this.commands.push(command);
     this.currentIndex++;
@@ -415,7 +436,9 @@ export class CommandManager {
   }
 
   canUndo(): boolean {
-    return this.currentIndex >= 0 && this.commands[this.currentIndex]?.canUndo();
+    return (
+      this.currentIndex >= 0 && this.commands[this.currentIndex]?.canUndo()
+    );
   }
 
   canRedo(): boolean {
@@ -428,6 +451,6 @@ export class CommandManager {
   }
 
   getCommandHistory(): string[] {
-    return this.commands.map(cmd => cmd.description);
+    return this.commands.map((cmd) => cmd.description);
   }
-} 
+}

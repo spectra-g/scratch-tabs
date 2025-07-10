@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { X, History, Clock, Trash2 } from 'lucide-react';
-import { CsvSnapshot } from '../types';
+import * as React from "react";
+import { X, History, Clock, Trash2 } from "lucide-react";
+import { CsvSnapshot } from "../types";
 
 interface CsvSnapshotsPanelProps {
   snapshots: CsvSnapshot[];
@@ -13,7 +13,7 @@ export const CsvSnapshotsPanel: React.FC<CsvSnapshotsPanelProps> = ({
   snapshots,
   onRestore,
   onDelete,
-  onClose
+  onClose,
 }) => {
   return (
     <div className="flex-none border-b border-gray-700 bg-gray-800/50 p-3">
@@ -39,9 +39,13 @@ export const CsvSnapshotsPanel: React.FC<CsvSnapshotsPanelProps> = ({
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <Clock size={14} className="text-gray-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-gray-200 truncate">{snapshot.name}</div>
+                <div className="text-sm text-gray-200 truncate">
+                  {snapshot.name}
+                </div>
                 <div className="text-xs text-gray-400">
-                  {new Date(snapshot.timestamp).toLocaleString()} • {snapshot.data.length} rows × {snapshot.columns.length} columns
+                  {new Date(snapshot.timestamp).toLocaleString()} •{" "}
+                  {snapshot.data.length} rows × {snapshot.columns.length}{" "}
+                  columns
                 </div>
               </div>
             </div>
@@ -66,4 +70,4 @@ export const CsvSnapshotsPanel: React.FC<CsvSnapshotsPanelProps> = ({
       </div>
     </div>
   );
-}; 
+};

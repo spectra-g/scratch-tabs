@@ -24,9 +24,9 @@ export const SENSITIVE_HEADER_PATTERNS = [
   /salt/i,
   /nonce/i,
   /iv/i,
-  /cipher/i
+  /cipher/i,
 ];
 
 export function isSensitiveHeader(header: string): boolean {
   return SENSITIVE_HEADER_PATTERNS.some((pattern) => pattern.test(header));
-} 
+}

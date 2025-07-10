@@ -65,4 +65,4 @@ That's it. You're viewing a side-by-side diff. No temporary files, no project co
 *Found a bug or have a feature idea? [Open an issue on GitHub!](https://github.com/spectra-g/scratch-tabs-feedback/issues)*
 
 *Built with ❤️ for developers who value privacy and productivity.*
-`; 
+`;

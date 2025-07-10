@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Tabs } from './components/Tabs';
-import { OpenMetricsEditor } from './OpenMetricsEditor';
-import { MetricsExplorer } from './MetricsExplorer';
-import { SnapshotManager } from './SnapshotManager';
-import { MetricsChart } from './MetricsChart';
-import { QueryPanel } from './QueryPanel';
-import { parseMetrics } from './MetricsParser';
-import { MetricSample, Snapshot, ParseResult } from './types';
+import React, { useState, useEffect } from "react";
+import { Tabs } from "./components/Tabs";
+import { OpenMetricsEditor } from "./OpenMetricsEditor";
+import { MetricsExplorer } from "./MetricsExplorer";
+import { SnapshotManager } from "./SnapshotManager";
+import { MetricsChart } from "./MetricsChart";
+import { QueryPanel } from "./QueryPanel";
+import { parseMetrics } from "./MetricsParser";
+import { MetricSample, Snapshot, ParseResult } from "./types";
 
 interface OpenMetricsUIProps {
   state: {
@@ -17,16 +17,19 @@ interface OpenMetricsUIProps {
     selectedMetricName: string | null;
     selectedLabels: Record<string, string>;
     chartConfig: {
-      type: 'bar' | 'line' | 'pie';
+      type: "bar" | "line" | "pie";
       groupByLabels: string[];
     };
     queryString: string;
-    activeTab: 'editor' | 'explorer' | 'diff' | 'chart' | 'query';
+    activeTab: "editor" | "explorer" | "diff" | "chart" | "query";
   };
   onChange: (newState: typeof OpenMetricsUIProps.prototype.state) => void;
 }
 
-export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({ state, onChange }) => {
+export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
+  state,
+  onChange,
+}) => {
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,13 +42,13 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({ state, onChange })
         const result = parseMetrics(state.rawText);
         setParseResult(result);
         setParseError(null);
-        
+
         // Update the active snapshot with the new metrics
         if (state.activeSnapshotId) {
-          const updatedSnapshots = state.snapshots.map(snapshot => 
-            snapshot.id === state.activeSnapshotId 
-              ? { ...snapshot, metrics: result.metrics } 
-              : snapshot
+          const updatedSnapshots = state.snapshots.map((snapshot) =>
+            snapshot.id === state.activeSnapshotId
+              ? { ...snapshot, metrics: result.metrics }
+              : snapshot,
           );
           onChange({ ...state, snapshots: updatedSnapshots });
         }
@@ -63,25 +66,27 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({ state, onChange })
     onChange({ ...state, rawText: newText });
   };
 
-  const handleTabChange = (tab: 'editor' | 'explorer' | 'diff' | 'chart' | 'query') => {
+  const handleTabChange = (
+    tab: "editor" | "explorer" | "diff" | "chart" | "query",
+  ) => {
     onChange({ ...state, activeTab: tab });
   };
 
   const handleTakeSnapshot = (name: string) => {
     if (!parseResult) return;
-    
+
     const newSnapshot: Snapshot = {
       id: `snapshot_${Date.now()}`,
       name,
       createdAt: Date.now(),
-      metrics: parseResult.metrics
+      metrics: parseResult.metrics,
     };
-    
+
     const updatedSnapshots = [...state.snapshots, newSnapshot];
-    onChange({ 
-      ...state, 
+    onChange({
+      ...state,
       snapshots: updatedSnapshots,
-      activeSnapshotId: newSnapshot.id
+      activeSnapshotId: newSnapshot.id,
     });
   };
 
@@ -94,38 +99,47 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({ state, onChange })
   };
 
   const handleDeleteSnapshot = (snapshotId: string) => {
-    const updatedSnapshots = state.snapshots.filter(s => s.id !== snapshotId);
-    
+    const updatedSnapshots = state.snapshots.filter((s) => s.id !== snapshotId);
+
     // Update active snapshot if the deleted one was active
     let newActiveId = state.activeSnapshotId;
     if (state.activeSnapshotId === snapshotId) {
-      newActiveId = updatedSnapshots.length > 0 ? updatedSnapshots[updatedSnapshots.length - 1].id : null;
+      newActiveId =
+        updatedSnapshots.length > 0
+          ? updatedSnapshots[updatedSnapshots.length - 1].id
+          : null;
     }
-    
+
     // Update compare snapshot if the deleted one was being compared
     let newCompareId = state.compareSnapshotId;
     if (state.compareSnapshotId === snapshotId) {
       newCompareId = null;
     }
-    
-    onChange({ 
-      ...state, 
+
+    onChange({
+      ...state,
       snapshots: updatedSnapshots,
       activeSnapshotId: newActiveId,
-      compareSnapshotId: newCompareId
+      compareSnapshotId: newCompareId,
     });
   };
 
-  const handleSelectMetric = (metricName: string, labels: Record<string, string> = {}) => {
-    onChange({ 
-      ...state, 
+  const handleSelectMetric = (
+    metricName: string,
+    labels: Record<string, string> = {},
+  ) => {
+    onChange({
+      ...state,
       selectedMetricName: metricName,
       selectedLabels: labels,
-      activeTab: 'chart' // Switch to chart tab when selecting a metric
+      activeTab: "chart", // Switch to chart tab when selecting a metric
     });
   };
 
-  const handleUpdateChartConfig = (config: { type: 'bar' | 'line' | 'pie'; groupByLabels: string[] }) => {
+  const handleUpdateChartConfig = (config: {
+    type: "bar" | "line" | "pie";
+    groupByLabels: string[];
+  }) => {
     onChange({ ...state, chartConfig: config });
   };
 
@@ -133,9 +147,10 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({ state, onChange })
     onChange({ ...state, queryString });
   };
 
-  const activeSnapshot = state.snapshots.find(s => s.id === state.activeSnapshotId) || null;
-  const compareSnapshot = state.compareSnapshotId 
-    ? state.snapshots.find(s => s.id === state.compareSnapshotId) || null 
+  const activeSnapshot =
+    state.snapshots.find((s) => s.id === state.activeSnapshotId) || null;
+  const compareSnapshot = state.compareSnapshotId
+    ? state.snapshots.find((s) => s.id === state.compareSnapshotId) || null
     : null;
 
   return (
@@ -147,26 +162,26 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({ state, onChange })
         isLoading={isLoading}
         error={parseError}
       />
-      
+
       <div className="flex-1 overflow-hidden">
-        {state.activeTab === 'editor' && (
-          <OpenMetricsEditor 
-            value={state.rawText} 
+        {state.activeTab === "editor" && (
+          <OpenMetricsEditor
+            value={state.rawText}
             onChange={handleTextChange}
             parseResult={parseResult}
             parseError={parseError}
             isLoading={isLoading}
           />
         )}
-        
-        {state.activeTab === 'explorer' && parseResult && (
-          <MetricsExplorer 
+
+        {state.activeTab === "explorer" && parseResult && (
+          <MetricsExplorer
             parsedMetrics={parseResult.parsedMetrics}
             onSelectMetric={handleSelectMetric}
           />
         )}
-        
-        {state.activeTab === 'diff' && (
+
+        {state.activeTab === "diff" && (
           <SnapshotManager
             snapshots={state.snapshots}
             activeSnapshotId={state.activeSnapshotId}
@@ -177,8 +192,8 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({ state, onChange })
             onDeleteSnapshot={handleDeleteSnapshot}
           />
         )}
-        
-        {state.activeTab === 'chart' && activeSnapshot && (
+
+        {state.activeTab === "chart" && activeSnapshot && (
           <MetricsChart
             metrics={activeSnapshot.metrics}
             selectedMetricName={state.selectedMetricName}
@@ -188,8 +203,8 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({ state, onChange })
             onSelectMetric={handleSelectMetric}
           />
         )}
-        
-        {state.activeTab === 'query' && activeSnapshot && (
+
+        {state.activeTab === "query" && activeSnapshot && (
           <QueryPanel
             metrics={activeSnapshot.metrics}
             queryString={state.queryString}

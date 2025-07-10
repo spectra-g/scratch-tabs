@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
-import { AlertCircle, CheckCircle, Loader } from 'lucide-react';
-import { ParseResult } from './types';
+import React, { useRef, useEffect } from "react";
+import { AlertCircle, CheckCircle, Loader } from "lucide-react";
+import { ParseResult } from "./types";
 
 interface OpenMetricsEditorProps {
   value: string;
@@ -15,7 +15,7 @@ export const OpenMetricsEditor: React.FC<OpenMetricsEditorProps> = ({
   onChange,
   parseResult,
   parseError,
-  isLoading
+  isLoading,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const errorLinesRef = useRef<HTMLDivElement>(null);
@@ -24,25 +24,25 @@ export const OpenMetricsEditor: React.FC<OpenMetricsEditorProps> = ({
   useEffect(() => {
     const textarea = textareaRef.current;
     const errorLines = errorLinesRef.current;
-    
+
     if (!textarea || !errorLines) return;
-    
+
     const handleScroll = () => {
       errorLines.scrollTop = textarea.scrollTop;
     };
-    
-    textarea.addEventListener('scroll', handleScroll);
-    return () => textarea.removeEventListener('scroll', handleScroll);
+
+    textarea.addEventListener("scroll", handleScroll);
+    return () => textarea.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Create line number markers for errors
-  const errorLineMarkers = parseResult?.errors.map(error => {
+  const errorLineMarkers = parseResult?.errors.map((error) => {
     const lineNumber = error.line;
     const lineHeight = 20; // Approximate line height in pixels
     const top = (lineNumber - 1) * lineHeight;
-    
+
     return (
-      <div 
+      <div
         key={`error-${lineNumber}`}
         className="absolute left-0 right-0 bg-red-900/30 flex items-center px-2"
         style={{ top: `${top}px`, height: `${lineHeight}px` }}
@@ -67,46 +67,45 @@ export const OpenMetricsEditor: React.FC<OpenMetricsEditorProps> = ({
               <CheckCircle size={16} className="text-green-400 mr-2" />
             )}
             <span className="text-sm">
-              {isLoading ? 'Parsing...' : 
-               parseError ? 'Parse Error' : 
-               `${parseResult?.stats.uniqueMetricNames || 0} metrics, ${parseResult?.stats.totalMetrics || 0} samples`}
+              {isLoading
+                ? "Parsing..."
+                : parseError
+                  ? "Parse Error"
+                  : `${parseResult?.stats.uniqueMetricNames || 0} metrics, ${parseResult?.stats.totalMetrics || 0} samples`}
             </span>
           </div>
-          
+
           {parseResult && !parseError && (
             <div className="text-sm text-gray-400">
-              {parseResult.stats.uniqueLabelNames} label names, {parseResult.stats.totalLabels} label values
+              {parseResult.stats.uniqueLabelNames} label names,{" "}
+              {parseResult.stats.totalLabels} label values
             </div>
           )}
         </div>
-        
-        {parseError && (
-          <div className="text-sm text-red-400">
-            {parseError}
-          </div>
-        )}
+
+        {parseError && <div className="text-sm text-red-400">{parseError}</div>}
       </div>
-      
+
       <div className="flex-1 relative overflow-hidden">
         {/* Error line markers container */}
-        <div 
+        <div
           ref={errorLinesRef}
           className="absolute inset-0 pointer-events-none overflow-hidden"
-          style={{ paddingTop: '10px' }}
+          style={{ paddingTop: "10px" }}
         >
           {errorLineMarkers}
         </div>
-        
+
         {/* Textarea */}
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="w-full h-full bg-gray-850 text-gray-200 font-mono p-2.5 resize-none focus:outline-none"
-          style={{ 
-            lineHeight: '20px',
+          style={{
+            lineHeight: "20px",
             tabSize: 2,
-            caretColor: 'white'
+            caretColor: "white",
           }}
           spellCheck={false}
         />

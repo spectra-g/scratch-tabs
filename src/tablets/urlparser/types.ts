@@ -11,21 +11,21 @@ export interface UrlComponents {
 }
 
 export interface UrlWarning {
-  type: 'error' | 'warning';
-  component: keyof UrlComponents | 'full';
+  type: "error" | "warning";
+  component: keyof UrlComponents | "full";
   message: string;
   description: string;
   suggestion?: string;
 }
 
 export interface UrlParserState {
-  type: 'urlparser';
+  type: "urlparser";
   data: {
     url: string;
     components: UrlComponents;
     warnings: UrlWarning[];
     history: string[];
-    viewMode: 'decoded' | 'encoded';
+    viewMode: "decoded" | "encoded";
     comparisonMode: boolean;
     comparisonResults?: Record<string, UrlComponents>;
   };

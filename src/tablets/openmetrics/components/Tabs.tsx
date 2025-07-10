@@ -1,10 +1,20 @@
-import React from 'react';
-import { FileText, List, GitCompare, BarChart2, Search, AlertCircle, Loader } from 'lucide-react';
-import { ParseResult } from '../types';
+import React from "react";
+import {
+  FileText,
+  List,
+  GitCompare,
+  BarChart2,
+  Search,
+  AlertCircle,
+  Loader,
+} from "lucide-react";
+import { ParseResult } from "../types";
 
 interface TabsProps {
-  activeTab: 'editor' | 'explorer' | 'diff' | 'chart' | 'query';
-  onTabChange: (tab: 'editor' | 'explorer' | 'diff' | 'chart' | 'query') => void;
+  activeTab: "editor" | "explorer" | "diff" | "chart" | "query";
+  onTabChange: (
+    tab: "editor" | "explorer" | "diff" | "chart" | "query",
+  ) => void;
   parseResult: ParseResult | null;
   isLoading: boolean;
   error: string | null;
@@ -15,26 +25,26 @@ export const Tabs: React.FC<TabsProps> = ({
   onTabChange,
   parseResult,
   isLoading,
-  error
+  error,
 }) => {
   const tabs = [
-    { id: 'editor', label: 'Editor', icon: FileText },
-    { id: 'explorer', label: 'Explorer', icon: List },
-    { id: 'diff', label: 'Snapshots', icon: GitCompare },
-    { id: 'chart', label: 'Chart', icon: BarChart2 },
-    { id: 'query', label: 'Query', icon: Search }
+    { id: "editor", label: "Editor", icon: FileText },
+    { id: "explorer", label: "Explorer", icon: List },
+    { id: "diff", label: "Snapshots", icon: GitCompare },
+    { id: "chart", label: "Chart", icon: BarChart2 },
+    { id: "query", label: "Query", icon: Search },
   ] as const;
 
   return (
     <div className="border-b border-gray-700 bg-gray-800">
       <div className="flex items-center">
-        {tabs.map(tab => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             className={`px-4 py-3 text-sm font-medium flex items-center space-x-2 border-b-2 transition-colors ${
               activeTab === tab.id
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
+                ? "border-blue-500 text-blue-400"
+                : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
             }`}
             onClick={() => onTabChange(tab.id)}
           >
@@ -42,7 +52,7 @@ export const Tabs: React.FC<TabsProps> = ({
             <span>{tab.label}</span>
           </button>
         ))}
-        
+
         <div className="ml-auto flex items-center px-4">
           {isLoading ? (
             <div className="flex items-center text-blue-400">
@@ -56,7 +66,8 @@ export const Tabs: React.FC<TabsProps> = ({
             </div>
           ) : parseResult ? (
             <div className="text-xs text-gray-400">
-              {parseResult.stats.uniqueMetricNames} metrics, {parseResult.stats.totalMetrics} samples
+              {parseResult.stats.uniqueMetricNames} metrics,{" "}
+              {parseResult.stats.totalMetrics} samples
             </div>
           ) : null}
         </div>

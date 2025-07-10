@@ -1,11 +1,31 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Editor } from '@monaco-editor/react';
-import { ArrowLeft, Save, Play, Plus, FileCode, Wand2, Upload, DownloadCloud, Copy, Check } from 'lucide-react';
-import { MappingConfig, MappingRule, PathInfo } from '../types';
-import { MappingTable } from './MappingTable';
-import { extractPaths, isValidJson, formatJson, jsonPathToReadablePath } from '../utils/jsonUtils';
-import { suggestMappings, createRulesFromSuggestions, validateRules } from '../utils/mappingUtils';
-import { readFileAsText } from '../utils/fileUtils';
+import React, { useState, useEffect, useCallback } from "react";
+import { Editor } from "@monaco-editor/react";
+import {
+  ArrowLeft,
+  Save,
+  Play,
+  Plus,
+  FileCode,
+  Wand2,
+  Upload,
+  DownloadCloud,
+  Copy,
+  Check,
+} from "lucide-react";
+import { MappingConfig, MappingRule, PathInfo } from "../types";
+import { MappingTable } from "./MappingTable";
+import {
+  extractPaths,
+  isValidJson,
+  formatJson,
+  jsonPathToReadablePath,
+} from "../utils/jsonUtils";
+import {
+  suggestMappings,
+  createRulesFromSuggestions,
+  validateRules,
+} from "../utils/mappingUtils";
+import { readFileAsText } from "../utils/fileUtils";
 
 interface MappingEditorProps {
   mapping: MappingConfig;
@@ -22,7 +42,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   onSave,
   onCancel,
   onTest,
-  onGenerateCode
+  onGenerateCode,
 }) => {
   const [name, setName] = useState(mapping.name);
   const [description, setDescription] = useState(mapping.description);
@@ -32,7 +52,9 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const [sourceJsonError, setSourceJsonError] = useState<string | null>(null);
   const [targetJsonError, setTargetJsonError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentSortedRules, setCurrentSortedRules] = useState<MappingRule[]>(mapping.rules);
+  const [currentSortedRules, setCurrentSortedRules] = useState<MappingRule[]>(
+    mapping.rules,
+  );
   const [sourceCopied, setSourceCopied] = useState(false);
   const [targetCopied, setTargetCopied] = useState(false);
 
@@ -43,7 +65,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
         JSON.parse(sourceJson);
         setSourceJsonError(null);
       } catch (error) {
-        setSourceJsonError('Invalid JSON');
+        setSourceJsonError("Invalid JSON");
       }
     } else {
       setSourceJsonError(null);
@@ -56,7 +78,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
         JSON.parse(targetJson);
         setTargetJsonError(null);
       } catch (error) {
-        setTargetJsonError('Invalid JSON');
+        setTargetJsonError("Invalid JSON");
       }
     } else {
       setTargetJsonError(null);
@@ -85,13 +107,13 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       "Target Data Type",
       "Status",
       "Confidence",
-      "User Defined"
+      "User Defined",
     ];
 
-    const csvRows = [headers.join(',')];
+    const csvRows = [headers.join(",")];
 
     // Use sorted rules instead of original rules
-    currentSortedRules.forEach(rule => {
+    currentSortedRules.forEach((rule) => {
       const row = [
         `"${rule.id}"`,
         `"${jsonPathToReadablePath(rule.sourcePath)}"`,
@@ -104,35 +126,37 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
         `"${rule.targetDataType}"`,
         `"${rule.status}"`,
         `${rule.confidence}`,
-        `${rule.isUserDefined}`
+        `${rule.isUserDefined}`,
       ];
-      csvRows.push(row.join(','));
+      csvRows.push(row.join(","));
     });
 
-    const csvString = csvRows.join('\n');
-    const filename = `${name.trim().replace(/\s+/g, '_') || 'mapping'}_rules.csv`;
+    const csvString = csvRows.join("\n");
+    const filename = `${name.trim().replace(/\s+/g, "_") || "mapping"}_rules.csv`;
 
     // Create and trigger download
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute("download", filename);
-    link.style.visibility = 'hidden';
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const handleSourceJsonChange = (value: string | undefined) => {
-    setSourceJson(value || '');
+    setSourceJson(value || "");
   };
 
   const handleTargetJsonChange = (value: string | undefined) => {
-    setTargetJson(value || '');
+    setTargetJson(value || "");
   };
 
-  const handleLoadSourceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLoadSourceFile = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -142,17 +166,19 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
         setSourceJson(formatJson(content));
         setSourceJsonError(null);
       } else {
-        setSourceJsonError('Invalid JSON file');
+        setSourceJsonError("Invalid JSON file");
       }
     } catch (error) {
-      setSourceJsonError('Error reading file');
+      setSourceJsonError("Error reading file");
     }
 
     // Reset the input value so the same file can be selected again
-    e.target.value = '';
+    e.target.value = "";
   };
 
-  const handleLoadTargetFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLoadTargetFile = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -162,37 +188,37 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
         setTargetJson(formatJson(content));
         setTargetJsonError(null);
       } else {
-        setTargetJsonError('Invalid JSON file');
+        setTargetJsonError("Invalid JSON file");
       }
     } catch (error) {
-      setTargetJsonError('Error reading file');
+      setTargetJsonError("Error reading file");
     }
 
     // Reset the input value so the same file can be selected again
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleCopySource = async () => {
     if (!sourceJson) return;
-    
+
     try {
       await navigator.clipboard.writeText(sourceJson);
       setSourceCopied(true);
       setTimeout(() => setSourceCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy source JSON:', error);
+      console.error("Failed to copy source JSON:", error);
     }
   };
 
   const handleCopyTarget = async () => {
     if (!targetJson) return;
-    
+
     try {
       await navigator.clipboard.writeText(targetJson);
       setTargetCopied(true);
       setTimeout(() => setTargetCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy target JSON:', error);
+      console.error("Failed to copy target JSON:", error);
     }
   };
 
@@ -205,12 +231,14 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
     try {
       const sourceData = JSON.parse(sourceJson);
-      const sourcePaths = extractPaths(sourceData, '$', { optimizeArrays: true });
+      const sourcePaths = extractPaths(sourceData, "$", {
+        optimizeArrays: true,
+      });
 
       let targetPaths: PathInfo[] = [];
       if (targetJson && !targetJsonError) {
         const targetData = JSON.parse(targetJson);
-        targetPaths = extractPaths(targetData, '$', { optimizeArrays: true });
+        targetPaths = extractPaths(targetData, "$", { optimizeArrays: true });
       }
 
       // If we have both source and target, suggest mappings
@@ -220,7 +248,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
         // Merge with existing rules, preserving user-defined ones
         const existingRuleMap = new Map<string, MappingRule>();
-        rules.forEach(rule => {
+        rules.forEach((rule) => {
           if (rule.isUserDefined) {
             existingRuleMap.set(rule.sourcePath, rule);
           }
@@ -228,12 +256,12 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
         // Check for better confidence scores in new mappings compared to existing ones
         const updatedExistingRules = [...rules];
-        newRules.forEach(newRule => {
+        newRules.forEach((newRule) => {
           // Find existing non-user-defined rule with the same source path
           const existingRuleIndex = updatedExistingRules.findIndex(
-            r => !r.isUserDefined && r.sourcePath === newRule.sourcePath
+            (r) => !r.isUserDefined && r.sourcePath === newRule.sourcePath,
           );
-          
+
           if (existingRuleIndex >= 0) {
             const existingRule = updatedExistingRules[existingRuleIndex];
             // If new rule has better confidence, update the existing rule
@@ -244,7 +272,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                 confidence: newRule.confidence,
                 sourceDataType: newRule.sourceDataType,
                 targetDataType: newRule.targetDataType,
-                status: 'mapped'
+                status: "mapped",
               };
             }
           } else if (!existingRuleMap.has(newRule.sourcePath)) {
@@ -255,71 +283,76 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
         // Filter out any rules that have array indices in the source path
         // but there's already a wildcard rule for the same path pattern
-        const finalRules = updatedExistingRules.filter(rule => {
+        const finalRules = updatedExistingRules.filter((rule) => {
           // Skip filtering for user-defined rules
           if (rule.isUserDefined) return true;
-          
+
           // Check if this is an indexed array path
           const indexMatch = rule.sourcePath.match(/\[(\d+)\]/);
           if (indexMatch) {
             // Create the wildcard version of this path
-            const wildcardPath = rule.sourcePath.replace(/\[\d+\]/g, '[*]');
-            
+            const wildcardPath = rule.sourcePath.replace(/\[\d+\]/g, "[*]");
+
             // Check if a wildcard version already exists with better or equal confidence
             const wildcardRule = updatedExistingRules.find(
-              r => r.sourcePath === wildcardPath && r.confidence >= rule.confidence
+              (r) =>
+                r.sourcePath === wildcardPath &&
+                r.confidence >= rule.confidence,
             );
-            
+
             return !wildcardRule; // Keep only if no wildcard rule exists
           }
           return true; // Keep all non-array-index rules
         });
 
         // Add any unmapped source paths
-        const mappedSourcePaths = new Set(finalRules.map(rule => rule.sourcePath));
-        const unmappedSourcePaths = sourcePaths.filter(p =>
-          p.type !== 'array' &&
-          p.type !== 'object' &&
-          !mappedSourcePaths.has(p.path)
+        const mappedSourcePaths = new Set(
+          finalRules.map((rule) => rule.sourcePath),
+        );
+        const unmappedSourcePaths = sourcePaths.filter(
+          (p) =>
+            p.type !== "array" &&
+            p.type !== "object" &&
+            !mappedSourcePaths.has(p.path),
         );
 
-        const unmappedRules = unmappedSourcePaths.map(path => ({
+        const unmappedRules = unmappedSourcePaths.map((path) => ({
           id: crypto.randomUUID(),
           sourcePath: path.path,
-          targetPath: '',
-          transformationType: 'none' as const,
-          transformation: '',
+          targetPath: "",
+          transformationType: "none" as const,
+          transformation: "",
           sourceDataType: path.type,
-          targetDataType: 'unknown' as const,
-          status: 'unmapped' as const,
+          targetDataType: "unknown" as const,
+          status: "unmapped" as const,
           confidence: 0,
-          isUserDefined: false
+          isUserDefined: false,
         }));
 
         setRules([...finalRules, ...unmappedRules]);
       } else {
         // If we only have source, create unmapped rules for all source paths
-        const sourceLeafPaths = sourcePaths.filter(p =>
-          p.type !== 'array' && p.type !== 'object'
+        const sourceLeafPaths = sourcePaths.filter(
+          (p) => p.type !== "array" && p.type !== "object",
         );
 
-        const newRules = sourceLeafPaths.map(path => ({
+        const newRules = sourceLeafPaths.map((path) => ({
           id: crypto.randomUUID(),
           sourcePath: path.path,
-          targetPath: '',
-          transformationType: 'none' as const,
-          transformation: '',
+          targetPath: "",
+          transformationType: "none" as const,
+          transformation: "",
           sourceDataType: path.type,
-          targetDataType: 'unknown' as const,
-          status: 'unmapped' as const,
+          targetDataType: "unknown" as const,
+          status: "unmapped" as const,
           confidence: 0,
-          isUserDefined: false
+          isUserDefined: false,
         }));
 
         setRules(newRules);
       }
     } catch (error) {
-      console.error('Error analyzing JSON:', error);
+      console.error("Error analyzing JSON:", error);
     } finally {
       setIsAnalyzing(false);
     }
@@ -328,49 +361,64 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const handleAddRule = () => {
     const newRule: MappingRule = {
       id: crypto.randomUUID(),
-      sourcePath: '',
-      targetPath: '',
-      transformationType: 'none',
-      transformation: '',
-      sourceDataType: 'unknown',
-      targetDataType: 'unknown',
-      status: 'unmapped',
+      sourcePath: "",
+      targetPath: "",
+      transformationType: "none",
+      transformation: "",
+      sourceDataType: "unknown",
+      targetDataType: "unknown",
+      status: "unmapped",
       confidence: 0,
-      isUserDefined: true
+      isUserDefined: true,
     };
 
     setRules([...rules, newRule]);
   };
 
   const handleUpdateRule = (updatedRule: MappingRule) => {
-    setRules(rules.map(rule =>
-      rule.id === updatedRule.id ? { ...updatedRule, isUserDefined: true } : rule
-    ));
+    setRules(
+      rules.map((rule) =>
+        rule.id === updatedRule.id
+          ? { ...updatedRule, isUserDefined: true }
+          : rule,
+      ),
+    );
   };
 
   const handleDeleteRule = (id: string) => {
-    setRules(rules.filter(rule => rule.id !== id));
+    setRules(rules.filter((rule) => rule.id !== id));
   };
 
   const handleIgnoreRule = (id: string) => {
-    setRules(rules.map(rule =>
-      rule.id === id ? { ...rule, status: rule.status === 'ignored' ? 'unmapped' : 'ignored' } : rule
-    ));
+    setRules(
+      rules.map((rule) =>
+        rule.id === id
+          ? {
+              ...rule,
+              status: rule.status === "ignored" ? "unmapped" : "ignored",
+            }
+          : rule,
+      ),
+    );
   };
 
   const handleClearRule = (id: string) => {
-    setRules(rules.map(rule =>
-      rule.id === id ? {
-        ...rule,
-        targetPath: '',
-        transformationType: 'none' as const,
-        transformation: '',
-        targetDataType: 'unknown' as const,
-        status: 'unmapped' as const,
-        confidence: 0,
-        isUserDefined: true
-      } : rule
-    ));
+    setRules(
+      rules.map((rule) =>
+        rule.id === id
+          ? {
+              ...rule,
+              targetPath: "",
+              transformationType: "none" as const,
+              transformation: "",
+              targetDataType: "unknown" as const,
+              status: "unmapped" as const,
+              confidence: 0,
+              isUserDefined: true,
+            }
+          : rule,
+      ),
+    );
   };
 
   const handleReEvaluateRule = (id: string) => {
@@ -382,20 +430,26 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       const sourceData = JSON.parse(sourceJson);
       const targetData = JSON.parse(targetJson);
 
-      const rule = rules.find(r => r.id === id);
+      const rule = rules.find((r) => r.id === id);
       if (!rule) return;
 
       // If the rule has been cleared (empty targetPath), re-run mapping suggestions
-      if (!rule.targetPath || rule.targetPath === '') {
-        const sourcePaths = extractPaths(sourceData, '$', { optimizeArrays: true });
-        const targetPaths = extractPaths(targetData, '$', { optimizeArrays: true });
-        
+      if (!rule.targetPath || rule.targetPath === "") {
+        const sourcePaths = extractPaths(sourceData, "$", {
+          optimizeArrays: true,
+        });
+        const targetPaths = extractPaths(targetData, "$", {
+          optimizeArrays: true,
+        });
+
         // Find the source path info for this rule
-        const sourcePathInfo = sourcePaths.find(p => p.path === rule.sourcePath);
+        const sourcePathInfo = sourcePaths.find(
+          (p) => p.path === rule.sourcePath,
+        );
         if (sourcePathInfo) {
           const suggestions = suggestMappings([sourcePathInfo], targetPaths);
           const newRules = createRulesFromSuggestions(suggestions);
-          
+
           if (newRules.length > 0) {
             // Update the rule with the best suggestion
             const bestSuggestion = newRules[0];
@@ -407,28 +461,28 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               targetDataType: bestSuggestion.targetDataType,
               status: bestSuggestion.status,
               confidence: bestSuggestion.confidence,
-              isUserDefined: true
+              isUserDefined: true,
             };
-            
-            setRules(rules.map(r => r.id === id ? updatedRule : r));
+
+            setRules(rules.map((r) => (r.id === id ? updatedRule : r)));
           } else {
             // No suggestions found, keep as unmapped
             const updatedRule = {
               ...rule,
-              status: 'unmapped' as const,
-              isUserDefined: true
+              status: "unmapped" as const,
+              isUserDefined: true,
             };
-            
-            setRules(rules.map(r => r.id === id ? updatedRule : r));
+
+            setRules(rules.map((r) => (r.id === id ? updatedRule : r)));
           }
         }
       } else {
         // Normal validation for rules with target paths
         const updatedRules = validateRules([rule], sourceData, targetData);
-        setRules(rules.map(r => r.id === id ? updatedRules[0] : r));
+        setRules(rules.map((r) => (r.id === id ? updatedRules[0] : r)));
       }
     } catch (error) {
-      console.error('Error re-evaluating rule:', error);
+      console.error("Error re-evaluating rule:", error);
     }
   };
 
@@ -444,7 +498,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       const updatedRules = validateRules(rules, sourceData, targetData);
       setRules(updatedRules);
     } catch (error) {
-      console.error('Error re-evaluating all rules:', error);
+      console.error("Error re-evaluating all rules:", error);
     }
   };
 
@@ -454,12 +508,12 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      alert('Please enter a name for the mapping');
+      alert("Please enter a name for the mapping");
       return;
     }
 
     if (!sourceJson || sourceJsonError) {
-      alert('Please enter valid source JSON');
+      alert("Please enter valid source JSON");
       return;
     }
 
@@ -470,7 +524,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       sourceJson,
       targetJson,
       rules,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     };
 
     onSave(updatedMapping);
@@ -478,7 +532,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
   const handleTest = () => {
     if (!name.trim() || !sourceJson || sourceJsonError) {
-      alert('Please enter a name and valid source JSON');
+      alert("Please enter a name and valid source JSON");
       return;
     }
 
@@ -489,7 +543,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       sourceJson,
       targetJson,
       rules,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     };
 
     onTest(updatedMapping);
@@ -497,7 +551,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
   const handleGenerateCode = () => {
     if (!name.trim() || !sourceJson || sourceJsonError) {
-      alert('Please enter a name and valid source JSON');
+      alert("Please enter a name and valid source JSON");
       return;
     }
 
@@ -508,7 +562,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       sourceJson,
       targetJson,
       rules,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     };
 
     onGenerateCode(updatedMapping);
@@ -528,7 +582,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               <ArrowLeft size={20} />
             </button>
             <h2 className="text-xl font-semibold text-gray-100">
-              {isNew ? 'Create Mapping' : 'Edit Mapping'}
+              {isNew ? "Create Mapping" : "Edit Mapping"}
             </h2>
           </div>
           <div className="flex space-x-3">
@@ -624,11 +678,13 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                     className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
                   >
                     {sourceCopied ? <Check size={14} /> : <Copy size={14} />}
-                    <span>{sourceCopied ? 'Copied!' : 'Copy'}</span>
+                    <span>{sourceCopied ? "Copied!" : "Copy"}</span>
                   </button>
                 </div>
               </div>
-              <div className={`border rounded-md overflow-hidden ${sourceJsonError ? 'border-red-500/50' : 'border-gray-700/50'}`}>
+              <div
+                className={`border rounded-md overflow-hidden ${sourceJsonError ? "border-red-500/50" : "border-gray-700/50"}`}
+              >
                 <Editor
                   height="300px"
                   language="json"
@@ -638,7 +694,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
-                    wordWrap: 'on',
+                    wordWrap: "on",
                     padding: { top: 8, bottom: 8 },
                   }}
                 />
@@ -671,11 +727,13 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                     className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
                   >
                     {targetCopied ? <Check size={14} /> : <Copy size={14} />}
-                    <span>{targetCopied ? 'Copied!' : 'Copy'}</span>
+                    <span>{targetCopied ? "Copied!" : "Copy"}</span>
                   </button>
                 </div>
               </div>
-              <div className={`border rounded-md overflow-hidden ${targetJsonError ? 'border-red-500/50' : 'border-gray-700/50'}`}>
+              <div
+                className={`border rounded-md overflow-hidden ${targetJsonError ? "border-red-500/50" : "border-gray-700/50"}`}
+              >
                 <Editor
                   height="300px"
                   language="json"
@@ -685,7 +743,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
-                    wordWrap: 'on',
+                    wordWrap: "on",
                     padding: { top: 8, bottom: 8 },
                   }}
                 />
@@ -703,15 +761,18 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               disabled={!sourceJson || !!sourceJsonError || isAnalyzing}
               className={`
                 flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium
-                ${!sourceJson || !!sourceJsonError || isAnalyzing
-                  ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                ${
+                  !sourceJson || !!sourceJsonError || isAnalyzing
+                    ? "bg-gray-700/50 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
                 }
                 transition-colors
               `}
             >
-              <Wand2 size={14} className={isAnalyzing ? 'animate-spin' : ''} />
-              <span>{isAnalyzing ? 'Analyzing...' : 'Analyze & Suggest Mappings'}</span>
+              <Wand2 size={14} className={isAnalyzing ? "animate-spin" : ""} />
+              <span>
+                {isAnalyzing ? "Analyzing..." : "Analyze & Suggest Mappings"}
+              </span>
             </button>
           </div>
 
@@ -732,7 +793,12 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                 <button
                   onClick={handleReEvaluateAll}
                   className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
-                  disabled={!sourceJson || !targetJson || !!sourceJsonError || !!targetJsonError}
+                  disabled={
+                    !sourceJson ||
+                    !targetJson ||
+                    !!sourceJsonError ||
+                    !!targetJsonError
+                  }
                 >
                   <Wand2 size={14} />
                   <span>Re-evaluate All</span>

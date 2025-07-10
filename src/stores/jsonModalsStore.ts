@@ -1,15 +1,24 @@
-import { create } from 'zustand';
-import { Tab } from '../types';
+import { create } from "zustand";
+import { Tab } from "../types";
 
 interface ModalState {
-  type: 'stringify' | 'codeGeneration' | 'treeView' | 'schemaValidation' | 'structureComparison' | null;
+  type:
+    | "stringify"
+    | "codeGeneration"
+    | "treeView"
+    | "schemaValidation"
+    | "structureComparison"
+    | null;
   props?: any;
 }
 
 interface JsonModalsStore {
   modalState: ModalState;
   openStringifyModal: (stringified: string, addTab: (tab: Tab) => void) => void;
-  openCodeGenerationModal: (tabs: { id: string; title: string; content: string; language: string; }[], addTab: (tab: Tab) => void) => void;
+  openCodeGenerationModal: (
+    tabs: { id: string; title: string; content: string; language: string }[],
+    addTab: (tab: Tab) => void,
+  ) => void;
   openTreeViewModal: (json: any) => void;
   openSchemaValidationModal: (json: any) => void;
   openStructureComparisonModal: (sourceJson: string) => void;
@@ -19,57 +28,62 @@ interface JsonModalsStore {
 export const useJsonModalsStore = create<JsonModalsStore>((set) => ({
   modalState: { type: null },
 
-  openStringifyModal: (stringified: string, addTab: (tab: Tab) => void) => set({
-    modalState: {
-      type: 'stringify',
-      props: {
-        content: stringified,
-        addTab,
-        onClose: () => set({ modalState: { type: null } })
-      }
-    }
-  }),
-
-  openCodeGenerationModal: (tabs, addTab) => set({
-    modalState: {
-      type: 'codeGeneration',
-      props: {
-        tabs,
-        addTab,
-        onClose: () => set({ modalState: { type: null } })
-      }
-    }
-  }),
-
-    openTreeViewModal: (json) => set({
+  openStringifyModal: (stringified: string, addTab: (tab: Tab) => void) =>
+    set({
       modalState: {
-        type: 'treeView',
+        type: "stringify",
         props: {
-          json,
-          onClose: () => set({ modalState: { type: null } })
-        }
-      }
-    }), 
-
-    openSchemaValidationModal: (json: any) => set({
-      modalState: {
-        type: 'schemaValidation',
-        props: {
-          json,
-          onClose: () => set({ modalState: { type: null } })
-        }
-      }
+          content: stringified,
+          addTab,
+          onClose: () => set({ modalState: { type: null } }),
+        },
+      },
     }),
 
-    openStructureComparisonModal: (sourceJson: string) => set({
+  openCodeGenerationModal: (tabs, addTab) =>
+    set({
       modalState: {
-        type: 'structureComparison',
+        type: "codeGeneration",
+        props: {
+          tabs,
+          addTab,
+          onClose: () => set({ modalState: { type: null } }),
+        },
+      },
+    }),
+
+  openTreeViewModal: (json) =>
+    set({
+      modalState: {
+        type: "treeView",
+        props: {
+          json,
+          onClose: () => set({ modalState: { type: null } }),
+        },
+      },
+    }),
+
+  openSchemaValidationModal: (json: any) =>
+    set({
+      modalState: {
+        type: "schemaValidation",
+        props: {
+          json,
+          onClose: () => set({ modalState: { type: null } }),
+        },
+      },
+    }),
+
+  openStructureComparisonModal: (sourceJson: string) =>
+    set({
+      modalState: {
+        type: "structureComparison",
         props: {
           sourceJson,
-          onClose: () => set({ modalState: { type: null } })
-        }
-      }
+          onClose: () => set({ modalState: { type: null } }),
+        },
+      },
     }),
 
-  closeModal: () => set({ modalState: { type: null } })
+  closeModal: () => set({ modalState: { type: null } }),
 }));

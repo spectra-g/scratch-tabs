@@ -1,15 +1,25 @@
-import React, { useCallback, useMemo, useRef, useEffect } from 'react';
-import { X, RotateCcw, Check, Eye, EyeOff, Wrench, CheckCircle } from 'lucide-react';
-import { useBatchToolsStore } from '../../stores/batchToolsStore';
-import { BatchToolsConfig } from './BatchToolsConfig';
-import { BatchToolsPreview } from './BatchToolsPreview';
-import { applyTransformations } from './transformations';
+import React, { useCallback, useMemo, useRef, useEffect } from "react";
+import {
+  X,
+  RotateCcw,
+  Check,
+  Eye,
+  EyeOff,
+  Wrench,
+  CheckCircle,
+} from "lucide-react";
+import { useBatchToolsStore } from "../../stores/batchToolsStore";
+import { BatchToolsConfig } from "./BatchToolsConfig";
+import { BatchToolsPreview } from "./BatchToolsPreview";
+import { applyTransformations } from "./transformations";
 
 interface BatchToolsModalProps {
   onApply: (content: string) => void;
 }
 
-export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => {
+export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
+  onApply,
+}) => {
   const {
     isOpen,
     originalContent,
@@ -26,7 +36,8 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
 
   // Debounced transformation
   const debouncedTransformRef = useRef<NodeJS.Timeout>();
-  const [transformedContent, setTransformedContent] = React.useState(contentToTransform);
+  const [transformedContent, setTransformedContent] =
+    React.useState(contentToTransform);
   const [isProcessing, setIsProcessing] = React.useState(false);
 
   const performTransformation = useCallback(() => {
@@ -35,13 +46,13 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
     }
 
     setIsProcessing(true);
-    
+
     debouncedTransformRef.current = setTimeout(() => {
       try {
         const result = applyTransformations(contentToTransform, config);
         setTransformedContent(result);
       } catch (error) {
-        console.error('Transformation error:', error);
+        console.error("Transformation error:", error);
         setTransformedContent(contentToTransform);
       } finally {
         setIsProcessing(false);
@@ -90,16 +101,26 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
               </span>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {/* Preview Mode Toggle */}
             <button
-              onClick={() => setPreviewMode(previewMode === 'side-by-side' ? 'unified' : 'side-by-side')}
+              onClick={() =>
+                setPreviewMode(
+                  previewMode === "side-by-side" ? "unified" : "side-by-side",
+                )
+              }
               className="flex items-center space-x-1 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-600/50 rounded text-sm text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-850"
-              title={`Switch to ${previewMode === 'side-by-side' ? 'unified' : 'side-by-side'} view`}
+              title={`Switch to ${previewMode === "side-by-side" ? "unified" : "side-by-side"} view`}
             >
-              {previewMode === 'side-by-side' ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              <span>{previewMode === 'side-by-side' ? 'Side-by-side' : 'Unified'}</span>
+              {previewMode === "side-by-side" ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <EyeOff className="w-4 h-4" />
+              )}
+              <span>
+                {previewMode === "side-by-side" ? "Side-by-side" : "Unified"}
+              </span>
             </button>
 
             {/* Reset Button */}
@@ -129,12 +150,15 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
           {/* Left Panel - Configuration */}
           <div className="w-80 bg-gray-900 border-r border-gray-700/60 flex flex-col">
             <div className="p-4 border-b border-gray-700/60">
-              <h3 className="text-lg font-medium text-gray-200">Transformations</h3>
+              <h3 className="text-lg font-medium text-gray-200">
+                Transformations
+              </h3>
               <p className="text-sm text-gray-400 mt-1">
-                {contentToTransform.split('\n').length} lines • {contentToTransform.length} chars
+                {contentToTransform.split("\n").length} lines •{" "}
+                {contentToTransform.length} chars
               </p>
             </div>
-            
+
             <div className="flex-1 overflow-auto p-4 custom-scrollbar">
               <BatchToolsConfig config={config} onChange={updateConfig} />
             </div>
@@ -153,12 +177,13 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
                     </span>
                   )}
                   <span className="text-sm text-gray-400">
-                    {transformedContent.split('\n').length} lines • {transformedContent.length} chars
+                    {transformedContent.split("\n").length} lines •{" "}
+                    {transformedContent.length} chars
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex-1 p-4 overflow-hidden">
               <BatchToolsPreview
                 originalContent={contentToTransform}
@@ -173,9 +198,11 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-gray-700/60 bg-gray-900">
           <div className="text-sm text-gray-400">
-            {selectedText ? 'Transformations will be applied to selected text' : 'Transformations will be applied to entire content'}
+            {selectedText
+              ? "Transformations will be applied to selected text"
+              : "Transformations will be applied to entire content"}
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <button
               onClick={closeModal}
@@ -183,15 +210,16 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
             >
               Cancel
             </button>
-            
+
             <button
               onClick={handleApply}
               disabled={!hasChanges || isProcessing}
               className={`
                 flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
-                ${!hasChanges || isProcessing
-                  ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                ${
+                  !hasChanges || isProcessing
+                    ? "bg-gray-700/50 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
                 }
                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900
               `}
@@ -204,4 +232,4 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({ onApply }) => 
       </div>
     </div>
   );
-}; 
+};

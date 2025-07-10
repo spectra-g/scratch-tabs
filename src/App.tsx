@@ -1,14 +1,14 @@
-import React, { Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { initializeLanguageProviders } from './languages';
-import { broadcastManager } from './stores/broadcastStore';
-import DragDropOverlay from './components/DragDropOverlay';
-import './views/csv';
+import React, { Suspense, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { initializeLanguageProviders } from "./languages";
+import { broadcastManager } from "./stores/broadcastStore";
+import DragDropOverlay from "./components/DragDropOverlay";
+import "./views/csv";
 
 // Initialize language providers once when the app loads
 initializeLanguageProviders();
 
-const MainLayout = React.lazy(() => import('./components/Layout/MainLayout'));
+const MainLayout = React.lazy(() => import("./components/Layout/MainLayout"));
 // const OGWelcomeScreen = React.lazy(() => import('./components/Welcome/OGWelcomeScreen').then(module => ({ default: module.OGWelcomeScreen })));
 
 const AppLoadingFallback = () => (
@@ -19,10 +19,9 @@ const AppLoadingFallback = () => (
 );
 
 function App() {
-
   useEffect(() => {
     broadcastManager.initialize();
-  
+
     return () => {
       // Optional: broadcastManager.cleanup(); if you want to close the channel
       // when the main app component unmounts, though usually not necessary

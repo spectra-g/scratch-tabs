@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { dynamicTabletRegistry as tabletRegistry } from '../dynamicRegistry';
-import { Tablet } from '../types';
-import { TabletMetadata } from '../tabletMetadata';
-import { Search } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { dynamicTabletRegistry as tabletRegistry } from "../dynamicRegistry";
+import { Tablet } from "../types";
+import { TabletMetadata } from "../tabletMetadata";
+import { Search } from "lucide-react";
 
 interface TabletSelectorProps {
   onSelect: (tablet: Tablet) => void;
@@ -11,11 +11,11 @@ interface TabletSelectorProps {
   showSearch?: boolean;
 }
 
-export const TabletSelector: React.FC<TabletSelectorProps> = ({ 
-  onSelect, 
+export const TabletSelector: React.FC<TabletSelectorProps> = ({
+  onSelect,
   onClose,
   searchQuery: initialQuery,
-  showSearch = false
+  showSearch = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [tablets, setTablets] = useState<TabletMetadata[]>([]);
@@ -24,7 +24,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Update search results when query changes
   useEffect(() => {
     const updateResults = () => {
@@ -34,7 +34,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
         const results = tabletRegistry.search(searchQuery);
         setTablets(results);
       } catch (error) {
-        console.error('Error searching tablets:', error);
+        console.error("Error searching tablets:", error);
         setTablets([]);
       } finally {
         setIsLoading(false);
@@ -51,29 +51,29 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       searchInputRef.current.focus();
     }
   }, [showSearch]);
-  
+
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Stop event propagation to prevent Monaco Editor from handling these keys
       e.stopPropagation();
-      
+
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
-          setSelectedIndex(i => Math.min(i + 1, tablets.length - 1));
+          setSelectedIndex((i) => Math.min(i + 1, tablets.length - 1));
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
-          setSelectedIndex(i => Math.max(i - 1, 0));
+          setSelectedIndex((i) => Math.max(i - 1, 0));
           break;
-        case 'Enter':
+        case "Enter":
           e.preventDefault();
           if (tablets[selectedIndex]) {
             handleTabletSelect(tablets[selectedIndex]);
           }
           break;
-        case 'Escape':
+        case "Escape":
           e.preventDefault();
           onClose();
           break;
@@ -81,8 +81,8 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
     };
 
     // Use capture phase to intercept events before they reach the editor
-    document.addEventListener('keydown', handleKeyDown, true);
-    return () => document.removeEventListener('keydown', handleKeyDown, true);
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
   }, [tablets, selectedIndex, onClose]);
 
   // Scroll selected item into view
@@ -91,8 +91,8 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       const items = listRef.current.children;
       if (items[selectedIndex]) {
         items[selectedIndex].scrollIntoView({
-          block: 'nearest',
-          behavior: 'smooth'
+          block: "nearest",
+          behavior: "smooth",
         });
       }
     }
@@ -101,13 +101,16 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   // Handle click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+      if (
+        selectorRef.current &&
+        !selectorRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
   // Handle tablet selection (loads implementation on demand)
@@ -120,10 +123,15 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
         // Close the selector immediately after selection
         onClose();
       } else {
-        console.error(`❌ TabletSelector: Failed to load tablet: ${tabletMetadata.id}`);
+        console.error(
+          `❌ TabletSelector: Failed to load tablet: ${tabletMetadata.id}`,
+        );
       }
     } catch (error) {
-      console.error(`❌ TabletSelector: Error loading tablet ${tabletMetadata.id}:`, error);
+      console.error(
+        `❌ TabletSelector: Error loading tablet ${tabletMetadata.id}:`,
+        error,
+      );
     }
   };
 
@@ -136,7 +144,10 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       {showSearch && (
         <div className="p-3 border-b border-gray-700">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
             <input
               ref={searchInputRef}
               type="text"
@@ -150,30 +161,31 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       )}
 
       {/* Tablet List */}
-      <div ref={listRef} className="max-h-80 md:max-h-[420px] lg:max-h-[520px] overflow-y-auto custom-scrollbar">
+      <div
+        ref={listRef}
+        className="max-h-80 md:max-h-[420px] lg:max-h-[520px] overflow-y-auto custom-scrollbar"
+      >
         {isLoading ? (
           <div className="p-4 text-center text-gray-400">
             Loading tablets...
           </div>
         ) : tablets.length === 0 ? (
-          <div className="p-4 text-center text-gray-400">
-            No tablets found
-          </div>
+          <div className="p-4 text-center text-gray-400">No tablets found</div>
         ) : (
           tablets.map((tablet, index) => (
             <div
               key={tablet.id}
               className={`px-4 py-4 cursor-pointer transition-colors ${
                 index === selectedIndex
-                  ? 'bg-blue-500/20 text-blue-200'
-                  : 'text-gray-200 hover:bg-gray-700/50'
+                  ? "bg-blue-500/20 text-blue-200"
+                  : "text-gray-200 hover:bg-gray-700/50"
               }`}
               onClick={() => handleTabletSelect(tablet)}
             >
               <div className="flex flex-col">
                 <div className="font-medium text-base">{tablet.label}</div>
                 <div className="text-sm text-gray-400 mt-2">
-                  {tablet.keywords.join(' • ')}
+                  {tablet.keywords.join(" • ")}
                 </div>
               </div>
             </div>
@@ -182,4 +194,4 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       </div>
     </div>
   );
-}; 
+};

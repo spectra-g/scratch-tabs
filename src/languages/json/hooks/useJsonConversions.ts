@@ -1,50 +1,45 @@
-import { useCallback } from 'react';
-import * as monaco from 'monaco-editor';
-import { Tab } from '../../../types';
-import { useJsonModals } from './useJsonModals';
-import { generateJavaClasses } from '../utils/javaGenerator';
-import { generateTypeScriptInterfaces } from '../utils/generateTypeScriptInterfaces';
-import { generatePythonClasses } from '../utils/generatePythonClasses';
-import { generateGoStructs } from '../utils/generateGoStructs';
-import { generateCSharpClasses } from '../utils/generateCSharpClasses';
-import { convertToCsv } from '../utils/generateCsv';
-import { convertToYaml } from '../utils/generateYaml';
-import { convertToXml } from '../utils/generateXml';
-import { generateJsonSchema } from '../utils/jsonSchema';
+import { useCallback } from "react";
+import * as monaco from "monaco-editor";
+import { Tab } from "../../../types";
+import { useJsonModals } from "./useJsonModals";
+import { generateJavaClasses } from "../utils/javaGenerator";
+import { generateTypeScriptInterfaces } from "../utils/generateTypeScriptInterfaces";
+import { generatePythonClasses } from "../utils/generatePythonClasses";
+import { generateGoStructs } from "../utils/generateGoStructs";
+import { generateCSharpClasses } from "../utils/generateCSharpClasses";
+import { convertToCsv } from "../utils/generateCsv";
+import { convertToYaml } from "../utils/generateYaml";
+import { convertToXml } from "../utils/generateXml";
+import { generateJsonSchema } from "../utils/jsonSchema";
 
 export const useJsonConversions = (
   editor: monaco.editor.IStandaloneCodeEditor | null,
-  addTab: (tab: Tab) => void
+  addTab: (tab: Tab) => void,
 ) => {
-  const {
-    openCodeGenerationModal,
-    openTreeViewModal,
-  } = useJsonModals();
+  const { openCodeGenerationModal, openTreeViewModal } = useJsonModals();
 
   const handleToJava = useCallback(() => {
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
-      
+
       // Generate Java classes
       const javaClasses = generateJavaClasses(json);
-      
+
       // Create tabs for each class
-      const tabs = javaClasses.map(javaClass => ({
+      const tabs = javaClasses.map((javaClass) => ({
         id: crypto.randomUUID(),
         title: javaClass.className,
         content: javaClass.code,
-        language: 'java'
+        language: "java",
       }));
 
       // Open the code generation modal with the Java classes
       openCodeGenerationModal(tabs, addTab);
     } catch (error) {
-      console.error('Failed to convert to Java:', error);
+      console.error("Failed to convert to Java:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -52,12 +47,10 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       openTreeViewModal(content);
     } catch (error) {
-      console.error('Failed to convert to tree view:', error);
+      console.error("Failed to convert to tree view:", error);
     }
   }, [editor, openTreeViewModal]);
 
@@ -65,22 +58,20 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
 
       const tsInterfaces = generateTypeScriptInterfaces(json);
-      const tabs = tsInterfaces.map(tsInterface => ({
+      const tabs = tsInterfaces.map((tsInterface) => ({
         id: crypto.randomUUID(),
         title: tsInterface.interfaceName,
         content: tsInterface.code,
-        language: 'typescript'
+        language: "typescript",
       }));
 
       openCodeGenerationModal(tabs, addTab);
     } catch (error) {
-      console.error('Failed to convert to TypeScript:', error);
+      console.error("Failed to convert to TypeScript:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -88,22 +79,20 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
 
       const pythonClasses = generatePythonClasses(json);
-      const tabs = pythonClasses.map(pythonClass => ({
+      const tabs = pythonClasses.map((pythonClass) => ({
         id: crypto.randomUUID(),
         title: pythonClass.className,
         content: pythonClass.code,
-        language: 'python'
+        language: "python",
       }));
 
       openCodeGenerationModal(tabs, addTab);
     } catch (error) {
-      console.error('Failed to convert to Python:', error);
+      console.error("Failed to convert to Python:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -111,22 +100,20 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
 
       const goStructs = generateGoStructs(json);
-      const tabs = goStructs.map(goStruct => ({
+      const tabs = goStructs.map((goStruct) => ({
         id: crypto.randomUUID(),
         title: goStruct.structName,
         content: goStruct.code,
-        language: 'go'
+        language: "go",
       }));
 
       openCodeGenerationModal(tabs, addTab);
     } catch (error) {
-      console.error('Failed to convert to Go:', error);
+      console.error("Failed to convert to Go:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -134,22 +121,20 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
 
       const csharpClasses = generateCSharpClasses(json);
-      const tabs = csharpClasses.map(csharpClass => ({
+      const tabs = csharpClasses.map((csharpClass) => ({
         id: crypto.randomUUID(),
         title: csharpClass.className,
         content: csharpClass.code,
-        language: 'csharp'
+        language: "csharp",
       }));
 
       openCodeGenerationModal(tabs, addTab);
     } catch (error) {
-      console.error('Failed to convert to C#:', error);
+      console.error("Failed to convert to C#:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -157,26 +142,24 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
-      
+
       const result = convertToCsv(json);
-      if ('error' in result) {
+      if ("error" in result) {
         throw new Error(result.error);
       }
 
       const tab = {
         id: crypto.randomUUID(),
-        title: 'Converted CSV',
+        title: "Converted CSV",
         content: result.csv,
-        language: 'plaintext'
+        language: "plaintext",
       };
 
       openCodeGenerationModal([tab], addTab);
     } catch (error) {
-      console.error('Failed to convert to CSV:', error);
+      console.error("Failed to convert to CSV:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -184,22 +167,20 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
-      
+
       const yaml = convertToYaml(json);
       const tab = {
         id: crypto.randomUUID(),
-        title: 'Converted YAML',
+        title: "Converted YAML",
         content: yaml,
-        language: 'yaml'
+        language: "yaml",
       };
 
       openCodeGenerationModal([tab], addTab);
     } catch (error) {
-      console.error('Failed to convert to YAML:', error);
+      console.error("Failed to convert to YAML:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -207,22 +188,20 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
-      
+
       const xml = convertToXml(json);
       const tab = {
         id: crypto.randomUUID(),
-        title: 'Converted XML',
+        title: "Converted XML",
         content: xml,
-        language: 'xml'
+        language: "xml",
       };
 
       openCodeGenerationModal([tab], addTab);
     } catch (error) {
-      console.error('Failed to convert to XML:', error);
+      console.error("Failed to convert to XML:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -230,22 +209,20 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-      
 
-      
       const json = JSON.parse(content);
       const schema = generateJsonSchema(json);
-      
+
       const tab = {
         id: crypto.randomUUID(),
-        title: 'JSON Schema',
+        title: "JSON Schema",
         content: JSON.stringify(schema, null, 2),
-        language: 'json'
+        language: "json",
       };
 
       openCodeGenerationModal([tab], addTab);
     } catch (error) {
-      console.error('Failed to generate schema:', error);
+      console.error("Failed to generate schema:", error);
     }
   }, [editor, openCodeGenerationModal, addTab]);
 
@@ -259,6 +236,6 @@ export const useJsonConversions = (
     handleToCsv,
     handleToYaml,
     handleToXml,
-    handleValidateSchema
+    handleValidateSchema,
   };
 };
