@@ -100,4 +100,36 @@ When('I wait for {int} seconds', async function(seconds) {
 
 When('I press Ctrl+Z', async function() {
   await this.pressCtrlZ();
+});
+
+When('I right-click the {string} tab', async function(tabTitle) {
+  await this.rightClickTab(tabTitle);
+});
+
+When('I right-click the "{string}" tab', async function(tabTitle) {
+  await this.rightClickTab(tabTitle);
+});
+
+When('I select {string} from the context menu', async function(menuItem) {
+  await this.selectFromContextMenu(menuItem);
+});
+
+When('I select "{string}" from the context menu', async function(menuItem) {
+  await this.selectFromContextMenu(menuItem);
+});
+
+When('I select {string} from the {string} submenu', async function(subItem, parentItem) {
+  await this.selectFromSubmenu(parentItem, subItem);
+});
+
+When('I select "{string}" from the "{string}" submenu', async function(subItem, parentItem) {
+  await this.selectFromSubmenu(parentItem, subItem);
+});
+
+When('I click the three dots menu', async function() {
+  await this.clickThreeDotsMenu();
+});
+
+When('I click in the editor', async function() {
+  await this.clickInEditor();
 }); 

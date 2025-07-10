@@ -66,4 +66,12 @@ Then('the status bar should show a green validation tick', async function() {
 
 Then('the active editor content should be {string}', async function(expectedContent) {
   await this.expectEditorContentToEqual(expectedContent);
+});
+
+Then('the editor content should be on a single line', async function() {
+  await this.expectContentIsSingleLine();
+});
+
+Then('the editor content should not be on a single line', async function() {
+  await this.expectContentIsNotSingleLine();
 }); 

@@ -358,15 +358,12 @@ export class E2EWorld extends World {
 
   async expectEditorContainsMarkdown() {
     const content = await this.getMonacoEditorContent();
-
-    console.log(`Editor content: "${content}"`);
     
     // Check for common markdown indicators
     const markdownIndicators = ['#', '##', '###', '*', '-', '```', '**', '__', 'Welcome to Scratch Tabs'];
     const hasMarkdown = markdownIndicators.some(indicator => content.includes(indicator));
     
     if (!hasMarkdown) {
-      console.log(`Editor content: "${content}"`);
       throw new Error('Editor does not contain markdown content');
     }
   }
@@ -435,7 +432,6 @@ export class E2EWorld extends World {
             }
           }
         },
-        content: `This is the main content for item ${i}. It contains a substantial amount of text to help reach the target file size of 1.5MB. The content includes various details, descriptions, and metadata that would be typical in a real-world JSON file.`
       });
     }
 
@@ -453,9 +449,36 @@ export class E2EWorld extends World {
 
   async typeText(text: string) {
     // Type text into the active editor (append to existing content)
-    const editorLocator = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-    await editorLocator.focus();
-    await editorLocator.type(text);
+    await this.clickInEditor();  // Use enhanced focus method
+    
+    // Use Monaco's API to insert text so it's properly recorded in the undo stack
+    await this.page.evaluate((textToInsert) => {
+      const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
+      if (editor && (window as any).monaco) {
+        const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) => 
+          e.getDomNode() === editor
+        );
+        if (editorInstance) {
+          // Get current position
+          const position = editorInstance.getPosition();
+          // Insert text using Monaco's API to ensure it's in the undo stack
+          editorInstance.executeEdits('automated-test', [{
+            range: new (window as any).monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+            text: textToInsert
+          }]);
+          return;
+        }
+      }
+      // Fallback to keyboard typing if Monaco API fails
+      console.log('Monaco API not available, using keyboard fallback');
+    }, text);
+    
+    // If Monaco API didn't work, fall back to keyboard typing
+    const content = await this.getMonacoEditorContent();
+    if (!content.includes(text)) {
+      console.log('Monaco API insertion failed, using keyboard fallback');
+      await this.page.keyboard.type(text);
+    }
   }
 
   async waitForSeconds(seconds: number) {
@@ -464,42 +487,38 @@ export class E2EWorld extends World {
   }
 
   async pressCtrlZ() {
-    // Press Ctrl+Z to trigger undo using Monaco's action system
-    console.log('Pressing Ctrl+Z for undo...');
-    
     try {
-      // Use Monaco's action system to trigger undo
-      await this.page.evaluate(() => {
+      // Use enhanced focus method to ensure Monaco editor has proper focus context
+      await this.clickInEditor();
+      
+      // Try Monaco's undo API first
+      const undoWorked = await this.page.evaluate(() => {
         const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
         if (editor && (window as any).monaco) {
           const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) => 
             e.getDomNode() === editor
           );
           if (editorInstance) {
-            // Use Monaco's undo action
-            const undoAction = editorInstance.getAction('undo');
-            if (undoAction) {
-              undoAction.run();
-              console.log('Triggered Monaco undo action');
-            } else {
-              console.log('Undo action not found, trying keyboard shortcut');
-              // Fallback to keyboard shortcut
-              editorInstance.trigger('keyboard', 'undo', {});
-            }
+            // Use Monaco's undo API directly
+            editorInstance.trigger('automated-test', 'undo', null);
+            console.log('Triggered undo via Monaco API');
+            return true;
           }
         }
+        return false;
       });
       
-      // Wait a moment for undo to take effect
-   //   await this.page.waitForTimeout(500);
-      
+      if (!undoWorked) {
+        console.log('Monaco undo API failed, falling back to keyboard');
+        // Fallback to keyboard if Monaco API doesn't work
+        await this.page.keyboard.press('Control+Z');
+      }
     } catch (error) {
       console.error('Error pressing Ctrl+Z:', error);
     }
     
     // Log the current content after undo
     const content = await this.getMonacoEditorContent();
-    console.log(`Content after undo: "${content}"`);
   }
 
   async expectFirst10LinesContainJson() {
@@ -536,6 +555,142 @@ export class E2EWorld extends World {
   async expectStatusBarValidationTick() {
     const validationTick = this.getStatusBarValidationIcon();
     await expect(validationTick).toBeVisible();
+  }
+
+  async rightClickTab(tabTitle: string) {
+    // Right-click on the specified tab
+    const tabLocator = this.page.locator(`[role="button"]:has-text("${tabTitle}")`);
+    await tabLocator.click({ button: 'right' });
+    // Wait for context menu to appear
+    await this.page.waitForTimeout(1000);
+    // Log all visible text/buttons for debugging
+    const allButtons = await this.page.locator('button').all();
+    console.log('Visible buttons after right-click:');
+    for (const btn of allButtons) {
+      const text = await btn.textContent();
+      if (text && text.trim()) {
+        console.log(`  - Button: "${text.trim()}"`);
+      }
+    }
+    const allDivs = await this.page.locator('div').all();
+    console.log('Visible divs after right-click:');
+    for (const div of allDivs) {
+      const text = await div.textContent();
+      if (text && text.trim()) {
+        console.log(`  - Div: "${text.trim()}"`);
+      }
+    }
+  }
+
+  async clickThreeDotsMenu() {
+    // Click the three dots menu (MoreHorizontal icon) in the status bar
+    const threeDotsButton = this.page.locator('button[title="JSON Options"]');
+    await threeDotsButton.click();
+  }
+
+  async clickInEditor() {
+    const editorContainer = this.page.locator('[data-editor-pane-side="left"] .monaco-editor');
+    await editorContainer.click();
+  }
+
+  async selectFromContextMenu(menuItem: string) {
+    // Select an item from the context menu
+    console.log(`Looking for menu item: "${menuItem}"`);
+    // Try multiple selectors for the menu item, prioritize button first
+    const selectors = [
+      () => this.page.locator(`button:has-text("${menuItem}")`).click(),
+      () => this.page.getByRole('menuitem', { name: menuItem }).click(),
+      () => this.page.locator(`[role="menuitem"]:has-text("${menuItem}")`).click(),
+      () => this.page.locator(`div:has-text("${menuItem}")`).click(),
+      () => this.page.locator(`*:has-text("${menuItem}")`).click()
+    ];
+    for (let i = 0; i < selectors.length; i++) {
+      try {
+        await selectors[i]();
+        console.log(`Successfully clicked menu item "${menuItem}" using selector ${i + 1}`);
+        return;
+      } catch (error) {
+        console.log(`Selector ${i + 1} failed for "${menuItem}": ${error.message}`);
+      }
+    }
+    // If no selector worked, log available menu items
+    console.log(`Could not find menu item "${menuItem}". Available menu items:`);
+    const menuItems = await this.page.locator('button').all();
+    for (const item of menuItems) {
+      const text = await item.textContent();
+      console.log(`  - "${text}"`);
+    }
+    throw new Error(`Could not find menu item "${menuItem}"`);
+  }
+
+  async selectFromSubmenu(parentItem: string, subItem: string) {
+    // Select from a submenu (e.g., "From sample" -> "JSON")
+    console.log(`Looking for submenu: "${parentItem}" -> "${subItem}"`);
+    // First, find and hover over the parent menu item, prioritize button first
+    const parentSelectors = [
+      () => this.page.locator(`button:has-text(\"${parentItem}\")`).hover(),
+      () => this.page.getByRole('menuitem', { name: parentItem }).hover(),
+      () => this.page.locator(`[role=\"menuitem\"]:has-text(\"${parentItem}\")`).hover(),
+      () => this.page.locator(`div:has-text(\"${parentItem}\")`).hover()
+    ];
+    let parentFound = false;
+    for (let i = 0; i < parentSelectors.length; i++) {
+      try {
+        await parentSelectors[i]();
+        console.log(`Successfully hovered over parent menu item "${parentItem}" using selector ${i + 1}`);
+        parentFound = true;
+        break;
+      } catch (error) {
+        console.log(`Parent selector ${i + 1} failed for "${parentItem}": ${error.message}`);
+      }
+    }
+    if (!parentFound) {
+      throw new Error(`Could not find parent menu item "${parentItem}"`);
+    }
+    // Wait a moment for the submenu to appear
+    await this.page.waitForTimeout(500);
+    // Then click on the submenu item, prioritize exact match first
+    const submenuSelectors = [
+      () => this.page.getByRole('button', { name: subItem, exact: true }).click(),
+      () => this.page.locator(`button:has-text(\"${subItem}\")`).click(),
+      () => this.page.getByRole('menuitem', { name: subItem }).click(),
+      () => this.page.locator(`[role=\"menuitem\"]:has-text(\"${subItem}\")`).click(),
+      () => this.page.locator(`div:has-text(\"${subItem}\")`).click()
+    ];
+    for (let i = 0; i < submenuSelectors.length; i++) {
+      try {
+        await submenuSelectors[i]();
+        console.log(`Successfully clicked submenu item "${subItem}" using selector ${i + 1}`);
+        return;
+      } catch (error) {
+        console.log(`Submenu selector ${i + 1} failed for "${subItem}": ${error.message}`);
+      }
+    }
+    // If no selector worked, log available submenu items
+    console.log(`Could not find submenu item "${subItem}". Available submenu items:`);
+    const submenuItems = await this.page.locator('button').all();
+    for (const item of submenuItems) {
+      const text = await item.textContent();
+      console.log(`  - "${text}"`);
+    }
+    throw new Error(`Could not find submenu item "${subItem}"`);
+  }
+
+  async expectContentIsSingleLine() {
+    // Check that the editor content is on a single line (no newlines)
+    const content = await this.getMonacoEditorContent();
+    if (content.includes('\n')) {
+      throw new Error(`Content is not on a single line. Content: "${content}"`);
+    }
+  }
+
+  async expectContentIsNotSingleLine() {
+    // Check that the editor content is NOT on a single line (has newlines)
+    const content = await this.getMonacoEditorContent();
+    
+    if (!content.includes('\n')) {
+      throw new Error(`Content is on a single line but should not be. Content: "${content}"`);
+    }
   }
 }
 
