@@ -50,4 +50,16 @@ Then('the active editor should contain markdown content', async function() {
 });
 Then('the preview should be visible', async function() {
   await this.expectPreviewIsVisible();
+});
+
+Then('the first 10 lines of the editor should contain JSON content', async function() {
+  await this.expectFirst10LinesContainJson();
+});
+
+Then('the status bar language should be {string}', async function(language) {
+  await this.expectStatusBarLanguage(language);
+});
+
+Then('the status bar should show a green validation tick', async function() {
+  await this.expectStatusBarValidationTick();
 }); 

@@ -375,14 +375,113 @@ export class E2EWorld extends World {
   }
 
   async expectUrlContains(expectedUrlPart: any) {
-    // Wait for the URL to contain the expected part with a timeout
-    try {
-      await this.page.waitForURL(`**/*${expectedUrlPart}*`, { timeout: 5000 });
-    } catch (error) {
-      // If the URL doesn't match the pattern, check the current URL and provide a helpful error
-      const currentUrl = this.page.url();
-      throw new Error(`URL does not contain "${expectedUrlPart}" after waiting. Current URL: ${currentUrl}`);
+    // Use Playwright's built-in expect with auto-waiting
+    await expect(this.page).toHaveURL(new RegExp(`.*${expectedUrlPart}.*`));
+  }
+
+  // Performance and Language Detection Methods
+  async generateLargeJsonFile() {
+    // Generate a large JSON object with nested structures
+    const largeJson = this.generateLargeJsonObject();
+    
+    // Set to clipboard
+    await this.setClipboardContent(largeJson);
+    
+    console.log(`Generated and set ${(largeJson.length / 1024 / 1024).toFixed(2)}MB JSON to clipboard`);
+  }
+
+  private generateLargeJsonObject(): string {
+    // Create a large JSON object with nested arrays and objects
+    const baseObject = {
+      metadata: {
+        generated: new Date().toISOString(),
+        size: "1.5MB",
+        description: "Large JSON file for performance testing"
+      },
+      data: []
+    };
+
+    // Generate 1000 objects with nested structures to reach ~1.5MB
+    for (let i = 0; i < 1000; i++) {
+      baseObject.data.push({
+        id: i,
+        name: `Item ${i}`,
+        description: `This is a detailed description for item ${i} with lots of text to increase the file size. It contains various details about the item including its properties, characteristics, and metadata.`,
+        properties: {
+          category: `Category ${i % 10}`,
+          priority: i % 5 + 1,
+          tags: [`tag${i}`, `category${i % 10}`, `priority${i % 5 + 1}`],
+          metadata: {
+            created: new Date(Date.now() - i * 86400000).toISOString(),
+            updated: new Date().toISOString(),
+            version: `${i % 10}.${i % 100}.${i % 1000}`,
+            flags: {
+              active: i % 2 === 0,
+              featured: i % 10 === 0,
+              archived: i % 50 === 0
+            }
+          },
+          nested: {
+            level1: {
+              level2: {
+                level3: {
+                  value: `Nested value ${i}`,
+                  array: Array.from({length: 5}, (_, j) => `nested-item-${i}-${j}`)
+                }
+              }
+            }
+          }
+        },
+        content: `This is the main content for item ${i}. It contains a substantial amount of text to help reach the target file size of 1.5MB. The content includes various details, descriptions, and metadata that would be typical in a real-world JSON file.`
+      });
     }
+
+    return JSON.stringify(baseObject, null, 2);
+  }
+
+  async typeMarkdownContent(content: string) {
+    // Clear the editor first
+    const editorLocator = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
+    await editorLocator.clear();
+    
+    // Type the content
+    await editorLocator.fill(content);
+  }
+
+  async expectFirst10LinesContainJson() {
+    const content = await this.getMonacoEditorContent();
+    const lines = content.split('\n').slice(0, 10);
+    const first10Lines = lines.join('\n');
+    
+    // Check if the first 10 lines contain JSON structure
+    const hasJsonStructure = first10Lines.includes('{') && 
+                           (first10Lines.includes('"') || first10Lines.includes(':')) &&
+                           (first10Lines.includes('metadata') || first10Lines.includes('data'));
+    
+    if (!hasJsonStructure) {
+      throw new Error(`First 10 lines do not contain JSON content. Content: "${first10Lines}"`);
+    }
+  }
+
+  // --- Status Bar Helpers ---
+  getStatusBarLanguageLabel() {
+    // Returns Playwright locator for the language label in the status bar
+    return this.page.locator('.flex.items-center.space-x-4 span.capitalize');
+  }
+
+  getStatusBarValidationIcon() {
+    // Returns Playwright locator for the green validation icon in the status bar
+    return this.page.locator('.flex.items-center.space-x-2 svg[class*="text-green-400"]');
+  }
+
+  async expectStatusBarLanguage(language: string) {
+    const statusBarLanguage = this.getStatusBarLanguageLabel();
+    await expect(statusBarLanguage).toContainText(language);
+  }
+
+  async expectStatusBarValidationTick() {
+    const validationTick = this.getStatusBarValidationIcon();
+    await expect(validationTick).toBeVisible();
   }
 }
 

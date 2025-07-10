@@ -76,4 +76,12 @@ When('I click the "Open specialized tablet" button', async function() {
 });
 When('I click the "Import from clipboard" button', async function() {
   await this.clickImportFromClipboard();
+});
+
+When('I generate a 1.5MB JSON file and set it to clipboard', async function() {
+  await this.generateLargeJsonFile();
+});
+
+When('I type the following markdown content into the editor:', async function(content) {
+  await this.typeMarkdownContent(content);
 }); 
