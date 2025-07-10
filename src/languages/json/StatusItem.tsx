@@ -3,8 +3,10 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { validateJson } from "./validation";
 import { StatusItemProps } from "../../components/StatusBar/types";
 
-export const JsonStatusItem: React.FC<StatusItemProps> = ({ content = "" }) => {
-  const validation = validateJson(content);
+export const JsonStatusItem: React.FC<StatusItemProps> = ({ content = "", activeTab }) => {
+  // Use full tab content for validation instead of truncated content
+  const fullContent = activeTab?.content || content;
+  const validation = validateJson(fullContent);
 
   return (
     <div
