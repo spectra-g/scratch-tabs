@@ -22,7 +22,7 @@ tests/e2e/
 
 The framework uses a **modular action-based approach** to avoid the "God Object" anti-pattern:
 
-- **`world.ts`**: Lightweight orchestrator that composes action classes
+- **`world.ts`**: **Essential** lightweight orchestrator and dependency injection container
 - **`editor.actions.ts`**: Editor-specific interactions (typing, undo, etc.)
 - **`tabBar.actions.ts`**: Tab management (clicking tabs, context menus, etc.)
 - **`contextMenu.actions.ts`**: Context menu interactions
@@ -32,6 +32,27 @@ The framework uses a **modular action-based approach** to avoid the "God Object"
 - **`statusBar.actions.ts`**: Status bar interactions
 
 Each action class encapsulates specific UI interactions and business logic, making tests more maintainable and reusable.
+
+#### Why `world.ts` is Essential
+
+The `world.ts` file **cannot be removed** as it serves three fundamental purposes:
+
+1. **Cucumber Architecture Requirement**: Provides the World class that Cucumber.js requires for:
+   - Holding state between steps in a scenario
+   - Providing the `this` context in step definitions
+   - Managing test resource lifecycle
+
+2. **Playwright Integration**: Essential for:
+   - Storing `page` and `context` objects
+   - Making them available across all step definitions
+   - Proper resource cleanup after tests
+
+3. **Dependency Injection Container**: Serves as the central hub that:
+   - Instantiates all action classes with the same `page` instance
+   - Provides single point of access to all actions
+   - Ensures consistent state management
+
+The file has been **streamlined** to its essential purpose, removing 50+ legacy delegate methods that were just bloat.
 
 ### Compilation Process
 
