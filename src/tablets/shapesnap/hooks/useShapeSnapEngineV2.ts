@@ -126,7 +126,7 @@ export const useShapeSnapEngineV2 = (
           })),
         };
       } else if (
-        shape.type === "arrow" &&
+        shape.type === "straight-arrow" &&
         (shape as any).from &&
         (shape as any).to
       ) {
@@ -206,11 +206,11 @@ export const useShapeSnapEngineV2 = (
           zIndex: Date.now(),
         } as Shape;
 
-        // Add default arrow tip to straight lines only
+        // Add default arrow tip to all arrow types
         if (
-          newShape.type === "line" &&
-          newShape.points &&
-          newShape.points.length === 2
+          newShape.type === "straight-arrow" ||
+          newShape.type === "curved-arrow" ||
+          newShape.type === "orthogonal-arrow"
         ) {
           (newShape as any).arrowTipEnd = "simple";
           (newShape as any).arrowTipSize = 10;

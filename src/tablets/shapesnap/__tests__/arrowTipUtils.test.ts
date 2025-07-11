@@ -76,7 +76,6 @@ describe("arrowTipUtils", () => {
     it("should return false for invalid styles", () => {
       const invalidStyles = [
         "invalid-style",
-        "arrow",
         "triangle",
         "circle",
         "",

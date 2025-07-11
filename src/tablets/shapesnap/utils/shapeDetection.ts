@@ -1,4 +1,4 @@
-import { Point, Shape } from "../types";
+import { Shape, Point } from '../types';
 
 // --- CORE HELPER FUNCTIONS ---
 const getBoundingBox = (
@@ -70,9 +70,12 @@ const findFurthestPoint = (points: Point[]): Point => {
     const start = points[0];
     const end = points[points.length - 1];
 
+    const lineDist = distance(start, end);
+    if (lineDist === 0) return furthestPoint;
+
     for (let i = 1; i < points.length - 1; i++) {
         const p = points[i];
-        const dist = Math.abs((end.y - start.y) * p.x - (end.x - start.x) * p.y + end.x * start.y - end.y * start.x) / distance(start, end);
+        const dist = Math.abs((end.y - start.y) * p.x - (end.x - start.x) * p.y + end.x * start.y - end.y * start.x) / lineDist;
         if (dist > maxDist) {
             maxDist = dist;
             furthestPoint = p;
@@ -90,16 +93,17 @@ const findFurthestPoint = (points: Point[]): Point => {
 const detectOrthogonalLine = (points: Point[]): Point[] | null => {
   if (points.length < 3) return null;
 
+  const simplifiedPoints = simplifyPoints(points, 5.0);
   // Use existing corner detection
-  const corners = getCorners(points, 45); // Use a wider angle threshold for corners
+  const corners = getCorners(simplifiedPoints, 45); // Use a wider angle threshold for corners
 
   // We are looking for 1 or 2 corners (which means 2 or 3 segments)
   if (corners.length < 1 || corners.length > 2) {
     return null;
   }
 
-  const startPoint = points[0];
-  const endPoint = points[points.length - 1];
+  const startPoint = simplifiedPoints[0];
+  const endPoint = simplifiedPoints[simplifiedPoints.length - 1];
   const allPoints = [startPoint, ...corners, endPoint];
   const newPoints: Point[] = [startPoint];
 
@@ -112,10 +116,18 @@ const detectOrthogonalLine = (points: Point[]): Point[] | null => {
     // Snap to horizontal or vertical
     if (Math.abs(dx) > Math.abs(dy)) {
       // More horizontal
-      newPoints.push({ x: p2.x, y: p1.y });
+      if (Math.abs(dy / dx) < 0.36) { // tangent of ~20 degrees
+        newPoints.push({ x: p2.x, y: p1.y });
+      } else {
+        newPoints.push(p2);
+      }
     } else {
       // More vertical
-      newPoints.push({ x: p1.x, y: p2.y });
+      if (Math.abs(dx / dy) < 0.36) { // tangent of ~20 degrees
+        newPoints.push({ x: p1.x, y: p2.y });
+      } else {
+        newPoints.push(p2);
+      }
     }
   }
 
@@ -526,33 +538,26 @@ export const detectShape = (
 ): any | null => {
   if (points.length < 10) return null;
 
-  // Log ALL drawing attempts at the start
-  console.log('=== DRAWING ATTEMPT ===');
-  console.log('Raw coordinates:', JSON.stringify(points));
-  console.log('Number of points:', points.length);
-  console.log('Intended shape: [PLACEHOLDER - TELL ME WHAT YOU DREW]');
-  console.log('=== END DRAWING ATTEMPT ===');
-
   const box = getBoundingBox(points);
   const width = box.maxX - box.minX;
   const height = box.maxY - box.minY;
+  const pathLength = getPathLength(points);
 
+  // --- OPEN PATH LOGIC (Lines and Arrows) ---
   if (!isClosed(points, box)) {
-    if (Math.max(width, height) < 20) return null;
-    
-    const pathLength = getPathLength(points); // Calculate path length once
-    
-    // --- NEW CURVE DETECTION LOGIC ---
+    if (pathLength < 20) return null; // Ignore tiny drawings
+
+    // 1. Check for Orthogonal Arrow
+    const orthogonalPoints = detectOrthogonalLine(points);
+    if (orthogonalPoints) {
+      return {
+        type: 'orthogonal-arrow',
+        points: orthogonalPoints,
+      };
+    }
+
+    // 2. Check for Curved Arrow
     if (isCurved(points, pathLength)) {
-      // Log curve detection data
-      console.log('=== CURVE ARROW DETECTION ===');
-      console.log('Raw coordinates:', JSON.stringify(points));
-      console.log('Path length:', pathLength);
-      console.log('Direct distance:', distance(points[0], points[points.length - 1]));
-      console.log('Curve ratio:', distance(points[0], points[points.length - 1]) / pathLength);
-      console.log('Detection result: curved-arrow');
-      console.log('=== END CURVE DETECTION ===');
-      
       return {
         type: "curved-arrow",
         from: points[0],
@@ -560,48 +565,26 @@ export const detectShape = (
         control: findFurthestPoint(points),
       };
     }
-    // --- END NEW LOGIC ---
 
-    // --- NEW ORTHOGONAL DETECTION LOGIC ---
-    const orthogonalPoints = detectOrthogonalLine(points);
-    if (orthogonalPoints) {
-      // Log orthogonal detection data
-      console.log('=== ORTHOGONAL ARROW DETECTION ===');
-      console.log('Raw coordinates:', JSON.stringify(points));
-      console.log('Original path length:', pathLength);
-      console.log('Orthogonal points:', JSON.stringify(orthogonalPoints));
-      console.log('Detection result: orthogonal-arrow');
-      console.log('=== END ORTHOGONAL DETECTION ===');
-      
-      return {
-        type: "orthogonal-arrow",
-        points: orthogonalPoints,
+    // 3. Check for Straight Arrow before defaulting
+    const directDistance = distance(points[0], points[points.length - 1]);
+    if (pathLength > 0 && (directDistance / pathLength) > 0.98) {
+       return {
+        type: 'straight-arrow',
+        from: points[0],
+        to: points[points.length - 1],
       };
     }
-    // --- END NEW LOGIC ---
 
-    // Existing open-path logic (for straight lines)
-    const straightness = distance(points[0], points[points.length - 1]) / pathLength;
-    
-    // Log straight line detection data
-    console.log('=== STRAIGHT LINE DETECTION ===');
-    console.log('Raw coordinates:', JSON.stringify(points));
-    console.log('Path length:', pathLength);
-    console.log('Direct distance:', distance(points[0], points[points.length - 1]));
-    console.log('Straightness ratio:', straightness);
-    console.log('Detection result: line');
-    console.log('=== END STRAIGHT LINE DETECTION ===');
-    
-    if (straightness > 0.95)
-      return { type: "line", points: [points[0], points[points.length - 1]] };
-    return { type: "line", points };
+    // Return null if no open-path shape is detected
+    return null;
   }
 
+  // --- CLOSED PATH LOGIC (Polygons) ---
   if (width < 20 || height < 20) return null;
 
   let detectedType: Shape["type"] | "unknown" = "unknown";
 
-  const pathLength = getPathLength(points);
   const boxPerimeter = 2 * (width + height);
   const perimeterRatio = pathLength / boxPerimeter;
   const angleThreshold = config.straightSegmentAngleThreshold ?? 20;
@@ -613,9 +596,6 @@ export const detectShape = (
   const dollarResult = recognizer.recognize(points);
   const diamondConfidence = calculateDiamondConfidence(points, box, config);
 
-  // --- REVISED DECISION LOGIC ---
-
-  // 1. Box-like shapes (Squares/Rectangles)
   if (
     perimeterRatio > config.perimeterRatioThreshold &&
     straightSegments >= 3 &&
@@ -634,7 +614,6 @@ export const detectShape = (
         aspectRatio > config.aspectRatioThreshold ? "rectangle" : "square";
     }
   } else {
-    // 2. Not a box. Evaluate other candidates.
     const isCircleCandidate = circleScore < config.circleScoreThreshold;
     const isTriangleCandidate =
       dollarResult.name === "triangle" && dollarResult.score > 0.85;
@@ -668,7 +647,6 @@ export const detectShape = (
     }
   }
 
-  // 3. Final Fallback.
   if (
     detectedType === "unknown" &&
     dollarResult.score > config.scoreThreshold
@@ -677,7 +655,7 @@ export const detectShape = (
   }
 
   if (detectedType === "unknown") {
-    return { type: "line", points };
+    return null;
   }
 
   const centroid = getCentroid(points);
@@ -706,7 +684,7 @@ export const detectShape = (
     case "rectangle":
       return { type: "rectangle", x: box.minX, y: box.minY, width, height };
     default:
-      return { type: "line", points };
+      return null;
   }
 };
 

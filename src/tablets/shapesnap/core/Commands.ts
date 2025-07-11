@@ -322,7 +322,7 @@ export class MoveShapeCommand extends BaseCommand {
     switch (shape.type) {
       case "line":
         return shape.points[0] || { x: 0, y: 0 };
-      case "arrow":
+      case "straight-arrow":
         return shape.from;
       default:
         return { x: (shape as any).x || 0, y: (shape as any).y || 0 };
@@ -339,7 +339,7 @@ export class MoveShapeCommand extends BaseCommand {
           y: p.y + delta.y,
         }));
         break;
-      case "arrow":
+      case "straight-arrow":
         (newShape as any).from = {
           x: shape.from.x + delta.x,
           y: shape.from.y + delta.y,

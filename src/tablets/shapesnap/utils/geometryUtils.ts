@@ -34,7 +34,7 @@ export const getShapeCenter = (shape: Shape): Point => {
         x: (shape.from.x + shape.to.x) / 2,
         y: (shape.from.y + shape.to.y) / 2,
       };
-    case "arrow":
+    case "straight-arrow":
       return {
         x: (shape.from.x + shape.to.x) / 2,
         y: (shape.from.y + shape.to.y) / 2,
@@ -146,7 +146,7 @@ export const getShapeBoundingBox = (
         bottom: Math.max(...yCoords),
       };
     }
-    case "arrow": {
+    case "straight-arrow": {
       const arrowShape = shape as Shape & { from: Point; to: Point };
       const xCoords = [arrowShape.from.x, arrowShape.to.x];
       const yCoords = [arrowShape.from.y, arrowShape.to.y];

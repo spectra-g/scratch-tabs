@@ -261,6 +261,39 @@ export class ShapeRegistry {
     );
 
     this.registerShape(
+      "straight-arrow",
+      {
+        type: "straight-arrow",
+        defaultProperties: {
+          type: "straight-arrow",
+          from: { x: 0, y: 0 },
+          to: { x: 50, y: 0 },
+          style: { stroke: "#000000", strokeWidth: 2 },
+        },
+        requiredProperties: ["from", "to"],
+        supportedOperations: [
+          "move",
+          "resize",
+          "editLabel",
+          "changeStyle",
+          "copy",
+          "delete",
+        ],
+        renderingStrategy: "svg",
+      },
+      {
+        canMove: true,
+        canResize: true,
+        canRotate: false,
+        canEditLabel: true,
+        canChangeStyle: true,
+        supportsMultipoint: false,
+        supportsFill: false,
+        supportsBorder: true,
+      },
+    );
+
+    this.registerShape(
       "text",
       {
         type: "text",
@@ -291,39 +324,6 @@ export class ShapeRegistry {
         supportsMultipoint: false,
         supportsFill: false,
         supportsBorder: false,
-      },
-    );
-
-    this.registerShape(
-      "arrow",
-      {
-        type: "arrow",
-        defaultProperties: {
-          type: "arrow",
-          from: { x: 0, y: 0 },
-          to: { x: 100, y: 100 },
-          style: { stroke: "#000000", strokeWidth: 2 },
-        },
-        requiredProperties: ["from", "to"],
-        supportedOperations: [
-          "move",
-          "resize",
-          "editLabel",
-          "changeStyle",
-          "copy",
-          "delete",
-        ],
-        renderingStrategy: "svg",
-      },
-      {
-        canMove: true,
-        canResize: true,
-        canRotate: false,
-        canEditLabel: true,
-        canChangeStyle: true,
-        supportsMultipoint: false,
-        supportsFill: false,
-        supportsBorder: true,
       },
     );
 

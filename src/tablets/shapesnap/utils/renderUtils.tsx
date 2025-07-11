@@ -89,7 +89,7 @@ export const getShapeCenter = (shape: Shape): Point => {
         x: (shape.from.x + shape.to.x) / 2,
         y: (shape.from.y + shape.to.y) / 2,
       };
-    case "arrow":
+    case "straight-arrow":
       return {
         x: (shape.from.x + shape.to.x) / 2,
         y: (shape.from.y + shape.to.y) / 2,
@@ -703,8 +703,8 @@ export const renderShape = (
             strokeWidth={shape.style.strokeWidth || 2}
           />
         );
-      case "arrow":
-        const [arrowPoint1, arrowPoint2] = calculateArrowhead(
+      case "straight-arrow":
+        const [straightArrowP1, straightArrowP2] = calculateArrowhead(
           shape.from,
           shape.to,
         );
@@ -722,7 +722,7 @@ export const renderShape = (
             />
             <polyline
               key={`${shape.id}-arrowhead`}
-              points={`${shape.to.x},${shape.to.y} ${arrowPoint1.x},${arrowPoint1.y} ${arrowPoint2.x},${arrowPoint2.y} ${shape.to.x},${shape.to.y}`}
+              points={`${shape.to.x},${shape.to.y} ${straightArrowP1.x},${straightArrowP1.y} ${straightArrowP2.x},${straightArrowP2.y} ${shape.to.x},${shape.to.y}`}
               fill={shape.style.stroke}
               stroke={shape.style.stroke}
               strokeWidth={shape.style.strokeWidth || 2}

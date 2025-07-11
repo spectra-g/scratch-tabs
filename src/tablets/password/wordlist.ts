@@ -29,7 +29,7 @@ export const wordlist: string[] = [
   "arise",
   "armor",
   "aroma",
-  "arrow",
+  "straight-arrow",
   "ascot",
   "asset",
   "atlas",

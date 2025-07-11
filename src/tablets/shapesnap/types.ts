@@ -3,7 +3,7 @@ export type ShapeType =
   | "rectangle"
   | "circle"
   | "diamond"
-  | "arrow"
+  | "straight-arrow"
   | "text"
   | "triangle"
   | "square"
@@ -77,8 +77,8 @@ export interface DiamondShape extends BaseShape {
   height: number;
 }
 
-export interface ArrowShape extends BaseShape {
-  type: "arrow";
+export interface StraightArrowShape extends BaseShape {
+  type: "straight-arrow";
   from: Point;
   to: Point;
 }
@@ -129,7 +129,7 @@ export type Shape =
   | RectangleShape
   | CircleShape
   | DiamondShape
-  | ArrowShape
+  | StraightArrowShape
   | TextShape
   | SquareShape
   | TriangleShape
