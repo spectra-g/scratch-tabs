@@ -52,7 +52,7 @@ function getCentroid(points: Point[]): Point {
  * @param threshold A value between 0 and 1. A lower value requires a more pronounced curve.
  * @returns True if the path is considered a curve.
  */
-const isCurved = (points: Point[], pathLength: number, threshold: number = 0.95): boolean => {
+const isCurved = (points: Point[], pathLength: number, threshold: number = 0.97): boolean => {
   if (points.length < 3) return false;
   const directDistance = distance(points[0], points[points.length - 1]);
   if (pathLength === 0) return false;
@@ -93,9 +93,10 @@ const findFurthestPoint = (points: Point[]): Point => {
 const detectOrthogonalLine = (points: Point[]): Point[] | null => {
   if (points.length < 3) return null;
 
-  const simplifiedPoints = simplifyPoints(points, 5.0);
-  // Use existing corner detection
-  const corners = getCorners(simplifiedPoints, 45); // Use a wider angle threshold for corners
+  // Simplify points to remove noise, with a slightly higher tolerance
+  const simplifiedPoints = simplifyPoints(points, 8.0);
+  // Use a stricter angle threshold to only find sharp corners
+  const corners = getCorners(simplifiedPoints, 70);
 
   // We are looking for 1 or 2 corners (which means 2 or 3 segments)
   if (corners.length < 1 || corners.length > 2) {
@@ -113,28 +114,30 @@ const detectOrthogonalLine = (points: Point[]): Point[] | null => {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
 
-    // Snap to horizontal or vertical
+    if (dx === 0 && dy === 0) continue;
+
+    const angleRatio = Math.abs(dx) > Math.abs(dy) ? Math.abs(dy / dx) : Math.abs(dx / dy);
+
+    // If the angle of a segment deviates more than ~20 degrees from a cardinal axis,
+    // it's probably not part of an intended orthogonal line. tan(20 deg) ~= 0.36
+    if (angleRatio > 0.36) {
+        return null;
+    }
+
+    // Snap to horizontal or vertical based on the dominant axis of the segment
     if (Math.abs(dx) > Math.abs(dy)) {
       // More horizontal
-      if (Math.abs(dy / dx) < 0.36) { // tangent of ~20 degrees
-        newPoints.push({ x: p2.x, y: p1.y });
-      } else {
-        newPoints.push(p2);
-      }
+      newPoints.push({ x: p2.x, y: p1.y });
     } else {
       // More vertical
-      if (Math.abs(dx / dy) < 0.36) { // tangent of ~20 degrees
-        newPoints.push({ x: p1.x, y: p2.y });
-      } else {
-        newPoints.push(p2);
-      }
+      newPoints.push({ x: p1.x, y: p2.y });
     }
   }
 
-  // Check if the resulting shape is plausible (not collapsed on itself)
+  // Final check to ensure the straightened line is valid
   if (newPoints.length < 3) return null;
   for (let i = 1; i < newPoints.length; i++) {
-      if (distance(newPoints[i-1], newPoints[i]) < 10) return null; // Ignore tiny segments
+    if (distance(newPoints[i - 1], newPoints[i]) < 20) return null; // Ignore tiny segments
   }
 
   return newPoints;
@@ -547,7 +550,7 @@ export const detectShape = (
   if (!isClosed(points, box)) {
     if (pathLength < 20) return null; // Ignore tiny drawings
 
-    // 1. Check for Orthogonal Arrow
+    // 1. Check for ORTHOGONAL ARROW first (most specific open shape)
     const orthogonalPoints = detectOrthogonalLine(points);
     if (orthogonalPoints) {
       return {
@@ -556,7 +559,7 @@ export const detectShape = (
       };
     }
 
-    // 2. Check for Curved Arrow
+    // 2. Check for CURVED ARROW second
     if (isCurved(points, pathLength)) {
       return {
         type: "curved-arrow",
@@ -566,18 +569,13 @@ export const detectShape = (
       };
     }
 
-    // 3. Check for Straight Arrow before defaulting
-    const directDistance = distance(points[0], points[points.length - 1]);
-    if (pathLength > 0 && (directDistance / pathLength) > 0.98) {
-       return {
-        type: 'straight-arrow',
-        from: points[0],
-        to: points[points.length - 1],
-      };
-    }
-
-    // Return null if no open-path shape is detected
-    return null;
+    // 3. Default to a STRAIGHT ARROW if it's not curved or orthogonal
+    // A simple straight line is a straight-arrow without a visible tip by default.
+    return {
+      type: 'straight-arrow',
+      from: points[0],
+      to: points[points.length - 1],
+    };
   }
 
   // --- CLOSED PATH LOGIC (Polygons) ---
