@@ -71,6 +71,7 @@ const createTrianglePath = (
 // Helper function to get shape center for label positioning
 export const getShapeCenter = (shape: Shape): Point => {
   switch (shape.type) {
+    case "orthogonal-arrow":
     case "line":
       const midIndex = Math.floor(shape.points.length / 2);
       return shape.points[midIndex] || { x: 0, y: 0 };
@@ -83,6 +84,11 @@ export const getShapeCenter = (shape: Shape): Point => {
     case "triangle":
       // For diamond and triangle, x and y represent the center, not top-left corner
       return { x: shape.x, y: shape.y };
+    case "curved-arrow":
+      return {
+        x: (shape.from.x + shape.to.x) / 2,
+        y: (shape.from.y + shape.to.y) / 2,
+      };
     case "arrow":
       return {
         x: (shape.from.x + shape.to.x) / 2,
@@ -515,6 +521,37 @@ export const renderShape = (
 
   const shapeElement = (() => {
     switch (shape.type) {
+      case "curved-arrow": {
+        const curvedArrow = shape as any; // Cast to access from, to, control
+        const { from, to, control, arrowTipEnd, arrowTipSize } = curvedArrow;
+        const pathData = `M ${from.x} ${from.y} Q ${control.x} ${control.y} ${to.x} ${to.y}`;
+
+        // For the arrowhead, the direction is from the control point to the end point
+        const endArrow = arrowTipEnd && arrowTipEnd !== "none"
+          ? renderArrowTip(
+              to,
+              control, // Use control point for direction
+              arrowTipEnd,
+              arrowTipSize || 10,
+              shape.style.stroke,
+              shape.style.strokeWidth || 2,
+            )
+          : null;
+
+        return (
+          <g key={shape.id} {...baseProps}>
+            <path
+              d={pathData}
+              stroke={shape.style.stroke}
+              strokeWidth={shape.style.strokeWidth || 2}
+              fill="none"
+              strokeLinecap="round"
+            />
+            {endArrow}
+          </g>
+        );
+      }
+      case "orthogonal-arrow": // Add this case
       case "line":
         const lineShape = shape as Shape & {
           points: Point[];

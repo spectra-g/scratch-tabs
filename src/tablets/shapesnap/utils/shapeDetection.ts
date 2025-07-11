@@ -45,6 +45,89 @@ function getCentroid(points: Point[]): Point {
   return { x: sum.x / n, y: sum.y / n };
 }
 
+/**
+ * Checks if a series of points represents a curve.
+ * @param points The points drawn by the user.
+ * @param pathLength The pre-calculated length of the path.
+ * @param threshold A value between 0 and 1. A lower value requires a more pronounced curve.
+ * @returns True if the path is considered a curve.
+ */
+const isCurved = (points: Point[], pathLength: number, threshold: number = 0.95): boolean => {
+  if (points.length < 3) return false;
+  const directDistance = distance(points[0], points[points.length - 1]);
+  if (pathLength === 0) return false;
+  // If the direct distance is much shorter than the path length, it's a curve.
+  return (directDistance / pathLength) < threshold;
+};
+
+/**
+ * Finds the point in a path that is furthest from the straight line connecting the start and end points.
+ * This will serve as the control point for our Bézier curve.
+ */
+const findFurthestPoint = (points: Point[]): Point => {
+    let maxDist = -1;
+    let furthestPoint = points[Math.floor(points.length / 2)]; // Default to midpoint
+    const start = points[0];
+    const end = points[points.length - 1];
+
+    for (let i = 1; i < points.length - 1; i++) {
+        const p = points[i];
+        const dist = Math.abs((end.y - start.y) * p.x - (end.x - start.x) * p.y + end.x * start.y - end.y * start.x) / distance(start, end);
+        if (dist > maxDist) {
+            maxDist = dist;
+            furthestPoint = p;
+        }
+    }
+    return furthestPoint;
+};
+
+/**
+ * Analyzes corners of an open path to see if it's an orthogonal line candidate.
+ * If it is, it returns a new set of points that are perfectly straight.
+ * @param points The points drawn by the user.
+ * @returns A new array of points for the orthogonal line, or null if it's not a match.
+ */
+const detectOrthogonalLine = (points: Point[]): Point[] | null => {
+  if (points.length < 3) return null;
+
+  // Use existing corner detection
+  const corners = getCorners(points, 45); // Use a wider angle threshold for corners
+
+  // We are looking for 1 or 2 corners (which means 2 or 3 segments)
+  if (corners.length < 1 || corners.length > 2) {
+    return null;
+  }
+
+  const startPoint = points[0];
+  const endPoint = points[points.length - 1];
+  const allPoints = [startPoint, ...corners, endPoint];
+  const newPoints: Point[] = [startPoint];
+
+  for (let i = 0; i < allPoints.length - 1; i++) {
+    const p1 = newPoints[i];
+    const p2 = allPoints[i + 1];
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+
+    // Snap to horizontal or vertical
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // More horizontal
+      newPoints.push({ x: p2.x, y: p1.y });
+    } else {
+      // More vertical
+      newPoints.push({ x: p1.x, y: p2.y });
+    }
+  }
+
+  // Check if the resulting shape is plausible (not collapsed on itself)
+  if (newPoints.length < 3) return null;
+  for (let i = 1; i < newPoints.length; i++) {
+      if (distance(newPoints[i-1], newPoints[i]) < 10) return null; // Ignore tiny segments
+  }
+
+  return newPoints;
+};
+
 // --- HEURISTIC CALCULATORS ---
 function getDiamondScore(
   points: Point[],
@@ -443,14 +526,72 @@ export const detectShape = (
 ): any | null => {
   if (points.length < 10) return null;
 
+  // Log ALL drawing attempts at the start
+  console.log('=== DRAWING ATTEMPT ===');
+  console.log('Raw coordinates:', JSON.stringify(points));
+  console.log('Number of points:', points.length);
+  console.log('Intended shape: [PLACEHOLDER - TELL ME WHAT YOU DREW]');
+  console.log('=== END DRAWING ATTEMPT ===');
+
   const box = getBoundingBox(points);
   const width = box.maxX - box.minX;
   const height = box.maxY - box.minY;
 
   if (!isClosed(points, box)) {
     if (Math.max(width, height) < 20) return null;
-    const straightness =
-      distance(points[0], points[points.length - 1]) / getPathLength(points);
+    
+    const pathLength = getPathLength(points); // Calculate path length once
+    
+    // --- NEW CURVE DETECTION LOGIC ---
+    if (isCurved(points, pathLength)) {
+      // Log curve detection data
+      console.log('=== CURVE ARROW DETECTION ===');
+      console.log('Raw coordinates:', JSON.stringify(points));
+      console.log('Path length:', pathLength);
+      console.log('Direct distance:', distance(points[0], points[points.length - 1]));
+      console.log('Curve ratio:', distance(points[0], points[points.length - 1]) / pathLength);
+      console.log('Detection result: curved-arrow');
+      console.log('=== END CURVE DETECTION ===');
+      
+      return {
+        type: "curved-arrow",
+        from: points[0],
+        to: points[points.length - 1],
+        control: findFurthestPoint(points),
+      };
+    }
+    // --- END NEW LOGIC ---
+
+    // --- NEW ORTHOGONAL DETECTION LOGIC ---
+    const orthogonalPoints = detectOrthogonalLine(points);
+    if (orthogonalPoints) {
+      // Log orthogonal detection data
+      console.log('=== ORTHOGONAL ARROW DETECTION ===');
+      console.log('Raw coordinates:', JSON.stringify(points));
+      console.log('Original path length:', pathLength);
+      console.log('Orthogonal points:', JSON.stringify(orthogonalPoints));
+      console.log('Detection result: orthogonal-arrow');
+      console.log('=== END ORTHOGONAL DETECTION ===');
+      
+      return {
+        type: "orthogonal-arrow",
+        points: orthogonalPoints,
+      };
+    }
+    // --- END NEW LOGIC ---
+
+    // Existing open-path logic (for straight lines)
+    const straightness = distance(points[0], points[points.length - 1]) / pathLength;
+    
+    // Log straight line detection data
+    console.log('=== STRAIGHT LINE DETECTION ===');
+    console.log('Raw coordinates:', JSON.stringify(points));
+    console.log('Path length:', pathLength);
+    console.log('Direct distance:', distance(points[0], points[points.length - 1]));
+    console.log('Straightness ratio:', straightness);
+    console.log('Detection result: line');
+    console.log('=== END STRAIGHT LINE DETECTION ===');
+    
     if (straightness > 0.95)
       return { type: "line", points: [points[0], points[points.length - 1]] };
     return { type: "line", points };
