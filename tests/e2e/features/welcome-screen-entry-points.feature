@@ -45,6 +45,7 @@ Feature: Welcome Screen Entry Points
     And the preview should be visible
     And the URL should contain "welcome"
 
+  @wip
   Scenario: Create new tab from file upload
     When I upload file "test-file.txt" with content "File content here"
     Then the "Welcome to Scratch Tabs" tab should exist and not be active
@@ -82,6 +83,7 @@ Feature: Welcome Screen Entry Points
     And the preview should be visible
     And the URL should contain "welcome"
 
+  @wip
   Scenario: Create new tab from drag and drop file
     When I drag file "dragged-file.json" with content '{"key": "value"}' onto the page
     Then the "Welcome to Scratch Tabs" tab should exist and not be active

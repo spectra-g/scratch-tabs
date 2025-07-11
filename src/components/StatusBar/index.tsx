@@ -306,7 +306,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           className="flex items-center cursor-pointer hover:bg-gray-700/50 px-1.5 py-0.5 rounded transition-colors"
           title="Change language"
         >
-          <span className="capitalize">{displayLabel}</span>
+          <span className="capitalize" data-testid="status-language">{displayLabel}</span>
           {showDotIndicator && (
             <span className="ml-1 text-blue-400 text-xs leading-none">•</span>
           )}

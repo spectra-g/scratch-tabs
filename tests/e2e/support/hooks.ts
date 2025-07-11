@@ -20,6 +20,9 @@ Before(async function () {
     permissions: ['clipboard-read', 'clipboard-write']
   });
   this.page = await this.context.newPage();
+  
+  // Initialize the action helpers now that page is available
+  this.initializeHelpers();
 });
 
 After(async function (params: any) {

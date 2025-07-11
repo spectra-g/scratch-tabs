@@ -188,6 +188,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
       {/* Preview Area (Conditional) */}
       {shouldShowPreview && activeTab && (
         <div
+          data-testid="preview-pane"
           style={previewStyle}
           className="h-full flex flex-col overflow-hidden border-l border-gray-700"
         >

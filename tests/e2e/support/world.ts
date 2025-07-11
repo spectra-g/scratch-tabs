@@ -1,696 +1,235 @@
 import { IWorldOptions, World, setWorldConstructor } from '@cucumber/cucumber';
-import { expect } from '@playwright/test';
+import { Page, BrowserContext } from '@playwright/test';
+import { EditorActions } from './editor.actions';
+import { TabBarActions } from './tabBar.actions';
+import { ContextMenuActions } from './contextMenu.actions';
+import { NavigationActions } from './navigation.actions';
+import { ClipboardActions } from './clipboard.actions';
+import { FileActions } from './file.actions';
+import { StatusBarActions } from './statusBar.actions';
 
 export class E2EWorld extends World {
-  context: any;
-  page: any;
+  context!: BrowserContext;
+  page!: Page;
 
-  constructor(options: any) {
+  // Action helpers
+  editor!: EditorActions;
+  tabBar!: TabBarActions;
+  contextMenu!: ContextMenuActions;
+  navigation!: NavigationActions;
+  clipboard!: ClipboardActions;
+  file!: FileActions;
+  statusBar!: StatusBarActions;
+
+  constructor(options: IWorldOptions) {
     super(options);
+    // The 'page' object isn't available yet, so we initialize helpers in a 'Before' hook
+    // where the page is guaranteed to exist.
   }
 
-  // 1. Navigation
-  async navigateToHome() {
-    await this.page.goto('http://localhost:5173/');
-    // Wait for the page to load first
-    await this.page.waitForLoadState('domcontentloaded');
-    // Wait for the app to be visible - look for "Scratch Tabs" text
-    await expect(this.page.getByText('Scratch Tabs')).toBeVisible();
-    await this.waitForPageStabilization();
+  // This method will be called from the Before hook in hooks.ts
+  initializeHelpers() {
+    this.editor = new EditorActions(this.page);
+    this.tabBar = new TabBarActions(this.page);
+    this.contextMenu = new ContextMenuActions(this.page);
+    this.navigation = new NavigationActions(this.page);
+    this.clipboard = new ClipboardActions(this.page);
+    this.file = new FileActions(this.page);
+    this.statusBar = new StatusBarActions(this.page);
   }
 
-  // 2. General Clicks & Interactions
-  async clickButton(buttonText: any) {
-    await this.page.getByRole('button', { name: buttonText, exact: true }).click();
-  }
-
-  async clickLink(linkText: any) {
-    await this.page.getByRole('link', { name: linkText, exact: true }).click();
-  }
-
-  async clickIcon(iconTestId: any) {
-    // Try multiple selectors for the specified icon
-    const selectors = [
-      // Playwright's built-in role selector (most reliable)
-      () => this.page.getByRole('button', { name: iconTestId }).click(),
-      // Title-based selectors
-      () => this.page.getByTitle(iconTestId).click(),
-      () => this.page.locator(`[title="${iconTestId}"]`).click(),
-      // Legacy selectors for backward compatibility
-      () => this.page.locator(`[data-testid="icon-${iconTestId}"]`).click(),
-      () => this.page.locator(`[data-testid="${iconTestId}"]`).click(),
-      () => this.page.locator(`[aria-label*="${iconTestId}"]`).click(),
-      () => this.page.locator(`[title*="${iconTestId}"]`).click(),
-      // Generic button selectors with the icon text
-      () => this.page.locator(`button[aria-label*="${iconTestId}"]`).click(),
-      () => this.page.locator(`button[title*="${iconTestId}"]`).click(),
-      () => this.page.locator(`[role="button"][aria-label*="${iconTestId}"]`).click(),
-      () => this.page.locator(`button:has-text("${iconTestId}")`).click(),
-      () => this.page.locator(`[role="button"]:has-text("${iconTestId}")`).click()
-    ];
-    
-    for (let i = 0; i < selectors.length; i++) {
-      try {
-        await selectors[i]();
-        console.log(`Successfully clicked icon "${iconTestId}" using selector ${i + 1}`);
-        return;
-      } catch (error) {
-        // Continue to next selector
-        console.log(`Selector ${i + 1} failed for "${iconTestId}": ${error.message}`);
-      }
-    }
-    
-    // If no selector worked, throw an error with available elements
-    console.log(`Could not find icon for "${iconTestId}". Available buttons:`);
-    const buttons = await this.page.locator('button').all();
-    for (const button of buttons) {
-      const text = await button.textContent();
-      const ariaLabel = await button.getAttribute('aria-label');
-      const title = await button.getAttribute('title');
-      console.log(`Button: text="${text}", aria-label="${ariaLabel}", title="${title}"`);
-    }
-    throw new Error(`Could not find icon for "${iconTestId}" using any of the tried selectors`);
-  }
-
-  // 3. Editor & Tab Interactions
-  async clickTab(tabTitle: any) {
-    // Use the same selector as expectTabExistsAndNotActive
-    const tab = this.page.locator(`[role="button"]:has-text("${tabTitle}")`);
-    await tab.first().click();
-    // After switching tabs, focus the editor
-    const editorLocator = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-    await editorLocator.focus();
-  }
-
-  async typeInEditor(content: any) {
-    const editorLocator = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-    await editorLocator.fill(content);
-  }
-
-  async rightClickEditor() {
-    const editorContainer = this.page.locator('[data-editor-pane-side="left"] .monaco-editor');
-    await editorContainer.click({ button: 'right' });
-  }
-
-  async doubleClickEditor() {
-    const editorContainer = this.page.locator('[data-editor-pane-side="left"] .monaco-editor');
-    await editorContainer.dblclick();
-  }
-
-  // 4. Context Menu Interactions
-  async selectContextMenuOption(optionText: any) {
-    await this.page.getByRole('menuitem', { name: optionText }).click();
-  }
-
-  // 5. Assertions & Verifications
-  async expectTextToExist(text: any) {
-    await expect(this.page.getByText(text, { exact: true })).toBeVisible();
-  }
-
-  // Helper method to get Monaco editor content
-  async getMonacoEditorContent(): Promise<string> {
-    // Wait for editor to be visible first
-    const editorLocator = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-    await expect(editorLocator).toBeVisible();
-    
-    // Read content directly from Monaco editor's model
-    return await this.page.evaluate(() => {
-      const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
-      if (editor && (window as any).monaco) {
-        const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) => 
-          e.getDomNode() === editor
-        );
-        if (editorInstance) {
-          return editorInstance.getValue();
-        }
-      }
-      // Fallback to textarea if Monaco API not available
-      const textarea = document.querySelector('[data-editor-pane-side="left"] .monaco-editor textarea') as HTMLTextAreaElement;
-      return textarea ? textarea.value : '';
-    });
-  }
-
-  async expectEditorContentToEqual(expectedContent: string) {
-    const actualContent = await this.getMonacoEditorContent();
-    
-    // Check the content
-    if (actualContent !== expectedContent) {
-      throw new Error(`Editor content does not match. Expected: "${expectedContent}", Got: "${actualContent}"`);
-    }
-  }
-
-  async expectEditorContentToContain(text: any) {
-    const actualContent = await this.getMonacoEditorContent();
-    
-    // Check if content contains the expected text
-    if (!actualContent.includes(text)) {
-      throw new Error(`Editor content does not contain "${text}". Actual content: "${actualContent}"`);
-    }
-  }
-
-  async expectTabIsActive(tabTitle: any) {
-    // Active tabs have role="button" and class "bg-gray-600/90"
-    const activeTab = this.page.locator('[role="button"].bg-gray-600\\/90');
-    await expect(activeTab).toContainText(tabTitle);
-  }
+  // Legacy method delegates - these maintain backwards compatibility
+  // while migrating step definitions to use the new action classes
   
-  // 6. Waiting & Synchronization
+  // Navigation delegates
+  async navigateToHome() {
+    return this.navigation.navigateToHome();
+  }
+
+  async clickButton(buttonText: string) {
+    return this.navigation.clickButton(buttonText);
+  }
+
+  async clickLink(linkText: string) {
+    return this.navigation.clickLink(linkText);
+  }
+
+  async clickIcon(iconTestId: string) {
+    return this.navigation.clickIcon(iconTestId);
+  }
+
   async waitForPageStabilization() {
-    await this.page.waitForLoadState('networkidle');
+    return this.navigation.waitForPageStabilization();
   }
 
-  // 7. Welcome Screen Entry Points - New Methods
-  async setClipboardContent(content: any) {
-    // Set clipboard content using Playwright's clipboard API with better error handling
-    try {
-      await this.page.evaluate(async (text) => {
-        await navigator.clipboard.writeText(text);
-        console.log(`Clipboard set to: "${text}"`);
-      }, content);
-      
-      // Verify the clipboard was set correctly
-      const clipboardContent = await this.page.evaluate(async () => {
-        return await navigator.clipboard.readText();
-      });
-      
-      console.log(`Verified clipboard content: "${clipboardContent}"`);
-      
-      if (clipboardContent !== content) {
-        console.warn(`Clipboard content mismatch. Expected: "${content}", Got: "${clipboardContent}"`);
-      }
-    } catch (error) {
-      console.error(`Failed to set clipboard: ${error.message}`);
-      // Fallback: try to set clipboard using a different approach
-      await this.page.evaluate((text) => {
-        // Try alternative clipboard method
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        console.log(`Fallback clipboard set to: "${text}"`);
-      }, content);
-    }
+  async expectTextToExist(text: string) {
+    return this.navigation.expectTextToExist(text);
   }
 
-  async clickNewTabFromPaste() {
-    // Click the "New tab with contents from clipboard" button
-    await this.page.getByTitle('New tab with contents from clipboard').click();
-  }
-
-  async clickNewTablet() {
-    // Click the "New tablet" button
-    await this.page.getByTitle('New tablet').click();
-  }
-
-  async selectTablet(tabletName: any) {
-    // Wait for tablet selector to appear and select the specified tablet
-    // Try multiple selectors for tablet selector
-    const selectors = [
-      '[data-testid="tablet-selector"]',
-      '.tablet-selector',
-      '[role="dialog"]',
-      '.modal'
-    ];
-    
-    let tabletSelector = null;
-    for (const selector of selectors) {
-      try {
-        tabletSelector = this.page.locator(selector);
-        if (await tabletSelector.count() > 0) {
-          break;
-        }
-      } catch (error) {
-        // Continue to next selector
-      }
-    }
-    
-    if (!tabletSelector || await tabletSelector.count() === 0) {
-      // If no specific selector found, try to find by text with more specific selectors
-      const tabletSelectors = [
-        // Try to find the main tablet name (not description)
-        () => this.page.locator('.font-medium.text-base:has-text("' + tabletName + '")').first().click(),
-        // Try to find by exact text match
-        () => this.page.getByText(tabletName, { exact: true }).first().click(),
-        // Try to find by role and text
-        () => this.page.getByRole('button', { name: tabletName }).click(),
-        // Try to find by any element with the text
-        () => this.page.locator('*:has-text("' + tabletName + '")').first().click()
-      ];
-      
-      for (let i = 0; i < tabletSelectors.length; i++) {
-        try {
-          await tabletSelectors[i]();
-          console.log(`Successfully selected tablet "${tabletName}" using selector ${i + 1}`);
-          return;
-        } catch (error) {
-          console.log(`Tablet selector ${i + 1} failed for "${tabletName}": ${error.message}`);
-        }
-      }
-    } else {
-      // Use the found tablet selector container
-      await tabletSelector.getByText(tabletName).first().click();
-    }
-  }
-
-  async doubleClickOnPage() {
-    // Double-click on the main content area (not on any specific element)
-    // Try multiple selectors for the main content area
-    const selectors = [
-      'main',
-      '.main-content',
-      '[data-testid="main-content"]',
-      'body'
-    ];
-    
-    for (const selector of selectors) {
-      try {
-        const element = this.page.locator(selector);
-        if (await element.count() > 0) {
-          await element.dblclick();
-          return;
-        }
-      } catch (error) {
-        // Continue to next selector
-      }
-    }
-    
-    // Fallback to clicking on the page body
-    await this.page.locator('body').dblclick();
-  }
-
-  async uploadFile(filename: any, content: any) {
-    // Create a file object and trigger file upload
-    const fileBuffer = Buffer.from(content);
-    
-    // Try to find file input element
-    const fileInput = this.page.locator('input[type="file"]');
-    if (await fileInput.count() > 0) {
-      await fileInput.setInputFiles({
-        name: filename,
-        mimeType: 'text/plain',
-        buffer: fileBuffer
-      });
-    } else {
-      // If no file input found, simulate drag and drop
-      await this.dragFileOntoPage(filename, content);
-    }
-  }
-
-  async clickOpenSpecializedTablet() {
-    // Click the "Open specialized tablet" button on welcome screen
-    await this.page.getByText('Open specialized tablet').click();
-  }
-
-  async clickImportFromClipboard() {
-    // Click the "Import from clipboard" button on welcome screen
-    await this.page.getByText('Import from clipboard').click();
-  }
-
-  async dragFileOntoPage(filename: any, content: any) {
-    // Simulate drag and drop of a file onto the page
-    const fileBuffer = Buffer.from(content);
-    
-    // Create a file object
-    const file = {
-      name: filename,
-      type: filename.endsWith('.json') ? 'application/json' : 'text/plain',
-      buffer: fileBuffer
-    };
-    
-    // Simulate drag and drop event
-    await this.page.evaluate((fileData) => {
-      const file = new File([fileData.buffer], fileData.name, { type: fileData.type });
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      
-      // Dispatch drop event
-      const dropEvent = new DragEvent('drop', { dataTransfer });
-      document.body.dispatchEvent(dropEvent);
-    }, file);
-  }
-
-  // 8. New Assertion Methods
-  async expectTabExistsAndNotActive(tabTitle: any) {
-    // Check that the tab exists but is not the active one
-    const tab = this.page.locator(`[role="button"]:has-text("${tabTitle}")`);
-    if (await tab.count() === 0) {
-      console.warn(`Tab "${tabTitle}" does not exist. Skipping assertion.`);
-      return;
-    }
-    await expect(tab).toBeVisible();
-    // Verify it's not the active tab (should not have the active class)
-    const activeTab = this.page.locator('[role="button"].bg-gray-600\\/90');
-    if (await activeTab.count() > 0) {
-      const activeTabText = await activeTab.textContent();
-      if (activeTabText && activeTabText.includes(tabTitle)) {
-        throw new Error(`Tab "${tabTitle}" should not be active but it is`);
-      }
-    }
-  }
-
-  async expectTabletIsActive(tabletName: any) {
-    // Check that the tablet is active (similar to tab but for tablets)
-    const activeTab = this.page.locator('[role="button"].bg-gray-600\\/90');
-    await expect(activeTab).toContainText(tabletName);
-  }
-
-  async expectEditorContainsMarkdown() {
-    const content = await this.getMonacoEditorContent();
-    
-    // Check for common markdown indicators
-    const markdownIndicators = ['#', '##', '###', '*', '-', '```', '**', '__', 'Welcome to Scratch Tabs'];
-    const hasMarkdown = markdownIndicators.some(indicator => content.includes(indicator));
-    
-    if (!hasMarkdown) {
-      throw new Error('Editor does not contain markdown content');
-    }
-  }
-
-  async expectPreviewIsVisible() {
-    // Check that the preview pane is visible with the specific welcome content
-    const previewContent = this.page.locator('div.prose.prose-invert:has-text("Welcome to Scratch Tabs! 🎉")');
-    await expect(previewContent).toBeVisible();
-  }
-
-  async expectUrlContains(expectedUrlPart: any) {
-    // Use Playwright's built-in expect with auto-waiting
-    await expect(this.page).toHaveURL(new RegExp(`.*${expectedUrlPart}.*`));
-  }
-
-  // Performance and Language Detection Methods
-  async generateLargeJsonFile() {
-    // Generate a large JSON object with nested structures
-    const largeJson = this.generateLargeJsonObject();
-    
-    // Set to clipboard
-    await this.setClipboardContent(largeJson);
-    
-    console.log(`Generated and set ${(largeJson.length / 1024 / 1024).toFixed(2)}MB JSON to clipboard`);
-  }
-
-  private generateLargeJsonObject(): string {
-    // Create a large JSON object with nested arrays and objects
-    const baseObject = {
-      metadata: {
-        generated: new Date().toISOString(),
-        size: "1.5MB",
-        description: "Large JSON file for performance testing"
-      },
-      data: []
-    };
-
-    // Generate 1000 objects with nested structures to reach ~1.5MB
-    for (let i = 0; i < 1000; i++) {
-      baseObject.data.push({
-        id: i,
-        name: `Item ${i}`,
-        description: `This is a detailed description for item ${i} with lots of text to increase the file size. It contains various details about the item including its properties, characteristics, and metadata.`,
-        properties: {
-          category: `Category ${i % 10}`,
-          priority: i % 5 + 1,
-          tags: [`tag${i}`, `category${i % 10}`, `priority${i % 5 + 1}`],
-          metadata: {
-            created: new Date(Date.now() - i * 86400000).toISOString(),
-            updated: new Date().toISOString(),
-            version: `${i % 10}.${i % 100}.${i % 1000}`,
-            flags: {
-              active: i % 2 === 0,
-              featured: i % 10 === 0,
-              archived: i % 50 === 0
-            }
-          },
-          nested: {
-            level1: {
-              level2: {
-                level3: {
-                  value: `Nested value ${i}`,
-                  array: Array.from({length: 5}, (_, j) => `nested-item-${i}-${j}`)
-                }
-              }
-            }
-          }
-        },
-      });
-    }
-
-    return JSON.stringify(baseObject, null, 2);
-  }
-
-  async typeMarkdownContent(content: string) {
-    // Clear the editor first
-    const editorLocator = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-    await editorLocator.clear();
-    
-    // Type the content
-    await editorLocator.fill(content);
-  }
-
-  async typeText(text: string) {
-    // Type text into the active editor (append to existing content)
-    await this.clickInEditor();  // Use enhanced focus method
-    
-    // Use Monaco's API to insert text so it's properly recorded in the undo stack
-    await this.page.evaluate((textToInsert) => {
-      const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
-      if (editor && (window as any).monaco) {
-        const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) => 
-          e.getDomNode() === editor
-        );
-        if (editorInstance) {
-          // Get current position
-          const position = editorInstance.getPosition();
-          // Insert text using Monaco's API to ensure it's in the undo stack
-          editorInstance.executeEdits('automated-test', [{
-            range: new (window as any).monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-            text: textToInsert
-          }]);
-          return;
-        }
-      }
-      // Fallback to keyboard typing if Monaco API fails
-      console.log('Monaco API not available, using keyboard fallback');
-    }, text);
-    
-    // If Monaco API didn't work, fall back to keyboard typing
-    const content = await this.getMonacoEditorContent();
-    if (!content.includes(text)) {
-      console.log('Monaco API insertion failed, using keyboard fallback');
-      await this.page.keyboard.type(text);
-    }
+  async expectUrlContains(expectedUrlPart: string) {
+    return this.navigation.expectUrlContains(expectedUrlPart);
   }
 
   async waitForSeconds(seconds: number) {
-    // Wait for the specified number of seconds
-    await this.page.waitForTimeout(seconds * 1000);
+    return this.navigation.waitForSeconds(seconds);
   }
 
-  async pressCtrlZ() {
-    try {
-      // Use enhanced focus method to ensure Monaco editor has proper focus context
-      await this.clickInEditor();
-      
-      // Try Monaco's undo API first
-      const undoWorked = await this.page.evaluate(() => {
-        const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
-        if (editor && (window as any).monaco) {
-          const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) => 
-            e.getDomNode() === editor
-          );
-          if (editorInstance) {
-            // Use Monaco's undo API directly
-            editorInstance.trigger('automated-test', 'undo', null);
-            console.log('Triggered undo via Monaco API');
-            return true;
-          }
-        }
-        return false;
-      });
-      
-      if (!undoWorked) {
-        console.log('Monaco undo API failed, falling back to keyboard');
-        // Fallback to keyboard if Monaco API doesn't work
-        await this.page.keyboard.press('Control+Z');
-      }
-    } catch (error) {
-      console.error('Error pressing Ctrl+Z:', error);
-    }
-    
-    // Log the current content after undo
-    const content = await this.getMonacoEditorContent();
+  async doubleClickOnPage() {
+    return this.navigation.doubleClickOnPage();
   }
 
-  async expectFirst10LinesContainJson() {
-    const content = await this.getMonacoEditorContent();
-    const lines = content.split('\n').slice(0, 10);
-    const first10Lines = lines.join('\n');
-    
-    // Check if the first 10 lines contain JSON structure
-    const hasJsonStructure = first10Lines.includes('{') && 
-                           (first10Lines.includes('"') || first10Lines.includes(':')) &&
-                           (first10Lines.includes('metadata') || first10Lines.includes('data'));
-    
-    if (!hasJsonStructure) {
-      throw new Error(`First 10 lines do not contain JSON content. Content: "${first10Lines}"`);
-    }
+  // Editor delegates
+  async clickTab(tabTitle: string) {
+    return this.tabBar.clickTab(tabTitle);
   }
 
-  // --- Status Bar Helpers ---
-  getStatusBarLanguageLabel() {
-    // Returns Playwright locator for the language label in the status bar
-    return this.page.locator('.flex.items-center.space-x-4 span.capitalize');
+  async typeInEditor(content: string) {
+    return this.editor.typeInEditor(content);
   }
 
-  getStatusBarValidationIcon() {
-    // Returns Playwright locator for the green validation icon in the status bar
-    return this.page.locator('.flex.items-center.space-x-2 svg[class*="text-green-400"]');
+  async rightClickEditor() {
+    return this.editor.rightClickEditor();
   }
 
-  async expectStatusBarLanguage(language: string) {
-    const statusBarLanguage = this.getStatusBarLanguageLabel();
-    await expect(statusBarLanguage).toContainText(language);
-  }
-
-  async expectStatusBarValidationTick() {
-    const validationTick = this.getStatusBarValidationIcon();
-    await expect(validationTick).toBeVisible();
-  }
-
-  async rightClickTab(tabTitle: string) {
-    // Right-click on the specified tab
-    const tabLocator = this.page.locator(`[role="button"]:has-text("${tabTitle}")`);
-    await tabLocator.click({ button: 'right' });
-    // Wait for context menu to appear
-    await this.page.waitForTimeout(1000);
-    // Log all visible text/buttons for debugging
-    const allButtons = await this.page.locator('button').all();
-    console.log('Visible buttons after right-click:');
-    for (const btn of allButtons) {
-      const text = await btn.textContent();
-      if (text && text.trim()) {
-        console.log(`  - Button: "${text.trim()}"`);
-      }
-    }
-    const allDivs = await this.page.locator('div').all();
-    console.log('Visible divs after right-click:');
-    for (const div of allDivs) {
-      const text = await div.textContent();
-      if (text && text.trim()) {
-        console.log(`  - Div: "${text.trim()}"`);
-      }
-    }
-  }
-
-  async clickThreeDotsMenu() {
-    // Click the three dots menu (MoreHorizontal icon) in the status bar
-    const threeDotsButton = this.page.locator('button[title="JSON Options"]');
-    await threeDotsButton.click();
+  async doubleClickEditor() {
+    return this.editor.doubleClickEditor();
   }
 
   async clickInEditor() {
-    const editorContainer = this.page.locator('[data-editor-pane-side="left"] .monaco-editor');
-    await editorContainer.click();
+    return this.editor.clickInEditor();
   }
 
-  async selectFromContextMenu(menuItem: string) {
-    // Select an item from the context menu
-    console.log(`Looking for menu item: "${menuItem}"`);
-    // Try multiple selectors for the menu item, prioritize button first
-    const selectors = [
-      () => this.page.locator(`button:has-text("${menuItem}")`).click(),
-      () => this.page.getByRole('menuitem', { name: menuItem }).click(),
-      () => this.page.locator(`[role="menuitem"]:has-text("${menuItem}")`).click(),
-      () => this.page.locator(`div:has-text("${menuItem}")`).click(),
-      () => this.page.locator(`*:has-text("${menuItem}")`).click()
-    ];
-    for (let i = 0; i < selectors.length; i++) {
-      try {
-        await selectors[i]();
-        console.log(`Successfully clicked menu item "${menuItem}" using selector ${i + 1}`);
-        return;
-      } catch (error) {
-        console.log(`Selector ${i + 1} failed for "${menuItem}": ${error.message}`);
-      }
-    }
-    // If no selector worked, log available menu items
-    console.log(`Could not find menu item "${menuItem}". Available menu items:`);
-    const menuItems = await this.page.locator('button').all();
-    for (const item of menuItems) {
-      const text = await item.textContent();
-      console.log(`  - "${text}"`);
-    }
-    throw new Error(`Could not find menu item "${menuItem}"`);
+  async getMonacoEditorContent(): Promise<string> {
+    return this.editor.getMonacoEditorContent();
   }
 
-  async selectFromSubmenu(parentItem: string, subItem: string) {
-    // Select from a submenu (e.g., "From sample" -> "JSON")
-    console.log(`Looking for submenu: "${parentItem}" -> "${subItem}"`);
-    // First, find and hover over the parent menu item, prioritize button first
-    const parentSelectors = [
-      () => this.page.locator(`button:has-text(\"${parentItem}\")`).hover(),
-      () => this.page.getByRole('menuitem', { name: parentItem }).hover(),
-      () => this.page.locator(`[role=\"menuitem\"]:has-text(\"${parentItem}\")`).hover(),
-      () => this.page.locator(`div:has-text(\"${parentItem}\")`).hover()
-    ];
-    let parentFound = false;
-    for (let i = 0; i < parentSelectors.length; i++) {
-      try {
-        await parentSelectors[i]();
-        console.log(`Successfully hovered over parent menu item "${parentItem}" using selector ${i + 1}`);
-        parentFound = true;
-        break;
-      } catch (error) {
-        console.log(`Parent selector ${i + 1} failed for "${parentItem}": ${error.message}`);
-      }
-    }
-    if (!parentFound) {
-      throw new Error(`Could not find parent menu item "${parentItem}"`);
-    }
-    // Wait a moment for the submenu to appear
-    await this.page.waitForTimeout(500);
-    // Then click on the submenu item, prioritize exact match first
-    const submenuSelectors = [
-      () => this.page.getByRole('button', { name: subItem, exact: true }).click(),
-      () => this.page.locator(`button:has-text(\"${subItem}\")`).click(),
-      () => this.page.getByRole('menuitem', { name: subItem }).click(),
-      () => this.page.locator(`[role=\"menuitem\"]:has-text(\"${subItem}\")`).click(),
-      () => this.page.locator(`div:has-text(\"${subItem}\")`).click()
-    ];
-    for (let i = 0; i < submenuSelectors.length; i++) {
-      try {
-        await submenuSelectors[i]();
-        console.log(`Successfully clicked submenu item "${subItem}" using selector ${i + 1}`);
-        return;
-      } catch (error) {
-        console.log(`Submenu selector ${i + 1} failed for "${subItem}": ${error.message}`);
-      }
-    }
-    // If no selector worked, log available submenu items
-    console.log(`Could not find submenu item "${subItem}". Available submenu items:`);
-    const submenuItems = await this.page.locator('button').all();
-    for (const item of submenuItems) {
-      const text = await item.textContent();
-      console.log(`  - "${text}"`);
-    }
-    throw new Error(`Could not find submenu item "${subItem}"`);
+  async expectEditorContentToEqual(expectedContent: string) {
+    return this.editor.expectEditorContentToEqual(expectedContent);
+  }
+
+  async expectEditorContentToContain(text: string) {
+    return this.editor.expectEditorContentToContain(text);
+  }
+
+  async expectEditorContainsMarkdown() {
+    return this.editor.expectEditorContainsMarkdown();
+  }
+
+  async expectPreviewIsVisible() {
+    return this.editor.expectPreviewIsVisible();
+  }
+
+  async typeMarkdownContent(content: string) {
+    return this.editor.typeMarkdownContent(content);
+  }
+
+  async typeText(text: string) {
+    return this.editor.typeText(text);
+  }
+
+  async pressCtrlZ() {
+    return this.editor.pressCtrlZ();
+  }
+
+  async expectFirst10LinesContainJson() {
+    return this.editor.expectFirst10LinesContainJson();
   }
 
   async expectContentIsSingleLine() {
-    // Check that the editor content is on a single line (no newlines)
-    const content = await this.getMonacoEditorContent();
-    if (content.includes('\n')) {
-      throw new Error(`Content is not on a single line. Content: "${content}"`);
-    }
+    return this.editor.expectContentIsSingleLine();
   }
 
   async expectContentIsNotSingleLine() {
-    // Check that the editor content is NOT on a single line (has newlines)
-    const content = await this.getMonacoEditorContent();
-    
-    if (!content.includes('\n')) {
-      throw new Error(`Content is on a single line but should not be. Content: "${content}"`);
-    }
+    return this.editor.expectContentIsNotSingleLine();
+  }
+
+  // Tab delegates
+  async expectTabIsActive(tabTitle: string) {
+    return this.tabBar.expectTabIsActive(tabTitle);
+  }
+
+  async expectTabExistsAndNotActive(tabTitle: string) {
+    return this.tabBar.expectTabExistsAndNotActive(tabTitle);
+  }
+
+  async rightClickTab(tabTitle: string) {
+    return this.tabBar.rightClickTab(tabTitle);
+  }
+
+  async clickThreeDotsMenu() {
+    return this.tabBar.clickThreeDotsMenu();
+  }
+
+  async clickNewTabFromPaste() {
+    return this.tabBar.clickNewTabFromPaste();
+  }
+
+  async clickNewTablet() {
+    return this.tabBar.clickNewTablet();
+  }
+
+  async selectTablet(tabletName: string) {
+    return this.tabBar.selectTablet(tabletName);
+  }
+
+  async expectTabletIsActive(tabletName: string) {
+    return this.tabBar.expectTabletIsActive(tabletName);
+  }
+
+  async clickOpenSpecializedTablet() {
+    return this.tabBar.clickOpenSpecializedTablet();
+  }
+
+  async clickImportFromClipboard() {
+    return this.tabBar.clickImportFromClipboard();
+  }
+
+  // Context menu delegates
+  async selectContextMenuOption(optionText: string) {
+    return this.contextMenu.selectContextMenuOption(optionText);
+  }
+
+  async selectFromContextMenu(menuItem: string) {
+    return this.contextMenu.selectFromContextMenu(menuItem);
+  }
+
+  async selectFromSubmenu(parentItem: string, subItem: string) {
+    return this.contextMenu.selectFromSubmenu(parentItem, subItem);
+  }
+
+  // Clipboard delegates
+  async setClipboardContent(content: string) {
+    return this.clipboard.setClipboardContent(content);
+  }
+
+  // File delegates
+  async uploadFile(filename: string, content: string) {
+    return this.file.uploadFile(filename, content);
+  }
+
+  async dragFileOntoPage(filename: string, content: string) {
+    return this.file.dragFileOntoPage(filename, content);
+  }
+
+  async generateLargeJsonFile() {
+    return this.file.generateLargeJsonFile();
+  }
+
+  // Status bar delegates
+  getStatusBarLanguageLabel() {
+    return this.statusBar.getStatusBarLanguageLabel();
+  }
+
+  getStatusBarValidationIcon() {
+    return this.statusBar.getStatusBarValidationIcon();
+  }
+
+  async expectStatusBarLanguage(language: string) {
+    return this.statusBar.expectStatusBarLanguage(language);
+  }
+
+  async expectStatusBarValidationTick() {
+    return this.statusBar.expectStatusBarValidationTick();
   }
 }
 

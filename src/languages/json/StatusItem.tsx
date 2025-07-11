@@ -12,6 +12,7 @@ export const JsonStatusItem: React.FC<StatusItemProps> = ({ content = "", active
     <div
       className="flex items-center space-x-1"
       title={validation.error || "Valid JSON"}
+      data-testid="status-validation"
     >
       {validation.isValid ? (
         <CheckCircle2 size={14} className="text-green-400" />
