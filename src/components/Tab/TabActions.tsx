@@ -24,6 +24,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
         onClick={() => handleNewTab(side === "right")}
         className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
         title="New tab"
+        data-testid="icon-new-tab"
       >
         <Plus size={16} />
       </button>
@@ -31,6 +32,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
         onClick={() => handleNewTabFromPaste(side === "right")}
         className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
         title="New tab with contents from clipboard"
+        data-testid="icon-new-tab-from-clipboard"
       >
         <ClipboardPlus size={16} />
       </button>
@@ -39,6 +41,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
         onClick={onShowTabletSelector}
         className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
         title="New tablet"
+        data-testid="icon-new-tablet"
       >
         <Tablet size={16} />
       </button>

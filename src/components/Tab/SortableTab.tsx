@@ -271,6 +271,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                     ${isDragging && !tab.isPinned ? "bg-blue-500/90 text-white shadow-md scale-105" : ""}
                     border-r-2 border-r-gray-700/90 backdrop-blur-sm`}
         style={style}
+        data-testid={`tab-${tab.title}`}
+        aria-selected={isActive}
         onClick={handleTabClick}
         onMouseDown={handleMouseDown}
         onContextMenu={(e) => !isEditing && onContextMenu(e)}

@@ -4,35 +4,29 @@ export class TabBarActions {
   constructor(private page: Page) {}
 
   async clickTab(tabTitle: string) {
-    // Use the same selector as expectTabExistsAndNotActive
-    const tab = this.page.locator(`[role="button"]:has-text("${tabTitle}")`);
-    await tab.first().click();
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await tab.click();
   }
 
   async rightClickTab(tabTitle: string) {
-    const tab = this.page.locator(`[role="button"]:has-text("${tabTitle}")`);
-    
-    // Get the first matching tab
-    const firstTab = tab.first();
-    await expect(firstTab).toBeVisible();
-    
-    // Right click on the tab
-    await firstTab.click({ button: 'right' });
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+    await tab.click({ button: 'right' });
   }
 
   async expectTabIsActive(tabTitle: string) {
-    // Active tabs have role="button" and class "bg-gray-600/90"
-    const activeTab = this.page.locator('[role="button"].bg-gray-600\\/90');
-    await expect(activeTab).toContainText(tabTitle);
+    // Use stable ARIA attribute instead of brittle CSS classes
+    const activeTab = this.page.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
+    await expect(activeTab).toBeVisible();
   }
 
   async expectTabExistsAndNotActive(tabTitle: string) {
     // First check if the tab exists
-    const tab = this.page.locator(`[role="button"]:has-text("${tabTitle}")`);
-    await expect(tab.first()).toBeVisible();
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
     
-    // Then check if it's not active (active tabs have bg-gray-600/90 class)
-    const activeTab = this.page.locator(`[role="button"].bg-gray-600\\/90:has-text("${tabTitle}")`);
+    // Then check if it's not active using aria-selected
+    const activeTab = this.page.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
     await expect(activeTab).not.toBeVisible();
   }
 
@@ -43,13 +37,15 @@ export class TabBarActions {
   }
 
   async clickNewTabFromPaste() {
-    // Click the "New tab with contents from clipboard" button
-    await this.page.getByTitle('New tab with contents from clipboard').click();
+    // Use stable test ID instead of title
+    const button = this.page.locator('[data-testid="icon-new-tab-from-clipboard"]');
+    await button.click();
   }
 
   async clickNewTablet() {
-    // Click the "New tablet" button
-    await this.page.getByTitle('New tablet').click();
+    // Use stable test ID instead of title
+    const button = this.page.locator('[data-testid="icon-new-tablet"]');
+    await button.click();
   }
 
   async selectTablet(tabletName: string) {
@@ -63,9 +59,9 @@ export class TabBarActions {
   }
 
   async expectTabletIsActive(tabletName: string) {
-    // Check if the tablet tab is active by looking at the active tab title
-    const activeTab = this.page.locator('[role="button"].bg-gray-600\\/90');
-    await expect(activeTab).toContainText(tabletName);
+    // Use stable ARIA attribute instead of brittle CSS classes
+    const activeTab = this.page.locator(`[data-testid="tab-${tabletName}"][aria-selected="true"]`);
+    await expect(activeTab).toBeVisible();
   }
 
   async clickOpenSpecializedTablet() {

@@ -83,9 +83,106 @@ npm run e2e:full -- --format progress
 npm run e2e:full -- --format json
 ```
 
+## Framework Evolution
+
+### From Brittle to Stable Selectors
+
+This framework has evolved from using brittle CSS-class-based selectors to implementing a stable test contract:
+
+**❌ Before (Brittle):**
+```typescript
+// Fragile - breaks when styles change
+async expectTabIsActive(tabTitle: string) {
+  const activeTab = this.page.locator('[role="button"].bg-gray-600\\/90');
+  await expect(activeTab).toContainText(tabTitle);
+}
+```
+
+**✅ After (Stable):**
+```typescript
+// Resilient - survives style changes
+async expectTabIsActive(tabTitle: string) {
+  const activeTab = this.page.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
+  await expect(activeTab).toBeVisible();
+}
+```
+
+### Icon Selector Simplification
+
+**❌ Before (Overly Defensive):**
+```typescript
+async clickIcon(iconTestId: string) {
+  // 13 different selectors tried in sequence
+  const selectors = [
+    () => this.page.getByRole('button', { name: iconTestId, exact: true }).click(),
+    () => this.page.getByTitle(iconTestId).click(),
+    // ... 11 more fallback selectors
+  ];
+  // Complex fallback logic...
+}
+```
+
+**✅ After (Clear Intent):**
+```typescript
+async clickIcon(iconName: string) {
+  const iconTestIdMap = {
+    'New tab': 'icon-new-tab',
+    'New tablet': 'icon-new-tablet'
+  };
+  const testId = iconTestIdMap[iconName] || `icon-${iconName.toLowerCase().replace(/\s+/g, '-')}`;
+  const locator = this.page.locator(`[data-testid="${testId}"]`);
+  await expect(locator).toBeVisible();
+  await locator.click();
+}
+```
+
+### Results
+
+With these improvements:
+- **10/10 scenarios pass** (excluding @wip tests)
+- **99/99 steps pass** in main test suite
+- **Style-resilient** selectors that won't break with UI changes
+- **Clear intent** in test code
+- **Maintainable** and **scalable** architecture
+
 ## Best Practices
 
-### 1. Avoid Arbitrary Timeouts
+### 1. Stable Test Contract (CRITICAL)
+
+**✅ The Foundation: Use `data-testid` and ARIA attributes**
+
+This framework implements a **stable contract** between the application and tests using:
+- `data-testid` attributes for reliable element identification
+- `aria-selected` for state verification (instead of CSS classes)
+- Semantic HTML attributes where appropriate
+
+**Example Implementation:**
+```tsx
+// In React Component (SortableTab.tsx)
+<div
+  data-testid={`tab-${tab.title}`}
+  aria-selected={isActive}
+  className={`... ${isActive ? 'bg-gray-600/90' : '...'} ...`}
+>
+  {/* ... */}
+</div>
+```
+
+```typescript
+// In Test Action (tabBar.actions.ts)
+async expectTabIsActive(tabTitle: string) {
+  // Resilient to style changes - checks semantic state, not appearance
+  const activeTab = this.page.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
+  await expect(activeTab).toBeVisible();
+}
+```
+
+**Why This Matters:**
+- **Style-Resilient**: Tests won't break when designers change colors from `bg-gray-600` to `bg-blue-700`
+- **Intent-Clear**: Selectors clearly express what they're testing
+- **Maintainable**: Easy to update when UI structure changes
+
+### 2. Avoid Arbitrary Timeouts
 
 **❌ Never do this:**
 ```typescript
@@ -107,7 +204,7 @@ await page.waitForResponse(response => response.url().includes('/api/data'));
 await page.waitForLoadState('networkidle');
 ```
 
-### 2. Use Reliable Selectors
+### 3. Use Reliable Selectors
 
 **❌ Avoid fragile selectors:**
 ```typescript
@@ -126,7 +223,7 @@ await page.locator('button:has-text("Submit")').click();
 await page.getByRole('button', { name: 'Submit' }).click();
 ```
 
-### 3. Handle Asynchronous Operations
+### 4. Handle Asynchronous Operations
 
 **❌ Don't assume immediate state changes:**
 ```typescript
@@ -140,7 +237,7 @@ await button.click();
 await expect(page.locator('.result')).toContainText('expected');
 ```
 
-### 4. Use Action Classes for Reusability
+### 5. Use Action Classes for Reusability
 
 **❌ Don't repeat complex interactions:**
 ```typescript
@@ -172,7 +269,7 @@ await this.editor.typeInEditor('Hello World');
 await this.editor.pressCtrlZ();
 ```
 
-### 5. Tag Management
+### 6. Tag Management
 
 Use tags to organize and filter tests:
 

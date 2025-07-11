@@ -20,50 +20,18 @@ export class NavigationActions {
     await this.page.getByRole('link', { name: linkText, exact: true }).click();
   }
 
-  async clickIcon(iconTestId: string) {
-    // Try multiple selectors for the specified icon
-    const selectors = [
-      // Playwright's built-in role selector with exact match (most reliable)
-      () => this.page.getByRole('button', { name: iconTestId, exact: true }).click(),
-      // Title-based selectors with exact match
-      () => this.page.getByTitle(iconTestId).click(),
-      () => this.page.locator(`[title="${iconTestId}"]`).click(),
-      // Legacy selectors for backward compatibility
-      () => this.page.locator(`[data-testid="icon-${iconTestId}"]`).click(),
-      () => this.page.locator(`[data-testid="${iconTestId}"]`).click(),
-      // Partial match selectors (for when exact doesn't work)
-      () => this.page.getByRole('button', { name: iconTestId }).click(),
-      () => this.page.locator(`[aria-label*="${iconTestId}"]`).click(),
-      () => this.page.locator(`[title*="${iconTestId}"]`).click(),
-      // Generic button selectors with the icon text
-      () => this.page.locator(`button[aria-label*="${iconTestId}"]`).click(),
-      () => this.page.locator(`button[title*="${iconTestId}"]`).click(),
-      () => this.page.locator(`[role="button"][aria-label*="${iconTestId}"]`).click(),
-      () => this.page.locator(`button:has-text("${iconTestId}")`).click(),
-      () => this.page.locator(`[role="button"]:has-text("${iconTestId}")`).click()
-    ];
+  async clickIcon(iconName: string) {
+    // Map human-readable names to test IDs
+    const iconTestIdMap: { [key: string]: string } = {
+      'New tab': 'icon-new-tab',
+      'New tab with contents from clipboard': 'icon-new-tab-from-clipboard', 
+      'New tablet': 'icon-new-tablet'
+    };
     
-    for (let i = 0; i < selectors.length; i++) {
-      try {
-        await selectors[i]();
-        console.log(`Successfully clicked icon "${iconTestId}" using selector ${i + 1}`);
-        return;
-      } catch (error) {
-        // Continue to next selector
-        console.log(`Selector ${i + 1} failed for "${iconTestId}": ${error.message}`);
-      }
-    }
-    
-    // If no selector worked, throw an error with available elements
-    console.log(`Could not find icon for "${iconTestId}". Available buttons:`);
-    const buttons = await this.page.locator('button').all();
-    for (const button of buttons) {
-      const text = await button.textContent();
-      const ariaLabel = await button.getAttribute('aria-label');
-      const title = await button.getAttribute('title');
-      console.log(`Button: text="${text}", aria-label="${ariaLabel}", title="${title}"`);
-    }
-    throw new Error(`Could not find icon for "${iconTestId}" using any of the tried selectors`);
+    const testId = iconTestIdMap[iconName] || `icon-${iconName.toLowerCase().replace(/\s+/g, '-')}`;
+    const locator = this.page.locator(`[data-testid="${testId}"]`);
+    await expect(locator).toBeVisible();
+    await locator.click();
   }
 
   async doubleClickOnPage() {
