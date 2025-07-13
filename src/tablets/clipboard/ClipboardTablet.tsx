@@ -468,6 +468,15 @@ export const ClipboardTablet: Tablet = {
       return () => window.removeEventListener("keydown", handleKeyDown);
     }, [activeIndex, filteredItems, handleCopy]);
 
+    // Handle paste event
+    useEffect(() => {
+      const handlePasteEvent = () => {
+        handlePaste();
+      };
+      window.addEventListener("paste", handlePasteEvent);
+      return () => window.removeEventListener("paste", handlePasteEvent);
+    }, [handlePaste]);
+
     useEffect(() => {
       listRef.current?.children[activeIndex]?.scrollIntoView({
         block: "nearest",
