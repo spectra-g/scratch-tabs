@@ -570,7 +570,7 @@ example.sayHello()
         const indentChar = "\t"; // Groovy often uses tabs or 4 spaces
 
         const formattedLines = lines.map((line: string) => {
-          let trimmedLine = line.trim();
+          const trimmedLine = line.trim();
           let currentIndent = "";
 
           if (

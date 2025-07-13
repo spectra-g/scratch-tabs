@@ -209,7 +209,7 @@ export class CsvLanguageDetector
         if (lines.length > 0) {
           const header = lines[0];
           const counts = { ",": 0, "\t": 0, ";": 0, "|": 0 };
-          for (let char of header) {
+          for (const char of header) {
             if (char in counts) counts[char as keyof typeof counts]++;
           }
           let maxCount = 0;

@@ -470,7 +470,7 @@ exit 0
         const indentSize = 2;
 
         const formattedLines = lines.map((line: string) => {
-          let trimmedLine = line.trim();
+          const trimmedLine = line.trim();
 
           if (trimmedLine.match(/^(fi|done|esac|\})$/)) {
             indentLevel = Math.max(0, indentLevel - 1);

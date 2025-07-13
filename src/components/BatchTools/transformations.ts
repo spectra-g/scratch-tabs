@@ -7,7 +7,7 @@ export function applyTransformations(
   if (!content) return "";
 
   const originalLines = content.split("\n");
-  let processedLines = [...originalLines];
+  const processedLines = [...originalLines];
 
   let result: string;
 
@@ -321,7 +321,7 @@ function applyTransformationsToLines(
   if (config.convertTabsSpaces === "tabs-to-spaces") {
     result = result.replace(/\t/g, "    "); // 4 spaces
   } else if (config.convertTabsSpaces === "spaces-to-tabs") {
-    result = result.replace(/    /g, "\t"); // 4 spaces to 1 tab
+    result = result.replace(/ {4}/g, "\t"); // 4 spaces to 1 tab
   }
 
   if (config.normalizeLineEndings === "lf") {

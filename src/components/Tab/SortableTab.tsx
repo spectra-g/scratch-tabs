@@ -89,7 +89,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     if (!tabElement) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         if (entry.target instanceof HTMLElement) {
           setCurrentWidth(entry.target.offsetWidth);
         }

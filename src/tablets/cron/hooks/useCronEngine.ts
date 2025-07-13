@@ -120,7 +120,7 @@ export const useCronEngine = (
     (rawExpression: string, currentDialect: CronDialect): CronExpression => {
       const parts = rawExpression.trim().split(/\s+/);
 
-      let updatedExpression: CronExpression = {
+      const updatedExpression: CronExpression = {
         raw: rawExpression,
         minute: "*",
         hour: "*",

@@ -83,7 +83,7 @@ function extractJsonAtPosition(
   text: string,
   startPos: number,
 ): { content: string; end: number } | null {
-  let stack = [];
+  const stack = [];
   let i = startPos;
   let inString = false;
   let escaped = false;

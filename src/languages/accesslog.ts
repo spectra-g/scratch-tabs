@@ -85,7 +85,7 @@ export class AccessLogLanguageDetector
 
     let confidenceScore = 0.0;
     let accessLogPatterns = 0;
-    let totalLines = Math.min(lines.length, 20); // Check first 20 lines max
+    const totalLines = Math.min(lines.length, 20); // Check first 20 lines max
 
     // Common access log patterns
     const logPatterns = [

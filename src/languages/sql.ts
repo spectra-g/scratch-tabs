@@ -561,7 +561,7 @@ multi-line SQL comment.
         const lines = formattedSql.split("\n");
         formattedSql = lines
           .map((line) => {
-            let currentLine = line.trim();
+            const currentLine = line.trim();
             let indent = indentLevel;
             if (
               currentLine.match(

@@ -340,7 +340,7 @@ end
         ];
 
         const formattedLines = lines.map((line: string) => {
-          let trimmedLine = line.trim();
+          const trimmedLine = line.trim();
           let currentIndent = "";
 
           // Heuristic: Decrease indent if line starts with a keyword that closes a block
@@ -372,7 +372,7 @@ end
             currentIndent = indentChar.repeat(indentLevel);
           }
 
-          let formattedLine = trimmedLine ? currentIndent + trimmedLine : "";
+          const formattedLine = trimmedLine ? currentIndent + trimmedLine : "";
 
           // Heuristic: Increase indent if line ends with `do` (for blocks)
           // or starts with a keyword that opens a block and doesn't also close it on the same line.
