@@ -39,13 +39,13 @@ export interface Tag {
 }
 
 export interface PromptManagerSettings {
-  sortBy: 'title' | 'createdAt' | 'lastModified' | 'usageCount';
-  sortDirection: 'asc' | 'desc';
-  viewMode: 'list' | 'grid';
+  sortBy: "title" | "createdAt" | "lastModified" | "usageCount";
+  sortDirection: "asc" | "desc";
+  viewMode: "list" | "grid";
 }
 
 export interface PromptManagerUI {
-  activeTab: 'prompts' | 'templates' | 'snippets' | 'workflows';
+  activeTab: "prompts" | "templates" | "snippets" | "workflows";
   selectedPromptId: string | null;
   selectedTemplateId: string | null;
   selectedSnippetId: string | null;

@@ -10,7 +10,7 @@ export interface Workspace {
   isLoadingCount?: boolean;
 }
 
-import type { SortOption, GroupOption } from '../../../constants';
+import type { SortOption, GroupOption } from "../../../constants";
 
 export type { SortOption, GroupOption };
 
@@ -22,4 +22,4 @@ export interface ConfirmationState {
   cancelText: string;
   onConfirm: () => void;
   isDestructive?: boolean;
-} 
+}

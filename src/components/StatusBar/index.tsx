@@ -1,36 +1,46 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { getLanguageStatusItem, getLanguageOptionsMenu } from './LanguageStatusItems';
-import { Macro } from '../Macro';
-import { tabletRegistry } from '../../tablets';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import {
+  getLanguageStatusItem,
+  getLanguageOptionsMenu,
+} from "./LanguageStatusItems";
+import { Macro } from "../Macro";
+import { tabletRegistry } from "../../tablets";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { Tab } from "../../types.ts";
-import { AIStatusIcon } from '../AI/AIStatusIcon';
-import { useRootStore } from '../../stores';
-import { useSplitViewStore } from '../../stores/splitViewStore';
-import { Search, Coffee } from 'lucide-react';
-import { useSearchStore } from '../../stores/searchStore';
-import { languageRegistry } from '../../languages';
-import { getPotentialLanguageMatches } from '../../languages';
-import { LanguageSelectionPopup } from './LanguageSelectionPopup';
-import { ExtendedViewButtons } from './ExtendedViewButtons';
-import { useIsMobile } from '../../hooks/useIsMobile';
-import type { PopupMenuItem } from './types';
+import { AIStatusIcon } from "../AI/AIStatusIcon";
+import { useRootStore } from "../../stores";
+import { useSplitViewStore } from "../../stores/splitViewStore";
+import { Search, Coffee } from "lucide-react";
+import { useSearchStore } from "../../stores/searchStore";
+import { languageRegistry } from "../../languages";
+import { getPotentialLanguageMatches } from "../../languages";
+import { LanguageSelectionPopup } from "./LanguageSelectionPopup";
+import { ExtendedViewButtons } from "./ExtendedViewButtons";
+import { useIsMobile } from "../../hooks/useIsMobile";
+import type { PopupMenuItem } from "./types";
 
 interface StatusBarProps {
-  editor: monaco.editor.IStandaloneCodeEditor | null,
-  activeTab: Tab,
-  side: 'left' | 'right'
+  editor: monaco.editor.IStandaloneCodeEditor | null;
+  activeTab: Tab;
+  side: "left" | "right";
 }
 
 // Helper function to get content for language detection
 const getContentForLanguageDetection = (tab: Tab): string => {
-  if (!tab.content) return '';
-  return tab.content.length > 1000 ? tab.content.substring(0, 1000) : tab.content;
+  if (!tab.content) return "";
+  return tab.content.length > 1000
+    ? tab.content.substring(0, 1000)
+    : tab.content;
 };
 
 // Custom hook to get real-time cursor position from Monaco editor
-const useCursorPosition = (editor: monaco.editor.IStandaloneCodeEditor | null) => {
-  const [cursorPosition, setCursorPosition] = useState({ lineNumber: 1, column: 1 });
+const useCursorPosition = (
+  editor: monaco.editor.IStandaloneCodeEditor | null,
+) => {
+  const [cursorPosition, setCursorPosition] = useState({
+    lineNumber: 1,
+    column: 1,
+  });
   const listenerRef = useRef<monaco.IDisposable | null>(null);
 
   useEffect(() => {
@@ -44,7 +54,7 @@ const useCursorPosition = (editor: monaco.editor.IStandaloneCodeEditor | null) =
     if (position) {
       setCursorPosition({
         lineNumber: position.lineNumber,
-        column: position.column
+        column: position.column,
       });
     }
 
@@ -52,7 +62,7 @@ const useCursorPosition = (editor: monaco.editor.IStandaloneCodeEditor | null) =
     listenerRef.current = editor.onDidChangeCursorPosition((e) => {
       setCursorPosition({
         lineNumber: e.position.lineNumber,
-        column: e.position.column
+        column: e.position.column,
       });
     });
 
@@ -64,7 +74,11 @@ const useCursorPosition = (editor: monaco.editor.IStandaloneCodeEditor | null) =
   return cursorPosition;
 };
 
-export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) => {
+export const StatusBar: React.FC<StatusBarProps> = ({
+  editor,
+  activeTab,
+  side,
+}) => {
   // Get real-time cursor position from editor
   const realTimeCursorPosition = useCursorPosition(editor);
 
@@ -72,11 +86,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
   const { updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
-  const [tabletLabel, setTabletLabel] = useState('');
+  const [tabletLabel, setTabletLabel] = useState("");
   const languageLabelRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
-  const showAIIcon = (!splitView.isSplit && side === 'left') || (splitView.isSplit && side === 'right');
+  const showAIIcon =
+    (!splitView.isSplit && side === "left") ||
+    (splitView.isSplit && side === "right");
 
   // Get the tablet if this is a tablet tab
   useEffect(() => {
@@ -88,14 +104,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
           if (tablet) {
             setTabletLabel(tablet.label);
           } else {
-            setTabletLabel('');
+            setTabletLabel("");
           }
         } catch (e) {
-          console.error('Error parsing tablet state:', e);
-          setTabletLabel('');
+          console.error("Error parsing tablet state:", e);
+          setTabletLabel("");
         }
       } else {
-        setTabletLabel('');
+        setTabletLabel("");
       }
     };
 
@@ -107,76 +123,92 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     if (!activeTab || activeTab.isTablet) {
       return {
         potentialMatches: [],
-        contentSample: ''
+        contentSample: "",
       };
     }
 
     const contentSample = getContentForLanguageDetection(activeTab);
     const potentialMatches = getPotentialLanguageMatches(contentSample);
-    
+
     return {
       potentialMatches,
-      contentSample
+      contentSample,
     };
   }, [activeTab?.id, activeTab?.content, activeTab?.isTablet]);
 
-  const LanguageStatusItem = activeTab && !activeTab.isTablet ? 
-    getLanguageStatusItem(activeTab.language, languageDetectionData.contentSample, activeTab) : null;
+  const LanguageStatusItem =
+    activeTab && !activeTab.isTablet
+      ? getLanguageStatusItem(
+          activeTab.language,
+          languageDetectionData.contentSample,
+          activeTab,
+        )
+      : null;
 
-  const LanguageOptionsMenu = activeTab && !activeTab.isTablet ? 
-    getLanguageOptionsMenu(activeTab.language, editor) : null;
+  const LanguageOptionsMenu =
+    activeTab && !activeTab.isTablet
+      ? getLanguageOptionsMenu(activeTab.language, editor)
+      : null;
 
   // Get languages to display in the popup with the new ordering rules
   const getPopupLanguages = (): PopupMenuItem[] => {
     if (!activeTab || activeTab.isTablet) return [];
 
-    const allLangs = languageRegistry.getAll().map(lang => ({ 
-      id: lang.id, 
-      name: lang.name, 
-      isSeparator: false 
-    })).sort((a, b) => a.name.localeCompare(b.name));
-    
+    const allLangs = languageRegistry
+      .getAll()
+      .map((lang) => ({
+        id: lang.id,
+        name: lang.name,
+        isSeparator: false,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
     const { potentialMatches, contentSample } = languageDetectionData;
     const isLocked = activeTab.languageLocked;
     const currentLanguageId = activeTab.language;
     const popupList: PopupMenuItem[] = [];
 
     // Manually ensure plaintext is always available (it might not be in the registry)
-    const plaintextEntry = allLangs.find(l => l.id === 'plaintext') || 
-                           { id: 'plaintext', name: 'Plaintext', isSeparator: false };
-    const isCurrentlyPlaintext = currentLanguageId === 'plaintext';
-
-
+    const plaintextEntry = allLangs.find((l) => l.id === "plaintext") || {
+      id: "plaintext",
+      name: "Plaintext",
+      isSeparator: false,
+    };
+    const isCurrentlyPlaintext = currentLanguageId === "plaintext";
 
     // Scenario A: Locked, empty, or no real suggestions (just plaintext)
-    if (isLocked || !contentSample?.trim() || potentialMatches.length === 0 || 
-        (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
-      
+    if (
+      isLocked ||
+      !contentSample?.trim() ||
+      potentialMatches.length === 0 ||
+      (potentialMatches.length === 1 && potentialMatches[0].id === "plaintext")
+    ) {
       // Add plaintext first if it's not the current language
       if (plaintextEntry && !isCurrentlyPlaintext) {
         popupList.push(plaintextEntry);
       }
-      
+
       // Add all other languages except plaintext and current language
-      const otherLangs = allLangs.filter(l => 
-        l.id !== 'plaintext' && l.id !== currentLanguageId
+      const otherLangs = allLangs.filter(
+        (l) => l.id !== "plaintext" && l.id !== currentLanguageId,
       );
       popupList.push(...otherLangs);
-      
+
       return popupList;
     }
 
     // Scenario B: Suggestions found, not locked
     const topSuggestionInStatusBar = potentialMatches[0]; // This is already displayed
-    const otherSuggestions = potentialMatches.slice(1)
-                                .filter(s => s.id !== topSuggestionInStatusBar.id);
+    const otherSuggestions = potentialMatches
+      .slice(1)
+      .filter((s) => s.id !== topSuggestionInStatusBar.id);
 
     // 1. Suggested languages group at the TOP
     // Second-best suggestion first, then third-best, etc.
-    const suggestionItems = otherSuggestions.map(s => ({ 
-      id: s.id, 
-      name: s.name, 
-      isSeparator: false 
+    const suggestionItems = otherSuggestions.map((s) => ({
+      id: s.id,
+      name: s.name,
+      isSeparator: false,
     }));
     popupList.push(...suggestionItems);
 
@@ -186,15 +218,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     }
 
     // 2. Separator line
-    popupList.push({ id: 'sep1', name: '-', isSeparator: true });
+    popupList.push({ id: "sep1", name: "-", isSeparator: true });
 
     // 3. All other non-suggested languages (alphabetical)
     // Exclude plaintext, topSuggestion, otherSuggestions, and current language
-    const nonSuggestedLangs = allLangs.filter(lang =>
-      lang.id !== 'plaintext' &&
-      lang.id !== topSuggestionInStatusBar.id &&
-      lang.id !== currentLanguageId &&
-      !otherSuggestions.some(s => s.id === lang.id)
+    const nonSuggestedLangs = allLangs.filter(
+      (lang) =>
+        lang.id !== "plaintext" &&
+        lang.id !== topSuggestionInStatusBar.id &&
+        lang.id !== currentLanguageId &&
+        !otherSuggestions.some((s) => s.id === lang.id),
     );
     popupList.push(...nonSuggestedLangs);
 
@@ -206,7 +239,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     if (!activeTab.isTablet) {
       // Always ensure we close any existing popup before opening a new one
       setShowLanguagePopup(false);
-      
+
       // Use setTimeout to ensure React has time to process the state change
       setTimeout(() => {
         setShowLanguagePopup(true);
@@ -233,7 +266,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     // Language Info
     const currentLanguageId = activeTab.language;
     const currentLanguageObject = languageRegistry.getById(currentLanguageId);
-    const currentLanguageName = currentLanguageObject?.name || currentLanguageId;
+    const currentLanguageName =
+      currentLanguageObject?.name || currentLanguageId;
     const isLocked = activeTab.languageLocked;
     const { potentialMatches } = languageDetectionData;
 
@@ -243,18 +277,23 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
     if (isLocked) {
       displayLabel = currentLanguageName;
       // For locked languages, show alternatives if content is ambiguous or different
-      const hasAlternatives = potentialMatches.length > 0 && potentialMatches.some(lang => lang.id !== currentLanguageId);
+      const hasAlternatives =
+        potentialMatches.length > 0 &&
+        potentialMatches.some((lang) => lang.id !== currentLanguageId);
       if (hasAlternatives) {
-         showDotIndicator = true; // Show a dot if alternatives exist even when locked
+        showDotIndicator = true; // Show a dot if alternatives exist even when locked
       }
     } else if (!languageDetectionData.contentSample?.trim()) {
       displayLabel = "Plaintext"; // Already default
-    } else if (potentialMatches.length === 0 || (potentialMatches.length === 1 && potentialMatches[0].id === 'plaintext')) {
+    } else if (
+      potentialMatches.length === 0 ||
+      (potentialMatches.length === 1 && potentialMatches[0].id === "plaintext")
+    ) {
       displayLabel = "Plaintext";
     } else {
       const topSuggestion = potentialMatches[0];
       displayLabel = topSuggestion.name;
-      if (potentialMatches.length > 1 && topSuggestion.id !== 'plaintext') {
+      if (potentialMatches.length > 1 && topSuggestion.id !== "plaintext") {
         showDotIndicator = true;
       }
     }
@@ -267,19 +306,23 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
           className="flex items-center cursor-pointer hover:bg-gray-700/50 px-1.5 py-0.5 rounded transition-colors"
           title="Change language"
         >
-          <span className="capitalize">{displayLabel}</span>
+          <span className="capitalize" data-testid="status-language">{displayLabel}</span>
           {showDotIndicator && (
             <span className="ml-1 text-blue-400 text-xs leading-none">•</span>
           )}
         </div>
-        
+
         {/* Language Selection Popup */}
         {showLanguagePopup && (
           <LanguageSelectionPopup
             languages={getPopupLanguages()}
             onSelectLanguage={handleSelectLanguage}
             onClose={() => setShowLanguagePopup(false)}
-            title={activeTab?.languageLocked ? "Other Language Options" : "Select Language"}
+            title={
+              activeTab?.languageLocked
+                ? "Other Language Options"
+                : "Select Language"
+            }
           />
         )}
       </div>
@@ -287,45 +330,55 @@ export const StatusBar: React.FC<StatusBarProps> = ({editor, activeTab, side}) =
   };
 
   return (
-   <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs"> 
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">
+      <div className="flex items-center space-x-4">
         {activeTab && (
           <>
             {!activeTab.isTablet && (
               <span>
-                Ln {realTimeCursorPosition.lineNumber}, Col {realTimeCursorPosition.column}
+                Ln {realTimeCursorPosition.lineNumber}, Col{" "}
+                {realTimeCursorPosition.column}
               </span>
             )}
             <div className="p-0.5 flex items-center space-x-2">
               {renderLanguageSection()}
               {LanguageStatusItem && <LanguageStatusItem />}
-              {LanguageOptionsMenu && editor && <LanguageOptionsMenu editor={editor} />}
-              <ExtendedViewButtons language={activeTab.language} tabId={activeTab.id} />
+              {LanguageOptionsMenu && editor && (
+                <LanguageOptionsMenu editor={editor} />
+              )}
+              <ExtendedViewButtons
+                language={activeTab.language}
+                tabId={activeTab.id}
+              />
             </div>
           </>
         )}
       </div>
       <div className="flex items-center space-x-2">
-        {showAIIcon &&
-            <button
-                onClick={() => window.open('https://ko-fi.com/scratchtabs', '_blank')}
-                className="p-0.5 hover:bg-gray-700 rounded transition-colors"
-                title="Support on Ko-fi"
-            >
-                <Coffee size={14} />
-            </button> }
+        {showAIIcon && (
+          <button
+            onClick={() =>
+              window.open("https://ko-fi.com/scratchtabs", "_blank")
+            }
+            className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+            title="Support on Ko-fi"
+          >
+            <Coffee size={14} />
+          </button>
+        )}
 
-        {showAIIcon &&
-            <button
-                onClick={() => toggleSearch()} // Open search with no initial query
-                className="p-0.5 hover:bg-gray-700 rounded transition-colors"
-                title="Find in Tabs (Ctrl+Shift+F)"
-            >
-                <Search size={14} />
-            </button> }
+        {showAIIcon && (
+          <button
+            onClick={() => toggleSearch()} // Open search with no initial query
+            className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+            title="Find in Tabs (Ctrl+Shift+F)"
+          >
+            <Search size={14} />
+          </button>
+        )}
 
         {showAIIcon && <AIStatusIcon />}
-        {!isMobile && <Macro editor={editor}/>}
+        {!isMobile && <Macro editor={editor} />}
       </div>
     </div>
   );

@@ -1,14 +1,17 @@
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types';
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
 
 /**
  * Rust language detector
  */
-export class RustLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'rust'; // Monaco's built-in ID for Rust
-  name = 'Rust';
-  extensions = ['rs'];
+export class RustLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "rust"; // Monaco's built-in ID for Rust
+  name = "Rust";
+  extensions = ["rs"];
   priority = 7; // High priority due to its very distinctive syntax
 
   sampleContent(): string {
@@ -117,28 +120,84 @@ fn main() -> Result<(), Box<dyn Error>> {
     let specificRustHits = 0;
 
     // 0. Early bail out if strong JS/other definitive markers are present
-    if (/\bimport\s+.*\s+from\s+['"]/.test(content) && !/\buse\s+/.test(content)) { // JS/TS import but not Rust 'use'
+    if (
+      /\bimport\s+.*\s+from\s+['"]/.test(content) &&
+      !/\buse\s+/.test(content)
+    ) {
+      // JS/TS import but not Rust 'use'
       return this.noMatch(); // Likely JS/TS module
     }
-    if (/=>\s*\{/.test(content) && !/\bmatch\b/.test(content)) { // JS arrow, not Rust match arm
+    if (/=>\s*\{/.test(content) && !/\bmatch\b/.test(content)) {
+      // JS arrow, not Rust match arm
       return this.noMatch();
     }
-
 
     // 1. Highly Definitive Rust Keywords and Syntax
     const definitivePatterns = [
       // fn, let, attributes, core types, use, ::, lifetimes, macros, Option/Result, match
-      { pattern: /\bfn\s+[a-zA-Z_][\w]*\s*(?:<[^>]*>)?\s*\([^)]*\)\s*(?:->\s*[\w&:'<>., ()[\]]+)?\s*\{/g, weight: 0.4, perMatch: 0.05, specific: true },
-      { pattern: /\b(let\s+(mut\s+)?[a-zA-Z_]\w*\s*:\s*[\w&:'<>., ()[\]]+)/g, weight: 0.3, perMatch: 0.05, specific: true }, // `let (mut) name: Type` (with type hint)
-      { pattern: /\b(let\s+(mut\s+)?[a-zA-Z_]\w*\s*=)/g, weight: 0.15, perMatch: 0.03 }, // `let (mut) name =` (without type hint, weaker signal due to JS overlap)
-      { pattern: /#\[(?:derive|cfg|test|allow|warn|deny|forbid|macro_export|macro_use|inline|cold|no_mangle|link)\b[^\]]*\]/g, weight: 0.35, perMatch: 0.05, specific: true },
-      { pattern: /\b(struct|enum|trait|impl|union)\s+[A-Z_][\w]*(?:<[^>]*>)?(?:\s*for\s+[\w:]+)?\s*\{?/g, weight: 0.3, perMatch: 0.05, specific: true },
-      { pattern: /\buse\s+(?:std|crate|super|self)?::(?:[\w*{} ,]+;)?/g, weight: 0.3, perMatch: 0.04, specific: true },
-      { pattern: /(?<!\w)::\w+(?!\s*\()/g, weight: 0.15, perMatch: 0.01, specific: true }, // Path separator `::` not followed by ( to avoid C++ static method calls
-      { pattern: /['][a-zA-Z_]\w*\b/g, weight: 0.2, perMatch: 0.03, specific: true },         // Lifetimes `'a`
-      { pattern: /\b\w+!\s*\(/g, weight: 0.25, perMatch: 0.03, specific: true },               // Macros `println!(...` (ending with !)
-      { pattern: /\b(Some|None)\s*\(|\bOk\s*\(|\bErr\s*\(/g, weight: 0.25, perMatch: 0.03, specific: true },
-      { pattern: /\bmatch\s+[\s\S]*?\{[\s\S]*?\}/gm, weight: 0.25, perMatch: 0.05, specific: true },
+      {
+        pattern:
+          /\bfn\s+[a-zA-Z_][\w]*\s*(?:<[^>]*>)?\s*\([^)]*\)\s*(?:->\s*[\w&:'<>., ()[\]]+)?\s*\{/g,
+        weight: 0.4,
+        perMatch: 0.05,
+        specific: true,
+      },
+      {
+        pattern: /\b(let\s+(mut\s+)?[a-zA-Z_]\w*\s*:\s*[\w&:'<>., ()[\]]+)/g,
+        weight: 0.3,
+        perMatch: 0.05,
+        specific: true,
+      }, // `let (mut) name: Type` (with type hint)
+      {
+        pattern: /\b(let\s+(mut\s+)?[a-zA-Z_]\w*\s*=)/g,
+        weight: 0.15,
+        perMatch: 0.03,
+      }, // `let (mut) name =` (without type hint, weaker signal due to JS overlap)
+      {
+        pattern:
+          /#\[(?:derive|cfg|test|allow|warn|deny|forbid|macro_export|macro_use|inline|cold|no_mangle|link)\b[^\]]*\]/g,
+        weight: 0.35,
+        perMatch: 0.05,
+        specific: true,
+      },
+      {
+        pattern:
+          /\b(struct|enum|trait|impl|union)\s+[A-Z_][\w]*(?:<[^>]*>)?(?:\s*for\s+[\w:]+)?\s*\{?/g,
+        weight: 0.3,
+        perMatch: 0.05,
+        specific: true,
+      },
+      {
+        pattern: /\buse\s+(?:std|crate|super|self)?::(?:[\w*{} ,]+;)?/g,
+        weight: 0.3,
+        perMatch: 0.04,
+        specific: true,
+      },
+      {
+        pattern: /(?<!\w)::\w+(?!\s*\()/g,
+        weight: 0.15,
+        perMatch: 0.01,
+        specific: true,
+      }, // Path separator `::` not followed by ( to avoid C++ static method calls
+      {
+        pattern: /['][a-zA-Z_]\w*\b/g,
+        weight: 0.2,
+        perMatch: 0.03,
+        specific: true,
+      }, // Lifetimes `'a`
+      { pattern: /\b\w+!\s*\(/g, weight: 0.25, perMatch: 0.03, specific: true }, // Macros `println!(...` (ending with !)
+      {
+        pattern: /\b(Some|None)\s*\(|\bOk\s*\(|\bErr\s*\(/g,
+        weight: 0.25,
+        perMatch: 0.03,
+        specific: true,
+      },
+      {
+        pattern: /\bmatch\s+[\s\S]*?\{[\s\S]*?\}/gm,
+        weight: 0.25,
+        perMatch: 0.05,
+        specific: true,
+      },
     ];
 
     for (const dp of definitivePatterns) {
@@ -158,11 +217,24 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // 2. Common Rust Keywords and constructs
     const commonPatterns = [
-      { pattern: /\b(pub(?:\((?:self|super|crate|in\s+[\w:]+)\))?|mod|const|static|type|unsafe|extern|as|move|loop|break|continue|return|async|await|yield|dyn|impl)\b/g, weight: 0.08, perMatch: 0.005 },
-      { pattern: /\b(if|else|while|for)\b(?:\s*\{|\s+\w+\s+in)/g, weight: 0.05, perMatch: 0.002 }, // Control flow typical for Rust
+      {
+        pattern:
+          /\b(pub(?:\((?:self|super|crate|in\s+[\w:]+)\))?|mod|const|static|type|unsafe|extern|as|move|loop|break|continue|return|async|await|yield|dyn|impl)\b/g,
+        weight: 0.08,
+        perMatch: 0.005,
+      },
+      {
+        pattern: /\b(if|else|while|for)\b(?:\s*\{|\s+\w+\s+in)/g,
+        weight: 0.05,
+        perMatch: 0.002,
+      }, // Control flow typical for Rust
       { pattern: /->\s*[\w&:'<>., ()[\]]+/g, weight: 0.1, perMatch: 0.01 }, // Return type arrow
-      { pattern: /&\s*(?:'[\w]+\s+)?(mut\s+)?[\w:]+/g, weight: 0.15, perMatch: 0.02 }, // References `&foo`, `&mut bar`, `&'a T`
-      { pattern: /'\w+:/g, weight: 0.1, perMatch: 0.02 } // Labeled loops/blocks: 'label: loop {
+      {
+        pattern: /&\s*(?:'[\w]+\s+)?(mut\s+)?[\w:]+/g,
+        weight: 0.15,
+        perMatch: 0.02,
+      }, // References `&foo`, `&mut bar`, `&'a T`
+      { pattern: /'\w+:/g, weight: 0.1, perMatch: 0.02 }, // Labeled loops/blocks: 'label: loop {
     ];
     for (const cp of commonPatterns) {
       // ... (same matching logic as definitivePatterns)
@@ -177,26 +249,35 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     // 3. Comments
-    if (/\/\//.test(content) && !content.includes("http://") && !content.includes("https://")) { // Avoid matching URLs
+    if (
+      /\/\//.test(content) &&
+      !content.includes("http://") &&
+      !content.includes("https://")
+    ) {
+      // Avoid matching URLs
       confidenceScore += 0.02; // // is common in many languages
     }
     if (/\/\*[\s\S]*?\*\//.test(content)) {
       confidenceScore += 0.02;
     }
-    if (/\/\/\/|\/\/!|\/\*\*!|\/\*\*[^!]/.test(content)) { // Rustdoc comments
-      confidenceScore += 0.15; patternsMatched++; strongSignalFound = true; specificRustHits++;
+    if (/\/\/\/|\/\/!|\/\*\*!|\/\*\*[^!]/.test(content)) {
+      // Rustdoc comments
+      confidenceScore += 0.15;
+      patternsMatched++;
+      strongSignalFound = true;
+      specificRustHits++;
     }
 
     // 4. Anti-patterns (more aggressive against JS)
     const antiPatterns = [
       { pattern: /<\?php/i, weight: -0.8 },
-      { pattern: /^\s*package\s+[\w.]+;/m, weight: -0.7 },         // Java package
-      { pattern: /System\.out\.println/i, weight: -0.6 },     // Java print
-      { pattern: /console\.log\s*\(/g, weight: -0.5 },          // JavaScript console.log (very common)
-      { pattern: /\bfunction\s+\w+\s*\(/g, weight: -0.6 },       // JS function keyword
+      { pattern: /^\s*package\s+[\w.]+;/m, weight: -0.7 }, // Java package
+      { pattern: /System\.out\.println/i, weight: -0.6 }, // Java print
+      { pattern: /console\.log\s*\(/g, weight: -0.5 }, // JavaScript console.log (very common)
+      { pattern: /\bfunction\s+\w+\s*\(/g, weight: -0.6 }, // JS function keyword
       // { pattern: /\bvar\s+\w+\s*=/g, weight: -0.3 }, // 'var' is too generic, might appear in comments/strings
-      { pattern: /#include\s*</i, weight: -0.7 },             // C/C++ include
-      { pattern: /<\w.*?>/g, weight: -0.6 },                  // HTML/XML tags
+      { pattern: /#include\s*</i, weight: -0.7 }, // C/C++ include
+      { pattern: /<\w.*?>/g, weight: -0.6 }, // HTML/XML tags
       { pattern: /^\s*def\s+\w+\s*\(.*?\)\s*:/m, weight: -0.7 }, // Python def func():
       { pattern: /@ Grab\b/i, weight: -0.8 }, // Groovy @Grab
     ];
@@ -212,42 +293,54 @@ fn main() -> Result<(), Box<dyn Error>> {
     if (strongSignalFound && specificRustHits >= 2) {
       confidenceScore += 0.25;
     }
-    if (content.includes("fn main()") && (content.includes("let ") || content.includes("println!"))) {
+    if (
+      content.includes("fn main()") &&
+      (content.includes("let ") || content.includes("println!"))
+    ) {
       confidenceScore += 0.2;
       strongSignalFound = true; // Re-affirm strong signal
     }
     // If it looks like JS but has no Rust-specific type annotations or lifetimes, penalize Rust more
-    if (content.includes("let ") && !content.match(/:\s*[\w&:'<>., ()[\]]+/) && !content.match(/[']\w/)) {
-      if (content.match(/\bfunction\b|\bconsole\.log\b/)) { // And has JS keywords
+    if (
+      content.includes("let ") &&
+      !content.match(/:\s*[\w&:'<>., ()[\]]+/) &&
+      !content.match(/[']\w/)
+    ) {
+      if (content.match(/\bfunction\b|\bconsole\.log\b/)) {
+        // And has JS keywords
         confidenceScore -= 0.2;
       }
     }
 
-
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    const isMatch = (strongSignalFound && specificRustHits >= 1 && confidenceScore >= 0.40) ||
-      (specificRustHits >= 2 && confidenceScore >= 0.50) ||
-      (patternsMatched >= 4 && confidenceScore >= 0.60);
+    const isMatch =
+      (strongSignalFound && specificRustHits >= 1 && confidenceScore >= 0.4) ||
+      (specificRustHits >= 2 && confidenceScore >= 0.5) ||
+      (patternsMatched >= 4 && confidenceScore >= 0.6);
 
     // console.log(`RUST: Score=${confidenceScore.toFixed(3)}, Patterns=${patternsMatched}, Specific=${specificRustHits}, Strong=${strongSignalFound}, Match=${isMatch}`);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongSignalFound && specificRustHits >= 1
+      matchedDefinitive: isMatch && strongSignalFound && specificRustHits >= 1,
     };
   }
 
   getFileExtension(): string {
-    return 'rs';
+    return "rs";
   }
 
   registerProvider(monaco: any): void {
     const languageId = this.id; // 'rust'
 
     // Monaco has excellent built-in support for 'rust'.
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+    if (
+      !monaco.languages
+        .getLanguages()
+        .some((lang: any) => lang.id === languageId)
+    ) {
       monaco.languages.register({ id: languageId });
     }
 

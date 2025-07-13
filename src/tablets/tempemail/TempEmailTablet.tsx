@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Tablet, TabletState } from '../types';
-import { Mail, RefreshCw, X, Loader2, Copy, Check } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from "react";
+import { Tablet, TabletState } from "../types";
+import { Mail, RefreshCw, X, Loader2, Copy, Check } from "lucide-react";
 
 interface Email {
   id: string;
@@ -11,7 +11,7 @@ interface Email {
 }
 
 interface TempEmailState extends TabletState {
-  type: 'tempemail';
+  type: "tempemail";
   data: {
     emailAddress: string;
     emailToken: string;
@@ -37,7 +37,7 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
   // State for copy-body feedback
   const [copiedBody, setCopiedBody] = useState(false);
   const handleCopyBody = async () => {
-    await navigator.clipboard.writeText(email.body || '');
+    await navigator.clipboard.writeText(email.body || "");
     setCopiedBody(true);
     setTimeout(() => setCopiedBody(false), 1500);
   };
@@ -51,8 +51,8 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
             <p className="text-sm text-gray-400">From: {email.from}</p>
             <button
               onClick={handleCopyFrom}
-              className={`p-1 rounded transition-colors ${copiedFrom ? 'text-green-400' : 'text-gray-400 hover:text-gray-300'}`}
-              title={copiedFrom ? 'Copied!' : 'Copy sender address'}
+              className={`p-1 rounded transition-colors ${copiedFrom ? "text-green-400" : "text-gray-400 hover:text-gray-300"}`}
+              title={copiedFrom ? "Copied!" : "Copy sender address"}
             >
               {copiedFrom ? <Check size={16} /> : <Copy size={16} />}
             </button>
@@ -61,8 +61,8 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
         <div className="flex items-center space-x-2">
           <button
             onClick={handleCopyBody}
-            className={`p-1 rounded transition-colors ${copiedBody ? 'text-green-400' : 'text-gray-400 hover:text-gray-200'}`}
-            title={copiedBody ? 'Copied!' : 'Copy email body'}
+            className={`p-1 rounded transition-colors ${copiedBody ? "text-green-400" : "text-gray-400 hover:text-gray-200"}`}
+            title={copiedBody ? "Copied!" : "Copy email body"}
           >
             {copiedBody ? <Check size={16} /> : <Copy size={16} />}
           </button>
@@ -76,8 +76,8 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
       </div>
       <div className="flex-1 p-6 overflow-auto custom-scrollbar">
         <div
-            className="prose prose-invert max-w-none"
-            dangerouslySetInnerHTML={{__html: email.body || ''}}
+          className="prose prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: email.body || "" }}
         />
       </div>
     </div>
@@ -99,7 +99,9 @@ const TempEmailTabletUI: React.FC<{
     setError(null);
 
     try {
-      const response = await fetch('https://api.guerrillamail.com/ajax.php?f=get_email_address');
+      const response = await fetch(
+        "https://api.guerrillamail.com/ajax.php?f=get_email_address",
+      );
       const data = await response.json();
 
       onChange({
@@ -109,11 +111,11 @@ const TempEmailTabletUI: React.FC<{
           emailAddress: data.email_addr,
           emailToken: data.sid_token,
           emails: [],
-          lastChecked: Date.now()
-        }
+          lastChecked: Date.now(),
+        },
       });
     } catch (err) {
-      setError('Failed to generate email address. Please try again.');
+      setError("Failed to generate email address. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -127,13 +129,13 @@ const TempEmailTabletUI: React.FC<{
 
     try {
       const response = await fetch(
-        `https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${state.data.emailToken}`
+        `https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${state.data.emailToken}`,
       );
       const data = await response.json();
 
       if (data.list && Array.isArray(data.list)) {
         // Create a Set of existing email IDs for efficient lookup
-        const existingIds = new Set(state.data.emails.map(email => email.id));
+        const existingIds = new Set(state.data.emails.map((email) => email.id));
 
         // Filter out any emails we already have
         const newEmails = data.list
@@ -153,8 +155,8 @@ const TempEmailTabletUI: React.FC<{
               ...state.data,
               // Add new emails to the beginning of the list
               emails: [...newEmails, ...state.data.emails],
-              lastChecked: Date.now()
-            }
+              lastChecked: Date.now(),
+            },
           });
         } else {
           // Just update the last checked timestamp
@@ -162,13 +164,13 @@ const TempEmailTabletUI: React.FC<{
             ...state,
             data: {
               ...state.data,
-              lastChecked: Date.now()
-            }
+              lastChecked: Date.now(),
+            },
           });
         }
       }
     } catch (err) {
-      setError('Failed to check for new emails. Please try again.');
+      setError("Failed to check for new emails. Please try again.");
     } finally {
       setIsChecking(false);
     }
@@ -179,7 +181,7 @@ const TempEmailTabletUI: React.FC<{
 
     try {
       const response = await fetch(
-        `https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=${emailId}&sid_token=${state.data.emailToken}`
+        `https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=${emailId}&sid_token=${state.data.emailToken}`,
       );
       const data = await response.json();
 
@@ -188,12 +190,12 @@ const TempEmailTabletUI: React.FC<{
         subject: data.subject,
         from: data.mail_from,
         timestamp: data.mail_timestamp,
-        body: data.mail_body
+        body: data.mail_body,
       };
 
       setSelectedEmail(emailWithBody);
     } catch (err) {
-      setError('Failed to fetch email content. Please try again.');
+      setError("Failed to fetch email content. Please try again.");
     }
   };
 
@@ -213,7 +215,9 @@ const TempEmailTabletUI: React.FC<{
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Mail className="text-gray-400" size={24} />
-              <h2 className="text-xl font-semibold text-gray-100">Temporary Email</h2>
+              <h2 className="text-xl font-semibold text-gray-100">
+                Temporary Email
+              </h2>
             </div>
             {state.data.emailAddress && (
               <button
@@ -243,7 +247,7 @@ const TempEmailTabletUI: React.FC<{
                   <span>Generating...</span>
                 </div>
               ) : (
-                'Generate Email Address'
+                "Generate Email Address"
               )}
             </button>
           ) : (
@@ -254,18 +258,14 @@ const TempEmailTabletUI: React.FC<{
             </div>
           )}
 
-          {error && (
-            <div className="mt-4 text-sm text-red-400">
-              {error}
-            </div>
-          )}
+          {error && <div className="mt-4 text-sm text-red-400">{error}</div>}
         </div>
       </div>
 
       {/* Email List */}
       <div className="flex-1 overflow-auto custom-scrollbar">
         {state.data.emailAddress ? (
-          (state.data.emails && state.data.emails.length > 0) ? (
+          state.data.emails && state.data.emails.length > 0 ? (
             <div className="divide-y divide-gray-700/50">
               {state.data.emails.map((email) => (
                 <button
@@ -276,11 +276,9 @@ const TempEmailTabletUI: React.FC<{
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-gray-200 font-medium">
-                        {email.subject || '(no subject)'}
+                        {email.subject || "(no subject)"}
                       </h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        {email.from}
-                      </p>
+                      <p className="text-sm text-gray-400 mt-1">{email.from}</p>
                     </div>
                     <span className="text-xs text-gray-500">
                       {new Date(email.timestamp * 1000).toLocaleTimeString()}
@@ -294,7 +292,9 @@ const TempEmailTabletUI: React.FC<{
               <div className="text-center">
                 <Mail size={48} className="mx-auto mb-4 opacity-50" />
                 <p>No emails yet</p>
-                <p className="text-sm mt-1">Emails will appear here when received</p>
+                <p className="text-sm mt-1">
+                  Emails will appear here when received
+                </p>
               </div>
             </div>
           )
@@ -320,19 +320,19 @@ const TempEmailTabletUI: React.FC<{
 };
 
 export const TempEmailTablet: Tablet = {
-  id: 'tempemail',
-  label: 'Temporary Email',
-  keywords: ['email', 'temp', 'disposable', 'mail', 'inbox'],
+  id: "tempemail",
+  label: "Temporary Email",
+  keywords: ["email", "temp", "disposable", "mail", "inbox"],
 
   createInitialState(): TempEmailState {
     return {
-      type: 'tempemail',
+      type: "tempemail",
       data: {
-        emailAddress: '',
-        emailToken: '',
+        emailAddress: "",
+        emailToken: "",
         emails: [],
-        lastChecked: 0
-      }
+        lastChecked: 0,
+      },
     };
   },
 
@@ -343,24 +343,24 @@ export const TempEmailTablet: Tablet = {
   deserializeState(json: string): TabletState {
     try {
       const parsed = JSON.parse(json);
-      if (parsed.type === 'tempemail' && parsed.data) {
+      if (parsed.type === "tempemail" && parsed.data) {
         return {
-          type: 'tempemail',
+          type: "tempemail",
           data: {
-            emailAddress: parsed.data.emailAddress || '',
-            emailToken: parsed.data.emailToken || '',
+            emailAddress: parsed.data.emailAddress || "",
+            emailToken: parsed.data.emailToken || "",
             emails: Array.isArray(parsed.data.emails) ? parsed.data.emails : [],
-            lastChecked: parsed.data.lastChecked || 0
-          }
+            lastChecked: parsed.data.lastChecked || 0,
+          },
         };
       }
     } catch (e) {
-      console.error('Failed to parse Email tablet state:', e);
+      console.error("Failed to parse Email tablet state:", e);
     }
     return this.createInitialState();
   },
 
   render(state: TempEmailState, onChange) {
     return <TempEmailTabletUI state={state} onChange={onChange} />;
-  }
+  },
 };

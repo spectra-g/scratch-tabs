@@ -1,6 +1,6 @@
-import React from 'react';
-import { Clock, Trash2, ArrowRightLeft } from 'lucide-react';
-import { Snapshot } from '../types';
+import React from "react";
+import { Clock, Trash2, ArrowRightLeft } from "lucide-react";
+import { Snapshot } from "../types";
 
 interface SnapshotCardProps {
   snapshot: Snapshot;
@@ -19,7 +19,7 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
   onSelect,
   onDelete,
   onToggleCompare,
-  disableCompare = false
+  disableCompare = false,
 }) => {
   const formatTimestamp = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -27,23 +27,23 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`p-3 rounded-lg border transition-colors ${
-        isActive 
-          ? 'bg-blue-500/20 border-blue-500/30' 
+        isActive
+          ? "bg-blue-500/20 border-blue-500/30"
           : isCompare
-            ? 'bg-purple-500/20 border-purple-500/30'
-            : 'border-gray-700 hover:border-gray-600'
+            ? "bg-purple-500/20 border-purple-500/30"
+            : "border-gray-700 hover:border-gray-600"
       }`}
     >
       <div className="flex items-center justify-between mb-2">
-        <div 
+        <div
           className="font-medium text-sm truncate cursor-pointer"
           onClick={onSelect}
         >
           {snapshot.name}
         </div>
-        
+
         {!isActive && !isCompare && (
           <button
             onClick={onDelete}
@@ -54,39 +54,39 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
           </button>
         )}
       </div>
-      
+
       <div className="flex items-center text-xs text-gray-500 mb-2">
         <Clock size={12} className="mr-1" />
         {formatTimestamp(snapshot.createdAt)}
       </div>
-      
+
       <div className="text-xs text-gray-500 mb-3">
         {snapshot.metrics.length} metrics
       </div>
-      
+
       <div className="flex items-center justify-between">
         <button
           onClick={onSelect}
           className={`px-2 py-1 text-xs rounded ${
-            isActive 
-              ? 'bg-blue-500/30 text-blue-300' 
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            isActive
+              ? "bg-blue-500/30 text-blue-300"
+              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
           }`}
         >
-          {isActive ? 'Active' : 'Select'}
+          {isActive ? "Active" : "Select"}
         </button>
-        
+
         {!disableCompare && !isActive && (
           <button
             onClick={onToggleCompare}
             className={`px-2 py-1 text-xs rounded flex items-center ${
-              isCompare 
-                ? 'bg-purple-500/30 text-purple-300' 
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              isCompare
+                ? "bg-purple-500/30 text-purple-300"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
             }`}
           >
             <ArrowRightLeft size={12} className="mr-1" />
-            {isCompare ? 'Comparing' : 'Compare'}
+            {isCompare ? "Comparing" : "Compare"}
           </button>
         )}
       </div>

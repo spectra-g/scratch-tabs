@@ -1,1 +1,1 @@
-export { TabletSelector } from './TabletSelector'; 
+export { TabletSelector } from "./TabletSelector";

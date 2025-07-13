@@ -1,11 +1,26 @@
-import React, { useState } from 'react';
-import { RotateCcw, RotateCw, ArrowDownUp, Download, Upload, Copy, Clipboard, Settings, X, Check, Info, Layers, FlipHorizontal as LayoutHorizontal, FlipVertical as LayoutVertical } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Base64Format, EncodingOption } from '../types';
+import React, { useState } from "react";
+import {
+  RotateCcw,
+  RotateCw,
+  ArrowDownUp,
+  Download,
+  Upload,
+  Copy,
+  Clipboard,
+  Settings,
+  X,
+  Check,
+  Info,
+  Layers,
+  FlipHorizontal as LayoutHorizontal,
+  FlipVertical as LayoutVertical,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { Base64Format, EncodingOption } from "../types";
 
 interface Base64ToolbarProps {
-  mode: 'encode' | 'decode' | 'line-by-line';
-  setMode: (mode: 'encode' | 'decode' | 'line-by-line') => void;
+  mode: "encode" | "decode" | "line-by-line";
+  setMode: (mode: "encode" | "decode" | "line-by-line") => void;
   selectedFormat: string;
   setSelectedFormat: (format: string) => void;
   selectedEncoding: string;
@@ -25,8 +40,8 @@ interface Base64ToolbarProps {
   hasOutput: boolean;
   hasInput: boolean;
   canProcess: boolean;
-  layout: 'horizontal' | 'vertical';
-  setLayout: (layout: 'horizontal' | 'vertical') => void;
+  layout: "horizontal" | "vertical";
+  setLayout: (layout: "horizontal" | "vertical") => void;
   showHistory: boolean;
   setShowHistory: (show: boolean) => void;
 }
@@ -56,7 +71,7 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
   layout,
   setLayout,
   showHistory,
-  setShowHistory
+  setShowHistory,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [copiedOutput, setCopiedOutput] = useState(false);
@@ -82,33 +97,33 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
           {/* Mode Selector */}
           <div className="bg-gray-800/50 rounded-lg p-0.5 flex">
             <button
-              onClick={() => setMode('encode')}
+              onClick={() => setMode("encode")}
               className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                mode === 'encode' 
-                  ? 'bg-blue-500/20 text-blue-400' 
-                  : 'text-gray-400 hover:text-gray-300'
+                mode === "encode"
+                  ? "bg-blue-500/20 text-blue-400"
+                  : "text-gray-400 hover:text-gray-300"
               }`}
               title="Encode text to Base64"
             >
               Encode
             </button>
             <button
-              onClick={() => setMode('decode')}
+              onClick={() => setMode("decode")}
               className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                mode === 'decode' 
-                  ? 'bg-blue-500/20 text-blue-400' 
-                  : 'text-gray-400 hover:text-gray-300'
+                mode === "decode"
+                  ? "bg-blue-500/20 text-blue-400"
+                  : "text-gray-400 hover:text-gray-300"
               }`}
               title="Decode Base64 to text"
             >
               Decode
             </button>
             <button
-              onClick={() => setMode('line-by-line')}
+              onClick={() => setMode("line-by-line")}
               className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                mode === 'line-by-line' 
-                  ? 'bg-blue-500/20 text-blue-400' 
-                  : 'text-gray-400 hover:text-gray-300'
+                mode === "line-by-line"
+                  ? "bg-blue-500/20 text-blue-400"
+                  : "text-gray-400 hover:text-gray-300"
               }`}
               title="Process each line separately"
             >
@@ -118,11 +133,21 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
 
           {/* Layout Toggle */}
           <button
-            onClick={() => setLayout(layout === 'horizontal' ? 'vertical' : 'horizontal')}
+            onClick={() =>
+              setLayout(layout === "horizontal" ? "vertical" : "horizontal")
+            }
             className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded-md transition-colors"
-            title={layout === 'horizontal' ? 'Switch to vertical layout' : 'Switch to horizontal layout'}
+            title={
+              layout === "horizontal"
+                ? "Switch to vertical layout"
+                : "Switch to horizontal layout"
+            }
           >
-            {layout === 'horizontal' ? <LayoutVertical size={16} /> : <LayoutHorizontal size={16} />}
+            {layout === "horizontal" ? (
+              <LayoutVertical size={16} />
+            ) : (
+              <LayoutHorizontal size={16} />
+            )}
           </button>
         </div>
 
@@ -162,9 +187,9 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
           <button
             onClick={() => setShowHistory(!showHistory)}
             className={`p-2 rounded-md transition-colors ${
-              showHistory 
-                ? 'bg-blue-500/20 text-blue-400' 
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/50'
+              showHistory
+                ? "bg-blue-500/20 text-blue-400"
+                : "text-gray-400 hover:text-gray-300 hover:bg-gray-700/50"
             }`}
             title="Show history"
           >
@@ -173,9 +198,9 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
           <button
             onClick={() => setShowSettings(!showSettings)}
             className={`p-2 rounded-md transition-colors ${
-              showSettings 
-                ? 'bg-blue-500/20 text-blue-400' 
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/50'
+              showSettings
+                ? "bg-blue-500/20 text-blue-400"
+                : "text-gray-400 hover:text-gray-300 hover:bg-gray-700/50"
             }`}
             title="Settings"
           >
@@ -188,7 +213,7 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
       {showSettings && (
         <motion.div
           initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
+          animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="border-t border-gray-700/50 p-3 bg-gray-800/50 overflow-hidden"
@@ -208,12 +233,14 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
                 ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                {formats.find(f => f.id === selectedFormat)?.description}
+                {formats.find((f) => f.id === selectedFormat)?.description}
               </p>
             </div>
 
             <div className="flex flex-col space-y-1">
-              <label className="text-sm text-gray-400">Character Encoding</label>
+              <label className="text-sm text-gray-400">
+                Character Encoding
+              </label>
               <select
                 value={selectedEncoding}
                 onChange={(e) => setSelectedEncoding(e.target.value)}
@@ -226,7 +253,7 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
                 ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                {encodings.find(e => e.id === selectedEncoding)?.description}
+                {encodings.find((e) => e.id === selectedEncoding)?.description}
               </p>
             </div>
 
@@ -252,7 +279,10 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
                   onChange={(e) => setPreserveNewlines(e.target.checked)}
                   className="rounded bg-gray-700 border-gray-600 text-blue-500 focus:ring-blue-500/50"
                 />
-                <label htmlFor="preserveNewlines" className="text-sm text-gray-300">
+                <label
+                  htmlFor="preserveNewlines"
+                  className="text-sm text-gray-300"
+                >
                   Preserve newlines in line-by-line mode
                 </label>
               </div>
@@ -261,9 +291,17 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
             <div className="flex items-center space-x-2 text-xs text-gray-400 bg-gray-700/30 p-2 rounded-md">
               <Info size={14} className="text-blue-400" />
               <span>
-                Keyboard shortcuts: <kbd className="px-1 py-0.5 bg-gray-700 rounded">Ctrl+E</kbd> to encode, 
-                <kbd className="px-1 py-0.5 bg-gray-700 rounded ml-1">Ctrl+D</kbd> to decode, 
-                <kbd className="px-1 py-0.5 bg-gray-700 rounded ml-1">Ctrl+↑/↓</kbd> to change mode
+                Keyboard shortcuts:{" "}
+                <kbd className="px-1 py-0.5 bg-gray-700 rounded">Ctrl+E</kbd> to
+                encode,
+                <kbd className="px-1 py-0.5 bg-gray-700 rounded ml-1">
+                  Ctrl+D
+                </kbd>{" "}
+                to decode,
+                <kbd className="px-1 py-0.5 bg-gray-700 rounded ml-1">
+                  Ctrl+↑/↓
+                </kbd>{" "}
+                to change mode
               </span>
             </div>
           </div>
@@ -274,7 +312,11 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
       <div className="flex border-t border-gray-700/50">
         <div className="flex-1 flex items-center justify-between p-2 border-r border-gray-700/50">
           <span className="text-sm font-medium text-gray-300">
-            {mode === 'encode' ? 'Text Input' : mode === 'decode' ? 'Base64 Input' : 'Input'}
+            {mode === "encode"
+              ? "Text Input"
+              : mode === "decode"
+                ? "Base64 Input"
+                : "Input"}
           </span>
           <div className="flex items-center space-x-1">
             <button
@@ -283,7 +325,11 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
               title="Copy input"
               disabled={!hasInput}
             >
-              {copiedInput ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+              {copiedInput ? (
+                <Check size={14} className="text-green-400" />
+              ) : (
+                <Copy size={14} />
+              )}
             </button>
             <button
               onClick={onClear}
@@ -297,7 +343,11 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
         </div>
         <div className="flex-1 flex items-center justify-between p-2">
           <span className="text-sm font-medium text-gray-300">
-            {mode === 'encode' ? 'Base64 Output' : mode === 'decode' ? 'Text Output' : 'Output'}
+            {mode === "encode"
+              ? "Base64 Output"
+              : mode === "decode"
+                ? "Text Output"
+                : "Output"}
           </span>
           <div className="flex items-center space-x-1">
             <button
@@ -306,7 +356,11 @@ export const Base64Toolbar: React.FC<Base64ToolbarProps> = ({
               title="Copy output"
               disabled={!hasOutput}
             >
-              {copiedOutput ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+              {copiedOutput ? (
+                <Check size={14} className="text-green-400" />
+              ) : (
+                <Copy size={14} />
+              )}
             </button>
             <button
               onClick={onDownload}

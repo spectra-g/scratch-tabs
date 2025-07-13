@@ -1,7 +1,7 @@
-import { useRef, useEffect } from 'react';
-import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { useAIStore } from '../stores/aiStore';
-import { useBatchToolsStore } from '../stores/batchToolsStore';
+import { useRef, useEffect } from "react";
+import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { useAIStore } from "../stores/aiStore";
+import { useBatchToolsStore } from "../stores/batchToolsStore";
 
 interface UseEditorActionsProps {
   editor: Monaco.editor.IStandaloneCodeEditor | null;
@@ -27,8 +27,10 @@ export const useEditorActions = ({
   const batchToolsDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiSummarizeDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiCodegenDisposableRef = useRef<Monaco.IDisposable | null>(null);
-  const aiReadyContextKeyRef = useRef<Monaco.editor.IContextKey<boolean> | null>(null);
-  const codegenReadyContextKeyRef = useRef<Monaco.editor.IContextKey<boolean> | null>(null);
+  const aiReadyContextKeyRef =
+    useRef<Monaco.editor.IContextKey<boolean> | null>(null);
+  const codegenReadyContextKeyRef =
+    useRef<Monaco.editor.IContextKey<boolean> | null>(null);
 
   const { openModal: openBatchToolsModal } = useBatchToolsStore();
   const { summarizeTextWithModal, runCodegen } = useAIStore();
@@ -50,53 +52,66 @@ export const useEditorActions = ({
 
     // Add Batch Tools context menu action
     batchToolsDisposableRef.current = editor.addAction({
-      id: 'batch-tools',
-      label: 'Transformations',
-      contextMenuGroupId: 'navigation',
+      id: "batch-tools",
+      label: "Transformations",
+      contextMenuGroupId: "navigation",
       contextMenuOrder: 2.5,
       run: () => {
         try {
           const model = editor.getModel();
-          const selectedText = model && !model.isDisposed() 
-            ? model.getValueInRange(editor.getSelection()!) || ''
-            : '';
-          const fullContent = model && !model.isDisposed() ? model.getValue() : '';
+          const selectedText =
+            model && !model.isDisposed()
+              ? model.getValueInRange(editor.getSelection()!) || ""
+              : "";
+          const fullContent =
+            model && !model.isDisposed() ? model.getValue() : "";
           openBatchToolsModal(fullContent, selectedText);
         } catch (error) {
-          console.warn('[useEditorActions] Failed to open batch tools modal:', error);
+          console.warn(
+            "[useEditorActions] Failed to open batch tools modal:",
+            error,
+          );
         }
-      }
+      },
     });
 
     // Create context keys for AI actions
     try {
-      aiReadyContextKeyRef.current = editor.createContextKey('aiReady', isAiReady && !isAiLoading);
-      codegenReadyContextKeyRef.current = editor.createContextKey('codegenReady', isCodegenReady && !isCodegenGenerating);
+      aiReadyContextKeyRef.current = editor.createContextKey(
+        "aiReady",
+        isAiReady && !isAiLoading,
+      );
+      codegenReadyContextKeyRef.current = editor.createContextKey(
+        "codegenReady",
+        isCodegenReady && !isCodegenGenerating,
+      );
     } catch (error) {
-      console.warn('[useEditorActions] Failed to create context keys:', error);
+      console.warn("[useEditorActions] Failed to create context keys:", error);
     }
 
     // Add AI actions
     aiSummarizeDisposableRef.current = editor.addAction({
-      id: 'ai-summarize',
-      label: 'Summarize',
-      contextMenuGroupId: 'navigation',
+      id: "ai-summarize",
+      label: "Summarize",
+      contextMenuGroupId: "navigation",
       contextMenuOrder: 1.0,
-      precondition: 'aiReady',
+      precondition: "aiReady",
       run: (ed) => {
         try {
           const freshAIState = useAIStore.getState().ai;
           if (aiReadyContextKeyRef.current) {
-            const freshAiReady = freshAIState.isReady && !freshAIState.isLoading;
+            const freshAiReady =
+              freshAIState.isReady && !freshAIState.isLoading;
             aiReadyContextKeyRef.current.set(freshAiReady);
           }
 
           const model = ed.getModel();
-          const content = model && !model.isDisposed() ? model.getValue() : '';
+          const content = model && !model.isDisposed() ? model.getValue() : "";
           const currentTab = latestActiveTabRef.current;
           if (!currentTab) return;
 
-          const shouldProceed = freshAIState.isReady &&
+          const shouldProceed =
+            freshAIState.isReady &&
             !freshAIState.isLoading &&
             !currentTab.isTablet &&
             content.trim().length > 0;
@@ -105,25 +120,29 @@ export const useEditorActions = ({
             summarizeTextWithModal(content, currentTab.id);
           }
         } catch (error) {
-          console.warn('[useEditorActions] Failed to run summarize action:', error);
+          console.warn(
+            "[useEditorActions] Failed to run summarize action:",
+            error,
+          );
         }
       },
     });
 
     aiCodegenDisposableRef.current = editor.addAction({
-      id: 'ai-generate-code',
-      label: 'Generate Code',
-      contextMenuGroupId: 'navigation',
+      id: "ai-generate-code",
+      label: "Generate Code",
+      contextMenuGroupId: "navigation",
       contextMenuOrder: 1.5,
-      precondition: 'codegenReady',
+      precondition: "codegenReady",
       run: (ed) => {
         try {
           const model = ed.getModel();
-          const originalValue = model && !model.isDisposed() ? model.getValue() : '';
+          const originalValue =
+            model && !model.isDisposed() ? model.getValue() : "";
           if (!isCodegenReady || isCodegenGenerating) return;
           const currentTab = latestActiveTabRef.current;
           if (!currentTab) return;
-          
+
           runCodegen({
             tabId: currentTab.id,
             text: originalValue,
@@ -133,7 +152,10 @@ export const useEditorActions = ({
             do_sample: false,
           });
         } catch (error) {
-          console.warn('[useEditorActions] Failed to run codegen action:', error);
+          console.warn(
+            "[useEditorActions] Failed to run codegen action:",
+            error,
+          );
         }
       },
     });
@@ -144,12 +166,15 @@ export const useEditorActions = ({
         if (!editor.hasTextFocus()) {
           return;
         }
-        const formatAction = editor.getAction('editor.action.formatDocument');
+        const formatAction = editor.getAction("editor.action.formatDocument");
         if (formatAction) {
           formatAction.run();
         }
       } catch (error) {
-        console.warn('[useEditorActions] Failed to format document via Ctrl+K:', error);
+        console.warn(
+          "[useEditorActions] Failed to format document via Ctrl+K:",
+          error,
+        );
       }
     });
 
@@ -176,7 +201,9 @@ export const useEditorActions = ({
       aiReadyContextKeyRef.current.set(isAiReady && !isAiLoading);
     }
     if (codegenReadyContextKeyRef.current) {
-      codegenReadyContextKeyRef.current.set(isCodegenReady && !isCodegenGenerating);
+      codegenReadyContextKeyRef.current.set(
+        isCodegenReady && !isCodegenGenerating,
+      );
     }
   }, [isAiReady, isAiLoading, isCodegenReady, isCodegenGenerating]);
 
@@ -185,4 +212,4 @@ export const useEditorActions = ({
     aiReadyContextKeyRef,
     codegenReadyContextKeyRef,
   };
-}; 
+};

@@ -1,7 +1,7 @@
 // src/tablets/pomodoro/types.ts
 
-export type TimerStatus = 'idle' | 'running' | 'paused';
-export type SessionType = 'focus' | 'shortBreak' | 'longBreak';
+export type TimerStatus = "idle" | "running" | "paused";
+export type SessionType = "focus" | "shortBreak" | "longBreak";
 
 export interface PomodoroSettings {
   focusDuration: number; // in minutes
@@ -45,7 +45,7 @@ export interface PomodoroState {
   settings: PomodoroSettings;
   sessions: PomodoroSession[];
   todayStats: TodayStats;
-  activeView: 'timer' | 'settings' | 'stats';
+  activeView: "timer" | "settings" | "stats";
   soundEnabled: boolean;
 }
 

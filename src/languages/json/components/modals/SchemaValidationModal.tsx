@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
-import { BaseModal } from './BaseModal';
-import { Editor } from '@monaco-editor/react';
-import { validateJsonSchema } from '../../utils/jsonSchema';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState } from "react";
+import { BaseModal } from "./BaseModal";
+import { Editor } from "@monaco-editor/react";
+import { validateJsonSchema } from "../../utils/jsonSchema";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 interface SchemaValidationModalProps {
   json: any;
   onClose: () => void;
 }
 
-export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({ json, onClose }) => {
-  const [schema, setSchema] = useState('');
-  const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
+export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
+  json,
+  onClose,
+}) => {
+  const [schema, setSchema] = useState("");
+  const [validationResult, setValidationResult] = useState<{
+    valid: boolean;
+    errors: string[];
+  } | null>(null);
 
   const handleValidate = () => {
     try {
@@ -21,7 +27,7 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({ js
     } catch (error) {
       setValidationResult({
         valid: false,
-        errors: [(error as Error).message]
+        errors: [(error as Error).message],
       });
     }
   };
@@ -39,12 +45,12 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({ js
                   height="100%"
                   language="json"
                   value={schema}
-                  onChange={(value) => setSchema(value || '')}
+                  onChange={(value) => setSchema(value || "")}
                   theme="vs-dark"
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
-                    wordWrap: 'on'
+                    wordWrap: "on",
                   }}
                 />
               </div>
@@ -53,7 +59,9 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({ js
           <div className="flex-1">
             {/* JSON Preview */}
             <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">JSON Data</h3>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">
+                JSON Data
+              </h3>
               <div className="h-64 border border-gray-700/50 rounded-lg overflow-hidden">
                 <Editor
                   height="100%"
@@ -64,7 +72,7 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({ js
                     readOnly: true,
                     minimap: { enabled: false },
                     fontSize: 14,
-                    wordWrap: 'on'
+                    wordWrap: "on",
                   }}
                 />
               </div>
@@ -74,15 +82,21 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({ js
 
         {/* Validation Results */}
         {validationResult && (
-          <div className={`p-2 rounded-lg ${validationResult.valid ? 'bg-green-900/20' : 'bg-red-900/20'}`}>
+          <div
+            className={`p-2 rounded-lg ${validationResult.valid ? "bg-green-900/20" : "bg-red-900/20"}`}
+          >
             <div className="flex items-center m-2">
               {validationResult.valid ? (
                 <CheckCircle2 className="text-green-400 mr-2" size={20} />
               ) : (
                 <XCircle className="text-red-400 mr-2" size={20} />
               )}
-              <h3 className={`font-medium ${validationResult.valid ? 'text-green-400' : 'text-red-400'}`}>
-                {validationResult.valid ? 'Validation Passed' : 'Validation Failed'}
+              <h3
+                className={`font-medium ${validationResult.valid ? "text-green-400" : "text-red-400"}`}
+              >
+                {validationResult.valid
+                  ? "Validation Passed"
+                  : "Validation Failed"}
               </h3>
             </div>
             {!validationResult.valid && validationResult.errors.length > 0 && (

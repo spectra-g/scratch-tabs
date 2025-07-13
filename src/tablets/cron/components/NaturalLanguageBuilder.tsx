@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { CronExpression, CronDialect, CronValidationError } from '../types';
+import React, { useState, useEffect, useRef } from "react";
+import { CronExpression, CronDialect, CronValidationError } from "../types";
 
 interface NaturalLanguageBuilderProps {
   expression: CronExpression;
@@ -12,15 +12,15 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
   expression,
   dialect,
   onExpressionChange,
-  validationErrors
+  validationErrors,
 }) => {
   // State for natural language components
-  const [frequency, setFrequency] = useState('hourly');
-  const [minuteValue, setMinuteValue] = useState('0');
-  const [hourValue, setHourValue] = useState('0');
-  const [dayValue, setDayValue] = useState('*');
-  const [monthValue, setMonthValue] = useState('*');
-  const [weekdayValue, setWeekdayValue] = useState('*');
+  const [frequency, setFrequency] = useState("hourly");
+  const [minuteValue, setMinuteValue] = useState("0");
+  const [hourValue, setHourValue] = useState("0");
+  const [dayValue, setDayValue] = useState("*");
+  const [monthValue, setMonthValue] = useState("*");
+  const [weekdayValue, setWeekdayValue] = useState("*");
 
   // Flag to prevent circular dependency
   const isUpdatingExpressionRef = useRef(false);
@@ -28,25 +28,25 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
   // Set appropriate default values when frequency changes
   useEffect(() => {
     switch (frequency) {
-      case 'weekly':
+      case "weekly":
         // Set Sunday as default if weekdayValue is '*' or invalid
-        if (weekdayValue === '*') {
-          setWeekdayValue('0');
+        if (weekdayValue === "*") {
+          setWeekdayValue("0");
         }
         break;
-      case 'monthly':
+      case "monthly":
         // Set day 1 as default if dayValue is '*' or invalid
-        if (dayValue === '*') {
-          setDayValue('1');
+        if (dayValue === "*") {
+          setDayValue("1");
         }
         break;
-      case 'yearly':
+      case "yearly":
         // Set day 1 and January as defaults if they are '*' or invalid
-        if (dayValue === '*') {
-          setDayValue('1');
+        if (dayValue === "*") {
+          setDayValue("1");
         }
-        if (monthValue === '*') {
-          setMonthValue('1');
+        if (monthValue === "*") {
+          setMonthValue("1");
         }
         break;
     }
@@ -60,33 +60,57 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
     }
 
     // Detect frequency from expression
-    if (expression.minute === '*' && expression.hour === '*') {
-      setFrequency('minutely');
-    } else if (expression.minute !== '*' && expression.hour === '*') {
-      setFrequency('hourly');
+    if (expression.minute === "*" && expression.hour === "*") {
+      setFrequency("minutely");
+    } else if (expression.minute !== "*" && expression.hour === "*") {
+      setFrequency("hourly");
       setMinuteValue(expression.minute);
-    } else if (expression.minute !== '*' && expression.hour !== '*' && expression.dayOfMonth === '*' && expression.month === '*' && expression.dayOfWeek === '*') {
-      setFrequency('daily');
+    } else if (
+      expression.minute !== "*" &&
+      expression.hour !== "*" &&
+      expression.dayOfMonth === "*" &&
+      expression.month === "*" &&
+      expression.dayOfWeek === "*"
+    ) {
+      setFrequency("daily");
       setMinuteValue(expression.minute);
       setHourValue(expression.hour);
-    } else if (expression.minute !== '*' && expression.hour !== '*' && expression.dayOfMonth === '*' && expression.month === '*' && expression.dayOfWeek !== '*') {
-      setFrequency('weekly');
+    } else if (
+      expression.minute !== "*" &&
+      expression.hour !== "*" &&
+      expression.dayOfMonth === "*" &&
+      expression.month === "*" &&
+      expression.dayOfWeek !== "*"
+    ) {
+      setFrequency("weekly");
       setMinuteValue(expression.minute);
       setHourValue(expression.hour);
       setWeekdayValue(expression.dayOfWeek);
-    } else if (expression.minute !== '*' && expression.hour !== '*' && expression.dayOfMonth !== '*' && expression.month === '*' && expression.dayOfWeek === '*') {
-      setFrequency('monthly');
+    } else if (
+      expression.minute !== "*" &&
+      expression.hour !== "*" &&
+      expression.dayOfMonth !== "*" &&
+      expression.month === "*" &&
+      expression.dayOfWeek === "*"
+    ) {
+      setFrequency("monthly");
       setMinuteValue(expression.minute);
       setHourValue(expression.hour);
       setDayValue(expression.dayOfMonth);
-    } else if (expression.minute !== '*' && expression.hour !== '*' && expression.dayOfMonth !== '*' && expression.month !== '*' && expression.dayOfWeek === '*') {
-      setFrequency('yearly');
+    } else if (
+      expression.minute !== "*" &&
+      expression.hour !== "*" &&
+      expression.dayOfMonth !== "*" &&
+      expression.month !== "*" &&
+      expression.dayOfWeek === "*"
+    ) {
+      setFrequency("yearly");
       setMinuteValue(expression.minute);
       setHourValue(expression.hour);
       setDayValue(expression.dayOfMonth);
       setMonthValue(expression.month);
     } else {
-      setFrequency('custom');
+      setFrequency("custom");
       setMinuteValue(expression.minute);
       setHourValue(expression.hour);
       setDayValue(expression.dayOfMonth);
@@ -98,62 +122,73 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
   // Update expression when natural language components change
   useEffect(() => {
     isUpdatingExpressionRef.current = true;
-    
-    let newExpression = '';
-    
+
+    let newExpression = "";
+
     switch (frequency) {
-      case 'minutely':
-        newExpression = '* * * * *';
+      case "minutely":
+        newExpression = "* * * * *";
         break;
-      case 'hourly':
+      case "hourly":
         newExpression = `${minuteValue} * * * *`;
         break;
-      case 'daily':
+      case "daily":
         newExpression = `${minuteValue} ${hourValue} * * *`;
         break;
-      case 'weekly':
+      case "weekly":
         newExpression = `${minuteValue} ${hourValue} * * ${weekdayValue}`;
         break;
-      case 'monthly':
+      case "monthly":
         newExpression = `${minuteValue} ${hourValue} ${dayValue} * *`;
         break;
-      case 'yearly':
+      case "yearly":
         newExpression = `${minuteValue} ${hourValue} ${dayValue} ${monthValue} *`;
         break;
-      case 'custom':
+      case "custom":
         newExpression = `${minuteValue} ${hourValue} ${dayValue} ${monthValue} ${weekdayValue}`;
         break;
     }
-    
+
     // Add second field for Quartz and Spring
-    if (dialect === 'quartz' || dialect === 'spring') {
+    if (dialect === "quartz" || dialect === "spring") {
       newExpression = `0 ${newExpression}`;
     }
-    
+
     // Add year field for Quartz and AWS
-    if (dialect === 'quartz' || dialect === 'aws') {
+    if (dialect === "quartz" || dialect === "aws") {
       newExpression = `${newExpression} *`;
     }
-    
+
     // Only update if the expression has changed
     if (newExpression !== expression.raw) {
       onExpressionChange(newExpression);
     }
-    
+
     // Reset flag after a short delay to allow the expression to update
     setTimeout(() => {
       isUpdatingExpressionRef.current = false;
     }, 0);
-  }, [frequency, minuteValue, hourValue, dayValue, monthValue, weekdayValue, dialect, onExpressionChange]);
+  }, [
+    frequency,
+    minuteValue,
+    hourValue,
+    dayValue,
+    monthValue,
+    weekdayValue,
+    dialect,
+    onExpressionChange,
+  ]);
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-sm font-medium text-gray-300 mb-4">Natural Language Builder</h3>
-      
+      <h3 className="text-sm font-medium text-gray-300 mb-4">
+        Natural Language Builder
+      </h3>
+
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-gray-300">Run</span>
-          
+
           <select
             value={frequency}
             onChange={(e) => setFrequency(e.target.value)}
@@ -167,8 +202,8 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
             <option value="yearly">Every year</option>
             <option value="custom">Custom schedule</option>
           </select>
-          
-          {frequency === 'hourly' && (
+
+          {frequency === "hourly" && (
             <>
               <span className="text-gray-300">at minute</span>
               <input
@@ -181,8 +216,12 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
               />
             </>
           )}
-          
-          {(frequency === 'daily' || frequency === 'weekly' || frequency === 'monthly' || frequency === 'yearly' || frequency === 'custom') && (
+
+          {(frequency === "daily" ||
+            frequency === "weekly" ||
+            frequency === "monthly" ||
+            frequency === "yearly" ||
+            frequency === "custom") && (
             <>
               <span className="text-gray-300">at</span>
               <input
@@ -204,8 +243,8 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
               />
             </>
           )}
-          
-          {frequency === 'weekly' && (
+
+          {frequency === "weekly" && (
             <>
               <span className="text-gray-300">on</span>
               <select
@@ -225,23 +264,25 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
               </select>
             </>
           )}
-          
-          {(frequency === 'monthly' || frequency === 'yearly' || frequency === 'custom') && (
+
+          {(frequency === "monthly" ||
+            frequency === "yearly" ||
+            frequency === "custom") && (
             <>
               <span className="text-gray-300">on day</span>
               <input
                 type="number"
                 min="1"
                 max="31"
-                value={dayValue === '*' ? '' : dayValue}
-                onChange={(e) => setDayValue(e.target.value || '*')}
+                value={dayValue === "*" ? "" : dayValue}
+                onChange={(e) => setDayValue(e.target.value || "*")}
                 placeholder="*"
                 className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-gray-200 w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </>
           )}
-          
-          {(frequency === 'yearly' || frequency === 'custom') && (
+
+          {(frequency === "yearly" || frequency === "custom") && (
             <>
               <span className="text-gray-300">of</span>
               <select
@@ -265,8 +306,8 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
               </select>
             </>
           )}
-          
-          {frequency === 'custom' && (
+
+          {frequency === "custom" && (
             <>
               <span className="text-gray-300">on</span>
               <select
@@ -288,10 +329,12 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
             </>
           )}
         </div>
-        
+
         {validationErrors.length > 0 && (
           <div className="mt-4 p-3 bg-red-900/20 border border-red-900/30 rounded-md">
-            <h4 className="text-sm font-medium text-red-400 mb-1">Validation Errors</h4>
+            <h4 className="text-sm font-medium text-red-400 mb-1">
+              Validation Errors
+            </h4>
             <ul className="text-xs text-red-300 space-y-1">
               {validationErrors.map((error, index) => (
                 <li key={index} className="flex items-start">

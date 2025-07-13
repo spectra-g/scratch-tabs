@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 /**
  * Custom hook for handling clicks outside a modal
@@ -7,7 +7,7 @@ export const useModalClickOutside = (
   ref: React.RefObject<HTMLElement>,
   modalOpenFlag: boolean,
   handler: (event: MouseEvent | TouchEvent) => void,
-  shouldCheckCondition?: () => boolean
+  shouldCheckCondition?: () => boolean,
 ) => {
   useEffect(() => {
     if (!modalOpenFlag) return; // Only attach listener if modal is open
@@ -17,7 +17,7 @@ export const useModalClickOutside = (
       if (shouldCheckCondition && !shouldCheckCondition()) {
         return;
       }
-      
+
       if (!ref.current || ref.current.contains(event.target as Node)) {
         return; // Click was inside the ref or ref missing
       }
@@ -32,4 +32,4 @@ export const useModalClickOutside = (
     };
     // Re-attach if modalOpenFlag or handler changes
   }, [ref, modalOpenFlag, handler, shouldCheckCondition]);
-}; 
+};

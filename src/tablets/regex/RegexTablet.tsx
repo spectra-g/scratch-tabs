@@ -1,20 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Copy, Download, Eye, Code, AlertCircle, Check } from 'lucide-react';
-import { Tablet, TabletState } from '../types';
-import { RegexTesterData, ViewMode } from './types';
-import { DEFAULT_FLAGS, executeRegex, validateRegex, explainRegex } from './utils/regexEngine';
-import { getSnippetById } from './utils/snippets';
-import { RegexEditor } from './components/RegexEditor';
-import { MatchPreview } from './components/MatchPreview';
-import { ExplanationView } from './components/ExplanationView';
-import { SnippetSelector } from './components/SnippetSelector';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Search,
+  Copy,
+  Download,
+  Eye,
+  Code,
+  AlertCircle,
+  Check,
+} from "lucide-react";
+import { Tablet, TabletState } from "../types";
+import { RegexTesterData, ViewMode } from "./types";
+import {
+  DEFAULT_FLAGS,
+  executeRegex,
+  validateRegex,
+  explainRegex,
+} from "./utils/regexEngine";
+import { getSnippetById } from "./utils/snippets";
+import { RegexEditor } from "./components/RegexEditor";
+import { MatchPreview } from "./components/MatchPreview";
+import { ExplanationView } from "./components/ExplanationView";
+import { SnippetSelector } from "./components/SnippetSelector";
 
 interface RegexTabletState extends TabletState {
-  type: 'regex';
+  type: "regex";
   data: RegexTesterData;
 }
 
-const DEFAULT_PATTERN = '(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})';
+const DEFAULT_PATTERN = "(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})";
 const DEFAULT_TEST_STRING = `Today is 2024-03-15 and tomorrow will be 2024-03-16.
 Meeting scheduled for 2024-04-01 at 14:30.
 Project deadline: 2024-12-25`;
@@ -24,15 +37,18 @@ async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (err) {
-    console.error('Failed to copy:', err);
+    console.error("Failed to copy:", err);
     return false;
   }
 }
 
 // Separate React component for the regex UI
-const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTabletState) => void }> = ({ state, onChange }) => {
+const RegexUI: React.FC<{
+  state: RegexTabletState;
+  onChange: (state: RegexTabletState) => void;
+}> = ({ state, onChange }) => {
   const { data } = state;
-  const [viewMode, setViewMode] = useState<ViewMode>('test');
+  const [viewMode, setViewMode] = useState<ViewMode>("test");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Use refs to avoid stale closures
@@ -53,7 +69,7 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
   // Execute regex when pattern, test string, or flags change
   useEffect(() => {
     let newData: Partial<RegexTesterData>;
-    
+
     if (!pattern) {
       newData = { matches: [], error: null, explanation: [] };
     } else {
@@ -66,19 +82,23 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
         newData = { matches, error: null, explanation };
       }
     }
-    
+
     // Get current values from refs
     const currentState = stateRef.current;
     const currentData = currentState.data;
-    
+
     // Only update if there are actual changes
-    const hasChanges = 
+    const hasChanges =
       JSON.stringify(newData.matches) !== JSON.stringify(currentData.matches) ||
       newData.error?.message !== currentData.error?.message ||
-      JSON.stringify(newData.explanation) !== JSON.stringify(currentData.explanation);
-      
+      JSON.stringify(newData.explanation) !==
+        JSON.stringify(currentData.explanation);
+
     if (hasChanges) {
-      onChangeRef.current({ ...currentState, data: { ...currentData, ...newData } });
+      onChangeRef.current({
+        ...currentState,
+        data: { ...currentData, ...newData },
+      });
     }
   }, [pattern, testString, JSON.stringify(flags)]);
 
@@ -91,8 +111,8 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
   };
 
   const handleFlagToggle = (flagToToggle: string) => {
-    const newFlags = data.flags.map(flag =>
-      flag.flag === flagToToggle ? { ...flag, enabled: !flag.enabled } : flag
+    const newFlags = data.flags.map((flag) =>
+      flag.flag === flagToToggle ? { ...flag, enabled: !flag.enabled } : flag,
     );
     updateData({ flags: newFlags });
   };
@@ -100,9 +120,9 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
   const handleSnippetSelect = (snippetId: string) => {
     const snippet = getSnippetById(snippetId);
     if (snippet) {
-      updateData({ 
+      updateData({
         pattern: snippet.pattern,
-        selectedSnippet: snippetId
+        selectedSnippet: snippetId,
       });
     }
   };
@@ -118,23 +138,29 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
   const handleExport = () => {
     const exportData = {
       pattern: data.pattern,
-      flags: data.flags.filter(f => f.enabled).map(f => f.flag).join(''),
+      flags: data.flags
+        .filter((f) => f.enabled)
+        .map((f) => f.flag)
+        .join(""),
       testString: data.testString,
       matches: data.matches,
       explanation: data.explanation,
       notes: data.notes,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
-      type: 'application/json' 
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
     });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `regex_test_${timestamp}.json`);
-    link.style.visibility = 'hidden';
+    const link = document.createElement("a");
+    const timestamp = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace(/[-:T]/g, "");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `regex_test_${timestamp}.json`);
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -150,38 +176,38 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
             <Search size={20} />
             Regex Tester
           </h1>
-          
+
           <div className="flex items-center gap-2">
             {/* View Mode Toggle */}
             <div className="flex bg-gray-800/50 rounded-lg overflow-hidden border border-gray-700/50">
               <button
-                onClick={() => setViewMode('test')}
+                onClick={() => setViewMode("test")}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  viewMode === 'test' 
-                    ? 'bg-blue-500/20 text-blue-400' 
-                    : 'text-gray-400 hover:text-gray-200'
+                  viewMode === "test"
+                    ? "bg-blue-500/20 text-blue-400"
+                    : "text-gray-400 hover:text-gray-200"
                 }`}
               >
                 <Search size={14} className="inline mr-1" />
                 Test
               </button>
               <button
-                onClick={() => setViewMode('explain')}
+                onClick={() => setViewMode("explain")}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  viewMode === 'explain' 
-                    ? 'bg-blue-500/20 text-blue-400' 
-                    : 'text-gray-400 hover:text-gray-200'
+                  viewMode === "explain"
+                    ? "bg-blue-500/20 text-blue-400"
+                    : "text-gray-400 hover:text-gray-200"
                 }`}
               >
                 <Eye size={14} className="inline mr-1" />
                 Explain
               </button>
               <button
-                onClick={() => setViewMode('export')}
+                onClick={() => setViewMode("export")}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  viewMode === 'export' 
-                    ? 'bg-blue-500/20 text-blue-400' 
-                    : 'text-gray-400 hover:text-gray-200'
+                  viewMode === "export"
+                    ? "bg-blue-500/20 text-blue-400"
+                    : "text-gray-400 hover:text-gray-200"
                 }`}
               >
                 <Code size={14} className="inline mr-1" />
@@ -210,7 +236,7 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
               </div>
             )}
           </div>
-          
+
           <RegexEditor
             value={data.pattern}
             onChange={handlePatternChange}
@@ -221,14 +247,14 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
           <div className="flex items-center gap-4">
             <div className="text-sm font-medium text-gray-300">Flags:</div>
             <div className="flex gap-2">
-              {data.flags.map(flag => (
+              {data.flags.map((flag) => (
                 <button
                   key={flag.flag}
                   onClick={() => handleFlagToggle(flag.flag)}
                   className={`px-2 py-1 text-xs rounded border transition-colors ${
                     flag.enabled
-                      ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
-                      : 'bg-gray-800/50 border-gray-700/50 text-gray-400 hover:text-gray-200'
+                      ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
+                      : "bg-gray-800/50 border-gray-700/50 text-gray-400 hover:text-gray-200"
                   }`}
                   title={flag.description}
                 >
@@ -236,10 +262,11 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
                 </button>
               ))}
             </div>
-            
+
             <div className="ml-auto">
               <div className="text-xs text-gray-500">
-                {data.matches.length} match{data.matches.length !== 1 ? 'es' : ''}
+                {data.matches.length} match
+                {data.matches.length !== 1 ? "es" : ""}
               </div>
             </div>
           </div>
@@ -261,20 +288,26 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
           {/* Test String */}
           <div className="flex-1 flex flex-col">
             <div className="flex items-center justify-between p-3 border-b border-gray-700/50">
-              <div className="text-sm font-medium text-gray-300">Test String:</div>
+              <div className="text-sm font-medium text-gray-300">
+                Test String:
+              </div>
               <button
-                onClick={() => handleCopy(data.testString, 'test-string')}
+                onClick={() => handleCopy(data.testString, "test-string")}
                 className={`p-1 rounded transition-colors ${
-                  copiedId === 'test-string'
-                    ? 'text-green-400'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                  copiedId === "test-string"
+                    ? "text-green-400"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
                 }`}
                 title="Copy test string"
               >
-                {copiedId === 'test-string' ? <Check size={14} /> : <Copy size={14} />}
+                {copiedId === "test-string" ? (
+                  <Check size={14} />
+                ) : (
+                  <Copy size={14} />
+                )}
               </button>
             </div>
-            
+
             <div className="flex-1 p-3">
               <textarea
                 value={data.testString}
@@ -288,7 +321,7 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
 
         {/* Right Panel */}
         <div className="w-1/2 flex flex-col">
-          {viewMode === 'test' && (
+          {viewMode === "test" && (
             <MatchPreview
               matches={data.matches}
               testString={data.testString}
@@ -296,18 +329,20 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
               copiedId={copiedId}
             />
           )}
-          
-          {viewMode === 'explain' && (
+
+          {viewMode === "explain" && (
             <ExplanationView
               explanation={data.explanation}
               pattern={data.pattern}
             />
           )}
-          
-          {viewMode === 'export' && (
+
+          {viewMode === "export" && (
             <div className="flex-1 p-4">
               <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 h-full">
-                <h3 className="text-lg font-medium text-gray-100 mb-4">Export</h3>
+                <h3 className="text-lg font-medium text-gray-100 mb-4">
+                  Export
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -320,7 +355,7 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
                       placeholder="Add notes about this regex pattern..."
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <button
                       onClick={handleExport}
@@ -329,16 +364,20 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
                       <Download size={16} />
                       Export Test Data (JSON)
                     </button>
-                    
+
                     <button
-                      onClick={() => handleCopy(data.pattern, 'pattern')}
+                      onClick={() => handleCopy(data.pattern, "pattern")}
                       className={`w-full p-3 rounded-md transition-colors flex items-center justify-center gap-2 ${
-                        copiedId === 'pattern'
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/70'
+                        copiedId === "pattern"
+                          ? "bg-green-500/20 text-green-400"
+                          : "bg-gray-700/50 text-gray-300 hover:bg-gray-700/70"
                       }`}
                     >
-                      {copiedId === 'pattern' ? <Check size={16} /> : <Copy size={16} />}
+                      {copiedId === "pattern" ? (
+                        <Check size={16} />
+                      ) : (
+                        <Copy size={16} />
+                      )}
                       Copy Pattern
                     </button>
                   </div>
@@ -353,13 +392,21 @@ const RegexUI: React.FC<{ state: RegexTabletState; onChange: (state: RegexTablet
 };
 
 export const RegexTablet: Tablet = {
-  id: 'regex',
-  label: 'Regex Tester',
-  keywords: ['regex', 'regexp', 'pattern', 'match', 'test', 'validate', 'expression'],
+  id: "regex",
+  label: "Regex Tester",
+  keywords: [
+    "regex",
+    "regexp",
+    "pattern",
+    "match",
+    "test",
+    "validate",
+    "expression",
+  ],
 
   createInitialState(): RegexTabletState {
     return {
-      type: 'regex',
+      type: "regex",
       data: {
         pattern: DEFAULT_PATTERN,
         testString: DEFAULT_TEST_STRING,
@@ -369,12 +416,12 @@ export const RegexTablet: Tablet = {
         explanation: [],
         selectedSnippet: null,
         diffMode: false,
-        diffPattern: '',
-        diffName1: 'Regex 1',
-        diffName2: 'Regex 2',
+        diffPattern: "",
+        diffName1: "Regex 1",
+        diffName2: "Regex 2",
         diffResult: null,
-        notes: ''
-      }
+        notes: "",
+      },
     };
   },
 
@@ -385,7 +432,7 @@ export const RegexTablet: Tablet = {
   deserializeState(json: string): TabletState {
     try {
       const parsed = JSON.parse(json);
-      if (parsed.type === 'regex' && parsed.data) {
+      if (parsed.type === "regex" && parsed.data) {
         return {
           ...parsed,
           data: {
@@ -393,12 +440,12 @@ export const RegexTablet: Tablet = {
             flags: parsed.data.flags || [...DEFAULT_FLAGS],
             matches: parsed.data.matches || [],
             explanation: parsed.data.explanation || [],
-            error: parsed.data.error || null
-          }
+            error: parsed.data.error || null,
+          },
         };
       }
     } catch (e) {
-      console.error('Failed to deserialize regex state:', e);
+      console.error("Failed to deserialize regex state:", e);
     }
     return RegexTablet.createInitialState();
   },
@@ -406,4 +453,4 @@ export const RegexTablet: Tablet = {
   render(state: RegexTabletState, onChange) {
     return <RegexUI state={state} onChange={onChange} />;
   },
-}; 
+};

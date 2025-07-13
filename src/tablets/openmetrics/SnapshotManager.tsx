@@ -1,7 +1,14 @@
-import React, { useState, useMemo } from 'react';
-import { Camera, Trash2, Clock, ArrowRightLeft, Plus, CheckCircle } from 'lucide-react';
-import { Snapshot, MetricSample } from './types';
-import { diffSnapshots } from './DiffEngine';
+import React, { useState, useMemo } from "react";
+import {
+  Camera,
+  Trash2,
+  Clock,
+  ArrowRightLeft,
+  Plus,
+  CheckCircle,
+} from "lucide-react";
+import { Snapshot, MetricSample } from "./types";
+import { diffSnapshots } from "./DiffEngine";
 
 interface SnapshotManagerProps {
   snapshots: Snapshot[];
@@ -20,21 +27,21 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
   onTakeSnapshot,
   onSelectSnapshot,
   onSelectCompareSnapshot,
-  onDeleteSnapshot
+  onDeleteSnapshot,
 }) => {
-  const [newSnapshotName, setNewSnapshotName] = useState('');
+  const [newSnapshotName, setNewSnapshotName] = useState("");
   const [isCreatingSnapshot, setIsCreatingSnapshot] = useState(false);
-  
-  const activeSnapshot = useMemo(() => 
-    snapshots.find(s => s.id === activeSnapshotId), 
-    [snapshots, activeSnapshotId]
+
+  const activeSnapshot = useMemo(
+    () => snapshots.find((s) => s.id === activeSnapshotId),
+    [snapshots, activeSnapshotId],
   );
-  
-  const compareSnapshot = useMemo(() => 
-    snapshots.find(s => s.id === compareSnapshotId), 
-    [snapshots, compareSnapshotId]
+
+  const compareSnapshot = useMemo(
+    () => snapshots.find((s) => s.id === compareSnapshotId),
+    [snapshots, compareSnapshotId],
   );
-  
+
   const diffResult = useMemo(() => {
     if (!activeSnapshot || !compareSnapshot) return null;
     return diffSnapshots(compareSnapshot, activeSnapshot);
@@ -43,7 +50,7 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
   const handleCreateSnapshot = () => {
     if (newSnapshotName.trim()) {
       onTakeSnapshot(newSnapshotName.trim());
-      setNewSnapshotName('');
+      setNewSnapshotName("");
       setIsCreatingSnapshot(false);
     }
   };
@@ -55,7 +62,7 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
 
   const renderDiffSummary = () => {
     if (!diffResult) return null;
-    
+
     return (
       <div className="mb-4 p-3 bg-gray-800 rounded-lg">
         <h3 className="text-sm font-medium text-gray-300 mb-2 flex items-center">
@@ -64,15 +71,21 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
         </h3>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="bg-green-900/20 p-2 rounded">
-            <div className="text-green-400 text-lg font-semibold">{diffResult.added.length}</div>
+            <div className="text-green-400 text-lg font-semibold">
+              {diffResult.added.length}
+            </div>
             <div className="text-xs text-gray-400">Added</div>
           </div>
           <div className="bg-yellow-900/20 p-2 rounded">
-            <div className="text-yellow-400 text-lg font-semibold">{diffResult.changed.length}</div>
+            <div className="text-yellow-400 text-lg font-semibold">
+              {diffResult.changed.length}
+            </div>
             <div className="text-xs text-gray-400">Changed</div>
           </div>
           <div className="bg-red-900/20 p-2 rounded">
-            <div className="text-red-400 text-lg font-semibold">{diffResult.removed.length}</div>
+            <div className="text-red-400 text-lg font-semibold">
+              {diffResult.removed.length}
+            </div>
             <div className="text-xs text-gray-400">Removed</div>
           </div>
         </div>
@@ -82,28 +95,38 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
 
   const renderDiffDetails = () => {
     if (!diffResult) return null;
-    
+
     return (
       <div className="space-y-4">
         {diffResult.added.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-green-400">Added Metrics</h4>
+            <h4 className="text-sm font-medium text-green-400">
+              Added Metrics
+            </h4>
             <div className="space-y-1">
               {diffResult.added.map((metric, index) => (
-                <div key={`added-${index}`} className="p-2 bg-green-900/10 border border-green-900/20 rounded text-xs font-mono">
+                <div
+                  key={`added-${index}`}
+                  className="p-2 bg-green-900/10 border border-green-900/20 rounded text-xs font-mono"
+                >
                   {formatMetricLine(metric)}
                 </div>
               ))}
             </div>
           </div>
         )}
-        
+
         {diffResult.changed.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-yellow-400">Changed Metrics</h4>
+            <h4 className="text-sm font-medium text-yellow-400">
+              Changed Metrics
+            </h4>
             <div className="space-y-1">
               {diffResult.changed.map((change, index) => (
-                <div key={`changed-${index}`} className="p-2 bg-yellow-900/10 border border-yellow-900/20 rounded text-xs">
+                <div
+                  key={`changed-${index}`}
+                  className="p-2 bg-yellow-900/10 border border-yellow-900/20 rounded text-xs"
+                >
                   <div className="font-mono">{formatMetricLine(change.to)}</div>
                   <div className="mt-1 flex items-center">
                     <span className="text-gray-400 mr-2">From:</span>
@@ -111,7 +134,9 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
                     <span className="text-gray-400 mx-2">To:</span>
                     <span className="text-yellow-400">{change.to.value}</span>
                     <span className="text-gray-400 mx-2">Diff:</span>
-                    <span className={`${change.to.value > change.from.value ? 'text-green-400' : 'text-red-400'}`}>
+                    <span
+                      className={`${change.to.value > change.from.value ? "text-green-400" : "text-red-400"}`}
+                    >
                       {(change.to.value - change.from.value).toFixed(2)}
                     </span>
                   </div>
@@ -120,13 +145,18 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
             </div>
           </div>
         )}
-        
+
         {diffResult.removed.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-red-400">Removed Metrics</h4>
+            <h4 className="text-sm font-medium text-red-400">
+              Removed Metrics
+            </h4>
             <div className="space-y-1">
               {diffResult.removed.map((metric, index) => (
-                <div key={`removed-${index}`} className="p-2 bg-red-900/10 border border-red-900/20 rounded text-xs font-mono">
+                <div
+                  key={`removed-${index}`}
+                  className="p-2 bg-red-900/10 border border-red-900/20 rounded text-xs font-mono"
+                >
                   {formatMetricLine(metric)}
                 </div>
               ))}
@@ -140,8 +170,8 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
   const formatMetricLine = (metric: MetricSample) => {
     const labels = Object.entries(metric.labels)
       .map(([key, value]) => `${key}="${value}"`)
-      .join(', ');
-    
+      .join(", ");
+
     return (
       <div>
         <span className="text-blue-400">{metric.name}</span>
@@ -165,7 +195,7 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
             <Plus size={16} />
           </button>
         </div>
-        
+
         {isCreatingSnapshot ? (
           <div className="mb-4 p-2 bg-gray-800 rounded">
             <input
@@ -201,33 +231,36 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
             <span>Take Snapshot</span>
           </button>
         )}
-        
+
         <div className="space-y-2 overflow-y-auto custom-scrollbar max-h-[calc(100vh-200px)]">
-          {snapshots.map(snapshot => (
-            <div 
+          {snapshots.map((snapshot) => (
+            <div
               key={snapshot.id}
               className={`p-2 rounded cursor-pointer ${
-                snapshot.id === activeSnapshotId 
-                  ? 'bg-blue-500/20 border border-blue-500/30' 
-                  : 'hover:bg-gray-800 border border-transparent'
+                snapshot.id === activeSnapshotId
+                  ? "bg-blue-500/20 border border-blue-500/30"
+                  : "hover:bg-gray-800 border border-transparent"
               }`}
               onClick={() => onSelectSnapshot(snapshot.id)}
             >
               <div className="flex items-center justify-between">
-                <div className="font-medium text-sm truncate">{snapshot.name}</div>
+                <div className="font-medium text-sm truncate">
+                  {snapshot.name}
+                </div>
                 <div className="flex items-center">
-                  {snapshot.id !== activeSnapshotId && snapshot.id !== compareSnapshotId && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteSnapshot(snapshot.id);
-                      }}
-                      className="p-1 text-gray-500 hover:text-red-400 rounded"
-                      title="Delete snapshot"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
+                  {snapshot.id !== activeSnapshotId &&
+                    snapshot.id !== compareSnapshotId && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteSnapshot(snapshot.id);
+                        }}
+                        className="p-1 text-gray-500 hover:text-red-400 rounded"
+                        title="Delete snapshot"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                 </div>
               </div>
               <div className="flex items-center text-xs text-gray-500 mt-1">
@@ -237,7 +270,7 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
               <div className="text-xs text-gray-500 mt-1">
                 {snapshot.metrics.length} metrics
               </div>
-              
+
               {/* Compare checkbox */}
               {snapshot.id !== activeSnapshotId && (
                 <div className="mt-2 flex items-center">
@@ -255,7 +288,7 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
                     className="mr-2"
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <label 
+                  <label
                     htmlFor={`compare-${snapshot.id}`}
                     className="text-xs text-gray-400"
                     onClick={(e) => e.stopPropagation()}
@@ -268,9 +301,9 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
           ))}
         </div>
       </div>
-      
+
       {/* Diff View */}
-              <div className="flex-1 p-4 overflow-auto custom-scrollbar">
+      <div className="flex-1 p-4 overflow-auto custom-scrollbar">
         {!activeSnapshot ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Camera size={48} className="mb-4 opacity-50" />
@@ -280,36 +313,45 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <ArrowRightLeft size={48} className="mb-4 opacity-50" />
             <p>Select another snapshot to compare</p>
-            <p className="text-sm mt-2">Check the "Compare with active" box on another snapshot</p>
+            <p className="text-sm mt-2">
+              Check the "Compare with active" box on another snapshot
+            </p>
           </div>
         ) : (
           <div>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-medium text-gray-200">Comparing Snapshots</h3>
+                <h3 className="text-lg font-medium text-gray-200">
+                  Comparing Snapshots
+                </h3>
                 <div className="text-sm text-gray-400 mt-1">
                   From "{compareSnapshot.name}" to "{activeSnapshot.name}"
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-2 text-sm">
                 <div className="flex items-center">
                   <Clock size={14} className="mr-1 text-gray-500" />
-                  <span className="text-gray-400">{formatTimestamp(compareSnapshot.createdAt)}</span>
+                  <span className="text-gray-400">
+                    {formatTimestamp(compareSnapshot.createdAt)}
+                  </span>
                 </div>
                 <ArrowRightLeft size={14} className="text-gray-500" />
                 <div className="flex items-center">
                   <Clock size={14} className="mr-1 text-gray-500" />
-                  <span className="text-gray-400">{formatTimestamp(activeSnapshot.createdAt)}</span>
+                  <span className="text-gray-400">
+                    {formatTimestamp(activeSnapshot.createdAt)}
+                  </span>
                 </div>
               </div>
             </div>
-            
+
             {renderDiffSummary()}
-            
-            {diffResult && diffResult.added.length === 0 && 
-             diffResult.changed.length === 0 && 
-             diffResult.removed.length === 0 ? (
+
+            {diffResult &&
+            diffResult.added.length === 0 &&
+            diffResult.changed.length === 0 &&
+            diffResult.removed.length === 0 ? (
               <div className="flex items-center justify-center p-8 text-gray-400 bg-gray-800/50 rounded-lg">
                 <CheckCircle size={20} className="mr-2 text-green-400" />
                 <span>No differences found between snapshots</span>

@@ -1,9 +1,9 @@
-import React from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
+import React from "react";
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
 
 interface AlertProps {
   children: React.ReactNode;
-  variant: 'info' | 'success' | 'warning' | 'error';
+  variant: "info" | "success" | "warning" | "error";
   title?: string;
   onClose?: () => void;
   className?: string;
@@ -14,35 +14,33 @@ export const Alert: React.FC<AlertProps> = ({
   variant,
   title,
   onClose,
-  className = ''
+  className = "",
 }) => {
   const variantStyles = {
-    info: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
-    success: 'bg-green-500/10 border-green-500/30 text-green-400',
-    warning: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
-    error: 'bg-red-500/10 border-red-500/30 text-red-400'
+    info: "bg-blue-500/10 border-blue-500/30 text-blue-400",
+    success: "bg-green-500/10 border-green-500/30 text-green-400",
+    warning: "bg-yellow-500/10 border-yellow-500/30 text-yellow-400",
+    error: "bg-red-500/10 border-red-500/30 text-red-400",
   };
-  
+
   const IconComponent = {
     info: Info,
     success: CheckCircle,
     warning: AlertTriangle,
-    error: AlertCircle
+    error: AlertCircle,
   }[variant];
-  
+
   return (
-    <div className={`border rounded-md p-3 ${variantStyles[variant]} ${className}`}>
+    <div
+      className={`border rounded-md p-3 ${variantStyles[variant]} ${className}`}
+    >
       <div className="flex items-start">
         <div className="flex-shrink-0 mt-0.5">
           <IconComponent size={18} />
         </div>
         <div className="ml-3 flex-1">
-          {title && (
-            <h3 className="text-sm font-medium">{title}</h3>
-          )}
-          <div className={`text-sm ${title ? 'mt-1' : ''}`}>
-            {children}
-          </div>
+          {title && <h3 className="text-sm font-medium">{title}</h3>}
+          <div className={`text-sm ${title ? "mt-1" : ""}`}>{children}</div>
         </div>
         {onClose && (
           <button

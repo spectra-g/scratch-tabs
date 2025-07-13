@@ -2,39 +2,39 @@ jest.mock("../../components/StatusBar/LanguageStatusItems/markdown", () => ({
   MarkdownStatusItem: () => "MockedMarkdownStatusItem",
 }));
 
-import { MarkdownLanguageDetector } from '../markdown';
+import { MarkdownLanguageDetector } from "../markdown";
 
-describe('MarkdownLanguageDetector', () => {
+describe("MarkdownLanguageDetector", () => {
   let detector: MarkdownLanguageDetector;
 
   beforeEach(() => {
     detector = new MarkdownLanguageDetector();
   });
 
-  describe('Basic Properties', () => {
-    test('should have correct basic properties', () => {
-      expect(detector.id).toBe('markdown');
-      expect(detector.name).toBe('Markdown');
-      expect(detector.extensions).toEqual(['md', 'markdown', 'mdown', 'mkd']);
+  describe("Basic Properties", () => {
+    test("should have correct basic properties", () => {
+      expect(detector.id).toBe("markdown");
+      expect(detector.name).toBe("Markdown");
+      expect(detector.extensions).toEqual(["md", "markdown", "mdown", "mkd"]);
       expect(detector.priority).toBe(4);
     });
 
-    test('should return correct file extension', () => {
-      expect(detector.getFileExtension()).toBe('md');
+    test("should return correct file extension", () => {
+      expect(detector.getFileExtension()).toBe("md");
     });
   });
 
-  describe('Sample Content', () => {
-    test('should provide valid sample content', () => {
+  describe("Sample Content", () => {
+    test("should provide valid sample content", () => {
       const sample = detector.sampleContent();
-      expect(sample).toContain('# Sample Markdown Document');
+      expect(sample).toContain("# Sample Markdown Document");
       expect(sample).toContain("```javascript");
-      expect(sample).toContain('- [x] Completed task');
+      expect(sample).toContain("- [x] Completed task");
     });
   });
 
-  describe('Detection Logic', () => {
-    test('should detect a simple markdown file with headers and lists', () => {
+  describe("Detection Logic", () => {
+    test("should detect a simple markdown file with headers and lists", () => {
       const content = `
 # Title
 ## Subtitle
@@ -48,7 +48,7 @@ describe('MarkdownLanguageDetector', () => {
       expect(result.confidence).toBeGreaterThan(0.6);
     });
 
-    test('should detect markdown with YAML frontmatter', () => {
+    test("should detect markdown with YAML frontmatter", () => {
       const content = `
 ---
 title: My Document
@@ -63,7 +63,7 @@ This is a paragraph.
       expect(result.confidence).toBeGreaterThan(0.5);
     });
 
-    test('should reject content that is almost exclusively YAML', () => {
+    test("should reject content that is almost exclusively YAML", () => {
       const content = `
 name: my-app
 version: 1.2.3
@@ -82,7 +82,7 @@ config:
       }
     });
 
-    test('should detect markdown with various features like links, images, and code blocks', () => {
+    test("should detect markdown with various features like links, images, and code blocks", () => {
       const content = `
 # Title
 A link to [Google](https://google.com).
@@ -98,8 +98,8 @@ console.log('hello');
       expect(result.confidence).toBeGreaterThan(0.7);
     });
 
-    test('should detect task lists and tables', () => {
-        const content = `
+    test("should detect task lists and tables", () => {
+      const content = `
 ### TODO
 - [x] Item 1
 - [ ] Item 2
@@ -113,13 +113,13 @@ console.log('hello');
       expect(result.confidence).toBeGreaterThan(0.6);
     });
 
-    test('should reject empty or very short content', () => {
-      expect(detector.detect('').match).toBe(false);
-      expect(detector.detect(' \n ').match).toBe(false);
-      expect(detector.detect('hello').match).toBe(false);
+    test("should reject empty or very short content", () => {
+      expect(detector.detect("").match).toBe(false);
+      expect(detector.detect(" \n ").match).toBe(false);
+      expect(detector.detect("hello").match).toBe(false);
     });
 
-    test('should have very low confidence for plain text prose', () => {
+    test("should have very low confidence for plain text prose", () => {
       const content = `
 This is a paragraph of regular text. It does not contain any special markdown
 characters like headers, lists, or links. It's just a few sentences to see how
@@ -134,48 +134,51 @@ classifying this as markdown if possible, as it is more likely just plaintext.
       }
     });
 
-    test('should reject JSON content', () => {
+    test("should reject JSON content", () => {
       const content = '{"key": "value", "array": [1, 2, 3]}';
       const result = detector.detect(content);
       expect(result.match).toBe(false);
     });
 
-    test('should reject XML/HTML content', () => {
-      const content = '<root><element attribute="value">Content</element></root>';
+    test("should reject XML/HTML content", () => {
+      const content =
+        '<root><element attribute="value">Content</element></root>';
       const result = detector.detect(content);
       expect(result.match).toBe(false);
     });
 
-    test('should reject shell script content', () => {
-        const content = `
+    test("should reject shell script content", () => {
+      const content = `
 #!/bin/bash
 echo "Hello World"
 for i in {1..5}; do
   echo "Number: $i"
 done
         `;
-        const result = detector.detect(content);
-        expect(result.match).toBe(false);
+      const result = detector.detect(content);
+      expect(result.match).toBe(false);
     });
   });
 
-  describe('UI Components', () => {
-    test('should return a status item component function', () => {
+  describe("UI Components", () => {
+    test("should return a status item component function", () => {
       // Get the function that returns the component
       const getStatusItemFn = detector.getStatusItem;
-      expect(typeof getStatusItemFn).toBe('function');
+      expect(typeof getStatusItemFn).toBe("function");
 
       // Call it to get the component function (which is now mocked)
       const StatusItemComponent = getStatusItemFn!();
-      expect(typeof StatusItemComponent).toBe('function');
-      
+      expect(typeof StatusItemComponent).toBe("function");
+
       // We can call the mocked component function to verify it returns what we expect.
-      expect(StatusItemComponent({ content: 'test'})).toBe('MockedMarkdownStatusItem');
+      expect(StatusItemComponent({ content: "test" })).toBe(
+        "MockedMarkdownStatusItem",
+      );
     });
   });
 
-  describe('Monaco Provider Registration', () => {
-    test('should register monaco provider without errors', () => {
+  describe("Monaco Provider Registration", () => {
+    test("should register monaco provider without errors", () => {
       const mockMonaco = {
         languages: {
           getLanguages: jest.fn(() => []),
@@ -188,8 +191,12 @@ done
         detector.registerProvider(mockMonaco);
       }).not.toThrow();
 
-      expect(mockMonaco.languages.register).toHaveBeenCalledWith({ id: 'markdown' });
-      expect(mockMonaco.languages.registerDocumentFormattingEditProvider).toHaveBeenCalledWith('markdown', expect.any(Object));
+      expect(mockMonaco.languages.register).toHaveBeenCalledWith({
+        id: "markdown",
+      });
+      expect(
+        mockMonaco.languages.registerDocumentFormattingEditProvider,
+      ).toHaveBeenCalledWith("markdown", expect.any(Object));
     });
   });
 });

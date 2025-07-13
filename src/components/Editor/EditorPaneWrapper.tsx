@@ -1,32 +1,40 @@
-import React, { Suspense, lazy, useMemo } from 'react';
-import { useRootStore } from '../../stores';
-import { useTabsStore } from '../../stores/tabsStore';
-import { useSplitViewStore } from '../../stores/splitViewStore';
-import { EditorInstance } from './EditorInstance';
-import { TabletView } from '../Tab/TabletView';
-import { extendedViewRegistry } from '../../views/registry';
-import { StatusBar } from '../StatusBar';
-import { useMarkdownPreviewResizer } from '../../hooks/useMarkdownPreviewResizer';
-import { PreviewDivider } from '../Preview/PreviewDivider';
-import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { shallow } from 'zustand/shallow';
+import React, { Suspense, lazy, useMemo } from "react";
+import { useRootStore } from "../../stores";
+import { useTabsStore } from "../../stores/tabsStore";
+import { useSplitViewStore } from "../../stores/splitViewStore";
+import { EditorInstance } from "./EditorInstance";
+import { TabletView } from "../Tab/TabletView";
+import { extendedViewRegistry } from "../../views/registry";
+import { StatusBar } from "../StatusBar";
+import { useMarkdownPreviewResizer } from "../../hooks/useMarkdownPreviewResizer";
+import { PreviewDivider } from "../Preview/PreviewDivider";
+import { useStoreWithEqualityFn } from "zustand/traditional";
+import { shallow } from "zustand/shallow";
 
 interface EditorPaneWrapperProps {
-  side: 'left' | 'right';
+  side: "left" | "right";
 }
 
-const LazyMarkdownPreview = lazy(() => import('../Preview/MarkdownPreview')
-  .catch(err => {
+const LazyMarkdownPreview = lazy(() =>
+  import("../Preview/MarkdownPreview").catch((err) => {
     console.error("Failed to load MarkdownPreview component:", err);
-    return { default: () => <div className="text-red-500 p-4">Error loading preview.</div> };
-  })
+    return {
+      default: () => (
+        <div className="text-red-500 p-4">Error loading preview.</div>
+      ),
+    };
+  }),
 );
 
-const LazyHtmlPreview = lazy(() => import('../Preview/HtmlPreview')
-  .catch(err => {
+const LazyHtmlPreview = lazy(() =>
+  import("../Preview/HtmlPreview").catch((err) => {
     console.error("Failed to load HtmlPreview component:", err);
-    return { default: () => <div className="text-red-500 p-4">Error loading preview.</div> };
-  })
+    return {
+      default: () => (
+        <div className="text-red-500 p-4">Error loading preview.</div>
+      ),
+    };
+  }),
 );
 
 const PreviewLoadingFallback = () => (
@@ -35,18 +43,23 @@ const PreviewLoadingFallback = () => (
 
 // Full content accessor for preview components (removing large content guard)
 const getContentForPreview = (tab: any): string => {
-  if (!tab?.content) return '';
+  if (!tab?.content) return "";
   return tab.content;
 };
 
-export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
+export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
+  side,
+}) => {
   const [editorInstance, setEditorInstance] = React.useState<any>(null);
-  
+
   // FIX: Use useStoreWithEqualityFn with shallow comparison to prevent unnecessary re-renders
   const activeTabId = useStoreWithEqualityFn(
     useSplitViewStore,
-    state => side === 'left' ? state.splitView.activeLeftTabId : state.splitView.activeRightTabId,
-    shallow
+    (state) =>
+      side === "left"
+        ? state.splitView.activeLeftTabId
+        : state.splitView.activeRightTabId,
+    shallow,
   );
 
   // Get actions from rootStore
@@ -55,8 +68,8 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
   // FIX: Use useStoreWithEqualityFn with proper equality check
   const activeTab = useStoreWithEqualityFn(
     useTabsStore,
-    state => {
-      const tab = state.tabs.find(t => t.id === activeTabId);
+    (state) => {
+      const tab = state.tabs.find((t) => t.id === activeTabId);
       return tab || null;
     },
     (prev, next) => {
@@ -72,7 +85,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
         prev.previewMode === next.previewMode &&
         prev.tabletState === next.tabletState
       );
-    }
+    },
   );
 
   // Memoize content for preview components to avoid expensive re-renders
@@ -82,26 +95,24 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
 
   const handleTabletStateChange = (newState: string) => {
     if (!activeTabId) return;
-    updateTabState(activeTabId, {tabletState: newState});
+    updateTabState(activeTabId, { tabletState: newState });
   };
 
   // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
-  const extendedView = activeTab && activeViewId 
-    ? extendedViewRegistry.getView(activeTab.language, activeViewId)
-    : null;
-  const shouldShowMarkdownPreview = activeTab?.previewMode && activeTab?.language === 'markdown';
-  const shouldShowHtmlPreview = activeTab?.previewMode && activeTab?.language === 'html';
+  const extendedView =
+    activeTab && activeViewId
+      ? extendedViewRegistry.getView(activeTab.language, activeViewId)
+      : null;
+  const shouldShowMarkdownPreview =
+    activeTab?.previewMode && activeTab?.language === "markdown";
+  const shouldShowHtmlPreview =
+    activeTab?.previewMode && activeTab?.language === "html";
   const shouldShowPreview = shouldShowMarkdownPreview || shouldShowHtmlPreview;
 
   // Use the markdown preview resizer hook
-  const {
-    containerRef,
-    editorStyle,
-    previewStyle,
-    dividerProps,
-    isDragging,
-  } = useMarkdownPreviewResizer(!!shouldShowPreview);
+  const { containerRef, editorStyle, previewStyle, dividerProps, isDragging } =
+    useMarkdownPreviewResizer(!!shouldShowPreview);
 
   // Clear editor instance when switching to extended view or tablet
   React.useEffect(() => {
@@ -115,12 +126,12 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
     <div
       ref={containerRef}
       data-editor-pane-side={side}
-      className={`flex h-full w-full overflow-hidden ${shouldShowPreview ? 'flex-row' : 'flex-col'}`}
+      className={`flex h-full w-full overflow-hidden ${shouldShowPreview ? "flex-row" : "flex-col"}`}
     >
       {/* Editor/Tablet/Extended View Container */}
       <div
         style={shouldShowPreview ? editorStyle : undefined}
-        className={`overflow-hidden relative ${shouldShowPreview ? '' : 'flex-1 w-full'} flex flex-col`}
+        className={`overflow-hidden relative ${shouldShowPreview ? "" : "flex-1 w-full"} flex flex-col`}
       >
         {/* Main Content Area */}
         <div className="flex-1 overflow-hidden">
@@ -129,15 +140,14 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
               // Render extended view (like CSV table editor)
               <extendedView.component
                 content={previewContent}
-                onContentChange={(newContent) => updateTabState(activeTab.id, { content: newContent })}
+                onContentChange={(newContent) =>
+                  updateTabState(activeTab.id, { content: newContent })
+                }
                 tabId={activeTab.id}
                 isActive={true}
               />
             ) : activeTab.isTablet ? (
-              <TabletView
-                tab={activeTab}
-                onChange={handleTabletStateChange}
-              />
+              <TabletView tab={activeTab} onChange={handleTabletStateChange} />
             ) : (
               // Pass only the ID to EditorInstance
               <EditorInstance
@@ -153,13 +163,13 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
             </div>
           )}
         </div>
-        
+
         {/* Status Bar - Always visible */}
         {activeTab && (
           <div className="flex-shrink-0">
-            <StatusBar 
+            <StatusBar
               editor={!extendedView ? editorInstance : null}
-              activeTab={activeTab} 
+              activeTab={activeTab}
               side={side}
             />
           </div>
@@ -177,11 +187,15 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({side}) => {
 
       {/* Preview Area (Conditional) */}
       {shouldShowPreview && activeTab && (
-        <div 
+        <div
+          data-testid="preview-pane"
           style={previewStyle}
           className="h-full flex flex-col overflow-hidden border-l border-gray-700"
         >
-          <div className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-gray-850" style={{ padding: shouldShowMarkdownPreview ? '1rem' : '0' }}>
+          <div
+            className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-gray-850"
+            style={{ padding: shouldShowMarkdownPreview ? "1rem" : "0" }}
+          >
             <Suspense fallback={<PreviewLoadingFallback />}>
               {shouldShowMarkdownPreview && (
                 <LazyMarkdownPreview content={previewContent} />

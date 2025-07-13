@@ -1,7 +1,22 @@
-import React from 'react';
-import { Archive, Search, Plus, Tag, FileCode, Filter, SortDesc, Pin, SortAsc, Clock, Hash, Star, X, Upload } from 'lucide-react';
-import { ContentType, SortOrder } from '../types';
-import { getContentTypeIcon } from '../utils/contentTypeUtils';
+import React from "react";
+import {
+  Archive,
+  Search,
+  Plus,
+  Tag,
+  FileCode,
+  Filter,
+  SortDesc,
+  Pin,
+  SortAsc,
+  Clock,
+  Hash,
+  Star,
+  X,
+  Upload,
+} from "lucide-react";
+import { ContentType, SortOrder } from "../types";
+import { getContentTypeIcon } from "../utils/contentTypeUtils";
 
 interface VaultSidebarProps {
   searchQuery: string;
@@ -36,21 +51,24 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
   onTogglePinnedFilter,
   onClearFilters,
   sortOrder,
-  onChangeSortOrder
+  onChangeSortOrder,
 }) => {
-  const hasActiveFilters = activeFilters.labels.length > 0 || 
-                          activeFilters.contentType !== null || 
-                          activeFilters.showPinnedOnly;
-  
+  const hasActiveFilters =
+    activeFilters.labels.length > 0 ||
+    activeFilters.contentType !== null ||
+    activeFilters.showPinnedOnly;
+
   return (
     <div className="w-64 border-r border-gray-700/50 flex flex-col bg-gray-800/30">
       {/* Header */}
       <div className="p-4 border-b border-gray-700/50">
         <div className="flex items-center space-x-3 mb-4">
           <Archive className="text-gray-400" size={20} />
-          <h2 className="text-lg font-semibold text-gray-100">Knowledge Vault</h2>
+          <h2 className="text-lg font-semibold text-gray-100">
+            Knowledge Vault
+          </h2>
         </div>
-        
+
         {/* Search */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -64,7 +82,7 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
             className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
           />
         </div>
-        
+
         {/* Action Buttons */}
         <div className="mt-4 space-y-2">
           <button
@@ -74,7 +92,7 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
             <Plus size={16} />
             <span>Add New Item</span>
           </button>
-          
+
           <button
             onClick={onImportItems}
             className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-green-500/20 text-green-400 rounded-md hover:bg-green-500/30 transition-colors"
@@ -84,7 +102,7 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
           </button>
         </div>
       </div>
-      
+
       {/* Filters Section */}
       <div className="flex-1 overflow-auto custom-scrollbar p-4">
         {/* Active Filters Summary */}
@@ -103,8 +121,8 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
               </button>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {activeFilters.labels.map(label => (
-                <span 
+              {activeFilters.labels.map((label) => (
+                <span
                   key={label}
                   className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-300"
                 >
@@ -145,7 +163,7 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
             </div>
           </div>
         )}
-        
+
         {/* Sort Options */}
         <div className="mb-4">
           <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center">
@@ -154,11 +172,11 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
           </h3>
           <div className="space-y-1">
             <button
-              onClick={() => onChangeSortOrder('title')}
+              onClick={() => onChangeSortOrder("title")}
               className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm ${
-                sortOrder === 'title' 
-                  ? 'bg-blue-500/20 text-blue-300' 
-                  : 'text-gray-300 hover:bg-gray-700/50'
+                sortOrder === "title"
+                  ? "bg-blue-500/20 text-blue-300"
+                  : "text-gray-300 hover:bg-gray-700/50"
               }`}
             >
               <span className="flex items-center">
@@ -167,11 +185,11 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
               </span>
             </button>
             <button
-              onClick={() => onChangeSortOrder('lastUsed')}
+              onClick={() => onChangeSortOrder("lastUsed")}
               className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm ${
-                sortOrder === 'lastUsed' 
-                  ? 'bg-blue-500/20 text-blue-300' 
-                  : 'text-gray-300 hover:bg-gray-700/50'
+                sortOrder === "lastUsed"
+                  ? "bg-blue-500/20 text-blue-300"
+                  : "text-gray-300 hover:bg-gray-700/50"
               }`}
             >
               <span className="flex items-center">
@@ -180,11 +198,11 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
               </span>
             </button>
             <button
-              onClick={() => onChangeSortOrder('usageCount')}
+              onClick={() => onChangeSortOrder("usageCount")}
               className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm ${
-                sortOrder === 'usageCount' 
-                  ? 'bg-blue-500/20 text-blue-300' 
-                  : 'text-gray-300 hover:bg-gray-700/50'
+                sortOrder === "usageCount"
+                  ? "bg-blue-500/20 text-blue-300"
+                  : "text-gray-300 hover:bg-gray-700/50"
               }`}
             >
               <span className="flex items-center">
@@ -193,11 +211,11 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
               </span>
             </button>
             <button
-              onClick={() => onChangeSortOrder('created')}
+              onClick={() => onChangeSortOrder("created")}
               className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm ${
-                sortOrder === 'created' 
-                  ? 'bg-blue-500/20 text-blue-300' 
-                  : 'text-gray-300 hover:bg-gray-700/50'
+                sortOrder === "created"
+                  ? "bg-blue-500/20 text-blue-300"
+                  : "text-gray-300 hover:bg-gray-700/50"
               }`}
             >
               <span className="flex items-center">
@@ -207,15 +225,15 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
             </button>
           </div>
         </div>
-        
+
         {/* Pinned Filter */}
         <div className="mb-4">
           <button
             onClick={onTogglePinnedFilter}
             className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm ${
-              activeFilters.showPinnedOnly 
-                ? 'bg-blue-500/20 text-blue-300' 
-                : 'text-gray-300 hover:bg-gray-700/50'
+              activeFilters.showPinnedOnly
+                ? "bg-blue-500/20 text-blue-300"
+                : "text-gray-300 hover:bg-gray-700/50"
             }`}
           >
             <span className="flex items-center">
@@ -224,7 +242,7 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
             </span>
           </button>
         </div>
-        
+
         {/* Labels Filter */}
         {allLabels.length > 0 && (
           <div className="mb-4">
@@ -233,14 +251,14 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
               Labels
             </h3>
             <div className="space-y-1">
-              {allLabels.map(label => (
+              {allLabels.map((label) => (
                 <button
                   key={label}
                   onClick={() => onFilterByLabel(label)}
                   className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm ${
-                    activeFilters.labels.includes(label) 
-                      ? 'bg-blue-500/20 text-blue-300' 
-                      : 'text-gray-300 hover:bg-gray-700/50'
+                    activeFilters.labels.includes(label)
+                      ? "bg-blue-500/20 text-blue-300"
+                      : "text-gray-300 hover:bg-gray-700/50"
                   }`}
                 >
                   <span className="truncate">{label}</span>
@@ -249,7 +267,7 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
             </div>
           </div>
         )}
-        
+
         {/* Content Types Filter */}
         {allContentTypes.length > 0 && (
           <div className="mb-4">
@@ -258,16 +276,16 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
               Content Types
             </h3>
             <div className="space-y-1">
-              {allContentTypes.map(type => {
+              {allContentTypes.map((type) => {
                 const TypeIcon = getContentTypeIcon(type);
                 return (
                   <button
                     key={type}
                     onClick={() => onFilterByContentType(type)}
                     className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm ${
-                      activeFilters.contentType === type 
-                        ? 'bg-blue-500/20 text-blue-300' 
-                        : 'text-gray-300 hover:bg-gray-700/50'
+                      activeFilters.contentType === type
+                        ? "bg-blue-500/20 text-blue-300"
+                        : "text-gray-300 hover:bg-gray-700/50"
                     }`}
                   >
                     <span className="flex items-center">

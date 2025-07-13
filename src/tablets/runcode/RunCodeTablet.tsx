@@ -1,35 +1,39 @@
-import { useState } from 'react';
-import { Tablet, TabletState } from '../types';
-import { Editor } from '@monaco-editor/react';
-import { Play, AlertCircle, CheckCircle2, Loader2, Code } from 'lucide-react';
-import { detectLanguage } from '../../languages';
-import { languageTemplates, languageToRuntime, supportedLanguages } from './snippets';
+import { useState } from "react";
+import { Tablet, TabletState } from "../types";
+import { Editor } from "@monaco-editor/react";
+import { Play, AlertCircle, CheckCircle2, Loader2, Code } from "lucide-react";
+import { detectLanguage } from "../../languages";
+import {
+  languageTemplates,
+  languageToRuntime,
+  supportedLanguages,
+} from "./snippets";
 
 interface RunCodeState extends TabletState {
-  type: 'runcode';
+  type: "runcode";
   data: {
     code: string;
     language: string;
     output: string;
-    status: 'idle' | 'running' | 'success' | 'error';
+    status: "idle" | "running" | "success" | "error";
     error?: string;
   };
 }
 
 export const RunCodeTablet: Tablet = {
-  id: 'runcode',
-  label: 'Run Code',
-  keywords: ['code', 'execute', 'run', 'compiler', 'interpreter'],
+  id: "runcode",
+  label: "Run Code",
+  keywords: ["code", "execute", "run", "compiler", "interpreter"],
 
   createInitialState(): RunCodeState {
     return {
-      type: 'runcode',
+      type: "runcode",
       data: {
-        code: '',
-        language: 'plaintext',
-        output: '',
-        status: 'idle'
-      }
+        code: "",
+        language: "plaintext",
+        output: "",
+        status: "idle",
+      },
     };
   },
 
@@ -57,10 +61,10 @@ export const RunCodeTablet: Tablet = {
           ...state.data,
           code,
           language: detectedLanguage,
-          status: 'idle',
-          output: '',
-          error: undefined
-        }
+          status: "idle",
+          output: "",
+          error: undefined,
+        },
       });
     };
 
@@ -73,10 +77,10 @@ export const RunCodeTablet: Tablet = {
             ...state.data,
             code: template.code,
             language,
-            status: 'idle',
-            output: '',
-            error: undefined
-          }
+            status: "idle",
+            output: "",
+            error: undefined,
+          },
         });
         setShowLanguages(false);
       }
@@ -89,9 +93,9 @@ export const RunCodeTablet: Tablet = {
           ...state,
           data: {
             ...state.data,
-            status: 'error',
-            error: `Language '${state.data.language}' is not supported for execution.`
-          }
+            status: "error",
+            error: `Language '${state.data.language}' is not supported for execution.`,
+          },
         });
         return;
       }
@@ -101,25 +105,27 @@ export const RunCodeTablet: Tablet = {
         ...state,
         data: {
           ...state.data,
-          status: 'running',
-          output: '',
-          error: undefined
-        }
+          status: "running",
+          output: "",
+          error: undefined,
+        },
       });
 
       try {
-        const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-          method: 'POST',
+        const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             language: runtime,
-            version: '*',
-            files: [{
-              content: state.data.code
-            }]
-          })
+            version: "*",
+            files: [
+              {
+                content: state.data.code,
+              },
+            ],
+          }),
         });
 
         const result = await response.json();
@@ -129,27 +135,27 @@ export const RunCodeTablet: Tablet = {
             ...state,
             data: {
               ...state.data,
-              status: 'success',
-              output: result.run.output
-            }
+              status: "success",
+              output: result.run.output,
+            },
           });
         } else if (result.run?.stderr) {
           onChange({
             ...state,
             data: {
               ...state.data,
-              status: 'error',
-              error: result.run.stderr
-            }
+              status: "error",
+              error: result.run.stderr,
+            },
           });
         } else {
           onChange({
             ...state,
             data: {
               ...state.data,
-              status: 'error',
-              error: 'No output received from execution'
-            }
+              status: "error",
+              error: "No output received from execution",
+            },
           });
         }
       } catch (error) {
@@ -157,16 +163,17 @@ export const RunCodeTablet: Tablet = {
           ...state,
           data: {
             ...state.data,
-            status: 'error',
-            error: 'Failed to execute code. Please try again.'
-          }
+            status: "error",
+            error: "Failed to execute code. Please try again.",
+          },
         });
       } finally {
         setIsExecuting(false);
       }
     };
 
-    const canExecute = supportedLanguages.includes(state.data.language) && !isExecuting;
+    const canExecute =
+      supportedLanguages.includes(state.data.language) && !isExecuting;
 
     return (
       <div className="flex h-full bg-gray-900">
@@ -180,9 +187,23 @@ export const RunCodeTablet: Tablet = {
                 onClick={() => setShowLanguages(!showLanguages)}
                 className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 hover:bg-gray-700/50 focus:outline-none focus:border-blue-500/50 transition-colors flex items-center justify-between space-x-8"
               >
-                <span>{state.data.language === 'plaintext' ? 'Select a language...' : languageTemplates[state.data.language]?.name}</span>
-                <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-                  <path d="M6 8l4 4 4-4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <span>
+                  {state.data.language === "plaintext"
+                    ? "Select a language..."
+                    : languageTemplates[state.data.language]?.name}
+                </span>
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M6 8l4 4 4-4"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
               {showLanguages && (
@@ -204,9 +225,10 @@ export const RunCodeTablet: Tablet = {
               disabled={!canExecute}
               className={`
                 flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium
-                ${canExecute
-                  ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
-                  : 'bg-gray-800/50 text-gray-500 cursor-not-allowed'
+                ${
+                  canExecute
+                    ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                    : "bg-gray-800/50 text-gray-500 cursor-not-allowed"
                 }
                 transition-colors
               `}
@@ -226,7 +248,7 @@ export const RunCodeTablet: Tablet = {
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
-                wordWrap: 'on',
+                wordWrap: "on",
                 padding: { top: 16, bottom: 16 },
               }}
             />
@@ -239,13 +261,13 @@ export const RunCodeTablet: Tablet = {
           <div className="flex items-center px-4 py-3 border-b border-gray-700/50">
             <div className="flex items-center space-x-3">
               <h2 className="text-gray-200 font-medium">Output</h2>
-              {state.data.status === 'running' && (
+              {state.data.status === "running" && (
                 <Loader2 size={16} className="text-blue-400 animate-spin" />
               )}
-              {state.data.status === 'success' && (
+              {state.data.status === "success" && (
                 <CheckCircle2 size={16} className="text-green-400" />
               )}
-              {state.data.status === 'error' && (
+              {state.data.status === "error" && (
                 <AlertCircle size={16} className="text-red-400" />
               )}
             </div>
@@ -253,25 +275,22 @@ export const RunCodeTablet: Tablet = {
 
           {/* Output Content */}
           <div className="flex-1 p-4 overflow-auto font-mono text-sm custom-scrollbar">
-            {state.data.status === 'idle' && (
+            {state.data.status === "idle" && (
               <div className="text-gray-500">
                 {supportedLanguages.includes(state.data.language)
-                  ? 'Click Run to execute the code'
-                  : `Language '${state.data.language}' is not supported for execution`
-                }
+                  ? "Click Run to execute the code"
+                  : `Language '${state.data.language}' is not supported for execution`}
               </div>
             )}
-            {state.data.status === 'running' && (
-              <div className="text-gray-400">
-                Executing code...
-              </div>
+            {state.data.status === "running" && (
+              <div className="text-gray-400">Executing code...</div>
             )}
-            {state.data.status === 'success' && (
+            {state.data.status === "success" && (
               <pre className="text-gray-200 whitespace-pre-wrap">
                 {state.data.output}
               </pre>
             )}
-            {state.data.status === 'error' && (
+            {state.data.status === "error" && (
               <pre className="text-red-400 whitespace-pre-wrap">
                 {state.data.error}
               </pre>
@@ -280,5 +299,5 @@ export const RunCodeTablet: Tablet = {
         </div>
       </div>
     );
-  }
+  },
 };

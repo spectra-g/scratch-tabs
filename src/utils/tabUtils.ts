@@ -1,16 +1,16 @@
-import { Tab } from '../types';
+import { Tab } from "../types";
 
 /**
  * Generates a UUID, with fallback for environments where crypto.randomUUID is not available
  */
 function generateUUID(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
   }
   // Fallback for Jest/Node.js environments
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -29,15 +29,15 @@ export function generateTabId(): string {
 export function createTab(options: Partial<Tab> = {}): Tab {
   return {
     id: generateTabId(),
-    title: 'Untitled',
-    content: '',
-    language: 'plaintext',
+    title: "Untitled",
+    content: "",
+    language: "plaintext",
     languageLocked: false,
     cursorPosition: { lineNumber: 1, column: 1 },
     dateCreated: Date.now(),
     lastModified: Date.now(),
-    workspaceId: '',
-    ...options
+    workspaceId: "",
+    ...options,
   };
 }
 
@@ -50,7 +50,7 @@ export function duplicateTab(tab: Tab, suffix: string = " (copy)"): Tab {
   return {
     ...tab,
     id: generateTabId(),
-    title: `${tab.title}${suffix}`
+    title: `${tab.title}${suffix}`,
   };
 }
 
@@ -59,7 +59,7 @@ export function duplicateTab(tab: Tab, suffix: string = " (copy)"): Tab {
  * @param tab The tab to check
  */
 export function isTabEmpty(tab: Tab): boolean {
-  return tab.isTablet ? false : (tab.content || '').trim() === '';
+  return tab.isTablet ? false : (tab.content || "").trim() === "";
 }
 
 /**
@@ -76,7 +76,7 @@ export function countEmptyTabs(tabs: Tab[]): number {
  * @param id ID of the tab to find
  */
 export function findTabById(tabs: Tab[], id: string): Tab | undefined {
-  return tabs.find(tab => tab.id === id);
+  return tabs.find((tab) => tab.id === id);
 }
 
 /**
@@ -84,7 +84,7 @@ export function findTabById(tabs: Tab[], id: string): Tab | undefined {
  * @param tabs Array of tabs
  */
 export function getTabIds(tabs: Tab[]): string[] {
-  return tabs.map(tab => tab.id);
+  return tabs.map((tab) => tab.id);
 }
 
 /**
@@ -93,5 +93,7 @@ export function getTabIds(tabs: Tab[]): string[] {
  * @param tabIds IDs of tabs to retrieve
  */
 export function getTabsFromIds(allTabs: Tab[], tabIds: string[]): Tab[] {
-  return tabIds.map(id => findTabById(allTabs, id)).filter((tab): tab is Tab => tab !== undefined);
-} 
+  return tabIds
+    .map((id) => findTabById(allTabs, id))
+    .filter((tab): tab is Tab => tab !== undefined);
+}

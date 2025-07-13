@@ -1,31 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { BaseModal } from '../../languages/json/components/modals/BaseModal';
-import { useAIStore } from '../../stores/aiStore';
-import './SummarizeModal.css';
+import React, { useState, useEffect, useRef } from "react";
+import { BaseModal } from "../../languages/json/components/modals/BaseModal";
+import { useAIStore } from "../../stores/aiStore";
+import "./SummarizeModal.css";
 
 interface SummarizeModalProps {
   content: string;
   onClose: () => void;
 }
 
-export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose }) => {
+export const SummarizeModal: React.FC<SummarizeModalProps> = ({
+  content,
+  onClose,
+}) => {
   const {
     summarizeText,
     isAiReady,
     aiError,
     isGenerating,
     summaryResult,
-    storeError
-  } = useAIStore(state => ({
+    storeError,
+  } = useAIStore((state) => ({
     summarizeText: state.summarizeText,
     isAiReady: state.ai.isReady,
     aiError: state.ai.error,
     isGenerating: state.ai.isGenerating,
     summaryResult: state.ai.summaryResult,
-    storeError: state.ai.error
+    storeError: state.ai.error,
   }));
 
-  const [localSummary, setLocalSummary] = useState<string>('');
+  const [localSummary, setLocalSummary] = useState<string>("");
   const [localError, setLocalError] = useState<string | null>(null);
   const isMounted = useRef(true);
   const didInitiateSummarize = useRef(false);
@@ -35,7 +38,7 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
     isMounted.current = true;
     didInitiateSummarize.current = false;
     setLocalError(aiError);
-    setLocalSummary('');
+    setLocalSummary("");
     return () => {
       isMounted.current = false;
     };
@@ -48,7 +51,7 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
 
     didInitiateSummarize.current = true;
     setLocalError(null);
-    setLocalSummary('');
+    setLocalSummary("");
     summarizeText(content);
   }, [content, summarizeText, isAiReady, aiError]);
 
@@ -57,13 +60,13 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
     if (!isMounted.current || !summaryResult) return;
 
     // Fix for removing quotes but not stripping first character
-    const fullText = summaryResult.replace(/^['"]|['"]$/g, '');
+    const fullText = summaryResult.replace(/^['"]|['"]$/g, "");
 
     // Reset for new summary
-    setLocalSummary('');
+    setLocalSummary("");
     setLocalError(null);
 
-    let currentText = '';
+    let currentText = "";
     let idx = 0;
 
     const interval = setInterval(() => {
@@ -83,24 +86,24 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
     if (!isMounted.current) return;
     if (isGenerating === false && storeError && storeError !== aiError) {
       setLocalError(storeError);
-      setLocalSummary('');
-    }
-    else if (isGenerating === true && !aiError) {
+      setLocalSummary("");
+    } else if (isGenerating === true && !aiError) {
       setLocalError(null);
     }
   }, [storeError, isGenerating, aiError]);
 
   const currentError = localError;
   const showThinking = isGenerating;
-  const thinkingText = 'Summarizing...';
+  const thinkingText = "Summarizing...";
 
   return (
     <BaseModal title="Summary" onClose={onClose} maxWidthClass="max-w-4xl">
       <div className="p-2 min-h-[250px] flex flex-col">
         {/* Experimental feature notice */}
         <div className="mb-3 px-3 py-2 bg-blue-900/30 border border-blue-500/30 rounded-md text-xs text-blue-200">
-          <span className="font-semibold">Experimental Feature:</span> This AI summary is processed entirely in your browser.
-          No content is sent to any servers - your data remains private and local.
+          <span className="font-semibold">Experimental Feature:</span> This AI
+          summary is processed entirely in your browser. No content is sent to
+          any servers - your data remains private and local.
         </div>
 
         <div className="flex-1 overflow-auto custom-scrollbar bg-gray-900/30 rounded-md p-4 flex items-center justify-center border border-gray-700/50 shadow-inner">
@@ -113,13 +116,19 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ content, onClose
           )}
           {currentError && (
             <div className="text-center text-red-300 p-4 bg-red-900/80 rounded border border-red-500/40 shadow-lg">
-              <p className="font-semibold text-red-200 mb-1">Summarization Error</p>
+              <p className="font-semibold text-red-200 mb-1">
+                Summarization Error
+              </p>
               <p className="text-sm">{currentError}</p>
             </div>
           )}
           {!showThinking && !currentError && (
             <div className="relative prose prose-sm prose-invert max-w-none text-gray-200 whitespace-pre-wrap leading-relaxed p-2 bg-gray-800/30 rounded-md border border-gray-600/20">
-              {localSummary || <span className="text-gray-500 italic">Summary could not be generated or is empty.</span>}
+              {localSummary || (
+                <span className="text-gray-500 italic">
+                  Summary could not be generated or is empty.
+                </span>
+              )}
             </div>
           )}
         </div>

@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Editor } from '@monaco-editor/react';
-import { X, Save, Tag, Plus, FileCode } from 'lucide-react';
-import { VaultItem, ContentType } from '../types';
-import { getContentTypeIcon, detectContentType, CONTENT_TYPES } from '../utils/contentTypeUtils';
+import React, { useState, useEffect, useRef } from "react";
+import { Editor } from "@monaco-editor/react";
+import { X, Save, Tag, Plus, FileCode } from "lucide-react";
+import { VaultItem, ContentType } from "../types";
+import {
+  getContentTypeIcon,
+  detectContentType,
+  CONTENT_TYPES,
+} from "../utils/contentTypeUtils";
 
 interface VaultItemModalProps {
   item: VaultItem;
@@ -17,86 +21,91 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
   isNew,
   onSave,
   onClose,
-  existingLabels
+  existingLabels,
 }) => {
   const [title, setTitle] = useState(item.title);
   const [content, setContent] = useState(item.content);
-  const [contentType, setContentType] = useState<ContentType>(item.contentType as ContentType);
+  const [contentType, setContentType] = useState<ContentType>(
+    item.contentType as ContentType,
+  );
   const [labels, setLabels] = useState<string[]>(item.labels);
-  const [newLabel, setNewLabel] = useState('');
+  const [newLabel, setNewLabel] = useState("");
   const [isPinned, setIsPinned] = useState(item.isPinned);
-  
+
   const titleInputRef = useRef<HTMLInputElement>(null);
   const newLabelInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Focus title input on mount
   useEffect(() => {
     if (titleInputRef.current) {
       titleInputRef.current.focus();
     }
   }, []);
-  
+
   // Auto-detect content type when content changes
   useEffect(() => {
-    if (isNew && content && contentType === 'plaintext') {
+    if (isNew && content && contentType === "plaintext") {
       const detectedType = detectContentType(content);
-      if (detectedType !== 'plaintext') {
+      if (detectedType !== "plaintext") {
         setContentType(detectedType);
       }
     }
   }, [content, isNew, contentType]);
-  
+
   const handleSave = () => {
     // Validate required fields
     if (!title.trim()) {
-      alert('Title is required');
+      alert("Title is required");
       return;
     }
-    
-    onSave({
-      ...item,
-      title: title.trim(),
-      content,
-      contentType,
-      labels,
-      isPinned,
-      modifiedTimestamp: Date.now()
-    }, isNew);
+
+    onSave(
+      {
+        ...item,
+        title: title.trim(),
+        content,
+        contentType,
+        labels,
+        isPinned,
+        modifiedTimestamp: Date.now(),
+      },
+      isNew,
+    );
   };
-  
+
   const handleAddLabel = () => {
     if (!newLabel.trim()) return;
-    
+
     // Don't add duplicate labels
     if (!labels.includes(newLabel.trim())) {
       setLabels([...labels, newLabel.trim()]);
     }
-    
-    setNewLabel('');
+
+    setNewLabel("");
     if (newLabelInputRef.current) {
       newLabelInputRef.current.focus();
     }
   };
-  
+
   const handleRemoveLabel = (labelToRemove: string) => {
-    setLabels(labels.filter(label => label !== labelToRemove));
+    setLabels(labels.filter((label) => label !== labelToRemove));
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleAddLabel();
     }
   };
-  
+
   const ContentTypeIcon = getContentTypeIcon(contentType);
-  
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
           <h2 className="text-xl font-semibold text-gray-100">
-            {isNew ? 'Add New Item' : 'Edit Item'}
+            {isNew ? "Add New Item" : "Edit Item"}
           </h2>
           <button
             onClick={onClose}
@@ -105,13 +114,16 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
             <X size={24} />
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">
           <div className="space-y-6">
             {/* Title */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-gray-300 mb-1"
+              >
                 Title
               </label>
               <input
@@ -124,10 +136,13 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
                 placeholder="Enter a descriptive title..."
               />
             </div>
-            
+
             {/* Content Type */}
             <div>
-              <label htmlFor="contentType" className="block text-sm font-medium text-gray-300 mb-1">
+              <label
+                htmlFor="contentType"
+                className="block text-sm font-medium text-gray-300 mb-1"
+              >
                 Content Type
               </label>
               <div className="relative">
@@ -137,10 +152,12 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
                 <select
                   id="contentType"
                   value={contentType}
-                  onChange={(e) => setContentType(e.target.value as ContentType)}
+                  onChange={(e) =>
+                    setContentType(e.target.value as ContentType)
+                  }
                   className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors appearance-none"
                 >
-                  {CONTENT_TYPES.map(type => (
+                  {CONTENT_TYPES.map((type) => (
                     <option key={type.id} value={type.id}>
                       {type.name}
                     </option>
@@ -151,10 +168,13 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Content */}
             <div>
-              <label htmlFor="content" className="block text-sm font-medium text-gray-300 mb-1">
+              <label
+                htmlFor="content"
+                className="block text-sm font-medium text-gray-300 mb-1"
+              >
                 Content
               </label>
               <div className="border border-gray-700/50 rounded-md overflow-hidden">
@@ -162,27 +182,27 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
                   height="300px"
                   language={contentType}
                   value={content}
-                  onChange={(value) => setContent(value || '')}
+                  onChange={(value) => setContent(value || "")}
                   theme="vs-dark"
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
-                    wordWrap: 'on',
+                    wordWrap: "on",
                     padding: { top: 16, bottom: 16 },
                   }}
                 />
               </div>
             </div>
-            
+
             {/* Labels */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Labels
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
-                {labels.map(label => (
-                  <span 
-                    key={label} 
+                {labels.map((label) => (
+                  <span
+                    key={label}
                     className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm bg-blue-500/20 text-blue-300"
                   >
                     <Tag size={12} className="mr-1.5" />
@@ -214,8 +234,8 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
                   />
                   <datalist id="existing-labels">
                     {existingLabels
-                      .filter(label => !labels.includes(label))
-                      .map(label => (
+                      .filter((label) => !labels.includes(label))
+                      .map((label) => (
                         <option key={label} value={label} />
                       ))}
                   </datalist>
@@ -229,7 +249,7 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
                 </button>
               </div>
             </div>
-            
+
             {/* Pin Option */}
             <div className="flex items-center">
               <input
@@ -245,7 +265,7 @@ export const VaultItemModal: React.FC<VaultItemModalProps> = ({
             </div>
           </div>
         </div>
-        
+
         {/* Footer */}
         <div className="flex justify-end px-6 py-4 border-t border-gray-700/50">
           <button

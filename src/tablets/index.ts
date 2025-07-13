@@ -2,14 +2,14 @@
 // But the dynamic system will handle most cases automatically
 
 // Export the new metadata-based registry
-export { dynamicTabletRegistry as tabletRegistry } from './dynamicRegistry';
+export { dynamicTabletRegistry as tabletRegistry } from "./dynamicRegistry";
 
 // Export types
-export type { Tablet, TabletState, TabletRegistry } from './types';
-export type { TabletMetadata } from './tabletMetadata';
+export type { Tablet, TabletState, TabletRegistry } from "./types";
+export type { TabletMetadata } from "./tabletMetadata";
 
 // Export metadata for direct access if needed
-export { tabletMetadata } from './tabletMetadata';
+export { tabletMetadata } from "./tabletMetadata";
 
 // Export the tablet selector component
-export { TabletSelector } from './components';
+export { TabletSelector } from "./components";

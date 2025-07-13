@@ -1,5 +1,5 @@
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import React from "react";
+import { LucideIcon } from "lucide-react";
 
 export interface ExtendedView {
   id: string;
@@ -22,7 +22,9 @@ class ExtendedViewRegistry {
 
   register(view: ExtendedView): void {
     const existing = this.views.get(view.languageId) || [];
-    const updated = [...existing, view].sort((a, b) => (a.priority || 0) - (b.priority || 0));
+    const updated = [...existing, view].sort(
+      (a, b) => (a.priority || 0) - (b.priority || 0),
+    );
     this.views.set(view.languageId, updated);
   }
 
@@ -32,7 +34,7 @@ class ExtendedViewRegistry {
 
   getView(languageId: string, viewId: string): ExtendedView | undefined {
     const views = this.getViewsForLanguage(languageId);
-    return views.find(view => view.id === viewId);
+    return views.find((view) => view.id === viewId);
   }
 
   getAllViews(): ExtendedView[] {
@@ -44,4 +46,4 @@ class ExtendedViewRegistry {
   }
 }
 
-export const extendedViewRegistry = new ExtendedViewRegistry(); 
+export const extendedViewRegistry = new ExtendedViewRegistry();

@@ -1,5 +1,5 @@
-import Dexie from 'dexie';
-import { Tab, Workspace, WorkspaceLink, SplitViewRecord } from '../types';
+import Dexie from "dexie";
+import { Tab, Workspace, WorkspaceLink, SplitViewRecord } from "../types";
 
 interface TabRecord {
   id: string;
@@ -39,53 +39,61 @@ export class ScratchTabsDB extends Dexie {
   settings!: Dexie.Table<SettingsRecord>;
 
   constructor() {
-    super('ScratchTabsDB');
+    super("ScratchTabsDB");
 
     this.version(1).stores({
-      tabs: 'id, lastModified',
-      splitView: 'id, lastModified'
+      tabs: "id, lastModified",
+      splitView: "id, lastModified",
     });
 
-    this.version(2).stores({
-      tabs: 'id, workspaceId, lastModified',
-      splitView: 'id, workspaceId, lastModified',
-      workspaces: 'id, lastAccessed'
-    }).upgrade(tx => this.upgradeToV2(tx));
+    this.version(2)
+      .stores({
+        tabs: "id, workspaceId, lastModified",
+        splitView: "id, workspaceId, lastModified",
+        workspaces: "id, lastAccessed",
+      })
+      .upgrade((tx) => this.upgradeToV2(tx));
 
     this.version(3).stores({
-      tabs: 'id, workspaceId, lastModified',
-      splitView: 'id, workspaceId, lastModified',
-      workspaces: 'id, lastAccessed',
-      settings: 'key'
+      tabs: "id, workspaceId, lastModified",
+      splitView: "id, workspaceId, lastModified",
+      workspaces: "id, lastAccessed",
+      settings: "key",
     });
   }
 
   private async upgradeToV2(tx: any): Promise<void> {
     // First check if there are any existing tabs that need migration
-    const existingTabs = await tx.table('tabs').toArray();
+    const existingTabs = await tx.table("tabs").toArray();
 
     if (existingTabs.length > 0) {
       // Only create default workspace if there are tabs to migrate
       const defaultWorkspace: WorkspaceRecord = {
         id: crypto.randomUUID(),
-        name: 'Default Workspace',
+        name: "Default Workspace",
         links: [],
         createdAt: Date.now(),
-        lastAccessed: Date.now()
+        lastAccessed: Date.now(),
       };
 
-      await tx.table('workspaces').add(defaultWorkspace);
+      await tx.table("workspaces").add(defaultWorkspace);
 
       // Update existing tabs with the workspace ID
-      await Promise.all(existingTabs.map((tab: any) =>
-        tx.table('tabs').update(tab.id, { workspaceId: defaultWorkspace.id })
-      ));
+      await Promise.all(
+        existingTabs.map((tab: any) =>
+          tx.table("tabs").update(tab.id, { workspaceId: defaultWorkspace.id }),
+        ),
+      );
 
       // Update split views if they exist
-      const splitViews = await tx.table('splitView').toArray();
-      await Promise.all(splitViews.map((sv: any) =>
-        tx.table('splitView').update(sv.id, { workspaceId: defaultWorkspace.id })
-      ));
+      const splitViews = await tx.table("splitView").toArray();
+      await Promise.all(
+        splitViews.map((sv: any) =>
+          tx
+            .table("splitView")
+            .update(sv.id, { workspaceId: defaultWorkspace.id }),
+        ),
+      );
     }
   }
 
@@ -95,7 +103,7 @@ export class ScratchTabsDB extends Dexie {
     try {
       await this.open();
     } catch (error) {
-      console.error('Failed to reopen database:', error);
+      console.error("Failed to reopen database:", error);
       throw error;
     }
   }
@@ -105,10 +113,10 @@ export const db = new ScratchTabsDB();
 
 const toTabRecord = (tab: Tab): TabRecord => ({
   ...tab,
-  content: tab.content || '',
+  content: tab.content || "",
   lastModified: tab.lastModified,
   dateCreated: tab.dateCreated,
-  workspaceId: tab.workspaceId
+  workspaceId: tab.workspaceId,
 });
 
 const toTab = (record: TabRecord): Tab => {
@@ -118,12 +126,12 @@ const toTab = (record: TabRecord): Tab => {
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },
-    workspaceId: record.workspaceId
+    workspaceId: record.workspaceId,
   };
 };
 
 // NEW: Convert record to tab metadata (without content)
-const toTabMetadata = (record: TabRecord): Omit<Tab, 'content'> => {
+const toTabMetadata = (record: TabRecord): Omit<Tab, "content"> => {
   const now = Date.now();
   const { content, ...metadata } = record;
   return {
@@ -131,7 +139,7 @@ const toTabMetadata = (record: TabRecord): Omit<Tab, 'content'> => {
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },
-    workspaceId: record.workspaceId
+    workspaceId: record.workspaceId,
   };
 };
 
@@ -151,9 +159,14 @@ export interface StorageProvider {
   getTabsByWorkspace(workspaceId: string): Promise<Tab[]>;
   getSplitViewByWorkspace(workspaceId: string): Promise<SplitViewRecord | null>;
   deleteSplitViewByWorkspace(workspaceId: string): Promise<void>;
-  getTabsMetadataByWorkspace(workspaceId: string): Promise<Omit<Tab, 'content'>[]>;
+  getTabsMetadataByWorkspace(
+    workspaceId: string,
+  ): Promise<Omit<Tab, "content">[]>;
   getTabContent(tabId: string): Promise<string | undefined>;
-  updateTabCursor(tabId: string, cursorPosition: { lineNumber: number; column: number }): Promise<void>;
+  updateTabCursor(
+    tabId: string,
+    cursorPosition: { lineNumber: number; column: number },
+  ): Promise<void>;
 }
 
 export class IndexedDBStorage implements StorageProvider {
@@ -164,7 +177,7 @@ export class IndexedDBStorage implements StorageProvider {
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): IndexedDBStorage {
     if (!IndexedDBStorage.instance) {
@@ -183,7 +196,7 @@ export class IndexedDBStorage implements StorageProvider {
       } catch (error) {
         lastError = error as Error;
         if (error instanceof Dexie.DatabaseClosedError) {
-          await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
+          await new Promise((resolve) => setTimeout(resolve, this.RETRY_DELAY));
           continue;
         }
         throw error;
@@ -235,7 +248,7 @@ export class IndexedDBStorage implements StorageProvider {
 
   async getSplitView(): Promise<SplitViewRecord | null> {
     return this.withRetry(async () => {
-      const result = await db.splitView.get('default');
+      const result = await db.splitView.get("default");
       return result || null;
     });
   }
@@ -265,10 +278,9 @@ export class IndexedDBStorage implements StorageProvider {
     });
   }
 
-
   async getWorkspaces(): Promise<Workspace[]> {
     return this.withRetry(async () => {
-      return await db.workspaces.orderBy('lastAccessed').reverse().toArray();
+      return await db.workspaces.orderBy("lastAccessed").reverse().toArray();
     });
   }
 
@@ -288,54 +300,75 @@ export class IndexedDBStorage implements StorageProvider {
   async deleteWorkspace(id: string): Promise<void> {
     await this.withRetry(async () => {
       try {
-        await db.transaction('rw', db.workspaces, db.tabs, db.splitView, async () => {
-          // 1. Delete tabs associated with the workspace
-          // This will delete all tab records where the 'workspaceId' property equals the given 'id'.
-          await db.tabs.where('workspaceId').equals(id).delete();
+        await db.transaction(
+          "rw",
+          db.workspaces,
+          db.tabs,
+          db.splitView,
+          async () => {
+            // 1. Delete tabs associated with the workspace
+            // This will delete all tab records where the 'workspaceId' property equals the given 'id'.
+            await db.tabs.where("workspaceId").equals(id).delete();
 
-          // 2. Delete split views associated with the workspace
-          // Changed from fetching then looping, to a direct delete operation.
-          // This will delete all splitView records where the 'workspaceId' property equals the given 'id'.
-          await db.splitView.where('workspaceId').equals(id).delete();
+            // 2. Delete split views associated with the workspace
+            // Changed from fetching then looping, to a direct delete operation.
+            // This will delete all splitView records where the 'workspaceId' property equals the given 'id'.
+            await db.splitView.where("workspaceId").equals(id).delete();
 
-          // 3. Delete the workspace itself
-          // This is done last; if any of the above deletions fail, the transaction
-          // will roll back, and the workspace will not be deleted either.
-          await db.workspaces.delete(id);
-        });
+            // 3. Delete the workspace itself
+            // This is done last; if any of the above deletions fail, the transaction
+            // will roll back, and the workspace will not be deleted either.
+            await db.workspaces.delete(id);
+          },
+        );
       } catch (error) {
         // Log the error or handle it as appropriate for your application
-        console.error(`Error deleting workspace ${id} and its associated data:`, error);
+        console.error(
+          `Error deleting workspace ${id} and its associated data:`,
+          error,
+        );
         throw error; // Re-throw the error to be handled by withRetry or the caller
       }
     });
   }
 
-
   async getTabsByWorkspace(workspaceId: string): Promise<Tab[]> {
     return this.withRetry(async () => {
-      const records = await db.tabs.where('workspaceId').equals(workspaceId).toArray();
+      const records = await db.tabs
+        .where("workspaceId")
+        .equals(workspaceId)
+        .toArray();
       return records.map(toTab);
     });
   }
 
-  async getSplitViewByWorkspace(workspaceId: string): Promise<SplitViewRecord | null> {
+  async getSplitViewByWorkspace(
+    workspaceId: string,
+  ): Promise<SplitViewRecord | null> {
     return this.withRetry(async () => {
-      const result = await db.splitView.where('workspaceId').equals(workspaceId).first();
+      const result = await db.splitView
+        .where("workspaceId")
+        .equals(workspaceId)
+        .first();
       return result || null;
     });
   }
 
   async deleteSplitViewByWorkspace(workspaceId: string): Promise<void> {
     await this.withRetry(async () => {
-      await db.splitView.where('workspaceId').equals(workspaceId).delete();
+      await db.splitView.where("workspaceId").equals(workspaceId).delete();
     });
   }
 
   // NEW: Methods for lazy loading
-  async getTabsMetadataByWorkspace(workspaceId: string): Promise<Omit<Tab, 'content'>[]> {
+  async getTabsMetadataByWorkspace(
+    workspaceId: string,
+  ): Promise<Omit<Tab, "content">[]> {
     return this.withRetry(async () => {
-      const records = await db.tabs.where('workspaceId').equals(workspaceId).toArray();
+      const records = await db.tabs
+        .where("workspaceId")
+        .equals(workspaceId)
+        .toArray();
       return records.map(toTabMetadata);
     });
   }
@@ -347,7 +380,10 @@ export class IndexedDBStorage implements StorageProvider {
     });
   }
 
-  async updateTabCursor(tabId: string, cursorPosition: { lineNumber: number; column: number }): Promise<void> {
+  async updateTabCursor(
+    tabId: string,
+    cursorPosition: { lineNumber: number; column: number },
+  ): Promise<void> {
     await this.withRetry(async () => {
       await db.tabs.update(tabId, { cursorPosition });
     });
@@ -355,12 +391,14 @@ export class IndexedDBStorage implements StorageProvider {
 }
 
 export class StorageProviderFactory {
-  static getProvider(type: 'indexeddb' | 'cloud' = 'indexeddb'): StorageProvider {
+  static getProvider(
+    type: "indexeddb" | "cloud" = "indexeddb",
+  ): StorageProvider {
     switch (type) {
-      case 'indexeddb':
+      case "indexeddb":
         return IndexedDBStorage.getInstance();
-      case 'cloud':
-        throw new Error('Cloud storage not implemented yet');
+      case "cloud":
+        throw new Error("Cloud storage not implemented yet");
       default:
         return IndexedDBStorage.getInstance();
     }
@@ -376,7 +414,10 @@ export async function getSetting(key: string): Promise<string | undefined> {
   return record?.value;
 }
 
-export async function incrementSetting(key: string, increment: number = 1): Promise<number> {
+export async function incrementSetting(
+  key: string,
+  increment: number = 1,
+): Promise<number> {
   const currentValue = await getSetting(key);
   const currentNumber = currentValue ? parseInt(currentValue, 10) : 0;
   const newValue = currentNumber + increment;

@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { SplitViewRecord } from '../types';
+import { create } from "zustand";
+import { SplitViewRecord } from "../types";
 
 interface CacheStore {
   // Split view cache for recent move operations
@@ -9,7 +9,10 @@ interface CacheStore {
   } | null;
 
   // Actions
-  cacheSplitViewForWorkspace: (workspaceId: string, splitView: SplitViewRecord) => void;
+  cacheSplitViewForWorkspace: (
+    workspaceId: string,
+    splitView: SplitViewRecord,
+  ) => void;
   clearCachedSplitView: () => void;
 }
 
@@ -22,13 +25,13 @@ export const useCacheStore = create<CacheStore>((set) => ({
         workspaceId,
         splitView: {
           ...splitView,
-          activeSide: splitView.activeSide as 'left' | 'right' | null
-        }
-      }
+          activeSide: splitView.activeSide as "left" | "right" | null,
+        },
+      },
     });
   },
 
   clearCachedSplitView: () => {
     set({ cachedSplitView: null });
-  }
-})); 
+  },
+}));

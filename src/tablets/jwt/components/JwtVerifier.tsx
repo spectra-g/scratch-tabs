@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, ShieldX, ShieldAlert, Key } from 'lucide-react';
-import { verifyJwt } from '../utils/jwtUtils';
-import { KeyInput } from './ui/KeyInput';
-import { Alert } from './ui/Alert';
-import { Button } from './ui/Button';
-import { KeyType, StoredKey } from '../types';
-import { SensitiveDataManager } from '../../../utils/sensitiveDataManager';
+import React, { useState, useEffect, useRef } from "react";
+import { ShieldCheck, ShieldX, ShieldAlert, Key } from "lucide-react";
+import { verifyJwt } from "../utils/jwtUtils";
+import { KeyInput } from "./ui/KeyInput";
+import { Alert } from "./ui/Alert";
+import { Button } from "./ui/Button";
+import { KeyType, StoredKey } from "../types";
+import { SensitiveDataManager } from "../../../utils/sensitiveDataManager";
 
 interface JwtVerifierProps {
   token: string;
@@ -14,7 +14,11 @@ interface JwtVerifierProps {
   verificationKeyType: KeyType;
   isValid: boolean | null;
   onVerificationKeyChange: (key: string, type: KeyType) => void;
-  onVerificationResult: (isValid: boolean | null, error?: string, warning?: string) => void;
+  onVerificationResult: (
+    isValid: boolean | null,
+    error?: string,
+    warning?: string,
+  ) => void;
   storedKeys: StoredKey[];
   onUseStoredKey: (key: StoredKey) => void;
 }
@@ -28,10 +32,14 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
   onVerificationKeyChange,
   onVerificationResult,
   storedKeys,
-  onUseStoredKey
+  onUseStoredKey,
 }) => {
-  const [verificationError, setVerificationError] = useState<string | null>(null);
-  const [verificationWarning, setVerificationWarning] = useState<string | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  );
+  const [verificationWarning, setVerificationWarning] = useState<string | null>(
+    null,
+  );
   const [isVerifying, setIsVerifying] = useState(false);
   const onVerificationResultRef = useRef(onVerificationResult);
 
@@ -40,23 +48,30 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
   }, [onVerificationResult]);
 
   // Get the algorithm from the header
-  const algorithm = header?.alg || '';
-  const isAsymmetric = algorithm.startsWith('RS') || algorithm.startsWith('ES') || algorithm.startsWith('PS');
+  const algorithm = header?.alg || "";
+  const isAsymmetric =
+    algorithm.startsWith("RS") ||
+    algorithm.startsWith("ES") ||
+    algorithm.startsWith("PS");
 
   // Filter stored keys based on algorithm
-  const filteredStoredKeys = storedKeys.filter(key => {
+  const filteredStoredKeys = storedKeys.filter((key) => {
     // For symmetric algorithms (HS*), we need a secret key
-    if (algorithm.startsWith('HS')) {
-      return !key.algorithm || key.algorithm.startsWith('HS');
+    if (algorithm.startsWith("HS")) {
+      return !key.algorithm || key.algorithm.startsWith("HS");
     }
 
     // For asymmetric algorithms, we need a public key
     if (isAsymmetric) {
-      return key.isPublic && 
-             // Either the key has no algorithm specified or it matches our selected algorithm
-             (!key.algorithm || algorithm === key.algorithm || 
-              // Match algorithm family (RS*, ES*, PS*)
-              (key.algorithm && algorithm.substring(0, 2) === key.algorithm.substring(0, 2)));
+      return (
+        key.isPublic &&
+        // Either the key has no algorithm specified or it matches our selected algorithm
+        (!key.algorithm ||
+          algorithm === key.algorithm ||
+          // Match algorithm family (RS*, ES*, PS*)
+          (key.algorithm &&
+            algorithm.substring(0, 2) === key.algorithm.substring(0, 2)))
+      );
     }
 
     return true;
@@ -65,7 +80,7 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
   // Verify token when key changes
   useEffect(() => {
     if (!token || !verificationKey) {
-      onVerificationResultRef.current(null, undefined)
+      onVerificationResultRef.current(null, undefined);
       setVerificationError(null);
       setVerificationWarning(null);
       return;
@@ -78,7 +93,11 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
       try {
         const unmaskedKey = SensitiveDataManager.unmask(verificationKey);
         const result = await verifyJwt(token, unmaskedKey, verificationKeyType);
-        onVerificationResultRef.current(result.isValid, result.error, result.warning);
+        onVerificationResultRef.current(
+          result.isValid,
+          result.error,
+          result.warning,
+        );
         setVerificationError(result.error || null);
         setVerificationWarning(result.warning || null);
       } catch (error) {
@@ -119,7 +138,10 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
         <Alert variant="warning" title="Key Required">
           <div className="flex items-center">
             <ShieldAlert size={18} className="mr-2" />
-            <span>Enter a {isAsymmetric ? 'public key' : 'secret'} to verify the token.</span>
+            <span>
+              Enter a {isAsymmetric ? "public key" : "secret"} to verify the
+              token.
+            </span>
           </div>
         </Alert>
       );
@@ -127,15 +149,20 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
 
     if (isValid === true) {
       return (
-        <Alert variant={verificationWarning ? "warning" : "success"} title={verificationWarning ? "Signature Valid (with warnings)" : "Signature Valid"}>
+        <Alert
+          variant={verificationWarning ? "warning" : "success"}
+          title={
+            verificationWarning
+              ? "Signature Valid (with warnings)"
+              : "Signature Valid"
+          }
+        >
           <div className="flex items-center">
             <ShieldCheck size={18} className="mr-2" />
             <div>
               <span>The token signature is valid.</span>
               {verificationWarning && (
-                <div className="mt-1 text-amber-400">
-                  {verificationWarning}
-                </div>
+                <div className="mt-1 text-amber-400">{verificationWarning}</div>
               )}
             </div>
           </div>
@@ -148,7 +175,9 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
         <Alert variant="error" title="Signature Invalid">
           <div className="flex items-center">
             <ShieldX size={18} className="mr-2" />
-            <span>{verificationError || 'The token signature is invalid.'}</span>
+            <span>
+              {verificationError || "The token signature is invalid."}
+            </span>
           </div>
         </Alert>
       );
@@ -166,12 +195,16 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-400">Algorithm</p>
-              <p className="text-sm font-medium text-gray-200">{algorithm || 'Unknown'}</p>
+              <p className="text-sm font-medium text-gray-200">
+                {algorithm || "Unknown"}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-400">Key Type</p>
               <p className="text-sm font-medium text-gray-200">
-                {isAsymmetric ? 'Asymmetric (Public/Private Key)' : 'Symmetric (Secret)'}
+                {isAsymmetric
+                  ? "Asymmetric (Public/Private Key)"
+                  : "Symmetric (Secret)"}
               </p>
             </div>
           </div>
@@ -184,9 +217,11 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
           value={verificationKey}
           onChange={onVerificationKeyChange}
           type={verificationKeyType}
-          onTypeChange={(type) => onVerificationKeyChange(verificationKey, type)}
-          label={isAsymmetric ? 'Public Key' : 'Secret'}
-          placeholder={isAsymmetric ? 'Enter public key...' : 'Enter secret...'}
+          onTypeChange={(type) =>
+            onVerificationKeyChange(verificationKey, type)
+          }
+          label={isAsymmetric ? "Public Key" : "Secret"}
+          placeholder={isAsymmetric ? "Enter public key..." : "Enter secret..."}
           isPrivate={false}
         />
       </div>
@@ -198,11 +233,16 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
             <div className="space-y-2">
               {filteredStoredKeys.map((key) => (
-                <div key={key.name} className="flex items-center justify-between">
+                <div
+                  key={key.name}
+                  className="flex items-center justify-between"
+                >
                   <div>
-                    <p className="text-sm font-medium text-gray-200">{key.name}</p>
+                    <p className="text-sm font-medium text-gray-200">
+                      {key.name}
+                    </p>
                     <p className="text-xs text-gray-400">
-                      {key.algorithm || 'Any'} • {key.type}
+                      {key.algorithm || "Any"} • {key.type}
                     </p>
                   </div>
                   <Button
@@ -222,14 +262,19 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
 
       {/* Verification Status */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-300">Verification Status</h3>
+        <h3 className="text-sm font-medium text-gray-300">
+          Verification Status
+        </h3>
         {renderVerificationStatus()}
       </div>
 
       {/* Security Notice */}
       <div className="pt-2">
         <Alert variant="info">
-          <p>All verification is performed client-side. No data is sent to any server.</p>
+          <p>
+            All verification is performed client-side. No data is sent to any
+            server.
+          </p>
         </Alert>
       </div>
     </div>

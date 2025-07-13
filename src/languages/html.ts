@@ -1,17 +1,20 @@
-import * as React from 'react';
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types';
-import { HtmlStatusItem } from '../components/StatusBar/LanguageStatusItems/html';
+import * as React from "react";
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
+import { HtmlStatusItem } from "../components/StatusBar/LanguageStatusItems/html";
 import { StatusItemProps } from "../components/StatusBar/types";
 
 /**
  * HTML language detector
  */
-export class HtmlLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'html'; // Monaco's built-in ID for HTML
-  name = 'HTML';
-  extensions = ['html', 'htm', 'xhtml'];
+export class HtmlLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "html"; // Monaco's built-in ID for HTML
+  name = "HTML";
+  extensions = ["html", "htm", "xhtml"];
   priority = 5; // HTML is quite distinct, give it a good priority
 
   sampleContent(): string {
@@ -48,7 +51,8 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
    * Detects if the given content matches HTML patterns and returns a confidence score.
    */
   detect(content: string): DetectionResult {
-    if (!content || content.trim().length < 10) { // e.g., "<html></html>"
+    if (!content || content.trim().length < 10) {
+      // e.g., "<html></html>"
       return this.noMatch();
     }
 
@@ -68,13 +72,14 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
     const coreTagPatterns = [
       { pattern: /<html[\s>]/i, weight: 0.35 },
       { pattern: /<head[\s>][\s\S]*?<\/head>/i, weight: 0.25 }, // Presence of head block
-      { pattern: /<body[\s>][\s\S]*?<\/body>/i, weight: 0.3 },   // Presence of body block
+      { pattern: /<body[\s>][\s\S]*?<\/body>/i, weight: 0.3 }, // Presence of body block
       { pattern: /<title[\s>][\s\S]*?<\/title>/i, weight: 0.15 },
       { pattern: /<meta[\s>]/i, weight: 0.1 },
     ];
 
     for (const tp of coreTagPatterns) {
-      if (tp.pattern.test(content)) { // Test on original content for multi-line matches
+      if (tp.pattern.test(content)) {
+        // Test on original content for multi-line matches
         confidenceScore += tp.weight;
         patternsMatched++;
         strongSignalFound = true;
@@ -92,8 +97,17 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
       { pattern: /<input[\s>]/gi, weight: 0.08, perMatch: 0.01 },
       { pattern: /<button[\s>]/gi, weight: 0.08, perMatch: 0.01 },
       { pattern: /<h[1-6][\s>]/gi, weight: 0.08, perMatch: 0.01 },
-      { pattern: /<ul[\s>]|<\/ul>|<ol[\s>]|<\/ol>|<li[\s>]|<\/li>/gi, weight: 0.1, perMatch: 0.01 },
-      { pattern: /<table[\s>]|<\/table>|<tr[\s>]|<\/tr>|<td[\s>]|<\/td>|<th[\s>]|<\/th>/gi, weight: 0.1, perMatch: 0.01 },
+      {
+        pattern: /<ul[\s>]|<\/ul>|<ol[\s>]|<\/ol>|<li[\s>]|<\/li>/gi,
+        weight: 0.1,
+        perMatch: 0.01,
+      },
+      {
+        pattern:
+          /<table[\s>]|<\/table>|<tr[\s>]|<\/tr>|<td[\s>]|<\/td>|<th[\s>]|<\/th>/gi,
+        weight: 0.1,
+        perMatch: 0.01,
+      },
       { pattern: /<\/[a-zA-Z0-9]+>/g, weight: 0.1, perMatch: 0.005 }, // Generic closing tags
       { pattern: /&[a-zA-Z0-9#]+;/g, weight: 0.05, perMatch: 0.005 }, // HTML entities
     ];
@@ -128,12 +142,16 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
     // 6. Anti-patterns (syntax strongly indicating other languages)
     // Be careful as HTML can embed JS and CSS
     const antiPatterns = [
-      { pattern: /^package\s+\w+;/im, weight: -0.6 },             // Java package
-      { pattern: /^\s*#include\s+<.+>/m, weight: -0.6 },         // C/C++ include
+      { pattern: /^package\s+\w+;/im, weight: -0.6 }, // Java package
+      { pattern: /^\s*#include\s+<.+>/m, weight: -0.6 }, // C/C++ include
       // If there are many JS keywords *outside* <script> tags, it's less likely pure HTML
       // This is harder to do perfectly with regex. A simpler check:
-      { pattern: /\b(function|class|const|let|var)\s+\w+\s*=/g, weight: -0.1, threshold: 3 }, // Penalize if many JS assignments outside script
-      { pattern: /^\s*(FROM|RUN|CMD|EXPOSE)\s+/mi, weight: -0.7 } // Dockerfile instructions
+      {
+        pattern: /\b(function|class|const|let|var)\s+\w+\s*=/g,
+        weight: -0.1,
+        threshold: 3,
+      }, // Penalize if many JS assignments outside script
+      { pattern: /^\s*(FROM|RUN|CMD|EXPOSE)\s+/im, weight: -0.7 }, // Dockerfile instructions
     ];
 
     for (const ap of antiPatterns) {
@@ -149,26 +167,31 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
       confidenceScore += 0.1;
     }
     // If it has html, head, and body tags, it's very likely HTML.
-    if (/<html[\s>]/.test(content) && /<head[\s>]/.test(content) && /<body[\s>]/.test(content)) {
-        confidenceScore += 0.2;
-        strongSignalFound = true;
+    if (
+      /<html[\s>]/.test(content) &&
+      /<head[\s>]/.test(content) &&
+      /<body[\s>]/.test(content)
+    ) {
+      confidenceScore += 0.2;
+      strongSignalFound = true;
     }
-
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
     // Determine match status
-    const isMatch = (strongSignalFound && confidenceScore >= 0.5) || (patternsMatched >= 3 && confidenceScore >= 0.6);
+    const isMatch =
+      (strongSignalFound && confidenceScore >= 0.5) ||
+      (patternsMatched >= 3 && confidenceScore >= 0.6);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongSignalFound
+      matchedDefinitive: isMatch && strongSignalFound,
     };
   }
 
   getFileExtension(): string {
-    return 'html';
+    return "html";
   }
 
   getStatusItem(): React.FC<StatusItemProps> {
@@ -180,7 +203,11 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
 
     // Monaco has excellent built-in support for 'html'.
     // You usually don't need to register a custom Monarch tokenizer or formatter.
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+    if (
+      !monaco.languages
+        .getLanguages()
+        .some((lang: any) => lang.id === languageId)
+    ) {
       monaco.languages.register({ id: languageId });
     }
 
@@ -201,60 +228,76 @@ export class HtmlLanguageDetector extends BaseLanguageDetector implements Langua
         const indentSize = 2; // Common for HTML
         let inPreTag = false;
 
-        const lines = content.split('\n');
+        const lines = content.split("\n");
 
         lines.forEach((line: string, index: number) => {
-            const trimmedLine = line.trim();
+          const trimmedLine = line.trim();
 
-            if (!trimmedLine) {
-                formattedHtml += '\n';
-                return;
-            }
-            
-            // Handle <pre> tags
-            if (trimmedLine.match(/<pre\b.*?>/i)) inPreTag = true;
-            if (inPreTag && trimmedLine.match(/<\/pre\b.*?>/i)) {
-                 // Line with closing pre tag is still part of pre content
-                 formattedHtml += line + '\n'; // Keep original line including its indent
-                 inPreTag = false;
-                 return;
-            }
-            if (inPreTag) {
-                formattedHtml += line + '\n'; // Keep original line including its indent
-                return;
-            }
+          if (!trimmedLine) {
+            formattedHtml += "\n";
+            return;
+          }
 
-            // Closing tags decrease indent before printing the line
-            // unless it's a self-closing tag or a void element on the same line
-            if (trimmedLine.startsWith('</') || 
-                (trimmedLine.startsWith('{') && trimmedLine.endsWith('}')) || // For embedded template syntax (e.g., Vue/Angular)
-                (trimmedLine.startsWith('(') && trimmedLine.endsWith(')'))) {
-                indentLevel = Math.max(0, indentLevel - 1);
-            }
+          // Handle <pre> tags
+          if (trimmedLine.match(/<pre\b.*?>/i)) inPreTag = true;
+          if (inPreTag && trimmedLine.match(/<\/pre\b.*?>/i)) {
+            // Line with closing pre tag is still part of pre content
+            formattedHtml += line + "\n"; // Keep original line including its indent
+            inPreTag = false;
+            return;
+          }
+          if (inPreTag) {
+            formattedHtml += line + "\n"; // Keep original line including its indent
+            return;
+          }
 
-            formattedHtml += ' '.repeat(indentLevel * indentSize) + trimmedLine + '\n';
+          // Closing tags decrease indent before printing the line
+          // unless it's a self-closing tag or a void element on the same line
+          if (
+            trimmedLine.startsWith("</") ||
+            (trimmedLine.startsWith("{") && trimmedLine.endsWith("}")) || // For embedded template syntax (e.g., Vue/Angular)
+            (trimmedLine.startsWith("(") && trimmedLine.endsWith(")"))
+          ) {
+            indentLevel = Math.max(0, indentLevel - 1);
+          }
 
-            // Opening tags (not self-closing, not void) increase indent for next line
-            if (trimmedLine.startsWith('<') &&
-                !trimmedLine.startsWith('</') && // Not a closing tag
-                !trimmedLine.endsWith('/>') &&    // Not a self-closing tag
-                !trimmedLine.match(/<(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)\b/i) // Not a void element
-                ) {
-                 if(!trimmedLine.endsWith('>')) { // If tag spans multiple lines, only indent if it's a new opening tag.
-                     // This logic is still simple and might fail for complex multi-line tags
-                 } else if (trimmedLine.includes('</') && trimmedLine.indexOf('</') < trimmedLine.indexOf('>')) {
-                    // Contains a closing tag before its own closing > (e.g. <p>text</p>) - no indent change for next line
-                 } else {
-                    indentLevel++;
-                 }
+          formattedHtml +=
+            " ".repeat(indentLevel * indentSize) + trimmedLine + "\n";
+
+          // Opening tags (not self-closing, not void) increase indent for next line
+          if (
+            trimmedLine.startsWith("<") &&
+            !trimmedLine.startsWith("</") && // Not a closing tag
+            !trimmedLine.endsWith("/>") && // Not a self-closing tag
+            !trimmedLine.match(
+              /<(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)\b/i,
+            ) // Not a void element
+          ) {
+            if (!trimmedLine.endsWith(">")) {
+              // If tag spans multiple lines, only indent if it's a new opening tag.
+              // This logic is still simple and might fail for complex multi-line tags
+            } else if (
+              trimmedLine.includes("</") &&
+              trimmedLine.indexOf("</") < trimmedLine.indexOf(">")
+            ) {
+              // Contains a closing tag before its own closing > (e.g. <p>text</p>) - no indent change for next line
+            } else {
+              indentLevel++;
             }
+          }
         });
 
-        return [{
-          range: model.getFullModelRange(),
-          text: formattedHtml.trimEnd() + (content.endsWith('\n') && formattedHtml.trimEnd() !== '' ? '\n' : ''),
-        }];
-      }
+        return [
+          {
+            range: model.getFullModelRange(),
+            text:
+              formattedHtml.trimEnd() +
+              (content.endsWith("\n") && formattedHtml.trimEnd() !== ""
+                ? "\n"
+                : ""),
+          },
+        ];
+      },
     });
   }
 }

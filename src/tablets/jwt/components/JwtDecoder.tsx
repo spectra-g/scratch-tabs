@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Editor } from '@monaco-editor/react';
-import { FileDown, FileUp, Trash2 } from 'lucide-react';
-import { useDropzone } from 'react-dropzone';
-import { decodeJwt } from '../utils/jwtUtils';
-import { CopyButton } from './ui/CopyButton';
-import { Alert } from './ui/Alert';
-import { Button } from './ui/Button';
+import React, { useState, useEffect, useCallback } from "react";
+import { Editor } from "@monaco-editor/react";
+import { FileDown, FileUp, Trash2 } from "lucide-react";
+import { useDropzone } from "react-dropzone";
+import { decodeJwt } from "../utils/jwtUtils";
+import { CopyButton } from "./ui/CopyButton";
+import { Alert } from "./ui/Alert";
+import { Button } from "./ui/Button";
 
 interface JwtDecoderProps {
   token: string;
@@ -20,7 +20,7 @@ interface JwtDecoderProps {
     payload: Record<string, any>,
     signature: string,
     error: string | null,
-    warning?: string | null
+    warning?: string | null,
   ) => void;
 }
 
@@ -31,7 +31,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   signature,
   error,
   warning,
-  onTokenChange
+  onTokenChange,
 }) => {
   const [localToken, setLocalToken] = useState(token);
 
@@ -41,26 +41,30 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   }, [token]);
 
   // Decode token when local token changes
-  const decodeToken = useCallback((tokenToDecode: string) => {
-    if (!tokenToDecode.trim()) {
-      onTokenChange('', {}, {}, '', null, null);
-      return;
-    }
+  const decodeToken = useCallback(
+    (tokenToDecode: string) => {
+      if (!tokenToDecode.trim()) {
+        onTokenChange("", {}, {}, "", null, null);
+        return;
+      }
 
-    try {
-      const { header, payload, signature, warning } = decodeJwt(tokenToDecode);
-      onTokenChange(tokenToDecode, header, payload, signature, null, warning);
-    } catch (error) {
-      onTokenChange(
-        tokenToDecode,
-        {},
-        {},
-        '',
-        error instanceof Error ? error.message : String(error),
-        null
-      );
-    }
-  }, [onTokenChange]);
+      try {
+        const { header, payload, signature, warning } =
+          decodeJwt(tokenToDecode);
+        onTokenChange(tokenToDecode, header, payload, signature, null, warning);
+      } catch (error) {
+        onTokenChange(
+          tokenToDecode,
+          {},
+          {},
+          "",
+          error instanceof Error ? error.message : String(error),
+          null,
+        );
+      }
+    },
+    [onTokenChange],
+  );
 
   // Handle token input change
   const handleTokenChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -71,45 +75,48 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
 
   // Clear token
   const handleClearToken = () => {
-    setLocalToken('');
-    onTokenChange('', {}, {}, '', null, null);
+    setLocalToken("");
+    onTokenChange("", {}, {}, "", null, null);
   };
 
   // File upload handling
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (acceptedFiles.length === 0) return;
 
-    const file = acceptedFiles[0];
-    const reader = new FileReader();
+      const file = acceptedFiles[0];
+      const reader = new FileReader();
 
-    reader.onload = () => {
-      const content = reader.result as string;
-      setLocalToken(content.trim());
-      decodeToken(content.trim());
-    };
+      reader.onload = () => {
+        const content = reader.result as string;
+        setLocalToken(content.trim());
+        decodeToken(content.trim());
+      };
 
-    reader.readAsText(file);
-  }, [decodeToken]);
+      reader.readAsText(file);
+    },
+    [decodeToken],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'text/plain': ['.txt', '.jwt'],
-      'application/json': ['.json']
+      "text/plain": [".txt", ".jwt"],
+      "application/json": [".json"],
     },
     maxFiles: 1,
-    multiple: false
+    multiple: false,
   });
 
   // Download token as file
   const handleDownloadToken = () => {
     if (!token) return;
 
-    const blob = new Blob([token], { type: 'text/plain' });
+    const blob = new Blob([token], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'token.jwt';
+    a.download = "token.jwt";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -150,10 +157,11 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
 
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-md transition-colors ${isDragActive
-              ? 'border-blue-500 bg-blue-500/10'
-              : 'border-gray-700 hover:border-gray-600'
-            }`}
+          className={`border-2 border-dashed rounded-md transition-colors ${
+            isDragActive
+              ? "border-blue-500 bg-blue-500/10"
+              : "border-gray-700 hover:border-gray-600"
+          }`}
         >
           <textarea
             value={localToken}
@@ -211,7 +219,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
                   readOnly: true,
                   minimap: { enabled: false },
                   fontSize: 14,
-                  wordWrap: 'on',
+                  wordWrap: "on",
                   padding: { top: 8, bottom: 8 },
                 }}
               />
@@ -237,7 +245,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
                   readOnly: true,
                   minimap: { enabled: false },
                   fontSize: 14,
-                  wordWrap: 'on',
+                  wordWrap: "on",
                   padding: { top: 8, bottom: 8 },
                 }}
               />
@@ -248,10 +256,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-300">Signature</h3>
-              <CopyButton
-                text={signature}
-                label="Copy Signature"
-              />
+              <CopyButton text={signature} label="Copy Signature" />
             </div>
             <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
               <div className="font-mono text-sm text-gray-300 break-all">
@@ -263,7 +268,10 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
           {/* Security Notice */}
           <div className="pt-2">
             <Alert variant="info">
-              <p>All JWT operations are performed client-side. No data is sent to any server.</p>
+              <p>
+                All JWT operations are performed client-side. No data is sent to
+                any server.
+              </p>
             </Alert>
           </div>
         </div>

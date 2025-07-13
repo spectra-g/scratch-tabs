@@ -1,22 +1,39 @@
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types';
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
 
 /**
  * VHost (Apache Virtual Host) language detector
  */
-export class VhostLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'vhost';
-  name = 'VHost';
-  extensions = ['vhost', 'conf', 'config'];
+export class VhostLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "vhost";
+  name = "VHost";
+  extensions = ["vhost", "conf", "config"];
   priority = 5; // Higher priority since vhost files have distinctive patterns
 
   // Apache-specific directives (strong indicators)
   private apacheDirectives = [
-    'ServerName', 'ServerAlias', 'DocumentRoot', 'ErrorLog', 'CustomLog',
-    'SSLEngine', 'SSLCertificateFile', 'SSLCertificateKeyFile', 'SSLCertificateChainFile',
-    'Options', 'AllowOverride', 'Require', 'Header', 'Redirect', 'RewriteEngine',
-    'DirectoryIndex', 'LoadModule', 'Listen'
+    "ServerName",
+    "ServerAlias",
+    "DocumentRoot",
+    "ErrorLog",
+    "CustomLog",
+    "SSLEngine",
+    "SSLCertificateFile",
+    "SSLCertificateKeyFile",
+    "SSLCertificateChainFile",
+    "Options",
+    "AllowOverride",
+    "Require",
+    "Header",
+    "Redirect",
+    "RewriteEngine",
+    "DirectoryIndex",
+    "LoadModule",
+    "Listen",
   ];
 
   sampleContent(): string {
@@ -86,7 +103,7 @@ export class VhostLanguageDetector extends BaseLanguageDetector implements Langu
       confidenceScore += 0.4;
       patternsMatched++;
       strongVhostSignal = true;
-      
+
       // Bonus if also has closing tag
       if (vhostCloseTagRegex.test(content)) {
         confidenceScore += 0.2;
@@ -103,8 +120,8 @@ export class VhostLanguageDetector extends BaseLanguageDetector implements Langu
 
     // Count Apache directives
     let directiveCount = 0;
-    const lines = content.split('\n');
-    
+    const lines = content.split("\n");
+
     for (const line of lines) {
       const trimmedLine = line.trim();
       if (!trimmedLine) continue;
@@ -116,12 +133,12 @@ export class VhostLanguageDetector extends BaseLanguageDetector implements Langu
 
       // Check for common Apache directives
       for (const directive of this.apacheDirectives) {
-        const directiveRegex = new RegExp(`^\\s*${directive}\\s+`, 'i');
+        const directiveRegex = new RegExp(`^\\s*${directive}\\s+`, "i");
         if (directiveRegex.test(trimmedLine)) {
           directiveCount++;
           confidenceScore += 0.1;
           patternsMatched++;
-          if (['ServerName', 'DocumentRoot', 'SSLEngine'].includes(directive)) {
+          if (["ServerName", "DocumentRoot", "SSLEngine"].includes(directive)) {
             strongVhostSignal = true;
           }
           break; // Only count each line once
@@ -185,141 +202,153 @@ export class VhostLanguageDetector extends BaseLanguageDetector implements Langu
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
     // Determine if it's a match
-    const isMatch = (strongVhostSignal && confidenceScore >= 0.4) ||
-                   (directiveCount >= 3 && confidenceScore >= 0.3) ||
-                   (vhostOpenTagRegex.test(content) && confidenceScore >= 0.3);
+    const isMatch =
+      (strongVhostSignal && confidenceScore >= 0.4) ||
+      (directiveCount >= 3 && confidenceScore >= 0.3) ||
+      (vhostOpenTagRegex.test(content) && confidenceScore >= 0.3);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongVhostSignal && vhostOpenTagRegex.test(content)
+      matchedDefinitive:
+        isMatch && strongVhostSignal && vhostOpenTagRegex.test(content),
     };
   }
 
   getFileExtension(): string {
-    return 'vhost';
+    return "vhost";
   }
 
   registerProvider(monaco: any): void {
     // Register VHost as a custom language
-    monaco.languages.register({ id: 'vhost' });
+    monaco.languages.register({ id: "vhost" });
 
     // Set up basic tokenization for VHost files
-    monaco.languages.setMonarchTokensProvider('vhost', {
+    monaco.languages.setMonarchTokensProvider("vhost", {
       tokenizer: {
         root: [
           // Comments
-          [/#.*$/, 'comment'],
-          
+          [/#.*$/, "comment"],
+
           // VirtualHost tags
-          [/<VirtualHost\s+[^>]*>/, 'tag.vhost'],
-          [/<\/VirtualHost>/, 'tag.vhost'],
-          
+          [/<VirtualHost\s+[^>]*>/, "tag.vhost"],
+          [/<\/VirtualHost>/, "tag.vhost"],
+
           // Directory tags
-          [/<Directory\s+[^>]*>/, 'tag.directory'],
-          [/<\/Directory>/, 'tag.directory'],
-          
+          [/<Directory\s+[^>]*>/, "tag.directory"],
+          [/<\/Directory>/, "tag.directory"],
+
           // Other Apache tags
-          [/<[\/]?\w+[^>]*>/, 'tag'],
-          
+          [/<[\/]?\w+[^>]*>/, "tag"],
+
           // Apache directives (keywords)
-          [/\b(ServerName|ServerAlias|DocumentRoot|ErrorLog|CustomLog|SSLEngine|SSLCertificateFile|SSLCertificateKeyFile|Options|AllowOverride|Require|Header|Redirect|RewriteEngine|DirectoryIndex|LoadModule|Listen)\b/, 'keyword'],
-          
+          [
+            /\b(ServerName|ServerAlias|DocumentRoot|ErrorLog|CustomLog|SSLEngine|SSLCertificateFile|SSLCertificateKeyFile|Options|AllowOverride|Require|Header|Redirect|RewriteEngine|DirectoryIndex|LoadModule|Listen)\b/,
+            "keyword",
+          ],
+
           // File paths
-          [/\/[\w\/.-]*/, 'string.path'],
-          
+          [/\/[\w\/.-]*/, "string.path"],
+
           // Domain names and URLs
-          [/\b[\w.-]+\.(com|org|net|edu|gov|mil|int|co|uk|de|fr|jp|au|ca)\b/, 'string.domain'],
-          
+          [
+            /\b[\w.-]+\.(com|org|net|edu|gov|mil|int|co|uk|de|fr|jp|au|ca)\b/,
+            "string.domain",
+          ],
+
           // IP addresses and ports
-          [/\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?\b/, 'number.ip'],
-          [/\*:\d+/, 'number.port'],
-          
+          [/\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?\b/, "number.ip"],
+          [/\*:\d+/, "number.port"],
+
           // Numbers
-          [/\d+/, 'number'],
-          
+          [/\d+/, "number"],
+
           // Strings in quotes
-          [/"([^"\\]|\\.)*$/, 'string.invalid'],
-          [/"/, 'string', '@string'],
-          [/'([^'\\]|\\.)*$/, 'string.invalid'],
-          [/'/, 'string', '@string_single'],
+          [/"([^"\\]|\\.)*$/, "string.invalid"],
+          [/"/, "string", "@string"],
+          [/'([^'\\]|\\.)*$/, "string.invalid"],
+          [/'/, "string", "@string_single"],
         ],
-        
+
         string: [
-          [/[^\\"]+/, 'string'],
-          [/\\./, 'string.escape'],
-          [/"/, 'string', '@pop']
+          [/[^\\"]+/, "string"],
+          [/\\./, "string.escape"],
+          [/"/, "string", "@pop"],
         ],
-        
+
         string_single: [
-          [/[^\\']+/, 'string'],
-          [/\\./, 'string.escape'],
-          [/'/, 'string', '@pop']
-        ]
-      }
+          [/[^\\']+/, "string"],
+          [/\\./, "string.escape"],
+          [/'/, "string", "@pop"],
+        ],
+      },
     });
 
     // Set up theme colors for VHost
-    monaco.editor.defineTheme('vhost-theme', {
-      base: 'vs-dark',
+    monaco.editor.defineTheme("vhost-theme", {
+      base: "vs-dark",
       inherit: true,
       rules: [
-        { token: 'comment', foreground: '6A9955' },
-        { token: 'tag.vhost', foreground: 'FF6B6B', fontStyle: 'bold' },
-        { token: 'tag.directory', foreground: 'FF9F43', fontStyle: 'bold' },
-        { token: 'tag', foreground: 'FFA500' },
-        { token: 'keyword', foreground: '569CD6', fontStyle: 'bold' },
-        { token: 'string.path', foreground: 'CE9178' },
-        { token: 'string.domain', foreground: '4EC9B0' },
-        { token: 'number.ip', foreground: 'B5CEA8' },
-        { token: 'number.port', foreground: 'B5CEA8' },
-        { token: 'string', foreground: 'CE9178' }
+        { token: "comment", foreground: "6A9955" },
+        { token: "tag.vhost", foreground: "FF6B6B", fontStyle: "bold" },
+        { token: "tag.directory", foreground: "FF9F43", fontStyle: "bold" },
+        { token: "tag", foreground: "FFA500" },
+        { token: "keyword", foreground: "569CD6", fontStyle: "bold" },
+        { token: "string.path", foreground: "CE9178" },
+        { token: "string.domain", foreground: "4EC9B0" },
+        { token: "number.ip", foreground: "B5CEA8" },
+        { token: "number.port", foreground: "B5CEA8" },
+        { token: "string", foreground: "CE9178" },
       ],
-      colors: {}
+      colors: {},
     });
 
     // Provide completion items for VHost directives
-    monaco.languages.registerCompletionItemProvider('vhost', {
+    monaco.languages.registerCompletionItemProvider("vhost", {
       provideCompletionItems: (_model: any, _position: any) => {
         const suggestions = [
           {
-            label: 'VirtualHost',
+            label: "VirtualHost",
             kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: '<VirtualHost *:80>\n\tServerName ${1:example.com}\n\tDocumentRoot ${2:/var/www/html}\n\t$0\n</VirtualHost>',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'Create a new VirtualHost block'
+            insertText:
+              "<VirtualHost *:80>\n\tServerName ${1:example.com}\n\tDocumentRoot ${2:/var/www/html}\n\t$0\n</VirtualHost>",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Create a new VirtualHost block",
           },
           {
-            label: 'Directory',
+            label: "Directory",
             kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: '<Directory ${1:/var/www/html}>\n\tOptions ${2:Indexes FollowSymLinks}\n\tAllowOverride ${3:All}\n\tRequire ${4:all granted}\n</Directory>',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'Create a Directory block'
+            insertText:
+              "<Directory ${1:/var/www/html}>\n\tOptions ${2:Indexes FollowSymLinks}\n\tAllowOverride ${3:All}\n\tRequire ${4:all granted}\n</Directory>",
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Create a Directory block",
           },
           ...this.apacheDirectives.map((directive: string) => ({
             label: directive,
             kind: monaco.languages.CompletionItemKind.Keyword,
-            insertText: directive + ' ',
-            documentation: `Apache directive: ${directive}`
-          }))
+            insertText: directive + " ",
+            documentation: `Apache directive: ${directive}`,
+          })),
         ];
-        
+
         return { suggestions };
-      }
+      },
     });
 
     // Add folding support for tags
-    monaco.languages.registerFoldingRangeProvider('vhost', {
+    monaco.languages.registerFoldingRangeProvider("vhost", {
       provideFoldingRanges: (model: any) => {
         const ranges: any[] = [];
         const lines = model.getLinesContent();
         const stack: Array<{ line: number; tag: string }> = [];
-        
+
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
           const openMatch = line.match(/<(VirtualHost|Directory)[^>]*>/i);
           const closeMatch = line.match(/<\/(VirtualHost|Directory)>/i);
-          
+
           if (openMatch) {
             stack.push({ line: i, tag: openMatch[1].toLowerCase() });
           } else if (closeMatch && stack.length > 0) {
@@ -328,14 +357,14 @@ export class VhostLanguageDetector extends BaseLanguageDetector implements Langu
               ranges.push({
                 start: lastOpen.line + 1,
                 end: i + 1,
-                kind: monaco.languages.FoldingRangeKind.Region
+                kind: monaco.languages.FoldingRangeKind.Region,
               });
             }
           }
         }
-        
+
         return ranges;
-      }
+      },
     });
   }
 }
@@ -347,4 +376,4 @@ languageRegistry.register(vhostDetector);
 // Export for testing or manual registration
 export const registerVhostProvider = (monaco: any) => {
   vhostDetector.registerProvider(monaco);
-}; 
+};

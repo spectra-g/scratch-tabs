@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from "react";
 
 interface HtmlPreviewProps {
   content: string;
@@ -10,12 +10,13 @@ const HtmlPreview: React.FC<HtmlPreviewProps> = ({ content }) => {
   useEffect(() => {
     if (iframeRef.current && content) {
       const iframe = iframeRef.current;
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      
+      const iframeDoc =
+        iframe.contentDocument || iframe.contentWindow?.document;
+
       if (iframeDoc) {
         // Clear existing content
         iframeDoc.open();
-        
+
         // Write the HTML content
         iframeDoc.write(content);
         iframeDoc.close();
@@ -43,4 +44,4 @@ const HtmlPreview: React.FC<HtmlPreviewProps> = ({ content }) => {
   );
 };
 
-export default HtmlPreview; 
+export default HtmlPreview;

@@ -1,53 +1,62 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scratch Tabs</title>
-  <!-- Add basic styles for the loader here -->
-  <style>
-    html, body, #root {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background-color: #111827; /* Match your app's bg-gray-900 */
-      color: #d1d5db; /* Match text-gray-300 */
-      font-family: sans-serif; /* Basic fallback font */
-    }
-    .app-loading-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-      text-align: center;
-    }
-    .app-loading-spinner {
-      border: 4px solid rgba(209, 213, 219, 0.3); /* Lighter border */
-      border-radius: 50%;
-      border-top: 4px solid #d1d5db; /* text-gray-300 */
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 16px; /* Spacing */
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
-  <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap" rel="stylesheet">
-</head>
-<body>
-<div id="root">
-  <!-- Static HTML Loader -->
-  <div class="app-loading-container">
-    <div class="app-loading-spinner"></div>
-    <p>Loading application...</p>
-  </div>
-  <!-- React will replace this content when it mounts -->
-</div>
-<script type="module" src="/src/main.tsx"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scratch Tabs</title>
+    <!-- Add basic styles for the loader here -->
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #111827; /* Match your app's bg-gray-900 */
+        color: #d1d5db; /* Match text-gray-300 */
+        font-family: sans-serif; /* Basic fallback font */
+      }
+      .app-loading-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        text-align: center;
+      }
+      .app-loading-spinner {
+        border: 4px solid rgba(209, 213, 219, 0.3); /* Lighter border */
+        border-radius: 50%;
+        border-top: 4px solid #d1d5db; /* text-gray-300 */
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 16px; /* Spacing */
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root">
+      <!-- Static HTML Loader -->
+      <div class="app-loading-container">
+        <div class="app-loading-spinner"></div>
+        <p>Loading application...</p>
+      </div>
+      <!-- React will replace this content when it mounts -->
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

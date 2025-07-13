@@ -1,10 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
-import { Tablet, TabletState } from '../types';
-import { Editor } from '@monaco-editor/react';
-import { Users, Copy, RotateCw, Check, ExternalLink } from 'lucide-react';
-import { useRootStore } from '../../stores';
-import { useSplitViewStore } from '../../stores/splitViewStore';
-import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useState, useRef, useCallback } from "react";
+import { Tablet, TabletState } from "../types";
+import { Editor } from "@monaco-editor/react";
+import { Users, Copy, RotateCw, Check, ExternalLink } from "lucide-react";
+import { useRootStore } from "../../stores";
+import { useSplitViewStore } from "../../stores/splitViewStore";
+import { useWorkspaceStore } from "../../stores/workspaceStore";
 
 interface GenerationResult {
   timestamp: number;
@@ -13,7 +13,7 @@ interface GenerationResult {
 }
 
 interface RandomUserState extends TabletState {
-  type: 'usergen';
+  type: "usergen";
   data: {
     results: GenerationResult[];
     selectedResult: number;
@@ -27,50 +27,50 @@ interface RandomUserState extends TabletState {
 }
 
 const NATIONALITIES = [
-  { value: '', label: 'Any' },
-  { value: 'au', label: 'Australian' },
-  { value: 'br', label: 'Brazilian' },
-  { value: 'ca', label: 'Canadian' },
-  { value: 'ch', label: 'Swiss' },
-  { value: 'de', label: 'German' },
-  { value: 'dk', label: 'Danish' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fi', label: 'Finnish' },
-  { value: 'fr', label: 'French' },
-  { value: 'gb', label: 'British' },
-  { value: 'ie', label: 'Irish' },
-  { value: 'ir', label: 'Iranian' },
-  { value: 'no', label: 'Norwegian' },
-  { value: 'nl', label: 'Dutch' },
-  { value: 'nz', label: 'New Zealand' },
-  { value: 'tr', label: 'Turkish' },
-  { value: 'us', label: 'American' }
+  { value: "", label: "Any" },
+  { value: "au", label: "Australian" },
+  { value: "br", label: "Brazilian" },
+  { value: "ca", label: "Canadian" },
+  { value: "ch", label: "Swiss" },
+  { value: "de", label: "German" },
+  { value: "dk", label: "Danish" },
+  { value: "es", label: "Spanish" },
+  { value: "fi", label: "Finnish" },
+  { value: "fr", label: "French" },
+  { value: "gb", label: "British" },
+  { value: "ie", label: "Irish" },
+  { value: "ir", label: "Iranian" },
+  { value: "no", label: "Norwegian" },
+  { value: "nl", label: "Dutch" },
+  { value: "nz", label: "New Zealand" },
+  { value: "tr", label: "Turkish" },
+  { value: "us", label: "American" },
 ];
 
 const FORMATS = [
-  { value: 'json', label: 'JSON' },
-  { value: 'csv', label: 'CSV' },
-  { value: 'yaml', label: 'YAML' }
+  { value: "json", label: "JSON" },
+  { value: "csv", label: "CSV" },
+  { value: "yaml", label: "YAML" },
 ];
 
 export const RandomUserTablet: Tablet = {
-  id: 'usergen',
-  label: 'Random User Generator',
-  keywords: ['user', 'random', 'generator', 'fake data', 'test data'],
+  id: "usergen",
+  label: "Random User Generator",
+  keywords: ["user", "random", "generator", "fake data", "test data"],
 
   createInitialState(): RandomUserState {
     return {
-      type: 'usergen',
+      type: "usergen",
       data: {
         results: [],
         selectedResult: -1,
         params: {
           results: 1,
-          gender: '',
-          nat: '',
-          format: 'json'
-        }
-      }
+          gender: "",
+          nat: "",
+          format: "json",
+        },
+      },
     };
   },
 
@@ -85,7 +85,9 @@ export const RandomUserTablet: Tablet = {
   render(state: RandomUserState, onChange) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
-    const [openedResultIndex, setOpenedResultIndex] = useState<number | null>(null);
+    const [openedResultIndex, setOpenedResultIndex] = useState<number | null>(
+      null,
+    );
     const containerRef = useRef<HTMLDivElement>(null);
     const { addBackgroundTab } = useRootStore();
     const { splitView } = useSplitViewStore();
@@ -99,31 +101,33 @@ export const RandomUserTablet: Tablet = {
         // Build base parameters
         const params = new URLSearchParams();
         if (state.data.params.results > 1) {
-          params.append('results', state.data.params.results.toString());
+          params.append("results", state.data.params.results.toString());
         }
         if (state.data.params.gender) {
-          params.append('gender', state.data.params.gender);
+          params.append("gender", state.data.params.gender);
         }
         if (state.data.params.nat) {
-          params.append('nat', state.data.params.nat);
+          params.append("nat", state.data.params.nat);
         }
 
         let content: string;
         const format = state.data.params.format;
 
         // First get JSON response
-        const jsonResponse = await fetch(`https://randomuser.me/api/?${params.toString()}`);
+        const jsonResponse = await fetch(
+          `https://randomuser.me/api/?${params.toString()}`,
+        );
         if (!jsonResponse.ok) {
           throw new Error(`Failed to fetch data: ${jsonResponse.statusText}`);
         }
         const jsonData = await jsonResponse.json();
 
         // Format the response based on selected format
-        if (format === 'json') {
+        if (format === "json") {
           content = JSON.stringify(jsonData, null, 2);
-        } else if (format === 'csv') {
+        } else if (format === "csv") {
           content = convertToCSV(jsonData.results);
-        } else if (format === 'yaml') {
+        } else if (format === "yaml") {
           content = convertToYAML(jsonData);
         } else {
           throw new Error(`Unsupported format: ${format}`);
@@ -132,7 +136,7 @@ export const RandomUserTablet: Tablet = {
         const newResult: GenerationResult = {
           timestamp: Date.now(),
           format,
-          content
+          content,
         };
 
         onChange({
@@ -140,12 +144,14 @@ export const RandomUserTablet: Tablet = {
           data: {
             ...state.data,
             results: [newResult, ...state.data.results],
-            selectedResult: 0
-          }
+            selectedResult: 0,
+          },
         });
       } catch (error) {
-        console.error('Failed to generate users:', error);
-        setError(error instanceof Error ? error.message : 'Failed to generate users');
+        console.error("Failed to generate users:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to generate users",
+        );
       } finally {
         setIsGenerating(false);
       }
@@ -154,22 +160,22 @@ export const RandomUserTablet: Tablet = {
     const convertToCSV = (users: any[]): string => {
       // Define CSV headers based on user properties
       const headers = [
-        'gender',
-        'title',
-        'first',
-        'last',
-        'street',
-        'city',
-        'state',
-        'country',
-        'postcode',
-        'email',
-        'phone',
-        'cell'
+        "gender",
+        "title",
+        "first",
+        "last",
+        "street",
+        "city",
+        "state",
+        "country",
+        "postcode",
+        "email",
+        "phone",
+        "cell",
       ];
 
       // Create CSV header row
-      const csvRows = [headers.join(',')];
+      const csvRows = [headers.join(",")];
 
       // Add data rows
       for (const user of users) {
@@ -185,25 +191,33 @@ export const RandomUserTablet: Tablet = {
           user.location.postcode,
           user.email,
           user.phone,
-          user.cell
+          user.cell,
         ];
-        csvRows.push(row.join(','));
+        csvRows.push(row.join(","));
       }
 
-      return csvRows.join('\n');
+      return csvRows.join("\n");
     };
 
     const convertToYAML = (data: any): string => {
       // Simple YAML conversion function
       const convertValue = (value: any, indent: number = 0): string => {
-        const spaces = ' '.repeat(indent);
-        
+        const spaces = " ".repeat(indent);
+
         if (Array.isArray(value)) {
-          return value.map(item => `${spaces}- ${convertValue(item, indent + 2)}`).join('\n');
-        } else if (typeof value === 'object' && value !== null) {
-          return '\n' + Object.entries(value)
-            .map(([key, val]) => `${spaces}${key}: ${convertValue(val, indent + 2)}`)
-            .join('\n');
+          return value
+            .map((item) => `${spaces}- ${convertValue(item, indent + 2)}`)
+            .join("\n");
+        } else if (typeof value === "object" && value !== null) {
+          return (
+            "\n" +
+            Object.entries(value)
+              .map(
+                ([key, val]) =>
+                  `${spaces}${key}: ${convertValue(val, indent + 2)}`,
+              )
+              .join("\n")
+          );
         } else {
           return String(value);
         }
@@ -223,31 +237,45 @@ export const RandomUserTablet: Tablet = {
 
     const selectedIndex = state.data.selectedResult;
 
-    const handleOpenInNewTab = useCallback((index: number) => {
-      if (index < 0) return;
-      setOpenedResultIndex(index);
-      const paneElem = containerRef.current?.closest('[data-editor-pane-side]');
-      const sideAttr = paneElem?.getAttribute('data-editor-pane-side');
-      const isRightSideLocal = splitView.isSplit && sideAttr === 'right';
-      const result = state.data.results[index];
-      const newTabId = crypto.randomUUID();
-      addBackgroundTab({
-        id: newTabId,
-        title: `Random User ${new Date(result.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`,
-        content: result.content,
-        language: result.format,
-        languageLocked: true,
-        cursorPosition: { lineNumber: 1, column: 1 },
-        dateCreated: Date.now(),
-        lastModified: Date.now(),
-        workspaceId: activeWorkspaceId || ''
-      }, isRightSideLocal);
-      setTimeout(() => setOpenedResultIndex(null), 1500);
-    }, [state.data.results, addBackgroundTab, splitView.isSplit, activeWorkspaceId]);
+    const handleOpenInNewTab = useCallback(
+      (index: number) => {
+        if (index < 0) return;
+        setOpenedResultIndex(index);
+        const paneElem = containerRef.current?.closest(
+          "[data-editor-pane-side]",
+        );
+        const sideAttr = paneElem?.getAttribute("data-editor-pane-side");
+        const isRightSideLocal = splitView.isSplit && sideAttr === "right";
+        const result = state.data.results[index];
+        const newTabId = crypto.randomUUID();
+        addBackgroundTab(
+          {
+            id: newTabId,
+            title: `Random User ${new Date(result.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+            content: result.content,
+            language: result.format,
+            languageLocked: true,
+            cursorPosition: { lineNumber: 1, column: 1 },
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            workspaceId: activeWorkspaceId || "",
+          },
+          isRightSideLocal,
+        );
+        setTimeout(() => setOpenedResultIndex(null), 1500);
+      },
+      [
+        state.data.results,
+        addBackgroundTab,
+        splitView.isSplit,
+        activeWorkspaceId,
+      ],
+    );
 
-    const selectedResult = state.data.selectedResult >= 0 
-      ? state.data.results[state.data.selectedResult] 
-      : null;
+    const selectedResult =
+      state.data.selectedResult >= 0
+        ? state.data.results[state.data.selectedResult]
+        : null;
 
     return (
       <div ref={containerRef} className="h-full bg-gray-900 flex">
@@ -256,7 +284,9 @@ export const RandomUserTablet: Tablet = {
           <div className="p-4 border-b border-gray-700/50">
             <div className="flex items-center space-x-3 mb-6">
               <Users className="text-gray-400" size={24} />
-              <h2 className="text-xl font-semibold text-gray-100">Random Users</h2>
+              <h2 className="text-xl font-semibold text-gray-100">
+                Random Users
+              </h2>
             </div>
 
             {/* Parameters */}
@@ -270,16 +300,18 @@ export const RandomUserTablet: Tablet = {
                   min="1"
                   max="100"
                   value={state.data.params.results}
-                  onChange={(e) => onChange({
-                    ...state,
-                    data: {
-                      ...state.data,
-                      params: {
-                        ...state.data.params,
-                        results: parseInt(e.target.value) || 1
-                      }
-                    }
-                  })}
+                  onChange={(e) =>
+                    onChange({
+                      ...state,
+                      data: {
+                        ...state.data,
+                        params: {
+                          ...state.data.params,
+                          results: parseInt(e.target.value) || 1,
+                        },
+                      },
+                    })
+                  }
                   className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200"
                 />
               </div>
@@ -290,16 +322,18 @@ export const RandomUserTablet: Tablet = {
                 </label>
                 <select
                   value={state.data.params.gender}
-                  onChange={(e) => onChange({
-                    ...state,
-                    data: {
-                      ...state.data,
-                      params: {
-                        ...state.data.params,
-                        gender: e.target.value
-                      }
-                    }
-                  })}
+                  onChange={(e) =>
+                    onChange({
+                      ...state,
+                      data: {
+                        ...state.data,
+                        params: {
+                          ...state.data.params,
+                          gender: e.target.value,
+                        },
+                      },
+                    })
+                  }
                   className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200"
                 >
                   <option value="">Any</option>
@@ -314,19 +348,21 @@ export const RandomUserTablet: Tablet = {
                 </label>
                 <select
                   value={state.data.params.nat}
-                  onChange={(e) => onChange({
-                    ...state,
-                    data: {
-                      ...state.data,
-                      params: {
-                        ...state.data.params,
-                        nat: e.target.value
-                      }
-                    }
-                  })}
+                  onChange={(e) =>
+                    onChange({
+                      ...state,
+                      data: {
+                        ...state.data,
+                        params: {
+                          ...state.data.params,
+                          nat: e.target.value,
+                        },
+                      },
+                    })
+                  }
                   className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200"
                 >
-                  {NATIONALITIES.map(nat => (
+                  {NATIONALITIES.map((nat) => (
                     <option key={nat.value} value={nat.value}>
                       {nat.label}
                     </option>
@@ -340,19 +376,21 @@ export const RandomUserTablet: Tablet = {
                 </label>
                 <select
                   value={state.data.params.format}
-                  onChange={(e) => onChange({
-                    ...state,
-                    data: {
-                      ...state.data,
-                      params: {
-                        ...state.data.params,
-                        format: e.target.value
-                      }
-                    }
-                  })}
+                  onChange={(e) =>
+                    onChange({
+                      ...state,
+                      data: {
+                        ...state.data,
+                        params: {
+                          ...state.data.params,
+                          format: e.target.value,
+                        },
+                      },
+                    })
+                  }
                   className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200"
                 >
-                  {FORMATS.map(format => (
+                  {FORMATS.map((format) => (
                     <option key={format.value} value={format.value}>
                       {format.label}
                     </option>
@@ -365,14 +403,15 @@ export const RandomUserTablet: Tablet = {
                 disabled={isGenerating}
                 className="w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-md px-4 py-2 text-sm font-medium flex items-center justify-center space-x-2 transition-colors"
               >
-                <RotateCw size={16} className={isGenerating ? 'animate-spin' : ''} />
-                <span>{isGenerating ? 'Generating...' : 'Generate'}</span>
+                <RotateCw
+                  size={16}
+                  className={isGenerating ? "animate-spin" : ""}
+                />
+                <span>{isGenerating ? "Generating..." : "Generate"}</span>
               </button>
 
               {error && (
-                <div className="text-sm text-red-400 mt-2">
-                  {error}
-                </div>
+                <div className="text-sm text-red-400 mt-2">{error}</div>
               )}
             </div>
           </div>
@@ -388,15 +427,19 @@ export const RandomUserTablet: Tablet = {
                 {state.data.results.map((result, index) => (
                   <button
                     key={result.timestamp}
-                    onClick={() => onChange({
-                      ...state,
-                      data: {
-                        ...state.data,
-                        selectedResult: index
-                      }
-                    })}
+                    onClick={() =>
+                      onChange({
+                        ...state,
+                        data: {
+                          ...state.data,
+                          selectedResult: index,
+                        },
+                      })
+                    }
                     className={`w-full px-4 py-3 text-left hover:bg-gray-800/50 transition-colors ${
-                      state.data.selectedResult === index ? 'bg-gray-800/50' : ''
+                      state.data.selectedResult === index
+                        ? "bg-gray-800/50"
+                        : ""
                     }`}
                   >
                     <div className="text-sm font-medium text-gray-200">
@@ -416,41 +459,48 @@ export const RandomUserTablet: Tablet = {
         <div className="flex-1 flex flex-col">
           <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50">
             <div className="text-sm text-gray-400">
-              {selectedResult 
+              {selectedResult
                 ? new Date(selectedResult.timestamp).toLocaleString()
-                : 'No result selected'
-              }
+                : "No result selected"}
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={copyToClipboard}
                 disabled={!selectedResult}
-                className={`p-1 rounded transition-colors ${isCopied ? 'text-green-400' : selectedResult ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 cursor-not-allowed'}`}
-                title={isCopied ? 'Copied!' : 'Copy to clipboard'}
+                className={`p-1 rounded transition-colors ${isCopied ? "text-green-400" : selectedResult ? "text-gray-400 hover:text-gray-300" : "text-gray-600 cursor-not-allowed"}`}
+                title={isCopied ? "Copied!" : "Copy to clipboard"}
               >
                 {isCopied ? <Check size={16} /> : <Copy size={16} />}
               </button>
               <button
                 onClick={() => handleOpenInNewTab(selectedIndex)}
                 disabled={!selectedResult}
-                className={`p-1 rounded transition-colors ${openedResultIndex === selectedIndex ? 'text-green-400' : selectedResult ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 cursor-not-allowed'}`}
-                title={openedResultIndex === selectedIndex ? 'Opened' : 'Open in new tab'}
+                className={`p-1 rounded transition-colors ${openedResultIndex === selectedIndex ? "text-green-400" : selectedResult ? "text-gray-400 hover:text-gray-300" : "text-gray-600 cursor-not-allowed"}`}
+                title={
+                  openedResultIndex === selectedIndex
+                    ? "Opened"
+                    : "Open in new tab"
+                }
               >
-                {openedResultIndex === selectedIndex ? <Check size={16} /> : <ExternalLink size={16} />}
+                {openedResultIndex === selectedIndex ? (
+                  <Check size={16} />
+                ) : (
+                  <ExternalLink size={16} />
+                )}
               </button>
             </div>
           </div>
           <div className="flex-1">
             <Editor
               height="100%"
-              language={selectedResult?.format || 'plaintext'}
-              value={selectedResult?.content || ''}
+              language={selectedResult?.format || "plaintext"}
+              value={selectedResult?.content || ""}
               theme="vs-dark"
               options={{
                 readOnly: true,
                 minimap: { enabled: false },
                 fontSize: 14,
-                wordWrap: 'on',
+                wordWrap: "on",
                 padding: { top: 16, bottom: 16 },
               }}
             />
@@ -458,5 +508,5 @@ export const RandomUserTablet: Tablet = {
         </div>
       </div>
     );
-  }
+  },
 };

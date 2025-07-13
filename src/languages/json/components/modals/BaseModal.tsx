@@ -1,5 +1,5 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React from "react";
+import { X } from "lucide-react";
 
 interface BaseModalProps {
   title: string;
@@ -11,23 +11,25 @@ interface BaseModalProps {
 }
 
 export const BaseModal: React.FC<BaseModalProps> = ({
-    title,
-    onClose,
-    children,
-    maxWidthClass = 'max-w-4xl', // Default max width
-    maxHeightClass = 'max-h-[85vh]' // Default max height
+  title,
+  onClose,
+  children,
+  maxWidthClass = "max-w-4xl", // Default max width
+  maxHeightClass = "max-h-[85vh]", // Default max height
 }) => {
   return (
     // --- Backdrop ---
     // Slightly darker, more blur potential if needed later
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-
       {/* --- Modal Container --- */}
       {/* Slightly lighter dark bg, refined border, larger shadow, constrained width/height */}
-      <div className={`bg-gray-850 rounded-lg shadow-xl w-full ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-gray-700/60`}>
-
+      <div
+        className={`bg-gray-850 rounded-lg shadow-xl w-full ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-gray-700/60`}
+      >
         {/* --- Modal Header --- */}
-        <div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/60 bg-gradient-to-b from-gray-800 to-gray-850"> {/* Subtle gradient */}
+        <div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/60 bg-gradient-to-b from-gray-800 to-gray-850">
+          {" "}
+          {/* Subtle gradient */}
           <h2 className="text-lg font-medium text-gray-100">{title}</h2>
           <button
             onClick={onClose}
@@ -40,10 +42,11 @@ export const BaseModal: React.FC<BaseModalProps> = ({
 
         {/* --- Modal Content Area --- */}
         {/* Let children handle padding, ensure scrollbar styling is applied */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar"> {/* Allow vertical scroll */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {" "}
+          {/* Allow vertical scroll */}
           {children}
         </div>
-
       </div>
     </div>
   );

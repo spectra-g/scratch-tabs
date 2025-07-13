@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, Clock, ArrowLeft, ArrowRight, FileText } from 'lucide-react';
-import { Prompt } from '../types';
+import React, { useState } from "react";
+import { X, Clock, ArrowLeft, ArrowRight, FileText } from "lucide-react";
+import { Prompt } from "../types";
 
 interface HistoryViewerProps {
   prompt: Prompt;
@@ -9,19 +9,19 @@ interface HistoryViewerProps {
 
 export const HistoryViewer: React.FC<HistoryViewerProps> = ({
   prompt,
-  onClose
+  onClose,
 }) => {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [showComparison, setShowComparison] = useState(false);
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleString(undefined, { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -30,17 +30,17 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
-      return 'Today';
+      return "Today";
     } else if (diffDays === 1) {
-      return 'Yesterday';
+      return "Yesterday";
     } else if (diffDays < 7) {
       return `${diffDays} days ago`;
     } else {
-      return date.toLocaleDateString(undefined, { 
-        month: 'short', 
-        day: 'numeric' 
+      return date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
       });
     }
   };
@@ -70,7 +70,10 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
               </div>
             </div>
             {/* Content */}
-            <div className="h-full overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100% - 60px)' }}>
+            <div
+              className="h-full overflow-y-auto custom-scrollbar"
+              style={{ maxHeight: "calc(100% - 60px)" }}
+            >
               <div className="p-4">
                 <pre className="whitespace-pre-wrap text-sm text-gray-300 font-mono leading-relaxed">
                   {versionContent}
@@ -78,7 +81,7 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
               </div>
             </div>
           </div>
-          
+
           {/* Right side - Current version */}
           <div className="border border-gray-700/50 rounded-lg overflow-hidden">
             {/* Header */}
@@ -91,7 +94,10 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
               </div>
             </div>
             {/* Content */}
-            <div className="h-full overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100% - 60px)' }}>
+            <div
+              className="h-full overflow-y-auto custom-scrollbar"
+              style={{ maxHeight: "calc(100% - 60px)" }}
+            >
               <div className="p-4">
                 <pre className="whitespace-pre-wrap text-sm text-gray-300 font-mono leading-relaxed">
                   {currentContent}
@@ -121,7 +127,7 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
             <div className="flex items-center space-x-2">
               <FileText size={20} className="text-blue-400" />
               <h2 className="text-lg font-semibold text-gray-200">
-                {showComparison ? 'Version Comparison' : 'Prompt History'}
+                {showComparison ? "Version Comparison" : "Prompt History"}
               </h2>
             </div>
           </div>
@@ -136,15 +142,15 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-hidden">
           {showComparison ? (
-            <div className="h-full p-4">
-              {renderComparison()}
-            </div>
+            <div className="h-full p-4">{renderComparison()}</div>
           ) : (
             <div className="h-full flex">
               {/* History List */}
               <div className="w-80 border-r border-gray-700 overflow-y-auto custom-scrollbar">
                 <div className="p-4">
-                  <h3 className="text-sm font-medium text-gray-300 mb-3">Version History</h3>
+                  <h3 className="text-sm font-medium text-gray-300 mb-3">
+                    Version History
+                  </h3>
                   {history.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
                       <Clock size={48} className="mx-auto mb-2 opacity-50" />
@@ -157,8 +163,8 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
                           key={index}
                           className={`p-3 rounded-lg cursor-pointer transition-colors ${
                             selectedVersion === index
-                              ? 'bg-blue-500/20 border border-blue-500/50'
-                              : 'bg-gray-800/50 hover:bg-gray-800'
+                              ? "bg-blue-500/20 border border-blue-500/50"
+                              : "bg-gray-800/50 hover:bg-gray-800"
                           }`}
                           onClick={() => setSelectedVersion(index)}
                         >
@@ -196,7 +202,8 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-medium text-gray-300">
-                        Version from {formatDate(history[selectedVersion].timestamp)}
+                        Version from{" "}
+                        {formatDate(history[selectedVersion].timestamp)}
                       </h3>
                       <button
                         onClick={() => setShowComparison(true)}
@@ -227,4 +234,4 @@ export const HistoryViewer: React.FC<HistoryViewerProps> = ({
       </div>
     </div>
   );
-}; 
+};

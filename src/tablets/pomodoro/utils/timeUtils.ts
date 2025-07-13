@@ -4,8 +4,8 @@
 export function formatTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+
+  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
 /**
@@ -14,11 +14,11 @@ export function formatTime(seconds: number): string {
 export function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   }
-  
+
   return `${minutes}m`;
 }
 
@@ -27,7 +27,7 @@ export function formatDuration(seconds: number): string {
  */
 export function formatTimeFromTimestamp(timestamp: number): string {
   const date = new Date(timestamp);
-  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
 }
 
 /**
@@ -44,7 +44,7 @@ export function formatDateFromTimestamp(timestamp: number): string {
 export function isSameDay(timestamp1: number, timestamp2: number): boolean {
   const date1 = new Date(timestamp1);
   const date2 = new Date(timestamp2);
-  
+
   return (
     date1.getFullYear() === date2.getFullYear() &&
     date1.getMonth() === date2.getMonth() &&

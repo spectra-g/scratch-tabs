@@ -57,11 +57,11 @@
 .text-shimmer {
   font-size: 0.875rem; /* text-sm */
   background: linear-gradient(
-    90deg, /* Left to right gradient */
-    #60a5fa 0%,
+    90deg,
+    /* Left to right gradient */ #60a5fa 0%,
     #60a5fa 40%,
-    #ffffff 50%, /* White highlight */
-    #60a5fa 60%,
+    #ffffff 50%,
+    /* White highlight */ #60a5fa 60%,
     #60a5fa 100%
   );
   background-size: 200% auto; /* Gradient wider than element */
@@ -89,6 +89,10 @@
 
 /* Opacity pulse keyframes */
 @keyframes pulse-opacity {
-  0% { opacity: 0.5; }
-  100% { opacity: 1; }
-} 
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}

@@ -1,5 +1,5 @@
 export const typescriptSnippet = {
-  name: 'TypeScript',
+  name: "TypeScript",
   code: `// Simple number guessing game
 const targetNumber = Math.floor(Math.random() * 100) + 1;
 let attempts = 0;
@@ -31,5 +31,5 @@ for (const guess of guesses) {
     console.log(\`Guessing: \${guess}\`);
     console.log(makeGuess(guess));
     console.log("");
-}`
+}`,
 };

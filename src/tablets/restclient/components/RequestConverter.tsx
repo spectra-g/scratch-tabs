@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Editor } from '@monaco-editor/react';
-import { Copy, Code, History } from 'lucide-react'; 
-import { HttpRequest } from '../types';
-import { converters, getConverter } from '../converters';
-import { requestToCurl } from '../converters/curlConverter';
+import React, { useState, useEffect, useRef } from "react";
+import { Editor } from "@monaco-editor/react";
+import { Copy, Code, History } from "lucide-react";
+import { HttpRequest } from "../types";
+import { converters, getConverter } from "../converters";
+import { requestToCurl } from "../converters/curlConverter";
 
 interface RequestConverterProps {
   request: HttpRequest;
   format: string;
   onFormatChange: (format: string) => void;
   onUpdateRequest: (request: Partial<HttpRequest>) => void;
-  onShowRequestHistory: () => void; 
-  requestHistoryCount: number;     
+  onShowRequestHistory: () => void;
+  requestHistoryCount: number;
 }
 
 export const RequestConverter: React.FC<RequestConverterProps> = ({
@@ -19,10 +19,10 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
   format,
   onFormatChange,
   onUpdateRequest,
-  onShowRequestHistory,     
-  requestHistoryCount       
+  onShowRequestHistory,
+  requestHistoryCount,
 }) => {
-  const [convertedText, setConvertedText] = useState('');
+  const [convertedText, setConvertedText] = useState("");
   const [isError, setIsError] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isCurlCopied, setIsCurlCopied] = useState(false);
@@ -51,7 +51,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
   }, [request, format]);
 
   const handleEditorChange = (value: string | undefined) => {
-    setConvertedText(value || '');
+    setConvertedText(value || "");
     const converter = getConverter(format);
     if (converter && converter.parse && value) {
       try {
@@ -76,7 +76,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      console.error("Failed to copy:", error);
     }
   };
 
@@ -87,16 +87,20 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
       setIsCurlCopied(true);
       setTimeout(() => setIsCurlCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy cURL:', error);
+      console.error("Failed to copy cURL:", error);
     }
   };
 
   const getLanguage = () => {
     switch (format) {
-      case 'curl': return 'shell';
-      case 'http': return 'plaintext';
-      case 'postman': return 'json';
-      default: return 'plaintext';
+      case "curl":
+        return "shell";
+      case "http":
+        return "plaintext";
+      case "postman":
+        return "json";
+      default:
+        return "plaintext";
     }
   };
 
@@ -125,7 +129,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
             title="Copy as cURL"
           >
             <Code size={14} />
-            <span>{isCurlCopied ? 'Copied!' : 'Copy cURL'}</span>
+            <span>{isCurlCopied ? "Copied!" : "Copy cURL"}</span>
           </button>
 
           <button
@@ -134,7 +138,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
             title="Copy"
           >
             <Copy size={14} />
-            <span>{isCopied ? 'Copied!' : 'Copy'}</span>
+            <span>{isCopied ? "Copied!" : "Copy"}</span>
           </button>
 
           <button
@@ -148,7 +152,9 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
         </div>
       </div>
 
-      <div className={`border rounded-md overflow-hidden ${isError ? 'border-red-500/50' : 'border-gray-700/50'}`}>
+      <div
+        className={`border rounded-md overflow-hidden ${isError ? "border-red-500/50" : "border-gray-700/50"}`}
+      >
         <Editor
           height="150px"
           language={getLanguage()}
@@ -158,9 +164,9 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
           options={{
             minimap: { enabled: false },
             fontSize: 14,
-            wordWrap: 'on',
+            wordWrap: "on",
             padding: { top: 8, bottom: 8 },
-            readOnly: !getConverter(format)?.parse
+            readOnly: !getConverter(format)?.parse,
           }}
         />
       </div>

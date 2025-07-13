@@ -1,15 +1,15 @@
-import { renderHook, act } from '@testing-library/react';
-import { useDragHandler } from '../useDragHandler';
-import { Shape } from '../../types';
+import { renderHook, act } from "@testing-library/react";
+import { useDragHandler } from "../useDragHandler";
+import { Shape } from "../../types";
 
 // Mock geometry utils
-jest.mock('../../utils/geometryUtils', () => ({
-  getShapeCenter: jest.fn()
+jest.mock("../../utils/geometryUtils", () => ({
+  getShapeCenter: jest.fn(),
 }));
 
-const { getShapeCenter } = require('../../utils/geometryUtils');
+const { getShapeCenter } = require("../../utils/geometryUtils");
 
-describe('useDragHandler', () => {
+describe("useDragHandler", () => {
   const mockOnUpdateShape = jest.fn();
   const mockOnShapeClick = jest.fn();
 
@@ -17,27 +17,27 @@ describe('useDragHandler', () => {
     jest.clearAllMocks();
   });
 
-  describe('Real-time visual feedback', () => {
-    it('should update dragged shape in real-time for rectangle', () => {
+  describe("Real-time visual feedback", () => {
+    it("should update dragged shape in real-time for rectangle", () => {
       const rectangleShape: Shape = {
-        id: 'rect-1',
-        type: 'rectangle',
+        id: "rect-1",
+        type: "rectangle",
         x: 100,
         y: 100,
         width: 50,
         height: 30,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 125, y: 115 }); // center of rectangle
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [rectangleShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -45,7 +45,7 @@ describe('useDragHandler', () => {
         result.current.startDrag(rectangleShape, { x: 130, y: 120 });
       });
 
-      expect(result.current.dragState.draggingShapeId).toBe('rect-1');
+      expect(result.current.dragState.draggingShapeId).toBe("rect-1");
       expect(result.current.dragState.dragOffset).toEqual({ x: 5, y: 5 });
 
       // Update drag - should update draggedShape for visual feedback
@@ -58,25 +58,25 @@ describe('useDragHandler', () => {
       expect((result.current.dragState.draggedShape as any).y).toBe(120); // 135 - 15 (half height)
     });
 
-    it('should update dragged shape in real-time for circle', () => {
+    it("should update dragged shape in real-time for circle", () => {
       const circleShape: Shape = {
-        id: 'circle-1',
-        type: 'circle',
+        id: "circle-1",
+        type: "circle",
         x: 100,
         y: 100,
         radius: 25,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 100, y: 100 }); // center of circle
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [circleShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -84,7 +84,7 @@ describe('useDragHandler', () => {
         result.current.startDrag(circleShape, { x: 110, y: 110 });
       });
 
-      expect(result.current.dragState.draggingShapeId).toBe('circle-1');
+      expect(result.current.dragState.draggingShapeId).toBe("circle-1");
       expect(result.current.dragState.dragOffset).toEqual({ x: 10, y: 10 });
 
       // Update drag - should update draggedShape for visual feedback
@@ -97,26 +97,26 @@ describe('useDragHandler', () => {
       expect((result.current.dragState.draggedShape as any).y).toBe(120); // 130 - 10
     });
 
-    it('should update dragged shape in real-time for triangle', () => {
+    it("should update dragged shape in real-time for triangle", () => {
       const triangleShape: Shape = {
-        id: 'triangle-1',
-        type: 'triangle',
+        id: "triangle-1",
+        type: "triangle",
         x: 100,
         y: 100,
         width: 40,
         height: 40,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 100, y: 100 }); // center of triangle
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [triangleShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -124,7 +124,7 @@ describe('useDragHandler', () => {
         result.current.startDrag(triangleShape, { x: 110, y: 110 });
       });
 
-      expect(result.current.dragState.draggingShapeId).toBe('triangle-1');
+      expect(result.current.dragState.draggingShapeId).toBe("triangle-1");
       expect(result.current.dragState.dragOffset).toEqual({ x: 10, y: 10 });
 
       // Update drag - should update draggedShape for visual feedback
@@ -137,23 +137,26 @@ describe('useDragHandler', () => {
       expect((result.current.dragState.draggedShape as any).y).toBe(120); // 130 - 10
     });
 
-    it('should update dragged shape in real-time for line', () => {
+    it("should update dragged shape in real-time for line", () => {
       const lineShape: Shape = {
-        id: 'line-1',
-        type: 'line',
-        points: [{ x: 100, y: 100 }, { x: 150, y: 150 }],
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        id: "line-1",
+        type: "line",
+        points: [
+          { x: 100, y: 100 },
+          { x: 150, y: 150 },
+        ],
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 125, y: 125 }); // center of line
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [lineShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -161,7 +164,7 @@ describe('useDragHandler', () => {
         result.current.startDrag(lineShape, { x: 130, y: 130 });
       });
 
-      expect(result.current.dragState.draggingShapeId).toBe('line-1');
+      expect(result.current.dragState.draggingShapeId).toBe("line-1");
       expect(result.current.dragState.dragOffset).toEqual({ x: 5, y: 5 });
 
       // Update drag - should update draggedShape for visual feedback
@@ -172,33 +175,33 @@ describe('useDragHandler', () => {
       expect(result.current.dragState.draggedShape).toBeDefined();
       expect((result.current.dragState.draggedShape as any).points).toEqual([
         { x: 120, y: 120 }, // 100 + 20 (delta from center)
-        { x: 170, y: 170 }  // 150 + 20 (delta from center)
+        { x: 170, y: 170 }, // 150 + 20 (delta from center)
       ]);
     });
   });
 
-  describe('Grid snapping', () => {
-    it('should snap to grid when enabled', () => {
+  describe("Grid snapping", () => {
+    it("should snap to grid when enabled", () => {
       const rectangleShape: Shape = {
-        id: 'rect-1',
-        type: 'rectangle',
+        id: "rect-1",
+        type: "rectangle",
         x: 100,
         y: 100,
         width: 50,
         height: 30,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 125, y: 115 });
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [rectangleShape],
           gridSnappingEnabled: true,
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -218,27 +221,27 @@ describe('useDragHandler', () => {
     });
   });
 
-  describe('Drag end behavior', () => {
-    it('should apply final position on drag end', () => {
+  describe("Drag end behavior", () => {
+    it("should apply final position on drag end", () => {
       const rectangleShape: Shape = {
-        id: 'rect-1',
-        type: 'rectangle',
+        id: "rect-1",
+        type: "rectangle",
         x: 100,
         y: 100,
         width: 50,
         height: 30,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 125, y: 115 });
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [rectangleShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -256,32 +259,32 @@ describe('useDragHandler', () => {
         result.current.endDrag({ x: 150, y: 140 });
       });
 
-      expect(mockOnUpdateShape).toHaveBeenCalledWith('rect-1', {
+      expect(mockOnUpdateShape).toHaveBeenCalledWith("rect-1", {
         x: 120, // 145 - 25 (half width)
-        y: 120  // 135 - 15 (half height)
+        y: 120, // 135 - 15 (half height)
       });
     });
 
-    it('should treat as click if not moved', () => {
+    it("should treat as click if not moved", () => {
       const rectangleShape: Shape = {
-        id: 'rect-1',
-        type: 'rectangle',
+        id: "rect-1",
+        type: "rectangle",
         x: 100,
         y: 100,
         width: 50,
         height: 30,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 125, y: 115 });
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [rectangleShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -294,32 +297,35 @@ describe('useDragHandler', () => {
         result.current.endDrag({ x: 131, y: 121 }); // Less than 5px movement
       });
 
-      expect(mockOnShapeClick).toHaveBeenCalledWith(rectangleShape, { x: 131, y: 121 });
+      expect(mockOnShapeClick).toHaveBeenCalledWith(rectangleShape, {
+        x: 131,
+        y: 121,
+      });
       expect(mockOnUpdateShape).not.toHaveBeenCalled();
     });
   });
 
-  describe('Drag guides alignment', () => {
-    it('should align drag guides with rectangle edges', () => {
+  describe("Drag guides alignment", () => {
+    it("should align drag guides with rectangle edges", () => {
       const rectangleShape: Shape = {
-        id: 'rect-1',
-        type: 'rectangle',
+        id: "rect-1",
+        type: "rectangle",
         x: 100,
         y: 100,
         width: 50,
         height: 30,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 125, y: 115 }); // center of rectangle
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [rectangleShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -340,25 +346,25 @@ describe('useDragHandler', () => {
       expect(result.current.dragState.dragGuides!.bottom).toBe(150); // 120 + 30 (height)
     });
 
-    it('should align drag guides with circle edges', () => {
+    it("should align drag guides with circle edges", () => {
       const circleShape: Shape = {
-        id: 'circle-1',
-        type: 'circle',
+        id: "circle-1",
+        type: "circle",
         x: 100,
         y: 100,
         radius: 25,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 100, y: 100 }); // center of circle
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [circleShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -379,26 +385,26 @@ describe('useDragHandler', () => {
       expect(result.current.dragState.dragGuides!.bottom).toBe(145); // 95 + 50 (diameter)
     });
 
-    it('should align drag guides with triangle edges', () => {
+    it("should align drag guides with triangle edges", () => {
       const triangleShape: Shape = {
-        id: 'triangle-1',
-        type: 'triangle',
+        id: "triangle-1",
+        type: "triangle",
         x: 100,
         y: 100,
         width: 40,
         height: 40,
-        style: { stroke: '#000', fill: 'transparent', strokeWidth: 2 },
-        zIndex: 1
+        style: { stroke: "#000", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
       } as Shape;
 
       getShapeCenter.mockReturnValue({ x: 100, y: 100 }); // center of triangle
 
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useDragHandler({
           shapes: [triangleShape],
           onUpdateShape: mockOnUpdateShape,
-          onShapeClick: mockOnShapeClick
-        })
+          onShapeClick: mockOnShapeClick,
+        }),
       );
 
       // Start drag
@@ -419,4 +425,4 @@ describe('useDragHandler', () => {
       expect(result.current.dragState.dragGuides!.bottom).toBe(140); // 100 + 40 (height)
     });
   });
-}); 
+});

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Tab } from '../../../types';
-import { useDroppable } from '@dnd-kit/core';
-import { DraggableTabItem } from './DraggableTabItem';
+import React, { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { Tab } from "../../../types";
+import { useDroppable } from "@dnd-kit/core";
+import { DraggableTabItem } from "./DraggableTabItem";
 
 export interface TabGroupProps {
   title: string;
@@ -30,13 +30,16 @@ export const TabGroup: React.FC<TabGroupProps> = ({
   groupWorkspaceId,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const { setNodeRef: setDroppableNodeRefForGroup, isOver: isGroupDropTargetOver } = useDroppable({
+  const {
+    setNodeRef: setDroppableNodeRefForGroup,
+    isOver: isGroupDropTargetOver,
+  } = useDroppable({
     id: `group-${groupWorkspaceId}-${title}`, // Ensure unique ID per workspace
     data: {
-      type: 'group',
+      type: "group",
       groupName: title,
       groupWorkspaceId: groupWorkspaceId,
-    }
+    },
   });
 
   return (
@@ -53,8 +56,11 @@ export const TabGroup: React.FC<TabGroupProps> = ({
       </div>
 
       {isExpanded && (
-        <div ref={setDroppableNodeRefForGroup} className={`${isGroupDropTargetOver ? 'bg-blue-500/10 ring-1 ring-blue-400 rounded' : ''} py-1`}>
-          {tabs.map(tab => (
+        <div
+          ref={setDroppableNodeRefForGroup}
+          className={`${isGroupDropTargetOver ? "bg-blue-500/10 ring-1 ring-blue-400 rounded" : ""} py-1`}
+        >
+          {tabs.map((tab) => (
             <DraggableTabItem
               key={tab.id}
               tab={tab}
@@ -77,4 +83,4 @@ export const TabGroup: React.FC<TabGroupProps> = ({
       )}
     </div>
   );
-}; 
+};

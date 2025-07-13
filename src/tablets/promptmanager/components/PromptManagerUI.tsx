@@ -1,40 +1,58 @@
-import React, { useState, useEffect } from 'react';
-import { Tabs } from './Tabs';
-import { Sidebar } from './Sidebar';
-import { PromptList } from './PromptList';
-import { PromptEditor } from './PromptEditor';
-import { TemplateList } from './TemplateList';
-import { SnippetList } from './SnippetList';
-import { WorkflowList } from './WorkflowList';
-import { WorkflowEditor } from './WorkflowEditor';
-import { ImportExportModal } from './ImportExportModal';
-import { PromptManagerData, Prompt, Template, Snippet, Tag, Workflow } from '../types';
-import { defaultTemplates } from '../data/defaultTemplates';
-import { defaultSnippets } from '../data/defaultSnippets';
+import React, { useState, useEffect } from "react";
+import { Tabs } from "./Tabs";
+import { Sidebar } from "./Sidebar";
+import { PromptList } from "./PromptList";
+import { PromptEditor } from "./PromptEditor";
+import { TemplateList } from "./TemplateList";
+import { SnippetList } from "./SnippetList";
+import { WorkflowList } from "./WorkflowList";
+import { WorkflowEditor } from "./WorkflowEditor";
+import { ImportExportModal } from "./ImportExportModal";
+import { SelectTemplateModal } from "./SelectTemplateModal";
+import {
+  PromptManagerData,
+  Prompt,
+  Template,
+  Snippet,
+  Tag,
+  Workflow,
+} from "../types";
 
 interface PromptManagerUIProps {
   data: PromptManagerData;
-  updateUI: (newUI: Partial<PromptManagerData['ui']>) => void;
-  updateSettings: (newSettings: Partial<PromptManagerData['settings']>) => void;
-  createPrompt: (prompt: Omit<Prompt, 'id' | 'createdAt' | 'lastModified' | 'usageCount'>) => Prompt;
-  updatePrompt: (id: string, updates: Partial<Omit<Prompt, 'id' | 'createdAt'>>) => void;
+  allTemplates: Template[];
+  allSnippets: Snippet[];
+  updateUI: (newUI: Partial<PromptManagerData["ui"]>) => void;
+  updateSettings: (newSettings: Partial<PromptManagerData["settings"]>) => void;
+  createPrompt: (
+    prompt: Omit<Prompt, "id" | "createdAt" | "lastModified" | "usageCount">,
+  ) => Prompt;
+  updatePrompt: (
+    id: string,
+    updates: Partial<Omit<Prompt, "id" | "createdAt">>,
+  ) => void;
   deletePrompt: (id: string) => void;
   clonePrompt: (id: string) => Prompt | undefined;
   incrementPromptUsage: (id: string) => void;
   toggleFavorite: (id: string) => void;
-  createWorkflow: (workflow: Omit<Workflow, 'id' | 'createdAt' | 'lastModified'>) => Workflow;
-  updateWorkflow: (id: string, updates: Partial<Omit<Workflow, 'id' | 'createdAt'>>) => void;
+  createWorkflow: (
+    workflow: Omit<Workflow, "id" | "createdAt" | "lastModified">,
+  ) => Workflow;
+  updateWorkflow: (
+    id: string,
+    updates: Partial<Omit<Workflow, "id" | "createdAt">>,
+  ) => void;
   deleteWorkflow: (id: string) => void;
   cloneWorkflow: (id: string) => Workflow | undefined;
   toggleWorkflowFavorite: (id: string) => void;
-  createTemplate: (template: Omit<Template, 'id'>) => Template;
-  updateTemplate: (id: string, updates: Partial<Omit<Template, 'id'>>) => void;
+  createTemplate: (template: Omit<Template, "id">) => Template;
+  updateTemplate: (id: string, updates: Partial<Omit<Template, "id">>) => void;
   deleteTemplate: (id: string) => void;
-  createSnippet: (snippet: Omit<Snippet, 'id'>) => Snippet;
-  updateSnippet: (id: string, updates: Partial<Omit<Snippet, 'id'>>) => void;
+  createSnippet: (snippet: Omit<Snippet, "id">) => Snippet;
+  updateSnippet: (id: string, updates: Partial<Omit<Snippet, "id">>) => void;
   deleteSnippet: (id: string) => void;
-  createTag: (tag: Omit<Tag, 'id'>) => Tag;
-  updateTag: (id: string, updates: Partial<Omit<Tag, 'id'>>) => void;
+  createTag: (tag: Omit<Tag, "id">) => Tag;
+  updateTag: (id: string, updates: Partial<Omit<Tag, "id">>) => void;
   deleteTag: (id: string) => void;
   importData: (data: Partial<PromptManagerData>) => void;
   exportData: () => Partial<PromptManagerData>;
@@ -43,6 +61,8 @@ interface PromptManagerUIProps {
 
 export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
   data,
+  allTemplates,
+  allSnippets,
   updateUI,
   updateSettings,
   createPrompt,
@@ -67,138 +87,166 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
   deleteTag,
   importData,
   exportData,
-  createPromptFromTemplate
+  createPromptFromTemplate,
 }) => {
-  const [showImportExport, setShowImportExport] = useState<'import' | 'export' | null>(null);
+  const [showImportExport, setShowImportExport] = useState<
+    "import" | "export" | null
+  >(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+  const [isSelectTemplateModalOpen, setSelectTemplateModalOpen] =
+    useState(false);
+
   // Get the selected item based on active tab
-  const selectedPrompt = data.ui.selectedPromptId 
-    ? data.prompts.find(p => p.id === data.ui.selectedPromptId) 
+  const selectedPrompt = data.ui.selectedPromptId
+    ? data.prompts.find((p) => p.id === data.ui.selectedPromptId)
     : null;
-    
-  const selectedWorkflow = data.ui.selectedWorkflowId 
-    ? (data.workflows || []).find(w => w.id === data.ui.selectedWorkflowId) 
+
+  const selectedWorkflow = data.ui.selectedWorkflowId
+    ? (data.workflows || []).find((w) => w.id === data.ui.selectedWorkflowId)
     : null;
-  
+
   // Filter prompts based on search, tags, and favorites
-  const filteredPrompts = data.prompts.filter(prompt => {
+  const filteredPrompts = data.prompts.filter((prompt) => {
     // Filter by search query
-    if (data.ui.searchQuery && !prompt.title.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) && 
-        !prompt.content.toLowerCase().includes(data.ui.searchQuery.toLowerCase())) {
+    if (
+      data.ui.searchQuery &&
+      !prompt.title.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) &&
+      !prompt.content.toLowerCase().includes(data.ui.searchQuery.toLowerCase())
+    ) {
       return false;
     }
-    
+
     // Filter by selected tags
-    if (data.ui.selectedTags.length > 0 && !data.ui.selectedTags.some(tagId => prompt.tags.includes(tagId))) {
+    if (
+      data.ui.selectedTags.length > 0 &&
+      !data.ui.selectedTags.some((tagId) => prompt.tags.includes(tagId))
+    ) {
       return false;
     }
-    
+
     // Filter by favorites
     if (data.ui.showFavoritesOnly && !prompt.isFavorite) {
       return false;
     }
-    
+
     return true;
   });
-  
+
   // Sort prompts based on settings
   const sortedPrompts = [...filteredPrompts].sort((a, b) => {
     const sortBy = data.settings.sortBy;
     const sortDirection = data.settings.sortDirection;
-    
+
     let comparison = 0;
-    
-    if (sortBy === 'title') {
+
+    if (sortBy === "title") {
       comparison = a.title.localeCompare(b.title);
-    } else if (sortBy === 'createdAt') {
+    } else if (sortBy === "createdAt") {
       comparison = a.createdAt - b.createdAt;
-    } else if (sortBy === 'lastModified') {
+    } else if (sortBy === "lastModified") {
       comparison = a.lastModified - b.lastModified;
-    } else if (sortBy === 'usageCount') {
+    } else if (sortBy === "usageCount") {
       comparison = a.usageCount - b.usageCount;
     }
-    
-    return sortDirection === 'asc' ? comparison : -comparison;
+
+    return sortDirection === "asc" ? comparison : -comparison;
   });
-  
+
   // Combine default and user templates, then filter based on search
-  const allTemplates = [...defaultTemplates, ...data.templates];
-  const filteredTemplates = allTemplates.filter(template => {
+  const filteredTemplates = allTemplates.filter((template) => {
     if (!data.ui.searchQuery) return true;
-    
-    return template.title.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) ||
-           (template.description || '').toLowerCase().includes(data.ui.searchQuery.toLowerCase()) ||
-           template.content.toLowerCase().includes(data.ui.searchQuery.toLowerCase());
+
+    return (
+      template.title
+        .toLowerCase()
+        .includes(data.ui.searchQuery.toLowerCase()) ||
+      (template.description || "")
+        .toLowerCase()
+        .includes(data.ui.searchQuery.toLowerCase()) ||
+      template.content.toLowerCase().includes(data.ui.searchQuery.toLowerCase())
+    );
   });
-  
+
   // Combine default and user snippets, then filter based on search
-  const allSnippets = [...defaultSnippets, ...data.snippets];
-  const filteredSnippets = allSnippets.filter(snippet => {
+  const filteredSnippets = allSnippets.filter((snippet) => {
     if (!data.ui.searchQuery) return true;
-    
-    return snippet.title.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) ||
-           snippet.content.toLowerCase().includes(data.ui.searchQuery.toLowerCase());
+
+    return (
+      snippet.title.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) ||
+      snippet.content.toLowerCase().includes(data.ui.searchQuery.toLowerCase())
+    );
   });
-  
+
   // Filter workflows based on search, tags, and favorites
-  const filteredWorkflows = (data.workflows || []).filter(workflow => {
+  const filteredWorkflows = (data.workflows || []).filter((workflow) => {
     // Filter by search query
-    if (data.ui.searchQuery && !workflow.title.toLowerCase().includes(data.ui.searchQuery.toLowerCase()) && 
-        !workflow.description.toLowerCase().includes(data.ui.searchQuery.toLowerCase())) {
+    if (
+      data.ui.searchQuery &&
+      !workflow.title
+        .toLowerCase()
+        .includes(data.ui.searchQuery.toLowerCase()) &&
+      !workflow.description
+        .toLowerCase()
+        .includes(data.ui.searchQuery.toLowerCase())
+    ) {
       return false;
     }
-    
+
     // Filter by selected tags
-    if (data.ui.selectedTags.length > 0 && !data.ui.selectedTags.some(tagId => workflow.tags.includes(tagId))) {
+    if (
+      data.ui.selectedTags.length > 0 &&
+      !data.ui.selectedTags.some((tagId) => workflow.tags.includes(tagId))
+    ) {
       return false;
     }
-    
+
     // Filter by favorites
     if (data.ui.showFavoritesOnly && !workflow.isFavorite) {
       return false;
     }
-    
+
     return true;
   });
-  
+
   // Sort workflows based on settings
   const sortedWorkflows = [...filteredWorkflows].sort((a, b) => {
     const sortBy = data.settings.sortBy;
     const sortDirection = data.settings.sortDirection;
-    
+
     let comparison = 0;
-    
-    if (sortBy === 'title') {
+
+    if (sortBy === "title") {
       comparison = a.title.localeCompare(b.title);
-    } else if (sortBy === 'createdAt') {
+    } else if (sortBy === "createdAt") {
       comparison = a.createdAt - b.createdAt;
-    } else if (sortBy === 'lastModified') {
+    } else if (sortBy === "lastModified") {
       comparison = a.lastModified - b.lastModified;
     }
-    
-    return sortDirection === 'asc' ? comparison : -comparison;
+
+    return sortDirection === "asc" ? comparison : -comparison;
   });
-  
+
   // Handle tab change
-  const handleTabChange = (tab: 'prompts' | 'templates' | 'snippets' | 'workflows') => {
+  const handleTabChange = (
+    tab: "prompts" | "templates" | "snippets" | "workflows",
+  ) => {
     updateUI({ activeTab: tab });
   };
-  
+
   // Handle search
   const handleSearch = (query: string) => {
     updateUI({ searchQuery: query });
   };
-  
+
   // Handle tag selection
   const handleTagSelect = (tagId: string) => {
     const selectedTags = data.ui.selectedTags.includes(tagId)
-      ? data.ui.selectedTags.filter(id => id !== tagId)
+      ? data.ui.selectedTags.filter((id) => id !== tagId)
       : [...data.ui.selectedTags, tagId];
-    
+
     updateUI({ selectedTags });
   };
-  
+
   // Handle favorites toggle
   const handleFavoritesToggle = () => {
     updateUI({ showFavoritesOnly: !data.ui.showFavoritesOnly });
@@ -208,64 +256,72 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
   const handleFiltersToggle = () => {
     updateUI({ showFiltersPanel: !data.ui.showFiltersPanel });
   };
-  
+
   // Handle sort change
-  const handleSortChange = (sortBy: PromptManagerData['settings']['sortBy']) => {
+  const handleSortChange = (
+    sortBy: PromptManagerData["settings"]["sortBy"],
+  ) => {
     updateSettings({ sortBy });
   };
-  
+
   // Handle workflow sort change (workflows don't support usageCount)
-  const handleWorkflowSortChange = (sortBy: 'title' | 'createdAt' | 'lastModified') => {
-    updateSettings({ sortBy: sortBy as PromptManagerData['settings']['sortBy'] });
+  const handleWorkflowSortChange = (
+    sortBy: "title" | "createdAt" | "lastModified",
+  ) => {
+    updateSettings({
+      sortBy: sortBy as PromptManagerData["settings"]["sortBy"],
+    });
   };
-  
+
   // Handle sort direction change
   const handleSortDirectionChange = () => {
-    updateSettings({ 
-      sortDirection: data.settings.sortDirection === 'asc' ? 'desc' : 'asc' 
+    updateSettings({
+      sortDirection: data.settings.sortDirection === "asc" ? "desc" : "asc",
     });
   };
-  
+
   // Handle view mode change
   const handleViewModeChange = () => {
-    updateSettings({ 
-      viewMode: data.settings.viewMode === 'list' ? 'grid' : 'list' 
+    updateSettings({
+      viewMode: data.settings.viewMode === "list" ? "grid" : "list",
     });
   };
-  
 
-  
+  const handleStartFromTemplate = () => {
+    setSelectTemplateModalOpen(true);
+  };
+
   // Handle import/export
   const handleImport = (importedData: Partial<PromptManagerData>) => {
     importData(importedData);
     setShowImportExport(null);
   };
-  
+
   // Close mobile menu when changing tabs
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [data.ui.activeTab]);
-  
+
   return (
     <div className="h-full flex flex-col bg-gray-900 text-gray-200">
       {/* Top Navigation */}
       <div className="flex-none border-b border-gray-700/50">
-        <Tabs 
+        <Tabs
           activeTab={data.ui.activeTab}
           onTabChange={handleTabChange}
           onSearch={handleSearch}
           searchQuery={data.ui.searchQuery}
-          onImportExport={() => setShowImportExport('import')}
+          onImportExport={() => setShowImportExport("import")}
           onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           showFiltersPanel={data.ui.showFiltersPanel}
           onToggleFiltersPanel={handleFiltersToggle}
         />
       </div>
-      
+
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <Sidebar 
+        <Sidebar
           tags={data.tags}
           selectedTags={data.ui.selectedTags}
           onTagSelect={handleTagSelect}
@@ -278,10 +334,10 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
           onClose={() => setIsMobileMenuOpen(false)}
           showFiltersPanel={data.ui.showFiltersPanel}
         />
-        
+
         {/* Content Area */}
         <div className="flex-1 flex overflow-hidden">
-          {data.ui.activeTab === 'prompts' && (
+          {data.ui.activeTab === "prompts" && (
             <div className="flex-1 flex overflow-hidden">
               {/* Prompt List */}
               <PromptList
@@ -294,13 +350,14 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
                 onToggleFavorite={toggleFavorite}
                 viewMode={data.settings.viewMode}
                 onViewModeChange={handleViewModeChange}
-                sortBy={data.settings.sortBy === 'usageCount' ? 'lastModified' : data.settings.sortBy as 'title' | 'createdAt' | 'lastModified'}
+                sortBy={data.settings.sortBy}
                 sortDirection={data.settings.sortDirection}
                 onSortChange={handleSortChange}
                 onSortDirectionChange={handleSortDirectionChange}
                 tags={data.tags}
+                onStartFromTemplate={handleStartFromTemplate}
               />
-              
+
               {/* Prompt Editor */}
               {selectedPrompt && (
                 <PromptEditor
@@ -314,8 +371,8 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
               )}
             </div>
           )}
-          
-          {data.ui.activeTab === 'templates' && (
+
+          {data.ui.activeTab === "templates" && (
             <TemplateList
               templates={filteredTemplates}
               selectedTemplateId={data.ui.selectedTemplateId}
@@ -326,8 +383,8 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
               onCreatePromptFromTemplate={createPromptFromTemplate}
             />
           )}
-          
-          {data.ui.activeTab === 'snippets' && (
+
+          {data.ui.activeTab === "snippets" && (
             <SnippetList
               snippets={filteredSnippets}
               selectedSnippetId={data.ui.selectedSnippetId}
@@ -337,8 +394,8 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
               onDeleteSnippet={deleteSnippet}
             />
           )}
-          
-          {data.ui.activeTab === 'workflows' && (
+
+          {data.ui.activeTab === "workflows" && (
             <div className="flex-1 flex overflow-hidden">
               {/* Workflow List */}
               <WorkflowList
@@ -351,13 +408,20 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
                 onToggleFavorite={toggleWorkflowFavorite}
                 viewMode={data.settings.viewMode}
                 onViewModeChange={handleViewModeChange}
-                sortBy={data.settings.sortBy === 'usageCount' ? 'lastModified' : data.settings.sortBy as 'title' | 'createdAt' | 'lastModified'}
+                sortBy={
+                  data.settings.sortBy === "usageCount"
+                    ? "lastModified"
+                    : (data.settings.sortBy as
+                        | "title"
+                        | "createdAt"
+                        | "lastModified")
+                }
                 sortDirection={data.settings.sortDirection}
                 onSortChange={handleWorkflowSortChange}
                 onSortDirectionChange={handleSortDirectionChange}
                 tags={data.tags}
               />
-              
+
               {/* Workflow Editor */}
               {selectedWorkflow && (
                 <WorkflowEditor
@@ -371,7 +435,18 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
           )}
         </div>
       </div>
-      
+
+      {isSelectTemplateModalOpen && (
+        <SelectTemplateModal
+          templates={allTemplates}
+          onSelect={(templateId: string) => {
+            createPromptFromTemplate(templateId);
+            setSelectTemplateModalOpen(false);
+          }}
+          onClose={() => setSelectTemplateModalOpen(false)}
+        />
+      )}
+
       {/* Import/Export Modal */}
       {showImportExport && (
         <ImportExportModal

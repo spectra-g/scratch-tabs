@@ -1,28 +1,31 @@
-import { CronDialect, CronCodeSnippet } from '../types';
+import { CronDialect, CronCodeSnippet } from "../types";
 
 /**
  * Get code snippets for a cron expression in various languages and frameworks
  */
-export function getCronCodeSnippets(expression: string, dialect: CronDialect): CronCodeSnippet[] {
+export function getCronCodeSnippets(
+  expression: string,
+  dialect: CronDialect,
+): CronCodeSnippet[] {
   const snippets: CronCodeSnippet[] = [];
-  
+
   // JavaScript snippets
   snippets.push({
-    language: 'javascript',
-    framework: 'node-cron',
+    language: "javascript",
+    framework: "node-cron",
     code: `const cron = require('node-cron');
 
 // Schedule a task to run based on the cron expression
 cron.schedule('${expression}', () => {
   console.log('Running a task based on the cron expression');
 });`,
-    installCommand: 'npm install node-cron',
-    description: 'A simple cron-like task scheduler for Node.js'
+    installCommand: "npm install node-cron",
+    description: "A simple cron-like task scheduler for Node.js",
   });
-  
+
   snippets.push({
-    language: 'javascript',
-    framework: 'cron',
+    language: "javascript",
+    framework: "cron",
     code: `const CronJob = require('cron').CronJob;
 
 // Create a new cron job
@@ -33,19 +36,19 @@ const job = new CronJob(
   },
   null, // onComplete
   true, // start
-  '${dialect === 'quartz' ? 'America/Los_Angeles' : 'UTC'}' // timezone
+  '${dialect === "quartz" ? "America/Los_Angeles" : "UTC"}' // timezone
 );
 
 // You can also manually start the job
 // job.start();`,
-    installCommand: 'npm install cron',
-    description: 'Cron jobs for your Node.js application'
+    installCommand: "npm install cron",
+    description: "Cron jobs for your Node.js application",
   });
-  
+
   // Python snippets
   snippets.push({
-    language: 'python',
-    framework: 'schedule',
+    language: "python",
+    framework: "schedule",
     code: `import schedule
 import time
 
@@ -62,13 +65,13 @@ schedule.every().day.at("00:00").do(job)  # Example for daily at midnight
 while True:
     schedule.run_pending()
     time.sleep(1)`,
-    installCommand: 'pip install schedule',
-    description: 'Python job scheduling for humans'
+    installCommand: "pip install schedule",
+    description: "Python job scheduling for humans",
   });
-  
+
   snippets.push({
-    language: 'python',
-    framework: 'apscheduler',
+    language: "python",
+    framework: "apscheduler",
     code: `from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -85,14 +88,14 @@ try:
     scheduler.start()
 except (KeyboardInterrupt, SystemExit):
     pass`,
-    installCommand: 'pip install apscheduler',
-    description: 'Advanced Python Scheduler with cron-style scheduling'
+    installCommand: "pip install apscheduler",
+    description: "Advanced Python Scheduler with cron-style scheduling",
   });
-  
+
   // Java snippets
   snippets.push({
-    language: 'java',
-    framework: 'spring',
+    language: "java",
+    framework: "spring",
     code: `import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -104,12 +107,12 @@ public class ScheduledTasks {
         System.out.println("Running a task based on the cron expression");
     }
 }`,
-    description: 'Spring Framework scheduled tasks using cron expressions'
+    description: "Spring Framework scheduled tasks using cron expressions",
   });
-  
+
   snippets.push({
-    language: 'java',
-    framework: 'quartz',
+    language: "java",
+    framework: "quartz",
     code: `import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -139,13 +142,13 @@ public class MyJob implements Job {
         System.out.println("Running a task based on the cron expression");
     }
 }`,
-    description: 'Quartz Scheduler for Java applications'
+    description: "Quartz Scheduler for Java applications",
   });
-  
+
   // PHP snippets
   snippets.push({
-    language: 'php',
-    framework: 'laravel',
+    language: "php",
+    framework: "laravel",
     code: `<?php
 
 // In app/Console/Kernel.php
@@ -154,13 +157,13 @@ protected function schedule(Schedule $schedule)
     $schedule->command('app:your-command')
              ->cron('${expression}');
 }`,
-    description: 'Laravel Task Scheduling with cron expressions'
+    description: "Laravel Task Scheduling with cron expressions",
   });
-  
+
   // Go snippets
   snippets.push({
-    language: 'go',
-    framework: 'cron',
+    language: "go",
+    framework: "cron",
     code: `package main
 
 import (
@@ -188,26 +191,26 @@ func main() {
 	// Keep the program running
 	select {}
 }`,
-    installCommand: 'go get github.com/robfig/cron/v3',
-    description: 'A cron library for Go'
+    installCommand: "go get github.com/robfig/cron/v3",
+    description: "A cron library for Go",
   });
-  
+
   // Ruby snippets
   snippets.push({
-    language: 'ruby',
-    framework: 'whenever',
+    language: "ruby",
+    framework: "whenever",
     code: `# In config/schedule.rb
 every '${expression}' do
   runner "MyModel.task_to_run"
 end`,
-    installCommand: 'gem install whenever',
-    description: 'Whenever is a Ruby gem for writing and deploying cron jobs'
+    installCommand: "gem install whenever",
+    description: "Whenever is a Ruby gem for writing and deploying cron jobs",
   });
-  
+
   // C# snippets
   snippets.push({
-    language: 'csharp',
-    framework: 'quartz.net',
+    language: "csharp",
+    framework: "quartz.net",
     code: `using Quartz;
 using Quartz.Impl;
 
@@ -246,21 +249,22 @@ public class MyJob : IJob
         return Task.CompletedTask;
     }
 }`,
-    installCommand: 'dotnet add package Quartz',
-    description: 'Quartz.NET is a full-featured, open source job scheduling system for .NET'
+    installCommand: "dotnet add package Quartz",
+    description:
+      "Quartz.NET is a full-featured, open source job scheduling system for .NET",
   });
-  
+
   // Shell snippets
   snippets.push({
-    language: 'shell',
-    framework: 'crontab',
+    language: "shell",
+    framework: "crontab",
     code: `# Add this line to your crontab file (crontab -e)
 ${expression} /path/to/your/script.sh
 
 # Or with output redirection
 ${expression} /path/to/your/script.sh >> /path/to/logfile.log 2>&1`,
-    description: 'Linux/Unix crontab entry'
+    description: "Linux/Unix crontab entry",
   });
-  
+
   return snippets;
 }

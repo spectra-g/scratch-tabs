@@ -1,13 +1,19 @@
-import { ResizeObserverCallback } from '../types';
+import { ResizeObserverCallback } from "../types";
 
 /**
  * Debounce function calls
  */
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number) {
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+) {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   // This is the function that will be called after the timeout
-  const debouncedFunction = function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+  const debouncedFunction = function (
+    this: ThisParameterType<T>,
+    ...args: Parameters<T>
+  ) {
     const context = this;
     // Clear any existing timeout
     if (timeoutId !== null) {
@@ -36,7 +42,7 @@ export function debounce<T extends (...args: any[]) => any>(func: T, wait: numbe
  */
 export function createThrottledResizeObserver(
   callback: ResizeObserverCallback,
-  delay: number
+  delay: number,
 ): ResizeObserver {
   let timeoutId: number | null = null;
   let pendingEntries: ResizeObserverEntry[] = [];

@@ -1,17 +1,24 @@
-import React from 'react';
-import { DndContext } from '@dnd-kit/core';
-import { FolderPlus } from 'lucide-react';
-import { BaseModal } from '../../../languages/json/components/modals/BaseModal';
-import { ConfirmationDialog } from './ConfirmationDialog';
-import { WorkspaceSidebar } from './WorkspaceSidebar';
-import { TabManagementToolbar, TabsContent, WorkspaceForm, DragOverlayUI } from './TabManagementUI';
-import { TabManagementEngine } from './useTabManagementEngine';
+import React from "react";
+import { DndContext } from "@dnd-kit/core";
+import { FolderPlus } from "lucide-react";
+import { BaseModal } from "../../../languages/json/components/modals/BaseModal";
+import { ConfirmationDialog } from "./ConfirmationDialog";
+import { WorkspaceSidebar } from "./WorkspaceSidebar";
+import {
+  TabManagementToolbar,
+  TabsContent,
+  WorkspaceForm,
+  DragOverlayUI,
+} from "./TabManagementUI";
+import { TabManagementEngine } from "./useTabManagementEngine";
 
 interface TabManagementModalUIProps {
   engine: TabManagementEngine;
 }
 
-export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({ engine }) => {
+export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({
+  engine,
+}) => {
   const {
     // UI State
     newWorkspaceName,
@@ -87,7 +94,12 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({ engi
   } = engine;
 
   return (
-    <BaseModal title="Tab Management" onClose={handleBaseModalClose} maxWidthClass="max-w-6xl" maxHeightClass="max-h-[90vh]">
+    <BaseModal
+      title="Tab Management"
+      onClose={handleBaseModalClose}
+      maxWidthClass="max-w-6xl"
+      maxHeightClass="max-h-[90vh]"
+    >
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
@@ -97,7 +109,9 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({ engi
           {/* Left sidebar - Workspaces */}
           <div className="w-64 border-r border-gray-700/50 flex flex-col">
             <div className="p-3 border-b border-gray-700/50">
-              <h3 className="text-sm font-medium text-gray-300 mb-2">Workspaces</h3>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">
+                Workspaces
+              </h3>
 
               {/* Create workspace button */}
               <button
@@ -126,7 +140,10 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({ engi
                   workspaceName={editingWorkspaceName}
                   setWorkspaceName={setEditingWorkspaceName}
                   handleRename={handleRenameWorkspace}
-                  onCancel={() => { setEditingWorkspaceId(null); setEditingWorkspaceName(''); }}
+                  onCancel={() => {
+                    setEditingWorkspaceId(null);
+                    setEditingWorkspaceName("");
+                  }}
                 />
               )}
             </div>
@@ -138,7 +155,7 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({ engi
               onSelect={handleSwitchWorkspaceAndKeepModal}
               onRename={(id) => {
                 setEditingWorkspaceId(id);
-                const workspace = workspaces.find(w => w.id === id);
+                const workspace = workspaces.find((w) => w.id === id);
                 if (workspace) {
                   setEditingWorkspaceName(workspace.name);
                 }
@@ -219,9 +236,11 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({ engi
         confirmText={confirmationDialog.confirmText}
         cancelText={confirmationDialog.cancelText}
         onConfirm={confirmationDialog.onConfirm}
-        onCancel={() => setConfirmationDialog(prev => ({ ...prev, isOpen: false }))}
+        onCancel={() =>
+          setConfirmationDialog((prev) => ({ ...prev, isOpen: false }))
+        }
         isDestructive={confirmationDialog.isDestructive}
       />
     </BaseModal>
   );
-}; 
+};

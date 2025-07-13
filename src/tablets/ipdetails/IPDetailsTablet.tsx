@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Tablet, TabletState } from '../types';
-import { Globe2, Copy, RotateCw, Loader2, Check } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Tablet, TabletState } from "../types";
+import { Globe2, Copy, RotateCw, Loader2, Check } from "lucide-react";
 
 interface IPDetailsState extends TabletState {
-  type: 'ipdetails';
+  type: "ipdetails";
   data: {
     ip: string;
     details: any;
@@ -26,13 +26,13 @@ const IPDetailsTabletUI: React.FC<{
       data: {
         ...state.data,
         loading: true,
-        error: null
-      }
+        error: null,
+      },
     });
 
     try {
       // First get the IP address from ipify
-      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const ipResponse = await fetch("https://api.ipify.org?format=json");
       const ipData = await ipResponse.json();
       const ip = ipData.ip;
 
@@ -41,7 +41,7 @@ const IPDetailsTabletUI: React.FC<{
       const details = await detailsResponse.json();
 
       if (details.error) {
-        throw new Error(details.reason || 'Failed to fetch IP details');
+        throw new Error(details.reason || "Failed to fetch IP details");
       }
 
       onChange({
@@ -51,8 +51,8 @@ const IPDetailsTabletUI: React.FC<{
           details,
           loading: false,
           error: null,
-          lastUpdated: Date.now()
-        }
+          lastUpdated: Date.now(),
+        },
       });
     } catch (error) {
       onChange({
@@ -60,8 +60,8 @@ const IPDetailsTabletUI: React.FC<{
         data: {
           ...state.data,
           loading: false,
-          error: 'Failed to fetch IP details. Please try again.'
-        }
+          error: "Failed to fetch IP details. Please try again.",
+        },
       });
     }
   };
@@ -116,61 +116,85 @@ const IPDetailsTabletUI: React.FC<{
             {/* IP Address */}
             <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-gray-400">IP Address</div>
+                <div className="text-sm font-medium text-gray-400">
+                  IP Address
+                </div>
                 <button
                   onClick={copyIP}
-                  className={`p-1 rounded transition-colors ${isCopied ? 'text-green-400' : 'text-gray-400 hover:text-gray-300'}`}
-                  title={isCopied ? 'Copied!' : 'Copy IP to clipboard'}
+                  className={`p-1 rounded transition-colors ${isCopied ? "text-green-400" : "text-gray-400 hover:text-gray-300"}`}
+                  title={isCopied ? "Copied!" : "Copy IP to clipboard"}
                 >
                   {isCopied ? <Check size={16} /> : <Copy size={16} />}
                 </button>
               </div>
-              <div className="mt-1 text-2xl font-mono text-gray-100">{state.data.ip}</div>
+              <div className="mt-1 text-2xl font-mono text-gray-100">
+                {state.data.ip}
+              </div>
             </div>
 
             {/* Location Details */}
             <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg divide-y divide-gray-700/50">
               <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-400 mb-3">Location</h3>
+                <h3 className="text-sm font-medium text-gray-400 mb-3">
+                  Location
+                </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-xs text-gray-500">City</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.city || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.city || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Region</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.region || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.region || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Country</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.country_name || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.country_name || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Postal Code</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.postal || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.postal || "-"}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Network Details */}
               <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-400 mb-3">Network</h3>
+                <h3 className="text-sm font-medium text-gray-400 mb-3">
+                  Network
+                </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-xs text-gray-500">ISP</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.org || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.org || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">ASN</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.asn || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.asn || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Network</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.network || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.network || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Version</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.version || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.version || "-"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -181,12 +205,14 @@ const IPDetailsTabletUI: React.FC<{
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-xs text-gray-500">Timezone</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.timezone || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.timezone || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">UTC Offset</div>
                     <div className="text-sm text-gray-200">
-                      {state.data.details?.utc_offset || '-'}
+                      {state.data.details?.utc_offset || "-"}
                     </div>
                   </div>
                 </div>
@@ -194,15 +220,21 @@ const IPDetailsTabletUI: React.FC<{
 
               {/* Coordinates */}
               <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-400 mb-3">Coordinates</h3>
+                <h3 className="text-sm font-medium text-gray-400 mb-3">
+                  Coordinates
+                </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-xs text-gray-500">Latitude</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.latitude || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.latitude || "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Longitude</div>
-                    <div className="text-sm text-gray-200">{state.data.details?.longitude || '-'}</div>
+                    <div className="text-sm text-gray-200">
+                      {state.data.details?.longitude || "-"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -211,7 +243,8 @@ const IPDetailsTabletUI: React.FC<{
             {/* Last Updated */}
             {state.data.lastUpdated && (
               <div className="text-xs text-gray-500">
-                Last updated: {new Date(state.data.lastUpdated).toLocaleString()}
+                Last updated:{" "}
+                {new Date(state.data.lastUpdated).toLocaleString()}
               </div>
             )}
           </div>
@@ -222,20 +255,20 @@ const IPDetailsTabletUI: React.FC<{
 };
 
 export const IPDetailsTablet: Tablet = {
-  id: 'ipdetails',
-  label: 'IP Details',
-  keywords: ['ip', 'address', 'location', 'network', 'geolocation'],
+  id: "ipdetails",
+  label: "IP Details",
+  keywords: ["ip", "address", "location", "network", "geolocation"],
 
   createInitialState(): IPDetailsState {
     return {
-      type: 'ipdetails',
+      type: "ipdetails",
       data: {
-        ip: '',
+        ip: "",
         details: null,
         loading: false,
         error: null,
-        lastUpdated: null
-      }
+        lastUpdated: null,
+      },
     };
   },
 
@@ -249,5 +282,5 @@ export const IPDetailsTablet: Tablet = {
 
   render(state: IPDetailsState, onChange) {
     return <IPDetailsTabletUI state={state} onChange={onChange} />;
-  }
+  },
 };

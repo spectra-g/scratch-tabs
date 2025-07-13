@@ -1,28 +1,29 @@
-import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import React from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface MarkdownPreviewProps {
   content: string;
   className?: string;
 }
 
-export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ 
-  content, 
-  className = "prose prose-invert max-w-none p-4 text-sm [&>h1]:mb-2 [&>h2]:mb-2 [&>h3]:mb-2 [&>h4]:mb-2 [&>h5]:mb-2 [&>h6]:mb-2 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-3 [&>h4]:mt-2 [&>h5]:mt-2 [&>h6]:mt-2 [&>h1]:text-gray-200 [&>h2]:text-gray-200 [&>h3]:text-gray-200 [&>h4]:text-gray-200 [&>h5]:text-gray-200 [&>h6]:text-gray-200" 
+export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
+  content,
+  className = "prose prose-invert max-w-none p-4 text-sm [&>h1]:mb-2 [&>h2]:mb-2 [&>h3]:mb-2 [&>h4]:mb-2 [&>h5]:mb-2 [&>h6]:mb-2 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-3 [&>h4]:mt-2 [&>h5]:mt-2 [&>h6]:mt-2 [&>h1]:text-gray-200 [&>h2]:text-gray-200 [&>h3]:text-gray-200 [&>h4]:text-gray-200 [&>h5]:text-gray-200 [&>h6]:text-gray-200",
 }) => {
   if (!content) {
-    return <div className="text-gray-500 italic p-4">No content to preview</div>;
+    return (
+      <div className="text-gray-500 italic p-4">No content to preview</div>
+    );
   }
 
   return (
     <div className={className}>
-      <ReactMarkdown 
+      <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           // Custom styling for code blocks
           code: ({ node, inline, className, children, ...props }: any) => {
-            const match = /language-(\w+)/.exec(className || '');
             return !inline ? (
               <pre className="bg-gray-800 rounded-md p-4 overflow-x-auto">
                 <code className={className} {...props}>
@@ -30,7 +31,10 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
                 </code>
               </pre>
             ) : (
-              <code className="bg-gray-800 px-1 py-0.5 rounded text-sm" {...props}>
+              <code
+                className="bg-gray-800 px-1 py-0.5 rounded text-sm"
+                {...props}
+              >
                 {children}
               </code>
             );
@@ -49,9 +53,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-gray-600 px-4 py-2">
-              {children}
-            </td>
+            <td className="border border-gray-600 px-4 py-2">{children}</td>
           ),
           // Custom styling for blockquotes
           blockquote: ({ children }) => (
@@ -61,9 +63,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
           ),
           // Custom styling for links
           a: ({ href, children }) => (
-            <a 
-              href={href} 
-              target="_blank" 
+            <a
+              href={href}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:text-blue-300 underline"
             >
@@ -72,18 +74,18 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
           ),
           // Custom styling for checkboxes
           input: ({ type, checked }) => {
-            if (type === 'checkbox') {
+            if (type === "checkbox") {
               return (
-                <input 
-                  type="checkbox" 
-                  checked={checked} 
-                  readOnly 
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  readOnly
                   className="mr-2"
                 />
               );
             }
             return null;
-          }
+          },
         }}
       >
         {content}

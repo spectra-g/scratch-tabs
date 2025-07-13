@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Editor } from '@monaco-editor/react';
-import { X, Copy, Check, Download } from 'lucide-react';
-import { MappingConfig, MappingDirection, TargetLanguage } from '../types';
-import { generateCode } from '../utils/mappingUtils';
-import { downloadStringAsFile } from '../utils/fileUtils';
+import React, { useState } from "react";
+import { Editor } from "@monaco-editor/react";
+import { X, Copy, Check, Download } from "lucide-react";
+import { MappingConfig, MappingDirection, TargetLanguage } from "../types";
+import { generateCode } from "../utils/mappingUtils";
+import { downloadStringAsFile } from "../utils/fileUtils";
 
 interface CodeGenerationModalProps {
   mapping: MappingConfig;
@@ -15,40 +15,47 @@ interface CodeGenerationModalProps {
 export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
   mapping,
   onClose,
-  initialLanguage = 'javascript',
-  initialDirection = 'sourceToTarget'
+  initialLanguage = "javascript",
+  initialDirection = "sourceToTarget",
 }) => {
   const [language, setLanguage] = useState<TargetLanguage>(initialLanguage);
-  const [direction, setDirection] = useState<MappingDirection>(initialDirection);
-  const [code, setCode] = useState(() => generateCode(mapping.rules, initialLanguage, initialDirection));
+  const [direction, setDirection] =
+    useState<MappingDirection>(initialDirection);
+  const [code, setCode] = useState(() =>
+    generateCode(mapping.rules, initialLanguage, initialDirection),
+  );
   const [isCopied, setIsCopied] = useState(false);
-  
+
   const handleLanguageChange = (newLanguage: TargetLanguage) => {
     setLanguage(newLanguage);
     setCode(generateCode(mapping.rules, newLanguage, direction));
   };
-  
+
   const handleDirectionChange = (newDirection: MappingDirection) => {
     setDirection(newDirection);
     setCode(generateCode(mapping.rules, language, newDirection));
   };
-  
+
   const handleCopyCode = async () => {
     await navigator.clipboard.writeText(code);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
-  
+
   const handleDownloadCode = () => {
-    const extension = language === 'javascript' ? 'js' : 
-                      language === 'typescript' ? 'ts' : 
-                      language === 'python' ? 'py' : 
-                      'java';
-    
-    const filename = `${mapping.name.replace(/\s+/g, '_')}_${direction}_mapper.${extension}`;
+    const extension =
+      language === "javascript"
+        ? "js"
+        : language === "typescript"
+          ? "ts"
+          : language === "python"
+            ? "py"
+            : "java";
+
+    const filename = `${mapping.name.replace(/\s+/g, "_")}_${direction}_mapper.${extension}`;
     downloadStringAsFile(code, filename);
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden">
@@ -64,7 +71,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
             <X size={24} />
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">
           <div className="space-y-6">
@@ -76,12 +83,13 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => handleLanguageChange('javascript')}
+                    onClick={() => handleLanguageChange("javascript")}
                     className={`
                       px-3 py-1.5 rounded-md text-sm
-                      ${language === 'javascript'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                      ${
+                        language === "javascript"
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                       }
                       transition-colors
                     `}
@@ -89,12 +97,13 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                     JavaScript
                   </button>
                   <button
-                    onClick={() => handleLanguageChange('typescript')}
+                    onClick={() => handleLanguageChange("typescript")}
                     className={`
                       px-3 py-1.5 rounded-md text-sm
-                      ${language === 'typescript'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                      ${
+                        language === "typescript"
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                       }
                       transition-colors
                     `}
@@ -102,12 +111,13 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                     TypeScript
                   </button>
                   <button
-                    onClick={() => handleLanguageChange('python')}
+                    onClick={() => handleLanguageChange("python")}
                     className={`
                       px-3 py-1.5 rounded-md text-sm
-                      ${language === 'python'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                      ${
+                        language === "python"
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                       }
                       transition-colors
                     `}
@@ -115,12 +125,13 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                     Python
                   </button>
                   <button
-                    onClick={() => handleLanguageChange('java')}
+                    onClick={() => handleLanguageChange("java")}
                     className={`
                       px-3 py-1.5 rounded-md text-sm
-                      ${language === 'java'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                      ${
+                        language === "java"
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                       }
                       transition-colors
                     `}
@@ -135,12 +146,13 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => handleDirectionChange('sourceToTarget')}
+                    onClick={() => handleDirectionChange("sourceToTarget")}
                     className={`
                       px-3 py-1.5 rounded-md text-sm
-                      ${direction === 'sourceToTarget'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                      ${
+                        direction === "sourceToTarget"
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                       }
                       transition-colors
                     `}
@@ -148,12 +160,13 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                     Source to Target
                   </button>
                   <button
-                    onClick={() => handleDirectionChange('targetToSource')}
+                    onClick={() => handleDirectionChange("targetToSource")}
                     className={`
                       px-3 py-1.5 rounded-md text-sm
-                      ${direction === 'targetToSource'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                      ${
+                        direction === "targetToSource"
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                       }
                       transition-colors
                     `}
@@ -163,7 +176,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Code Editor */}
             <div>
               <div className="flex justify-between items-center mb-2">
@@ -176,7 +189,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                     className="flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
                   >
                     {isCopied ? <Check size={16} /> : <Copy size={16} />}
-                    <span>{isCopied ? 'Copied!' : 'Copy'}</span>
+                    <span>{isCopied ? "Copied!" : "Copy"}</span>
                   </button>
                   <button
                     onClick={handleDownloadCode}
@@ -190,15 +203,15 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
               <div className="border border-gray-700/50 rounded-md overflow-hidden">
                 <Editor
                   height="500px"
-                  language={language === 'java' ? 'java' : language}
+                  language={language === "java" ? "java" : language}
                   value={code}
                   theme="vs-dark"
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
-                    wordWrap: 'on',
+                    wordWrap: "on",
                     padding: { top: 8, bottom: 8 },
-                    readOnly: true
+                    readOnly: true,
                   }}
                 />
               </div>

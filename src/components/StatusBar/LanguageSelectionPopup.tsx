@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
-import { useClickOutside } from '../../hooks/useClickOutside';
-import type { PopupMenuItem } from './types';
+import React, { useRef } from "react";
+import { useClickOutside } from "../../hooks/useClickOutside";
+import type { PopupMenuItem } from "./types";
 
 interface LanguageSelectionPopupProps {
   languages: PopupMenuItem[];
@@ -13,27 +13,27 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
   languages,
   onSelectLanguage,
   onClose,
-  title
+  title,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
-  
+
   useClickOutside(popupRef, onClose);
-  
+
   const handleSelectLanguage = (languageId: string) => {
     onSelectLanguage(languageId);
     onClose();
   };
 
   return (
-    <div 
+    <div
       ref={popupRef}
       className="absolute z-50 bg-gray-800 border border-gray-700 rounded shadow-lg overflow-hidden custom-scrollbar"
-      style={{ 
-        bottom: '28px',
-        left: '0px',
-        maxHeight: '300px',
-        width: '170px',
-        overflowY: 'auto'
+      style={{
+        bottom: "28px",
+        left: "0px",
+        maxHeight: "300px",
+        width: "170px",
+        overflowY: "auto",
       }}
     >
       {title && (
@@ -42,9 +42,14 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
         </div>
       )}
       <div className="py-1">
-        {languages.map(item => {
+        {languages.map((item) => {
           if (item.isSeparator) {
-            return <div key={item.id} className="border-t border-gray-700/50 my-1 mx-2"></div>;
+            return (
+              <div
+                key={item.id}
+                className="border-t border-gray-700/50 my-1 mx-2"
+              ></div>
+            );
           }
           return (
             <button
@@ -57,7 +62,7 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
             </button>
           );
         })}
-        
+
         {languages.length === 0 && (
           <div className="px-3 py-2 text-sm text-gray-400 italic">
             No languages available
@@ -66,4 +71,4 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
       </div>
     </div>
   );
-}; 
+};

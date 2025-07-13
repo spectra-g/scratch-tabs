@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { BaseModal } from './BaseModal';
-import { Editor } from '@monaco-editor/react';
-import { Tab } from '../../../../types';
-import { Copy, ExternalLink, Check } from 'lucide-react';
-import { useWorkspaceStore } from '../../../../stores/workspaceStore';
+import React, { useState } from "react";
+import { BaseModal } from "./BaseModal";
+import { Editor } from "@monaco-editor/react";
+import { Tab } from "../../../../types";
+import { Copy, ExternalLink, Check } from "lucide-react";
+import { useWorkspaceStore } from "../../../../stores/workspaceStore";
 
 interface CodeTab {
   id: string;
@@ -18,16 +18,21 @@ interface CodeGenerationModalProps {
   addTab: (tab: Tab) => void;
 }
 
-export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, onClose, addTab }) => {
-
+export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
+  tabs,
+  onClose,
+  addTab,
+}) => {
   // Initialize activeTabId only once using a function form
-  const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0]?.id || '');
+  const [activeTabId, setActiveTabId] = useState<string>(
+    () => tabs[0]?.id || "",
+  );
   const [copiedTabId, setCopiedTabId] = useState<string | null>(null);
   const [openedTabId, setOpenedTabId] = useState<string | null>(null);
   const { activeWorkspaceId } = useWorkspaceStore();
 
   const handleCopyContent = async (tabId: string) => {
-    const tab = tabs.find(t => t.id === tabId);
+    const tab = tabs.find((t) => t.id === tabId);
     if (!tab) return;
 
     await navigator.clipboard.writeText(tab.content);
@@ -52,7 +57,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
         cursorPosition: { lineNumber: 1, column: 1 },
         dateCreated: Date.now(),
         lastModified: Date.now(),
-        workspaceId: activeWorkspaceId || ''
+        workspaceId: activeWorkspaceId || "",
       });
     });
 
@@ -63,20 +68,23 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
   };
 
   // Memoize the active tab to prevent unnecessary re-renders
-  const activeTab = React.useMemo(() => 
-    tabs.find(t => t.id === activeTabId), 
-    [tabs, activeTabId]
+  const activeTab = React.useMemo(
+    () => tabs.find((t) => t.id === activeTabId),
+    [tabs, activeTabId],
   );
 
   // Safeguard for large content in generated code
   const displayContent = React.useMemo(() => {
-    if (!activeTab?.content) return '';
-    
+    if (!activeTab?.content) return "";
+
     // If content is very large, truncate it for display
     if (activeTab.content.length > 100000) {
-      return activeTab.content.substring(0, 50000) + '\n\n... [Content truncated for performance] ...';
+      return (
+        activeTab.content.substring(0, 50000) +
+        "\n\n... [Content truncated for performance] ..."
+      );
     }
-    
+
     return activeTab.content;
   }, [activeTab?.content]);
 
@@ -86,7 +94,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
         <div className="flex flex-row justify-between">
           {/* Tabs */}
           <div className="flex space-x-1 bg-gray-800 p-2 rounded-t-lg">
-            {tabs.map(tab => (
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {
@@ -94,9 +102,10 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
                 }}
                 className={`
                   px-4 py-2 rounded-md text-sm font-medium transition-colors
-                  ${activeTabId === tab.id
-                    ? 'bg-gray-700 text-gray-200'
-                    : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+                  ${
+                    activeTabId === tab.id
+                      ? "bg-gray-700 text-gray-200"
+                      : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
                   }
                 `}
               >
@@ -108,17 +117,25 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
             <div className="flex items-center justify-end space-x-2 px-4 py-2">
               <button
                 onClick={() => handleCopyContent(activeTab.id)}
-                className={`p-2 rounded-md transition-colors ${copiedTabId === activeTab.id ? 'text-green-400' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}`}
+                className={`p-2 rounded-md transition-colors ${copiedTabId === activeTab.id ? "text-green-400" : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"}`}
                 title="Copy to clipboard"
               >
-                {copiedTabId === activeTab.id ? <Check size={16} /> : <Copy size={16} />}
+                {copiedTabId === activeTab.id ? (
+                  <Check size={16} />
+                ) : (
+                  <Copy size={16} />
+                )}
               </button>
               <button
                 onClick={() => handleOpenInNewTab(activeTab)}
-                className={`p-2 rounded-md transition-colors ${openedTabId === activeTab.id ? 'text-green-400' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}`}
+                className={`p-2 rounded-md transition-colors ${openedTabId === activeTab.id ? "text-green-400" : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"}`}
                 title="Open in new tab"
               >
-                {openedTabId === activeTab.id ? <Check size={16} /> : <ExternalLink size={16} />}
+                {openedTabId === activeTab.id ? (
+                  <Check size={16} />
+                ) : (
+                  <ExternalLink size={16} />
+                )}
               </button>
             </div>
           )}
@@ -139,7 +156,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({ tabs, 
                     readOnly: true,
                     minimap: { enabled: false },
                     fontSize: 14,
-                    wordWrap: 'on',
+                    wordWrap: "on",
                     padding: { top: 16, bottom: 16 },
                   }}
                 />

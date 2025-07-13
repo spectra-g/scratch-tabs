@@ -1,5 +1,5 @@
 export const goSnippet = {
-  name: 'Go',
+  name: "Go",
   code: `package main
 
 import (
@@ -37,5 +37,5 @@ func main() {
     for word, count := range freq {
         fmt.Printf("%-10s: %d\\n", word, count)
     }
-}`
+}`,
 };

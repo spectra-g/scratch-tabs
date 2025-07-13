@@ -1,90 +1,102 @@
-import React, { useEffect, useState } from 'react';
-import { useRootStore } from '../../stores/rootStore';
-import { useTabsStore } from '../../stores/tabsStore';
-import { useSplitViewStore } from '../../stores/splitViewStore';
-import { useWorkspaceStore } from '../../stores/workspaceStore';
-import { usePersistenceStore } from '../../stores/persistenceStore';
-import { useSplitViewResizer } from '../../hooks/useSplitViewResizer';
-import { useUrlTabHandler, handleInitialUrl } from '../../hooks/useUrlTabHandler';
-import { useSearchStore } from '../../stores/searchStore';
-import { WelcomeScreen } from '../Welcome/WelcomeScreen';
-import { TabBar } from '../Tab/TabBar';
-import { EditorPaneWrapper } from '../Editor/EditorPaneWrapper';
-import { SplitViewDivider } from '../SplitView/SplitViewDivider';
-import { DiffModal } from '../DiffModal';
-import { SummarizeModal } from '../AI/SummarizeModal';
-import { SearchModal } from '../Search/SearchModal';
-import { AIModelManagementModal } from '../AI/AIModelManagementModal';
-import { useAIStore } from '../../stores/aiStore';
-import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { shallow } from 'zustand/shallow';
+import React, { useEffect, useState } from "react";
+import { useRootStore } from "../../stores/rootStore";
+import { useTabsStore } from "../../stores/tabsStore";
+import { useSplitViewStore } from "../../stores/splitViewStore";
+import { useWorkspaceStore } from "../../stores/workspaceStore";
+import { usePersistenceStore } from "../../stores/persistenceStore";
+import { useSplitViewResizer } from "../../hooks/useSplitViewResizer";
+import {
+  useUrlTabHandler,
+  handleInitialUrl,
+} from "../../hooks/useUrlTabHandler";
+import { useSearchStore } from "../../stores/searchStore";
+import { WelcomeScreen } from "../Welcome/WelcomeScreen";
+import { TabBar } from "../Tab/TabBar";
+import { EditorPaneWrapper } from "../Editor/EditorPaneWrapper";
+import { SplitViewDivider } from "../SplitView/SplitViewDivider";
+import { DiffModal } from "../DiffModal";
+import { SummarizeModal } from "../AI/SummarizeModal";
+import { SearchModal } from "../Search/SearchModal";
+import { AIModelManagementModal } from "../AI/AIModelManagementModal";
+import { useAIStore } from "../../stores/aiStore";
+import { useStoreWithEqualityFn } from "zustand/traditional";
+import { shallow } from "zustand/shallow";
 
 const MainLayout: React.FC = () => {
   // FIX: Use selective subscription for tab count only
-  const tabCount = useTabsStore(state => state.tabs.length);
-  
+  const tabCount = useTabsStore((state) => state.tabs.length);
+
   // FIX: Use useStoreWithEqualityFn for split view with shallow comparison
-  const { splitView, activeLeftTabId, activeRightTabId } = useStoreWithEqualityFn(
-    useSplitViewStore,
-    state => ({
-      splitView: state.splitView,
-      activeLeftTabId: state.splitView?.activeLeftTabId,
-      activeRightTabId: state.splitView?.activeRightTabId,
-    }),
-    shallow
-  );
-  
+  const { splitView, activeLeftTabId, activeRightTabId } =
+    useStoreWithEqualityFn(
+      useSplitViewStore,
+      (state) => ({
+        splitView: state.splitView,
+        activeLeftTabId: state.splitView?.activeLeftTabId,
+        activeRightTabId: state.splitView?.activeRightTabId,
+      }),
+      shallow,
+    );
+
   // FIX: Use useStoreWithEqualityFn for root store actions
   const { saveTabDataById, setSplitRatio } = useStoreWithEqualityFn(
     useRootStore,
-    state => ({
+    (state) => ({
       saveTabDataById: state.saveTabDataById,
       setSplitRatio: state.setSplitRatio,
     }),
-    shallow
+    shallow,
   );
 
   // FIX: Use useStoreWithEqualityFn for workspace store
   const { loadWorkspaces, workspaces } = useStoreWithEqualityFn(
     useWorkspaceStore,
-    state => ({
+    (state) => ({
       loadWorkspaces: state.loadWorkspaces,
       workspaces: state.workspaces,
     }),
-    shallow
+    shallow,
   );
-  
+
   // FIX: Use useStoreWithEqualityFn for persistence store
   const { saveState } = useStoreWithEqualityFn(
     usePersistenceStore,
-    state => ({ saveState: state.saveState }),
-    shallow
+    (state) => ({ saveState: state.saveState }),
+    shallow,
   );
-  
+
   const [isAppInitialized, setIsAppInitialized] = useState(false);
-  
+
   // FIX: Use useStoreWithEqualityFn for AI store
   const { setSummaryModalCallback } = useStoreWithEqualityFn(
     useAIStore,
-    state => ({ setSummaryModalCallback: state.setSummaryModalCallback }),
-    shallow
+    (state) => ({ setSummaryModalCallback: state.setSummaryModalCallback }),
+    shallow,
   );
 
   function setRealHeight() {
-    document.documentElement.style.setProperty('--real-vh', `${window.innerHeight * 0.01}px`);
+    document.documentElement.style.setProperty(
+      "--real-vh",
+      `${window.innerHeight * 0.01}px`,
+    );
   }
-  window.addEventListener('resize', setRealHeight);
+  window.addEventListener("resize", setRealHeight);
   setRealHeight();
 
   // Initialize workspace store
   useEffect(() => {
-    loadWorkspaces().then(async () => {
-      await handleInitialUrl();
-      setIsAppInitialized(true);
-    }).catch(error => {
-      console.error('[MainLayout] Failed to initialize workspace store:', error);
-      setIsAppInitialized(true);
-    });
+    loadWorkspaces()
+      .then(async () => {
+        await handleInitialUrl();
+        setIsAppInitialized(true);
+      })
+      .catch((error) => {
+        console.error(
+          "[MainLayout] Failed to initialize workspace store:",
+          error,
+        );
+        setIsAppInitialized(true);
+      });
   }, [loadWorkspaces]);
 
   // Set up AI summary modal callback
@@ -108,7 +120,6 @@ const MainLayout: React.FC = () => {
     };
   }, []); // Empty dependency array ensures this runs only once on mount
 
-
   const [diffModal, setDiffModal] = React.useState<{
     leftTabId: string | null;
     rightTabId: string | null;
@@ -130,21 +141,35 @@ const MainLayout: React.FC = () => {
   } = useSplitViewResizer(
     splitView?.isSplit,
     splitView?.splitRatio,
-    setSplitRatio
+    setSplitRatio,
   );
 
   const { isOpen: isSearchOpen, toggleSearch } = useSearchStore();
 
-  const handleOpenDiffModal = (fromHistory?: boolean, explicitSide?: 'left' | 'right', explicitTabId?: string) => {
+  const handleOpenDiffModal = (
+    fromHistory?: boolean,
+    explicitSide?: "left" | "right",
+    explicitTabId?: string,
+  ) => {
     const currentSplitView = useSplitViewStore.getState().splitView;
-    
+
     if (fromHistory) {
       // Determine which side we're on based on explicit side or current state
-      const isRightSide = explicitSide ? explicitSide === 'right' : currentSplitView.rightTabs.includes(currentSplitView.activeRightTabId || '');
-      const history = isRightSide ? (currentSplitView as any).rightTabHistory : (currentSplitView as any).leftTabHistory;
+      const isRightSide = explicitSide
+        ? explicitSide === "right"
+        : currentSplitView.rightTabs.includes(
+            currentSplitView.activeRightTabId || "",
+          );
+      const history = isRightSide
+        ? (currentSplitView as any).rightTabHistory
+        : (currentSplitView as any).leftTabHistory;
 
       // Always use the explicit tab ID when provided
-      const currentTabId = explicitTabId || (isRightSide ? currentSplitView.activeRightTabId : currentSplitView.activeLeftTabId);
+      const currentTabId =
+        explicitTabId ||
+        (isRightSide
+          ? currentSplitView.activeRightTabId
+          : currentSplitView.activeLeftTabId);
 
       if (history && history.length >= 2 && currentTabId) {
         // Get the previous tab from history that isn't the current tab
@@ -160,7 +185,7 @@ const MainLayout: React.FC = () => {
           setDiffModal({
             leftTabId: isRightSide ? previousTabId : currentTabId,
             rightTabId: isRightSide ? currentTabId : previousTabId,
-            fromHistory: true
+            fromHistory: true,
           });
         }
       }
@@ -171,14 +196,16 @@ const MainLayout: React.FC = () => {
 
       if (explicitTabId) {
         // If explicit side provided, use it on that side
-        if (explicitSide === 'left') {
+        if (explicitSide === "left") {
           leftTabId = explicitTabId;
-        } else if (explicitSide === 'right') {
+        } else if (explicitSide === "right") {
           rightTabId = explicitTabId;
         } else {
           // No side specified - determine based on which side contains the tab
-          const isInLeftSide = currentSplitView.leftTabs.includes(explicitTabId);
-          const isInRightSide = currentSplitView.rightTabs.includes(explicitTabId);
+          const isInLeftSide =
+            currentSplitView.leftTabs.includes(explicitTabId);
+          const isInRightSide =
+            currentSplitView.rightTabs.includes(explicitTabId);
 
           if (isInLeftSide) {
             leftTabId = explicitTabId;
@@ -191,7 +218,7 @@ const MainLayout: React.FC = () => {
       setDiffModal({
         leftTabId: leftTabId,
         rightTabId: rightTabId,
-        fromHistory: false
+        fromHistory: false,
       });
     }
   };
@@ -200,69 +227,86 @@ const MainLayout: React.FC = () => {
     setDiffModal(null);
   };
 
-    const handleOpenSummarizeModal = (tabId: string) => {
-        // This find should be fast unless 'tabs' is gigantic
-        const tab = useTabsStore.getState().tabs.find(t => t.id === tabId);
-        if (tab && tab.content) {
-            setSummarizeModal({ content: tab.content, tabId: tabId }); // This should trigger re-render quickly
-        } else {
-            // Optionally show a user notification here
-        }
-    };
+  const handleOpenSummarizeModal = (tabId: string) => {
+    // This find should be fast unless 'tabs' is gigantic
+    const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId);
+    if (tab && tab.content) {
+      setSummarizeModal({ content: tab.content, tabId: tabId }); // This should trigger re-render quickly
+    } else {
+      // Optionally show a user notification here
+    }
+  };
 
   const handleCloseSummarizeModal = () => {
-      setSummarizeModal(null);
+    setSummarizeModal(null);
   };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-
       // --- Search Shortcut ---
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'F') {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.shiftKey &&
+        event.key === "F"
+      ) {
         event.preventDefault();
-        const selectedText = window.getSelection()?.toString() || '';
+        const selectedText = window.getSelection()?.toString() || "";
         toggleSearch(selectedText); // Pass selected text to pre-populate
       }
 
-      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
         saveState(); // Call the centralized save function
 
-        const editorTextAreas = document.querySelectorAll<HTMLElement>('.monaco-editor textarea');
-        let focusedEditorSide: 'left' | 'right' | null = null;
+        const editorTextAreas = document.querySelectorAll<HTMLElement>(
+          ".monaco-editor textarea",
+        );
+        let focusedEditorSide: "left" | "right" | null = null;
         let focusedElement: HTMLElement | null = null;
 
-        if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') {
-            for (const textArea of editorTextAreas) {
-                if (document.activeElement === textArea) {
-                     focusedElement = textArea;
-                     break;
-                }
+        if (
+          document.activeElement &&
+          document.activeElement.tagName === "TEXTAREA"
+        ) {
+          for (const textArea of editorTextAreas) {
+            if (document.activeElement === textArea) {
+              focusedElement = textArea;
+              break;
             }
+          }
         }
 
         if (focusedElement) {
-            const parentPane = focusedElement.closest<HTMLElement>('[data-editor-pane-side]');
-            if (parentPane) {
-                const sideAttr = parentPane.getAttribute('data-editor-pane-side');
-                if (sideAttr === 'left' || sideAttr === 'right') {
-                    focusedEditorSide = sideAttr;
-                }
+          const parentPane = focusedElement.closest<HTMLElement>(
+            "[data-editor-pane-side]",
+          );
+          if (parentPane) {
+            const sideAttr = parentPane.getAttribute("data-editor-pane-side");
+            if (sideAttr === "left" || sideAttr === "right") {
+              focusedEditorSide = sideAttr;
             }
+          }
         }
         if (focusedEditorSide) {
-            const tabIdToSave = focusedEditorSide === 'left' ? activeLeftTabId : activeRightTabId;
+          const tabIdToSave =
+            focusedEditorSide === "left" ? activeLeftTabId : activeRightTabId;
 
-            if (tabIdToSave) {
-              saveTabDataById(tabIdToSave);
-            }
+          if (tabIdToSave) {
+            saveTabDataById(tabIdToSave);
+          }
         }
-    }
+      }
     };
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [saveState, toggleSearch, activeLeftTabId, activeRightTabId, saveTabDataById]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    saveState,
+    toggleSearch,
+    activeLeftTabId,
+    activeRightTabId,
+    saveTabDataById,
+  ]);
 
   useUrlTabHandler();
 
@@ -282,7 +326,7 @@ const MainLayout: React.FC = () => {
         className="flex w-full h-full min-w-0 overflow-hidden"
       >
         {tabCount === 0 && workspaces.length === 0 ? (
-          <WelcomeScreen/>
+          <WelcomeScreen />
         ) : (
           <>
             <div
@@ -297,7 +341,7 @@ const MainLayout: React.FC = () => {
                 />
               </div>
               <div className="w-full h-full flex-grow overflow-hidden">
-                <EditorPaneWrapper side="left"/>
+                <EditorPaneWrapper side="left" />
               </div>
             </div>
 
@@ -321,7 +365,7 @@ const MainLayout: React.FC = () => {
                     />
                   </div>
                   <div className="w-full h-full flex-grow overflow-hidden">
-                    <EditorPaneWrapper side="right"/>
+                    <EditorPaneWrapper side="right" />
                   </div>
                 </div>
               </>
@@ -338,12 +382,12 @@ const MainLayout: React.FC = () => {
         />
       )}
       {summarizeModal && (
-          <>
-            <SummarizeModal
-                  content={summarizeModal.content}
-                  onClose={handleCloseSummarizeModal}
-            />
-          </>
+        <>
+          <SummarizeModal
+            content={summarizeModal.content}
+            onClose={handleCloseSummarizeModal}
+          />
+        </>
       )}
       {isSearchOpen && <SearchModal />}
       <AIModelManagementModal />

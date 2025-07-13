@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Tag, Star, Plus, Edit2, Trash2, Check, X } from 'lucide-react';
-import { Tag as TagType } from '../types';
+import React, { useState } from "react";
+import { Tag, Star, Plus, Edit2, Trash2, X } from "lucide-react";
+import { Tag as TagType } from "../types";
 
 interface SidebarProps {
   tags: TagType[];
@@ -8,8 +8,8 @@ interface SidebarProps {
   onTagSelect: (tagId: string) => void;
   showFavoritesOnly: boolean;
   onFavoritesToggle: () => void;
-  onCreateTag: (tag: Omit<TagType, 'id'>) => TagType;
-  onUpdateTag: (id: string, updates: Partial<Omit<TagType, 'id'>>) => void;
+  onCreateTag: (tag: Omit<TagType, "id">) => TagType;
+  onUpdateTag: (id: string, updates: Partial<Omit<TagType, "id">>) => void;
   onDeleteTag: (id: string) => void;
   isVisible: boolean;
   onClose: () => void;
@@ -27,75 +27,77 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeleteTag,
   isVisible,
   onClose,
-  showFiltersPanel
+  showFiltersPanel,
 }) => {
   const [isCreatingTag, setIsCreatingTag] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState('#3B82F6'); // Default blue
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState("#3B82F6"); // Default blue
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
-  const [editTagName, setEditTagName] = useState('');
-  const [editTagColor, setEditTagColor] = useState('');
-  
+  const [editTagName, setEditTagName] = useState("");
+  const [editTagColor, setEditTagColor] = useState("");
+
   // Available colors for tags
   const tagColors = [
-    { name: 'Blue', value: '#3B82F6' },
-    { name: 'Green', value: '#10B981' },
-    { name: 'Purple', value: '#8B5CF6' },
-    { name: 'Yellow', value: '#F59E0B' },
-    { name: 'Red', value: '#EF4444' },
-    { name: 'Pink', value: '#EC4899' },
-    { name: 'Indigo', value: '#6366F1' },
-    { name: 'Teal', value: '#14B8A6' },
-    { name: 'Orange', value: '#F97316' },
-    { name: 'Gray', value: '#6B7280' },
+    { name: "Blue", value: "#3B82F6" },
+    { name: "Green", value: "#10B981" },
+    { name: "Purple", value: "#8B5CF6" },
+    { name: "Yellow", value: "#F59E0B" },
+    { name: "Red", value: "#EF4444" },
+    { name: "Pink", value: "#EC4899" },
+    { name: "Indigo", value: "#6366F1" },
+    { name: "Teal", value: "#14B8A6" },
+    { name: "Orange", value: "#F97316" },
+    { name: "Gray", value: "#6B7280" },
   ];
-  
+
   const handleCreateTag = () => {
     if (newTagName.trim()) {
       onCreateTag({
         name: newTagName.trim(),
-        color: newTagColor
+        color: newTagColor,
       });
-      setNewTagName('');
+      setNewTagName("");
       setIsCreatingTag(false);
     }
   };
-  
+
   const handleStartEditTag = (tag: TagType) => {
     setEditingTagId(tag.id);
     setEditTagName(tag.name);
     setEditTagColor(tag.color);
   };
-  
+
   const handleSaveEditTag = () => {
     if (editingTagId && editTagName.trim()) {
       onUpdateTag(editingTagId, {
         name: editTagName.trim(),
-        color: editTagColor
+        color: editTagColor,
       });
       setEditingTagId(null);
     }
   };
-  
+
   const handleCancelEditTag = () => {
     setEditingTagId(null);
   };
-  
+
   return (
     <>
       {/* Mobile overlay */}
       {isVisible && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 bg-black/50 z-40"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar */}
-      <div 
+      <div
         className={`w-64 bg-gray-800 border-r border-gray-700/50 flex-none overflow-y-auto custom-scrollbar transition-all duration-300 ease-in-out ${
-          isVisible ? 'fixed left-0 top-0 bottom-0 z-50' : 'fixed -left-64 top-0 bottom-0 z-50'
-        } ${showFiltersPanel ? 'md:relative md:left-0' : 'md:hidden'}`}
+          isVisible
+            ? "fixed left-0 top-0 bottom-0 z-50"
+            : "fixed -left-64 top-0 bottom-0 z-50"
+        } ${showFiltersPanel ? "md:relative md:left-0" : "md:hidden"}`}
       >
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
@@ -107,22 +109,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <X size={18} />
             </button>
           </div>
-          
+
           {/* Favorites Filter */}
           <div className="mb-6">
             <button
               className={`flex items-center space-x-2 w-full px-3 py-2 rounded-md transition-colors ${
                 showFavoritesOnly
-                  ? 'bg-yellow-500/20 text-yellow-400'
-                  : 'hover:bg-gray-700/50 text-gray-300'
+                  ? "bg-yellow-500/20 text-yellow-400"
+                  : "hover:bg-gray-700/50 text-gray-300"
               }`}
               onClick={onFavoritesToggle}
             >
-              <Star size={16} className={showFavoritesOnly ? 'text-yellow-400 fill-yellow-400' : ''} />
+              <Star
+                size={16}
+                className={
+                  showFavoritesOnly ? "text-yellow-400 fill-yellow-400" : ""
+                }
+              />
               <span>Favorites Only</span>
             </button>
           </div>
-          
+
           {/* Tags */}
           <div className="mb-2">
             <div className="flex items-center justify-between mb-2">
@@ -130,12 +137,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded"
                 onClick={() => setIsCreatingTag(!isCreatingTag)}
-                title={isCreatingTag ? 'Cancel' : 'Create new tag'}
+                title={isCreatingTag ? "Cancel" : "Create new tag"}
               >
                 {isCreatingTag ? <X size={14} /> : <Plus size={14} />}
               </button>
             </div>
-            
+
             {/* Create Tag Form */}
             {isCreatingTag && (
               <div className="mb-3 bg-gray-700/30 p-2 rounded-md">
@@ -152,7 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <button
                       key={color.value}
                       className={`w-5 h-5 rounded-full ${
-                        newTagColor === color.value ? 'ring-2 ring-white' : ''
+                        newTagColor === color.value ? "ring-2 ring-white" : ""
                       }`}
                       style={{ backgroundColor: color.value }}
                       onClick={() => setNewTagColor(color.value)}
@@ -177,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
             )}
-            
+
             {/* Tag List */}
             <div className="space-y-1">
               {tags.map((tag) => (
@@ -197,7 +204,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           <button
                             key={color.value}
                             className={`w-5 h-5 rounded-full ${
-                              editTagColor === color.value ? 'ring-2 ring-white' : ''
+                              editTagColor === color.value
+                                ? "ring-2 ring-white"
+                                : ""
                             }`}
                             style={{ backgroundColor: color.value }}
                             onClick={() => setEditTagColor(color.value)}
@@ -226,15 +235,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <button
                         className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors flex-1 ${
                           selectedTags.includes(tag.id)
-                            ? 'bg-gray-700/70 text-gray-200'
-                            : 'hover:bg-gray-700/50 text-gray-300'
+                            ? "bg-gray-700/70 text-gray-200"
+                            : "hover:bg-gray-700/50 text-gray-300"
                         }`}
                         onClick={() => onTagSelect(tag.id)}
                       >
                         <Tag size={14} style={{ color: tag.color }} />
                         <span>{tag.name}</span>
                       </button>
-                      
+
                       {!tag.isBuiltIn && (
                         <div className="hidden group-hover:flex items-center space-x-1">
                           <button
@@ -257,7 +266,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   )}
                 </div>
               ))}
-              
+
               {tags.length === 0 && (
                 <div className="text-gray-500 text-sm italic text-center py-2">
                   No tags created yet

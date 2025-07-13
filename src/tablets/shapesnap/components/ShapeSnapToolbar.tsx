@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import { 
-  Pencil, 
-  Eraser, 
-  RotateCcw, 
-  RotateCw, 
-  Trash2, 
-  Download, 
-  Sun, 
-  Moon, 
+import React, { useState } from "react";
+import {
+  Pencil,
+  Eraser,
+  RotateCcw,
+  RotateCw,
+  Trash2,
+  Download,
+  Sun,
+  Moon,
   Magnet,
   Signature,
   Type,
-  Layers
-} from 'lucide-react';
-import { ShapeSnapTool, ShapeSnapMode } from '../types';
+  Layers,
+} from "lucide-react";
+import { ShapeSnapTool, ShapeSnapMode } from "../types";
 
 interface ShapeSnapToolbarProps {
   currentTool: ShapeSnapTool;
@@ -52,51 +52,61 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
   onToggleGridSnapping,
   sketchModeEnabled,
   onToggleSketchMode,
-  onToggleTemplates
+  onToggleTemplates,
 }) => {
   const [showExportOptions, setShowExportOptions] = useState(false);
-  
+
   const handleDrawToggle = () => {
     // Toggle between 'draw' and 'select' modes
-    const newTool = currentTool === 'draw' ? 'select' : 'draw';
+    const newTool = currentTool === "draw" ? "select" : "draw";
     onToolChange(newTool);
   };
-  
+
   return (
     <div className="flex items-center justify-between p-2 border-b border-gray-700 bg-gray-800">
       <div className="flex items-center space-x-1">
         {/* Draw/Select toggle button */}
         <button
           className={`p-2 rounded-md transition-colors ${
-            currentTool === 'draw'
-              ? 'bg-blue-500/20 text-blue-400'
-              : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+            currentTool === "draw"
+              ? "bg-blue-500/20 text-blue-400"
+              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
           }`}
           onClick={handleDrawToggle}
-          title={currentTool === 'draw' ? 'Draw Mode (Click for Select Mode)' : 'Select Mode (Click for Draw Mode)'}
+          title={
+            currentTool === "draw"
+              ? "Draw Mode (Click for Select Mode)"
+              : "Select Mode (Click for Draw Mode)"
+          }
         >
           <Pencil size={18} />
         </button>
-        
+
         {/* Eraser tool */}
         <button
           className={`p-2 rounded-md transition-colors ${
-            currentTool === 'eraser' 
-              ? 'bg-red-500/20 text-red-400' 
-              : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+            currentTool === "eraser"
+              ? "bg-red-500/20 text-red-400"
+              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
           }`}
-          onClick={() => onToolChange('eraser')}
+          onClick={() => onToolChange("eraser")}
           title="Eraser"
         >
           <Eraser size={18} />
         </button>
-        
+
         <button
           className={`p-2 rounded-md transition-colors ${
-            gridSnappingEnabled ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+            gridSnappingEnabled
+              ? "bg-blue-500/20 text-blue-400"
+              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
           }`}
           onClick={onToggleGridSnapping}
-          title={gridSnappingEnabled ? 'Disable Grid Snapping' : 'Enable Grid Snapping'}
+          title={
+            gridSnappingEnabled
+              ? "Disable Grid Snapping"
+              : "Enable Grid Snapping"
+          }
         >
           <Magnet size={18} />
         </button>
@@ -111,11 +121,13 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           <span className="text-xs font-mono">{currentFontSize}</span>
         </button>
       </div>
-      
+
       <div className="flex items-center space-x-1">
         <button
           className={`p-2 rounded-md transition-colors ${
-            canUndo ? 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300' : 'text-gray-600 cursor-not-allowed'
+            canUndo
+              ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+              : "text-gray-600 cursor-not-allowed"
           }`}
           onClick={onUndo}
           disabled={!canUndo}
@@ -123,10 +135,12 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         >
           <RotateCcw size={18} />
         </button>
-        
+
         <button
           className={`p-2 rounded-md transition-colors ${
-            canRedo ? 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300' : 'text-gray-600 cursor-not-allowed'
+            canRedo
+              ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+              : "text-gray-600 cursor-not-allowed"
           }`}
           onClick={onRedo}
           disabled={!canRedo}
@@ -134,29 +148,37 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         >
           <RotateCw size={18} />
         </button>
-        
+
         <div className="w-px h-6 bg-gray-700 mx-1"></div>
-        
+
         <button
           className={`p-2 rounded-md transition-colors ${
-            sketchModeEnabled ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+            sketchModeEnabled
+              ? "bg-blue-500/20 text-blue-400"
+              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
           }`}
           onClick={onToggleSketchMode}
-          title={sketchModeEnabled ? 'Disable Sketch Mode' : 'Enable Sketch Mode'}
+          title={
+            sketchModeEnabled ? "Disable Sketch Mode" : "Enable Sketch Mode"
+          }
         >
           <Signature size={18} />
         </button>
-        
+
         <button
           className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
           onClick={onModeChange}
-          title={canvasMode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          title={
+            canvasMode === "dark"
+              ? "Switch to Light Mode"
+              : "Switch to Dark Mode"
+          }
         >
-          {canvasMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          {canvasMode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        
+
         <div className="w-px h-6 bg-gray-700 mx-1"></div>
-        
+
         <button
           className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
           onClick={onToggleTemplates}
@@ -164,7 +186,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         >
           <Layers size={18} />
         </button>
-        
+
         <button
           className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
           onClick={onClear}
@@ -172,7 +194,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         >
           <Trash2 size={18} />
         </button>
-        
+
         <div className="relative">
           <button
             className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
@@ -181,7 +203,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           >
             <Download size={18} />
           </button>
-          
+
           {showExportOptions && (
             <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
               <button

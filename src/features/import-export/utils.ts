@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
-import { ExportData } from './types';
+import JSZip from "jszip";
+import { ExportData } from "./types";
 
 /**
  * Creates a stable string representation of the data block for checksum generation.
@@ -22,15 +22,18 @@ export const stableStringifyDataBlock = (dataBlock: ExportData): string => {
  */
 export async function generateSha256(str: string): Promise<string> {
   const buffer = new TextEncoder().encode(str);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
  * Creates a ZIP archive containing export data and checksum.
  */
-export async function createZipArchive(jsonData: string, checksum: string): Promise<Blob> {
+export async function createZipArchive(
+  jsonData: string,
+  checksum: string,
+): Promise<Blob> {
   const zip = new JSZip();
   zip.file("export-data.json", jsonData);
   zip.file("checksum.sha256", checksum);
@@ -42,7 +45,7 @@ export async function createZipArchive(jsonData: string, checksum: string): Prom
  */
 export function triggerDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -55,7 +58,13 @@ export function triggerDownload(blob: Blob, filename: string): void {
  * Reads and unzips a .scratch file.
  * Returns the content of export-data.json and checksum.sha256.
  */
-export async function readZipArchive(file: File): Promise<{ jsonDataString?: string; checksumString?: string; error?: string }> {
+export async function readZipArchive(
+  file: File,
+): Promise<{
+  jsonDataString?: string;
+  checksumString?: string;
+  error?: string;
+}> {
   try {
     const zip = await JSZip.loadAsync(file);
     const jsonDataFile = zip.file("export-data.json");
@@ -73,7 +82,9 @@ export async function readZipArchive(file: File): Promise<{ jsonDataString?: str
     return { jsonDataString, checksumString };
   } catch (e) {
     console.error("Failed to read zip archive:", e);
-    return { error: "Failed to read or unzip the archive. It might be corrupted." };
+    return {
+      error: "Failed to read or unzip the archive. It might be corrupted.",
+    };
   }
 }
 
@@ -83,7 +94,7 @@ export async function readZipArchive(file: File): Promise<{ jsonDataString?: str
  */
 export function generateExportFilename(): string {
   const now = new Date();
-  const pad = (num: number) => num.toString().padStart(2, '0');
+  const pad = (num: number) => num.toString().padStart(2, "0");
   const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
   const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
   return `scratch-tabs-export-${dateStr}-${timeStr}.scratch`;

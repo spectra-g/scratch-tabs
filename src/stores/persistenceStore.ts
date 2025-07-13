@@ -1,9 +1,9 @@
-import { create } from 'zustand';
-import { StorageProviderFactory } from '../db';
-import { useWorkspaceStore } from './workspaceStore';
-import { useTabsStore } from './tabsStore';
-import { useSplitViewStore } from './splitViewStore';
-import { modelManager } from '../services/modelManager';
+import { create } from "zustand";
+import { StorageProviderFactory } from "../db";
+import { useWorkspaceStore } from "./workspaceStore";
+import { useTabsStore } from "./tabsStore";
+import { useSplitViewStore } from "./splitViewStore";
+import { modelManager } from "../services/modelManager";
 
 interface PersistenceStore {
   saveState: () => Promise<void>;
@@ -26,31 +26,33 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
 
         // The tabs in tabsStore are the source of truth for persistence.
         // The ModelManager's listeners have already updated them.
-        const workspaceTabs = tabs.filter(tab => tab.workspaceId === activeWorkspaceId);
-        
+        const workspaceTabs = tabs.filter(
+          (tab) => tab.workspaceId === activeWorkspaceId,
+        );
+
         // ARCHITECTURAL FIX: Get live content from ModelManager for any active models
-        const tabsToSave = workspaceTabs.map(tab => {
+        const tabsToSave = workspaceTabs.map((tab) => {
           const liveContent = modelManager.getContent(tab.id);
-      
+
           if (liveContent !== undefined) {
-              return { ...tab, content: liveContent };
+            return { ...tab, content: liveContent };
           } else {
-              return tab;
+            return tab;
           }
         });
 
         if (tabsToSave.length > 0) {
           await storage.saveTabsInterval(tabsToSave);
         }
-        
+
         if (splitView && splitView.workspaceId === activeWorkspaceId) {
           await storage.saveSplitViewNow({
             ...splitView,
-            lastModified: Date.now()
+            lastModified: Date.now(),
           });
         }
       } catch (error) {
-        console.error('[Persistence] Failed to save state:', error);
+        console.error("[Persistence] Failed to save state:", error);
       }
     },
   };

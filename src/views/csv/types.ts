@@ -1,4 +1,4 @@
-import * as Papa from 'papaparse';
+import * as Papa from "papaparse";
 
 export interface CsvCell {
   value: string;
@@ -16,7 +16,7 @@ export interface CsvRow {
 export interface CsvColumn {
   id: string;
   name: string;
-  type: 'text' | 'number' | 'date' | 'boolean';
+  type: "text" | "number" | "date" | "boolean";
   index: number;
 }
 
@@ -28,7 +28,7 @@ export interface CsvParseResult {
 }
 
 export interface CsvDiagnostic {
-  type: 'warning' | 'error';
+  type: "warning" | "error";
   message: string;
   line?: number;
   column?: number;
@@ -55,8 +55,8 @@ export interface CsvColumnStats {
   unique: number;
   empty: number;
   mostCommon: { value: string; count: number } | null;
-  dataType: 'number' | 'string' | 'mixed';
-  
+  dataType: "number" | "string" | "mixed";
+
   // Number-specific stats
   numericStats?: {
     min: number;
@@ -66,14 +66,18 @@ export interface CsvColumnStats {
     median: number;
     standardDeviation: number;
   };
-  
+
   // String-specific stats
   stringStats?: {
     minLength: number;
     maxLength: number;
     avgLength: number;
   };
-  
+
   // Frequency distribution for top values
-  frequencyDistribution: Array<{ value: string; count: number; percentage: number }>;
-} 
+  frequencyDistribution: Array<{
+    value: string;
+    count: number;
+    percentage: number;
+  }>;
+}

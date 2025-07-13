@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import React, { useState } from "react";
+import { Copy, Check } from "lucide-react";
 
 interface ConversionPanelProps {
   title: string;
@@ -12,13 +12,13 @@ export const ConversionPanel: React.FC<ConversionPanelProps> = ({
   title,
   description,
   result,
-  children
+  children,
 }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     if (!result) return;
-    
+
     await navigator.clipboard.writeText(result);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -37,16 +37,17 @@ export const ConversionPanel: React.FC<ConversionPanelProps> = ({
         {result !== undefined && (
           <div className="flex items-center space-x-2">
             <div className="flex-1 font-mono text-sm bg-gray-900/50 text-gray-200 px-3 py-2 rounded-md break-all">
-              {result || 'No result'}
+              {result || "No result"}
             </div>
             <button
               onClick={handleCopy}
               disabled={!result}
               className={`
                 p-2 rounded-md transition-colors
-                ${result
-                  ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
-                  : 'text-gray-600 cursor-not-allowed'
+                ${
+                  result
+                    ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                    : "text-gray-600 cursor-not-allowed"
                 }
               `}
               title="Copy to clipboard"

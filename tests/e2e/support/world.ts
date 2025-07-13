@@ -1,0 +1,54 @@
+import { IWorldOptions, World, setWorldConstructor } from '@cucumber/cucumber';
+import { Page, BrowserContext } from '@playwright/test';
+import { EditorActions } from './editor.actions';
+import { TabBarActions } from './tabBar.actions';
+import { ContextMenuActions } from './contextMenu.actions';
+import { NavigationActions } from './navigation.actions';
+import { ClipboardActions } from './clipboard.actions';
+import { FileActions } from './file.actions';
+import { StatusBarActions } from './statusBar.actions';
+
+/**
+ * E2E World Class - Lightweight Orchestrator & Dependency Injection Container
+ * 
+ * This class serves as the central hub for E2E tests, providing:
+ * - Cucumber World lifecycle management
+ * - Playwright page/context state management
+ * - Action class orchestration and dependency injection
+ * - Consistent state sharing across step definitions
+ */
+export class E2EWorld extends World {
+  context!: BrowserContext;
+  page!: Page;
+
+  // Action class instances - each encapsulates specific UI interactions
+  editor!: EditorActions;
+  tabBar!: TabBarActions;
+  contextMenu!: ContextMenuActions;
+  navigation!: NavigationActions;
+  clipboard!: ClipboardActions;
+  file!: FileActions;
+  statusBar!: StatusBarActions;
+
+  constructor(options: IWorldOptions) {
+    super(options);
+    // The 'page' object isn't available yet, so we initialize helpers in a 'Before' hook
+    // where the page is guaranteed to exist.
+  }
+
+  /**
+   * Initialize all action class instances with the current page.
+   * Called from the Before hook in hooks.ts where page is guaranteed to exist.
+   */
+  initializeHelpers() {
+    this.editor = new EditorActions(this.page);
+    this.tabBar = new TabBarActions(this.page);
+    this.contextMenu = new ContextMenuActions(this.page);
+    this.navigation = new NavigationActions(this.page);
+    this.clipboard = new ClipboardActions(this.page);
+    this.file = new FileActions(this.page);
+    this.statusBar = new StatusBarActions(this.page);
+  }
+}
+
+setWorldConstructor(E2EWorld); 

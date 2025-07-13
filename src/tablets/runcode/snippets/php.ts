@@ -1,5 +1,5 @@
 export const phpSnippet = {
-  name: 'PHP',
+  name: "PHP",
   code: `<?php
 
 class WeatherStation {
@@ -53,5 +53,5 @@ $station->recordTemperature(25.0, '2025-01-02');
 $station->recordTemperature(22.8, '2025-01-03');
 $station->recordTemperature(24.2, '2025-01-04');
 
-$station->generateReport();`
+$station->generateReport();`,
 };

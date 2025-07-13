@@ -1,14 +1,17 @@
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types'; 
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
 
 /**
  * C++ language detector
  */
-export class CppLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'cpp';
-  name = 'C++';
-  extensions = ['cpp', 'hpp', 'h', 'cc', 'cxx', 'hh']; // Added .hh
+export class CppLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "cpp";
+  name = "C++";
+  extensions = ["cpp", "hpp", "h", "cc", "cxx", "hh"]; // Added .hh
   priority = 5; // Adjust as needed relative to C, Java, etc.
 
   sampleContent(): string {
@@ -101,17 +104,40 @@ int main(int argc, char* argv[]) {
 
     // 1. Definitive C++ patterns (higher weights)
     const definitivePatterns = [
-      { pattern: /^\s*#include\s+<(iostream|vector|string|map|set|algorithm|memory|thread|fstream|sstream|iomanip)>/m, weight: 0.4, perMatch: 0.1 },
-      { pattern: /\bstd::(cout|cin|cerr|endl|string|vector|map|set|unique_ptr|shared_ptr|move)\b/g, weight: 0.35, perMatch: 0.05 },
+      {
+        pattern:
+          /^\s*#include\s+<(iostream|vector|string|map|set|algorithm|memory|thread|fstream|sstream|iomanip)>/m,
+        weight: 0.4,
+        perMatch: 0.1,
+      },
+      {
+        pattern:
+          /\bstd::(cout|cin|cerr|endl|string|vector|map|set|unique_ptr|shared_ptr|move)\b/g,
+        weight: 0.35,
+        perMatch: 0.05,
+      },
       { pattern: /\bnamespace\s+\w+\s*\{/g, weight: 0.25, perMatch: 0.05 },
-      { pattern: /\bclass\s+\w+\s*\{[\s\S]*?(public|private|protected):/g, weight: 0.3, perMatch: 0.1 }, // Class with access specifiers
-      { pattern: /\bstruct\s+\w+\s*\{[\s\S]*?(public|private|protected):/g, weight: 0.25, perMatch: 0.05 }, // Struct with access specifiers (more C++ like)
+      {
+        pattern: /\bclass\s+\w+\s*\{[\s\S]*?(public|private|protected):/g,
+        weight: 0.3,
+        perMatch: 0.1,
+      }, // Class with access specifiers
+      {
+        pattern: /\bstruct\s+\w+\s*\{[\s\S]*?(public|private|protected):/g,
+        weight: 0.25,
+        perMatch: 0.05,
+      }, // Struct with access specifiers (more C++ like)
       { pattern: /template\s*<.*?>/g, weight: 0.3, perMatch: 0.1 },
       { pattern: /\b(new|delete)\b\s+\w+/g, weight: 0.2, perMatch: 0.05 }, // new/delete keywords
       { pattern: /\b(try|catch|throw)\b/g, weight: 0.15, perMatch: 0.05 }, // Exception handling
       { pattern: /(?<!:)\b\w+::\w+\b/g, weight: 0.1, perMatch: 0.02 }, // Scope resolution operator (std::cout, not ":items")
-      { pattern: /\b(auto&?|const_cast|dynamic_cast|reinterpret_cast|static_cast|nullptr|override|final|noexcept|constexpr)\b/g, weight: 0.4, perMatch: 0.15 }, // C++11 and later keywords
-      { pattern: /using\s+namespace\s+std;/g, weight: 0.3, perMatch: 0.1}, // Common, though not always best practice
+      {
+        pattern:
+          /\b(auto&?|const_cast|dynamic_cast|reinterpret_cast|static_cast|nullptr|override|final|noexcept|constexpr)\b/g,
+        weight: 0.4,
+        perMatch: 0.15,
+      }, // C++11 and later keywords
+      { pattern: /using\s+namespace\s+std;/g, weight: 0.3, perMatch: 0.1 }, // Common, though not always best practice
     ];
 
     for (const dp of definitivePatterns) {
@@ -126,29 +152,51 @@ int main(int argc, char* argv[]) {
 
     // 2. Common C/C++ patterns (lower weights, help if definitive ones are sparse)
     const commonPatterns = [
-      { pattern: /^\s*#include\s+["<][\w.]+h[">]/m, weight: 0.1, perMatch: 0.02 }, // C-style headers
-      { pattern: /\b(int|void|char|double|float|long|short|bool)\s+\w+\s*\(.*\)\s*\{/g, weight: 0.1, perMatch: 0.02 }, // Function definitions
-      { pattern: /\b(printf|scanf|fprintf|fscanf|malloc|free|sizeof)\b/g, weight: -0.1, perMatch: -0.05 }, // C standard library functions - slight negative for pure C++
+      {
+        pattern: /^\s*#include\s+["<][\w.]+h[">]/m,
+        weight: 0.1,
+        perMatch: 0.02,
+      }, // C-style headers
+      {
+        pattern:
+          /\b(int|void|char|double|float|long|short|bool)\s+\w+\s*\(.*\)\s*\{/g,
+        weight: 0.1,
+        perMatch: 0.02,
+      }, // Function definitions
+      {
+        pattern: /\b(printf|scanf|fprintf|fscanf|malloc|free|sizeof)\b/g,
+        weight: -0.1,
+        perMatch: -0.05,
+      }, // C standard library functions - slight negative for pure C++
       { pattern: /->\w+/g, weight: 0.05, perMatch: 0.01 }, // Pointer member access
-      { pattern: /\b(const\s+)?(char|int|float|double)\s*\*\s*\w+/g, weight: 0.05, perMatch: 0.01 }, // Pointer declarations
+      {
+        pattern: /\b(const\s+)?(char|int|float|double)\s*\*\s*\w+/g,
+        weight: 0.05,
+        perMatch: 0.01,
+      }, // Pointer declarations
     ];
 
-    if (!definitiveMatchFound || confidenceScore < 0.5) { // Only check common if definitive score is not already high
-        for (const cp of commonPatterns) {
-            const matches = content.match(cp.pattern);
-            if (matches) {
-                confidenceScore += cp.weight;
-                confidenceScore += Math.min(matches.length, 5) * cp.perMatch;
-                patternsMatched++;
-            }
+    if (!definitiveMatchFound || confidenceScore < 0.5) {
+      // Only check common if definitive score is not already high
+      for (const cp of commonPatterns) {
+        const matches = content.match(cp.pattern);
+        if (matches) {
+          confidenceScore += cp.weight;
+          confidenceScore += Math.min(matches.length, 5) * cp.perMatch;
+          patternsMatched++;
         }
+      }
     }
-    
+
     // 3. Anti-patterns (e.g., from Java or JavaScript)
     const antiPatterns = [
       { pattern: /\bimport\s+[\w.*]+;/i, weight: -0.4 }, // Java import
       { pattern: /\bSystem\.out\.println\(/i, weight: -0.3 }, // Java print
-      { pattern: /\bpublic\s+static\s+void\s+main\s*\(String(\[\]|\s*\.\.\.)\s+\w+\)/i, weight: -0.5 }, // Java main
+      {
+        pattern:
+          /\bpublic\s+static\s+void\s+main\s*\(String(\[\]|\s*\.\.\.)\s+\w+\)/i,
+        weight: -0.5,
+      }, // Java main
       { pattern: /\b(var|let|const)\s+\w+\s*=/i, weight: -0.4 }, // JS variable declarations
       { pattern: /=>\s*\{/i, weight: -0.5 }, // JS arrow function
       { pattern: /"[^"]*":\s*\{/g, weight: -0.6 }, // JSON object keys (strong negative)
@@ -156,19 +204,26 @@ int main(int argc, char* argv[]) {
     ];
 
     for (const ap of antiPatterns) {
-        if (ap.pattern.test(content)) {
-            confidenceScore += ap.weight; // Apply negative weight
-        }
+      if (ap.pattern.test(content)) {
+        confidenceScore += ap.weight; // Apply negative weight
+      }
     }
 
     // Boost for combined typical C++ constructs
-    if (content.includes("std::") && content.includes("cout") && content.includes("<<")) {
-        confidenceScore += 0.2;
+    if (
+      content.includes("std::") &&
+      content.includes("cout") &&
+      content.includes("<<")
+    ) {
+      confidenceScore += 0.2;
     }
-    if (content.includes("class") && content.includes("public:") && content.includes("private:")) {
-        confidenceScore += 0.15;
+    if (
+      content.includes("class") &&
+      content.includes("public:") &&
+      content.includes("private:")
+    ) {
+      confidenceScore += 0.15;
     }
-
 
     // 4. Normalization and Clamping
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
@@ -183,7 +238,7 @@ int main(int argc, char* argv[]) {
   }
 
   getFileExtension(): string {
-      return 'cpp';
+    return "cpp";
   }
 
   // registerProvider can remain as is, potentially with a more advanced formatter if desired
@@ -194,7 +249,6 @@ int main(int argc, char* argv[]) {
     // For a scratchpad, a simple indent-adjuster might be attempted, but it's error-prone.
     // You could leave this empty or provide a very basic heuristic indenter.
     // For now, let's leave it as a no-op to avoid introducing a potentially buggy formatter.
-    
     // Example of basic heuristic (highly simplified, likely buggy for complex C++):
     /*
     monaco.languages.registerDocumentFormattingEditProvider('cpp', {

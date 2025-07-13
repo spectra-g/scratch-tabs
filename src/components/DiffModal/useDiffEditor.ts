@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { useState, useEffect, useRef, useCallback } from "react";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 // Define the structure for a history entry
 export interface ChangeHistoryEntry {
@@ -32,12 +32,18 @@ export const useDiffEditor = (
   rightContent: string,
   language: string,
   leftTabId: string,
-  rightTabId: string
+  rightTabId: string,
 ): DiffEditorEngine => {
-  const diffEditorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
+  const diffEditorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(
+    null,
+  );
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const originalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const modifiedEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const originalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(
+    null,
+  );
+  const modifiedEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(
+    null,
+  );
 
   const [changeHistory, setChangeHistory] = useState<ChangeHistoryEntry[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
@@ -53,7 +59,11 @@ export const useDiffEditor = (
   }, [currentHistoryIndex]);
 
   const recordChangeActual = useCallback(() => {
-    if (!originalEditorRef.current || !modifiedEditorRef.current || isRestoringHistory.current) {
+    if (
+      !originalEditorRef.current ||
+      !modifiedEditorRef.current ||
+      isRestoringHistory.current
+    ) {
       return;
     }
     const currentLeft = originalEditorRef.current.getValue();
@@ -63,10 +73,14 @@ export const useDiffEditor = (
     // Check identical status after recording change
     setAreContentsIdentical(currentLeft === currentRight);
 
-    setChangeHistory(prevHistory => {
+    setChangeHistory((prevHistory) => {
       const lastEntry = prevHistory[latestIndex];
       // Prevent recording identical consecutive states if content hasn't changed
-      if (lastEntry && lastEntry.leftContent === currentLeft && lastEntry.rightContent === currentRight) {
+      if (
+        lastEntry &&
+        lastEntry.leftContent === currentLeft &&
+        lastEntry.rightContent === currentRight
+      ) {
         return prevHistory;
       }
       const newEntry: ChangeHistoryEntry = {
@@ -124,7 +138,7 @@ export const useDiffEditor = (
         model?.original?.dispose();
         model?.modified?.dispose();
       }
-    }
+    };
 
     cleanup();
 
@@ -138,7 +152,7 @@ export const useDiffEditor = (
     editor = monaco.editor.createDiffEditor(editorContainerRef.current, {
       originalEditable: true,
       renderSideBySide: true,
-      theme: 'vs-dark',
+      theme: "vs-dark",
       automaticLayout: true,
       enableSplitViewResizing: true,
       readOnly: false,
@@ -168,15 +182,23 @@ export const useDiffEditor = (
 
     // Attach listeners
     if (originalEditorRef.current) {
-      listeners.push(originalEditorRef.current.onDidChangeModelContent(debouncedRecordChangeHandler));
+      listeners.push(
+        originalEditorRef.current.onDidChangeModelContent(
+          debouncedRecordChangeHandler,
+        ),
+      );
     }
     if (modifiedEditorRef.current) {
-      listeners.push(modifiedEditorRef.current.onDidChangeModelContent(debouncedRecordChangeHandler));
+      listeners.push(
+        modifiedEditorRef.current.onDidChangeModelContent(
+          debouncedRecordChangeHandler,
+        ),
+      );
     }
 
     // Cleanup function
     return () => {
-      listeners.forEach(listener => listener.dispose());
+      listeners.forEach((listener) => listener.dispose());
       listeners = [];
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
@@ -184,7 +206,14 @@ export const useDiffEditor = (
       }
       cleanup();
     };
-  }, [leftTabId, rightTabId, leftContent, rightContent, language, recordChangeActual]);
+  }, [
+    leftTabId,
+    rightTabId,
+    leftContent,
+    rightContent,
+    language,
+    recordChangeActual,
+  ]);
 
   // Effect to Update Editor Options (like hiding lines)
   useEffect(() => {
@@ -193,7 +222,7 @@ export const useDiffEditor = (
         hideUnchangedRegions: {
           enabled: hideMatchingLines,
           contextLineCount: DIFF_CONTEXT_LINES,
-        }
+        },
       });
     }
   }, [hideMatchingLines]);
@@ -234,7 +263,9 @@ export const useDiffEditor = (
 
     // Check identical status after restoring history
     if (changed) {
-      setAreContentsIdentical(historyEntry.leftContent === historyEntry.rightContent);
+      setAreContentsIdentical(
+        historyEntry.leftContent === historyEntry.rightContent,
+      );
     }
 
     // Use setTimeout to allow Monaco to process the setValue operations
@@ -243,7 +274,6 @@ export const useDiffEditor = (
     setTimeout(() => {
       isRestoringHistory.current = false;
     }, 0);
-
   }, [currentHistoryIndex, changeHistory]);
 
   // Computed values
@@ -261,18 +291,18 @@ export const useDiffEditor = (
     }
     // Set flag *before* changing state to prevent immediate recording
     isRestoringHistory.current = true;
-    setCurrentHistoryIndex(prevIndex => prevIndex - 1);
+    setCurrentHistoryIndex((prevIndex) => prevIndex - 1);
   }, [canUndo, recordChangeActual]);
 
   const handleRedo = useCallback(() => {
     if (!canRedo) return;
     // Set flag *before* changing state
     isRestoringHistory.current = true;
-    setCurrentHistoryIndex(prevIndex => prevIndex + 1);
+    setCurrentHistoryIndex((prevIndex) => prevIndex + 1);
   }, [canRedo]);
 
   const toggleHideMatching = useCallback(() => {
-    setHideMatchingLines(prev => !prev);
+    setHideMatchingLines((prev) => !prev);
   }, []);
 
   const getCurrentLeftContent = useCallback(() => {
@@ -309,4 +339,4 @@ export const useDiffEditor = (
     getCurrentRightContent,
     forceRecordChange,
   };
-}; 
+};

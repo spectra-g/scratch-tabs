@@ -1,6 +1,6 @@
-import React from 'react';
-import { X, Pin, ArrowRight, Trash2, Send } from 'lucide-react';
-import { HttpRequestHistoryItem } from '../types';
+import React from "react";
+import { X, Pin, ArrowRight, Trash2, Send } from "lucide-react";
+import { HttpRequestHistoryItem } from "../types";
 
 interface RequestHistoryViewerProps {
   history: HttpRequestHistoryItem[];
@@ -15,7 +15,7 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
   onPinItem,
   onDeleteItem,
   onRestoreItem,
-  onClose
+  onClose,
 }) => {
   if (history.length === 0) {
     return (
@@ -55,25 +55,41 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
       <div className="flex-1 overflow-auto custom-scrollbar">
         <div className="divide-y divide-gray-700/50">
           {history.map((item) => (
-            <div key={item.id} className="p-4 hover:bg-gray-800/50 transition-colors">
+            <div
+              key={item.id}
+              className="p-4 hover:bg-gray-800/50 transition-colors"
+            >
               <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className={`font-medium text-gray-200 ${item.request.method === 'GET' ? 'text-green-400' :
-                                                                    item.request.method === 'POST' ? 'text-blue-400' :
-                                                                    item.request.method === 'PUT' ? 'text-yellow-400' :
-                                                                    item.request.method === 'DELETE' ? 'text-red-400' :
-                                                                    'text-purple-400' // For PATCH, HEAD, OPTIONS
-                                                                  }`}>
-                        {item.request.method}
+                    <span
+                      className={`font-medium text-gray-200 ${
+                        item.request.method === "GET"
+                          ? "text-green-400"
+                          : item.request.method === "POST"
+                            ? "text-blue-400"
+                            : item.request.method === "PUT"
+                              ? "text-yellow-400"
+                              : item.request.method === "DELETE"
+                                ? "text-red-400"
+                                : "text-purple-400" // For PATCH, HEAD, OPTIONS
+                      }`}
+                    >
+                      {item.request.method}
                     </span>
-                    <span className="text-gray-400 truncate max-w-md" title={item.request.url}>{item.request.url}</span>
+                    <span
+                      className="text-gray-400 truncate max-w-md"
+                      title={item.request.url}
+                    >
+                      {item.request.url}
+                    </span>
                   </div>
 
                   <div className="flex items-center space-x-3 mt-1 text-sm">
                     <span className="text-gray-400 flex items-center">
                       <Send size={14} className="mr-1" />
-                      Sent: {new Date(item.timestamp).toLocaleTimeString()} ({new Date(item.timestamp).toLocaleDateString()})
+                      Sent: {new Date(item.timestamp).toLocaleTimeString()} (
+                      {new Date(item.timestamp).toLocaleDateString()})
                     </span>
                   </div>
                 </div>
@@ -83,12 +99,13 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
                     onClick={() => onPinItem(item.id, !item.isPinned)}
                     className={`
                       p-1.5 rounded-md transition-colors
-                      ${item.isPinned
-                        ? 'text-yellow-400 hover:bg-yellow-500/20'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                      ${
+                        item.isPinned
+                          ? "text-yellow-400 hover:bg-yellow-500/20"
+                          : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
                       }
                     `}
-                    title={item.isPinned ? 'Unpin' : 'Pin'}
+                    title={item.isPinned ? "Unpin" : "Pin"}
                   >
                     <Pin size={16} />
                   </button>

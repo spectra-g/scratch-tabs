@@ -1,14 +1,17 @@
-import { DetectionResult, LanguageDetector } from './types';
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
+import { DetectionResult, LanguageDetector } from "./types";
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
 
 /**
  * JavaScript/TypeScript language detector
  */
-export class JavaScriptLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'javascript';
-  name = 'JavaScript';
-  extensions = ['js', 'jsx', 'mjs'];
+export class JavaScriptLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "javascript";
+  name = "JavaScript";
+  extensions = ["js", "jsx", "mjs"];
   priority = 6; // Higher priority than CSV
 
   sampleContent(): string {
@@ -106,15 +109,62 @@ console.log("Exiting the script.");
 
     // 1. Definitive/Highly Specific JavaScript Patterns
     const definitivePatterns = [
-      { pattern: /\bimport\s+[\w{}*\s,]+from\s*['"]/g, weight: 0.35, perMatch: 0.1, specific: true }, // import {x} from 'y' or import * as x from 'y'
-      { pattern: /\bexport\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var)\b/g, weight: 0.35, perMatch: 0.1, specific: true },
-      { pattern: /\basync\s+function\b/g, weight: 0.3, perMatch: 0.05, specific: true },
-      { pattern: /\bawait\s+\w+/g, weight: 0.25, perMatch: 0.05, specific: true },
-      { pattern: /=>\s*(?:\{|[^({])?/g, weight: 0.3, perMatch: 0.05, specific: true }, // Arrow functions (block or implicit return)
-      { pattern: /\bclass\s+\w+(?:\s+extends\s+\w+)?\s*\{/g, weight: 0.25, perMatch: 0.05, specific: true },
-      { pattern: /`[^`]*\$\{.*?\}[^`]*`/g, weight: 0.4, perMatch: 0.1, specific: true }, // Template literals with interpolation
-      { pattern: /\b\w+\.(?:then|catch|finally)\s*\(/g, weight: 0.25, perMatch: 0.05, specific: true }, // Promise chains
-      { pattern: /\b(?:document|window)\.(?:getElementById|querySelector|addEventListener|fetch|localStorage|sessionStorage)\b/g, weight: 0.2, perMatch: 0.03, specific: true }, // Browser APIs
+      {
+        pattern: /\bimport\s+[\w{}*\s,]+from\s*['"]/g,
+        weight: 0.35,
+        perMatch: 0.1,
+        specific: true,
+      }, // import {x} from 'y' or import * as x from 'y'
+      {
+        pattern:
+          /\bexport\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var)\b/g,
+        weight: 0.35,
+        perMatch: 0.1,
+        specific: true,
+      },
+      {
+        pattern: /\basync\s+function\b/g,
+        weight: 0.3,
+        perMatch: 0.05,
+        specific: true,
+      },
+      {
+        pattern: /\bawait\s+\w+/g,
+        weight: 0.25,
+        perMatch: 0.05,
+        specific: true,
+      },
+      {
+        pattern: /=>\s*(?:\{|[^({])?/g,
+        weight: 0.3,
+        perMatch: 0.05,
+        specific: true,
+      }, // Arrow functions (block or implicit return)
+      {
+        pattern: /\bclass\s+\w+(?:\s+extends\s+\w+)?\s*\{/g,
+        weight: 0.25,
+        perMatch: 0.05,
+        specific: true,
+      },
+      {
+        pattern: /`[^`]*\$\{.*?\}[^`]*`/g,
+        weight: 0.4,
+        perMatch: 0.1,
+        specific: true,
+      }, // Template literals with interpolation
+      {
+        pattern: /\b\w+\.(?:then|catch|finally)\s*\(/g,
+        weight: 0.25,
+        perMatch: 0.05,
+        specific: true,
+      }, // Promise chains
+      {
+        pattern:
+          /\b(?:document|window)\.(?:getElementById|querySelector|addEventListener|fetch|localStorage|sessionStorage)\b/g,
+        weight: 0.2,
+        perMatch: 0.03,
+        specific: true,
+      }, // Browser APIs
     ];
 
     for (const dp of definitivePatterns) {
@@ -136,8 +186,17 @@ console.log("Exiting the script.");
       { pattern: /\b(const|let)\s+\w+\s*=/g, weight: 0.15, perMatch: 0.02 },
       { pattern: /\bvar\s+\w+\s*=/g, weight: 0.05, perMatch: 0.01 }, // Less distinct
       { pattern: /\bnew\s+\w+\s*\(/g, weight: 0.05, perMatch: 0.01 },
-      { pattern: /\b(if|for|while|switch|case|default|break|continue|return)\s*\(?/g, weight: 0.03, perMatch: 0.005 }, // Very common, lower weight
-      { pattern: /\bconsole\.(log|warn|error|info|debug|table)\s*\(/g, weight: 0.1, perMatch: 0.02 },
+      {
+        pattern:
+          /\b(if|for|while|switch|case|default|break|continue|return)\s*\(?/g,
+        weight: 0.03,
+        perMatch: 0.005,
+      }, // Very common, lower weight
+      {
+        pattern: /\bconsole\.(log|warn|error|info|debug|table)\s*\(/g,
+        weight: 0.1,
+        perMatch: 0.02,
+      },
       { pattern: /typeof\s+\w+/g, weight: 0.05, perMatch: 0.01 },
       { pattern: /JSON\.(parse|stringify)\s*\(/g, weight: 0.1, perMatch: 0.02 },
     ];
@@ -155,13 +214,13 @@ console.log("Exiting the script.");
 
     // 3. Anti-Patterns (Syntax strongly indicating OTHER languages)
     const antiPatterns = [
-      { pattern: /^\s*package\s+[\w.]+;/m, weight: -0.6 },         // Java package
-      { pattern: /System\.out\.println/i, weight: -0.5 },         // Java print
-      { pattern: /#include\s*</i, weight: -0.6 },                 // C/C++ include
-      { pattern: /^\s*def\s+\w+\s*\(.*?\)\s*:/m, weight: -0.5 },    // Python def func():
-      { pattern: /^\s*<\?php/m, weight: -0.7 },                   // PHP tag
+      { pattern: /^\s*package\s+[\w.]+;/m, weight: -0.6 }, // Java package
+      { pattern: /System\.out\.println/i, weight: -0.5 }, // Java print
+      { pattern: /#include\s*</i, weight: -0.6 }, // C/C++ include
+      { pattern: /^\s*def\s+\w+\s*\(.*?\)\s*:/m, weight: -0.5 }, // Python def func():
+      { pattern: /^\s*<\?php/m, weight: -0.7 }, // PHP tag
       { pattern: /^\s*#!\/bin\/(bash|sh|zsh|ksh)/m, weight: -0.7 }, // Shell shebang
-      { pattern: /^\s*@(?:Grab|Override|Test)\b/m, weight: -0.4 } // Java/Groovy annotations
+      { pattern: /^\s*@(?:Grab|Override|Test)\b/m, weight: -0.4 }, // Java/Groovy annotations
     ];
 
     for (const ap of antiPatterns) {
@@ -179,17 +238,18 @@ console.log("Exiting the script.");
       // If many common patterns but no highly specific ones, slightly temper confidence
       confidenceScore *= 0.8;
     }
-    if (content.includes("use strict")) { // "use strict" is a good JS signal
+    if (content.includes("use strict")) {
+      // "use strict" is a good JS signal
       confidenceScore += 0.1;
       strongSignalFound = true;
     }
-
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
     // Final match decision
     // Needs either a strong signal with decent confidence, or multiple patterns with higher confidence
-    const isMatch = (strongSignalFound && confidenceScore >= 0.45 && specificJsHits >= 1) ||
+    const isMatch =
+      (strongSignalFound && confidenceScore >= 0.45 && specificJsHits >= 1) ||
       (patternsMatched >= 3 && confidenceScore >= 0.55);
 
     // console.log(`JS: Score=${confidenceScore.toFixed(3)}, Patterns=${patternsMatched}, Specific=${specificJsHits}, Strong=${strongSignalFound}, Match=${isMatch}`);
@@ -197,7 +257,7 @@ console.log("Exiting the script.");
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongSignalFound && specificJsHits >= 1 // Or just strongSignalFound
+      matchedDefinitive: isMatch && strongSignalFound && specificJsHits >= 1, // Or just strongSignalFound
     };
   }
 
@@ -206,7 +266,7 @@ console.log("Exiting the script.");
    */
   registerProvider(monaco: any): void {
     // Configure JavaScript formatting provider
-    monaco.languages.registerDocumentFormattingEditProvider('javascript', {
+    monaco.languages.registerDocumentFormattingEditProvider("javascript", {
       provideDocumentFormattingEdits(model: any) {
         const content = model.getValue();
 
@@ -217,65 +277,73 @@ console.log("Exiting the script.");
         const indentSize = 2;
         let indentLevel = 0;
         let inString = false;
-        let stringChar = '';
+        let stringChar = "";
 
-        const lines = formattedJs.split('\n');
+        const lines = formattedJs.split("\n");
 
-        formattedJs = lines.map((line: string) => {
-          const trimmedLine = line.trim();
+        formattedJs = lines
+          .map((line: string) => {
+            const trimmedLine = line.trim();
 
-          // Skip empty lines
-          if (!trimmedLine) return '';
+            // Skip empty lines
+            if (!trimmedLine) return "";
 
-          // Count opening and closing braces in this line
-          let openBraces = 0;
-          let closeBraces = 0;
+            // Count opening and closing braces in this line
+            let openBraces = 0;
+            let closeBraces = 0;
 
-          // Process each character to track string context and braces
-          for (let i = 0; i < trimmedLine.length; i++) {
-            const char = trimmedLine[i];
-            const prevChar = i > 0 ? trimmedLine[i - 1] : '';
+            // Process each character to track string context and braces
+            for (let i = 0; i < trimmedLine.length; i++) {
+              const char = trimmedLine[i];
+              const prevChar = i > 0 ? trimmedLine[i - 1] : "";
 
-            // Handle string context
-            if ((char === '"' || char === "'" || char === '`') && prevChar !== '\\') {
+              // Handle string context
+              if (
+                (char === '"' || char === "'" || char === "`") &&
+                prevChar !== "\\"
+              ) {
+                if (!inString) {
+                  inString = true;
+                  stringChar = char;
+                } else if (char === stringChar) {
+                  inString = false;
+                }
+              }
+
+              // Only count braces outside of strings
               if (!inString) {
-                inString = true;
-                stringChar = char;
-              } else if (char === stringChar) {
-                inString = false;
+                if (char === "{" || char === "(" || char === "[") {
+                  openBraces++;
+                } else if (char === "}" || char === ")" || char === "]") {
+                  closeBraces++;
+                }
               }
             }
 
-            // Only count braces outside of strings
-            if (!inString) {
-              if (char === '{' || char === '(' || char === '[') {
-                openBraces++;
-              } else if (char === '}' || char === ')' || char === ']') {
-                closeBraces++;
-              }
+            // Adjust indent level based on closing braces at the start of the line
+            if (trimmedLine.match(/^[})\]]/)) {
+              indentLevel = Math.max(0, indentLevel - 1);
             }
-          }
 
-          // Adjust indent level based on closing braces at the start of the line
-          if (trimmedLine.match(/^[})\]]/)) {
-            indentLevel = Math.max(0, indentLevel - 1);
-          }
+            // Apply current indentation
+            const formattedLine =
+              " ".repeat(indentLevel * indentSize) + trimmedLine;
 
-          // Apply current indentation
-          const formattedLine = ' '.repeat(indentLevel * indentSize) + trimmedLine;
+            // Adjust indent level for the next line based on opening/closing braces
+            indentLevel += openBraces - closeBraces;
+            indentLevel = Math.max(0, indentLevel);
 
-          // Adjust indent level for the next line based on opening/closing braces
-          indentLevel += openBraces - closeBraces;
-          indentLevel = Math.max(0, indentLevel);
+            return formattedLine;
+          })
+          .join("\n");
 
-          return formattedLine;
-        }).join('\n');
-
-        return [{
-          range: model.getFullModelRange(),
-          text: formattedJs
-        }];
-      }
+        return [
+          {
+            range: model.getFullModelRange(),
+            text: formattedJs,
+          },
+        ];
+      },
     });
   }
 }
@@ -283,10 +351,13 @@ console.log("Exiting the script.");
 /**
  * TypeScript language detector
  */
-export class TypeScriptLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'typescript';
-  name = 'TypeScript';
-  extensions = ['ts', 'tsx'];
+export class TypeScriptLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "typescript";
+  name = "TypeScript";
+  extensions = ["ts", "tsx"];
   // Priority should be higher than JavaScript if it's a distinct check,
   // or it can be lower if JS detector is very broad and TS detector just adds specificity.
   // Let's make it slightly higher than JS for now, assuming TS features are strong indicators.
@@ -390,39 +461,58 @@ console.log(MyMath.circumference(10));
     }
 
     // --- STRONG ANTI-PATTERNS FOR OTHER LANGUAGES ---
-    if (trimmedContent.startsWith('<?php') || trimmedContent.startsWith('<?=') || trimmedContent.startsWith('<?=')) {
+    if (
+      trimmedContent.startsWith("<?php") ||
+      trimmedContent.startsWith("<?=") ||
+      trimmedContent.startsWith("<?=")
+    ) {
       return { match: false, confidence: 0.0, matchedDefinitive: false }; // PHP
     }
     if (/^\s*#![^\r\n]*python/i.test(trimmedContent)) {
       return { match: false, confidence: 0.0, matchedDefinitive: false }; // Python Shebang
     }
-    if (/^\s*package\s+[\w.]+;/m.test(content) || /System\.out\.println/.test(content)) {
+    if (
+      /^\s*package\s+[\w.]+;/m.test(content) ||
+      /System\.out\.println/.test(content)
+    ) {
       return { match: false, confidence: 0.0, matchedDefinitive: false }; // Java
     }
     // --- RUST ANTI-PATTERNS (NEW and CRITICAL) ---
-    if (/\bfn\s+\w/.test(content) && !/\bfunction\b/.test(content)) { // `fn name` but not `function`
+    if (/\bfn\s+\w/.test(content) && !/\bfunction\b/.test(content)) {
+      // `fn name` but not `function`
       return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
-    if (/\b(struct|enum|trait|impl|mod)\s+\w/.test(content) && !/\b(class|interface|enum)\s+\w+\s*\{/.test(content)) { // Rust keywords vs TS/JS class/interface/enum
+    if (
+      /\b(struct|enum|trait|impl|mod)\s+\w/.test(content) &&
+      !/\b(class|interface|enum)\s+\w+\s*\{/.test(content)
+    ) {
+      // Rust keywords vs TS/JS class/interface/enum
       return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
-    if (/#\[derive\(/.test(content)) { // Rust derive macro
+    if (/#\[derive\(/.test(content)) {
+      // Rust derive macro
       return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
-    if (/\buse\s+[\w:]+;/.test(content) && !/\bimport\b/.test(content)) { // Rust `use some::path;` vs JS/TS `import`
+    if (/\buse\s+[\w:]+;/.test(content) && !/\bimport\b/.test(content)) {
+      // Rust `use some::path;` vs JS/TS `import`
       return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
-    if (/\w+!\(/.test(content) && !content.includes("document.getElementById")) { // Rust macro calls like println!(...) - avoid simple function calls
+    if (
+      /\w+!\(/.test(content) &&
+      !content.includes("document.getElementById")
+    ) {
+      // Rust macro calls like println!(...) - avoid simple function calls
       return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
-    if (/->\s*\w/.test(content) && !/=>/.test(content)) { // Rust return type arrow `->` vs JS/TS fat arrow `=>`
+    if (/->\s*\w/.test(content) && !/=>/.test(content)) {
+      // Rust return type arrow `->` vs JS/TS fat arrow `=>`
       return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
-    if (/\b(let\s+mut)\b/.test(content)) { // `let mut` is very Rust specific
+    if (/\b(let\s+mut)\b/.test(content)) {
+      // `let mut` is very Rust specific
       return { match: false, confidence: 0.0, matchedDefinitive: false };
     }
     // --- End Rust Anti-Patterns ---
-
 
     let confidenceScore = 0.0;
     let patternsMatched = 0;
@@ -430,7 +520,9 @@ console.log(MyMath.circumference(10));
     let tsSpecificMatches = 0;
 
     // 1. Leverage JavaScript detector's result
-    const jsDetector = languageRegistry.getById('javascript') as JavaScriptLanguageDetector | undefined;
+    const jsDetector = languageRegistry.getById("javascript") as
+      | JavaScriptLanguageDetector
+      | undefined;
     let jsConfidence = 0.0;
     if (jsDetector) {
       const jsResult = jsDetector.detect(content); // Pass original content
@@ -444,18 +536,93 @@ console.log(MyMath.circumference(10));
 
     // 2. TypeScript-specific patterns
     const tsPatterns = [
-      { pattern: /:\s*(?:string|number|boolean|any|void|never|unknown|symbol|bigint)\b(?![=:(])/g, weight: 0.35, perMatch: 0.05, specific: true, maxMatches: 5 },
-      { pattern: /\binterface\s+[A-Z_][\w]*\s*(?:<[^>]+>)?\s*\{/g, weight: 0.4, perMatch: 0.1, specific: true, maxMatches: 3 },
-      { pattern: /\btype\s+[A-Z_][\w]*\s*=/g, weight: 0.3, perMatch: 0.05, specific: true, maxMatches: 3 },
-      { pattern: /\benum\s+[A-Z_][\w]*\s*(?:=\s*\S+\s*)?\{/g, weight: 0.3, perMatch: 0.05, specific: true, maxMatches: 2 },
-      { pattern: /<\s*[A-Z_][\w]*(?:\s*extends\s*[\w.<>]+)?(?:\s*,\s*[A-Z_][\w]*)*\s*>/g, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 3 },
-      { pattern: /\b(public|private|protected|readonly)\s+(?:static\s+)?\w+(?:\??:|\s*=)/g, weight: 0.25, perMatch: 0.03, specific: true, maxMatches: 5 },
-      { pattern: /\bimplements\s+[\w,.<>\s]+/g, weight: 0.2, perMatch: 0.03, specific: true, maxMatches: 2 },
-      { pattern: /\bdeclare\s+(?:module|global|function|class|var|let|const|enum|type|interface)\b/g, weight: 0.3, perMatch: 0.05, specific: true, maxMatches: 3 },
-      { pattern: /\bnamespace\s+[A-Z_][\w]*\s*\{/g, weight: 0.2, perMatch: 0.03, specific: true, maxMatches: 2 },
-      { pattern: /\w+\s*as\s+(?:const|string|number|boolean|any|unknown|[\w.]+)\b/g, weight: 0.15, perMatch: 0.02, maxMatches: 3 },
-      { pattern: /<\s*(?:string|number|boolean|any|unknown|[\w.]+)\s*>\s*\w+/g, weight: 0.15, perMatch: 0.02, maxMatches: 3 },
-      { pattern: /\b(abstract\s+class|abstract\s+\w+\s*\()/g, weight: 0.2, perMatch: 0.05, specific: true, maxMatches: 2 }
+      {
+        pattern:
+          /:\s*(?:string|number|boolean|any|void|never|unknown|symbol|bigint)\b(?![=:(])/g,
+        weight: 0.35,
+        perMatch: 0.05,
+        specific: true,
+        maxMatches: 5,
+      },
+      {
+        pattern: /\binterface\s+[A-Z_][\w]*\s*(?:<[^>]+>)?\s*\{/g,
+        weight: 0.4,
+        perMatch: 0.1,
+        specific: true,
+        maxMatches: 3,
+      },
+      {
+        pattern: /\btype\s+[A-Z_][\w]*\s*=/g,
+        weight: 0.3,
+        perMatch: 0.05,
+        specific: true,
+        maxMatches: 3,
+      },
+      {
+        pattern: /\benum\s+[A-Z_][\w]*\s*(?:=\s*\S+\s*)?\{/g,
+        weight: 0.3,
+        perMatch: 0.05,
+        specific: true,
+        maxMatches: 2,
+      },
+      {
+        pattern:
+          /<\s*[A-Z_][\w]*(?:\s*extends\s*[\w.<>]+)?(?:\s*,\s*[A-Z_][\w]*)*\s*>/g,
+        weight: 0.25,
+        perMatch: 0.03,
+        specific: true,
+        maxMatches: 3,
+      },
+      {
+        pattern:
+          /\b(public|private|protected|readonly)\s+(?:static\s+)?\w+(?:\??:|\s*=)/g,
+        weight: 0.25,
+        perMatch: 0.03,
+        specific: true,
+        maxMatches: 5,
+      },
+      {
+        pattern: /\bimplements\s+[\w,.<>\s]+/g,
+        weight: 0.2,
+        perMatch: 0.03,
+        specific: true,
+        maxMatches: 2,
+      },
+      {
+        pattern:
+          /\bdeclare\s+(?:module|global|function|class|var|let|const|enum|type|interface)\b/g,
+        weight: 0.3,
+        perMatch: 0.05,
+        specific: true,
+        maxMatches: 3,
+      },
+      {
+        pattern: /\bnamespace\s+[A-Z_][\w]*\s*\{/g,
+        weight: 0.2,
+        perMatch: 0.03,
+        specific: true,
+        maxMatches: 2,
+      },
+      {
+        pattern:
+          /\w+\s*as\s+(?:const|string|number|boolean|any|unknown|[\w.]+)\b/g,
+        weight: 0.15,
+        perMatch: 0.02,
+        maxMatches: 3,
+      },
+      {
+        pattern: /<\s*(?:string|number|boolean|any|unknown|[\w.]+)\s*>\s*\w+/g,
+        weight: 0.15,
+        perMatch: 0.02,
+        maxMatches: 3,
+      },
+      {
+        pattern: /\b(abstract\s+class|abstract\s+\w+\s*\()/g,
+        weight: 0.2,
+        perMatch: 0.05,
+        specific: true,
+        maxMatches: 2,
+      },
     ];
 
     for (const p of tsPatterns) {
@@ -463,7 +630,8 @@ console.log(MyMath.circumference(10));
       if (matches) {
         confidenceScore += p.weight;
         if (p.perMatch) {
-          confidenceScore += Math.min(matches.length, p.maxMatches || 3) * p.perMatch;
+          confidenceScore +=
+            Math.min(matches.length, p.maxMatches || 3) * p.perMatch;
         }
         patternsMatched++;
         if (p.specific) tsSpecificMatches++;
@@ -480,7 +648,11 @@ console.log(MyMath.circumference(10));
       { pattern: /System\.out\.println/i, weight: -0.6 },
       { pattern: /^\s*package\s+[\w.]+;/m, weight: -0.7 },
       { pattern: /^\s*#include\s*<.+>/m, weight: -0.7 },
-      { pattern: /^\s*def\s+\w+\s*\(.*?\)\s*:/m, weight: -0.6, except: /\bfunction\b/ }, // Python def, ensure not confused with JS function
+      {
+        pattern: /^\s*def\s+\w+\s*\(.*?\)\s*:/m,
+        weight: -0.6,
+        except: /\bfunction\b/,
+      }, // Python def, ensure not confused with JS function
     ];
 
     for (const ap of otherAntiPatterns) {
@@ -493,7 +665,11 @@ console.log(MyMath.circumference(10));
     // 4. Adjustments and Clamping
     if (jsConfidence > 0.5 && tsSpecificMatches === 0) {
       confidenceScore = jsConfidence * 0.3;
-    } else if (tsSpecificMatches >= 1 && jsConfidence < 0.2 && patternsMatched > tsSpecificMatches) {
+    } else if (
+      tsSpecificMatches >= 1 &&
+      jsConfidence < 0.2 &&
+      patternsMatched > tsSpecificMatches
+    ) {
       confidenceScore += 0.15;
     } else if (tsSpecificMatches >= 2) {
       confidenceScore += 0.25;
@@ -501,19 +677,23 @@ console.log(MyMath.circumference(10));
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    const isMatch = (strongSignalFound && tsSpecificMatches >= 1 && confidenceScore >= 0.40) ||
+    const isMatch =
+      (strongSignalFound && tsSpecificMatches >= 1 && confidenceScore >= 0.4) ||
       (tsSpecificMatches >= 2 && confidenceScore >= 0.55);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongSignalFound && tsSpecificMatches >= 2 && confidenceScore > 0.65
+      matchedDefinitive:
+        isMatch &&
+        strongSignalFound &&
+        tsSpecificMatches >= 2 &&
+        confidenceScore > 0.65,
     };
   }
 
-
   getFileExtension(): string {
-    return 'ts';
+    return "ts";
   }
 
   // registerProvider for TypeScript can reuse or adapt the JavaScript one,
@@ -522,7 +702,11 @@ console.log(MyMath.circumference(10));
     const languageId = this.id; // 'typescript'
 
     // Monaco has excellent built-in support for 'typescript'.
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+    if (
+      !monaco.languages
+        .getLanguages()
+        .some((lang: any) => lang.id === languageId)
+    ) {
       monaco.languages.register({ id: languageId });
     }
 

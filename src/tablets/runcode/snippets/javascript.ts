@@ -1,5 +1,5 @@
 export const javascriptSnippet = {
-  name: 'JavaScript',
+  name: "JavaScript",
   code: `function isPalindrome(str) {
     // Remove non-alphanumeric characters and convert to lowercase
     str = str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -26,5 +26,5 @@ function testPalindromes() {
     });
 }
 
-testPalindromes();`
+testPalindromes();`,
 };

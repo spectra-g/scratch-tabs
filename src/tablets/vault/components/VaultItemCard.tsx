@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
-import { Pin, Copy, ExternalLink, Trash2, Edit, Check, Tag, Clock, Hash, Globe, X, CopyPlus } from 'lucide-react';
-import { VaultItem } from '../types';
-import { getContentTypeIcon } from '../utils/contentTypeUtils';
-import { formatRelativeTime } from '../utils/dateUtils';
+import React, { useState } from "react";
+import {
+  Pin,
+  Copy,
+  ExternalLink,
+  Trash2,
+  Edit,
+  Check,
+  Tag,
+  Clock,
+  Hash,
+  Globe,
+  X,
+  CopyPlus,
+} from "lucide-react";
+import { VaultItem } from "../types";
+import { getContentTypeIcon } from "../utils/contentTypeUtils";
+import { formatRelativeTime } from "../utils/dateUtils";
 
 interface VaultItemCardProps {
   item: VaultItem;
@@ -27,15 +40,15 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
   onOpenInNewTab,
   onOpenUrl,
   isCopied,
-  isOpened
+  isOpened,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
+
   const ContentTypeIcon = getContentTypeIcon(item.contentType);
-  
+
   // Determine what action button to show based on content type
   const renderActionButton = () => {
-    if (item.contentType === 'url') {
+    if (item.contentType === "url") {
       return (
         <button
           onClick={onOpenUrl}
@@ -46,14 +59,14 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
         </button>
       );
     }
-    
+
     return (
       <button
         onClick={onOpenInNewTab}
         className={`p-1.5 transition-colors ${
-          isOpened 
-            ? 'text-green-400' 
-            : 'text-gray-400 hover:text-blue-400 hover:bg-gray-700/50'
+          isOpened
+            ? "text-green-400"
+            : "text-gray-400 hover:text-blue-400 hover:bg-gray-700/50"
         }`}
         title="Open in new tab"
       >
@@ -61,7 +74,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
       </button>
     );
   };
-  
+
   return (
     <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/50 transition-colors group">
       {/* Header */}
@@ -74,9 +87,9 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
           <button
             onClick={onTogglePin}
             className={`p-1.5 rounded transition-colors ${
-              item.isPinned 
-                ? 'text-yellow-400 hover:bg-yellow-500/20' 
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+              item.isPinned
+                ? "text-yellow-400 hover:bg-yellow-500/20"
+                : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
             }`}
             title={item.isPinned ? "Unpin item" : "Pin item"}
           >
@@ -84,24 +97,24 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
           </button>
         </div>
       </div>
-      
+
       {/* Content Preview - Clickable to copy */}
-      <div 
+      <div
         className="px-3 py-2 text-sm text-gray-300 font-mono whitespace-pre-wrap overflow-hidden cursor-pointer relative"
-        style={{ maxHeight: '100px' }}
+        style={{ maxHeight: "100px" }}
         onClick={onCopy}
       >
-        {item.content.length > 200 
-          ? `${item.content.substring(0, 200)}...` 
+        {item.content.length > 200
+          ? `${item.content.substring(0, 200)}...`
           : item.content}
       </div>
-      
+
       {/* Labels */}
       {item.labels.length > 0 && (
         <div className="px-3 py-2 border-t border-gray-700/50 flex flex-wrap gap-1.5">
-          {item.labels.map(label => (
-            <span 
-              key={label} 
+          {item.labels.map((label) => (
+            <span
+              key={label}
               className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-300"
             >
               <Tag size={10} className="mr-1" />
@@ -110,7 +123,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
           ))}
         </div>
       )}
-      
+
       {/* Footer */}
       <div className="px-3 py-2 border-t border-gray-700/50 flex items-center justify-between text-xs text-gray-400">
         <div className="flex items-center space-x-3">
@@ -123,7 +136,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
             {item.usageCount}
           </span>
         </div>
-        
+
         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {/* Only show action buttons when not in delete confirmation mode */}
           {!showDeleteConfirm && (
@@ -131,15 +144,15 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
               <button
                 onClick={onCopy}
                 className={`p-1.5 transition-colors ${
-                  isCopied 
-                    ? 'text-green-400' 
-                    : 'text-gray-400 hover:text-blue-400 hover:bg-gray-700/50'
+                  isCopied
+                    ? "text-green-400"
+                    : "text-gray-400 hover:text-blue-400 hover:bg-gray-700/50"
                 }`}
                 title="Copy content"
               >
                 {isCopied ? <Check size={16} /> : <Copy size={16} />}
               </button>
-              
+
               <button
                 onClick={onEdit}
                 className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
@@ -147,7 +160,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
               >
                 <Edit size={16} />
               </button>
-              
+
               <button
                 onClick={onDuplicate}
                 className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
@@ -155,9 +168,9 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
               >
                 <CopyPlus size={16} />
               </button>
-              
+
               {renderActionButton()}
-              
+
               <button
                 onClick={() => setShowDeleteConfirm(true)}
                 className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
@@ -167,7 +180,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
               </button>
             </>
           )}
-          
+
           {/* Delete confirmation buttons - shown in a separate row when active */}
           {showDeleteConfirm && (
             <div className="flex items-center space-x-2 ml-auto">

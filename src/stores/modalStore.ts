@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface ModalState {
   isTabManagementModalOpen: boolean;
@@ -19,12 +19,14 @@ export const useModalStore = create<ModalState>((set) => ({
   isTabManagementActionInProgress: false,
   openTabManagementModal: () => set({ isTabManagementModalOpen: true }),
   closeTabManagementModal: () => set({ isTabManagementModalOpen: false }),
-  setTabManagementActionInProgress: (inProgress: boolean) => 
+  setTabManagementActionInProgress: (inProgress: boolean) =>
     set({ isTabManagementActionInProgress: inProgress }),
-    isImportModalActive: false,
-    openImportModal: () => set({ isImportModalActive: true, isTabManagementActionInProgress: false }),
-    closeImportModal: () => set({ isImportModalActive: false }),
-    isAIModelManagementModalOpen: false,
-    openAIModelManagementModal: () => set({ isAIModelManagementModalOpen: true }),
-    closeAIModelManagementModal: () => set({ isAIModelManagementModalOpen: false }),
-})); 
+  isImportModalActive: false,
+  openImportModal: () =>
+    set({ isImportModalActive: true, isTabManagementActionInProgress: false }),
+  closeImportModal: () => set({ isImportModalActive: false }),
+  isAIModelManagementModalOpen: false,
+  openAIModelManagementModal: () => set({ isAIModelManagementModalOpen: true }),
+  closeAIModelManagementModal: () =>
+    set({ isAIModelManagementModalOpen: false }),
+}));

@@ -1,9 +1,20 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Plus, Trash2, GripVertical, Tag as TagIcon, Check, X, Copy, CheckSquare, Square, ExternalLink } from 'lucide-react';
-import { Workflow, WorkflowStep, Prompt, Tag } from '../types';
-import { useRootStore } from '../../../stores';
-import { useSplitViewStore } from '../../../stores/splitViewStore';
-import { useWorkspaceStore } from '../../../stores/workspaceStore';
+import React, { useState, useRef, useCallback } from "react";
+import {
+  Plus,
+  Trash2,
+  GripVertical,
+  Tag as TagIcon,
+  Check,
+  X,
+  Copy,
+  CheckSquare,
+  Square,
+  ExternalLink,
+} from "lucide-react";
+import { Workflow, WorkflowStep, Prompt, Tag } from "../types";
+import { useRootStore } from "../../../stores";
+import { useSplitViewStore } from "../../../stores/splitViewStore";
+import { useWorkspaceStore } from "../../../stores/workspaceStore";
 
 interface PromptSelectorProps {
   prompts: Prompt[];
@@ -12,15 +23,23 @@ interface PromptSelectorProps {
   usedPromptIds: string[];
 }
 
-const PromptSelector: React.FC<PromptSelectorProps> = ({ prompts, onSelectPrompt, onClose, usedPromptIds }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  
+const PromptSelector: React.FC<PromptSelectorProps> = ({
+  prompts,
+  onSelectPrompt,
+  onClose,
+  usedPromptIds,
+}) => {
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Filter out prompts that are already used in the workflow
-  const availablePrompts = prompts.filter(prompt => !usedPromptIds.includes(prompt.id));
-  
-  const filteredPrompts = availablePrompts.filter(prompt =>
-    prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    prompt.content.toLowerCase().includes(searchQuery.toLowerCase())
+  const availablePrompts = prompts.filter(
+    (prompt) => !usedPromptIds.includes(prompt.id),
+  );
+
+  const filteredPrompts = availablePrompts.filter(
+    (prompt) =>
+      prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      prompt.content.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -40,8 +59,12 @@ const PromptSelector: React.FC<PromptSelectorProps> = ({ prompts, onSelectPrompt
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {availablePrompts.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
-              <div className="mb-2">All prompts are already used in this workflow</div>
-              <div className="text-xs text-gray-600">Remove existing steps to add different prompts</div>
+              <div className="mb-2">
+                All prompts are already used in this workflow
+              </div>
+              <div className="text-xs text-gray-600">
+                Remove existing steps to add different prompts
+              </div>
             </div>
           ) : filteredPrompts.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
@@ -57,7 +80,9 @@ const PromptSelector: React.FC<PromptSelectorProps> = ({ prompts, onSelectPrompt
                   onClose();
                 }}
               >
-                <div className="font-medium text-sm text-gray-200">{prompt.title}</div>
+                <div className="font-medium text-sm text-gray-200">
+                  {prompt.title}
+                </div>
                 <div className="text-xs text-gray-400 line-clamp-2 mt-1">
                   {prompt.content}
                 </div>
@@ -72,7 +97,10 @@ const PromptSelector: React.FC<PromptSelectorProps> = ({ prompts, onSelectPrompt
 
 interface WorkflowEditorProps {
   workflow: Workflow;
-  onUpdateWorkflow: (id: string, updates: Partial<Omit<Workflow, 'id' | 'createdAt'>>) => void;
+  onUpdateWorkflow: (
+    id: string,
+    updates: Partial<Omit<Workflow, "id" | "createdAt">>,
+  ) => void;
   prompts: Prompt[];
   tags: Tag[];
 }
@@ -81,7 +109,7 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
   workflow,
   onUpdateWorkflow,
   prompts,
-  tags
+  tags,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(workflow.title);
@@ -104,7 +132,8 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
 
   // Auto-enter edit mode for new workflows
   React.useEffect(() => {
-    const isNewWorkflow = workflow.title === 'Untitled Workflow' && workflow.steps.length === 0;
+    const isNewWorkflow =
+      workflow.title === "Untitled Workflow" && workflow.steps.length === 0;
     if (isNewWorkflow) {
       setIsEditing(true);
     }
@@ -119,8 +148,8 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
 
   const handleSave = () => {
     onUpdateWorkflow(workflow.id, {
-      title: title.trim() || 'Untitled Workflow',
-      description: description.trim()
+      title: title.trim() || "Untitled Workflow",
+      description: description.trim(),
     });
     setIsEditing(false);
   };
@@ -135,18 +164,18 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
     const newStep: WorkflowStep = {
       id: crypto.randomUUID(),
       promptId,
-      stepTitle: undefined
+      stepTitle: undefined,
     };
 
     onUpdateWorkflow(workflow.id, {
-      steps: [...workflow.steps, newStep]
+      steps: [...workflow.steps, newStep],
     });
   };
 
   const handleRemoveStep = (stepIndex: number) => {
     const newSteps = workflow.steps.filter((_, index) => index !== stepIndex);
     onUpdateWorkflow(workflow.id, {
-      steps: newSteps
+      steps: newSteps,
     });
   };
 
@@ -154,21 +183,21 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
     const newSteps = [...workflow.steps];
     newSteps[stepIndex] = {
       ...newSteps[stepIndex],
-      stepTitle: stepTitle.trim() || undefined
+      stepTitle: stepTitle.trim() || undefined,
     };
     onUpdateWorkflow(workflow.id, {
-      steps: newSteps
+      steps: newSteps,
     });
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
     setDragOverIndex(index);
   };
 
@@ -186,16 +215,17 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
 
     const newSteps = [...workflow.steps];
     const draggedStep = newSteps[draggedIndex];
-    
+
     // Remove the dragged step
     newSteps.splice(draggedIndex, 1);
-    
+
     // Insert at new position
-    const adjustedDropIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    const adjustedDropIndex =
+      draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
     newSteps.splice(adjustedDropIndex, 0, draggedStep);
 
     onUpdateWorkflow(workflow.id, {
-      steps: newSteps
+      steps: newSteps,
     });
 
     setDraggedIndex(null);
@@ -204,9 +234,9 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
 
   const handleTagToggle = (tagId: string) => {
     const newTags = workflow.tags.includes(tagId)
-      ? workflow.tags.filter(id => id !== tagId)
+      ? workflow.tags.filter((id) => id !== tagId)
       : [...workflow.tags, tagId];
-    
+
     onUpdateWorkflow(workflow.id, { tags: newTags });
   };
 
@@ -214,13 +244,13 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
   const copyStepToClipboard = (stepIndex: number) => {
     const step = workflow.steps[stepIndex];
     const prompt = getPromptById(step.promptId);
-    const stepTitle = step.stepTitle || prompt?.title || 'Unknown Prompt';
-    const content = prompt?.content || '';
-    
+    const stepTitle = step.stepTitle || prompt?.title || "Unknown Prompt";
+    const content = prompt?.content || "";
+
     const stepText = `Step ${stepIndex + 1}: ${stepTitle}
 
 ${content}`;
-    
+
     navigator.clipboard.writeText(stepText).then(() => {
       setCopiedStep(stepIndex);
       setTimeout(() => setCopiedStep(null), 2000);
@@ -229,18 +259,20 @@ ${content}`;
 
   const copySelectedSteps = () => {
     const selectedStepIndexes = Array.from(selectedSteps).sort((a, b) => a - b);
-    const stepsText = selectedStepIndexes.map(stepIndex => {
-      const step = workflow.steps[stepIndex];
-      const prompt = getPromptById(step.promptId);
-      const stepTitle = step.stepTitle || prompt?.title || 'Unknown Prompt';
-      const content = prompt?.content || '';
-      
-      return `Step ${stepIndex + 1}: ${stepTitle}
+    const stepsText = selectedStepIndexes
+      .map((stepIndex) => {
+        const step = workflow.steps[stepIndex];
+        const prompt = getPromptById(step.promptId);
+        const stepTitle = step.stepTitle || prompt?.title || "Unknown Prompt";
+        const content = prompt?.content || "";
+
+        return `Step ${stepIndex + 1}: ${stepTitle}
 
 ${content}`;
-    }).join('\n\n---\n\n');
+      })
+      .join("\n\n---\n\n");
 
-    const header = `${workflow.title}${workflow.description ? `\n${workflow.description}` : ''}`;
+    const header = `${workflow.title}${workflow.description ? `\n${workflow.description}` : ""}`;
     const fullText = `${header}\n\n${stepsText}`;
 
     navigator.clipboard.writeText(fullText).then(() => {
@@ -276,18 +308,20 @@ ${content}`;
 
   const copyAllSteps = () => {
     if (workflow.steps.length === 0) return;
-    
-    const allStepsText = workflow.steps.map((step, index) => {
-      const prompt = getPromptById(step.promptId);
-      const stepTitle = step.stepTitle || prompt?.title || 'Unknown Prompt';
-      const content = prompt?.content || '';
-      
-      return `Step ${index + 1}: ${stepTitle}
+
+    const allStepsText = workflow.steps
+      .map((step, index) => {
+        const prompt = getPromptById(step.promptId);
+        const stepTitle = step.stepTitle || prompt?.title || "Unknown Prompt";
+        const content = prompt?.content || "";
+
+        return `Step ${index + 1}: ${stepTitle}
 
 ${content}`;
-    }).join('\n\n---\n\n');
+      })
+      .join("\n\n---\n\n");
 
-    const header = `${workflow.title}${workflow.description ? `\n${workflow.description}` : ''}`;
+    const header = `${workflow.title}${workflow.description ? `\n${workflow.description}` : ""}`;
     const fullText = `${header}\n\n${allStepsText}`;
 
     navigator.clipboard.writeText(fullText).then(() => {
@@ -301,49 +335,62 @@ ${content}`;
     if (selectedSteps.size === 0) return;
 
     const selectedStepIndexes = Array.from(selectedSteps).sort((a, b) => a - b);
-    const stepsText = selectedStepIndexes.map(stepIndex => {
-      const step = workflow.steps[stepIndex];
-      const prompt = getPromptById(step.promptId);
-      const stepTitle = step.stepTitle || prompt?.title || 'Unknown Prompt';
-      const content = prompt?.content || '';
-      
-      return `## Step ${stepIndex + 1}: ${stepTitle}
+    const stepsText = selectedStepIndexes
+      .map((stepIndex) => {
+        const step = workflow.steps[stepIndex];
+        const prompt = getPromptById(step.promptId);
+        const stepTitle = step.stepTitle || prompt?.title || "Unknown Prompt";
+        const content = prompt?.content || "";
+
+        return `## Step ${stepIndex + 1}: ${stepTitle}
 
 ${content}`;
-    }).join('\n\n---\n\n');
+      })
+      .join("\n\n---\n\n");
 
-    const header = `# ${workflow.title}${workflow.description ? `\n\n${workflow.description}` : ''}`;
+    const header = `# ${workflow.title}${workflow.description ? `\n\n${workflow.description}` : ""}`;
     const fullContent = `${header}\n\n${stepsText}`;
 
     // Determine which side to open the tab on
-    const paneElem = containerRef.current?.closest('[data-editor-pane-side]');
-    const sideAttr = paneElem?.getAttribute('data-editor-pane-side');
-    const isRightSideLocal = splitView.isSplit && sideAttr === 'right';
+    const paneElem = containerRef.current?.closest("[data-editor-pane-side]");
+    const sideAttr = paneElem?.getAttribute("data-editor-pane-side");
+    const isRightSideLocal = splitView.isSplit && sideAttr === "right";
 
     const newTabId = crypto.randomUUID();
-    addBackgroundTab({
-      id: newTabId,
-      title: `${workflow.title} (${selectedSteps.size} steps)`,
-      content: fullContent,
-      language: 'markdown',
-      languageLocked: true,
-      cursorPosition: { lineNumber: 1, column: 1 },
-      dateCreated: Date.now(),
-      lastModified: Date.now(),
-      workspaceId: activeWorkspaceId || ''
-    }, isRightSideLocal);
+    addBackgroundTab(
+      {
+        id: newTabId,
+        title: `${workflow.title} (${selectedSteps.size} steps)`,
+        content: fullContent,
+        language: "markdown",
+        languageLocked: true,
+        cursorPosition: { lineNumber: 1, column: 1 },
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        workspaceId: activeWorkspaceId || "",
+      },
+      isRightSideLocal,
+    );
 
     // Exit selection mode and show success
     setSelectionMode(false);
     setSelectedSteps(new Set());
-  }, [selectedSteps, workflow, addBackgroundTab, splitView.isSplit, activeWorkspaceId]);
+  }, [
+    selectedSteps,
+    workflow,
+    addBackgroundTab,
+    splitView.isSplit,
+    activeWorkspaceId,
+  ]);
 
   const getPromptById = (promptId: string) => {
-    return prompts.find(p => p.id === promptId);
+    return prompts.find((p) => p.id === promptId);
   };
 
   const getTagsForWorkflow = () => {
-    return workflow.tags.map(tagId => tags.find(tag => tag.id === tagId)).filter(Boolean) as Tag[];
+    return workflow.tags
+      .map((tagId) => tags.find((tag) => tag.id === tagId))
+      .filter(Boolean) as Tag[];
   };
 
   return (
@@ -387,14 +434,16 @@ ${content}`;
         ) : (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-semibold text-gray-200">{workflow.title}</h2>
+              <h2 className="text-xl font-semibold text-gray-200">
+                {workflow.title}
+              </h2>
               <div className="flex items-center space-x-2">
                 {workflow.steps.length > 0 && (
                   <button
                     className={`p-2 rounded-md transition-colors ${
-                      copiedAllSteps 
-                        ? 'text-green-400 bg-green-500/20' 
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                      copiedAllSteps
+                        ? "text-green-400 bg-green-500/20"
+                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
                     }`}
                     onClick={copyAllSteps}
                     title="Copy all steps"
@@ -407,7 +456,17 @@ ${content}`;
                   onClick={() => setIsEditing(true)}
                   title="Edit workflow"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                   </svg>
@@ -417,7 +476,7 @@ ${content}`;
             {workflow.description && (
               <p className="text-gray-400 mb-3">{workflow.description}</p>
             )}
-            
+
             {/* Tags */}
             <div className="flex items-center space-x-2">
               <div className="flex flex-wrap gap-1">
@@ -442,11 +501,11 @@ ${content}`;
                 >
                   <TagIcon size={16} />
                 </button>
-                
+
                 {showTagSelector && (
                   <>
-                    <div 
-                      className="fixed inset-0 z-10" 
+                    <div
+                      className="fixed inset-0 z-10"
                       onClick={() => setShowTagSelector(false)}
                     />
                     <div className="absolute left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 min-w-[200px]">
@@ -455,7 +514,9 @@ ${content}`;
                           <button
                             key={tag.id}
                             className={`flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-700 transition-colors ${
-                              workflow.tags.includes(tag.id) ? 'bg-gray-700/50' : ''
+                              workflow.tags.includes(tag.id)
+                                ? "bg-gray-700/50"
+                                : ""
                             }`}
                             onClick={() => handleTagToggle(tag.id)}
                           >
@@ -465,7 +526,10 @@ ${content}`;
                             />
                             <span className="text-gray-200">{tag.name}</span>
                             {workflow.tags.includes(tag.id) && (
-                              <Check size={14} className="ml-auto text-blue-400" />
+                              <Check
+                                size={14}
+                                className="ml-auto text-blue-400"
+                              />
                             )}
                           </button>
                         ))}
@@ -489,13 +553,19 @@ ${content}`;
                 <button
                   onClick={toggleSelectionMode}
                   className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                    selectionMode 
-                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' 
-                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
+                    selectionMode
+                      ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                      : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
                   }`}
                 >
-                  {selectionMode ? <CheckSquare size={16} /> : <Square size={16} />}
-                  <span>{selectionMode ? 'Exit Selection' : 'Select Steps'}</span>
+                  {selectionMode ? (
+                    <CheckSquare size={16} />
+                  ) : (
+                    <Square size={16} />
+                  )}
+                  <span>
+                    {selectionMode ? "Exit Selection" : "Select Steps"}
+                  </span>
                 </button>
 
                 {selectionMode && (
@@ -546,8 +616,18 @@ ${content}`;
           {workflow.steps.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="mb-4">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
               </div>
               <p className="mb-4">No steps in this workflow yet</p>
@@ -559,13 +639,13 @@ ${content}`;
                   <Plus size={16} />
                   <span>Add First Step</span>
                 </button>
-                
+
                 {showPromptSelector && (
                   <PromptSelector
                     prompts={prompts}
                     onSelectPrompt={handleAddStep}
                     onClose={() => setShowPromptSelector(false)}
-                    usedPromptIds={workflow.steps.map(step => step.promptId)}
+                    usedPromptIds={workflow.steps.map((step) => step.promptId)}
                   />
                 )}
               </div>
@@ -578,23 +658,27 @@ ${content}`;
                 const isDragOver = dragOverIndex === index;
                 const isSelected = selectedSteps.has(index);
                 const isCopied = copiedStep === index;
-                
+
                 return (
                   <div
                     key={step.id}
                     draggable={!selectionMode}
-                    onDragStart={(e) => !selectionMode && handleDragStart(e, index)}
-                    onDragOver={(e) => !selectionMode && handleDragOver(e, index)}
+                    onDragStart={(e) =>
+                      !selectionMode && handleDragStart(e, index)
+                    }
+                    onDragOver={(e) =>
+                      !selectionMode && handleDragOver(e, index)
+                    }
                     onDragLeave={!selectionMode ? handleDragLeave : undefined}
                     onDrop={(e) => !selectionMode && handleDrop(e, index)}
                     className={`group relative border rounded-lg p-4 transition-all ${
-                      isDragging ? 'opacity-50 scale-95' : ''
+                      isDragging ? "opacity-50 scale-95" : ""
                     } ${
-                      isDragOver ? 'border-blue-500/50 bg-blue-500/10' : ''
+                      isDragOver ? "border-blue-500/50 bg-blue-500/10" : ""
                     } ${
-                      isSelected 
-                        ? 'border-blue-500/50 bg-blue-500/10' 
-                        : 'border-gray-700/50 bg-gray-800/50 hover:bg-gray-800/70'
+                      isSelected
+                        ? "border-blue-500/50 bg-blue-500/10"
+                        : "border-gray-700/50 bg-gray-800/50 hover:bg-gray-800/70"
                     }`}
                   >
                     <div className="flex items-start space-x-3">
@@ -606,7 +690,10 @@ ${content}`;
                             className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-700/50"
                           >
                             {isSelected ? (
-                              <CheckSquare size={20} className="text-blue-400" />
+                              <CheckSquare
+                                size={20}
+                                className="text-blue-400"
+                              />
                             ) : (
                               <Square size={20} className="text-gray-400" />
                             )}
@@ -632,35 +719,45 @@ ${content}`;
                           <div className="flex-1 min-w-0">
                             <input
                               type="text"
-                              value={step.stepTitle || ''}
-                              onChange={(e) => handleStepTitleChange(index, e.target.value)}
-                              placeholder={prompt?.title || 'Unknown Prompt'}
+                              value={step.stepTitle || ""}
+                              onChange={(e) =>
+                                handleStepTitleChange(index, e.target.value)
+                              }
+                              placeholder={prompt?.title || "Unknown Prompt"}
                               className="w-full bg-transparent border-none px-0 py-1 text-base font-medium text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-0"
                               disabled={selectionMode}
                             />
                             <div className="text-sm text-gray-400">
-                              Prompt: {prompt?.title || 'Unknown Prompt'}
+                              Prompt: {prompt?.title || "Unknown Prompt"}
                             </div>
                           </div>
-                          
+
                           {/* Step Actions */}
                           {!selectionMode && (
                             <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 className={`p-2 rounded-md transition-colors ${
-                                  isCopied 
-                                    ? 'text-green-400 bg-green-500/20' 
-                                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                                  isCopied
+                                    ? "text-green-400 bg-green-500/20"
+                                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
                                 }`}
                                 onClick={() => copyStepToClipboard(index)}
                                 title="Copy step"
                               >
-                                {isCopied ? <Check size={16} /> : <Copy size={16} />}
+                                {isCopied ? (
+                                  <Check size={16} />
+                                ) : (
+                                  <Copy size={16} />
+                                )}
                               </button>
                               <button
                                 className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded-md"
                                 onClick={() => {
-                                  if (confirm('Remove this step from the workflow?')) {
+                                  if (
+                                    confirm(
+                                      "Remove this step from the workflow?",
+                                    )
+                                  ) {
                                     handleRemoveStep(index);
                                   }
                                 }}
@@ -671,10 +768,12 @@ ${content}`;
                             </div>
                           )}
                         </div>
-                        
+
                         {prompt && (
                           <div className="mt-2 p-3 bg-gray-900/50 rounded border border-gray-700/30">
-                            <div className="text-xs text-gray-400 mb-1">Preview:</div>
+                            <div className="text-xs text-gray-400 mb-1">
+                              Preview:
+                            </div>
                             <div className="text-sm text-gray-300 line-clamp-3">
                               {prompt.content}
                             </div>
@@ -695,13 +794,13 @@ ${content}`;
                   <Plus size={16} />
                   <span>Add Step</span>
                 </button>
-                
+
                 {showPromptSelector && (
                   <PromptSelector
                     prompts={prompts}
                     onSelectPrompt={handleAddStep}
                     onClose={() => setShowPromptSelector(false)}
-                    usedPromptIds={workflow.steps.map(step => step.promptId)}
+                    usedPromptIds={workflow.steps.map((step) => step.promptId)}
                   />
                 )}
               </div>
@@ -709,7 +808,6 @@ ${content}`;
           )}
         </div>
       </div>
-
     </div>
   );
-}; 
+};

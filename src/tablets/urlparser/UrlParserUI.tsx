@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
-import { 
-  Globe, 
-  User, 
-  Key, 
-  Hash, 
-  FileText, 
-  Search, 
-  Anchor, 
-  Link 
-} from 'lucide-react';
-import { UrlComponents, UrlParserState, UrlWarning } from './types';
-import { UrlInput } from './components/UrlInput';
-import { ComponentEditor } from './components/ComponentEditor';
-import { QueryParamsEditor } from './components/QueryParamsEditor';
-import { WarningsPanel } from './components/WarningsPanel';
-import { ComparisonView } from './components/ComparisonView';
-import { ToolbarButtons } from './components/ToolbarButtons';
-import { HistoryPanel } from './components/HistoryPanel';
-import { SuspiciousUrlDemo } from './components/SuspiciousUrlDemo';
-import { getSuspiciousUrlExamples } from './utils/urlUtils';
+import React, { useState } from "react";
+import {
+  Globe,
+  User,
+  Key,
+  Hash,
+  FileText,
+  Search,
+  Anchor,
+  Link,
+} from "lucide-react";
+import { UrlComponents, UrlParserState, UrlWarning } from "./types";
+import { UrlInput } from "./components/UrlInput";
+import { ComponentEditor } from "./components/ComponentEditor";
+import { QueryParamsEditor } from "./components/QueryParamsEditor";
+import { WarningsPanel } from "./components/WarningsPanel";
+import { ComparisonView } from "./components/ComparisonView";
+import { ToolbarButtons } from "./components/ToolbarButtons";
+import { HistoryPanel } from "./components/HistoryPanel";
+import { SuspiciousUrlDemo } from "./components/SuspiciousUrlDemo";
+import { getSuspiciousUrlExamples } from "./utils/urlUtils";
 
 interface UrlParserUIProps {
   url: string;
   components: UrlComponents;
   warnings: UrlWarning[];
   history: string[];
-  viewMode: 'decoded' | 'encoded';
+  viewMode: "decoded" | "encoded";
   comparisonMode: boolean;
   comparisonResults?: Record<string, UrlComponents>;
   onUpdateUrl: (url: string) => void;
@@ -51,18 +51,18 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
   onToggleEncoding,
   onToggleComparison,
   onClearUrl,
-  onPaste
+  onPaste,
 }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [showSuspiciousDemo, setShowSuspiciousDemo] = useState(false);
-  
-  const isEncoded = viewMode === 'encoded';
+
+  const isEncoded = viewMode === "encoded";
   const hasWarnings = warnings.length > 0;
-  
+
   const handleLoadSuspiciousExample = () => {
     setShowSuspiciousDemo(true);
   };
-  
+
   return (
     <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
       {/* Header */}
@@ -72,7 +72,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
             <Link size={20} className="text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-100">URL Parser</h2>
           </div>
-          
+
           <ToolbarButtons
             url={url}
             hasWarnings={hasWarnings}
@@ -85,7 +85,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
             onLoadSuspiciousExample={handleLoadSuspiciousExample}
           />
         </div>
-        
+
         <UrlInput
           url={url}
           warnings={warnings}
@@ -93,7 +93,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
           onPaste={onPaste}
         />
       </div>
-      
+
       {/* Main content */}
       <div className="flex-1 overflow-auto p-4 custom-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -108,7 +108,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
               isEncoded={isEncoded}
               onChange={onUpdateComponent}
             />
-            
+
             <ComponentEditor
               label="Username"
               icon={<User size={16} className="text-green-400" />}
@@ -120,7 +120,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
               onToggleEncoding={onToggleEncoding}
               sensitive={true}
             />
-            
+
             <ComponentEditor
               label="Password"
               icon={<Key size={16} className="text-red-400" />}
@@ -132,7 +132,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
               onToggleEncoding={onToggleEncoding}
               sensitive={true}
             />
-            
+
             <ComponentEditor
               label="Host"
               icon={<Globe size={16} className="text-purple-400" />}
@@ -142,7 +142,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
               isEncoded={isEncoded}
               onChange={onUpdateComponent}
             />
-            
+
             <ComponentEditor
               label="Port"
               icon={<Hash size={16} className="text-yellow-400" />}
@@ -153,7 +153,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
               onChange={onUpdateComponent}
             />
           </div>
-          
+
           {/* Right column */}
           <div>
             <ComponentEditor
@@ -166,7 +166,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
               onChange={onUpdateComponent}
               onToggleEncoding={onToggleEncoding}
             />
-            
+
             <ComponentEditor
               label="Query String"
               icon={<Search size={16} className="text-green-400" />}
@@ -177,7 +177,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
               onChange={onUpdateComponent}
               onToggleEncoding={onToggleEncoding}
             />
-            
+
             <ComponentEditor
               label="Fragment"
               icon={<Anchor size={16} className="text-orange-400" />}
@@ -188,7 +188,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
               onChange={onUpdateComponent}
               onToggleEncoding={onToggleEncoding}
             />
-            
+
             <QueryParamsEditor
               params={components.queryParams}
               warnings={warnings}
@@ -197,10 +197,10 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
             />
           </div>
         </div>
-        
+
         {/* Warnings panel */}
         <WarningsPanel warnings={warnings} />
-        
+
         {/* Comparison view */}
         {comparisonMode && (
           <ComparisonView
@@ -209,7 +209,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
           />
         )}
       </div>
-      
+
       {/* History panel */}
       {showHistory && (
         <HistoryPanel
@@ -218,7 +218,7 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
           onClose={() => setShowHistory(false)}
         />
       )}
-      
+
       {/* Suspicious URL demo */}
       {showSuspiciousDemo && (
         <SuspiciousUrlDemo

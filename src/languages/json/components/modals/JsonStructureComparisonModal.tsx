@@ -1,22 +1,26 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Editor } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { BaseModal } from './BaseModal';
-import { JsonStructureComparisonUI } from './JsonStructureComparisonUI';
-import { compareStructures, ComparisonResult, ComparisonOptions } from '../../utils/jsonStructureComparison';
-import { useDebounce } from '../../../../hooks/useDebounce';
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { Editor } from "@monaco-editor/react";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { BaseModal } from "./BaseModal";
+import { JsonStructureComparisonUI } from "./JsonStructureComparisonUI";
+import {
+  compareStructures,
+  ComparisonResult,
+  ComparisonOptions,
+} from "../../utils/jsonStructureComparison";
+import { useDebounce } from "../../../../hooks/useDebounce";
 
 interface JsonStructureComparisonModalProps {
   sourceJson: string;
   onClose: () => void;
 }
 
-export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModalProps> = ({
-  sourceJson,
-  onClose,
-}) => {
-  const [targetJson, setTargetJson] = useState('');
-  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
+export const JsonStructureComparisonModal: React.FC<
+  JsonStructureComparisonModalProps
+> = ({ sourceJson, onClose }) => {
+  const [targetJson, setTargetJson] = useState("");
+  const [comparisonResult, setComparisonResult] =
+    useState<ComparisonResult | null>(null);
   const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [options, setOptions] = useState<ComparisonOptions>({
@@ -25,8 +29,12 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
     caseSensitiveKeys: true,
   });
 
-  const sourceEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const targetEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const sourceEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(
+    null,
+  );
+  const targetEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(
+    null,
+  );
   const [syncScroll, setSyncScroll] = useState(false);
 
   // Debounce the comparison to avoid excessive computation
@@ -46,10 +54,18 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
     // Use setTimeout to prevent blocking the UI
     const timeoutId = setTimeout(() => {
       try {
-        const result = compareStructures(sourceJson, debouncedTargetJson, options);
+        const result = compareStructures(
+          sourceJson,
+          debouncedTargetJson,
+          options,
+        );
         setComparisonResult(result);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred during comparison');
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred during comparison",
+        );
         setComparisonResult(null);
       } finally {
         setIsComparing(false);
@@ -60,45 +76,52 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
   }, [sourceJson, debouncedTargetJson, options]);
 
   // Handle source editor mount
-  const handleSourceEditorMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
-    sourceEditorRef.current = editor;
-    
-    // Configure editor
-    editor.updateOptions({
-      readOnly: true,
-      minimap: { enabled: false },
-      scrollBeyondLastLine: false,
-      wordWrap: 'on',
-    });
+  const handleSourceEditorMount = useCallback(
+    (editor: monaco.editor.IStandaloneCodeEditor) => {
+      sourceEditorRef.current = editor;
 
-    // Set the source JSON
-    editor.setValue(sourceJson);
-  }, [sourceJson]);
+      // Configure editor
+      editor.updateOptions({
+        readOnly: true,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        wordWrap: "on",
+      });
+
+      // Set the source JSON
+      editor.setValue(sourceJson);
+    },
+    [sourceJson],
+  );
 
   // Handle target editor mount
-  const handleTargetEditorMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
-    targetEditorRef.current = editor;
-    
-    // Configure editor
-    editor.updateOptions({
-      readOnly: false,
-      minimap: { enabled: false },
-      scrollBeyondLastLine: false,
-      wordWrap: 'on',
-    });
+  const handleTargetEditorMount = useCallback(
+    (editor: monaco.editor.IStandaloneCodeEditor) => {
+      targetEditorRef.current = editor;
 
-    // Set placeholder
-    editor.setValue(targetJson || '// Paste your JSON here to compare\n');
-  }, [targetJson]);
+      // Configure editor
+      editor.updateOptions({
+        readOnly: false,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        wordWrap: "on",
+      });
+
+      // Set placeholder
+      editor.setValue(targetJson || "// Paste your JSON here to compare\n");
+    },
+    [targetJson],
+  );
 
   // Handle target editor change
   const handleTargetEditorChange = useCallback((value: string | undefined) => {
-    setTargetJson(value || '');
+    setTargetJson(value || "");
   }, []);
 
   // Sync scroll between editors
   useEffect(() => {
-    if (!syncScroll || !sourceEditorRef.current || !targetEditorRef.current) return;
+    if (!syncScroll || !sourceEditorRef.current || !targetEditorRef.current)
+      return;
 
     const sourceEditor = sourceEditorRef.current;
     const targetEditor = targetEditorRef.current;
@@ -129,7 +152,7 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
     if (!sourceEditorRef.current || !targetEditorRef.current) return;
 
     // Simple path to line number mapping (this could be enhanced)
-    const pathParts = path.split('/').filter(Boolean);
+    const pathParts = path.split("/").filter(Boolean);
     const lineNumber = pathParts.length + 1; // Rough estimate
 
     // Navigate in both editors
@@ -139,12 +162,12 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
     // Highlight the line briefly
     const sourceModel = sourceEditorRef.current.getModel();
     const targetModel = targetEditorRef.current.getModel();
-    
+
     if (sourceModel && lineNumber <= sourceModel.getLineCount()) {
       const range = new monaco.Range(lineNumber, 1, lineNumber, 1);
       sourceEditorRef.current.setSelection(range);
     }
-    
+
     if (targetModel && lineNumber <= targetModel.getLineCount()) {
       const range = new monaco.Range(lineNumber, 1, lineNumber, 1);
       targetEditorRef.current.setSelection(range);
@@ -156,8 +179,8 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
     if (!comparisonResult) return;
 
     const reportText = comparisonResult.diffList
-      .map(diff => `${diff.path}: ${diff.message}`)
-      .join('\n');
+      .map((diff) => `${diff.path}: ${diff.message}`)
+      .join("\n");
 
     navigator.clipboard.writeText(reportText);
   }, [comparisonResult]);
@@ -167,12 +190,12 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
     if (!comparisonResult) return;
 
     const dataStr = JSON.stringify(comparisonResult, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement('a');
+
+    const link = document.createElement("a");
     link.href = url;
-    link.download = 'json-structure-comparison-report.json';
+    link.download = "json-structure-comparison-report.json";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -180,8 +203,8 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
   }, [comparisonResult]);
 
   return (
-    <BaseModal 
-      title="JSON Structure Comparison" 
+    <BaseModal
+      title="JSON Structure Comparison"
       onClose={onClose}
       maxWidthClass="max-w-7xl"
       maxHeightClass="max-h-[90vh]"
@@ -205,4 +228,4 @@ export const JsonStructureComparisonModal: React.FC<JsonStructureComparisonModal
       />
     </BaseModal>
   );
-}; 
+};

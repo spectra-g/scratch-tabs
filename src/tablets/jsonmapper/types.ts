@@ -1,10 +1,17 @@
-import { TabletState } from '../types';
+import { TabletState } from "../types";
 
-export type MappingDirection = 'sourceToTarget' | 'targetToSource';
-export type MappingStatus = 'mapped' | 'unmapped' | 'ignored' | 'error';
-export type DataType = 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null' | 'unknown';
-export type TransformationType = 'none' | 'builtin' | 'custom';
-export type TargetLanguage = 'javascript' | 'typescript' | 'python' | 'java';
+export type MappingDirection = "sourceToTarget" | "targetToSource";
+export type MappingStatus = "mapped" | "unmapped" | "ignored" | "error";
+export type DataType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "object"
+  | "array"
+  | "null"
+  | "unknown";
+export type TransformationType = "none" | "builtin" | "custom";
+export type TargetLanguage = "javascript" | "typescript" | "python" | "java";
 
 export interface MappingRule {
   id: string;
@@ -31,7 +38,7 @@ export interface MappingConfig {
 }
 
 export interface JsonMapperState extends TabletState {
-  type: 'jsonmapper';
+  type: "jsonmapper";
   data: {
     mappings: MappingConfig[];
     activeMappingId: string | null;

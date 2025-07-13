@@ -1,19 +1,29 @@
 export type HttpMethod =
-  | 'GET'
-  | 'POST'
-  | 'PUT'
-  | 'DELETE'
-  | 'PATCH'
-  | 'HEAD'
-  | 'OPTIONS';
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "DELETE"
+  | "PATCH"
+  | "HEAD"
+  | "OPTIONS";
 
-export type AuthType = 'none' | 'basic' | 'bearer' | 'apikey';
+export type AuthType = "none" | "basic" | "bearer" | "apikey";
 
-export type BodyType = 'none' | 'form-data' | 'x-www-form-urlencoded' | 'raw' | 'binary';
+export type BodyType =
+  | "none"
+  | "form-data"
+  | "x-www-form-urlencoded"
+  | "raw"
+  | "binary";
 
-export type RawBodyFormat = 'json' | 'xml' | 'html' | 'text' | 'javascript';
+export type RawBodyFormat = "json" | "xml" | "html" | "text" | "javascript";
 
-export type ExplanationLevel = 'simplest' | 'simple' | 'medium' | 'detailed' | 'most-detailed';
+export type ExplanationLevel =
+  | "simplest"
+  | "simple"
+  | "medium"
+  | "detailed"
+  | "most-detailed";
 
 export interface KeyValuePair {
   key: string;

@@ -64,4 +64,9 @@ export interface MetricTypeInfo {
   count: number;
 }
 
-export type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary' | 'untyped';
+export type MetricType =
+  | "counter"
+  | "gauge"
+  | "histogram"
+  | "summary"
+  | "untyped";

@@ -1,11 +1,12 @@
-import { Template } from '../types';
+import { Template } from "../types";
 
 export const defaultTemplates: Template[] = [
   {
-    id: 'template-prd',
-    title: 'Product Requirements Document (PRD)',
-    description: 'A comprehensive document outlining the purpose, features, and functionality of a product.',
-    category: 'Product',
+    id: "template-prd",
+    title: "Product Requirements Document (PRD)",
+    description:
+      "A comprehensive document outlining the purpose, features, and functionality of a product.",
+    category: "Product",
     content: `# Product Requirements Document: [Product Name]
 
 ## Overview
@@ -52,13 +53,14 @@ export const defaultTemplates: Template[] = [
 
 ## Appendix
 [Any additional information, diagrams, or references]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-srs',
-    title: 'Software Requirements Specification (SRS)',
-    description: 'A detailed document specifying the requirements for a software system.',
-    category: 'Development',
+    id: "template-srs",
+    title: "Software Requirements Specification (SRS)",
+    description:
+      "A detailed document specifying the requirements for a software system.",
+    category: "Development",
     content: `# Software Requirements Specification
 
 ## 1. Introduction
@@ -125,13 +127,13 @@ export const defaultTemplates: Template[] = [
 
 ## Appendix B: Analysis Models
 [Any analysis models, diagrams, etc.]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-bug-report',
-    title: 'Bug Report',
-    description: 'A structured report for documenting software bugs.',
-    category: 'Development',
+    id: "template-bug-report",
+    title: "Bug Report",
+    description: "A structured report for documenting software bugs.",
+    category: "Development",
     content: `# Bug Report
 
 ## Summary
@@ -169,13 +171,14 @@ export const defaultTemplates: Template[] = [
 
 ## Severity/Priority
 [How severe is this bug and what priority should it have?]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-agent-context',
-    title: 'Agent Context',
-    description: 'A template for defining the context and capabilities of an AI agent.',
-    category: 'AI',
+    id: "template-agent-context",
+    title: "Agent Context",
+    description:
+      "A template for defining the context and capabilities of an AI agent.",
+    category: "AI",
     content: `# Agent Context: [Agent Name]
 
 ## Agent Identity
@@ -217,13 +220,13 @@ export const defaultTemplates: Template[] = [
 - [Metric 1]
 - [Metric 2]
 - [Metric 3]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-code-review',
-    title: 'Code Review',
-    description: 'A template for conducting thorough code reviews.',
-    category: 'Development',
+    id: "template-code-review",
+    title: "Code Review",
+    description: "A template for conducting thorough code reviews.",
+    category: "Development",
     content: `# Code Review: [PR/Commit Title]
 
 ## Overview
@@ -264,13 +267,13 @@ export const defaultTemplates: Template[] = [
 
 ## Summary
 [Summary of the review and next steps]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-user-story',
-    title: 'User Story',
-    description: 'A template for creating user stories in agile development.',
-    category: 'Product',
+    id: "template-user-story",
+    title: "User Story",
+    description: "A template for creating user stories in agile development.",
+    category: "Product",
     content: `# User Story: [Story Title]
 
 ## Story
@@ -299,13 +302,14 @@ So that [benefit or value].
 - [ ] Code reviewed
 - [ ] Acceptance criteria met
 - [ ] Product owner approval`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-technical-spec',
-    title: 'Technical Specification',
-    description: 'A detailed technical specification for a software component or feature.',
-    category: 'Development',
+    id: "template-technical-spec",
+    title: "Technical Specification",
+    description:
+      "A detailed technical specification for a software component or feature.",
+    category: "Development",
     content: `# Technical Specification: [Feature/Component Name]
 
 ## Overview
@@ -362,13 +366,13 @@ So that [benefit or value].
 
 ## Future Work
 [Potential future enhancements or related work]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-api-doc',
-    title: 'API Documentation',
-    description: 'A template for documenting APIs.',
-    category: 'Development',
+    id: "template-api-doc",
+    title: "API Documentation",
+    description: "A template for documenting APIs.",
+    category: "Development",
     content: `# API Documentation: [API Name]
 
 ## Overview
@@ -448,13 +452,13 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
 
 ## Changelog
 [Recent changes to the API]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-feature-request',
-    title: 'Feature Request',
-    description: 'A template for requesting new features.',
-    category: 'Product',
+    id: "template-feature-request",
+    title: "Feature Request",
+    description: "A template for requesting new features.",
+    category: "Product",
     content: `# Feature Request: [Feature Name]
 
 ## Summary
@@ -490,13 +494,13 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
 
 ## Additional Context
 [Any additional information, screenshots, mockups, etc.]`,
-    isBuiltIn: true
+    isBuiltIn: true,
   },
   {
-    id: 'template-system-prompt',
-    title: 'System Prompt',
-    description: 'A template for creating system prompts for LLMs.',
-    category: 'AI',
+    id: "template-system-prompt",
+    title: "System Prompt",
+    description: "A template for creating system prompts for LLMs.",
+    category: "AI",
     content: `# System Prompt: [Purpose]
 
 You are [role/identity], an AI assistant specialized in [domain/expertise].
@@ -530,6 +534,6 @@ Assistant: [Example assistant response]
 
 ## Additional Instructions
 [Any other instructions or guidelines]`,
-    isBuiltIn: true
-  }
+    isBuiltIn: true,
+  },
 ];

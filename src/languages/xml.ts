@@ -1,17 +1,39 @@
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types';
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
 
 /**
  * XML language detector
  */
-export class XmlLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'xml'; // Monaco's built-in ID for XML
-  name = 'XML';
+export class XmlLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "xml"; // Monaco's built-in ID for XML
+  name = "XML";
   extensions = [
-    'xml', 'xsd', 'svg', 'rss', 'atom', 'plist', 'xaml', 'csproj', 'vbproj', 'fsproj',
-    'xsl', 'xslt', 'wsdl', 'config', 'manifest', 'pom', 'jnlp', 'kml', 'gpx',
-    'collada', 'dae', 'drawio', // Common diagramming format
+    "xml",
+    "xsd",
+    "svg",
+    "rss",
+    "atom",
+    "plist",
+    "xaml",
+    "csproj",
+    "vbproj",
+    "fsproj",
+    "xsl",
+    "xslt",
+    "wsdl",
+    "config",
+    "manifest",
+    "pom",
+    "jnlp",
+    "kml",
+    "gpx",
+    "collada",
+    "dae",
+    "drawio", // Common diagramming format
   ];
   priority = 4; // XML is foundational; HTML might have higher priority for .htm/.html
 
@@ -55,7 +77,8 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
    */
   detect(content: string): DetectionResult {
     const trimmedContent = content.trim();
-    if (!trimmedContent || trimmedContent.length < 7) { // e.g., "<a/>" or "<a></a>"
+    if (!trimmedContent || trimmedContent.length < 7) {
+      // e.g., "<a/>" or "<a></a>"
       return this.noMatch();
     }
 
@@ -80,9 +103,11 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
     //    Regex for a simple opening tag: <tagname ...>
     //    Regex for a simple closing tag: </tagname>
     //    Regex for a self-closing tag: <tagname ... />
-    const openingTagRegex = /<([a-zA-Z_][\w.-]*)(?:\s+[\w.-]+(?:=(?:"[^"]*"|'[^']*'|[^>\s]+))?)*\s*>/g;
+    const openingTagRegex =
+      /<([a-zA-Z_][\w.-]*)(?:\s+[\w.-]+(?:=(?:"[^"]*"|'[^']*'|[^>\s]+))?)*\s*>/g;
     const closingTagRegex = /<\/([a-zA-Z_][\w.-]*)\s*>/g;
-    const selfClosingTagRegex = /<([a-zA-Z_][\w.-]*)(?:\s+[\w.-]+(?:=(?:"[^"]*"|'[^']*'|[^>\s]+))?)*\s*\/>/g;
+    const selfClosingTagRegex =
+      /<([a-zA-Z_][\w.-]*)(?:\s+[\w.-]+(?:=(?:"[^"]*"|'[^']*'|[^>\s]+))?)*\s*\/>/g;
 
     const openingMatches = content.match(openingTagRegex);
     const closingMatches = content.match(closingTagRegex);
@@ -94,19 +119,23 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
     const totalTags = numOpening + numClosing + numSelfClosing;
 
     if (totalTags > 0) {
-        confidenceScore += 0.1; // Base for finding any tags
-        patternsMatched++;
-        if (totalTags >= 2) strongSignalFound = true; // At least one pair or two distinct tags
+      confidenceScore += 0.1; // Base for finding any tags
+      patternsMatched++;
+      if (totalTags >= 2) strongSignalFound = true; // At least one pair or two distinct tags
 
-        // Bonus for balanced-ish tags (heuristic)
-        if (numOpening > 0 && numClosing > 0 && Math.abs(numOpening - numClosing) <= numOpening * 0.5 + 1) {
-            confidenceScore += 0.15;
-        } else if (numSelfClosing >= 2) {
-            confidenceScore += 0.1;
-        }
-        confidenceScore += Math.min(totalTags, 20) * 0.01; // Small bonus for more tags
+      // Bonus for balanced-ish tags (heuristic)
+      if (
+        numOpening > 0 &&
+        numClosing > 0 &&
+        Math.abs(numOpening - numClosing) <= numOpening * 0.5 + 1
+      ) {
+        confidenceScore += 0.15;
+      } else if (numSelfClosing >= 2) {
+        confidenceScore += 0.1;
+      }
+      confidenceScore += Math.min(totalTags, 20) * 0.01; // Small bonus for more tags
     }
-    
+
     // 3. XML Comments <!-- ... -->
     if (/<!--[\s\S]*?-->/g.test(content)) {
       confidenceScore += 0.1;
@@ -119,9 +148,12 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
       patternsMatched++;
       strongSignalFound = true;
     }
-    
+
     // 5. Processing Instructions <?target ...?>
-    if (/<\?[\w-]+[\s\S]*?\?>/g.test(content) && !/<\?xml/i.test(content) /* exclude XML decl */) {
+    if (
+      /<\?[\w-]+[\s\S]*?\?>/g.test(content) &&
+      !/<\?xml/i.test(content) /* exclude XML decl */
+    ) {
       confidenceScore += 0.1;
       patternsMatched++;
     }
@@ -136,7 +168,10 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
     // 7. Anti-patterns (Reduce confidence if it looks more like other formats)
     //    Be careful as HTML is a form of XML. HTML detector should have higher priority or more specific anti-patterns.
     const antiPatterns = [
-      { pattern: /\b(function|class|var|let|const|def|if|for|while)\s*[\({]/gi, weight: -0.3 }, // Common code keywords + block start
+      {
+        pattern: /\b(function|class|var|let|const|def|if|for|while)\s*[\({]/gi,
+        weight: -0.3,
+      }, // Common code keywords + block start
       { pattern: /=>|->/g, weight: -0.2 }, // Arrows not typical in XML data
       { pattern: /^package\s|System\.out\.println|#include/gi, weight: -0.5 }, // Java, C, etc.
       // If it has many lines *not* starting with < or whitespace then <, it's less likely XML
@@ -144,42 +179,51 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
 
     // If no strong XML signals were found initially, apply anti-patterns more aggressively
     if (confidenceScore < 0.4) {
-        for (const ap of antiPatterns) {
-            if (ap.pattern.test(content)) {
-                confidenceScore += ap.weight;
-            }
+      for (const ap of antiPatterns) {
+        if (ap.pattern.test(content)) {
+          confidenceScore += ap.weight;
         }
+      }
     }
 
     // 8. Final Adjustments and Clamping
     if (strongSignalFound && patternsMatched >= 2) {
       confidenceScore += 0.1;
     }
-    if (trimmedContent.startsWith('<') && trimmedContent.endsWith('>') && totalTags >= 2) {
-        confidenceScore += 0.05; // General well-formedness check
+    if (
+      trimmedContent.startsWith("<") &&
+      trimmedContent.endsWith(">") &&
+      totalTags >= 2
+    ) {
+      confidenceScore += 0.05; // General well-formedness check
     }
-
 
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    const isMatch = (strongSignalFound && confidenceScore >= 0.4) || (patternsMatched >= 2 && confidenceScore >= 0.5);
+    const isMatch =
+      (strongSignalFound && confidenceScore >= 0.4) ||
+      (patternsMatched >= 2 && confidenceScore >= 0.5);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongSignalFound
+      matchedDefinitive: isMatch && strongSignalFound,
     };
   }
 
   getFileExtension(): string {
-    return 'xml';
+    return "xml";
   }
 
   registerProvider(monaco: any): void {
     const languageId = this.id; // 'xml'
 
     // Monaco has excellent built-in support for 'xml'.
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+    if (
+      !monaco.languages
+        .getLanguages()
+        .some((lang: any) => lang.id === languageId)
+    ) {
       monaco.languages.register({ id: languageId });
     }
 
@@ -188,63 +232,83 @@ export class XmlLanguageDetector extends BaseLanguageDetector implements Languag
     // to do correctly due to nesting, attributes, comments, CDATA, PIs, etc.
     // The one you had is a good starting point for a heuristic indenter.
     monaco.languages.registerDocumentFormattingEditProvider(languageId, {
-        provideDocumentFormattingEdits(model: any, options: any) {
-            const content = model.getValue();
-            const indentChar = options.insertSpaces ? ' '.repeat(options.tabSize) : '\t';
-            let formattedXml = '';
-            let indentLevel = 0;
-            // Regex to split XML by tags, keeping delimiters. It's complex.
-            // This regex tries to handle: tags, comments, PIs, CDATA, DOCTYPE
-            const tagRegex = /(<\?xml.*?\?>|<!DOCTYPE[^>]*>|<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?]]>|<[^>]+>)/g;
-            const parts = content.split(tagRegex).filter((part: string) => part && part.trim() !== '');
+      provideDocumentFormattingEdits(model: any, options: any) {
+        const content = model.getValue();
+        const indentChar = options.insertSpaces
+          ? " ".repeat(options.tabSize)
+          : "\t";
+        let formattedXml = "";
+        let indentLevel = 0;
+        // Regex to split XML by tags, keeping delimiters. It's complex.
+        // This regex tries to handle: tags, comments, PIs, CDATA, DOCTYPE
+        const tagRegex =
+          /(<\?xml.*?\?>|<!DOCTYPE[^>]*>|<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?]]>|<[^>]+>)/g;
+        const parts = content
+          .split(tagRegex)
+          .filter((part: string) => part && part.trim() !== "");
 
-            parts.forEach((part: string, index: number) => {
-                const trimmedPart = part.trim();
-                let currentLineIndented = false;
+        parts.forEach((part: string, index: number) => {
+          const trimmedPart = part.trim();
+          let currentLineIndented = false;
 
-                if (trimmedPart.startsWith('</')) { // Closing tag
-                    indentLevel = Math.max(0, indentLevel - 1);
-                    formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
-                    currentLineIndented = true;
-                } else if (trimmedPart.startsWith('<?') || trimmedPart.startsWith('<!DOCTYPE') || trimmedPart.startsWith('<!--') || trimmedPart.startsWith('<![CDATA[')) { // PI, DOCTYPE, Comment, CDATA
-                    formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
-                    currentLineIndented = true;
-                } else if (trimmedPart.endsWith('/>')) { // Self-closing tag
-                    formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
-                    currentLineIndented = true;
-                } else if (trimmedPart.startsWith('<')) { // Opening tag
-                    formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
-                    indentLevel++;
-                    currentLineIndented = true;
-                } else { // Text content
-                    // Only add text if it's not just whitespace between tags that are already on new lines
-                    if (trimmedPart) {
-                         formattedXml += indentChar.repeat(indentLevel) + trimmedPart + '\n';
-                         currentLineIndented = true;
-                    } else if (formattedXml.endsWith('\n\n')) {
-                        // Avoid adding more newlines if already double spaced
-                    } else if (formattedXml.endsWith('\n')) {
-                         // Avoid adding newline if previous part already added one and this is just whitespace
-                    } else if (part.trim() === '' && index > 0 && parts[index-1].trim().endsWith('>')) {
-                        // If it's just whitespace after a tag, don't add extra indent or newline
-                        // formattedXml += part; // preserve original whitespace for careful scenarios
-                    }
-
-                }
-            });
-            
-            // Remove leading/trailing newlines and ensure only one at the end if original had it
-            formattedXml = formattedXml.trim();
-            if (content.trim().length > 0 && content.endsWith('\n')) {
-                 formattedXml += '\n';
+          if (trimmedPart.startsWith("</")) {
+            // Closing tag
+            indentLevel = Math.max(0, indentLevel - 1);
+            formattedXml += indentChar.repeat(indentLevel) + trimmedPart + "\n";
+            currentLineIndented = true;
+          } else if (
+            trimmedPart.startsWith("<?") ||
+            trimmedPart.startsWith("<!DOCTYPE") ||
+            trimmedPart.startsWith("<!--") ||
+            trimmedPart.startsWith("<![CDATA[")
+          ) {
+            // PI, DOCTYPE, Comment, CDATA
+            formattedXml += indentChar.repeat(indentLevel) + trimmedPart + "\n";
+            currentLineIndented = true;
+          } else if (trimmedPart.endsWith("/>")) {
+            // Self-closing tag
+            formattedXml += indentChar.repeat(indentLevel) + trimmedPart + "\n";
+            currentLineIndented = true;
+          } else if (trimmedPart.startsWith("<")) {
+            // Opening tag
+            formattedXml += indentChar.repeat(indentLevel) + trimmedPart + "\n";
+            indentLevel++;
+            currentLineIndented = true;
+          } else {
+            // Text content
+            // Only add text if it's not just whitespace between tags that are already on new lines
+            if (trimmedPart) {
+              formattedXml +=
+                indentChar.repeat(indentLevel) + trimmedPart + "\n";
+              currentLineIndented = true;
+            } else if (formattedXml.endsWith("\n\n")) {
+              // Avoid adding more newlines if already double spaced
+            } else if (formattedXml.endsWith("\n")) {
+              // Avoid adding newline if previous part already added one and this is just whitespace
+            } else if (
+              part.trim() === "" &&
+              index > 0 &&
+              parts[index - 1].trim().endsWith(">")
+            ) {
+              // If it's just whitespace after a tag, don't add extra indent or newline
+              // formattedXml += part; // preserve original whitespace for careful scenarios
             }
+          }
+        });
 
-
-            return [{
-                range: model.getFullModelRange(),
-                text: formattedXml
-            }];
+        // Remove leading/trailing newlines and ensure only one at the end if original had it
+        formattedXml = formattedXml.trim();
+        if (content.trim().length > 0 && content.endsWith("\n")) {
+          formattedXml += "\n";
         }
+
+        return [
+          {
+            range: model.getFullModelRange(),
+            text: formattedXml,
+          },
+        ];
+      },
     });
   }
 }

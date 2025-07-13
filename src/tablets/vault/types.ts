@@ -1,8 +1,4 @@
-export type ContentType = 
-  | 'plaintext' 
-  | 'code'
-  | 'script'
-  | 'url';
+export type ContentType = "plaintext" | "code" | "script" | "url";
 
 export interface VaultItem {
   id: string;
@@ -17,12 +13,17 @@ export interface VaultItem {
   lastUsedTimestamp: number;
 }
 
-export type SortOrder = 'title' | 'created' | 'modified' | 'lastUsed' | 'usageCount';
+export type SortOrder =
+  | "title"
+  | "created"
+  | "modified"
+  | "lastUsed"
+  | "usageCount";
 
-export type ViewMode = 'card' | 'list';
+export type ViewMode = "card" | "list";
 
 export interface VaultTabletState {
-  type: 'vault';
+  type: "vault";
   data: {
     items: VaultItem[];
     searchQuery: string;

@@ -1,5 +1,5 @@
-import React from 'react';
-import { HttpMethod } from '../types';
+import React from "react";
+import { HttpMethod } from "../types";
 
 interface UrlBarProps {
   method: HttpMethod;
@@ -9,20 +9,20 @@ interface UrlBarProps {
 }
 
 const HTTP_METHODS: HttpMethod[] = [
-  'GET',
-  'POST',
-  'PUT',
-  'DELETE',
-  'PATCH',
-  'HEAD',
-  'OPTIONS'
+  "GET",
+  "POST",
+  "PUT",
+  "DELETE",
+  "PATCH",
+  "HEAD",
+  "OPTIONS",
 ];
 
 export const UrlBar: React.FC<UrlBarProps> = ({
   method,
   url,
   onMethodChange,
-  onUrlChange
+  onUrlChange,
 }) => {
   return (
     <div className="flex space-x-2">
@@ -37,7 +37,7 @@ export const UrlBar: React.FC<UrlBarProps> = ({
           </option>
         ))}
       </select>
-      
+
       <input
         type="text"
         value={url}

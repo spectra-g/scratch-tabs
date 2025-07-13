@@ -1,14 +1,14 @@
-import { YamlLanguageDetector } from '../yaml';
+import { YamlLanguageDetector } from "../yaml";
 
-describe('YamlLanguageDetector', () => {
+describe("YamlLanguageDetector", () => {
   let detector: YamlLanguageDetector;
 
   beforeEach(() => {
     detector = new YamlLanguageDetector();
   });
 
-  describe('JSON vs YAML detection', () => {
-    it('should NOT detect valid JSON as YAML', () => {
+  describe("JSON vs YAML detection", () => {
+    it("should NOT detect valid JSON as YAML", () => {
       const jsonContent = `{
     "menu": {
         "categories": [
@@ -48,7 +48,7 @@ describe('YamlLanguageDetector', () => {
       expect(result.confidence).toBe(0.0);
     });
 
-    it('should detect valid YAML as YAML', () => {
+    it("should detect valid YAML as YAML", () => {
       const yamlContent = `
 menu:
   categories:
@@ -73,7 +73,7 @@ metadata:
       expect(result.confidence).toBeGreaterThan(0.4);
     });
 
-    it('should handle JSON with various value types', () => {
+    it("should handle JSON with various value types", () => {
       const jsonWithVariousTypes = `{
   "string": "value",
   "number": 123,
@@ -91,7 +91,7 @@ metadata:
       expect(result.confidence).toBe(0.0);
     });
 
-    it('should handle JSON with trailing commas', () => {
+    it("should handle JSON with trailing commas", () => {
       const jsonWithCommas = `{
   "key1": "value1",
   "key2": 123,
@@ -104,7 +104,7 @@ metadata:
       expect(result.confidence).toBe(0.0);
     });
 
-    it('should handle minified JSON', () => {
+    it("should handle minified JSON", () => {
       const minifiedJson = `{"menu":{"categories":[{"description":"test","id":"123","items":[{"calories":534,"name":"test","price":9.49}]}]}}`;
 
       const result = detector.detect(minifiedJson);
@@ -112,7 +112,7 @@ metadata:
       expect(result.confidence).toBe(0.0);
     });
 
-    it('should detect YAML with document separators', () => {
+    it("should detect YAML with document separators", () => {
       const yamlWithSeparators = `---
 name: John Doe
 age: 30
@@ -127,7 +127,7 @@ skills:
       expect(result.confidence).toBeGreaterThan(0.5);
     });
 
-    it('should not detect invalid JSON as YAML', () => {
+    it("should not detect invalid JSON as YAML", () => {
       const invalidJson = `{
   "key": "value"
   "missing": "comma"
@@ -142,20 +142,20 @@ skills:
     });
   });
 
-  describe('edge cases', () => {
-    it('should handle empty content', () => {
-      const result = detector.detect('');
+  describe("edge cases", () => {
+    it("should handle empty content", () => {
+      const result = detector.detect("");
       expect(result.match).toBe(false);
       expect(result.confidence).toBe(0.0);
     });
 
-    it('should handle content with only whitespace', () => {
-      const result = detector.detect('   \n  \t  \n  ');
+    it("should handle content with only whitespace", () => {
+      const result = detector.detect("   \n  \t  \n  ");
       expect(result.match).toBe(false);
       expect(result.confidence).toBe(0.0);
     });
 
-    it('should handle URLs in content', () => {
+    it("should handle URLs in content", () => {
       const contentWithUrls = `{
   "api": "https://example.com/api",
   "image": "https://loremflickr.com/640/480/food?lock=123456789"
@@ -166,4 +166,4 @@ skills:
       expect(result.confidence).toBe(0.0);
     });
   });
-}); 
+});

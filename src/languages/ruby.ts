@@ -1,14 +1,17 @@
-import { BaseLanguageDetector } from './baseDetector';
-import { languageRegistry } from './registry';
-import { DetectionResult, LanguageDetector } from './types';
+import { BaseLanguageDetector } from "./baseDetector";
+import { languageRegistry } from "./registry";
+import { DetectionResult, LanguageDetector } from "./types";
 
 /**
  * Ruby language detector
  */
-export class RubyLanguageDetector extends BaseLanguageDetector implements LanguageDetector {
-  id = 'ruby'; // Monaco's built-in ID for Ruby
-  name = 'Ruby';
-  extensions = ['rb', 'rbw', 'rake', 'gemspec', 'ru', 'erb']; // .erb for embedded Ruby
+export class RubyLanguageDetector
+  extends BaseLanguageDetector
+  implements LanguageDetector
+{
+  id = "ruby"; // Monaco's built-in ID for Ruby
+  name = "Ruby";
+  extensions = ["rb", "rbw", "rake", "gemspec", "ru", "erb"]; // .erb for embedded Ruby
   priority = 7; // High priority, fairly distinct syntax
 
   sampleContent(): string {
@@ -99,7 +102,8 @@ end
    */
   detect(content: string): DetectionResult {
     const trimmedContent = content.trim();
-    if (!trimmedContent || trimmedContent.length < 3) { // e.g., "def"
+    if (!trimmedContent || trimmedContent.length < 3) {
+      // e.g., "def"
       return this.noMatch();
     }
 
@@ -116,19 +120,74 @@ end
 
     // 2. Core Ruby Keywords and Structure (Definitive)
     const definitivePatterns = [
-      { pattern: /^\s*(?:class|module)\s+[A-Z_][\w]*(?:\s*<\s*[\w:]+)?/gm, weight: 0.35, perMatch: 0.1, specific: true }, // class Foo or class Foo < Bar or module Foo
-      { pattern: /^\s*def\s+[a-zA-Z_][\w!?=]*\s*(?:\([^)]*\)|[\w\s,]+)?/gm, weight: 0.3, perMatch: 0.05, specific: true }, // def method_name(...) or def method_name ...
-      { pattern: /\battr_(?:reader|writer|accessor)\s+(?::\w+|['"]\w+['"])/g, weight: 0.25, perMatch: 0.05, specific: true },
-      { pattern: /@[a-zA-Z_][\w]*/g, weight: 0.15, perMatch: 0.02, specific: true }, // Instance variables @var
-      { pattern: /@@[a-zA-Z_][\w]*/g, weight: 0.2, perMatch: 0.03, specific: true }, // Class variables @@var
-      { pattern: /:[a-zA-Z_][\w!?=]*/g, weight: 0.2, perMatch: 0.02, specific: true }, // Symbols :my_symbol
+      {
+        pattern: /^\s*(?:class|module)\s+[A-Z_][\w]*(?:\s*<\s*[\w:]+)?/gm,
+        weight: 0.35,
+        perMatch: 0.1,
+        specific: true,
+      }, // class Foo or class Foo < Bar or module Foo
+      {
+        pattern: /^\s*def\s+[a-zA-Z_][\w!?=]*\s*(?:\([^)]*\)|[\w\s,]+)?/gm,
+        weight: 0.3,
+        perMatch: 0.05,
+        specific: true,
+      }, // def method_name(...) or def method_name ...
+      {
+        pattern: /\battr_(?:reader|writer|accessor)\s+(?::\w+|['"]\w+['"])/g,
+        weight: 0.25,
+        perMatch: 0.05,
+        specific: true,
+      },
+      {
+        pattern: /@[a-zA-Z_][\w]*/g,
+        weight: 0.15,
+        perMatch: 0.02,
+        specific: true,
+      }, // Instance variables @var
+      {
+        pattern: /@@[a-zA-Z_][\w]*/g,
+        weight: 0.2,
+        perMatch: 0.03,
+        specific: true,
+      }, // Class variables @@var
+      {
+        pattern: /:[a-zA-Z_][\w!?=]*/g,
+        weight: 0.2,
+        perMatch: 0.02,
+        specific: true,
+      }, // Symbols :my_symbol
       { pattern: /#\{.*?\}/g, weight: 0.25, perMatch: 0.05, specific: true }, // String interpolation #{expression}
-      { pattern: /\b(BEGIN|END)\s*\{/g, weight: 0.2, perMatch: 0.05, specific: true }, // BEGIN {} / END {} blocks
-      { pattern: /\b(alias|alias_method|undef)\b/g, weight: 0.15, perMatch: 0.03 },
-      { pattern: /\b(require|require_relative|load|include|extend|prepend)\b/g, weight: 0.15, perMatch: 0.02 },
-      { pattern: /\b(?:if|unless|while|until|case|for)\b[\s\S]*?\bend\b/g, weight: 0.1, perMatch: 0.01 }, // Control structures ending with 'end'
-      { pattern: /\bdo\s*(?:\|[^|]*\|)?[\s\S]*?\bend\b/g, weight: 0.15, perMatch: 0.02 }, // Blocks do |params| ... end
-      { pattern: /\{\s*(?:\|[^|]*\|)?[\s\S]*?\}/g, weight: 0.05, perMatch: 0.005 } // Blocks { |params| ... } - less specific than do..end
+      {
+        pattern: /\b(BEGIN|END)\s*\{/g,
+        weight: 0.2,
+        perMatch: 0.05,
+        specific: true,
+      }, // BEGIN {} / END {} blocks
+      {
+        pattern: /\b(alias|alias_method|undef)\b/g,
+        weight: 0.15,
+        perMatch: 0.03,
+      },
+      {
+        pattern: /\b(require|require_relative|load|include|extend|prepend)\b/g,
+        weight: 0.15,
+        perMatch: 0.02,
+      },
+      {
+        pattern: /\b(?:if|unless|while|until|case|for)\b[\s\S]*?\bend\b/g,
+        weight: 0.1,
+        perMatch: 0.01,
+      }, // Control structures ending with 'end'
+      {
+        pattern: /\bdo\s*(?:\|[^|]*\|)?[\s\S]*?\bend\b/g,
+        weight: 0.15,
+        perMatch: 0.02,
+      }, // Blocks do |params| ... end
+      {
+        pattern: /\{\s*(?:\|[^|]*\|)?[\s\S]*?\}/g,
+        weight: 0.05,
+        perMatch: 0.005,
+      }, // Blocks { |params| ... } - less specific than do..end
     ];
 
     for (const dp of definitivePatterns) {
@@ -146,8 +205,23 @@ end
     }
 
     // 3. Common keywords (lower weight as they can appear in other contexts)
-    const commonKeywords = ["puts", "gets", "yield", "super", "self", "nil", "true", "false", "defined?", "lambda", "proc"];
-    const commonKeywordsRegex = new RegExp(`\\b(?:${commonKeywords.join('|')})\\b`, "g");
+    const commonKeywords = [
+      "puts",
+      "gets",
+      "yield",
+      "super",
+      "self",
+      "nil",
+      "true",
+      "false",
+      "defined?",
+      "lambda",
+      "proc",
+    ];
+    const commonKeywordsRegex = new RegExp(
+      `\\b(?:${commonKeywords.join("|")})\\b`,
+      "g",
+    );
     const commonMatches = content.match(commonKeywordsRegex);
     if (commonMatches) {
       confidenceScore += 0.05;
@@ -156,11 +230,13 @@ end
     }
 
     // 4. Comments
-    if (/^\s*#.*$/m.test(content)) { // Single line comments
+    if (/^\s*#.*$/m.test(content)) {
+      // Single line comments
       confidenceScore += 0.03;
       patternsMatched++;
     }
-    if (/^=begin[\s\S]*?^=end/m.test(content)) { // Block comments
+    if (/^=begin[\s\S]*?^=end/m.test(content)) {
+      // Block comments
       confidenceScore += 0.15;
       patternsMatched++;
       strongSignalFound = true;
@@ -169,13 +245,13 @@ end
     // 5. Anti-patterns
     const antiPatterns = [
       { pattern: /<\?php/i, weight: -0.7 },
-      { pattern: /^\s*package\s+\w+;/m, weight: -0.6 },         // Java package
-      { pattern: /System\.out\.println/i, weight: -0.5 },     // Java print
+      { pattern: /^\s*package\s+\w+;/m, weight: -0.6 }, // Java package
+      { pattern: /System\.out\.println/i, weight: -0.5 }, // Java print
       { pattern: /\b(var|let|const)\s+\w+\s*=/g, weight: -0.4 }, // JS var declarations (def is preferred in Ruby)
-      { pattern: /function\s+\w+\s*\(/g, weight: -0.4 },        // JS function keyword
-      { pattern: /=>\s*\{/g, weight: -0.3 },                    // JS arrow (Ruby uses -> for lambdas)
-      { pattern: /^\s*#include\s*<.+>/m, weight: -0.6 },       // C/C++ include
-      { pattern: /<\w.*?>/g, weight: -0.5 },                  // HTML/XML tags
+      { pattern: /function\s+\w+\s*\(/g, weight: -0.4 }, // JS function keyword
+      { pattern: /=>\s*\{/g, weight: -0.3 }, // JS arrow (Ruby uses -> for lambdas)
+      { pattern: /^\s*#include\s*<.+>/m, weight: -0.6 }, // C/C++ include
+      { pattern: /<\w.*?>/g, weight: -0.5 }, // HTML/XML tags
       { pattern: /^\s*def\s+\w+\s*\(.*?\)\s*:/m, weight: -0.5 }, // Python def func(): (colon at end)
     ];
 
@@ -190,33 +266,42 @@ end
       confidenceScore += 0.2;
     }
     // If common Ruby patterns like def, class, and string interpolation or symbols are present together
-    if (content.includes("def ") && (content.includes("class ") || content.includes("module ")) && (content.includes("#{") || content.includes(" :"))) {
+    if (
+      content.includes("def ") &&
+      (content.includes("class ") || content.includes("module ")) &&
+      (content.includes("#{") || content.includes(" :"))
+    ) {
       confidenceScore += 0.25;
       strongSignalFound = true;
     }
 
-
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
     // Determine match status
-    const isMatch = (strongSignalFound && confidenceScore >= 0.45) || (patternsMatched >= 3 && confidenceScore >= 0.55);
+    const isMatch =
+      (strongSignalFound && confidenceScore >= 0.45) ||
+      (patternsMatched >= 3 && confidenceScore >= 0.55);
 
     return {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
-      matchedDefinitive: isMatch && strongSignalFound
+      matchedDefinitive: isMatch && strongSignalFound,
     };
   }
 
   getFileExtension(): string {
-    return 'rb';
+    return "rb";
   }
 
   registerProvider(monaco: any): void {
     const languageId = this.id; // 'ruby'
 
     // Monaco has built-in support for 'ruby'.
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
+    if (
+      !monaco.languages
+        .getLanguages()
+        .some((lang: any) => lang.id === languageId)
+    ) {
       monaco.languages.register({ id: languageId });
     }
 
@@ -226,51 +311,84 @@ end
     monaco.languages.registerDocumentFormattingEditProvider(languageId, {
       provideDocumentFormattingEdits(model: any) {
         const content = model.getValue();
-        const lines = content.split('\n');
+        const lines = content.split("\n");
         let indentLevel = 0;
-        const indentChar = '  '; // Common: 2 spaces for Ruby
+        const indentChar = "  "; // Common: 2 spaces for Ruby
 
         // Keywords that typically increase indentation for the next line
         const increaseIndentKeywords = [
-          'class', 'module', 'def', 'if', 'unless', 'case', 'while', 'until', 'for', 'begin',
+          "class",
+          "module",
+          "def",
+          "if",
+          "unless",
+          "case",
+          "while",
+          "until",
+          "for",
+          "begin",
           // Also consider blocks starting with do, or {
         ];
         // Keywords that decrease indentation on the current line
         const decreaseIndentKeywords = [
-          'end', 'else', 'elsif', 'when', 'rescue', 'ensure'
+          "end",
+          "else",
+          "elsif",
+          "when",
+          "rescue",
+          "ensure",
         ];
 
         const formattedLines = lines.map((line: string) => {
           let trimmedLine = line.trim();
-          let currentIndent = '';
+          let currentIndent = "";
 
           // Heuristic: Decrease indent if line starts with a keyword that closes a block
           // or is an `else` or `elsif` part of a conditional.
           // Also handle '}' for blocks.
-          if (decreaseIndentKeywords.some(kw => trimmedLine.startsWith(kw)) || trimmedLine.startsWith('}') || trimmedLine.startsWith(']')) {
-            if (!(trimmedLine.startsWith('else if') || trimmedLine.startsWith('elsif'))) { // `else if` is not a single block ender
+          if (
+            decreaseIndentKeywords.some((kw) => trimmedLine.startsWith(kw)) ||
+            trimmedLine.startsWith("}") ||
+            trimmedLine.startsWith("]")
+          ) {
+            if (
+              !(
+                trimmedLine.startsWith("else if") ||
+                trimmedLine.startsWith("elsif")
+              )
+            ) {
+              // `else if` is not a single block ender
               indentLevel = Math.max(0, indentLevel - 1);
             }
           }
           // Special case for `when` if it's not the first `when` in a `case`
-          if (trimmedLine.startsWith('when') && indentLevel > 0 && !line.match(/^\s*case\b/)) {
+          if (
+            trimmedLine.startsWith("when") &&
+            indentLevel > 0 &&
+            !line.match(/^\s*case\b/)
+          ) {
             // currentIndent = indentChar.repeat(Math.max(0, indentLevel -1));
           } else {
             currentIndent = indentChar.repeat(indentLevel);
           }
 
-
-          let formattedLine = trimmedLine ? currentIndent + trimmedLine : '';
+          let formattedLine = trimmedLine ? currentIndent + trimmedLine : "";
 
           // Heuristic: Increase indent if line ends with `do` (for blocks)
           // or starts with a keyword that opens a block and doesn't also close it on the same line.
           // Also handle '{' for blocks.
-          if (increaseIndentKeywords.some(kw => trimmedLine.startsWith(kw)) ||
-            (trimmedLine.includes(' do') && !trimmedLine.includes(' end')) || // `foo.each do`
-            (trimmedLine.endsWith('{') && !trimmedLine.startsWith('}')) ||
-            (trimmedLine.endsWith('[') && !trimmedLine.startsWith(']'))) {
+          if (
+            increaseIndentKeywords.some((kw) => trimmedLine.startsWith(kw)) ||
+            (trimmedLine.includes(" do") && !trimmedLine.includes(" end")) || // `foo.each do`
+            (trimmedLine.endsWith("{") && !trimmedLine.startsWith("}")) ||
+            (trimmedLine.endsWith("[") && !trimmedLine.startsWith("]"))
+          ) {
             // Avoid double indenting for one-liners like `if true then ... end`
-            if (!trimmedLine.endsWith(' end') && !trimmedLine.includes('; end') && !trimmedLine.match(/\bif\s+.*\sthen\s+.*\s+end\b/)) {
+            if (
+              !trimmedLine.endsWith(" end") &&
+              !trimmedLine.includes("; end") &&
+              !trimmedLine.match(/\bif\s+.*\sthen\s+.*\s+end\b/)
+            ) {
               indentLevel++;
             }
           }
@@ -283,49 +401,144 @@ end
 
           return formattedLine;
         });
-        return [{
-          range: model.getFullModelRange(),
-          text: formattedLines.join('\n').trimEnd() + (content.endsWith('\n') && formattedLines.join('\n').trimEnd() !== '' ? '\n' : '')
-        }];
-      }
+        return [
+          {
+            range: model.getFullModelRange(),
+            text:
+              formattedLines.join("\n").trimEnd() +
+              (content.endsWith("\n") &&
+              formattedLines.join("\n").trimEnd() !== ""
+                ? "\n"
+                : ""),
+          },
+        ];
+      },
     });
 
     // In RubyLanguageDetector.registerProvider
 
     monaco.languages.setMonarchTokensProvider(languageId, {
-      defaultToken: 'invalid', // Be explicit about unhandled tokens
-      tokenPostfix: '.ruby',   // Good practice
+      defaultToken: "invalid", // Be explicit about unhandled tokens
+      tokenPostfix: ".ruby", // Good practice
 
       keywords: [
-        '__ENCODING__', '__LINE__', '__FILE__', 'BEGIN', 'END', 'alias', 'and',
-        'begin', 'break', 'case', 'class', 'def', 'defined?', 'do', 'else',
-        'elsif', 'end', 'ensure', 'false', 'for', 'if', 'in', 'module', 'next',
-        'nil', 'not', 'or', 'redo', 'rescue', 'retry', 'return', 'self', 'super',
-        'then', 'true', 'undef', 'unless', 'until', 'when', 'while', 'yield',
+        "__ENCODING__",
+        "__LINE__",
+        "__FILE__",
+        "BEGIN",
+        "END",
+        "alias",
+        "and",
+        "begin",
+        "break",
+        "case",
+        "class",
+        "def",
+        "defined?",
+        "do",
+        "else",
+        "elsif",
+        "end",
+        "ensure",
+        "false",
+        "for",
+        "if",
+        "in",
+        "module",
+        "next",
+        "nil",
+        "not",
+        "or",
+        "redo",
+        "rescue",
+        "retry",
+        "return",
+        "self",
+        "super",
+        "then",
+        "true",
+        "undef",
+        "unless",
+        "until",
+        "when",
+        "while",
+        "yield",
         // Contextual keywords (sometimes): require, require_relative, include, extend, prepend
       ],
 
-      typeKeywords: [ // Less formal types, but common conventions or core classes
-        'Array', 'String', 'Integer', 'Float', 'Hash', 'Symbol', 'Regexp', 'Proc', 'Lambda'
+      typeKeywords: [
+        // Less formal types, but common conventions or core classes
+        "Array",
+        "String",
+        "Integer",
+        "Float",
+        "Hash",
+        "Symbol",
+        "Regexp",
+        "Proc",
+        "Lambda",
       ],
 
       operators: [
-        '=', '>', '<', '!', '~', '?', ':', '==', '===', '<=', '>=', '<=>', '!=',
-        '&&', '||', '!', 'not', 'and', 'or',
-        '++', '--', // Not standard Ruby, but sometimes seen in DSLs or by mistake
-        '+', '-', '*', '/', '%', '**',
-        '&', '|', '^', '<<', '>>',
-        '+=', '-=', '*=', '/=', '%=', '**=', '&=', '|=', '^=', '<<=', '>>=',
-        '&&=', '||=',
-        '=~', '!~', // Regex matching
-        '..', '...', // Range operators
-        '::', '.', '&.', // Scope, method call, safe navigation
-        '=>' // Hash rocket, lambda
+        "=",
+        ">",
+        "<",
+        "!",
+        "~",
+        "?",
+        ":",
+        "==",
+        "===",
+        "<=",
+        ">=",
+        "<=>",
+        "!=",
+        "&&",
+        "||",
+        "!",
+        "not",
+        "and",
+        "or",
+        "++",
+        "--", // Not standard Ruby, but sometimes seen in DSLs or by mistake
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "**",
+        "&",
+        "|",
+        "^",
+        "<<",
+        ">>",
+        "+=",
+        "-=",
+        "*=",
+        "/=",
+        "%=",
+        "**=",
+        "&=",
+        "|=",
+        "^=",
+        "<<=",
+        ">>=",
+        "&&=",
+        "||=",
+        "=~",
+        "!~", // Regex matching
+        "..",
+        "...", // Range operators
+        "::",
+        ".",
+        "&.", // Scope, method call, safe navigation
+        "=>", // Hash rocket, lambda
       ],
 
       symbols: /[=><!~?:&|+\-*/^%]+/,
 
-      escapes: /\\(?:[abefnrstv\\"']|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|x[0-9a-fA-F]{1,2}|[0-7]{1,3})/,
+      escapes:
+        /\\(?:[abefnrstv\\"']|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|x[0-9a-fA-F]{1,2}|[0-7]{1,3})/,
 
       // Variables
       globalVar: /\$([&_*~@`']|\w+|-[0-9a-zA-Z])/, // $global, $!, $&, etc.
@@ -335,42 +548,48 @@ end
       tokenizer: {
         root: [
           // Shebang
-          [/^#!.*$/, 'metatag.shebang'],
+          [/^#!.*$/, "metatag.shebang"],
 
           // Comments
-          [/^\s*#.*$/, 'comment.ruby'],
-          [/^=begin(?=\s)/, { token: 'comment.block.ruby', next: '@commentBlock' }],
+          [/^\s*#.*$/, "comment.ruby"],
+          [
+            /^=begin(?=\s)/,
+            { token: "comment.block.ruby", next: "@commentBlock" },
+          ],
 
           // Keywords
-          [/[a-zA-Z_]\w*[!?=]?/, {
-            cases: {
-              '@keywords': 'keyword.ruby',
-              '@typeKeywords': 'type.ruby',
-              '@default': 'identifier.ruby'
-            }
-          }],
+          [
+            /[a-zA-Z_]\w*[!?=]?/,
+            {
+              cases: {
+                "@keywords": "keyword.ruby",
+                "@typeKeywords": "type.ruby",
+                "@default": "identifier.ruby",
+              },
+            },
+          ],
 
           // Identifiers that can end with ! or ?
           // Handled by the rule above now with [!?=]?
 
           // Global, instance, class variables
-          [/@globalVar/, 'variable.global.ruby'],
-          [/@instanceVar/, 'variable.instance.ruby'],
-          [/@classVar/, 'variable.class.ruby'],
+          [/@globalVar/, "variable.global.ruby"],
+          [/@instanceVar/, "variable.instance.ruby"],
+          [/@classVar/, "variable.class.ruby"],
 
           // Constants (start with uppercase)
-          [/[A-Z_]\w*[!?=]?/, 'constant.ruby'],
+          [/[A-Z_]\w*[!?=]?/, "constant.ruby"],
 
           // Numbers
-          [/\d+[eE][+-]?\d+/, 'number.float.ruby'], // Scientific notation
-          [/\d+\.\d+(?:[eE][+-]?\d+)?/, 'number.float.ruby'],
-          [/0[xX][0-9a-fA-F]+/, 'number.hex.ruby'],
-          [/0[bB][01]+/, 'number.binary.ruby'],
-          [/0[oO]?[0-7]+/, 'number.octal.ruby'], // 0o prefix is optional for octal
-          [/\d+/, 'number.ruby'],
+          [/\d+[eE][+-]?\d+/, "number.float.ruby"], // Scientific notation
+          [/\d+\.\d+(?:[eE][+-]?\d+)?/, "number.float.ruby"],
+          [/0[xX][0-9a-fA-F]+/, "number.hex.ruby"],
+          [/0[bB][01]+/, "number.binary.ruby"],
+          [/0[oO]?[0-7]+/, "number.octal.ruby"], // 0o prefix is optional for octal
+          [/\d+/, "number.ruby"],
 
           // Delimiters and Brackets - assign specific token types, don't use generic '@brackets' in root
-          [/[{}()\[\]]/, '@brackets'], // This is fine if Monaco handles it, or use specific:
+          [/[{}()\[\]]/, "@brackets"], // This is fine if Monaco handles it, or use specific:
           // [/\(/, 'delimiter.parenthesis.ruby'],
           // [/\)/, 'delimiter.parenthesis.ruby'],
           // [/\{/, 'delimiter.curly.ruby'],
@@ -378,95 +597,187 @@ end
           // [/\[/, 'delimiter.square.ruby'],
           // [/\]/, 'delimiter.square.ruby'],
 
-
           // Symbols
-          [/:\w+!?=?'?/, 'string.symbol.ruby'], // :symbol, :symbol=, :symbol?
-          [/:"[^"]+"/, 'string.symbol.ruby'], // :"quoted_symbol"
-          [/:'[^']+'/, 'string.symbol.ruby'], // :'quoted_symbol'
+          [/:\w+!?=?'?/, "string.symbol.ruby"], // :symbol, :symbol=, :symbol?
+          [/:"[^"]+"/, "string.symbol.ruby"], // :"quoted_symbol"
+          [/:'[^']+'/, "string.symbol.ruby"], // :'quoted_symbol'
 
           // Strings
-          [/"/, { token: 'string.double.ruby', bracket: '@open', next: '@string_double' }],
-          [/'/, { token: 'string.single.ruby', bracket: '@open', next: '@string_single' }],
-          [/`/, { token: 'string.interpolated.ruby', bracket: '@open', next: '@string_backtick' }], // Backtick strings (command execution)
+          [
+            /"/,
+            {
+              token: "string.double.ruby",
+              bracket: "@open",
+              next: "@string_double",
+            },
+          ],
+          [
+            /'/,
+            {
+              token: "string.single.ruby",
+              bracket: "@open",
+              next: "@string_single",
+            },
+          ],
+          [
+            /`/,
+            {
+              token: "string.interpolated.ruby",
+              bracket: "@open",
+              next: "@string_backtick",
+            },
+          ], // Backtick strings (command execution)
 
           // Heredocs
-          [/<<(-?)(\w+)/, [{ token: 'string.heredoc.delimiter', next: `@heredoc_start.$2` }, { token: 'string.heredoc.delimiter', next: `@heredoc_start.$2` }]],
-
+          [
+            /<<(-?)(\w+)/,
+            [
+              { token: "string.heredoc.delimiter", next: `@heredoc_start.$2` },
+              { token: "string.heredoc.delimiter", next: `@heredoc_start.$2` },
+            ],
+          ],
 
           // Regular Expressions
           // [/\/(?![*+?])(?:[^\r\n\[\/\\]|\\.|\\[(?:[^\]\\]|\\.)*\])*\//[gimuy] */, 'regexp.ruby'],
 
           // Operators
-          [/@symbols/, {
-            cases: {
-              '@operators': 'operator.ruby',
-              '@default': '' // Or 'invalid' if unmatched symbols are errors
-            }
-          }],
+          [
+            /@symbols/,
+            {
+              cases: {
+                "@operators": "operator.ruby",
+                "@default": "", // Or 'invalid' if unmatched symbols are errors
+              },
+            },
+          ],
 
           // Delimiters
-          [/[;,]/, 'delimiter.ruby'],
+          [/[;,]/, "delimiter.ruby"],
 
           // Whitespace
-          { include: '@whitespace' },
+          { include: "@whitespace" },
         ],
 
         commentBlock: [
-          [/^=end/, { token: 'comment.block.ruby', next: '@pop' }],
-          [/./, 'comment.block.ruby'] // Anything else inside is a comment
+          [/^=end/, { token: "comment.block.ruby", next: "@pop" }],
+          [/./, "comment.block.ruby"], // Anything else inside is a comment
         ],
 
         whitespace: [
-          [/[ \t\r\n]+/, ''], // Removed 'white' token, just ignore
+          [/[ \t\r\n]+/, ""], // Removed 'white' token, just ignore
         ],
 
         string_double: [
-          [/[^\\"#]+/, 'string.double.ruby'],
-          [/@escapes/, 'string.escape.ruby'],
-          [/\\./, 'string.escape.invalid.ruby'],
-          [/#\{/, { token: 'string.interpolation.delimiter.ruby', bracket: '@open', next: '@interpolation' }],
-          [/"/, { token: 'string.double.ruby', bracket: '@close', next: '@pop' }]
+          [/[^\\"#]+/, "string.double.ruby"],
+          [/@escapes/, "string.escape.ruby"],
+          [/\\./, "string.escape.invalid.ruby"],
+          [
+            /#\{/,
+            {
+              token: "string.interpolation.delimiter.ruby",
+              bracket: "@open",
+              next: "@interpolation",
+            },
+          ],
+          [
+            /"/,
+            { token: "string.double.ruby", bracket: "@close", next: "@pop" },
+          ],
         ],
 
         string_single: [
-          [/[^\\']+/, 'string.single.ruby'],
-          [/@escapes/, 'string.escape.ruby'], // Note: single quotes in Ruby only escape \' and \\
-          [/\\./, 'string.escape.invalid.ruby'],
-          [/'/, { token: 'string.single.ruby', bracket: '@close', next: '@pop' }]
+          [/[^\\']+/, "string.single.ruby"],
+          [/@escapes/, "string.escape.ruby"], // Note: single quotes in Ruby only escape \' and \\
+          [/\\./, "string.escape.invalid.ruby"],
+          [
+            /'/,
+            { token: "string.single.ruby", bracket: "@close", next: "@pop" },
+          ],
         ],
 
         string_backtick: [
-          [/[^\\`#]+/, 'string.interpolated.ruby'],
-          [/@escapes/, 'string.escape.ruby'],
-          [/\\./, 'string.escape.invalid.ruby'],
-          [/#\{/, { token: 'string.interpolation.delimiter.ruby', bracket: '@open', next: '@interpolation' }],
-          [/`/, { token: 'string.interpolated.ruby', bracket: '@close', next: '@pop' }]
+          [/[^\\`#]+/, "string.interpolated.ruby"],
+          [/@escapes/, "string.escape.ruby"],
+          [/\\./, "string.escape.invalid.ruby"],
+          [
+            /#\{/,
+            {
+              token: "string.interpolation.delimiter.ruby",
+              bracket: "@open",
+              next: "@interpolation",
+            },
+          ],
+          [
+            /`/,
+            {
+              token: "string.interpolated.ruby",
+              bracket: "@close",
+              next: "@pop",
+            },
+          ],
         ],
 
         heredoc_start: [
-          [/^\s*([^\s]+)\s*$/, { cases: { '$1==$S2': { token: 'string.heredoc.delimiter', next: '@pop' }, '@default': 'string.heredoc.ruby' } }],
-          [/./, 'string.heredoc.ruby']
+          [
+            /^\s*([^\s]+)\s*$/,
+            {
+              cases: {
+                "$1==$S2": { token: "string.heredoc.delimiter", next: "@pop" },
+                "@default": "string.heredoc.ruby",
+              },
+            },
+          ],
+          [/./, "string.heredoc.ruby"],
         ],
 
         interpolation: [
           // Match expressions inside #{}
-          [/\{/, { token: 'string.interpolation.delimiter.ruby', bracket: '@open', next: '@interpolation_nested' }], // Nested #{{}}
-          [/\}/, { token: 'string.interpolation.delimiter.ruby', bracket: '@close', next: '@pop' }],
-          { include: 'root' } // Allow full Ruby syntax inside interpolation
+          [
+            /\{/,
+            {
+              token: "string.interpolation.delimiter.ruby",
+              bracket: "@open",
+              next: "@interpolation_nested",
+            },
+          ], // Nested #{{}}
+          [
+            /\}/,
+            {
+              token: "string.interpolation.delimiter.ruby",
+              bracket: "@close",
+              next: "@pop",
+            },
+          ],
+          { include: "root" }, // Allow full Ruby syntax inside interpolation
         ],
-        interpolation_nested: [ // For handling nested braces inside interpolation
-          [/\{/, { token: 'string.interpolation.delimiter.ruby', bracket: '@open', next: '@interpolation_nested' }],
-          [/\}/, { token: 'string.interpolation.delimiter.ruby', bracket: '@close', next: '@pop' }],
-          { include: 'root' }
+        interpolation_nested: [
+          // For handling nested braces inside interpolation
+          [
+            /\{/,
+            {
+              token: "string.interpolation.delimiter.ruby",
+              bracket: "@open",
+              next: "@interpolation_nested",
+            },
+          ],
+          [
+            /\}/,
+            {
+              token: "string.interpolation.delimiter.ruby",
+              bracket: "@close",
+              next: "@pop",
+            },
+          ],
+          { include: "root" },
         ],
 
-        section: [ // For INI-style sections, if you ever need them (not standard Ruby)
-          [/[^\]]+/, 'type.identifier.ini'],
-          [/\]/, { token: 'metatag.ini', bracket: '@close', next: '@pop' }]
+        section: [
+          // For INI-style sections, if you ever need them (not standard Ruby)
+          [/[^\]]+/, "type.identifier.ini"],
+          [/\]/, { token: "metatag.ini", bracket: "@close", next: "@pop" }],
         ],
-      }
+      },
     });
-
   }
 }
 
