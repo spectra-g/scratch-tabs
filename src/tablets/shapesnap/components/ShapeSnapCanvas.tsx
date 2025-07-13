@@ -14,7 +14,7 @@ import { ShapeSnapInfoModal } from "./ShapeSnapInfoModal";
 // Custom hook to create modal-aware event handlers
 const useModalAwareHandlers = (isModalOpen: boolean) => {
   const createEventHandler = (handler: (e: any) => void) => {
-    return isModalOpen ? () => { } : handler;
+    return isModalOpen ? () => {} : handler;
   };
 
   return { createEventHandler };
@@ -125,7 +125,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     currentTool,
     currentFontSize,
     gridSnappingEnabled,
-    onShapeClick,
+    onShapeClick: undefined, // Don't use the hook's click handler
     onUpdateLabel,
     onUpdateShape,
     onDeleteShape,
@@ -278,13 +278,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   // Helper function to render resize indicators for selected shapes
   const renderResizeIndicators = (shape: Shape): React.ReactNode => {
     // Show resize handles for all selected shapes (not just the one being dragged)
-    if (
-      !selectedShapeIds.includes(shape.id) ||
-      shape.type === "line" ||
-      shape.type === "straight-arrow" ||
-      shape.type === "curved-arrow" ||
-      shape.type === "orthogonal-arrow"
-    ) {
+    if (shape.type === "line" || !selectedShapeIds.includes(shape.id)) {
       return null;
     }
 
@@ -403,10 +397,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       {/* Information Icon */}
       <button
         onClick={() => onShowInfoModal(true)}
-        className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${canvasSettings.mode === "dark"
+        className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${
+          canvasSettings.mode === "dark"
             ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
             : "bg-white hover:bg-gray-100 text-gray-700"
-          }`}
+        }`}
         title="Shape Snap Help"
       >
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -432,140 +427,140 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         {...(showInfoModal
           ? {}
           : {
-            onDoubleClick: handleCanvasDoubleClick,
-            onMouseMove: handleWrappedMouseMove,
-            onMouseUp: handleWrappedMouseUp,
-            onClick: handleCanvasClick,
-            onTouchStart: (e) => {
-              // Prevent default to avoid scrolling
-              e.preventDefault();
-              // Convert touch to mouse event for compatibility
-              const touch = e.touches[0];
-              const mouseEvent = new MouseEvent("mousedown", {
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                bubbles: true,
-              });
-              e.currentTarget.dispatchEvent(mouseEvent);
-            },
-            onTouchMove: (e) => {
-              // Prevent default to avoid scrolling
-              e.preventDefault();
-              // Convert touch to mouse event for compatibility
-              const touch = e.touches[0];
-              const mouseEvent = new MouseEvent("mousemove", {
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                bubbles: true,
-              });
-              e.currentTarget.dispatchEvent(mouseEvent);
-            },
-            onTouchEnd: (e) => {
-              // Prevent default to avoid any unwanted behavior
-              e.preventDefault();
-              // Convert touch to mouse event for compatibility
-              const mouseEvent = new MouseEvent("mouseup", {
-                bubbles: true,
-              });
-              e.currentTarget.dispatchEvent(mouseEvent);
-            },
-          })}
+              onDoubleClick: handleCanvasDoubleClick,
+              onMouseMove: handleWrappedMouseMove,
+              onMouseUp: handleWrappedMouseUp,
+              onClick: handleCanvasClick,
+              onTouchStart: (e) => {
+                // Prevent default to avoid scrolling
+                e.preventDefault();
+                // Convert touch to mouse event for compatibility
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent("mousedown", {
+                  clientX: touch.clientX,
+                  clientY: touch.clientY,
+                  bubbles: true,
+                });
+                e.currentTarget.dispatchEvent(mouseEvent);
+              },
+              onTouchMove: (e) => {
+                // Prevent default to avoid scrolling
+                e.preventDefault();
+                // Convert touch to mouse event for compatibility
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent("mousemove", {
+                  clientX: touch.clientX,
+                  clientY: touch.clientY,
+                  bubbles: true,
+                });
+                e.currentTarget.dispatchEvent(mouseEvent);
+              },
+              onTouchEnd: (e) => {
+                // Prevent default to avoid any unwanted behavior
+                e.preventDefault();
+                // Convert touch to mouse event for compatibility
+                const mouseEvent = new MouseEvent("mouseup", {
+                  bubbles: true,
+                });
+                e.currentTarget.dispatchEvent(mouseEvent);
+              },
+            })}
       >
         {/* Render all shapes */}
         {shapesToRender.map((shape) =>
           sketchModeEnabled && svgRef.current
             ? (() => {
-              switch (shape.type) {
-                case "rectangle":
-                case "square":
-                case "circle":
-                case "diamond":
-                case "triangle":
-                case "line": {
-                  const roughMarkup = renderRoughShapeSVG(
-                    svgRef.current,
-                    shape.type,
-                    shape,
-                    {
-                      roughness: 2.2,
-                      stroke: shape.style?.stroke || "#000",
-                      strokeWidth: shape.style?.strokeWidth || 2,
-                      fill: shape.style?.fill || undefined,
-                      fillStyle: "hachure",
-                      seed: hashCode(shape.id),
-                    },
-                  );
-                  // Render roughjs shape for visuals, then the normal SVG shape (with event handlers) on top, but invisible
-                  return roughMarkup ? (
-                    <g key={shape.id}>
-                      <g dangerouslySetInnerHTML={{ __html: roughMarkup }} />
-                      {/* Invisible hit area for interactivity */}
-                      {renderShape(
-                        // Clone the shape and override style for hit area
-                        {
-                          ...shape,
-                          style: {
-                            ...shape.style,
-                            stroke: "transparent",
-                            fill: "transparent",
+                switch (shape.type) {
+                  case "rectangle":
+                  case "square":
+                  case "circle":
+                  case "diamond":
+                  case "triangle":
+                  case "line": {
+                    const roughMarkup = renderRoughShapeSVG(
+                      svgRef.current,
+                      shape.type,
+                      shape,
+                      {
+                        roughness: 2.2,
+                        stroke: shape.style?.stroke || "#000",
+                        strokeWidth: shape.style?.strokeWidth || 2,
+                        fill: shape.style?.fill || undefined,
+                        fillStyle: "hachure",
+                        seed: hashCode(shape.id),
+                      },
+                    );
+                    // Render roughjs shape for visuals, then the normal SVG shape (with event handlers) on top, but invisible
+                    return roughMarkup ? (
+                      <g key={shape.id}>
+                        <g dangerouslySetInnerHTML={{ __html: roughMarkup }} />
+                        {/* Invisible hit area for interactivity */}
+                        {renderShape(
+                          // Clone the shape and override style for hit area
+                          {
+                            ...shape,
+                            style: {
+                              ...shape.style,
+                              stroke: "transparent",
+                              fill: "transparent",
+                            },
                           },
-                        },
-                        (s, pos) => {
-                          handleShapeClickWrapper(s, pos);
-                        },
-                        selectedShapeIds.includes(shape.id)
-                          ? shape.id
-                          : undefined,
-                        editingShape ? editingShape.id : undefined,
-                        handleCustomShapeDoubleClick,
-                        handleWrappedMouseDown,
-                        currentTool,
-                        sketchModeEnabled,
-                        currentFontSize,
-                        showInfoModal,
-                      )}
-                      {renderShapeOverlay(
-                        shape,
-                        editingShape ? editingShape.id : undefined,
-                        sketchModeEnabled,
-                        currentFontSize,
-                      )}
-                    </g>
-                  ) : null;
+                          (s, pos) => {
+                            handleShapeClickWrapper(s, pos);
+                          },
+                          selectedShapeIds.includes(shape.id)
+                            ? shape.id
+                            : undefined,
+                          editingShape ? editingShape.id : undefined,
+                          handleCustomShapeDoubleClick,
+                          handleWrappedMouseDown,
+                          currentTool,
+                          sketchModeEnabled,
+                          currentFontSize,
+                          showInfoModal,
+                        )}
+                        {renderShapeOverlay(
+                          shape,
+                          editingShape ? editingShape.id : undefined,
+                          sketchModeEnabled,
+                          currentFontSize,
+                        )}
+                      </g>
+                    ) : null;
+                  }
+                  default:
+                    return renderShape(
+                      shape,
+                      (s, pos) => {
+                        handleShapeClickWrapper(s, pos);
+                      },
+                      selectedShapeIds.includes(shape.id)
+                        ? shape.id
+                        : undefined,
+                      editingShape ? editingShape.id : undefined,
+                      handleCustomShapeDoubleClick,
+                      handleWrappedMouseDown,
+                      currentTool,
+                      sketchModeEnabled,
+                      currentFontSize,
+                      showInfoModal,
+                    );
                 }
-                default:
-                  return renderShape(
-                    shape,
-                    (s, pos) => {
-                      handleShapeClickWrapper(s, pos);
-                    },
-                    selectedShapeIds.includes(shape.id)
-                      ? shape.id
-                      : undefined,
-                    editingShape ? editingShape.id : undefined,
-                    handleCustomShapeDoubleClick,
-                    handleWrappedMouseDown,
-                    currentTool,
-                    sketchModeEnabled,
-                    currentFontSize,
-                    showInfoModal,
-                  );
-              }
-            })()
+              })()
             : renderShape(
-              shape,
-              (s, pos) => {
-                handleShapeClickWrapper(s, pos);
-              },
-              selectedShapeIds.includes(shape.id) ? shape.id : undefined,
-              editingShape ? editingShape.id : undefined,
-              handleCustomShapeDoubleClick,
-              handleWrappedMouseDown,
-              currentTool,
-              sketchModeEnabled,
-              currentFontSize,
-              showInfoModal,
-            ),
+                shape,
+                (s, pos) => {
+                  handleShapeClickWrapper(s, pos);
+                },
+                selectedShapeIds.includes(shape.id) ? shape.id : undefined,
+                editingShape ? editingShape.id : undefined,
+                handleCustomShapeDoubleClick,
+                handleWrappedMouseDown,
+                currentTool,
+                sketchModeEnabled,
+                currentFontSize,
+                showInfoModal,
+              ),
         )}
 
         {/* Render current drawing stroke */}

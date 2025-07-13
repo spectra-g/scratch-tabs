@@ -196,26 +196,12 @@ export const useResizeHandler = ({
           height: circle.radius * 2,
           radius: circle.radius,
         };
-      } else if (
-        shape.type === "diamond" ||
-        shape.type === "triangle" ||
-        shape.type === "text"
-      ) {
-        // For shapes with center coordinates
-        const polyShape = shape as any;
-        originalBounds = {
-          x: polyShape.x - polyShape.width / 2,
-          y: polyShape.y - polyShape.height / 2,
-          width: polyShape.width,
-          height: polyShape.height,
-          radius: undefined,
-        };
       } else {
-        // For shapes with top-left coordinates (rectangle, square)
+        // For rectangle, square, diamond, triangle, text - they use center coordinates
         const rectShape = shape as any;
         originalBounds = {
-          x: rectShape.x,
-          y: rectShape.y,
+          x: rectShape.x - rectShape.width / 2,
+          y: rectShape.y - rectShape.height / 2,
           width: rectShape.width,
           height: rectShape.height,
           radius: undefined,
@@ -263,17 +249,7 @@ export const useResizeHandler = ({
 
       switch (shape.type) {
         case "rectangle":
-        case "square": {
-          updates = {
-            x: newBounds.x,
-            y: newBounds.y,
-            width: newBounds.width,
-            height: newBounds.height,
-          } as Partial<
-            Shape & { x: number; y: number; width: number; height: number }
-          >;
-          break;
-        }
+        case "square":
         case "diamond":
         case "triangle": {
           updates = {

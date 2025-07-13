@@ -7,7 +7,7 @@ const createModalAwareHandler = (
   handler: (e: any) => void,
   modalOpen?: boolean,
 ) => {
-  return modalOpen ? () => { } : handler;
+  return modalOpen ? () => {} : handler;
 };
 
 // Calculate the arrowhead points
@@ -71,7 +71,6 @@ const createTrianglePath = (
 // Helper function to get shape center for label positioning
 export const getShapeCenter = (shape: Shape): Point => {
   switch (shape.type) {
-    case "orthogonal-arrow":
     case "line":
       const midIndex = Math.floor(shape.points.length / 2);
       return shape.points[midIndex] || { x: 0, y: 0 };
@@ -84,12 +83,7 @@ export const getShapeCenter = (shape: Shape): Point => {
     case "triangle":
       // For diamond and triangle, x and y represent the center, not top-left corner
       return { x: shape.x, y: shape.y };
-    case "curved-arrow":
-      return {
-        x: (shape.from.x + shape.to.x) / 2,
-        y: (shape.from.y + shape.to.y) / 2,
-      };
-    case "straight-arrow":
+    case "arrow":
       return {
         x: (shape.from.x + shape.to.x) / 2,
         y: (shape.from.y + shape.to.y) / 2,
@@ -157,7 +151,7 @@ const isNearLineEndpoint = (
 
   const startDistance = Math.sqrt(
     Math.pow(mousePos.x - startPoint.x, 2) +
-    Math.pow(mousePos.y - startPoint.y, 2),
+      Math.pow(mousePos.y - startPoint.y, 2),
   );
 
   const endDistance = Math.sqrt(
@@ -521,86 +515,94 @@ export const renderShape = (
 
   const shapeElement = (() => {
     switch (shape.type) {
-      case "curved-arrow": {
-        const curvedArrow = shape as any; // Cast to access from, to, control
-        const { from, to, control, arrowTipEnd, arrowTipSize } = curvedArrow;
-        const pathData = `M ${from.x} ${from.y} Q ${control.x} ${control.y} ${to.x} ${to.y}`;
-
-        // For the arrowhead, the direction is from the control point to the end point
-        const endArrow = arrowTipEnd && arrowTipEnd !== "none"
-          ? renderArrowTip(
-            to,
-            control, // Use control point for direction
-            arrowTipEnd,
-            arrowTipSize || 10,
-            shape.style.stroke,
-            shape.style.strokeWidth || 2,
-          )
-          : null;
-
-        return (
-          <g key={shape.id} {...baseProps}>
-            <path
-              d={pathData}
-              stroke={shape.style.stroke}
-              strokeWidth={shape.style.strokeWidth || 2}
-              fill="none"
-              strokeLinecap="round"
-            />
-            {endArrow}
-          </g>
-        );
-      }
-      case "orthogonal-arrow":
-      case "line": {
+      case "line":
         const lineShape = shape as Shape & {
           points: Point[];
           arrowTipStart?: ArrowTipStyle;
           arrowTipEnd?: ArrowTipStyle;
           arrowTipSize?: number;
         };
-
-        const startArrow =
+        const hasStartArrow =
           lineShape.arrowTipStart &&
-            lineShape.arrowTipStart !== "none" &&
-            lineShape.points.length >= 2
-            ? renderArrowTip(
-              lineShape.points[0],
-              lineShape.points[1],
-              lineShape.arrowTipStart,
-              lineShape.arrowTipSize,
-              shape.style.stroke,
-              shape.style.strokeWidth,
-            )
-            : null;
-
-        const endArrow =
+          lineShape.arrowTipStart !== "none" &&
+          lineShape.points.length >= 2;
+        const hasEndArrow =
           lineShape.arrowTipEnd &&
-            lineShape.arrowTipEnd !== "none" &&
-            lineShape.points.length >= 2
-            ? renderArrowTip(
-              lineShape.points[lineShape.points.length - 1],
-              lineShape.points[lineShape.points.length - 2],
-              lineShape.arrowTipEnd,
-              lineShape.arrowTipSize,
-              shape.style.stroke,
-              shape.style.strokeWidth,
-            )
-            : null;
+          lineShape.arrowTipEnd !== "none" &&
+          lineShape.points.length >= 2;
 
-        return (
-          <g key={shape.id} {...baseProps}>
+        if (hasStartArrow || hasEndArrow) {
+          const arrowTipSize = lineShape.arrowTipSize || 10;
+          const arrowTips = [];
+
+          // Render start arrow tip
+          if (hasStartArrow) {
+            const startPoint = lineShape.points[0];
+            const directionPoint = lineShape.points[1];
+            arrowTips.push(
+              renderArrowTip(
+                startPoint,
+                directionPoint,
+                lineShape.arrowTipStart!,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+                baseProps,
+              ),
+            );
+          }
+
+          // Render end arrow tip
+          if (hasEndArrow) {
+            const endPoint = lineShape.points[lineShape.points.length - 1];
+            const directionPoint =
+              lineShape.points[lineShape.points.length - 2];
+            arrowTips.push(
+              renderArrowTip(
+                endPoint,
+                directionPoint,
+                lineShape.arrowTipEnd!,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+                baseProps,
+              ),
+            );
+          }
+
+          return (
+            <g key={shape.id}>
+              <path
+                key={`${shape.id}-path`}
+                {...baseProps}
+                d={`M ${lineShape.points.map((p) => `${p.x},${p.y}`).join(" L ")}`}
+                stroke={shape.style.stroke}
+                strokeWidth={shape.style.strokeWidth || 2}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {arrowTips.map((tip, index) => (
+                <React.Fragment key={`${shape.id}-arrow-${index}`}>
+                  {tip}
+                </React.Fragment>
+              ))}
+            </g>
+          );
+        } else {
+          return (
             <path
+              key={shape.id}
+              {...baseProps}
               d={`M ${lineShape.points.map((p) => `${p.x},${p.y}`).join(" L ")}`}
               stroke={shape.style.stroke}
               strokeWidth={shape.style.strokeWidth || 2}
               fill="none"
               strokeLinecap="round"
+              strokeLinejoin="round"
             />
-            {endArrow}
-          </g>
-        );
-      }
+          );
+        }
       case "rectangle":
         return (
           <rect
@@ -664,8 +666,8 @@ export const renderShape = (
             strokeWidth={shape.style.strokeWidth || 2}
           />
         );
-      case "straight-arrow":
-        const [straightArrowP1, straightArrowP2] = calculateArrowhead(
+      case "arrow":
+        const [arrowPoint1, arrowPoint2] = calculateArrowhead(
           shape.from,
           shape.to,
         );
@@ -683,7 +685,7 @@ export const renderShape = (
             />
             <polyline
               key={`${shape.id}-arrowhead`}
-              points={`${shape.to.x},${shape.to.y} ${straightArrowP1.x},${straightArrowP1.y} ${straightArrowP2.x},${straightArrowP2.y} ${shape.to.x},${shape.to.y}`}
+              points={`${shape.to.x},${shape.to.y} ${arrowPoint1.x},${arrowPoint1.y} ${arrowPoint2.x},${arrowPoint2.y} ${shape.to.x},${shape.to.y}`}
               fill={shape.style.stroke}
               stroke={shape.style.stroke}
               strokeWidth={shape.style.strokeWidth || 2}
@@ -721,51 +723,51 @@ export const renderShape = (
   const labelElement =
     !isEditing && shape.label
       ? (() => {
-        if (shape.type === "line") {
-          // Use special positioning for lines based on orientation
-          const labelPos = getLineLabelPosition(
-            shape as Shape & { points: Point[] },
-          );
-          return (
-            <text
-              key={`${shape.id}-label`}
-              x={labelPos.x}
-              y={labelPos.y}
-              fill={shape.style.stroke}
-              fontSize={currentFontSize || 12}
-              dominantBaseline={labelPos.dominantBaseline}
-              textAnchor={labelPos.textAnchor}
-              style={{
-                pointerEvents: "none",
-                userSelect: "none",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-              }}
-            >
-              {shape.label}
-            </text>
-          );
-        } else {
-          // Use standard center positioning for other shapes
-          return (
-            <text
-              key={`${shape.id}-label`}
-              x={center.x}
-              y={center.y}
-              fill={shape.style.stroke}
-              fontSize={currentFontSize || 12}
-              dominantBaseline="middle"
-              textAnchor="middle"
-              style={{
-                pointerEvents: "none",
-                userSelect: "none",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-              }}
-            >
-              {shape.label}
-            </text>
-          );
-        }
-      })()
+          if (shape.type === "line") {
+            // Use special positioning for lines based on orientation
+            const labelPos = getLineLabelPosition(
+              shape as Shape & { points: Point[] },
+            );
+            return (
+              <text
+                key={`${shape.id}-label`}
+                x={labelPos.x}
+                y={labelPos.y}
+                fill={shape.style.stroke}
+                fontSize={currentFontSize || 12}
+                dominantBaseline={labelPos.dominantBaseline}
+                textAnchor={labelPos.textAnchor}
+                style={{
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
+                }}
+              >
+                {shape.label}
+              </text>
+            );
+          } else {
+            // Use standard center positioning for other shapes
+            return (
+              <text
+                key={`${shape.id}-label`}
+                x={center.x}
+                y={center.y}
+                fill={shape.style.stroke}
+                fontSize={currentFontSize || 12}
+                dominantBaseline="middle"
+                textAnchor="middle"
+                style={{
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
+                }}
+              >
+                {shape.label}
+              </text>
+            );
+          }
+        })()
       : null;
 
   return (
@@ -926,125 +928,125 @@ export const renderShapeOverlay = (
   const arrowTipsElement =
     shape.type === "line"
       ? (() => {
-        const lineShape = shape as Shape & {
-          points: Point[];
-          arrowTipStart?: ArrowTipStyle;
-          arrowTipEnd?: ArrowTipStyle;
-          arrowTipSize?: number;
-        };
-        const hasStartArrow =
-          lineShape.arrowTipStart &&
-          lineShape.arrowTipStart !== "none" &&
-          lineShape.points.length >= 2;
-        const hasEndArrow =
-          lineShape.arrowTipEnd &&
-          lineShape.arrowTipEnd !== "none" &&
-          lineShape.points.length >= 2;
+          const lineShape = shape as Shape & {
+            points: Point[];
+            arrowTipStart?: ArrowTipStyle;
+            arrowTipEnd?: ArrowTipStyle;
+            arrowTipSize?: number;
+          };
+          const hasStartArrow =
+            lineShape.arrowTipStart &&
+            lineShape.arrowTipStart !== "none" &&
+            lineShape.points.length >= 2;
+          const hasEndArrow =
+            lineShape.arrowTipEnd &&
+            lineShape.arrowTipEnd !== "none" &&
+            lineShape.points.length >= 2;
 
-        if (!hasStartArrow && !hasEndArrow) return null;
+          if (!hasStartArrow && !hasEndArrow) return null;
 
-        const arrowTipSize = lineShape.arrowTipSize || 10;
-        const arrowTips = [];
+          const arrowTipSize = lineShape.arrowTipSize || 10;
+          const arrowTips = [];
 
-        // Render start arrow tip
-        if (hasStartArrow) {
-          const startPoint = lineShape.points[0];
-          const directionPoint = lineShape.points[1];
-          arrowTips.push(
-            renderArrowTip(
-              startPoint,
-              directionPoint,
-              lineShape.arrowTipStart!,
-              arrowTipSize,
-              shape.style.stroke,
-              shape.style.strokeWidth || 2,
-            ),
+          // Render start arrow tip
+          if (hasStartArrow) {
+            const startPoint = lineShape.points[0];
+            const directionPoint = lineShape.points[1];
+            arrowTips.push(
+              renderArrowTip(
+                startPoint,
+                directionPoint,
+                lineShape.arrowTipStart!,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+              ),
+            );
+          }
+
+          // Render end arrow tip
+          if (hasEndArrow) {
+            const endPoint = lineShape.points[lineShape.points.length - 1];
+            const directionPoint =
+              lineShape.points[lineShape.points.length - 2];
+            arrowTips.push(
+              renderArrowTip(
+                endPoint,
+                directionPoint,
+                lineShape.arrowTipEnd!,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+              ),
+            );
+          }
+
+          return (
+            <g key={`${shape.id}-arrow-tips`}>
+              {arrowTips.map((tip, index) => (
+                <React.Fragment key={`${shape.id}-arrow-tip-${index}`}>
+                  {tip}
+                </React.Fragment>
+              ))}
+            </g>
           );
-        }
-
-        // Render end arrow tip
-        if (hasEndArrow) {
-          const endPoint = lineShape.points[lineShape.points.length - 1];
-          const directionPoint =
-            lineShape.points[lineShape.points.length - 2];
-          arrowTips.push(
-            renderArrowTip(
-              endPoint,
-              directionPoint,
-              lineShape.arrowTipEnd!,
-              arrowTipSize,
-              shape.style.stroke,
-              shape.style.strokeWidth || 2,
-            ),
-          );
-        }
-
-        return (
-          <g key={`${shape.id}-arrow-tips`}>
-            {arrowTips.map((tip, index) => (
-              <React.Fragment key={`${shape.id}-arrow-tip-${index}`}>
-                {tip}
-              </React.Fragment>
-            ))}
-          </g>
-        );
-      })()
+        })()
       : null;
 
   // Render label if it exists and not editing
   const labelElement =
     !isEditing && shape.label
       ? (() => {
-        const fontFamily = sketchFont
-          ? '"Architects Daughter", Arial, sans-serif'
-          : undefined;
-        if (shape.type === "line") {
-          // Use special positioning for lines based on orientation
-          const labelPos = getLineLabelPosition(
-            shape as Shape & { points: Point[] },
-          );
-          return (
-            <text
-              key={`${shape.id}-label`}
-              x={labelPos.x}
-              y={labelPos.y}
-              fill={shape.style.stroke}
-              fontSize={currentFontSize || 12}
-              dominantBaseline={labelPos.dominantBaseline}
-              textAnchor={labelPos.textAnchor}
-              style={{
-                pointerEvents: "none",
-                userSelect: "none",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-                fontFamily,
-              }}
-            >
-              {shape.label}
-            </text>
-          );
-        } else {
-          // For circles and all other shapes, label is centered
-          return (
-            <text
-              key={`${shape.id}-label`}
-              x={center.x}
-              y={center.y}
-              fill={shape.style.stroke}
-              fontSize={currentFontSize || 12}
-              dominantBaseline="middle"
-              textAnchor="middle"
-              style={{
-                pointerEvents: "none",
-                userSelect: "none",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-                fontFamily,
-              }}
-            >
-              {shape.label}
-            </text>
-          );
-        }
-      })()
+          const fontFamily = sketchFont
+            ? '"Architects Daughter", Arial, sans-serif'
+            : undefined;
+          if (shape.type === "line") {
+            // Use special positioning for lines based on orientation
+            const labelPos = getLineLabelPosition(
+              shape as Shape & { points: Point[] },
+            );
+            return (
+              <text
+                key={`${shape.id}-label`}
+                x={labelPos.x}
+                y={labelPos.y}
+                fill={shape.style.stroke}
+                fontSize={currentFontSize || 12}
+                dominantBaseline={labelPos.dominantBaseline}
+                textAnchor={labelPos.textAnchor}
+                style={{
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
+                  fontFamily,
+                }}
+              >
+                {shape.label}
+              </text>
+            );
+          } else {
+            // For circles and all other shapes, label is centered
+            return (
+              <text
+                key={`${shape.id}-label`}
+                x={center.x}
+                y={center.y}
+                fill={shape.style.stroke}
+                fontSize={currentFontSize || 12}
+                dominantBaseline="middle"
+                textAnchor="middle"
+                style={{
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
+                  fontFamily,
+                }}
+              >
+                {shape.label}
+              </text>
+            );
+          }
+        })()
       : null;
 
   return (

@@ -1,4 +1,4 @@
-import { Shape, Point } from '../types';
+import { Point, Shape } from "../types";
 
 // --- CORE HELPER FUNCTIONS ---
 const getBoundingBox = (
@@ -44,104 +44,6 @@ function getCentroid(points: Point[]): Point {
   });
   return { x: sum.x / n, y: sum.y / n };
 }
-
-/**
- * Checks if a series of points represents a curve.
- * @param points The points drawn by the user.
- * @param pathLength The pre-calculated length of the path.
- * @param threshold A value between 0 and 1. A lower value requires a more pronounced curve.
- * @returns True if the path is considered a curve.
- */
-const isCurved = (points: Point[], pathLength: number, threshold: number = 0.97): boolean => {
-  if (points.length < 3) return false;
-  const directDistance = distance(points[0], points[points.length - 1]);
-  if (pathLength === 0) return false;
-  // If the direct distance is much shorter than the path length, it's a curve.
-  return (directDistance / pathLength) < threshold;
-};
-
-/**
- * Finds the point in a path that is furthest from the straight line connecting the start and end points.
- * This will serve as the control point for our Bézier curve.
- */
-const findFurthestPoint = (points: Point[]): Point => {
-    let maxDist = -1;
-    let furthestPoint = points[Math.floor(points.length / 2)]; // Default to midpoint
-    const start = points[0];
-    const end = points[points.length - 1];
-
-    const lineDist = distance(start, end);
-    if (lineDist === 0) return furthestPoint;
-
-    for (let i = 1; i < points.length - 1; i++) {
-        const p = points[i];
-        const dist = Math.abs((end.y - start.y) * p.x - (end.x - start.x) * p.y + end.x * start.y - end.y * start.x) / lineDist;
-        if (dist > maxDist) {
-            maxDist = dist;
-            furthestPoint = p;
-        }
-    }
-    return furthestPoint;
-};
-
-/**
- * Analyzes corners of an open path to see if it's an orthogonal line candidate.
- * If it is, it returns a new set of points that are perfectly straight.
- * @param points The points drawn by the user.
- * @returns A new array of points for the orthogonal line, or null if it's not a match.
- */
-const detectOrthogonalLine = (points: Point[]): Point[] | null => {
-  if (points.length < 3) return null;
-
-  // Simplify points to remove noise, with a slightly higher tolerance
-  const simplifiedPoints = simplifyPoints(points, 8.0);
-  // Use a stricter angle threshold to only find sharp corners
-  const corners = getCorners(simplifiedPoints, 70);
-
-  // We are looking for 1 or 2 corners (which means 2 or 3 segments)
-  if (corners.length < 1 || corners.length > 2) {
-    return null;
-  }
-
-  const startPoint = simplifiedPoints[0];
-  const endPoint = simplifiedPoints[simplifiedPoints.length - 1];
-  const allPoints = [startPoint, ...corners, endPoint];
-  const newPoints: Point[] = [startPoint];
-
-  for (let i = 0; i < allPoints.length - 1; i++) {
-    const p1 = newPoints[i];
-    const p2 = allPoints[i + 1];
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-
-    if (dx === 0 && dy === 0) continue;
-
-    const angleRatio = Math.abs(dx) > Math.abs(dy) ? Math.abs(dy / dx) : Math.abs(dx / dy);
-
-    // If the angle of a segment deviates more than ~20 degrees from a cardinal axis,
-    // it's probably not part of an intended orthogonal line. tan(20 deg) ~= 0.36
-    if (angleRatio > 0.36) {
-        return null;
-    }
-
-    // Snap to horizontal or vertical based on the dominant axis of the segment
-    if (Math.abs(dx) > Math.abs(dy)) {
-      // More horizontal
-      newPoints.push({ x: p2.x, y: p1.y });
-    } else {
-      // More vertical
-      newPoints.push({ x: p1.x, y: p2.y });
-    }
-  }
-
-  // Final check to ensure the straightened line is valid
-  if (newPoints.length < 3) return null;
-  for (let i = 1; i < newPoints.length; i++) {
-    if (distance(newPoints[i - 1], newPoints[i]) < 20) return null; // Ignore tiny segments
-  }
-
-  return newPoints;
-};
 
 // --- HEURISTIC CALCULATORS ---
 function getDiamondScore(
@@ -544,45 +446,21 @@ export const detectShape = (
   const box = getBoundingBox(points);
   const width = box.maxX - box.minX;
   const height = box.maxY - box.minY;
-  const pathLength = getPathLength(points);
 
-  // --- OPEN PATH LOGIC (Lines and Arrows) ---
   if (!isClosed(points, box)) {
-    if (pathLength < 20) return null; // Ignore tiny drawings
-
-    // 1. Check for ORTHOGONAL ARROW first (most specific open shape)
-    const orthogonalPoints = detectOrthogonalLine(points);
-    if (orthogonalPoints) {
-      return {
-        type: 'orthogonal-arrow',
-        points: orthogonalPoints,
-      };
-    }
-
-    // 2. Check for CURVED ARROW second
-    if (isCurved(points, pathLength)) {
-      return {
-        type: "curved-arrow",
-        from: points[0],
-        to: points[points.length - 1],
-        control: findFurthestPoint(points),
-      };
-    }
-
-    // 3. Default to a STRAIGHT ARROW if it's not curved or orthogonal
-    // A simple straight line is a straight-arrow without a visible tip by default.
-    return {
-      type: 'straight-arrow',
-      from: points[0],
-      to: points[points.length - 1],
-    };
+    if (Math.max(width, height) < 20) return null;
+    const straightness =
+      distance(points[0], points[points.length - 1]) / getPathLength(points);
+    if (straightness > 0.95)
+      return { type: "line", points: [points[0], points[points.length - 1]] };
+    return { type: "line", points };
   }
 
-  // --- CLOSED PATH LOGIC (Polygons) ---
   if (width < 20 || height < 20) return null;
 
   let detectedType: Shape["type"] | "unknown" = "unknown";
 
+  const pathLength = getPathLength(points);
   const boxPerimeter = 2 * (width + height);
   const perimeterRatio = pathLength / boxPerimeter;
   const angleThreshold = config.straightSegmentAngleThreshold ?? 20;
@@ -594,6 +472,9 @@ export const detectShape = (
   const dollarResult = recognizer.recognize(points);
   const diamondConfidence = calculateDiamondConfidence(points, box, config);
 
+  // --- REVISED DECISION LOGIC ---
+
+  // 1. Box-like shapes (Squares/Rectangles)
   if (
     perimeterRatio > config.perimeterRatioThreshold &&
     straightSegments >= 3 &&
@@ -612,6 +493,7 @@ export const detectShape = (
         aspectRatio > config.aspectRatioThreshold ? "rectangle" : "square";
     }
   } else {
+    // 2. Not a box. Evaluate other candidates.
     const isCircleCandidate = circleScore < config.circleScoreThreshold;
     const isTriangleCandidate =
       dollarResult.name === "triangle" && dollarResult.score > 0.85;
@@ -645,6 +527,7 @@ export const detectShape = (
     }
   }
 
+  // 3. Final Fallback.
   if (
     detectedType === "unknown" &&
     dollarResult.score > config.scoreThreshold
@@ -653,7 +536,7 @@ export const detectShape = (
   }
 
   if (detectedType === "unknown") {
-    return null;
+    return { type: "line", points };
   }
 
   const centroid = getCentroid(points);
@@ -682,7 +565,7 @@ export const detectShape = (
     case "rectangle":
       return { type: "rectangle", x: box.minX, y: box.minY, width, height };
     default:
-      return null;
+      return { type: "line", points };
   }
 };
 

@@ -124,7 +124,7 @@ export const useDragHandler = ({
           } as Shape;
           break;
         }
-        case "straight-arrow": {
+        case "arrow": {
           const dx = newCenterX - center.x;
           const dy = newCenterY - center.y;
           const arrowShape = shape as Shape & { from: Point; to: Point };
@@ -220,7 +220,7 @@ export const useDragHandler = ({
               };
               break;
             }
-            case "straight-arrow":
+            case "arrow":
             case "line": {
               // For lines and arrows, use the bounding box of all points
               const lineShape = updatedShape as Shape & {
@@ -328,7 +328,7 @@ export const useDragHandler = ({
           } as Partial<Shape & { x: number; y: number }>;
           break;
         }
-        case "straight-arrow": {
+        case "arrow": {
           const dx = newCenterX - center.x;
           const dy = newCenterY - center.y;
           const arrowShape = shape as Shape & { from: Point; to: Point };

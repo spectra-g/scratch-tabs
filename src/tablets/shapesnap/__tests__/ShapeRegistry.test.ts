@@ -18,7 +18,7 @@ describe("ShapeRegistry", () => {
         "triangle",
         "square",
         "text",
-        "straight-arrow",
+        "arrow",
       ];
 
       expectedShapes.forEach((shapeType) => {
@@ -176,7 +176,7 @@ describe("ShapeRegistry", () => {
         "diamond",
         "triangle",
       ];
-      const fillNotSupportedTypes = ["line", "text", "straight-arrow"];
+      const fillNotSupportedTypes = ["line", "text", "arrow"];
 
       fillSupportedTypes.forEach((type) => {
         const capabilities = registry.getShapeCapabilities(type as ShapeType);
@@ -197,7 +197,7 @@ describe("ShapeRegistry", () => {
         "diamond",
         "triangle",
         "line",
-        "straight-arrow",
+        "arrow",
       ];
       const borderNotSupportedTypes = ["text"];
 

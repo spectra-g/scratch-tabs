@@ -3,12 +3,10 @@ export type ShapeType =
   | "rectangle"
   | "circle"
   | "diamond"
-  | "straight-arrow"
+  | "arrow"
   | "text"
   | "triangle"
-  | "square"
-  | "curved-arrow"
-  | "orthogonal-arrow";
+  | "square";
 export type ShapeSnapMode = "dark" | "light";
 export type ShapeSnapTool = "draw" | "select" | "text" | "eraser";
 
@@ -77,8 +75,8 @@ export interface DiamondShape extends BaseShape {
   height: number;
 }
 
-export interface StraightArrowShape extends BaseShape {
-  type: "straight-arrow";
+export interface ArrowShape extends BaseShape {
+  type: "arrow";
   from: Point;
   to: Point;
 }
@@ -107,34 +105,15 @@ export interface TriangleShape extends BaseShape {
   height: number;
 }
 
-export interface CurvedArrowShape extends BaseShape {
-  type: "curved-arrow";
-  from: Point;
-  to: Point;
-  control: Point; // The point that defines the curve's bend
-  arrowTipEnd?: ArrowTipStyle;
-  arrowTipSize?: number;
-}
-
-export interface OrthogonalArrowShape extends BaseShape {
-  type: "orthogonal-arrow";
-  points: Point[];
-  arrowTipStart?: ArrowTipStyle; // Arrow tip style for the start of the line
-  arrowTipEnd?: ArrowTipStyle; // Arrow tip style for the end of the line
-  arrowTipSize?: number; // Size of the arrow tips (default: 10)
-}
-
 export type Shape =
   | LineShape
   | RectangleShape
   | CircleShape
   | DiamondShape
-  | StraightArrowShape
+  | ArrowShape
   | TextShape
   | SquareShape
-  | TriangleShape
-  | CurvedArrowShape
-  | OrthogonalArrowShape;
+  | TriangleShape;
 
 export interface CanvasSettings {
   background: string;
