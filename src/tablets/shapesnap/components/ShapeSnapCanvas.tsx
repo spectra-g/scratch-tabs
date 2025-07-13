@@ -125,7 +125,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     currentTool,
     currentFontSize,
     gridSnappingEnabled,
-    onShapeClick: undefined, // Don't use the hook's click handler
+    onShapeClick,
     onUpdateLabel,
     onUpdateShape,
     onDeleteShape,

@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { ShapeSnapData, DrawState, ShapeSnapTemplate } from "../types";
+import React, { useState, useRef, useEffect, useCallback } from "react"; // Add useCallback
+import { ShapeSnapData, DrawState, ShapeSnapTemplate, Shape, Point } from "../types";
 import { useShapeSnapEngineV2 } from "../hooks/useShapeSnapEngineV2";
 import { ShapeSnapCanvas } from "./ShapeSnapCanvas";
 import { ShapeSnapToolbar } from "./ShapeSnapToolbar";
@@ -31,8 +31,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
 
   const engine = useShapeSnapEngineV2(state, onChange);
 
-  // Template functions
-  const handleApplyTemplate = (template: ShapeSnapTemplate) => {
+  // --- START OF STABILIZED CALLBACKS ---
+  const handleApplyTemplate = useCallback((template: ShapeSnapTemplate) => {
     onChange({
       ...state,
       shapes: [...template.shapes],
@@ -40,7 +40,40 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
       history: [template.shapes],
       historyIndex: 0,
     });
-  };
+  }, [onChange, state]);
+
+  const onUpdateLabel = useCallback((shapeId: string, label: string) => {
+    engine.updateShapeLabel(shapeId, label);
+  }, [engine]);
+
+  const onUpdateShape = useCallback((shapeId: string, updates: Partial<Shape>) => {
+    engine.updateShape(shapeId, updates);
+  }, [engine]);
+
+  const onDeleteShape = useCallback((shapeId: string) => {
+    engine.deleteShape(shapeId);
+  }, [engine]);
+
+  const onAddShape = useCallback((shape: Shape) => {
+    engine.addShape(shape);
+  }, [engine]);
+
+  const onDrawEnd = useCallback((points: Point[]) => {
+    return engine.detectAndAddShape(points);
+  }, [engine]);
+
+  const onSelectionChange = useCallback((shapeIds: string[]) => {
+    engine.setSelectedShapes(shapeIds);
+  }, [engine]);
+
+  const onToggleShapeSelection = useCallback((shapeId: string) => {
+    engine.toggleShapeSelection(shapeId);
+  }, [engine]);
+
+  const onClearSelection = useCallback(() => {
+    engine.clearSelection();
+  }, [engine]);
+  // --- END OF STABILIZED CALLBACKS ---
 
   // Handle canvas resize
   useEffect(() => {
@@ -68,7 +101,6 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
   // Keyboard shortcuts handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't handle keyboard shortcuts if we're in an input field or modal
       if (
         showInfoModal ||
         e.target instanceof HTMLInputElement ||
@@ -115,7 +147,6 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
         case "A":
           if (ctrlOrCmd) {
             e.preventDefault();
-            // Select all shapes
             const allShapeIds = state.shapes.map((shape) => shape.id);
             engine.setSelectedShapes(allShapeIds);
           }
@@ -123,11 +154,9 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
       }
     };
 
-    // Add event listener to the UI container
     const uiElement = uiRef.current;
     if (uiElement) {
       uiElement.addEventListener("keydown", handleKeyDown);
-      // Make sure the element can receive focus
       uiElement.focus();
     }
 
@@ -138,7 +167,6 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
     };
   }, [engine, showInfoModal, state.shapes]);
 
-  // Helper function to get point from event (mouse or touch)
   const getPointFromEvent = (
     e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
   ) => {
@@ -148,12 +176,10 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
     let clientX: number, clientY: number;
 
     if ("touches" in e) {
-      // Touch event
       if (e.touches.length === 0) return null;
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
     } else {
-      // Mouse event
       clientX = e.clientX;
       clientY = e.clientY;
     }
@@ -164,13 +190,10 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
     };
   };
 
-  // Mouse event handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (showInfoModal || state.currentTool !== "draw") return;
-
     const point = getPointFromEvent(e);
     if (!point) return;
-
     setDrawState({
       isDrawing: true,
       currentPoints: [point],
@@ -179,12 +202,9 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (showInfoModal || !drawState.isDrawing || state.currentTool !== "draw")
-      return;
-
+    if (showInfoModal || !drawState.isDrawing || state.currentTool !== "draw") return;
     const point = getPointFromEvent(e);
     if (!point) return;
-
     setDrawState((prev) => ({
       ...prev,
       currentPoints: [...prev.currentPoints, point],
@@ -192,20 +212,11 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
   };
 
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (showInfoModal || !drawState.isDrawing || state.currentTool !== "draw")
-      return;
-
+    if (showInfoModal || !drawState.isDrawing || state.currentTool !== "draw") return;
     const point = getPointFromEvent(e);
     if (!point) return;
-
     const finalPoints = [...drawState.currentPoints, point];
-
-    // Instead of detecting and adding shape here, call onDrawEnd
-    if (typeof engine.detectAndAddShape === "function") {
-      engine.detectAndAddShape(finalPoints);
-    }
-
-    // Reset drawing state
+    onDrawEnd(finalPoints);
     setDrawState({
       isDrawing: false,
       currentPoints: [],
@@ -218,14 +229,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
       showInfoModal ||
       !drawState.isDrawing ||
       drawState.currentPoints.length <= 1
-    )
-      return;
-
-    // Finish the drawing if mouse leaves canvas
-    if (typeof engine.detectAndAddShape === "function") {
-      engine.detectAndAddShape(drawState.currentPoints);
-    }
-
+    ) return;
+    onDrawEnd(drawState.currentPoints);
     setDrawState({
       isDrawing: false,
       currentPoints: [],
@@ -233,16 +238,11 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
     });
   };
 
-  // Touch event handlers
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (showInfoModal || state.currentTool !== "draw") return;
-
-    // Prevent default to avoid scrolling while drawing
     e.preventDefault();
-
     const point = getPointFromEvent(e);
     if (!point) return;
-
     setDrawState({
       isDrawing: true,
       currentPoints: [point],
@@ -251,15 +251,10 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (showInfoModal || !drawState.isDrawing || state.currentTool !== "draw")
-      return;
-
-    // Prevent default to avoid scrolling while drawing
+    if (showInfoModal || !drawState.isDrawing || state.currentTool !== "draw") return;
     e.preventDefault();
-
     const point = getPointFromEvent(e);
     if (!point) return;
-
     setDrawState((prev) => ({
       ...prev,
       currentPoints: [...prev.currentPoints, point],
@@ -267,21 +262,10 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
   };
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (showInfoModal || !drawState.isDrawing || state.currentTool !== "draw")
-      return;
-
-    // Prevent default to avoid any unwanted behavior
+    if (showInfoModal || !drawState.isDrawing || state.currentTool !== "draw") return;
     e.preventDefault();
-
-    // For touch end, we don't add a final point since the last touch move already captured it
     const finalPoints = [...drawState.currentPoints];
-
-    // Instead of detecting and adding shape here, call onDrawEnd
-    if (typeof engine.detectAndAddShape === "function") {
-      engine.detectAndAddShape(finalPoints);
-    }
-
-    // Reset drawing state
+    onDrawEnd(finalPoints);
     setDrawState({
       isDrawing: false,
       currentPoints: [],
@@ -294,14 +278,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
       showInfoModal ||
       !drawState.isDrawing ||
       drawState.currentPoints.length <= 1
-    )
-      return;
-
-    // Finish the drawing if touch is cancelled
-    if (typeof engine.detectAndAddShape === "function") {
-      engine.detectAndAddShape(drawState.currentPoints);
-    }
-
+    ) return;
+    onDrawEnd(drawState.currentPoints);
     setDrawState({
       isDrawing: false,
       currentPoints: [],
@@ -313,7 +291,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
     <div
       ref={uiRef}
       className="h-full flex flex-col bg-gray-900 outline-none"
-      tabIndex={0} // Make the container focusable for keyboard events
+      tabIndex={0}
     >
       <ShapeSnapToolbar
         currentTool={state.currentTool}
@@ -339,7 +317,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
         ref={canvasRef}
         className="flex-1 relative overflow-hidden"
         style={{
-          touchAction: "none", // Prevent default touch behaviors like scrolling
+          touchAction: "none",
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -359,14 +337,14 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
           currentTool={state.currentTool}
           currentFontSize={state.currentFontSize || 16}
           selectedShapeIds={state.selectedShapeIds || []}
-          onUpdateLabel={engine.updateShapeLabel}
-          onUpdateShape={engine.updateShape}
-          onDeleteShape={engine.deleteShape}
-          onAddShape={engine.addShape}
-          onDrawEnd={engine.detectAndAddShape}
-          onSelectionChange={engine.setSelectedShapes}
-          onToggleShapeSelection={engine.toggleShapeSelection}
-          onClearSelection={engine.clearSelection}
+          onUpdateLabel={onUpdateLabel}
+          onUpdateShape={onUpdateShape}
+          onDeleteShape={onDeleteShape}
+          onAddShape={onAddShape}
+          onDrawEnd={onDrawEnd}
+          onSelectionChange={onSelectionChange}
+          onToggleShapeSelection={onToggleShapeSelection}
+          onClearSelection={onClearSelection}
           gridSnappingEnabled={gridSnappingEnabled}
           sketchModeEnabled={sketchModeEnabled}
           showInfoModal={showInfoModal}
@@ -381,7 +359,6 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
         selectedCount={state.selectedShapeIds?.length || 0}
       />
 
-      {/* Templates Panel */}
       {showTemplatesPanel && (
         <ShapeSnapTemplatesPanel
           onApplyTemplate={handleApplyTemplate}

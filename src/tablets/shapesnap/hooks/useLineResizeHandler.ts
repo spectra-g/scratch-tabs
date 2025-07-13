@@ -24,14 +24,12 @@ export const useLineResizeHandler = ({
     draggedShape: null,
   });
 
-  // Helper: snap a value to the nearest grid
   const snapToGridValue = useCallback(
     (value: number, grid: number) =>
       gridSnappingEnabled ? Math.round(value / grid) * grid : value,
     [gridSnappingEnabled],
   );
 
-  // Detect line drag mode (move, resize-start, or resize-end)
   const detectLineDragMode = useCallback(
     (
       shape: Shape,
@@ -86,7 +84,6 @@ export const useLineResizeHandler = ({
     [],
   );
 
-  // Start line resize operation
   const startLineResize = useCallback(
     (
       shape: Shape,
@@ -115,7 +112,7 @@ export const useLineResizeHandler = ({
           }
           break;
         default:
-          return; // Not a resizable line-like shape
+          return;
       }
 
       setLineResizeState({
@@ -128,11 +125,9 @@ export const useLineResizeHandler = ({
     [detectLineDragMode],
   );
 
-  // Update line resize operation - only update local state for immediate visual feedback
   const updateLineResize = useCallback(
     (mousePoint: Point) => {
-      if (!lineResizeState.lineDragMode || !lineResizeState.lineDragShape)
-        return;
+      if (!lineResizeState.lineDragMode || !lineResizeState.lineDragShape) return;
 
       const shape = lineResizeState.lineDragShape;
       const snappedPoint = {
@@ -145,24 +140,22 @@ export const useLineResizeHandler = ({
       switch (shape.type) {
         case "straight-arrow":
         case "curved-arrow": {
-          const arrowShape = updatedShape as Shape & { from: Point; to: Point };
           if (lineResizeState.lineDragMode === "resize-start") {
-            arrowShape.from = snappedPoint;
+            (updatedShape as any).from = snappedPoint;
           } else if (lineResizeState.lineDragMode === "resize-end") {
-            arrowShape.to = snappedPoint;
+            (updatedShape as any).to = snappedPoint;
           }
           break;
         }
         case "line":
         case "orthogonal-arrow": {
-          const lineShape = updatedShape as Shape & { points: Point[] };
           const newPoints = [...shape.points];
           if (lineResizeState.lineDragMode === "resize-start") {
             newPoints[0] = snappedPoint;
           } else if (lineResizeState.lineDragMode === "resize-end") {
             newPoints[newPoints.length - 1] = snappedPoint;
           }
-          lineShape.points = newPoints;
+          (updatedShape as any).points = newPoints;
           break;
         }
       }
@@ -175,7 +168,6 @@ export const useLineResizeHandler = ({
     [lineResizeState, snapToGridValue],
   );
 
-  // End line resize operation - now call onUpdateShape to persist changes
   const endLineResize = useCallback(() => {
     if (!lineResizeState.lineDragMode || !lineResizeState.lineDragShape) return;
 
@@ -204,7 +196,6 @@ export const useLineResizeHandler = ({
     });
   }, [lineResizeState, onUpdateShape]);
 
-  // Cancel line resize operation
   const cancelLineResize = useCallback(() => {
     setLineResizeState({
       lineDragMode: null,
@@ -215,17 +206,12 @@ export const useLineResizeHandler = ({
   }, []);
 
   return {
-    // State
     lineResizeState,
-
-    // Actions
     detectLineDragMode,
     startLineResize,
     updateLineResize,
     endLineResize,
     cancelLineResize,
-
-    // Computed values
     isLineResizing: lineResizeState.lineDragMode !== null,
     lineDragMode: lineResizeState.lineDragMode,
     draggedShape: lineResizeState.draggedShape,
