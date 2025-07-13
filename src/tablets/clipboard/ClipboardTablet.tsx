@@ -6,17 +6,12 @@ import React, {
   useMemo,
 } from "react";
 import { Tablet, TabletState } from "../types";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Clipboard,
   Copy,
   ClipboardPaste,
-  XCircle,
-  RefreshCw,
-  ExternalLink,
   Pin,
-  PinOff,
-  Pencil,
   Check,
   Search,
   Image as ImageIcon,
@@ -27,17 +22,14 @@ import {
   Filter,
   List,
   Trash2,
-  Merge,
   Star,
   Keyboard,
-  View,
   Grid,
   Clock,
+  Menu,
 } from "lucide-react";
-import { detectLanguage } from "../../languages";
-import { useRootStore } from "../../stores";
-import { useWorkspaceStore } from "../../stores/workspaceStore";
-import { formatRelativeTime } from "../vault/utils/dateUtils"; // CORRECTED IMPORT PATH
+import { useIsMobile } from "../../hooks/useIsMobile";
+import { formatRelativeTime } from "../vault/utils/dateUtils";
 
 // --- Types & Constants ---
 type ContentType = "text" | "image" | "link" | "color";
@@ -52,7 +44,7 @@ interface ClipboardItem {
   isPinned: boolean;
   isFavorite: boolean;
   title: string;
-  sourceApp?: string; // Future use
+  sourceApp?: string;
 }
 
 interface ClipboardTabletState extends TabletState {
@@ -168,12 +160,14 @@ const ContentTypeIcon: React.FC<{ type: ContentType }> = React.memo(
   },
 );
 
-const ExpiryCountdown: React.FC<{ expiry: number }> = ({ expiry }) => {
-  const [remaining, setRemaining] = useState(expiry - Date.now());
+const ExpiryCountdown: React.FC<{ item: ClipboardItem }> = ({ item }) => {
+  const [remaining, setRemaining] = useState(item.expiresAt - Date.now());
 
   useEffect(() => {
+    if (item.isPinned) return;
+
     const timer = setInterval(() => {
-      const newRemaining = expiry - Date.now();
+      const newRemaining = item.expiresAt - Date.now();
       if (newRemaining > 0) {
         setRemaining(newRemaining);
       } else {
@@ -183,7 +177,16 @@ const ExpiryCountdown: React.FC<{ expiry: number }> = ({ expiry }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [expiry]);
+  }, [item.expiresAt, item.isPinned]);
+
+  if (item.isPinned) {
+    return (
+      <div className="flex items-center space-x-1 text-xs text-yellow-500">
+        <Pin size={12} />
+        <span>Pinned</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center space-x-1 text-xs text-gray-500">
@@ -260,8 +263,10 @@ export const ClipboardTablet: Tablet = {
     const { items, searchQuery, filterType, showFavorites, viewMode } = data;
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
     const [activeIndex, setActiveIndex] = useState(-1);
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
     const listRef = useRef<HTMLDivElement>(null);
     const latestStateRef = useRef(state);
+    const isMobile = useIsMobile();
     latestStateRef.current = state;
 
     const updateData = useCallback(
@@ -270,6 +275,14 @@ export const ClipboardTablet: Tablet = {
       },
       [state, onChange],
     );
+
+    useEffect(() => {
+      if (!isMobile) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    }, [isMobile]);
 
     // Auto-expire items
     useEffect(() => {
@@ -286,7 +299,6 @@ export const ClipboardTablet: Tablet = {
       return () => clearInterval(interval);
     }, [updateData]);
 
-    // Filter and sort items
     const filteredItems = useMemo(() => {
       return items
         .filter((item) => {
@@ -300,27 +312,24 @@ export const ClipboardTablet: Tablet = {
             return false;
           return true;
         })
-        .sort((a, b) => b.timestamp - a.timestamp);
+        .sort((a, b) => {
+          if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+          if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1;
+          return b.timestamp - a.timestamp;
+        });
     }, [items, showFavorites, filterType, searchQuery]);
 
-    // Handle clipboard changes
     const handlePaste = useCallback(async () => {
       try {
         const clipboardItems = await navigator.clipboard.read();
-
         for (const item of clipboardItems) {
           for (const type of item.types) {
             if (type.startsWith("image/")) {
               const blob = await item.getType(type);
               const reader = new FileReader();
-
               reader.onload = () => {
                 const imageDataUrl = reader.result as string;
-                if (
-                  !latestStateRef.current.data.items.some(
-                    (i) => i.content === imageDataUrl,
-                  )
-                ) {
+                if (!latestStateRef.current.data.items.some((i) => i.content === imageDataUrl)) {
                   const newItem: ClipboardItem = {
                     id: crypto.randomUUID(),
                     content: imageDataUrl,
@@ -331,30 +340,18 @@ export const ClipboardTablet: Tablet = {
                     isFavorite: false,
                     title: generateTitle(imageDataUrl, "image"),
                   };
-                  updateData({
-                    items: [newItem, ...latestStateRef.current.data.items],
-                  });
+                  updateData({ items: [newItem, ...latestStateRef.current.data.items] });
                 }
               };
-
               reader.readAsDataURL(blob);
               return;
             }
           }
-
           if (item.types.includes("text/plain")) {
             const text = await item.getType("text/plain");
             const textContent = await text.text();
             const trimmedText = textContent.trim();
-
-            if (
-              !trimmedText ||
-              latestStateRef.current.data.items.some(
-                (i) => i.content === trimmedText,
-              )
-            )
-              return;
-
+            if (!trimmedText || latestStateRef.current.data.items.some((i) => i.content === trimmedText)) return;
             const type = detectContentType(trimmedText);
             const newItem: ClipboardItem = {
               id: crypto.randomUUID(),
@@ -366,9 +363,7 @@ export const ClipboardTablet: Tablet = {
               isFavorite: false,
               title: generateTitle(trimmedText, type),
             };
-            updateData({
-              items: [newItem, ...latestStateRef.current.data.items],
-            });
+            updateData({ items: [newItem, ...latestStateRef.current.data.items] });
             return;
           }
         }
@@ -377,14 +372,7 @@ export const ClipboardTablet: Tablet = {
         try {
           const text = await navigator.clipboard.readText();
           const trimmedText = text.trim();
-          if (
-            !trimmedText ||
-            latestStateRef.current.data.items.some(
-              (i) => i.content === trimmedText,
-            )
-          )
-            return;
-
+          if (!trimmedText || latestStateRef.current.data.items.some((i) => i.content === trimmedText)) return;
           const type = detectContentType(trimmedText);
           const newItem: ClipboardItem = {
             id: crypto.randomUUID(),
@@ -396,9 +384,7 @@ export const ClipboardTablet: Tablet = {
             isFavorite: false,
             title: generateTitle(trimmedText, type),
           };
-          updateData({
-            items: [newItem, ...latestStateRef.current.data.items],
-          });
+          updateData({ items: [newItem, ...latestStateRef.current.data.items] });
         } catch (textError) {
           console.error("Failed to read clipboard text:", textError);
         }
@@ -411,14 +397,11 @@ export const ClipboardTablet: Tablet = {
           if (type === "image" && content.startsWith("data:image/")) {
             const response = await fetch(content);
             const blob = await response.blob();
-            const clipboardItem = new ClipboardItem({
-              [blob.type]: blob,
-            } as any);
+            const clipboardItem = new ClipboardItem({ [blob.type]: blob } as any);
             await navigator.clipboard.write([clipboardItem]);
           } else {
             await navigator.clipboard.writeText(content);
           }
-
           const now = Date.now();
           updateData({
             items: items.map((item) =>
@@ -427,7 +410,6 @@ export const ClipboardTablet: Tablet = {
                 : item,
             ),
           });
-
           setCopiedItemId(id);
           setTimeout(() => setCopiedItemId(null), 1500);
         } catch (error) {
@@ -440,13 +422,22 @@ export const ClipboardTablet: Tablet = {
     const handleDelete = (id: string) => {
       updateData({ items: items.filter((item) => item.id !== id) });
     };
+
     const handleTogglePin = (id: string) => {
+      const now = Date.now();
       updateData({
         items: items.map((item) =>
-          item.id === id ? { ...item, isPinned: !item.isPinned } : item,
+          item.id === id
+            ? {
+                ...item,
+                isPinned: !item.isPinned,
+                expiresAt: now + TWENTY_FOUR_HOURS_MS,
+              }
+            : item,
         ),
       });
     };
+
     const handleToggleFavorite = (id: string) => {
       updateData({
         items: items.map((item) =>
@@ -457,25 +448,14 @@ export const ClipboardTablet: Tablet = {
 
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement
-        )
-          return;
-
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
         if (e.key === "ArrowDown") {
           e.preventDefault();
-          setActiveIndex((prev) =>
-            Math.min(prev + 1, filteredItems.length - 1),
-          );
+          setActiveIndex((prev) => Math.min(prev + 1, filteredItems.length - 1));
         } else if (e.key === "ArrowUp") {
           e.preventDefault();
           setActiveIndex((prev) => Math.max(prev - 1, 0));
-        } else if (
-          e.key === "Enter" &&
-          activeIndex >= 0 &&
-          filteredItems[activeIndex]
-        ) {
+        } else if (e.key === "Enter" && activeIndex >= 0 && filteredItems[activeIndex]) {
           e.preventDefault();
           handleCopy(
             filteredItems[activeIndex].id,
@@ -489,9 +469,7 @@ export const ClipboardTablet: Tablet = {
     }, [activeIndex, filteredItems, handleCopy]);
 
     useEffect(() => {
-      const handlePasteEvent = () => {
-        handlePaste();
-      };
+      const handlePasteEvent = () => handlePaste();
       window.addEventListener("paste", handlePasteEvent);
       return () => window.removeEventListener("paste", handlePasteEvent);
     }, [handlePaste]);
@@ -499,53 +477,45 @@ export const ClipboardTablet: Tablet = {
     useEffect(() => {
       if (activeIndex === -1 || !listRef.current) return;
       const activeElement = listRef.current.children[activeIndex] as HTMLElement;
-      activeElement?.scrollIntoView({
-        block: "nearest",
-        behavior: "smooth",
-      });
+      activeElement?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }, [activeIndex]);
 
-    return (
-      <div className="h-full bg-gray-900 flex">
-        <div className="w-64 border-r border-gray-700/50 flex flex-col p-4 space-y-6">
+    const SidebarContent = () => (
+      <div className="flex flex-col p-4 space-y-6 h-full">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Clipboard className="text-gray-400" size={20} />
             <h2 className="text-lg font-semibold text-gray-100">Clipboard</h2>
           </div>
-          <div className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => updateData({ searchQuery: e.target.value })}
-              placeholder="Search clipboard..."
-              className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500"
-            />
-          </div>
+          {isMobile && (
+            <button onClick={() => setSidebarOpen(false)} className="p-1 text-gray-400 hover:text-white">
+              <X size={20} />
+            </button>
+          )}
+        </div>
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => updateData({ searchQuery: e.target.value })}
+            placeholder="Search clipboard..."
+            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500"
+          />
+        </div>
+        <div className="flex-grow overflow-y-auto space-y-4">
           <div>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">
-              Filters
-            </h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Filters</h3>
             <div className="space-y-1">
               <button
-                onClick={() =>
-                  updateData({ filterType: null, showFavorites: false })
-                }
+                onClick={() => updateData({ filterType: null, showFavorites: false })}
                 className={`w-full flex items-center p-2 rounded-md text-sm ${!filterType && !showFavorites ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
               >
                 <List size={16} className="mr-2" />
                 All Items
               </button>
               <button
-                onClick={() =>
-                  updateData({
-                    showFavorites: !showFavorites,
-                    filterType: null,
-                  })
-                }
+                onClick={() => updateData({ showFavorites: !showFavorites, filterType: null })}
                 className={`w-full flex items-center p-2 rounded-md text-sm ${showFavorites ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
               >
                 <Star size={16} className="mr-2" />
@@ -554,16 +524,12 @@ export const ClipboardTablet: Tablet = {
             </div>
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">
-              Content Types
-            </h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Content Types</h3>
             <div className="space-y-1">
               {["text", "image", "link", "color"].map((type) => (
                 <button
                   key={type}
-                  onClick={() =>
-                    updateData({ filterType: type as ContentType })
-                  }
+                  onClick={() => updateData({ filterType: type as ContentType })}
                   className={`w-full flex items-center p-2 rounded-md text-sm ${filterType === type ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
                 >
                   <ContentTypeIcon type={type as ContentType} />
@@ -572,20 +538,52 @@ export const ClipboardTablet: Tablet = {
               ))}
             </div>
           </div>
-          <div className="mt-auto space-y-2">
-            <button
-              onClick={handlePaste}
-              className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
-            >
-              <ClipboardPaste size={16} />
-              <span>Paste from Clipboard</span>
-            </button>
-            <div className="text-xs text-gray-500 text-center flex items-center justify-center gap-1">
-              <Keyboard size={14} />
-              <span>Up/Down to navigate, Enter to copy.</span>
-            </div>
+        </div>
+        <div className="mt-auto space-y-2 flex-shrink-0">
+          <button
+            onClick={handlePaste}
+            className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
+          >
+            <ClipboardPaste size={16} />
+            <span>Paste from Clipboard</span>
+          </button>
+          <div className="text-xs text-gray-500 text-center flex items-center justify-center gap-1">
+            <Keyboard size={14} />
+            <span>Up/Down, Enter to copy.</span>
           </div>
         </div>
+      </div>
+    );
+
+    return (
+      <div className="h-full bg-gray-900 flex relative overflow-hidden">
+        <AnimatePresence>
+          {isSidebarOpen && isMobile && (
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="z-20 absolute top-0 left-0 h-full bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50 w-64"
+            >
+              <SidebarContent />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {!isMobile && (
+            <div className="w-64 flex-shrink-0 border-r border-gray-700/50">
+                <SidebarContent />
+            </div>
+        )}
+
+        {!isSidebarOpen && isMobile && (
+          <div className="absolute top-0 left-0 z-30 p-2">
+            <button onClick={() => setSidebarOpen(true)} className="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-md">
+              <Menu size={20} />
+            </button>
+          </div>
+        )}
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-none p-4 border-b border-gray-700/50 flex items-center justify-between">
@@ -620,9 +618,7 @@ export const ClipboardTablet: Tablet = {
               <div className="text-center text-gray-400 mt-8">
                 <Filter size={40} className="mx-auto mb-3 opacity-50" />
                 <p className="text-base">No items match your filters</p>
-                <p className="text-sm mt-1">
-                  Try adjusting your search or filters
-                </p>
+                <p className="text-sm mt-1">Try adjusting your search or filters</p>
               </div>
             ) : viewMode === "card" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -645,30 +641,20 @@ export const ClipboardTablet: Tablet = {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
                             <ContentTypeIcon type={item.type} />
-                            <p className="text-sm font-medium text-gray-200 truncate">
-                              {item.title}
-                            </p>
+                            <p className="text-sm font-medium text-gray-200 truncate">{item.title}</p>
                           </div>
                           <div className="flex items-center space-x-1">
                             <button
                               onClick={() => handleToggleFavorite(item.id)}
                               className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
                             >
-                              <Star
-                                size={14}
-                                className={
-                                  item.isFavorite ? "fill-current" : ""
-                                }
-                              />
+                              <Star size={14} className={item.isFavorite ? "fill-current" : ""} />
                             </button>
                             <button
                               onClick={() => handleTogglePin(item.id)}
                               className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
                             >
-                              <Pin
-                                size={14}
-                                className={item.isPinned ? "fill-current" : ""}
-                              />
+                              <Pin size={14} className={item.isPinned ? "fill-current" : ""} />
                             </button>
                           </div>
                         </div>
@@ -677,20 +663,14 @@ export const ClipboardTablet: Tablet = {
                         </div>
                       </div>
                       <div className="px-3 py-2 border-t border-gray-700/50 flex justify-between items-center">
-                        <ExpiryCountdown expiry={item.expiresAt} />
+                        <ExpiryCountdown item={item} />
                         <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() =>
-                              handleCopy(item.id, item.content, item.type)
-                            }
+                            onClick={() => handleCopy(item.id, item.content, item.type)}
                             className="p-1 rounded hover:bg-gray-700/50"
                             title="Copy"
                           >
-                            {copiedItemId === item.id ? (
-                              <Check size={14} className="text-green-400" />
-                            ) : (
-                              <Copy size={14} />
-                            )}
+                            {copiedItemId === item.id ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
                           </button>
                           <button
                             onClick={() => handleDelete(item.id)}
@@ -726,11 +706,9 @@ export const ClipboardTablet: Tablet = {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
                             <ContentTypeIcon type={item.type} />
-                            <p className="text-sm font-medium text-gray-200 truncate">
-                              {item.title}
-                            </p>
+                            <p className="text-sm font-medium text-gray-200 truncate">{item.title}</p>
                           </div>
-                          <ExpiryCountdown expiry={item.expiresAt} />
+                          <ExpiryCountdown item={item} />
                         </div>
                         <div className="max-h-48 overflow-y-auto custom-scrollbar rounded-md bg-black/20 p-2">
                           <ItemPreview item={item} viewMode="list" />
@@ -738,35 +716,23 @@ export const ClipboardTablet: Tablet = {
                       </div>
                       <div className="flex flex-col items-center space-y-2">
                         <button
-                          onClick={() =>
-                            handleCopy(item.id, item.content, item.type)
-                          }
+                          onClick={() => handleCopy(item.id, item.content, item.type)}
                           className="p-1.5 rounded hover:bg-gray-700/50"
                           title="Copy"
                         >
-                          {copiedItemId === item.id ? (
-                            <Check size={16} className="text-green-400" />
-                          ) : (
-                            <Copy size={16} />
-                          )}
+                          {copiedItemId === item.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
                         </button>
                         <button
                           onClick={() => handleToggleFavorite(item.id)}
                           className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
                         >
-                          <Star
-                            size={16}
-                            className={item.isFavorite ? "fill-current" : ""}
-                          />
+                          <Star size={16} className={item.isFavorite ? "fill-current" : ""} />
                         </button>
                         <button
                           onClick={() => handleTogglePin(item.id)}
                           className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
                         >
-                          <Pin
-                            size={16}
-                            className={item.isPinned ? "fill-current" : ""}
-                          />
+                          <Pin size={16} className={item.isPinned ? "fill-current" : ""} />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
