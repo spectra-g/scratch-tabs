@@ -112,7 +112,13 @@ export const useMouseEventCoordinator = ({
       }
 
       // Check for line resize
-      if (shape.type === "line") {
+      const isLineLike =
+        shape.type === "line" ||
+        shape.type === "straight-arrow" ||
+        shape.type === "curved-arrow" ||
+        shape.type === "orthogonal-arrow";
+
+      if (isLineLike) {
         const lineDragMode = lineResizeHandler.detectLineDragMode(
           shape,
           mousePoint,

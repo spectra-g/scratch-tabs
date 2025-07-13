@@ -90,7 +90,6 @@ describe("Test Summary", () => {
     let totalTests = 0;
 
     Object.entries(shapeStats).forEach(([expectedShape, stats]) => {
-      if (!expectedShape || expectedShape === 'undefined') return;
       const accuracy =
         stats.total > 0
           ? ((stats.correct / stats.total) * 100).toFixed(1)
@@ -125,7 +124,6 @@ describe("Test Summary", () => {
     // Additional insights
     console.log("\n🔍 KEY INSIGHTS:");
     Object.entries(shapeStats).forEach(([expectedShape, stats]) => {
-      if (!expectedShape || expectedShape === 'undefined') return;
       const accuracy = parseFloat(
         ((stats.correct / stats.total) * 100).toFixed(1),
       );
