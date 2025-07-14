@@ -2,7 +2,7 @@ export function unstringifyJson(input: string): string {
   // Try to parse the input as a stringified JSON string
   let parsed: any;
   let lastError: Error | null = null;
-  let attempts = [input];
+  const attempts = [input];
 
   // If input starts with a quote but not ends, or ends but not starts, try to fix
   const trimmed = input.trim();

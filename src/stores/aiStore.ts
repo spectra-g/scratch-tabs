@@ -51,7 +51,7 @@ export interface AISlice {
 function updateProgressState(ai: AIState, p: any): AIState {
   // Keep this function largely the same, it now updates based on worker messages
   if (!ai.isLoading) return ai;
-  let files = { ...ai.files };
+  const files = { ...ai.files };
   if (p.file && typeof p.loaded === "number") {
     const percent = p.total
       ? Math.round((p.loaded / p.total) * 100)
@@ -121,7 +121,7 @@ let summaryModalCallback: ((tabId: string) => void) | null = null;
 export const useAIStore = create<AISlice>((set, get) => {
   // Track the current codegen model name for persistence
   let currentCodegenModelName = "Xenova/starcoderbase-1b-sft"; // Default fallback
-  let currentSummarizationModelName = "Xenova/distilbart-cnn-6-6"; // Default fallback
+  const currentSummarizationModelName = "Xenova/distilbart-cnn-6-6"; // Default fallback
 
   // Helper function to get persistence key for codegen model
   const getCodegenPersistenceKey = () => {

@@ -10,7 +10,7 @@ const flattenJsonArray = (
   parentPathKey: string = "", // The key name of the array itself (e.g., "hobbies")
   parentData: Record<string, any> = {}, // Data from levels above the array's parent object
 ): Record<string, any>[] => {
-  let result: Record<string, any>[] = [];
+  const result: Record<string, any>[] = [];
 
   arr.forEach((item, index) => {
     // If the item within the array is itself an object or array, we need to handle it.
@@ -55,7 +55,7 @@ const flattenObjectAndExpandArrays = (
   baseData: Record<string, any> = {}, // Accumulates non-array data for duplication
 ): Record<string, any>[] => {
   let currentLevelData: Record<string, any> = { ...baseData };
-  let arraysToExpand: { key: string; pathKey: string; value: any[] }[] = [];
+  const arraysToExpand: { key: string; pathKey: string; value: any[] }[] = [];
 
   Object.entries(obj).forEach(([key, value]) => {
     const currentPath = parentPath ? `${parentPath}.${key}` : key;

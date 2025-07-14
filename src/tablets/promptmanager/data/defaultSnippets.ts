@@ -15,7 +15,13 @@ export const defaultSnippets: Snippet[] = [
 - [ ] Form validation provides clear feedback
 - [ ] Color contrast meets WCAG AA standards
 - [ ] Critical actions have confirmation steps
-- [ ] Success messages confirm completed actions`,
+- [ ] Success messages confirm completed actions
+
+---
+
+*AI, please review the following interface/design against the checklist above and identify any missing items or areas for improvement.*
+
+{{interface_to_review}}`,
     isBuiltIn: true,
   },
   {
@@ -32,48 +38,60 @@ export const defaultSnippets: Snippet[] = [
 7. **Error Handling**: Are errors handled appropriately?
 8. **Edge Cases**: Are edge cases considered?
 9. **Consistency**: Does the code follow project conventions?
-10. **Reusability**: Could any parts be made more reusable?`,
+10. **Reusability**: Could any parts be made more reusable?
+
+---
+
+*AI, please review the following code against the criteria above and provide detailed feedback for each applicable area.*
+
+{{code_to_review}}`,
     isBuiltIn: true,
   },
   {
     id: "snippet-persona-template",
     title: "User Persona Template",
     category: "Product",
-    content: `## User Persona: [Name]
+    content: `## User Persona: {{persona_name}}
 
 ### Demographics
-- **Age**: [Age]
-- **Occupation**: [Occupation]
-- **Location**: [Location]
-- **Education**: [Education Level]
+- **Age**: {{age}} <!-- e.g., 28-35 years old -->
+- **Occupation**: {{occupation}} <!-- e.g., Marketing Manager, Software Developer -->
+- **Location**: {{location}} <!-- e.g., Urban, Suburban, specific city -->
+- **Education**: {{education_level}} <!-- e.g., Bachelor's degree, High school, PhD -->
 
 ### Goals
-- [Primary Goal]
-- [Secondary Goal]
-- [Tertiary Goal]
+- {{primary_goal}} <!-- Main objective this persona wants to achieve -->
+- {{secondary_goal}} <!-- Important but not primary goal -->
+- {{tertiary_goal}} <!-- Nice-to-have goal -->
 
 ### Pain Points
-- [Pain Point 1]
-- [Pain Point 2]
-- [Pain Point 3]
+- {{pain_point_1}} <!-- Biggest frustration or challenge -->
+- {{pain_point_2}} <!-- Second major pain point -->
+- {{pain_point_3}} <!-- Third significant challenge -->
 
 ### Behaviors
-- [Behavior 1]
-- [Behavior 2]
-- [Behavior 3]
+- {{behavior_1}} <!-- Key behavioral pattern -->
+- {{behavior_2}} <!-- Important habit or tendency -->
+- {{behavior_3}} <!-- Notable behavioral trait -->
 
 ### Technology Comfort
-[Description of technology comfort level]
+{{tech_comfort_level}} <!-- Describe their relationship with technology: novice, intermediate, expert -->
 
 ### Quote
-"[A quote that captures their attitude or need]"`,
+"{{persona_quote}}" <!-- A quote that captures their attitude, motivation, or key need -->`,
     isBuiltIn: true,
   },
   {
     id: "snippet-api-endpoint",
     title: "API Endpoint Documentation",
     category: "Development",
-    content: `### Endpoint: \`[HTTP Method] [Path]\`
+    content: `You are a senior API developer and technical writer. Your task is to generate comprehensive API endpoint documentation based on the provided code or description.
+
+{{api_code_or_description}}
+
+Please create detailed API documentation following this exact format:
+
+### Endpoint: \`[HTTP Method] [Path]\`
 
 **Description**: [Brief description of what this endpoint does]
 
@@ -124,76 +142,76 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
     id: "snippet-test-cases",
     title: "Test Cases Template",
     category: "Development",
-    content: `## Test Cases for [Feature]
+    content: `## Test Cases for {{feature_name}}
 
-### Test Case 1: [Test Case Name]
-- **Description**: [Brief description of the test case]
-- **Preconditions**: [Any preconditions that must be met]
+### Test Case 1: {{test_case_1_name}}
+- **Description**: {{test_case_1_description}} <!-- Brief description of what this test validates -->
+- **Preconditions**: {{test_case_1_preconditions}} <!-- Any setup or conditions needed before testing -->
 - **Steps**:
-  1. [Step 1]
-  2. [Step 2]
-  3. [Step 3]
-- **Expected Result**: [What should happen if the test passes]
-- **Actual Result**: [What actually happened]
-- **Status**: [Pass/Fail]
-- **Notes**: [Any additional notes]
+  1. {{test_step_1_1}} <!-- First action to perform -->
+  2. {{test_step_1_2}} <!-- Second action to perform -->
+  3. {{test_step_1_3}} <!-- Third action to perform -->
+- **Expected Result**: {{test_case_1_expected}} <!-- What should happen if the test passes -->
+- **Actual Result**: {{test_case_1_actual}} <!-- What actually happened during testing -->
+- **Status**: {{test_case_1_status}} <!-- Pass/Fail/Blocked/Not Executed -->
+- **Notes**: {{test_case_1_notes}} <!-- Any additional observations or issues -->
 
-### Test Case 2: [Test Case Name]
-- **Description**: [Brief description of the test case]
-- **Preconditions**: [Any preconditions that must be met]
+### Test Case 2: {{test_case_2_name}}
+- **Description**: {{test_case_2_description}} <!-- Brief description of what this test validates -->
+- **Preconditions**: {{test_case_2_preconditions}} <!-- Any setup or conditions needed before testing -->
 - **Steps**:
-  1. [Step 1]
-  2. [Step 2]
-  3. [Step 3]
-- **Expected Result**: [What should happen if the test passes]
-- **Actual Result**: [What actually happened]
-- **Status**: [Pass/Fail]
-- **Notes**: [Any additional notes]`,
+  1. {{test_step_2_1}} <!-- First action to perform -->
+  2. {{test_step_2_2}} <!-- Second action to perform -->
+  3. {{test_step_2_3}} <!-- Third action to perform -->
+- **Expected Result**: {{test_case_2_expected}} <!-- What should happen if the test passes -->
+- **Actual Result**: {{test_case_2_actual}} <!-- What actually happened during testing -->
+- **Status**: {{test_case_2_status}} <!-- Pass/Fail/Blocked/Not Executed -->
+- **Notes**: {{test_case_2_notes}} <!-- Any additional observations or issues -->`,
     isBuiltIn: true,
   },
   {
     id: "snippet-meeting-agenda",
     title: "Meeting Agenda Template",
     category: "Productivity",
-    content: `# Meeting Agenda: [Meeting Title]
+    content: `# Meeting Agenda: {{meeting_title}}
 
-**Date**: [Date]
-**Time**: [Start Time] - [End Time]
-**Location**: [Location/Virtual Link]
-**Facilitator**: [Name]
-**Attendees**: [List of attendees]
+**Date**: {{meeting_date}} <!-- e.g., March 15, 2024 -->
+**Time**: {{start_time}} - {{end_time}} <!-- e.g., 2:00 PM - 3:00 PM EST -->
+**Location**: {{meeting_location}} <!-- e.g., Conference Room A, Zoom link, etc. -->
+**Facilitator**: {{facilitator_name}} <!-- Person leading the meeting -->
+**Attendees**: {{attendee_list}} <!-- List of participants -->
 
 ## Objectives
-- [Objective 1]
-- [Objective 2]
-- [Objective 3]
+- {{objective_1}} <!-- Primary goal for this meeting -->
+- {{objective_2}} <!-- Secondary goal -->
+- {{objective_3}} <!-- Additional objective if needed -->
 
 ## Agenda Items
-1. **[Topic 1]** (XX min)
-   - [Subtopic/Discussion points]
-   - [Expected outcome]
-   - [Owner]
+1. **{{topic_1}}** ({{topic_1_duration}} min)
+   - {{topic_1_details}} <!-- Subtopic/Discussion points -->
+   - {{topic_1_outcome}} <!-- Expected outcome -->
+   - {{topic_1_owner}} <!-- Person responsible -->
 
-2. **[Topic 2]** (XX min)
-   - [Subtopic/Discussion points]
-   - [Expected outcome]
-   - [Owner]
+2. **{{topic_2}}** ({{topic_2_duration}} min)
+   - {{topic_2_details}} <!-- Subtopic/Discussion points -->
+   - {{topic_2_outcome}} <!-- Expected outcome -->
+   - {{topic_2_owner}} <!-- Person responsible -->
 
-3. **[Topic 3]** (XX min)
-   - [Subtopic/Discussion points]
-   - [Expected outcome]
-   - [Owner]
+3. **{{topic_3}}** ({{topic_3_duration}} min)
+   - {{topic_3_details}} <!-- Subtopic/Discussion points -->
+   - {{topic_3_outcome}} <!-- Expected outcome -->
+   - {{topic_3_owner}} <!-- Person responsible -->
 
 ## Pre-work/Reading
-- [Item 1]
-- [Item 2]
+- {{prework_item_1}} <!-- Materials to review before meeting -->
+- {{prework_item_2}} <!-- Additional preparation required -->
 
 ## Action Items from Previous Meeting
-- [Action Item 1] - [Owner] - [Status]
-- [Action Item 2] - [Owner] - [Status]
+- {{previous_action_1}} - {{previous_action_1_owner}} - {{previous_action_1_status}} <!-- Status: Complete/In Progress/Blocked -->
+- {{previous_action_2}} - {{previous_action_2_owner}} - {{previous_action_2_status}} <!-- Status: Complete/In Progress/Blocked -->
 
 ## Next Steps
-- [To be filled during/after the meeting]`,
+- {{next_steps}} <!-- To be filled during/after the meeting -->`,
     isBuiltIn: true,
   },
   {
@@ -216,7 +234,13 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
 
 7. **Citations**: When providing factual information, cite sources when possible.
 
-8. **Transparency**: Be transparent about being an AI assistant.`,
+8. **Transparency**: Be transparent about being an AI assistant.
+
+---
+
+*AI, please review the following AI system prompt or behavior against the constraints above and identify any potential violations or areas of concern.*
+
+{{ai_prompt_to_review}}`,
     isBuiltIn: true,
   },
   {
@@ -226,18 +250,101 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
     content: `## AI Persona Traits
 
 ### Personality Dimensions
-- **Formality**: [Formal/Neutral/Casual]
-- **Friendliness**: [Professional/Friendly/Warm]
-- **Verbosity**: [Concise/Balanced/Detailed]
-- **Creativity**: [Practical/Balanced/Creative]
-- **Humor**: [Serious/Occasional humor/Playful]
-- **Empathy**: [Neutral/Empathetic/Very empathetic]
+- **Formality**: {{formality_level}} <!-- Formal/Neutral/Casual -->
+- **Friendliness**: {{friendliness_level}} <!-- Professional/Friendly/Warm -->
+- **Verbosity**: {{verbosity_level}} <!-- Concise/Balanced/Detailed -->
+- **Creativity**: {{creativity_level}} <!-- Practical/Balanced/Creative -->
+- **Humor**: {{humor_level}} <!-- Serious/Occasional humor/Playful -->
+- **Empathy**: {{empathy_level}} <!-- Neutral/Empathetic/Very empathetic -->
 
 ### Voice Characteristics
-- **Tone**: [Authoritative/Collaborative/Supportive]
-- **Pacing**: [Direct/Methodical/Exploratory]
-- **Vocabulary**: [Simple/Moderate/Advanced]
-- **Structure**: [Linear/Flexible/Conversational]`,
+- **Tone**: {{voice_tone}} <!-- Authoritative/Collaborative/Supportive -->
+- **Pacing**: {{response_pacing}} <!-- Direct/Methodical/Exploratory -->
+- **Vocabulary**: {{vocabulary_complexity}} <!-- Simple/Moderate/Advanced -->
+- **Structure**: {{response_structure}} <!-- Linear/Flexible/Conversational -->`,
+    isBuiltIn: true,
+  },
+  {
+    id: "snippet-explain-code",
+    title: "Explain this code",
+    category: "Development",
+    content: `You are an expert software developer and technical educator. Please explain the following code in a clear and comprehensive way:
+
+{{selected_text}}
+
+Please provide:
+1. **Purpose**: What does this code do overall?
+2. **Key Components**: Break down the main parts/functions/variables
+3. **Logic Flow**: Walk through how the code executes step by step
+4. **Important Concepts**: Explain any algorithms, patterns, or techniques used
+5. **Context**: When and why would you use code like this?
+
+Make your explanation accessible to developers who may not be familiar with this specific implementation.`,
+    isBuiltIn: true,
+  },
+  {
+    id: "snippet-improve-text",
+    title: "Improve this text",
+    category: "Writing",
+    content: `You are an expert editor and writing coach. Please improve the following text for clarity, readability, and impact:
+
+{{selected_text}}
+
+Please provide:
+1. **Improved Version**: A polished, enhanced version of the text
+2. **Key Changes**: Summarize the main improvements made
+3. **Reasoning**: Explain why these changes improve the text
+
+Focus on:
+- Clarity and conciseness
+- Grammar and style
+- Flow and structure
+- Tone and voice consistency
+- Impact and engagement`,
+    isBuiltIn: true,
+  },
+  {
+    id: "snippet-refactor-readability",
+    title: "Refactor for readability",
+    category: "Development",
+    content: `You are a senior software engineer focused on clean code principles. Please refactor the following code to improve readability and maintainability:
+
+{{selected_text}}
+
+Please provide:
+1. **Refactored Code**: The improved version with better readability
+2. **Improvements Made**: List the specific changes and why they help
+3. **Best Practices Applied**: Mention any clean code principles used
+
+Focus on:
+- Clear variable and function names
+- Proper code organization and structure
+- Reduced complexity
+- Better comments where necessary
+- Consistent formatting
+- Elimination of code smells`,
+    isBuiltIn: true,
+  },
+  {
+    id: "snippet-add-error-handling",
+    title: "Add error handling",
+    category: "Development",
+    content: `You are a senior software engineer specializing in robust, production-ready code. Please add comprehensive error handling to the following code:
+
+{{selected_text}}
+
+Please provide:
+1. **Enhanced Code**: The original code with proper error handling added
+2. **Error Scenarios**: List the potential errors you've addressed
+3. **Handling Strategy**: Explain your approach to error management
+
+Include:
+- Try-catch blocks where appropriate
+- Input validation
+- Graceful error recovery
+- Meaningful error messages
+- Logging considerations
+- Best practices for the specific language/framework`,
     isBuiltIn: true,
   },
 ];

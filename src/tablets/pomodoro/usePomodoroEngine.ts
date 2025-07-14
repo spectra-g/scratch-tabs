@@ -82,7 +82,7 @@ export const usePomodoroEngine = (
   const startNextSession = useCallback(
     (completedSession: PomodoroSession) => {
       setState((prevState) => {
-        let newTodayStats = { ...prevState.todayStats };
+        const newTodayStats = { ...prevState.todayStats };
         if (completedSession.type === "focus" && completedSession.completed) {
           newTodayStats.focusCompleted++;
           newTodayStats.totalFocusTime += completedSession.duration;

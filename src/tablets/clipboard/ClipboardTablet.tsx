@@ -6,17 +6,12 @@ import React, {
   useMemo,
 } from "react";
 import { Tablet, TabletState } from "../types";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Clipboard,
   Copy,
   ClipboardPaste,
-  XCircle,
-  RefreshCw,
-  ExternalLink,
   Pin,
-  PinOff,
-  Pencil,
   Check,
   Search,
   Image as ImageIcon,
@@ -27,17 +22,17 @@ import {
   Filter,
   List,
   Trash2,
-  Merge,
   Star,
   Keyboard,
+  Grid,
+  Clock,
+  Menu,
 } from "lucide-react";
-import { detectLanguage } from "../../languages";
-import { useRootStore } from "../../stores";
-import { useWorkspaceStore } from "../../stores/workspaceStore";
-import { formatRelativeTime } from "../vault/utils/dateUtils"; // CORRECTED IMPORT PATH
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 // --- Types & Constants ---
 type ContentType = "text" | "image" | "link" | "color";
+type ViewMode = "list" | "card";
 
 interface ClipboardItem {
   id: string;
@@ -48,7 +43,7 @@ interface ClipboardItem {
   isPinned: boolean;
   isFavorite: boolean;
   title: string;
-  sourceApp?: string; // Future use
+  sourceApp?: string;
 }
 
 interface ClipboardTabletState extends TabletState {
@@ -58,11 +53,12 @@ interface ClipboardTabletState extends TabletState {
     searchQuery: string;
     filterType: ContentType | null;
     showFavorites: boolean;
+    viewMode: ViewMode;
   };
 }
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
-const EXPIRY_CHECK_INTERVAL_MS = 10000;
+const EXPIRY_CHECK_INTERVAL_MS = 1000;
 
 // --- Helper Functions ---
 const detectContentType = (content: string): ContentType => {
@@ -70,10 +66,9 @@ const detectContentType = (content: string): ContentType => {
   if (content.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) return "color";
   try {
     new URL(content);
-    // Extra check to avoid matching things like "node.js" as a URL
     if (content.includes("://")) return "link";
-  } catch (_) {
-    // Not a valid URL
+  } catch {
+    // Not a URL
   }
   return "text";
 };
@@ -98,23 +93,31 @@ const generateTitle = (content: string, type: ContentType): string => {
   }
 };
 
+const formatDuration = (ms: number): string => {
+  if (ms < 0) return "Expired";
+  const seconds = Math.floor(ms / 1000) % 60;
+  const minutes = Math.floor(ms / (1000 * 60)) % 60;
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+};
+
 // --- UI Components ---
 
-const ItemPreview: React.FC<{ item: ClipboardItem }> = React.memo(
-  ({ item }) => {
+const ItemPreview: React.FC<{ item: ClipboardItem; viewMode: ViewMode }> =
+  React.memo(({ item, viewMode }) => {
+    const className =
+      viewMode === "card"
+        ? "max-h-24 w-auto object-contain rounded-md mx-auto"
+        : "max-h-48 w-auto object-contain rounded-md";
     switch (item.type) {
       case "image":
-        return (
-          <img
-            src={item.content}
-            alt={item.title}
-            className="max-h-24 w-auto object-contain rounded-md mx-auto"
-          />
-        );
+        return <img src={item.content} alt={item.title} className={className} />;
       case "color":
         return (
           <div
-            className="w-full h-24 rounded-md"
+            className="w-full h-full rounded-md"
             style={{ backgroundColor: item.content }}
           />
         );
@@ -140,8 +143,7 @@ const ItemPreview: React.FC<{ item: ClipboardItem }> = React.memo(
           </pre>
         );
     }
-  },
-);
+  });
 
 const ContentTypeIcon: React.FC<{ type: ContentType }> = React.memo(
   ({ type }) => {
@@ -159,7 +161,540 @@ const ContentTypeIcon: React.FC<{ type: ContentType }> = React.memo(
   },
 );
 
-// --- Main Tablet Component ---
+const ExpiryCountdown: React.FC<{ item: ClipboardItem }> = ({ item }) => {
+  const [remaining, setRemaining] = useState(item.expiresAt - Date.now());
+
+  useEffect(() => {
+    if (item.isPinned) return;
+
+    const timer = setInterval(() => {
+      const newRemaining = item.expiresAt - Date.now();
+      if (newRemaining > 0) {
+        setRemaining(newRemaining);
+      } else {
+        setRemaining(0);
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [item.expiresAt, item.isPinned]);
+
+  if (item.isPinned) {
+    return (
+      <div className="flex items-center space-x-1 text-xs text-yellow-500">
+        <Pin size={12} />
+        <span>Pinned</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-1 text-xs text-gray-500">
+      <Clock size={12} />
+      <span>{formatDuration(remaining)}</span>
+    </div>
+  );
+};
+
+const ClipboardTabletComponent: React.FC<{
+  state: ClipboardTabletState;
+  onChange: (newState: ClipboardTabletState) => void;
+}> = ({ state, onChange }) => {
+  const { data } = state;
+  const { items, searchQuery, filterType, showFavorites, viewMode } = data;
+  const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const latestStateRef = useRef(state);
+  const isMobile = useIsMobile();
+  latestStateRef.current = state;
+
+  const updateData = useCallback(
+    (updates: Partial<ClipboardTabletState["data"]>) => {
+      onChange({ ...state, data: { ...state.data, ...updates } });
+    },
+    [state, onChange],
+  );
+
+  useEffect(() => {
+    if (!isMobile) {
+      setSidebarOpen(true);
+    } else {
+      setSidebarOpen(false);
+    }
+  }, [isMobile]);
+
+  // Auto-expire items
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const currentState = latestStateRef.current;
+      const unexpiredItems = currentState.data.items.filter(
+        (item) => item.isPinned || item.expiresAt > now,
+      );
+      if (unexpiredItems.length < currentState.data.items.length) {
+        updateData({ items: unexpiredItems });
+      }
+    }, EXPIRY_CHECK_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [updateData]);
+
+  const filteredItems = useMemo(() => {
+    return items
+      .filter((item) => {
+        if (showFavorites && !item.isFavorite) return false;
+        if (filterType && item.type !== filterType) return false;
+        if (
+          searchQuery &&
+          !item.content.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          !item.title.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+          return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+        if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1;
+        return b.timestamp - a.timestamp;
+      });
+  }, [items, showFavorites, filterType, searchQuery]);
+
+  const handlePaste = useCallback(async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const item of clipboardItems) {
+        for (const type of item.types) {
+          if (type.startsWith("image/")) {
+            const blob = await item.getType(type);
+            const reader = new FileReader();
+            reader.onload = () => {
+              const imageDataUrl = reader.result as string;
+              if (!latestStateRef.current.data.items.some((i) => i.content === imageDataUrl)) {
+                const newItem: ClipboardItem = {
+                  id: crypto.randomUUID(),
+                  content: imageDataUrl,
+                  type: "image",
+                  timestamp: Date.now(),
+                  expiresAt: Date.now() + TWENTY_FOUR_HOURS_MS,
+                  isPinned: false,
+                  isFavorite: false,
+                  title: generateTitle(imageDataUrl, "image"),
+                };
+                updateData({ items: [newItem, ...latestStateRef.current.data.items] });
+              }
+            };
+            reader.readAsDataURL(blob);
+            return;
+          }
+        }
+        if (item.types.includes("text/plain")) {
+          const text = await item.getType("text/plain");
+          const textContent = await text.text();
+          const trimmedText = textContent.trim();
+          if (!trimmedText || latestStateRef.current.data.items.some((i) => i.content === trimmedText)) return;
+          const type = detectContentType(trimmedText);
+          const newItem: ClipboardItem = {
+            id: crypto.randomUUID(),
+            content: trimmedText,
+            type,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + TWENTY_FOUR_HOURS_MS,
+            isPinned: false,
+            isFavorite: false,
+            title: generateTitle(trimmedText, type),
+          };
+          updateData({ items: [newItem, ...latestStateRef.current.data.items] });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("Failed to read clipboard:", error);
+      try {
+        const text = await navigator.clipboard.readText();
+        const trimmedText = text.trim();
+        if (!trimmedText || latestStateRef.current.data.items.some((i) => i.content === trimmedText)) return;
+        const type = detectContentType(trimmedText);
+        const newItem: ClipboardItem = {
+          id: crypto.randomUUID(),
+          content: trimmedText,
+          type,
+          timestamp: Date.now(),
+          expiresAt: Date.now() + TWENTY_FOUR_HOURS_MS,
+          isPinned: false,
+          isFavorite: false,
+          title: generateTitle(trimmedText, type),
+        };
+        updateData({ items: [newItem, ...latestStateRef.current.data.items] });
+      } catch (textError) {
+        console.error("Failed to read clipboard text:", textError);
+      }
+    }
+  }, [updateData]);
+
+  const handleCopy = useCallback(
+    async (id: string, content: string, type: ContentType) => {
+      try {
+        if (type === "image" && content.startsWith("data:image/")) {
+          const response = await fetch(content);
+          const blob = await response.blob();
+          const clipboardItem = new (window as any).ClipboardItem({ [blob.type]: blob });
+          await navigator.clipboard.write([clipboardItem]);
+        } else {
+          await navigator.clipboard.writeText(content);
+        }
+        const now = Date.now();
+        updateData({
+          items: items.map((item) =>
+            item.id === id
+              ? { ...item, timestamp: now, expiresAt: now + TWENTY_FOUR_HOURS_MS }
+              : item,
+          ),
+        });
+        setCopiedItemId(id);
+        setTimeout(() => setCopiedItemId(null), 1500);
+      } catch (error) {
+        console.error("Failed to copy to clipboard:", error);
+      }
+    },
+    [items, updateData],
+  );
+
+  const handleDelete = (id: string) => {
+    updateData({ items: items.filter((item) => item.id !== id) });
+  };
+
+  const handleTogglePin = (id: string) => {
+    const now = Date.now();
+    updateData({
+      items: items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              isPinned: !item.isPinned,
+              expiresAt: now + TWENTY_FOUR_HOURS_MS,
+            }
+          : item,
+      ),
+    });
+  };
+
+  const handleToggleFavorite = (id: string) => {
+    updateData({
+      items: items.map((item) =>
+        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item,
+      ),
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((prev) => Math.min(prev + 1, filteredItems.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((prev) => Math.max(prev - 1, 0));
+      } else if (e.key === "Enter" && activeIndex >= 0 && filteredItems[activeIndex]) {
+        e.preventDefault();
+        handleCopy(
+          filteredItems[activeIndex].id,
+          filteredItems[activeIndex].content,
+          filteredItems[activeIndex].type,
+        );
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeIndex, filteredItems, handleCopy]);
+
+  useEffect(() => {
+    const handlePasteEvent = () => handlePaste();
+    window.addEventListener("paste", handlePasteEvent);
+    return () => window.removeEventListener("paste", handlePasteEvent);
+  }, [handlePaste]);
+
+  useEffect(() => {
+    if (activeIndex === -1 || !listRef.current) return;
+    const activeElement = listRef.current.children[activeIndex] as HTMLElement;
+    activeElement?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [activeIndex]);
+
+  const SidebarContent = () => (
+    <div className="flex flex-col p-4 space-y-6 h-full">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Clipboard className="text-gray-400" size={20} />
+          <h2 className="text-lg font-semibold text-gray-100">Clipboard</h2>
+        </div>
+        {isMobile && (
+          <button onClick={() => setSidebarOpen(false)} className="p-1 text-gray-400 hover:text-white">
+            <X size={20} />
+          </button>
+        )}
+      </div>
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => updateData({ searchQuery: e.target.value })}
+          placeholder="Search clipboard..."
+          className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500"
+        />
+      </div>
+      <div className="flex-grow overflow-y-auto space-y-4">
+        <div>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Filters</h3>
+          <div className="space-y-1">
+            <button
+              onClick={() => updateData({ filterType: null, showFavorites: false })}
+              className={`w-full flex items-center p-2 rounded-md text-sm ${!filterType && !showFavorites ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
+            >
+              <List size={16} className="mr-2" />
+              All Items
+            </button>
+            <button
+              onClick={() => updateData({ showFavorites: !showFavorites, filterType: null })}
+              className={`w-full flex items-center p-2 rounded-md text-sm ${showFavorites ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
+            >
+              <Star size={16} className="mr-2" />
+              Favorites
+            </button>
+          </div>
+        </div>
+        <div>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Content Types</h3>
+          <div className="space-y-1">
+            {["text", "image", "link", "color"].map((type) => (
+              <button
+                key={type}
+                onClick={() => updateData({ filterType: type as ContentType })}
+                className={`w-full flex items-center p-2 rounded-md text-sm ${filterType === type ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
+              >
+                <ContentTypeIcon type={type as ContentType} />
+                <span className="ml-2 capitalize">{type}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="mt-auto space-y-2 flex-shrink-0">
+        <button
+          onClick={handlePaste}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
+        >
+          <ClipboardPaste size={16} />
+          <span>Paste from Clipboard</span>
+        </button>
+        <div className="text-xs text-gray-500 text-center flex items-center justify-center gap-1">
+          <Keyboard size={14} />
+          <span>Up/Down, Enter to copy, CTRL+V to paste.</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="h-full bg-gray-900 flex relative overflow-hidden">
+      <AnimatePresence>
+        {isSidebarOpen && isMobile && (
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="z-20 absolute top-0 left-0 h-full bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50 w-64"
+          >
+            <SidebarContent />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {!isMobile && (
+          <div className="w-64 flex-shrink-0 border-r border-gray-700/50">
+              <SidebarContent />
+          </div>
+      )}
+
+      {!isSidebarOpen && isMobile && (
+        <div className="absolute top-0 left-0 z-30 p-2">
+          <button onClick={() => setSidebarOpen(true)} className="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-md">
+            <Menu size={20} />
+          </button>
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-none p-4 border-b border-gray-700/50 flex items-center justify-between">
+          <div className="text-sm text-gray-400">
+            {filteredItems.length} of {items.length} items showing
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center bg-gray-800/50 border border-gray-700/50 rounded-md">
+              <button
+                onClick={() => updateData({ viewMode: "list" })}
+                className={`p-1.5 rounded-l-md ${viewMode === "list" ? "bg-blue-500/20 text-blue-300" : "text-gray-400 hover:bg-gray-700/50"}`}
+                title="List View"
+              >
+                <List size={16} />
+              </button>
+              <button
+                onClick={() => updateData({ viewMode: "card" })}
+                className={`p-1.5 rounded-r-md ${viewMode === "card" ? "bg-blue-500/20 text-blue-300" : "text-gray-400 hover:bg-gray-700/50"}`}
+                title="Card View"
+              >
+                <Grid size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          ref={listRef}
+          className="flex-1 overflow-y-auto p-4 custom-scrollbar"
+          onClick={() => setActiveIndex(-1)}
+        >
+          {filteredItems.length === 0 ? (
+            <div className="text-center text-gray-400 mt-8">
+              <Filter size={40} className="mx-auto mb-3 opacity-50" />
+              <p className="text-base">No items match your filters</p>
+              <p className="text-sm mt-1">Try adjusting your search or filters</p>
+            </div>
+          ) : viewMode === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredItems.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                >
+                  <div
+                    className={`bg-gray-800/50 border rounded-lg overflow-hidden transition-all duration-200 group ${activeIndex === index ? "ring-2 ring-blue-400" : "border-gray-700/50 hover:border-gray-600/50"}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIndex(index);
+                    }}
+                  >
+                    <div className="p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <ContentTypeIcon type={item.type} />
+                          <p className="text-sm font-medium text-gray-200 truncate">{item.title}</p>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={() => handleToggleFavorite(item.id)}
+                            className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                          >
+                            <Star size={14} className={item.isFavorite ? "fill-current" : ""} />
+                          </button>
+                          <button
+                            onClick={() => handleTogglePin(item.id)}
+                            className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                          >
+                            <Pin size={14} className={item.isPinned ? "fill-current" : ""} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="h-28 flex items-center justify-center p-2 bg-black/20 rounded-md overflow-hidden">
+                        <ItemPreview item={item} viewMode="card" />
+                      </div>
+                    </div>
+                    <div className="px-3 py-2 border-t border-gray-700/50 flex justify-between items-center">
+                      <ExpiryCountdown item={item} />
+                      <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleCopy(item.id, item.content, item.type)}
+                          className="p-1 rounded hover:bg-gray-700/50"
+                          title="Copy"
+                        >
+                          {copiedItemId === item.id ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-1 rounded hover:bg-gray-700/50"
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredItems.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                >
+                  <div
+                    className={`bg-gray-800/50 border rounded-lg transition-all duration-200 group flex items-start p-3 space-x-4 ${activeIndex === index ? "ring-2 ring-blue-400" : "border-gray-700/50 hover:border-gray-600/50"}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIndex(index);
+                    }}
+                  >
+                    <div className="flex-1 overflow-hidden">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <ContentTypeIcon type={item.type} />
+                          <p className="text-sm font-medium text-gray-200 truncate">{item.title}</p>
+                        </div>
+                        <ExpiryCountdown item={item} />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto custom-scrollbar rounded-md bg-black/20 p-2">
+                        <ItemPreview item={item} viewMode="list" />
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center space-y-2">
+                      <button
+                        onClick={() => handleCopy(item.id, item.content, item.type)}
+                        className="p-1.5 rounded hover:bg-gray-700/50"
+                        title="Copy"
+                      >
+                        {copiedItemId === item.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                      </button>
+                      <button
+                        onClick={() => handleToggleFavorite(item.id)}
+                        className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                      >
+                        <Star size={16} className={item.isFavorite ? "fill-current" : ""} />
+                      </button>
+                      <button
+                        onClick={() => handleTogglePin(item.id)}
+                        className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                      >
+                        <Pin size={16} className={item.isPinned ? "fill-current" : ""} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="p-1.5 rounded hover:bg-gray-700/50"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ClipboardTablet: Tablet = {
   id: "clipboard",
   label: "Clipboard Manager",
@@ -173,6 +708,7 @@ export const ClipboardTablet: Tablet = {
         searchQuery: "",
         filterType: null,
         showFavorites: false,
+        viewMode: "list",
       },
     };
   },
@@ -187,7 +723,7 @@ export const ClipboardTablet: Tablet = {
       const parsed = JSON.parse(json);
       if (parsed.type === "clipboard" && parsed.data) {
         const items = Array.isArray(parsed.data.items)
-          ? parsed.data.items.map((item: any) => ({
+          ? parsed.data.items.map((item: ClipboardItem) => ({
               id: item.id || crypto.randomUUID(),
               content: item.content || "",
               type: item.type || detectContentType(item.content || ""),
@@ -210,6 +746,7 @@ export const ClipboardTablet: Tablet = {
             ...defaultState.data,
             ...parsed.data,
             items,
+            viewMode: parsed.data.viewMode || "list",
           },
         };
       }
@@ -220,483 +757,6 @@ export const ClipboardTablet: Tablet = {
   },
 
   render(state: ClipboardTabletState, onChange) {
-    const { data } = state;
-    const { items, searchQuery, filterType, showFavorites } = data;
-    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-    const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
-    const [activeIndex, setActiveIndex] = useState(-1);
-    const listRef = useRef<HTMLDivElement>(null);
-    const latestStateRef = useRef(state);
-    latestStateRef.current = state;
-
-    const updateData = useCallback(
-      (updates: Partial<ClipboardTabletState["data"]>) => {
-        onChange({ ...state, data: { ...state.data, ...updates } });
-      },
-      [state, onChange],
-    );
-
-    // Filter and sort items
-    const filteredItems = useMemo(() => {
-      return items
-        .filter((item) => {
-          if (showFavorites && !item.isFavorite) return false;
-          if (filterType && item.type !== filterType) return false;
-          if (
-            searchQuery &&
-            !item.content.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            !item.title.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-            return false;
-          return true;
-        })
-        .sort((a, b) => b.timestamp - a.timestamp);
-    }, [items, showFavorites, filterType, searchQuery]);
-
-    // Handle clipboard changes
-    const handlePaste = useCallback(async () => {
-      try {
-        // Try to read clipboard items (supports images and other formats)
-        const clipboardItems = await navigator.clipboard.read();
-
-        for (const item of clipboardItems) {
-          // Check for image types first
-          for (const type of item.types) {
-            if (type.startsWith("image/")) {
-              const blob = await item.getType(type);
-              const reader = new FileReader();
-
-              reader.onload = () => {
-                const imageDataUrl = reader.result as string;
-                if (
-                  !latestStateRef.current.data.items.some(
-                    (item) => item.content === imageDataUrl,
-                  )
-                ) {
-                  const newItem: ClipboardItem = {
-                    id: crypto.randomUUID(),
-                    content: imageDataUrl,
-                    type: "image",
-                    timestamp: Date.now(),
-                    expiresAt: Date.now() + TWENTY_FOUR_HOURS_MS,
-                    isPinned: false,
-                    isFavorite: false,
-                    title: generateTitle(imageDataUrl, "image"),
-                  };
-                  updateData({
-                    items: [newItem, ...latestStateRef.current.data.items],
-                  });
-                }
-              };
-
-              reader.readAsDataURL(blob);
-              return; // Exit after processing first image
-            }
-          }
-
-          // Check for text if no image found
-          if (item.types.includes("text/plain")) {
-            const text = await item.getType("text/plain");
-            const textContent = await text.text();
-            const trimmedText = textContent.trim();
-
-            if (
-              !trimmedText ||
-              latestStateRef.current.data.items.some(
-                (item) => item.content === trimmedText,
-              )
-            )
-              return;
-
-            const type = detectContentType(trimmedText);
-            const newItem: ClipboardItem = {
-              id: crypto.randomUUID(),
-              content: trimmedText,
-              type,
-              timestamp: Date.now(),
-              expiresAt: Date.now() + TWENTY_FOUR_HOURS_MS,
-              isPinned: false,
-              isFavorite: false,
-              title: generateTitle(trimmedText, type),
-            };
-            updateData({
-              items: [newItem, ...latestStateRef.current.data.items],
-            });
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Failed to read clipboard:", error);
-
-        // Fallback to text-only if read() fails (older browsers or permissions)
-        try {
-          const text = await navigator.clipboard.readText();
-          const trimmedText = text.trim();
-          if (
-            !trimmedText ||
-            latestStateRef.current.data.items.some(
-              (item) => item.content === trimmedText,
-            )
-          )
-            return;
-
-          const type = detectContentType(trimmedText);
-          const newItem: ClipboardItem = {
-            id: crypto.randomUUID(),
-            content: trimmedText,
-            type,
-            timestamp: Date.now(),
-            expiresAt: Date.now() + TWENTY_FOUR_HOURS_MS,
-            isPinned: false,
-            isFavorite: false,
-            title: generateTitle(trimmedText, type),
-          };
-          updateData({
-            items: [newItem, ...latestStateRef.current.data.items],
-          });
-        } catch (textError) {
-          console.error("Failed to read clipboard text:", textError);
-        }
-      }
-    }, [updateData]);
-
-    const handleCopy = useCallback(
-      async (id: string, content: string, type: ContentType) => {
-        try {
-          if (type === "image" && content.startsWith("data:image/")) {
-            // Convert data URL to blob and copy to clipboard
-            const response = await fetch(content);
-            const blob = await response.blob();
-
-            // Create a ClipboardItem for the image
-            const clipboardItem = new ClipboardItem({
-              [blob.type]: blob,
-            });
-
-            await navigator.clipboard.write([clipboardItem]);
-          } else {
-            // Copy text content
-            await navigator.clipboard.writeText(content);
-          }
-
-          setCopiedItemId(id);
-          setTimeout(() => setCopiedItemId(null), 1500);
-        } catch (error) {
-          console.error("Failed to copy to clipboard:", error);
-        }
-      },
-      [],
-    );
-
-    // Item actions
-    const handleDelete = (ids: string[]) => {
-      updateData({ items: items.filter((item) => !ids.includes(item.id)) });
-      setSelectedItems(new Set());
-    };
-    const handleTogglePin = (id: string) => {
-      updateData({
-        items: items.map((item) =>
-          item.id === id ? { ...item, isPinned: !item.isPinned } : item,
-        ),
-      });
-    };
-    const handleToggleFavorite = (id: string) => {
-      updateData({
-        items: items.map((item) =>
-          item.id === id ? { ...item, isFavorite: !item.isFavorite } : item,
-        ),
-      });
-    };
-    const handleMerge = () => {
-      if (selectedItems.size < 2) return;
-      const itemsToMerge = Array.from(selectedItems)
-        .map((id) => items.find((i) => i.id === id))
-        .filter(Boolean) as ClipboardItem[];
-      itemsToMerge.sort((a, b) => a.timestamp - b.timestamp);
-      const mergedContent = itemsToMerge.map((i) => i.content).join("\n");
-      const type = detectContentType(mergedContent);
-      const newItem: ClipboardItem = {
-        id: crypto.randomUUID(),
-        content: mergedContent,
-        type,
-        title: `Merged ${selectedItems.size} items`,
-        timestamp: Date.now(),
-        expiresAt: Date.now() + TWENTY_FOUR_HOURS_MS,
-        isPinned: false,
-        isFavorite: false,
-      };
-      updateData({
-        items: [
-          newItem,
-          ...items.filter((item) => !selectedItems.has(item.id)),
-        ],
-      });
-      setSelectedItems(new Set());
-    };
-
-    // Keyboard navigation
-    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement
-        )
-          return;
-
-        if (e.key === "ArrowDown") {
-          e.preventDefault();
-          setActiveIndex((prev) =>
-            Math.min(prev + 1, filteredItems.length - 1),
-          );
-        } else if (e.key === "ArrowUp") {
-          e.preventDefault();
-          setActiveIndex((prev) => Math.max(prev - 1, 0));
-        } else if (
-          e.key === "Enter" &&
-          activeIndex >= 0 &&
-          filteredItems[activeIndex]
-        ) {
-          e.preventDefault();
-          handleCopy(
-            filteredItems[activeIndex].id,
-            filteredItems[activeIndex].content,
-            filteredItems[activeIndex].type,
-          );
-        }
-      };
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [activeIndex, filteredItems, handleCopy]);
-
-    useEffect(() => {
-      listRef.current?.children[activeIndex]?.scrollIntoView({
-        block: "nearest",
-        behavior: "smooth",
-      });
-    }, [activeIndex]);
-
-    return (
-      <div className="h-full bg-gray-900 flex">
-        {/* Sidebar */}
-        <div className="w-64 border-r border-gray-700/50 flex flex-col p-4 space-y-6">
-          <div className="flex items-center space-x-3">
-            <Clipboard className="text-gray-400" size={20} />
-            <h2 className="text-lg font-semibold text-gray-100">Clipboard</h2>
-          </div>
-          <div className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => updateData({ searchQuery: e.target.value })}
-              placeholder="Search clipboard..."
-              className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500"
-            />
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">
-              Filters
-            </h3>
-            <div className="space-y-1">
-              <button
-                onClick={() =>
-                  updateData({ filterType: null, showFavorites: false })
-                }
-                className={`w-full flex items-center p-2 rounded-md text-sm ${!filterType && !showFavorites ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
-              >
-                <List size={16} className="mr-2" />
-                All Items
-              </button>
-              <button
-                onClick={() =>
-                  updateData({
-                    showFavorites: !showFavorites,
-                    filterType: null,
-                  })
-                }
-                className={`w-full flex items-center p-2 rounded-md text-sm ${showFavorites ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
-              >
-                <Star size={16} className="mr-2" />
-                Favorites
-              </button>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">
-              Content Types
-            </h3>
-            <div className="space-y-1">
-              {["text", "image", "link", "color"].map((type) => (
-                <button
-                  key={type}
-                  onClick={() =>
-                    updateData({ filterType: type as ContentType })
-                  }
-                  className={`w-full flex items-center p-2 rounded-md text-sm ${filterType === type ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
-                >
-                  <ContentTypeIcon type={type as ContentType} />
-                  <span className="ml-2 capitalize">{type}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="mt-auto space-y-2">
-            <button
-              onClick={handlePaste}
-              className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
-            >
-              <ClipboardPaste size={16} />
-              <span>Paste from Clipboard</span>
-            </button>
-            <div className="text-xs text-gray-500 text-center flex items-center justify-center gap-1">
-              <Keyboard size={14} />
-              <span>Up/Down to navigate, Enter to copy.</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-none p-4 border-b border-gray-700/50 flex items-center justify-between">
-            <div className="text-sm text-gray-400">
-              {filteredItems.length} of {items.length} items showing
-            </div>
-            <div className="flex items-center space-x-2">
-              {selectedItems.size > 1 && (
-                <button
-                  onClick={handleMerge}
-                  className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-purple-500/15 text-purple-400 rounded-md hover:bg-purple-500/25 text-xs"
-                >
-                  <Merge size={14} />
-                  <span>Merge ({selectedItems.size})</span>
-                </button>
-              )}
-              {selectedItems.size > 0 && (
-                <button
-                  onClick={() => handleDelete(Array.from(selectedItems))}
-                  className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-red-500/15 text-red-400 rounded-md hover:bg-red-500/25 text-xs"
-                >
-                  <Trash2 size={14} />
-                  <span>Delete ({selectedItems.size})</span>
-                </button>
-              )}
-            </div>
-          </div>
-          <div
-            ref={listRef}
-            className="flex-1 overflow-y-auto p-4 custom-scrollbar"
-            onClick={() => setActiveIndex(-1)}
-          >
-            {filteredItems.length === 0 ? (
-              <div className="text-center text-gray-400 mt-8">
-                <Filter size={40} className="mx-auto mb-3 opacity-50" />
-                <p className="text-base">No items match your filters</p>
-                <p className="text-sm mt-1">
-                  Try adjusting your search or filters
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredItems.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                  >
-                    <div
-                      className={`bg-gray-800/50 border rounded-lg overflow-hidden transition-all duration-200 group ${selectedItems.has(item.id) ? "border-blue-500 ring-2 ring-blue-500/50" : "border-gray-700/50 hover:border-gray-600/50"} ${activeIndex === index ? "ring-2 ring-blue-400" : ""}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveIndex(index);
-                      }}
-                    >
-                      <div className="p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedItems.has(item.id)}
-                              onChange={() => {
-                                const newSelection = new Set(selectedItems);
-                                if (newSelection.has(item.id)) {
-                                  newSelection.delete(item.id);
-                                } else {
-                                  newSelection.add(item.id);
-                                }
-                                setSelectedItems(newSelection);
-                              }}
-                              className="form-checkbox h-4 w-4 bg-gray-700 border-gray-600 text-blue-500 rounded focus:ring-blue-500/50"
-                            />
-                            <ContentTypeIcon type={item.type} />
-                            <p className="text-sm font-medium text-gray-200 truncate">
-                              {item.title}
-                            </p>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <button
-                              onClick={() => handleToggleFavorite(item.id)}
-                              className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
-                            >
-                              <Star
-                                size={14}
-                                className={
-                                  item.isFavorite ? "fill-current" : ""
-                                }
-                              />
-                            </button>
-                            <button
-                              onClick={() => handleTogglePin(item.id)}
-                              className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
-                            >
-                              <Pin
-                                size={14}
-                                className={item.isPinned ? "fill-current" : ""}
-                              />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="h-28 flex items-center justify-center p-2 bg-black/20 rounded-md overflow-hidden">
-                          <ItemPreview item={item} />
-                        </div>
-                      </div>
-                      <div className="px-3 py-2 border-t border-gray-700/50 flex justify-between items-center text-xs text-gray-500">
-                        <span>{formatRelativeTime(item.timestamp)}</span>
-                        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() =>
-                              handleCopy(item.id, item.content, item.type)
-                            }
-                            className="p-1 rounded hover:bg-gray-700/50"
-                            title="Copy"
-                          >
-                            {copiedItemId === item.id ? (
-                              <Check size={14} className="text-green-400" />
-                            ) : (
-                              <Copy size={14} />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleDelete([item.id])}
-                            className="p-1 rounded hover:bg-gray-700/50"
-                            title="Delete"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+    return <ClipboardTabletComponent state={state} onChange={onChange} />;
   },
 };

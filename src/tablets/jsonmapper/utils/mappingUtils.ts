@@ -1512,7 +1512,7 @@ def transform(${sourceVar}):
         code += `                # This is a best-effort conversion and may need manual adjustment\n`;
 
         // Convert the JavaScript transformation to Python (very basic conversion)
-        let pythonTransformation = rule.transformation
+        const pythonTransformation = rule.transformation
           .replace(/===|!==|==|!=|&&|\|\|/g, (match) => {
             switch (match) {
               case "===":

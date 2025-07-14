@@ -246,7 +246,7 @@ func main() {
         const indentChar = "\t"; // Go typically uses tabs
 
         const formattedLines = lines.map((line: string) => {
-          let trimmedLine = line.trim();
+          const trimmedLine = line.trim();
           let currentIndent = "";
 
           // Handle lines that decrease indent (heuristic)

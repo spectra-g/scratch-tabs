@@ -50,7 +50,7 @@ export const useCalculatorEngine = (
       // Don't add operators to an error state
       if (initialData.display === "Error" && isNaN(Number(input))) return;
 
-      let currentExpression =
+      const currentExpression =
         initialData.expression === "0" || initialData.display === "Error"
           ? ""
           : initialData.expression;

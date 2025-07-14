@@ -61,7 +61,7 @@ function getDiamondScore(
     { x: box.minX + width / 2, y: box.maxY },
     { x: box.minX, y: box.minY + height / 2 },
   ];
-  let min_dists = midpoints.map((mp) =>
+  const min_dists = midpoints.map((mp) =>
     Math.min(...points.map((p) => distance(p, mp))),
   );
   return min_dists.reduce((a, b) => a + b, 0) / diagonal;
@@ -162,7 +162,7 @@ function countStraightSegmentsAndLengths(
     mergedCorners.push(currentCorner);
   }
 
-  let lengths: number[] = [];
+  const lengths: number[] = [];
   if (mergedCorners.length > 1) {
     for (let i = 0; i < mergedCorners.length; i++) {
       const a = mergedCorners[i];
