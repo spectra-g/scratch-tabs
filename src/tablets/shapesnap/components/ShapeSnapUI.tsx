@@ -335,6 +335,13 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
         onToggleTemplates={() => setShowTemplatesPanel((s) => !s)}
       />
 
+      {/* Instructions message */}
+      <div className="px-4 py-2 bg-gray-800 border-b border-gray-700">
+        <p className="text-gray-300 text-sm text-center">
+          Draw freely and Shape Snap will correct it for you
+        </p>
+      </div>
+
       <div
         ref={canvasRef}
         className="flex-1 relative overflow-hidden"
