@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Copy, Trash2, Edit2, Play, Check } from "lucide-react";
+import { Plus, Trash2, Edit2, Play, Check, PlusCircle } from "lucide-react";
 import { Template, Snippet } from "../types";
 import { TemplateDetailModal } from "./TemplateDetailModal";
 import { ContentItemEditorModal } from "./ContentItemEditorModal";
@@ -219,7 +219,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                             }}
                             title="Create prompt from template"
                           >
-                            <Copy size={14} />
+                            <PlusCircle size={14} />
                           </button>
                           {!template.isBuiltIn && (
                             <>

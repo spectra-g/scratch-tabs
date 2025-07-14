@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Copy, Tag as TagIcon, Check, X, Plus, History } from "lucide-react";
+import { Tag as TagIcon, Check, X, Plus, History, Play } from "lucide-react";
 import { Prompt, Tag, Snippet, Template } from "../types";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { HistoryViewer } from "./HistoryViewer";
@@ -441,7 +441,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
                 {copied ? (
                   <Check size={18} className="text-green-400" />
                 ) : (
-                  <Copy size={18} />
+                  <Play size={18} />
                 )}
               </button>
             </div>
