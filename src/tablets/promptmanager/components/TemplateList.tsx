@@ -92,7 +92,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
   const handleQuickUseSubmit = (values: Record<string, string>) => {
     if (!quickUseTemplate) return;
     
-    const substitutedContent = substituteVariables(quickUseTemplate.content, values, false);
+    const substitutedContent = substituteVariables(quickUseTemplate.content, values, true);
     copyToClipboard(substitutedContent, quickUseTemplate.id);
     
     // Close modal
@@ -278,6 +278,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
         onSubmit={handleQuickUseSubmit}
         onClose={handleQuickUseClose}
         submitButtonLabel="Generate & Copy"
+        allowEmpty={true}
       />
     </>
   );

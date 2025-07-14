@@ -232,7 +232,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   };
 
   const handleCopyVariableSubmit = (values: Record<string, string>) => {
-    const substitutedContent = substituteVariables(prompt.content, values, false);
+    const substitutedContent = substituteVariables(prompt.content, values, true);
     copyToClipboard(substitutedContent);
     setCopyVariableModal({
       isOpen: false,
@@ -577,7 +577,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
         onSubmit={handleCopyVariableSubmit}
         onClose={handleCopyVariableClose}
         submitButtonLabel="Generate & Copy"
-        allowEmpty={false}
+        allowEmpty={true}
       />
     </div>
   );
