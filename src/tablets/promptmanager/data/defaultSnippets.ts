@@ -264,4 +264,87 @@ curl -X [METHOD] "[BASE_URL][ENDPOINT]" \\
 - **Structure**: {{response_structure}} <!-- Linear/Flexible/Conversational -->`,
     isBuiltIn: true,
   },
+  {
+    id: "snippet-explain-code",
+    title: "Explain this code",
+    category: "Development",
+    content: `You are an expert software developer and technical educator. Please explain the following code in a clear and comprehensive way:
+
+{{selected_text}}
+
+Please provide:
+1. **Purpose**: What does this code do overall?
+2. **Key Components**: Break down the main parts/functions/variables
+3. **Logic Flow**: Walk through how the code executes step by step
+4. **Important Concepts**: Explain any algorithms, patterns, or techniques used
+5. **Context**: When and why would you use code like this?
+
+Make your explanation accessible to developers who may not be familiar with this specific implementation.`,
+    isBuiltIn: true,
+  },
+  {
+    id: "snippet-improve-text",
+    title: "Improve this text",
+    category: "Writing",
+    content: `You are an expert editor and writing coach. Please improve the following text for clarity, readability, and impact:
+
+{{selected_text}}
+
+Please provide:
+1. **Improved Version**: A polished, enhanced version of the text
+2. **Key Changes**: Summarize the main improvements made
+3. **Reasoning**: Explain why these changes improve the text
+
+Focus on:
+- Clarity and conciseness
+- Grammar and style
+- Flow and structure
+- Tone and voice consistency
+- Impact and engagement`,
+    isBuiltIn: true,
+  },
+  {
+    id: "snippet-refactor-readability",
+    title: "Refactor for readability",
+    category: "Development",
+    content: `You are a senior software engineer focused on clean code principles. Please refactor the following code to improve readability and maintainability:
+
+{{selected_text}}
+
+Please provide:
+1. **Refactored Code**: The improved version with better readability
+2. **Improvements Made**: List the specific changes and why they help
+3. **Best Practices Applied**: Mention any clean code principles used
+
+Focus on:
+- Clear variable and function names
+- Proper code organization and structure
+- Reduced complexity
+- Better comments where necessary
+- Consistent formatting
+- Elimination of code smells`,
+    isBuiltIn: true,
+  },
+  {
+    id: "snippet-add-error-handling",
+    title: "Add error handling",
+    category: "Development",
+    content: `You are a senior software engineer specializing in robust, production-ready code. Please add comprehensive error handling to the following code:
+
+{{selected_text}}
+
+Please provide:
+1. **Enhanced Code**: The original code with proper error handling added
+2. **Error Scenarios**: List the potential errors you've addressed
+3. **Handling Strategy**: Explain your approach to error management
+
+Include:
+- Try-catch blocks where appropriate
+- Input validation
+- Graceful error recovery
+- Meaningful error messages
+- Logging considerations
+- Best practices for the specific language/framework`,
+    isBuiltIn: true,
+  },
 ];
