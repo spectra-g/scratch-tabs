@@ -5,7 +5,9 @@ import { MarkdownPreview } from "./MarkdownPreview";
 import { HistoryViewer } from "./HistoryViewer";
 import { EditorInsertPanel } from "./EditorInsertPanel";
 import { FormattingToolbar } from "./FormattingToolbar";
+import { VariableFillModal } from "./VariableFillModal";
 import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
+import { parseVariables, substituteVariables } from "../utils/variables";
 
 interface PromptEditorProps {
   prompt: Prompt;
@@ -41,6 +43,13 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   const [copied, setCopied] = useState(false);
   const [isInsertPanelOpen, setIsInsertPanelOpen] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [copyVariableModal, setCopyVariableModal] = useState<{
+    isOpen: boolean;
+    variables: string[];
+  }>({
+    isOpen: false,
+    variables: [],
+  });
 
   // Undo/Redo state
   const [history, setHistory] = useState<HistoryState[]>([]);
@@ -198,13 +207,44 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(prompt.content);
+    const variables = parseVariables(prompt.content);
+    
+    if (variables.length > 0) {
+      // Open variable fill modal
+      setCopyVariableModal({
+        isOpen: true,
+        variables,
+      });
+    } else {
+      // No variables, copy directly
+      copyToClipboard(prompt.content);
+    }
+  };
+
+  const copyToClipboard = (content: string) => {
+    navigator.clipboard.writeText(content);
     setCopied(true);
     onIncrementUsage(prompt.id);
 
     setTimeout(() => {
       setCopied(false);
     }, 2000);
+  };
+
+  const handleCopyVariableSubmit = (values: Record<string, string>) => {
+    const substitutedContent = substituteVariables(prompt.content, values, false);
+    copyToClipboard(substitutedContent);
+    setCopyVariableModal({
+      isOpen: false,
+      variables: [],
+    });
+  };
+
+  const handleCopyVariableClose = () => {
+    setCopyVariableModal({
+      isOpen: false,
+      variables: [],
+    });
   };
 
   const handleTagToggle = (tagId: string) => {
@@ -529,6 +569,16 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
       {showHistory && (
         <HistoryViewer prompt={prompt} onClose={() => setShowHistory(false)} />
       )}
+
+      {/* Variable Fill Modal for Copy */}
+      <VariableFillModal
+        isOpen={copyVariableModal.isOpen}
+        variables={copyVariableModal.variables}
+        onSubmit={handleCopyVariableSubmit}
+        onClose={handleCopyVariableClose}
+        submitButtonLabel="Generate & Copy"
+        allowEmpty={false}
+      />
     </div>
   );
 };

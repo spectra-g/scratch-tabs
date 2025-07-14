@@ -64,7 +64,7 @@ export const ContentItemEditorModal: React.FC<ContentItemEditorModalProps> = ({
             <X size={20} />
           </button>
         </div>
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Title
@@ -123,10 +123,10 @@ export const ContentItemEditorModal: React.FC<ContentItemEditorModalProps> = ({
                     setEditedItem({ ...editedItem, content: e.target.value })
                   }
                   rows={15}
-                  className={`w-full bg-gray-900 p-2 text-white focus:outline-none resize-none ${showPreview ? "rounded-bl-md" : "rounded-b-md"}`}
+                  className={`w-full bg-gray-900 p-2 text-white focus:outline-none resize-none custom-scrollbar ${showPreview ? "rounded-bl-md" : "rounded-b-md"}`}
                 />
                 {showPreview && (
-                  <div className="bg-gray-900 p-2 overflow-y-auto rounded-br-md">
+                  <div className="bg-gray-900 p-2 overflow-y-auto rounded-br-md custom-scrollbar">
                     <MarkdownPreview content={editedItem.content} />
                   </div>
                 )}

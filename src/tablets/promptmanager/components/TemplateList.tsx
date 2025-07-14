@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { Plus, Copy, Trash2, Edit2 } from "lucide-react";
+import { Plus, Copy, Trash2, Edit2, Play, Check } from "lucide-react";
 import { Template, Snippet } from "../types";
 import { TemplateDetailModal } from "./TemplateDetailModal";
 import { ContentItemEditorModal } from "./ContentItemEditorModal";
+import { VariableFillModal } from "./VariableFillModal";
 import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
+import { parseVariables, substituteVariables } from "../utils/variables";
 
 interface TemplateListProps {
   templates: Template[];
@@ -32,6 +34,9 @@ export const TemplateList: React.FC<TemplateListProps> = ({
   const [viewingTemplate, setViewingTemplate] = useState<Template | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [quickUseTemplate, setQuickUseTemplate] = useState<Template | null>(null);
+  const [quickUseVariables, setQuickUseVariables] = useState<string[]>([]);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const filteredTemplates = templates.filter((template) => {
     if (template.isBuiltIn) {
@@ -69,6 +74,41 @@ export const TemplateList: React.FC<TemplateListProps> = ({
     }
     setIsCreating(false);
     setEditingTemplate(null);
+  };
+
+  const handleQuickUse = (template: Template) => {
+    const variables = parseVariables(template.content);
+    
+    if (variables.length > 0) {
+      // Open variable fill modal
+      setQuickUseTemplate(template);
+      setQuickUseVariables(variables);
+    } else {
+      // No variables, copy directly
+      copyToClipboard(template.content, template.id);
+    }
+  };
+
+  const handleQuickUseSubmit = (values: Record<string, string>) => {
+    if (!quickUseTemplate) return;
+    
+    const substitutedContent = substituteVariables(quickUseTemplate.content, values, false);
+    copyToClipboard(substitutedContent, quickUseTemplate.id);
+    
+    // Close modal
+    setQuickUseTemplate(null);
+    setQuickUseVariables([]);
+  };
+
+  const handleQuickUseClose = () => {
+    setQuickUseTemplate(null);
+    setQuickUseVariables([]);
+  };
+
+  const copyToClipboard = (content: string, templateId: string) => {
+    navigator.clipboard.writeText(content);
+    setCopied(templateId);
+    setTimeout(() => setCopied(null), 2000);
   };
 
   return (
@@ -158,6 +198,20 @@ export const TemplateList: React.FC<TemplateListProps> = ({
 
                         <div className="absolute top-2 right-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <button
+                            className="p-1.5 text-gray-400 hover:text-green-400 hover:bg-gray-700/50 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuickUse(template);
+                            }}
+                            title="Use template (copy with variables filled)"
+                          >
+                            {copied === template.id ? (
+                              <Check size={14} className="text-green-400" />
+                            ) : (
+                              <Play size={14} />
+                            )}
+                          </button>
+                          <button
                             className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -218,6 +272,13 @@ export const TemplateList: React.FC<TemplateListProps> = ({
           itemType="Template"
         />
       )}
+      <VariableFillModal
+        isOpen={quickUseTemplate !== null}
+        variables={quickUseVariables}
+        onSubmit={handleQuickUseSubmit}
+        onClose={handleQuickUseClose}
+        submitButtonLabel="Generate & Copy"
+      />
     </>
   );
 };

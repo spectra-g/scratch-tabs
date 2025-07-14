@@ -19,7 +19,7 @@ export const SnippetDetailModal: React.FC<SnippetDetailModalProps> = ({ snippet,
             <X size={24} />
           </button>
         </div>
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
           <MarkdownPreview content={snippet.content} />
         </div>
         

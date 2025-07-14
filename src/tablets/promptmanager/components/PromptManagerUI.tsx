@@ -9,6 +9,7 @@ import { WorkflowList } from "./WorkflowList";
 import { WorkflowEditor } from "./WorkflowEditor";
 import { ImportExportModal } from "./ImportExportModal";
 import { SelectTemplateModal } from "./SelectTemplateModal";
+import { VariableFillModal } from "./VariableFillModal";
 import {
   PromptManagerData,
   Prompt,
@@ -56,7 +57,8 @@ interface PromptManagerUIProps {
   deleteTag: (id: string) => void;
   importData: (data: Partial<PromptManagerData>) => void;
   exportData: () => Partial<PromptManagerData>;
-  createPromptFromTemplate: (templateId: string) => Prompt | undefined;
+  createPromptFromTemplate: (templateId: string, variableValues?: Record<string, string>) => Prompt | undefined;
+  getTemplateVariables: (templateId: string) => string[];
 }
 
 export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
@@ -88,6 +90,7 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
   importData,
   exportData,
   createPromptFromTemplate,
+  getTemplateVariables,
 }) => {
   const [showImportExport, setShowImportExport] = useState<
     "import" | "export" | null
@@ -95,6 +98,15 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSelectTemplateModalOpen, setSelectTemplateModalOpen] =
     useState(false);
+  const [variableFillModal, setVariableFillModal] = useState<{
+    isOpen: boolean;
+    templateId: string | null;
+    variables: string[];
+  }>({
+    isOpen: false,
+    templateId: null,
+    variables: [],
+  });
 
   // Get the selected item based on active tab
   const selectedPrompt = data.ui.selectedPromptId
@@ -291,6 +303,41 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
     setSelectTemplateModalOpen(true);
   };
 
+  const handleCreatePromptFromTemplate = (templateId: string) => {
+    const variables = getTemplateVariables(templateId);
+    
+    if (variables.length > 0) {
+      // Open variable fill modal
+      setVariableFillModal({
+        isOpen: true,
+        templateId,
+        variables,
+      });
+    } else {
+      // No variables, create prompt directly
+      createPromptFromTemplate(templateId);
+    }
+  };
+
+  const handleVariableFillSubmit = (values: Record<string, string>) => {
+    if (variableFillModal.templateId) {
+      createPromptFromTemplate(variableFillModal.templateId, values);
+    }
+    setVariableFillModal({
+      isOpen: false,
+      templateId: null,
+      variables: [],
+    });
+  };
+
+  const handleVariableFillClose = () => {
+    setVariableFillModal({
+      isOpen: false,
+      templateId: null,
+      variables: [],
+    });
+  };
+
   // Handle import/export
   const handleImport = (importedData: Partial<PromptManagerData>) => {
     importData(importedData);
@@ -380,7 +427,7 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
               onCreateTemplate={createTemplate}
               onUpdateTemplate={updateTemplate}
               onDeleteTemplate={deleteTemplate}
-              onCreatePromptFromTemplate={createPromptFromTemplate}
+              onCreatePromptFromTemplate={handleCreatePromptFromTemplate}
             />
           )}
 
@@ -440,7 +487,7 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
         <SelectTemplateModal
           templates={allTemplates}
           onSelect={(templateId: string) => {
-            createPromptFromTemplate(templateId);
+            handleCreatePromptFromTemplate(templateId);
             setSelectTemplateModalOpen(false);
           }}
           onClose={() => setSelectTemplateModalOpen(false)}
@@ -456,6 +503,15 @@ export const PromptManagerUI: React.FC<PromptManagerUIProps> = ({
           onExport={exportData}
         />
       )}
+
+      <VariableFillModal
+        isOpen={variableFillModal.isOpen}
+        variables={variableFillModal.variables}
+        onSubmit={handleVariableFillSubmit}
+        onClose={handleVariableFillClose}
+        submitButtonLabel="Create Prompt"
+        allowEmpty={true}
+      />
     </div>
   );
 };

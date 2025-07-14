@@ -22,7 +22,7 @@ export const TemplateDetailModal: React.FC<TemplateDetailModalProps> = ({
             <X size={24} />
           </button>
         </div>
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
           {template.description && (
             <p className="text-lg text-gray-300 mb-6 italic">
               {template.description}

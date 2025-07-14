@@ -11,6 +11,7 @@ import { PromptManagerUI } from "./components/PromptManagerUI";
 import { defaultTags } from "./data/defaultTags";
 import { defaultTemplates } from "./data/defaultTemplates";
 import { defaultSnippets } from "./data/defaultSnippets";
+import { parseVariables, substituteVariables } from "./utils/variables";
 
 interface PromptManagerTabletState extends TabletState {
   type: "promptmanager";
@@ -606,15 +607,21 @@ export const PromptManagerTablet: Tablet = {
     };
 
     // Create prompt from template
-    const createPromptFromTemplate = (templateId: string) => {
+    const createPromptFromTemplate = (templateId: string, variableValues?: Record<string, string>) => {
       const allTemplates = [...defaultTemplates, ...data.templates];
       const template = allTemplates.find((t) => t.id === templateId);
       if (!template) return;
 
+      // If variable values are provided, substitute them in the content
+      let content = template.content;
+      if (variableValues) {
+        content = substituteVariables(template.content, variableValues, true);
+      }
+
       const newPrompt: Prompt = {
         id: crypto.randomUUID(),
         title: template.title,
-        content: template.content,
+        content: content,
         tags: [],
         isFavorite: false,
         createdAt: Date.now(),
@@ -632,6 +639,14 @@ export const PromptManagerTablet: Tablet = {
       });
 
       return newPrompt;
+    };
+
+    // Get template variables
+    const getTemplateVariables = (templateId: string) => {
+      const allTemplates = [...defaultTemplates, ...data.templates];
+      const template = allTemplates.find((t) => t.id === templateId);
+      if (!template) return [];
+      return parseVariables(template.content);
     };
 
     const allTemplates = [...defaultTemplates, ...data.templates];
@@ -667,6 +682,7 @@ export const PromptManagerTablet: Tablet = {
         importData={importData}
         exportData={exportData}
         createPromptFromTemplate={createPromptFromTemplate}
+        getTemplateVariables={getTemplateVariables}
       />
     );
   },
