@@ -36,6 +36,8 @@ interface VaultSidebarProps {
   onClearFilters: () => void;
   sortOrder: SortOrder;
   onChangeSortOrder: (sortOrder: SortOrder) => void;
+  isMobile?: boolean;
+  onCloseSidebar?: () => void;
 }
 
 export const VaultSidebar: React.FC<VaultSidebarProps> = ({
@@ -52,6 +54,8 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
   onClearFilters,
   sortOrder,
   onChangeSortOrder,
+  isMobile,
+  onCloseSidebar,
 }) => {
   const hasActiveFilters =
     activeFilters.labels.length > 0 ||
@@ -62,11 +66,21 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
     <div className="w-64 border-r border-gray-700/50 flex flex-col bg-gray-800/30">
       {/* Header */}
       <div className="p-4 border-b border-gray-700/50">
-        <div className="flex items-center space-x-3 mb-4">
-          <Archive className="text-gray-400" size={20} />
-          <h2 className="text-lg font-semibold text-gray-100">
-            Knowledge Vault
-          </h2>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <Archive className="text-gray-400" size={20} />
+            <h2 className="text-lg font-semibold text-gray-100">
+              Knowledge Vault
+            </h2>
+          </div>
+          {isMobile && onCloseSidebar && (
+            <button
+              onClick={onCloseSidebar}
+              className="p-1 text-gray-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* Search */}

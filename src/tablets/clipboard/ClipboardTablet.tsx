@@ -491,7 +491,7 @@ const ClipboardTabletComponent: React.FC<{
         </button>
         <div className="text-xs text-gray-500 text-center flex items-center justify-center gap-1">
           <Keyboard size={14} />
-          <span>Up/Down, Enter to copy.</span>
+          <span>Up/Down, Enter to copy, CTRL+V to paste.</span>
         </div>
       </div>
     </div>

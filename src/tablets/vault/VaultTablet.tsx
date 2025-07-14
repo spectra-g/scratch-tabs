@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Tablet, TabletState } from "../types";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Archive,
   Plus,
@@ -16,10 +17,12 @@ import {
   List,
   CopyPlus,
   Globe,
+  Menu,
 } from "lucide-react";
 import { useRootStore } from "../../stores";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
+import { useIsMobile } from "../../hooks/useIsMobile";
 import { detectLanguage } from "../../languages";
 import { VaultItemCard } from "./components/VaultItemCard";
 import { VaultItemModal } from "./components/VaultItemModal";
@@ -111,6 +114,7 @@ export const VaultTablet: Tablet = {
     const { addBackgroundTab } = useRootStore();
     const { splitView } = useSplitViewStore();
     const { activeWorkspaceId } = useWorkspaceStore();
+    const isMobile = useIsMobile();
 
     // Local state for UI interactions
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
@@ -119,12 +123,22 @@ export const VaultTablet: Tablet = {
       string | null
     >(null);
     const [preserveOrder, setPreserveOrder] = useState<boolean>(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Store the current sorted order in state when we need to preserve it
     const [manualOrder, setManualOrder] = useState<string[]>([]);
 
     // Import modal state
     const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+
+    // Handle mobile state changes
+    useEffect(() => {
+      if (!isMobile) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    }, [isMobile]);
 
     // Memoized filtered and sorted items
     const filteredItems = useMemo(() => {
@@ -823,24 +837,61 @@ export const VaultTablet: Tablet = {
       );
     };
 
+    const SidebarContent = () => (
+      <VaultSidebar
+        searchQuery={state.data.searchQuery}
+        onSearchChange={handleSearchChange}
+        onAddItem={handleAddItem}
+        onImportItems={handleImportItems}
+        allLabels={allLabels}
+        allContentTypes={allContentTypes}
+        activeFilters={state.data.activeFilters}
+        onFilterByLabel={handleFilterByLabel}
+        onFilterByContentType={handleFilterByContentType}
+        onTogglePinnedFilter={handleTogglePinnedFilter}
+        onClearFilters={handleClearFilters}
+        sortOrder={state.data.sortOrder}
+        onChangeSortOrder={handleChangeSortOrder}
+        isMobile={isMobile}
+        onCloseSidebar={() => setIsSidebarOpen(false)}
+      />
+    );
+
     return (
-      <div className="h-full bg-gray-900 flex">
-        {/* Sidebar */}
-        <VaultSidebar
-          searchQuery={state.data.searchQuery}
-          onSearchChange={handleSearchChange}
-          onAddItem={handleAddItem}
-          onImportItems={handleImportItems}
-          allLabels={allLabels}
-          allContentTypes={allContentTypes}
-          activeFilters={state.data.activeFilters}
-          onFilterByLabel={handleFilterByLabel}
-          onFilterByContentType={handleFilterByContentType}
-          onTogglePinnedFilter={handleTogglePinnedFilter}
-          onClearFilters={handleClearFilters}
-          sortOrder={state.data.sortOrder}
-          onChangeSortOrder={handleChangeSortOrder}
-        />
+      <div className="h-full bg-gray-900 flex relative overflow-hidden">
+        {/* Mobile Sidebar Overlay */}
+        <AnimatePresence>
+          {isSidebarOpen && isMobile && (
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="z-20 absolute top-0 left-0 h-full bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50"
+            >
+              <SidebarContent />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Desktop Sidebar */}
+        {!isMobile && (
+          <div className="flex-shrink-0">
+            <SidebarContent />
+          </div>
+        )}
+
+        {/* Hamburger Menu Button */}
+        {!isSidebarOpen && isMobile && (
+          <div className="absolute top-0 left-0 z-30 p-2">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-md"
+            >
+              <Menu size={20} />
+            </button>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto custom-scrollbar p-6">
