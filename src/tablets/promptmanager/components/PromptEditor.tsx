@@ -5,6 +5,7 @@ import { MarkdownPreview } from "./MarkdownPreview";
 import { HistoryViewer } from "./HistoryViewer";
 import { EditorInsertPanel } from "./EditorInsertPanel";
 import { FormattingToolbar } from "./FormattingToolbar";
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
 
 interface PromptEditorProps {
   prompt: Prompt;
@@ -512,6 +513,16 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
             />
           </div>
         )}
+      </div>
+
+      {/* Token Count Status Bar */}
+      <div className="flex-none px-4 py-2 border-t border-gray-700/50 bg-gray-800/30">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-gray-400">Token Count:</span>
+          <span className={getTokenCountColor(estimateTokenCount(isEditing ? content : prompt.content))}>
+            {formatTokenCount(estimateTokenCount(isEditing ? content : prompt.content))}
+          </span>
+        </div>
       </div>
 
       {/* History Viewer */}

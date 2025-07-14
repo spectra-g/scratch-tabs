@@ -3,6 +3,7 @@ import { X, Eye, Code } from "lucide-react";
 import { Template, Snippet } from "../types";
 import { FormattingToolbar } from "./FormattingToolbar";
 import { MarkdownPreview } from "./MarkdownPreview";
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
 
 type Item = Omit<Template, "id"> | Omit<Snippet, "id">;
 
@@ -134,13 +135,21 @@ export const ContentItemEditorModal: React.FC<ContentItemEditorModalProps> = ({
           </div>
         </div>
         <div className="flex items-center justify-between p-4 border-t border-gray-700">
-          <button
-            onClick={() => setShowPreview(!showPreview)}
-            className="flex items-center space-x-2 text-gray-400 hover:text-white"
-          >
-            {showPreview ? <Code size={16} /> : <Eye size={16} />}
-            <span>{showPreview ? "Editor" : "Preview"}</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="flex items-center space-x-2 text-gray-400 hover:text-white"
+            >
+              {showPreview ? <Code size={16} /> : <Eye size={16} />}
+              <span>{showPreview ? "Editor" : "Preview"}</span>
+            </button>
+            <div className="flex items-center space-x-2 text-xs">
+              <span className="text-gray-400">Token Count:</span>
+              <span className={getTokenCountColor(estimateTokenCount(editedItem.content))}>
+                {formatTokenCount(estimateTokenCount(editedItem.content))}
+              </span>
+            </div>
+          </div>
           <div>
             <button
               onClick={onClose}

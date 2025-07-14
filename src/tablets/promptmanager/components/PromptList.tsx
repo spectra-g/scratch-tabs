@@ -12,6 +12,7 @@ import {
   SortDesc,
 } from "lucide-react";
 import { Prompt, Tag } from "../types";
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
 
 interface PromptListProps {
   prompts: Prompt[];
@@ -365,7 +366,12 @@ export const PromptList: React.FC<PromptListProps> = ({
 
                   {/* Metadata */}
                   <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-                    <span>{formatDate(prompt.lastModified)}</span>
+                    <div className="flex items-center space-x-2">
+                      <span>{formatDate(prompt.lastModified)}</span>
+                      <span className={getTokenCountColor(estimateTokenCount(prompt.content))}>
+                        {formatTokenCount(estimateTokenCount(prompt.content))}
+                      </span>
+                    </div>
                     <span>
                       {prompt.usageCount}{" "}
                       {prompt.usageCount === 1 ? "use" : "uses"}

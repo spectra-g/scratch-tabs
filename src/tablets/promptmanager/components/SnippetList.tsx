@@ -3,6 +3,7 @@ import { Plus, Copy, Trash2, Edit2, Check } from "lucide-react";
 import { Snippet, Template } from "../types";
 import { ContentItemEditorModal } from "./ContentItemEditorModal";
 import { SnippetDetailModal } from './SnippetDetailModal';
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
 
 interface SnippetListProps {
   snippets: Snippet[];
@@ -159,8 +160,13 @@ export const SnippetList: React.FC<SnippetListProps> = ({
                             )}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 line-clamp-3 font-mono">
+                        <div className="text-xs text-gray-500 line-clamp-3 font-mono mb-2">
                           {snippet.content}
+                        </div>
+                        <div className="text-xs">
+                          <span className={getTokenCountColor(estimateTokenCount(snippet.content))}>
+                            {formatTokenCount(estimateTokenCount(snippet.content))}
+                          </span>
                         </div>
                       </div>
                     ))}

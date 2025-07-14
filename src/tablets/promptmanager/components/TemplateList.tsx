@@ -3,6 +3,7 @@ import { Plus, Copy, Trash2, Edit2 } from "lucide-react";
 import { Template, Snippet } from "../types";
 import { TemplateDetailModal } from "./TemplateDetailModal";
 import { ContentItemEditorModal } from "./ContentItemEditorModal";
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
 
 interface TemplateListProps {
   templates: Template[];
@@ -149,6 +150,11 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                         <p className="text-sm text-gray-400 truncate mt-1">
                           {template.description}
                         </p>
+                        <div className="mt-2 text-xs">
+                          <span className={getTokenCountColor(estimateTokenCount(template.content))}>
+                            {formatTokenCount(estimateTokenCount(template.content))}
+                          </span>
+                        </div>
 
                         <div className="absolute top-2 right-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <button

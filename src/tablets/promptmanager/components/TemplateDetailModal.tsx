@@ -2,6 +2,7 @@ import React from "react";
 import { X } from "lucide-react";
 import { Template } from "../types";
 import { MarkdownPreview } from "./MarkdownPreview";
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
 
 interface TemplateDetailModalProps {
   template: Template;
@@ -28,6 +29,16 @@ export const TemplateDetailModal: React.FC<TemplateDetailModalProps> = ({
             </p>
           )}
           <MarkdownPreview content={template.content} />
+        </div>
+        
+        {/* Token Count Status Bar */}
+        <div className="px-4 py-2 border-t border-gray-700 bg-gray-800/30">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-400">Token Count:</span>
+            <span className={getTokenCountColor(estimateTokenCount(template.content))}>
+              {formatTokenCount(estimateTokenCount(template.content))}
+            </span>
+          </div>
         </div>
       </div>
     </div>
