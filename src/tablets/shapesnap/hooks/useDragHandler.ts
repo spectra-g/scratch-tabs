@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Shape, Point } from "../types";
 import { getShapeCenter } from "../utils/geometryUtils";
 
@@ -6,7 +6,9 @@ export interface DragState {
   draggingShapeId: string | null;
   dragOffset: { x: number; y: number } | null;
   draggedShape: Shape | null;
+  draggedShapes: Shape[] | null; // For multi-selection drag preview
   hasMoved: boolean;
+  justCompletedMultiDrag: boolean; // Flag to prevent premature clearing of draggedShapes
   dragGuides: {
     left: number;
     right: number;
@@ -17,24 +19,45 @@ export interface DragState {
 
 export interface UseDragHandlerProps {
   shapes: Shape[];
+  selectedShapeIds?: string[];
   gridSnappingEnabled?: boolean;
   onUpdateShape: (shapeId: string, updates: Partial<Shape>) => void;
+  onMoveMultipleShapes: (updates: { shapeId: string; delta: Point }[]) => void;
   onShapeClick?: (shape: Shape, position: Point) => void;
 }
 
 export const useDragHandler = ({
   shapes,
+  selectedShapeIds = [],
   gridSnappingEnabled = false,
   onUpdateShape,
+  onMoveMultipleShapes,
   onShapeClick,
 }: UseDragHandlerProps) => {
   const [dragState, setDragState] = useState<DragState>({
     draggingShapeId: null,
     dragOffset: null,
     draggedShape: null,
+    draggedShapes: null,
     hasMoved: false,
+    justCompletedMultiDrag: false,
     dragGuides: null,
   });
+  
+  // Clear the multi-drag completion flag after spurious clicks are handled
+  useEffect(() => {
+    if (dragState.justCompletedMultiDrag) {
+      const timer = setTimeout(() => {
+        setDragState(prev => ({
+          ...prev,
+          draggedShapes: null,
+          justCompletedMultiDrag: false,
+        }));
+      }, 150); // Wait long enough for spurious clicks to be blocked (matches Canvas timer)
+      
+      return () => clearTimeout(timer);
+    }
+  }, [dragState.justCompletedMultiDrag]);
 
   // Helper: snap a value to the nearest grid
   const snapToGridValue = useCallback(
@@ -42,6 +65,59 @@ export const useDragHandler = ({
       gridSnappingEnabled ? Math.round(value / grid) * grid : value,
     [gridSnappingEnabled],
   );
+
+  // Helper: calculate position updates for a shape based on center delta
+  const calculateShapeUpdates = useCallback((shape: Shape, dx: number, dy: number): Partial<Shape> => {
+    switch (shape.type) {
+      case "rectangle":
+      case "square": {
+        const boxShape = shape as Shape & {
+          x: number;
+          y: number;
+          width: number;
+          height: number;
+        };
+        return {
+          x: boxShape.x + dx,
+          y: boxShape.y + dy,
+        } as Partial<Shape & { x: number; y: number }>;
+      }
+      case "diamond":
+      case "triangle":
+      case "circle":
+      case "text": {
+        const centeredShape = shape as Shape & { x: number; y: number };
+        return {
+          x: centeredShape.x + dx,
+          y: centeredShape.y + dy,
+        } as Partial<Shape & { x: number; y: number }>;
+      }
+      case "straight-arrow": {
+        const arrowShape = shape as Shape & { from: Point; to: Point };
+        return {
+          from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
+          to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
+        } as Partial<Shape & { from: Point; to: Point }>;
+      }
+      case "curved-arrow": {
+        const arrowShape = shape as Shape & { from: Point; to: Point; control: Point };
+        return {
+          from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
+          to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
+          control: { x: arrowShape.control.x + dx, y: arrowShape.control.y + dy },
+        } as Partial<Shape & { from: Point; to: Point; control: Point }>;
+      }
+      case "orthogonal-arrow":
+      case "line": {
+        const lineShape = shape as Shape & { points: Point[] };
+        return {
+          points: lineShape.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+        } as Partial<Shape & { points: Point[] }>;
+      }
+      default:
+        return {};
+    }
+  }, []);
 
   // Start dragging a shape
   const startDrag = useCallback((shape: Shape, mousePoint: Point) => {
@@ -55,10 +131,12 @@ export const useDragHandler = ({
       draggingShapeId: shape.id,
       dragOffset: offset,
       draggedShape: shape,
+      draggedShapes: null,
       hasMoved: false,
+      justCompletedMultiDrag: false,
       dragGuides: null,
     });
-  }, []);
+  }, [selectedShapeIds]);
 
   // Update drag position
   const updateDrag = useCallback(
@@ -93,57 +171,107 @@ export const useDragHandler = ({
         20,
       );
 
+      // Check if this is a multi-selection drag
+      const draggedShapeIsSelected = selectedShapeIds.includes(dragState.draggingShapeId);
+      const hasMultipleSelected = selectedShapeIds.length > 1;
+      const isMultiSelectionDrag = draggedShapeIsSelected && hasMultipleSelected;
+      
       // Calculate the updated shape for real-time visual feedback
       let updatedShape = { ...shape };
+      let updatedShapes: Shape[] | null = null;
+      
+      // Calculate movement delta
+      const dx = newCenterX - center.x;
+      const dy = newCenterY - center.y;
+      
+      if (isMultiSelectionDrag) {
+        // For multi-selection, update all selected shapes
+        updatedShapes = selectedShapeIds.map(shapeId => {
+          const targetShape = shapes.find(s => s.id === shapeId);
+          if (!targetShape) return null;
+          
+          const updates = calculateShapeUpdates(targetShape, dx, dy);
+          return { ...targetShape, ...updates };
+        }).filter(Boolean) as Shape[];
+        
+        // Also update the primary dragged shape
+        updatedShape = updatedShapes.find(s => s.id === shape.id) || updatedShape;
+      }
 
       switch (shape.type) {
         case "rectangle":
         case "square": {
-          const boxShape = shape as Shape & {
-            x: number;
-            y: number;
-            width: number;
-            height: number;
-          };
-          updatedShape = {
-            ...updatedShape,
-            x: newCenterX - boxShape.width / 2,
-            y: newCenterY - boxShape.height / 2,
-          } as Shape;
+          if (!isMultiSelectionDrag) {
+            const boxShape = shape as Shape & {
+              x: number;
+              y: number;
+              width: number;
+              height: number;
+            };
+            updatedShape = {
+              ...updatedShape,
+              x: newCenterX - boxShape.width / 2,
+              y: newCenterY - boxShape.height / 2,
+            } as Shape;
+          }
           break;
         }
         case "diamond":
         case "triangle":
         case "circle":
         case "text": {
-          // For these shapes, x and y represent the center
-          updatedShape = {
-            ...updatedShape,
-            x: newCenterX,
-            y: newCenterY,
-          } as Shape;
+          if (!isMultiSelectionDrag) {
+            // For these shapes, x and y represent the center
+            updatedShape = {
+              ...updatedShape,
+              x: newCenterX,
+              y: newCenterY,
+            } as Shape;
+          }
           break;
         }
-        case "arrow": {
-          const dx = newCenterX - center.x;
-          const dy = newCenterY - center.y;
-          const arrowShape = shape as Shape & { from: Point; to: Point };
-          updatedShape = {
-            ...updatedShape,
-            from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
-            to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
-          } as Shape;
+        case "straight-arrow": {
+          if (!isMultiSelectionDrag) {
+            const arrowShape = shape as Shape & { from: Point; to: Point };
+            updatedShape = {
+              ...updatedShape,
+              from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
+              to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
+            } as Shape;
+          }
+          break;
+        }
+        case "curved-arrow": {
+          if (!isMultiSelectionDrag) {
+            const arrowShape = shape as Shape & { from: Point; to: Point; control: Point };
+            updatedShape = {
+              ...updatedShape,
+              from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
+              to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
+              control: { x: arrowShape.control.x + dx, y: arrowShape.control.y + dy },
+            } as Shape;
+          }
+          break;
+        }
+        case "orthogonal-arrow": {
+          if (!isMultiSelectionDrag) {
+            const arrowShape = shape as Shape & { points: Point[] };
+            updatedShape = {
+              ...updatedShape,
+              points: arrowShape.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+            } as Shape;
+          }
           break;
         }
         case "line": {
-          // Move all points by the delta
-          const dx = newCenterX - center.x;
-          const dy = newCenterY - center.y;
-          const lineShape = shape as Shape & { points: Point[] };
-          updatedShape = {
-            ...updatedShape,
-            points: lineShape.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
-          } as Shape;
+          if (!isMultiSelectionDrag) {
+            // Move all points by the delta
+            const lineShape = shape as Shape & { points: Point[] };
+            updatedShape = {
+              ...updatedShape,
+              points: lineShape.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+            } as Shape;
+          }
           break;
         }
       }
@@ -220,13 +348,16 @@ export const useDragHandler = ({
               };
               break;
             }
-            case "arrow":
+            case "straight-arrow":
+            case "curved-arrow":
+            case "orthogonal-arrow":
             case "line": {
               // For lines and arrows, use the bounding box of all points
               const lineShape = updatedShape as Shape & {
                 points?: Point[];
                 from?: Point;
                 to?: Point;
+                control?: Point;
               };
               let points: Point[] = [];
 
@@ -234,6 +365,10 @@ export const useDragHandler = ({
                 points = lineShape.points;
               } else if (lineShape.from && lineShape.to) {
                 points = [lineShape.from, lineShape.to];
+                // For curved arrows, include control point
+                if (lineShape.control) {
+                  points.push(lineShape.control);
+                }
               }
 
               if (points.length > 0) {
@@ -254,6 +389,7 @@ export const useDragHandler = ({
         return {
           ...prev,
           draggedShape: updatedShape,
+          draggedShapes: updatedShapes,
           dragGuides,
         };
       });
@@ -265,7 +401,7 @@ export const useDragHandler = ({
   const endDrag = useCallback(
     (mousePoint: Point) => {
       if (!dragState.draggingShapeId || !dragState.dragOffset) {
-        return { wasClick: false };
+        return { wasClick: false, wasDrag: false };
       }
 
       const shape = shapes.find((s) => s.id === dragState.draggingShapeId);
@@ -275,17 +411,25 @@ export const useDragHandler = ({
 
       // If we haven't moved much, treat as a click
       if (!dragState.hasMoved) {
-        if (onShapeClick) {
+        // Check if this would be a multi-selection drag - if so, don't trigger click
+        const draggedShapeIsSelected = selectedShapeIds.includes(dragState.draggingShapeId);
+        const hasMultipleSelected = selectedShapeIds.length > 1;
+        const isMultiSelectionDrag = draggedShapeIsSelected && hasMultipleSelected;
+        
+        if (!isMultiSelectionDrag && onShapeClick) {
           onShapeClick(shape, mousePoint);
         }
+        
         setDragState({
           draggingShapeId: null,
           dragOffset: null,
           draggedShape: null,
+          draggedShapes: null,
           hasMoved: false,
+          justCompletedMultiDrag: false,
           dragGuides: null,
         });
-        return { wasClick: true };
+        return { wasClick: !isMultiSelectionDrag, wasDrag: false };
       }
 
       // Apply drag changes
@@ -328,7 +472,7 @@ export const useDragHandler = ({
           } as Partial<Shape & { x: number; y: number }>;
           break;
         }
-        case "arrow": {
+        case "straight-arrow": {
           const dx = newCenterX - center.x;
           const dy = newCenterY - center.y;
           const arrowShape = shape as Shape & { from: Point; to: Point };
@@ -336,6 +480,26 @@ export const useDragHandler = ({
             from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
             to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
           } as Partial<Shape & { from: Point; to: Point }>;
+          break;
+        }
+        case "curved-arrow": {
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const arrowShape = shape as Shape & { from: Point; to: Point; control: Point };
+          updates = {
+            from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
+            to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
+            control: { x: arrowShape.control.x + dx, y: arrowShape.control.y + dy },
+          } as Partial<Shape & { from: Point; to: Point; control: Point }>;
+          break;
+        }
+        case "orthogonal-arrow": {
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const arrowShape = shape as Shape & { points: Point[] };
+          updates = {
+            points: arrowShape.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+          } as Partial<Shape & { points: Point[] }>;
           break;
         }
         case "line": {
@@ -352,7 +516,25 @@ export const useDragHandler = ({
 
       // Apply the updates
       if (Object.keys(updates).length > 0) {
-        onUpdateShape(dragState.draggingShapeId, updates);
+        // Check if we should move multiple shapes
+        const draggedShapeIsSelected = selectedShapeIds.includes(dragState.draggingShapeId);
+        const hasMultipleSelected = selectedShapeIds.length > 1;
+        const dx = newCenterX - center.x;
+        const dy = newCenterY - center.y;
+
+        if (draggedShapeIsSelected && hasMultipleSelected) {
+          // Move all selected shapes by the same delta - use atomic operation
+          
+          const updates = selectedShapeIds.map(shapeId => ({
+            shapeId,
+            delta: { x: dx, y: dy },
+          }));
+          
+          onMoveMultipleShapes(updates);
+        } else {
+          // Single shape drag
+          onUpdateShape(dragState.draggingShapeId, updates);
+        }
       }
 
       // Reset drag state
@@ -360,13 +542,15 @@ export const useDragHandler = ({
         draggingShapeId: null,
         dragOffset: null,
         draggedShape: null,
+        draggedShapes: null,
         hasMoved: false,
+        justCompletedMultiDrag: false,
         dragGuides: null,
       });
 
-      return { wasClick: false };
+      return { wasClick: false, wasDrag: true };
     },
-    [dragState, shapes, snapToGridValue, onUpdateShape, onShapeClick],
+    [dragState, shapes, selectedShapeIds, snapToGridValue, onUpdateShape, onMoveMultipleShapes, onShapeClick, calculateShapeUpdates],
   );
 
   // Cancel drag operation
@@ -375,7 +559,9 @@ export const useDragHandler = ({
       draggingShapeId: null,
       dragOffset: null,
       draggedShape: null,
+      draggedShapes: null,
       hasMoved: false,
+      justCompletedMultiDrag: false,
       dragGuides: null,
     });
   }, []);
@@ -392,7 +578,9 @@ export const useDragHandler = ({
 
     // Computed values
     isDragging: dragState.draggingShapeId !== null,
+    hasMoved: dragState.hasMoved,
     draggedShape: dragState.draggedShape,
+    draggedShapes: dragState.draggedShapes,
     dragGuides: dragState.dragGuides,
   };
 };

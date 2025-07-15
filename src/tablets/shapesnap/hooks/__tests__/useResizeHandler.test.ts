@@ -162,8 +162,8 @@ describe("useResizeHandler", () => {
       });
 
       expect(mockOnUpdateShape).toHaveBeenCalledWith("test-shape", {
-        x: 95, // 100 - 10/2 = 95 (center)
-        y: 95, // 100 - 10/2 = 95 (center)
+        x: 90, // 100 - 10 (top-left)
+        y: 90, // 100 - 10 (top-left)
         width: 110, // 100 + 10
         height: 110, // 100 + 10
       });
@@ -185,8 +185,8 @@ describe("useResizeHandler", () => {
       });
 
       expect(mockOnUpdateShape).toHaveBeenCalledWith("test-shape", {
-        x: 105, // 100 + 10/2 = 105 (center)
-        y: 105, // 100 + 10/2 = 105 (center)
+        x: 100, // 100 (top-left unchanged)
+        y: 100, // 100 (top-left unchanged)
         width: 110, // 100 + 10
         height: 110, // 100 + 10
       });
@@ -231,8 +231,8 @@ describe("useResizeHandler", () => {
 
       // Should maintain minimum size of 20x20
       expect(mockOnUpdateShape).toHaveBeenCalledWith("test-shape", {
-        x: 165, // 50 + 20/2 = 60, but center is 165 after min size
-        y: 165, // 50 + 20/2 = 60, but center is 165 after min size
+        x: 205, // 200 + 5 (top-left after min size)
+        y: 205, // 200 + 5 (top-left after min size)
         width: 20, // minimum size
         height: 20, // minimum size
       });
@@ -258,8 +258,8 @@ describe("useResizeHandler", () => {
 
       // Should snap to nearest 20px grid
       expect(mockOnUpdateShape).toHaveBeenCalledWith("test-shape", {
-        x: 100, // 50 + 100/2 = 100 (center)
-        y: 110, // 50 + 120/2 = 110 (center)
+        x: 100, // 100 (top-left unchanged)
+        y: 100, // 100 (top-left unchanged)
         width: 100, // width unchanged (snapped)
         height: 120, // height snapped to 120
       });
@@ -375,8 +375,8 @@ describe("useResizeHandler", () => {
       });
 
       expect(mockOnUpdateShape).toHaveBeenCalledWith("test-shape", {
-        x: 105, // 100 + 10/2 = 105 (center)
-        y: 105, // 100 + 10/2 = 105 (center)
+        x: 100, // 100 (top-left unchanged)
+        y: 100, // 100 (top-left unchanged)
         width: 110, // 100 + 10
         height: 110, // 100 + 10
       });

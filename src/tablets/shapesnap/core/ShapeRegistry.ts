@@ -1,4 +1,4 @@
-import { Shape, ShapeType, Point } from "../types";
+import { Shape, ShapeType } from "../types";
 
 export interface ShapeDefinition {
   type: ShapeType;
@@ -261,6 +261,39 @@ export class ShapeRegistry {
     );
 
     this.registerShape(
+      "straight-arrow",
+      {
+        type: "straight-arrow",
+        defaultProperties: {
+          type: "straight-arrow",
+          from: { x: 0, y: 0 },
+          to: { x: 50, y: 0 },
+          style: { stroke: "#000000", strokeWidth: 2 },
+        },
+        requiredProperties: ["from", "to"],
+        supportedOperations: [
+          "move",
+          "resize",
+          "editLabel",
+          "changeStyle",
+          "copy",
+          "delete",
+        ],
+        renderingStrategy: "svg",
+      },
+      {
+        canMove: true,
+        canResize: true,
+        canRotate: false,
+        canEditLabel: true,
+        canChangeStyle: true,
+        supportsMultipoint: false,
+        supportsFill: false,
+        supportsBorder: true,
+      },
+    );
+
+    this.registerShape(
       "text",
       {
         type: "text",
@@ -295,16 +328,53 @@ export class ShapeRegistry {
     );
 
     this.registerShape(
-      "arrow",
+      "curved-arrow",
       {
-        type: "arrow",
+        type: "curved-arrow",
         defaultProperties: {
-          type: "arrow",
+          type: "curved-arrow",
           from: { x: 0, y: 0 },
           to: { x: 100, y: 100 },
+          control: { x: 50, y: 50 },
           style: { stroke: "#000000", strokeWidth: 2 },
+          arrowTipEnd: "simple",
+          arrowTipSize: 10,
         },
-        requiredProperties: ["from", "to"],
+        requiredProperties: ["from", "to", "control"],
+        supportedOperations: [
+          "move",
+          "resize", // We'll interpret resize as moving the endpoints
+          "editLabel",
+          "changeStyle",
+          "copy",
+          "delete",
+        ],
+        renderingStrategy: "svg",
+      },
+      {
+        canMove: true,
+        canResize: true, // Resizing endpoints
+        canRotate: false,
+        canEditLabel: true,
+        canChangeStyle: true,
+        supportsMultipoint: false,
+        supportsFill: false,
+        supportsBorder: true,
+      },
+    );
+
+    this.registerShape(
+      "orthogonal-arrow",
+      {
+        type: "orthogonal-arrow",
+        defaultProperties: {
+          type: "orthogonal-arrow",
+          points: [],
+          style: { stroke: "#000000", strokeWidth: 2 },
+          arrowTipEnd: "simple",
+          arrowTipSize: 10,
+        },
+        requiredProperties: ["points"],
         supportedOperations: [
           "move",
           "resize",
@@ -321,7 +391,7 @@ export class ShapeRegistry {
         canRotate: false,
         canEditLabel: true,
         canChangeStyle: true,
-        supportsMultipoint: false,
+        supportsMultipoint: true, // It has multiple points
         supportsFill: false,
         supportsBorder: true,
       },

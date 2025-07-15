@@ -1,5 +1,5 @@
 import { Tablet, TabletState } from "../types";
-import { ShapeSnapData, ShapeSnapTemplate } from "./types";
+import { ShapeSnapData } from "./types";
 import { ShapeSnapUI } from "./components/ShapeSnapUI";
 
 interface ShapeSnapTabletState extends TabletState {

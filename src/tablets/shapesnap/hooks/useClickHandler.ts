@@ -11,22 +11,28 @@ export interface UseClickHandlerProps {
   shapes: Shape[];
   currentTool: ShapeSnapTool;
   currentFontSize?: number;
-  onShapeClick?: (shape: Shape, position: Point) => void;
+  canvasMode?: "light" | "dark";
+  editingShape: Shape | null;
+  setEditingShape: (shape: Shape | null) => void;
+  onShapeClick?: (shape: Shape, position: Point, event?: React.MouseEvent) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onAddShape?: (shape: Shape) => void;
 }
 
 export const useClickHandler = ({
-  shapes,
+  shapes: _shapes,
   currentTool,
   currentFontSize = 16,
+  canvasMode = "dark",
+  editingShape,
+  setEditingShape,
   onShapeClick,
   onUpdateLabel,
   onAddShape,
 }: UseClickHandlerProps) => {
   const [clickState, setClickState] = useState<ClickState>({
     selectedShapeId: undefined,
-    editingShape: null,
+    editingShape: null, // This will be managed externally now
   });
 
   const generateId = useCallback(
@@ -36,18 +42,20 @@ export const useClickHandler = ({
 
   // Handle shape click
   const handleShapeClick = useCallback(
-    (shape: Shape, position: Point) => {
+    (shape: Shape, position: Point, event?: React.MouseEvent) => {
       setClickState((prev) => ({
         ...prev,
         selectedShapeId: shape.id,
         editingShape: null,
       }));
 
+      setEditingShape(null);
+
       if (onShapeClick) {
-        onShapeClick(shape, position);
+        onShapeClick(shape, position, event);
       }
     },
-    [onShapeClick],
+    [onShapeClick, setEditingShape],
   );
 
   // Handle label save
@@ -57,40 +65,39 @@ export const useClickHandler = ({
         onUpdateLabel(shapeId, label);
       }
 
-      setClickState((prev) => ({
-        ...prev,
-        editingShape: null,
-      }));
+      setEditingShape(null);
     },
-    [onUpdateLabel],
+    [onUpdateLabel, setEditingShape],
   );
 
   // Handle label cancel
   const handleLabelCancel = useCallback(() => {
-    setClickState((prev) => ({
-      ...prev,
-      editingShape: null,
-    }));
-  }, []);
+    setEditingShape(null);
+  }, [setEditingShape]);
 
   // Handle canvas double click (add text)
   const handleCanvasDoubleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (currentTool !== "text") return;
+      if (currentTool !== "draw" && currentTool !== "text" && currentTool !== "select") return;
 
-      const mouseX = e.nativeEvent.offsetX;
-      const mouseY = e.nativeEvent.offsetY;
+      // Use getBoundingClientRect for consistent coordinate calculation
+      const rect = e.currentTarget.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Get the correct text color based on canvas mode
+      const textColor = canvasMode === "dark" ? "#ffffff" : "#000000";
 
       const newTextShape: Shape = {
         id: generateId(),
         type: "text",
         x: mouseX,
         y: mouseY,
-        text: "Double-click to edit",
+        text: "Enter text",
         fontSize: currentFontSize,
         style: {
-          stroke: "transparent",
-          fill: "#000000",
+          stroke: textColor,
+          fill: "transparent",
           strokeWidth: 0,
         },
         zIndex: Date.now(),
@@ -104,10 +111,10 @@ export const useClickHandler = ({
       setClickState((prev) => ({
         ...prev,
         selectedShapeId: newTextShape.id,
-        editingShape: newTextShape,
       }));
+      setEditingShape(newTextShape);
     },
-    [currentTool, currentFontSize, generateId, onAddShape],
+    [currentTool, currentFontSize, canvasMode, generateId, onAddShape, setEditingShape],
   );
 
   // Handle shape double click (edit text or start drawing)
@@ -116,10 +123,10 @@ export const useClickHandler = ({
       setClickState((prev) => ({
         ...prev,
         selectedShapeId: shape.id,
-        editingShape: shape,
       }));
+      setEditingShape(shape);
     }
-  }, []);
+  }, [setEditingShape]);
 
   // Handle drawing mode clicks
   const handleDrawingClick = useCallback(
@@ -175,13 +182,12 @@ export const useClickHandler = ({
     handleDrawingClick,
 
     // Setters
-    setSelectedShapeId: (id: string | undefined) =>
-      setClickState((prev) => ({ ...prev, selectedShapeId: id })),
-    setEditingShape: (shape: Shape | null) =>
-      setClickState((prev) => ({ ...prev, editingShape: shape })),
+    setSelectedShapeId: useCallback((id: string | undefined) =>
+      setClickState((prev) => ({ ...prev, selectedShapeId: id })), []),
+    setEditingShape,
 
     // Computed values
     selectedShapeId: clickState.selectedShapeId,
-    editingShape: clickState.editingShape,
+    editingShape,
   };
 };

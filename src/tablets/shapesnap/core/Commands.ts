@@ -237,7 +237,7 @@ export class DeleteSelectedShapesCommand extends BaseCommand {
     if (this.deletedShapes.length === 0) return;
 
     const currentState = this.state;
-    const newShapes = [...currentState.shapes];
+    let newShapes = [...currentState.shapes];
 
     // Restore deleted shapes at their original indices
     // Sort by index in descending order to avoid index shifting issues
@@ -321,8 +321,10 @@ export class MoveShapeCommand extends BaseCommand {
   private getShapePosition(shape: Shape): Point {
     switch (shape.type) {
       case "line":
+      case "orthogonal-arrow":
         return shape.points[0] || { x: 0, y: 0 };
-      case "arrow":
+      case "straight-arrow":
+      case "curved-arrow":
         return shape.from;
       default:
         return { x: (shape as any).x || 0, y: (shape as any).y || 0 };
@@ -334,12 +336,14 @@ export class MoveShapeCommand extends BaseCommand {
 
     switch (shape.type) {
       case "line":
+      case "orthogonal-arrow":
         (newShape as any).points = shape.points.map((p) => ({
           x: p.x + delta.x,
           y: p.y + delta.y,
         }));
         break;
-      case "arrow":
+      case "straight-arrow":
+      case "curved-arrow":
         (newShape as any).from = {
           x: shape.from.x + delta.x,
           y: shape.from.y + delta.y,
@@ -348,6 +352,102 @@ export class MoveShapeCommand extends BaseCommand {
           x: shape.to.x + delta.x,
           y: shape.to.y + delta.y,
         };
+        // For curved arrows, also move the control point
+        if (shape.type === "curved-arrow") {
+          (newShape as any).control = {
+            x: (shape as any).control.x + delta.x,
+            y: (shape as any).control.y + delta.y,
+          };
+        }
+        break;
+      default:
+        (newShape as any).x = (shape as any).x + delta.x;
+        (newShape as any).y = (shape as any).y + delta.y;
+        break;
+    }
+
+    return newShape;
+  }
+}
+
+export class MoveMultipleShapesCommand extends BaseCommand {
+  private updates: { shapeId: string; delta: Point }[];
+  private originalShapes: Shape[] = [];
+
+  constructor(
+    getState: () => ShapeSnapData,
+    onChange: (newState: ShapeSnapData) => void,
+    updates: { shapeId: string; delta: Point }[],
+  ) {
+    super(getState, onChange, `Move ${updates.length} shapes`);
+    this.updates = updates;
+  }
+
+  execute(): void {
+    const currentState = this.state;
+    // Store original shapes for undo
+    this.originalShapes = this.updates
+      .map(({ shapeId }) => currentState.shapes.find((s) => s.id === shapeId))
+      .filter(Boolean) as Shape[];
+
+    const updatedShapes = currentState.shapes.map((shape) => {
+      const update = this.updates.find((u) => u.shapeId === shape.id);
+      if (update) {
+        return this.moveShape(shape, update.delta);
+      }
+      return shape;
+    });
+
+    this.updateState({
+      ...currentState,
+      shapes: updatedShapes,
+    });
+  }
+
+  undo(): void {
+    if (this.originalShapes.length === 0) return;
+
+    const currentState = this.state;
+    const updatedShapes = currentState.shapes.map((shape) => {
+      const originalShape = this.originalShapes.find(
+        (os) => os.id === shape.id,
+      );
+      return originalShape || shape;
+    });
+
+    this.updateState({
+      ...currentState,
+      shapes: updatedShapes,
+    });
+  }
+
+  private moveShape(shape: Shape, delta: Point): Shape {
+    const newShape = { ...shape };
+
+    switch (shape.type) {
+      case "line":
+      case "orthogonal-arrow":
+        (newShape as any).points = (shape as any).points.map((p: Point) => ({
+          x: p.x + delta.x,
+          y: p.y + delta.y,
+        }));
+        break;
+      case "straight-arrow":
+      case "curved-arrow":
+        (newShape as any).from = {
+          x: (shape as any).from.x + delta.x,
+          y: (shape as any).from.y + delta.y,
+        };
+        (newShape as any).to = {
+          x: (shape as any).to.x + delta.x,
+          y: (shape as any).to.y + delta.y,
+        };
+        if (shape.type === "curved-arrow") {
+          (newShape as any).control = {
+            x: (shape as any).control.x + delta.x,
+            y: (shape as any).control.y + delta.y,
+          };
+        }
         break;
       default:
         (newShape as any).x = (shape as any).x + delta.x;

@@ -14,7 +14,7 @@ import { ShapeSnapInfoModal } from "./ShapeSnapInfoModal";
 // Custom hook to create modal-aware event handlers
 const useModalAwareHandlers = (isModalOpen: boolean) => {
   const createEventHandler = (handler: (e: any) => void) => {
-    return isModalOpen ? () => {} : handler;
+    return isModalOpen ? () => { } : handler;
   };
 
   return { createEventHandler };
@@ -29,9 +29,10 @@ interface ShapeSnapCanvasProps {
   currentTool: ShapeSnapTool;
   currentFontSize?: number;
   selectedShapeIds?: string[];
-  onShapeClick?: (shape: Shape, position: Point) => void;
+  onShapeClick?: (shape: Shape, position: Point, event?: React.MouseEvent) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onUpdateShape?: (shapeId: string, updates: Partial<Shape>) => void;
+  onMoveMultipleShapes?: (updates: { shapeId: string; delta: Point }[]) => void;
   onDeleteShape?: (shapeId: string) => void;
   onAddShape?: (shape: Shape) => void;
   onDrawEnd?: (points: Point[]) => Shape | null;
@@ -40,6 +41,7 @@ interface ShapeSnapCanvasProps {
   onClearSelection?: () => void;
   gridSnappingEnabled?: boolean;
   sketchModeEnabled?: boolean;
+  backgroundMode?: "notepad" | "none" | "dot-grid" | "graph-paper" | "isometric";
   showInfoModal: boolean;
   onShowInfoModal: (show: boolean) => void;
 }
@@ -56,6 +58,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onShapeClick,
   onUpdateLabel,
   onUpdateShape,
+  onMoveMultipleShapes,
   onDeleteShape,
   onAddShape,
   onSelectionChange,
@@ -63,12 +66,16 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onClearSelection,
   gridSnappingEnabled,
   sketchModeEnabled,
+  backgroundMode = "notepad",
   showInfoModal,
   onShowInfoModal,
 }) => {
   const { createEventHandler } = useModalAwareHandlers(showInfoModal);
 
   const svgRef = useRef<SVGSVGElement>(null);
+  const isDraggingRef = useRef<boolean>(false);
+  const dragCompletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const mouseInteractionActiveRef = useRef<boolean>(false);
 
   // Track modifier key states
   const [modifierKeys, setModifierKeys] = useState({
@@ -94,12 +101,22 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       }));
     };
 
+    const handleMouseDown = (e: MouseEvent) => {
+      setModifierKeys((prev) => ({
+        ...prev,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+      }));
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("mousedown", handleMouseDown);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("mousedown", handleMouseDown);
     };
   }, []);
 
@@ -107,8 +124,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const {
     editingShape,
     draggedShape,
+    draggedShapes,
+    dragHasMoved,
     dragGuides,
     resizeHandle,
+    justCompletedDrag,
     setEditingShape,
     handleLabelSave,
     handleLabelCancel,
@@ -124,30 +144,30 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     canvasSettings,
     currentTool,
     currentFontSize,
+    selectedShapeIds,
     gridSnappingEnabled,
-    onShapeClick: undefined, // Don't use the hook's click handler
+    onShapeClick,
     onUpdateLabel,
     onUpdateShape,
+    onMoveMultipleShapes,
     onDeleteShape,
     onAddShape,
   });
 
-  // Aggressively clear editing state in select mode - use useLayoutEffect for immediate execution
+  // Clear editing state when switching away from compatible modes
+  // Allow text editing in draw, text, and select modes only
   useLayoutEffect(() => {
-    if (currentTool === "select" && editingShape) {
+    const isCompatibleTool = currentTool === "draw" || currentTool === "text" || currentTool === "select";
+    if (!isCompatibleTool && editingShape) {
       setEditingShape(null);
     }
   }, [currentTool, editingShape, setEditingShape]);
 
-  // Also clear on any state change that might trigger editing in select mode
-  useEffect(() => {
-    if (currentTool === "select") {
-      setEditingShape(null);
-    }
-  }, [currentTool, setEditingShape]);
-
   // Wrapper functions to control when the hook's mouse events should be handled
   const handleWrappedMouseDown = (shape: Shape, e: React.MouseEvent) => {
+    // Mark that a mouse interaction is starting
+    mouseInteractionActiveRef.current = true;
+    
     // Always allow the hook to handle mouse down for dragging and resizing
     // The key is that we prevent the hook's onShapeClick callback, not the mouse tracking
     handleShapeMouseDown(shape, e);
@@ -162,14 +182,29 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     // Always allow the hook to handle mouseUp for proper state cleanup
     // We already disabled the hook's onShapeClick callback (passed undefined),
     // so the hook's internal click detection won't trigger label editing
-    handleMouseUp(e);
+    const result = handleMouseUp(e);
+    
+    // Don't clear mouse interaction flag immediately - let the drag blocking handle it
+    // If there's an active drag, the drag blocking will clear both flags together
+    // If there's no drag, clear after a short delay
+    const wasRealDrag = !!(draggedShapes && dragHasMoved);
+    if (!wasRealDrag) {
+      setTimeout(() => {
+        if (!isDraggingRef.current) { // Only clear if drag blocking isn't active
+          mouseInteractionActiveRef.current = false;
+        }
+      }, 50);
+    }
+    // If there was a real drag, the drag blocking useEffect will clear both flags
+    
+    return result;
   };
 
   // Custom shape click handler that properly handles multi-selection
-  const handleCustomShapeClick = (shape: Shape, position: Point) => {
+  const handleCustomShapeClick = (shape: Shape, position: Point, event?: React.MouseEvent) => {
     // Call the original onShapeClick if provided
     if (onShapeClick) {
-      onShapeClick(shape, position);
+      onShapeClick(shape, position, event);
     }
 
     // Handle different tools
@@ -177,8 +212,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       case "select":
       case "draw":
         // Both select and draw modes should allow shape selection and show resize handles
-        // Handle multi-selection with tracked modifier keys
-        const isMultiSelect = modifierKeys.ctrlKey || modifierKeys.metaKey;
+        // Handle multi-selection with real-time modifier keys from the event
+        const isMultiSelect = event ? (event.ctrlKey || event.metaKey) : (modifierKeys.ctrlKey || modifierKeys.metaKey);
 
         if (isMultiSelect && onToggleShapeSelection) {
           // Multi-selection: toggle this shape in the selection
@@ -219,6 +254,27 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 
   // Handle canvas click to clear selection
   const handleCanvasClick = (e: React.MouseEvent) => {
+    // Block canvas clicks during any mouse interaction sequence
+    if (mouseInteractionActiveRef.current) {
+      return;
+    }
+    
+    // Use ref-based blocking which persists across event cycles
+    if (isDraggingRef.current) {
+      return;
+    }
+    
+    // Prevent clearing selection immediately after a drag operation (backup)
+    if (justCompletedDrag) {
+      return;
+    }
+    
+    // Be very conservative - block canvas clicks if ANY drag state exists
+    // This includes initial mouse down before movement occurs
+    if (draggedShape || draggedShapes || lineResizeDraggedShape) {
+      return;
+    }
+    
     // Only clear selection if clicking on empty space (not on a shape)
     if (e.target === e.currentTarget && onClearSelection) {
       onClearSelection();
@@ -233,8 +289,18 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const shapesToRender = (() => {
     let shapes = sortedShapes;
 
-    // Replace with regular dragged shape if available
-    if (draggedShape) {
+    // Replace with multi-selection dragged shapes if available
+    if (draggedShapes && draggedShapes.length > 0) {
+      const draggedShapeIds = new Set(draggedShapes.map(s => s.id));
+      shapes = shapes.map((shape) => {
+        if (draggedShapeIds.has(shape.id)) {
+          const draggedVersion = draggedShapes.find(s => s.id === shape.id);
+          return draggedVersion || shape;
+        }
+        return shape;
+      });
+    } else if (draggedShape) {
+      // Replace with single dragged shape if available
       shapes = shapes.map((shape) =>
         shape.id === draggedShape.id ? draggedShape : shape,
       );
@@ -252,6 +318,175 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 
   // Determine stroke color based on canvas mode
   const strokeColor = canvasSettings.mode === "dark" ? "#ffffff" : "#000000";
+
+  // Generate grid pattern based on background mode
+  const generateGridPattern = () => {
+    if (backgroundMode === "none") return null;
+
+    const gridId = `grid-pattern-${backgroundMode}-${canvasSettings.mode}`;
+    
+    // Grid colors - subtle and appropriate for each mode
+    const gridColor = canvasSettings.mode === "dark" 
+      ? "rgba(255, 255, 255, 0.1)" 
+      : "rgba(156, 163, 175, 0.15)"; // Subtle gray for light mode
+    
+    const dotColor = canvasSettings.mode === "dark" 
+      ? "rgba(255, 255, 255, 0.2)" 
+      : "rgba(156, 163, 175, 0.25)";
+    
+    switch (backgroundMode) {
+      case "notepad": {
+        const gridSize = 20; // Grid cell size in pixels
+        return (
+          <defs>
+            <pattern
+              id={gridId}
+              x="0"
+              y="0"
+              width={gridSize}
+              height={gridSize}
+              patternUnits="userSpaceOnUse"
+            >
+              {/* Horizontal lines */}
+              <line
+                x1="0"
+                y1={gridSize}
+                x2={gridSize}
+                y2={gridSize}
+                stroke={gridColor}
+                strokeWidth="0.5"
+              />
+              {/* Vertical lines */}
+              <line
+                x1={gridSize}
+                y1="0"
+                x2={gridSize}
+                y2={gridSize}
+                stroke={gridColor}
+                strokeWidth="0.5"
+              />
+            </pattern>
+          </defs>
+        );
+      }
+      
+      case "dot-grid": {
+        const dotSpacing = 15;
+        return (
+          <defs>
+            <pattern
+              id={gridId}
+              x="0"
+              y="0"
+              width={dotSpacing}
+              height={dotSpacing}
+              patternUnits="userSpaceOnUse"
+            >
+              <circle
+                cx={dotSpacing / 2}
+                cy={dotSpacing / 2}
+                r="0.8"
+                fill={dotColor}
+              />
+            </pattern>
+          </defs>
+        );
+      }
+      
+      case "graph-paper": {
+        const gridSize = 10; // Smaller grid for graph paper
+        return (
+          <defs>
+            <pattern
+              id={gridId}
+              x="0"
+              y="0"
+              width={gridSize}
+              height={gridSize}
+              patternUnits="userSpaceOnUse"
+            >
+              {/* Fine grid lines */}
+              <line
+                x1="0"
+                y1={gridSize}
+                x2={gridSize}
+                y2={gridSize}
+                stroke={gridColor}
+                strokeWidth="0.3"
+              />
+              <line
+                x1={gridSize}
+                y1="0"
+                x2={gridSize}
+                y2={gridSize}
+                stroke={gridColor}
+                strokeWidth="0.3"
+              />
+            </pattern>
+          </defs>
+        );
+      }
+      
+      case "isometric": {
+        const gridSize = 20;
+        return (
+          <defs>
+            <pattern
+              id={gridId}
+              x="0"
+              y="0"
+              width={gridSize * 2}
+              height={gridSize * Math.sqrt(3)}
+              patternUnits="userSpaceOnUse"
+            >
+              {/* Isometric grid lines - 60 degree angles */}
+              <line
+                x1="0"
+                y1={gridSize * Math.sqrt(3) / 2}
+                x2={gridSize}
+                y2={gridSize * Math.sqrt(3)}
+                stroke={gridColor}
+                strokeWidth="0.4"
+              />
+              <line
+                x1={gridSize}
+                y1="0"
+                x2={gridSize * 2}
+                y2={gridSize * Math.sqrt(3) / 2}
+                stroke={gridColor}
+                strokeWidth="0.4"
+              />
+              <line
+                x1={gridSize}
+                y1={gridSize * Math.sqrt(3)}
+                x2={gridSize * 2}
+                y2={gridSize * Math.sqrt(3) / 2}
+                stroke={gridColor}
+                strokeWidth="0.4"
+              />
+            </pattern>
+          </defs>
+        );
+      }
+      
+      default:
+        return null;
+    }
+  };
+
+  // Get background style based on background mode
+  const getBackgroundStyle = () => {
+    if (backgroundMode === "none") {
+      return { backgroundColor: canvasSettings.background };
+    }
+
+    // Soft paper colors for textured backgrounds
+    const paperColor = canvasSettings.mode === "dark" 
+      ? "#1e1e1e" // Keep dark mode as is
+      : "#fefcf6"; // Soft cream/paper color for light mode
+
+    return { backgroundColor: paperColor };
+  };
 
   // Helper function to get cursor style for resize handles
   const getResizeCursor = (handle: string | null): string => {
@@ -275,11 +510,22 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     }
   };
 
+
   // Helper function to render resize indicators for selected shapes
   const renderResizeIndicators = (shape: Shape): React.ReactNode => {
     // Show resize handles for all selected shapes (not just the one being dragged)
-    if (shape.type === "line" || !selectedShapeIds.includes(shape.id)) {
+    if (!selectedShapeIds.includes(shape.id)) {
       return null;
+    }
+
+    // Handle arrow types and text - don't show resize indicators for lines/arrows/text
+    const isLineLike = shape.type === "line" || 
+                      shape.type === "straight-arrow" || 
+                      shape.type === "curved-arrow" || 
+                      shape.type === "orthogonal-arrow";
+    
+    if (isLineLike || shape.type === "text") {
+      return null; // Don't render visual indicators for arrows/text - they block arrow tips or aren't resizable
     }
 
     const bounds = getShapeBoundingBox(shape);
@@ -383,10 +629,56 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     };
   };
 
+  // Track drag state changes to set our ref-based flag
+  useEffect(() => {
+    // Only consider it "dragging" if shapes are being dragged AND movement has occurred
+    const isCurrentlyDragging = !!(draggedShape || draggedShapes || lineResizeDraggedShape) && dragHasMoved;
+    
+    if (isCurrentlyDragging && !isDraggingRef.current) {
+      // Real drag started (with movement)
+      isDraggingRef.current = true;
+      
+      // Clear any existing timeout
+      if (dragCompletionTimeoutRef.current) {
+        clearTimeout(dragCompletionTimeoutRef.current);
+        dragCompletionTimeoutRef.current = null;
+      }
+    } else if (!isCurrentlyDragging && isDraggingRef.current) {
+      // Drag ended - keep blocking clicks for a short period
+      
+      dragCompletionTimeoutRef.current = setTimeout(() => {
+        isDraggingRef.current = false;
+        mouseInteractionActiveRef.current = false; // Clear both flags together
+        dragCompletionTimeoutRef.current = null;
+      }, 150); // Longer timeout to ensure all spurious events are blocked
+    }
+    
+    return () => {
+      if (dragCompletionTimeoutRef.current) {
+        clearTimeout(dragCompletionTimeoutRef.current);
+      }
+    };
+  }, [draggedShape, draggedShapes, lineResizeDraggedShape, dragHasMoved]);
+
   // Wrapper function that handles shape clicks and prevents hook's click logic in select mode
-  const handleShapeClickWrapper = (shape: Shape, position: Point) => {
+  const handleShapeClickWrapper = (shape: Shape, position: Point, event?: React.MouseEvent) => {
+    // Use ref-based blocking which persists across event cycles
+    if (isDraggingRef.current) {
+      return;
+    }
+    
+    // Prevent clicks immediately after a drag operation (backup)
+    if (justCompletedDrag) {
+      return;
+    }
+    
+    // Also prevent clicks during active dragging (backup)
+    if (draggedShape || draggedShapes || lineResizeDraggedShape) {
+      return;
+    }
+    
     // Handle the click with our custom logic
-    handleCustomShapeClick(shape, position);
+    handleCustomShapeClick(shape, position, event);
 
     // In select mode, we don't want the hook's internal click logic to run at all
     // So we don't call the hook's click handler
@@ -397,11 +689,10 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       {/* Information Icon */}
       <button
         onClick={() => onShowInfoModal(true)}
-        className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${
-          canvasSettings.mode === "dark"
+        className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${canvasSettings.mode === "dark"
             ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
             : "bg-white hover:bg-gray-100 text-gray-700"
-        }`}
+          }`}
         title="Shape Snap Help"
       >
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -419,7 +710,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         width={width}
         height={height}
         style={{
-          backgroundColor: canvasSettings.background,
+          ...getBackgroundStyle(),
           touchAction: "none",
           cursor: getResizeCursor(resizeHandle),
           pointerEvents: showInfoModal ? "none" : "auto",
@@ -427,140 +718,155 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         {...(showInfoModal
           ? {}
           : {
-              onDoubleClick: handleCanvasDoubleClick,
-              onMouseMove: handleWrappedMouseMove,
-              onMouseUp: handleWrappedMouseUp,
-              onClick: handleCanvasClick,
-              onTouchStart: (e) => {
-                // Prevent default to avoid scrolling
-                e.preventDefault();
-                // Convert touch to mouse event for compatibility
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent("mousedown", {
-                  clientX: touch.clientX,
-                  clientY: touch.clientY,
-                  bubbles: true,
-                });
-                e.currentTarget.dispatchEvent(mouseEvent);
-              },
-              onTouchMove: (e) => {
-                // Prevent default to avoid scrolling
-                e.preventDefault();
-                // Convert touch to mouse event for compatibility
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent("mousemove", {
-                  clientX: touch.clientX,
-                  clientY: touch.clientY,
-                  bubbles: true,
-                });
-                e.currentTarget.dispatchEvent(mouseEvent);
-              },
-              onTouchEnd: (e) => {
-                // Prevent default to avoid any unwanted behavior
-                e.preventDefault();
-                // Convert touch to mouse event for compatibility
-                const mouseEvent = new MouseEvent("mouseup", {
-                  bubbles: true,
-                });
-                e.currentTarget.dispatchEvent(mouseEvent);
-              },
-            })}
+            onDoubleClick: handleCanvasDoubleClick,
+            onMouseMove: handleWrappedMouseMove,
+            onMouseUp: handleWrappedMouseUp,
+            onClick: handleCanvasClick,
+            onTouchStart: (e) => {
+              // Prevent default to avoid scrolling
+              e.preventDefault();
+              // Convert touch to mouse event for compatibility
+              const touch = e.touches[0];
+              const mouseEvent = new MouseEvent("mousedown", {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                bubbles: true,
+              });
+              e.currentTarget.dispatchEvent(mouseEvent);
+            },
+            onTouchMove: (e) => {
+              // Prevent default to avoid scrolling
+              e.preventDefault();
+              // Convert touch to mouse event for compatibility
+              const touch = e.touches[0];
+              const mouseEvent = new MouseEvent("mousemove", {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                bubbles: true,
+              });
+              e.currentTarget.dispatchEvent(mouseEvent);
+            },
+            onTouchEnd: (e) => {
+              // Prevent default to avoid any unwanted behavior
+              e.preventDefault();
+              // Convert touch to mouse event for compatibility
+              const mouseEvent = new MouseEvent("mouseup", {
+                bubbles: true,
+              });
+              e.currentTarget.dispatchEvent(mouseEvent);
+            },
+          })}
       >
+        {/* Generate grid pattern definition */}
+        {generateGridPattern()}
+
+        {/* Render grid background based on background mode */}
+        {backgroundMode !== "none" && (
+          <rect
+            x="0"
+            y="0"
+            width={width}
+            height={height}
+            fill={`url(#grid-pattern-${backgroundMode}-${canvasSettings.mode})`}
+            style={{ pointerEvents: "none" }}
+          />
+        )}
+
         {/* Render all shapes */}
         {shapesToRender.map((shape) =>
           sketchModeEnabled && svgRef.current
             ? (() => {
-                switch (shape.type) {
-                  case "rectangle":
-                  case "square":
-                  case "circle":
-                  case "diamond":
-                  case "triangle":
-                  case "line": {
-                    const roughMarkup = renderRoughShapeSVG(
-                      svgRef.current,
-                      shape.type,
-                      shape,
-                      {
-                        roughness: 2.2,
-                        stroke: shape.style?.stroke || "#000",
-                        strokeWidth: shape.style?.strokeWidth || 2,
-                        fill: shape.style?.fill || undefined,
-                        fillStyle: "hachure",
-                        seed: hashCode(shape.id),
-                      },
-                    );
-                    // Render roughjs shape for visuals, then the normal SVG shape (with event handlers) on top, but invisible
-                    return roughMarkup ? (
-                      <g key={shape.id}>
-                        <g dangerouslySetInnerHTML={{ __html: roughMarkup }} />
-                        {/* Invisible hit area for interactivity */}
-                        {renderShape(
-                          // Clone the shape and override style for hit area
-                          {
-                            ...shape,
-                            style: {
-                              ...shape.style,
-                              stroke: "transparent",
-                              fill: "transparent",
-                            },
+              switch (shape.type) {
+                case "rectangle":
+                case "square":
+                case "circle":
+                case "diamond":
+                case "triangle":
+                case "line": {
+                  const roughMarkup = renderRoughShapeSVG(
+                    svgRef.current,
+                    shape.type,
+                    shape,
+                    {
+                      roughness: 2.2,
+                      stroke: shape.style?.stroke || "#000",
+                      strokeWidth: shape.style?.strokeWidth || 2,
+                      fill: shape.style?.fill || undefined,
+                      fillStyle: "hachure",
+                      seed: hashCode(shape.id),
+                    },
+                  );
+                  // Render roughjs shape for visuals, then the normal SVG shape (with event handlers) on top, but invisible
+                  return roughMarkup ? (
+                    <g key={shape.id}>
+                      <g dangerouslySetInnerHTML={{ __html: roughMarkup }} />
+                      {/* Invisible hit area for interactivity */}
+                      {renderShape(
+                        // Clone the shape and override style for hit area
+                        {
+                          ...shape,
+                          style: {
+                            ...shape.style,
+                            stroke: "transparent",
+                            fill: "transparent",
                           },
-                          (s, pos) => {
-                            handleShapeClickWrapper(s, pos);
-                          },
-                          selectedShapeIds.includes(shape.id)
-                            ? shape.id
-                            : undefined,
-                          editingShape ? editingShape.id : undefined,
-                          handleCustomShapeDoubleClick,
-                          handleWrappedMouseDown,
-                          currentTool,
-                          sketchModeEnabled,
-                          currentFontSize,
-                          showInfoModal,
-                        )}
-                        {renderShapeOverlay(
-                          shape,
-                          editingShape ? editingShape.id : undefined,
-                          sketchModeEnabled,
-                          currentFontSize,
-                        )}
-                      </g>
-                    ) : null;
-                  }
-                  default:
-                    return renderShape(
-                      shape,
-                      (s, pos) => {
-                        handleShapeClickWrapper(s, pos);
-                      },
-                      selectedShapeIds.includes(shape.id)
-                        ? shape.id
-                        : undefined,
-                      editingShape ? editingShape.id : undefined,
-                      handleCustomShapeDoubleClick,
-                      handleWrappedMouseDown,
-                      currentTool,
-                      sketchModeEnabled,
-                      currentFontSize,
-                      showInfoModal,
-                    );
+                        },
+                        (s, pos, e) => {
+                          handleShapeClickWrapper(s, pos, e);
+                        },
+                        selectedShapeIds.includes(shape.id)
+                          ? shape.id
+                          : undefined,
+                        editingShape ? editingShape.id : undefined,
+                        handleCustomShapeDoubleClick,
+                        handleWrappedMouseDown,
+                        currentTool,
+                        sketchModeEnabled,
+                        currentFontSize,
+                        showInfoModal,
+                      )}
+                      {renderShapeOverlay(
+                        shape,
+                        editingShape ? editingShape.id : undefined,
+                        sketchModeEnabled,
+                        currentFontSize,
+                      )}
+                    </g>
+                  ) : null;
                 }
-              })()
+                default:
+                  return renderShape(
+                    shape,
+                    (s, pos, e) => {
+                      handleShapeClickWrapper(s, pos, e);
+                    },
+                    selectedShapeIds.includes(shape.id)
+                      ? shape.id
+                      : undefined,
+                    editingShape ? editingShape.id : undefined,
+                    handleCustomShapeDoubleClick,
+                    handleWrappedMouseDown,
+                    currentTool,
+                    sketchModeEnabled,
+                    currentFontSize,
+                    showInfoModal,
+                  );
+              }
+            })()
             : renderShape(
-                shape,
-                (s, pos) => {
-                  handleShapeClickWrapper(s, pos);
-                },
-                selectedShapeIds.includes(shape.id) ? shape.id : undefined,
-                editingShape ? editingShape.id : undefined,
-                handleCustomShapeDoubleClick,
-                handleWrappedMouseDown,
-                currentTool,
-                sketchModeEnabled,
-                currentFontSize,
-                showInfoModal,
-              ),
+              shape,
+              (s, pos, e) => {
+                handleShapeClickWrapper(s, pos, e);
+              },
+              selectedShapeIds.includes(shape.id) ? shape.id : undefined,
+              editingShape ? editingShape.id : undefined,
+              handleCustomShapeDoubleClick,
+              handleWrappedMouseDown,
+              currentTool,
+              sketchModeEnabled,
+              currentFontSize,
+              showInfoModal,
+            ),
         )}
 
         {/* Render current drawing stroke */}

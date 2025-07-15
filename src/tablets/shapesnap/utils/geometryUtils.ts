@@ -16,6 +16,7 @@ export const distance = (p1: Point, p2: Point): number =>
  */
 export const getShapeCenter = (shape: Shape): Point => {
   switch (shape.type) {
+    case "orthogonal-arrow":
     case "line":
       const midIndex = Math.floor(shape.points.length / 2);
       return shape.points[midIndex] || { x: 0, y: 0 };
@@ -28,7 +29,12 @@ export const getShapeCenter = (shape: Shape): Point => {
     case "triangle":
       // For diamond and triangle, x and y represent the center, not top-left corner
       return { x: shape.x, y: shape.y };
-    case "arrow":
+    case "curved-arrow":
+      return {
+        x: (shape.from.x + shape.to.x) / 2,
+        y: (shape.from.y + shape.to.y) / 2,
+      };
+    case "straight-arrow":
       return {
         x: (shape.from.x + shape.to.x) / 2,
         y: (shape.from.y + shape.to.y) / 2,
@@ -113,6 +119,7 @@ export const getShapeBoundingBox = (
         bottom: textShape.y + textHeight / 2,
       };
     }
+    case "orthogonal-arrow":
     case "line": {
       const lineShape = shape as Shape & { points: Point[] };
       if (!lineShape.points || lineShape.points.length === 0) {
@@ -120,6 +127,29 @@ export const getShapeBoundingBox = (
       }
       const xCoords = lineShape.points.map((p) => p.x);
       const yCoords = lineShape.points.map((p) => p.y);
+      return {
+        left: Math.min(...xCoords),
+        right: Math.max(...xCoords),
+        top: Math.min(...yCoords),
+        bottom: Math.max(...yCoords),
+      };
+    }
+    case "curved-arrow": {
+      const curvedArrow = shape as any;
+      const { from, to, control } = curvedArrow;
+      const xCoords = [from.x, to.x, control.x];
+      const yCoords = [from.y, to.y, control.y];
+      return {
+        left: Math.min(...xCoords),
+        right: Math.max(...xCoords),
+        top: Math.min(...yCoords),
+        bottom: Math.max(...yCoords),
+      };
+    }
+    case "straight-arrow": {
+      const arrowShape = shape as Shape & { from: Point; to: Point };
+      const xCoords = [arrowShape.from.x, arrowShape.to.x];
+      const yCoords = [arrowShape.from.y, arrowShape.to.y];
       return {
         left: Math.min(...xCoords),
         right: Math.max(...xCoords),

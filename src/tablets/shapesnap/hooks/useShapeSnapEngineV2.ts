@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { ShapeSnapData, Point, Shape, ShapeSnapTool } from "../types";
+import { ShapeSnapData, Point, Shape, ShapeSnapTool, TextShape } from "../types";
 import { detectShape } from "../utils/shapeDetection";
 import { ShapeRegistry } from "../core/ShapeRegistry";
 import {
@@ -9,6 +9,7 @@ import {
   DeleteShapeCommand,
   DeleteSelectedShapesCommand,
   MoveShapeCommand,
+  MoveMultipleShapesCommand,
   AddMultipleShapesCommand,
 } from "../core/Commands";
 import { SelectionManager } from "../core/SelectionManager";
@@ -42,11 +43,19 @@ export const useShapeSnapEngineV2 = (
   // Update a shape's label
   const updateShapeLabel = useCallback(
     (shapeId: string, label: string) => {
+      const currentState = getCurrentState();
+      const shape = currentState.shapes.find(s => s.id === shapeId);
+      
+      // For text shapes, update the 'text' property; for others, update the 'label' property
+      const updates = shape?.type === "text" 
+        ? { text: label || undefined }
+        : { label: label || undefined };
+      
       const command = new UpdateShapeCommand(
         getCurrentState,
         onChange,
         shapeId,
-        { label: label || undefined },
+        updates,
       );
       commandManager.executeCommand(command);
     },
@@ -117,20 +126,24 @@ export const useShapeSnapEngineV2 = (
       };
 
       // Apply offset based on shape type
-      if (shape.type === "line" && (shape as any).points) {
-        return {
-          ...newShape,
-          points: (shape as any).points.map((point: Point) => ({
-            x: point.x + offset,
-            y: point.y + offset,
-          })),
-        };
+      if (shape.type === "line" || shape.type === "orthogonal-arrow") {
+        // Handle line and orthogonal-arrow with points array
+        if ((shape as any).points) {
+          return {
+            ...newShape,
+            points: (shape as any).points.map((point: Point) => ({
+              x: point.x + offset,
+              y: point.y + offset,
+            })),
+          };
+        }
       } else if (
-        shape.type === "arrow" &&
+        (shape.type === "straight-arrow" || shape.type === "curved-arrow") &&
         (shape as any).from &&
         (shape as any).to
       ) {
-        return {
+        // Handle straight-arrow and curved-arrow with from/to points
+        const updates: any = {
           ...newShape,
           from: {
             x: (shape as any).from.x + offset,
@@ -141,7 +154,18 @@ export const useShapeSnapEngineV2 = (
             y: (shape as any).to.y + offset,
           },
         };
+        
+        // Handle curved-arrow control point
+        if (shape.type === "curved-arrow" && (shape as any).control) {
+          updates.control = {
+            x: (shape as any).control.x + offset,
+            y: (shape as any).control.y + offset,
+          };
+        }
+        
+        return updates;
       } else {
+        // Handle all other shapes with x/y coordinates
         return {
           ...newShape,
           x: (shape as any).x + offset,
@@ -206,11 +230,18 @@ export const useShapeSnapEngineV2 = (
           zIndex: Date.now(),
         } as Shape;
 
-        // Add default arrow tip to straight lines only
+        // Add default arrow tip to all arrow types and straight lines
         if (
+          newShape.type === "straight-arrow" ||
+          newShape.type === "curved-arrow" ||
+          newShape.type === "orthogonal-arrow"
+        ) {
+          (newShape as any).arrowTipEnd = "simple";
+          (newShape as any).arrowTipSize = 10;
+        } else if (
           newShape.type === "line" &&
-          newShape.points &&
-          newShape.points.length === 2
+          (newShape as any).points &&
+          (newShape as any).points.length === 2
         ) {
           (newShape as any).arrowTipEnd = "simple";
           (newShape as any).arrowTipSize = 10;
@@ -372,24 +403,27 @@ export const useShapeSnapEngineV2 = (
     const nextIndex = (currentIndex + 1) % fontSizes.length;
     const newFontSize = fontSizes[nextIndex];
 
-    // Update all text shapes with the new font size
-    const textShapes = state.shapes.filter((shape) => shape.type === "text");
-    textShapes.forEach((shape) => {
-      const command = new UpdateShapeCommand(
-        getCurrentState,
-        onChange,
-        shape.id,
-        { fontSize: newFontSize },
-      );
-      commandManager.executeCommand(command);
+    // Get current state to ensure we have the latest shape data
+    const currentState = getCurrentState();
+    
+    // Update all text shapes with the new font size in a single state update
+    const updatedShapes = currentState.shapes.map((shape) => {
+      if (shape.type === "text") {
+        return {
+          ...shape,
+          fontSize: newFontSize,
+        } as TextShape;
+      }
+      return shape;
     });
 
-    // Update current font size
+    // Update both shapes and current font size in one go
     onChange({
-      ...getCurrentState(),
+      ...currentState,
+      shapes: updatedShapes,
       currentFontSize: newFontSize,
     });
-  }, [state, getCurrentState, onChange, commandManager]);
+  }, [state, getCurrentState, onChange]);
 
   // Move shape by delta
   const moveShape = useCallback(
@@ -399,6 +433,19 @@ export const useShapeSnapEngineV2 = (
         onChange,
         shapeId,
         delta,
+      );
+      commandManager.executeCommand(command);
+    },
+    [getCurrentState, onChange, commandManager],
+  );
+
+  // Move multiple shapes by delta
+  const moveMultipleShapes = useCallback(
+    (updates: { shapeId: string; delta: Point }[]) => {
+      const command = new MoveMultipleShapesCommand(
+        getCurrentState,
+        onChange,
+        updates,
       );
       commandManager.executeCommand(command);
     },
@@ -475,6 +522,7 @@ export const useShapeSnapEngineV2 = (
     deleteShape,
     deleteSelectedShapes,
     moveShape,
+    moveMultipleShapes,
 
     // Clipboard operations
     copySelectedShapes,

@@ -12,8 +12,11 @@ import {
   Signature,
   Type,
   Layers,
+  Grid3X3,
 } from "lucide-react";
 import { ShapeSnapTool, ShapeSnapMode } from "../types";
+
+type BackgroundMode = "notepad" | "none" | "dot-grid" | "graph-paper" | "isometric";
 
 interface ShapeSnapToolbarProps {
   currentTool: ShapeSnapTool;
@@ -32,6 +35,8 @@ interface ShapeSnapToolbarProps {
   onToggleGridSnapping: () => void;
   sketchModeEnabled: boolean;
   onToggleSketchMode: () => void;
+  backgroundMode: BackgroundMode;
+  onToggleBackgroundMode: () => void;
   onToggleTemplates: () => void;
 }
 
@@ -52,6 +57,8 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
   onToggleGridSnapping,
   sketchModeEnabled,
   onToggleSketchMode,
+  backgroundMode,
+  onToggleBackgroundMode,
   onToggleTemplates,
 }) => {
   const [showExportOptions, setShowExportOptions] = useState(false);
@@ -122,6 +129,13 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         </button>
       </div>
 
+      {/* Instructional Text */}
+      <div className="flex items-center px-3">
+        <span className="text-sm text-gray-400 font-medium">
+          Draw freely and Shape Snap will auto detect and correct
+        </span>
+      </div>
+
       <div className="flex items-center space-x-1">
         <button
           className={`p-2 rounded-md transition-colors ${
@@ -166,6 +180,22 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         </button>
 
         <button
+          className={`p-2 rounded-md transition-colors ${
+            backgroundMode !== "none"
+              ? "bg-green-500/20 text-green-400"
+              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+          }`}
+          onClick={onToggleBackgroundMode}
+          title={`Background: ${backgroundMode === "notepad" ? "Notepad" : 
+                              backgroundMode === "none" ? "None" : 
+                              backgroundMode === "dot-grid" ? "Dot Grid" : 
+                              backgroundMode === "graph-paper" ? "Graph Paper" : 
+                              "Isometric"}`}
+        >
+          <Grid3X3 size={18} />
+        </button>
+
+        <button
           className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
           onClick={onModeChange}
           title={
@@ -205,9 +235,9 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           </button>
 
           {showExportOptions && (
-            <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
+            <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 min-w-max">
               <button
-                className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors whitespace-nowrap"
                 onClick={() => {
                   onExport();
                   setShowExportOptions(false);
