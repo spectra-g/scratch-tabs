@@ -26,3 +26,4 @@ dist-ssr
 .env
 /coverage/
 /reports/
+/.claude/settings.local.json
