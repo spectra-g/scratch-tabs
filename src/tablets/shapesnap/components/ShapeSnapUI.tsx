@@ -58,7 +58,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
     engine.addShape(shape);
   }, [engine]);
 
-  const onShapeClick = useCallback((shape: Shape, position: Point) => {
+  const onShapeClick = useCallback((shape: Shape, _position: Point) => {
     // If in eraser mode, delete the shape
     if (state.currentTool === "eraser") {
       engine.deleteShape(shape.id);
