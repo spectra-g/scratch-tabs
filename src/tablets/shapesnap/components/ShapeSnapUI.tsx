@@ -59,19 +59,14 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
   }, [engine]);
 
   const onShapeClick = useCallback((shape: Shape, position: Point) => {
-    console.log(`[DEBUG] onShapeClick called for shape ${shape.id} (${shape.type}) at position:`, position);
-    console.log(`[DEBUG] Current tool: ${state.currentTool}`);
-    
     // If in eraser mode, delete the shape
     if (state.currentTool === "eraser") {
-      console.log(`[DEBUG] Deleting shape ${shape.id} in eraser mode`);
       engine.deleteShape(shape.id);
       return;
     }
     
     // Otherwise, select the shape when clicked
     engine.setSelectedShapes([shape.id]);
-    console.log(`[DEBUG] Selected shapes after click:`, state.selectedShapeIds);
   }, [engine, state.selectedShapeIds, state.currentTool]);
 
   const onDrawEnd = useCallback((points: Point[]) => {

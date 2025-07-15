@@ -624,6 +624,8 @@ export const renderShape = (
             y={shape.y}
             width={shape.width}
             height={shape.height}
+            rx={8}
+            ry={8}
             stroke={shape.style.stroke}
             fill={shape.style.fill || "transparent"}
             strokeWidth={shape.style.strokeWidth || 2}
@@ -638,6 +640,8 @@ export const renderShape = (
             y={shape.y}
             width={shape.width}
             height={shape.height}
+            rx={8}
+            ry={8}
             stroke={shape.style.stroke}
             fill={shape.style.fill || "transparent"}
             strokeWidth={shape.style.strokeWidth || 2}
@@ -822,7 +826,7 @@ export function renderRoughShape(
         props.y,
         props.width,
         props.height,
-        roughOptions,
+        { ...roughOptions, roughness: 0.5 },
       );
     case "square":
       return rc.rectangle(
@@ -830,7 +834,7 @@ export function renderRoughShape(
         props.y,
         props.width,
         props.height,
-        roughOptions,
+        { ...roughOptions, roughness: 0.5 },
       );
     case "circle":
       return rc.circle(props.x, props.y, props.radius * 2, roughOptions);
@@ -888,7 +892,7 @@ export function renderRoughShapeSVG(
         props.y,
         props.width,
         props.height,
-        roughOptions,
+        { ...roughOptions, roughness: 0.5 },
       );
       break;
     case "square":
@@ -897,7 +901,7 @@ export function renderRoughShapeSVG(
         props.y,
         props.width,
         props.height,
-        roughOptions,
+        { ...roughOptions, roughness: 0.5 },
       );
       break;
     case "circle":

@@ -77,21 +77,16 @@ export const useMouseEventCoordinator = ({
 
   const handleShapeMouseDown = useCallback(
     (shape: Shape, e: React.MouseEvent) => {
-      console.log(`[DEBUG] handleShapeMouseDown called for shape ${shape.id} (${shape.type})`);
       const mousePoint = {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
       };
-      console.log(`[DEBUG] Mouse point:`, mousePoint);
 
       // Check for arrow tip click, but don't handle it yet - let line resize handler take precedence for dragging
       const arrowTipState = arrowTipHandler.detectArrowTipClick(shape, mousePoint);
-      console.log(`[DEBUG] Arrow tip state:`, arrowTipState);
 
       const resizeHandle = resizeHandler.detectResizeHandle(shape, mousePoint);
-      console.log(`[DEBUG] Resize handle:`, resizeHandle);
       if (resizeHandle) {
-        console.log(`[DEBUG] Starting resize with handle: ${resizeHandle}`);
         resizeHandler.startResize(shape, mousePoint, resizeHandle);
         return;
       }
@@ -101,22 +96,18 @@ export const useMouseEventCoordinator = ({
         shape.type === "straight-arrow" ||
         shape.type === "curved-arrow" ||
         shape.type === "orthogonal-arrow";
-      console.log(`[DEBUG] Is line-like: ${isLineLike}`);
 
       if (isLineLike) {
         const lineDragMode = lineResizeHandler.detectLineDragMode(
           shape,
           mousePoint,
         );
-        console.log(`[DEBUG] Line drag mode: ${lineDragMode}`);
         if (lineDragMode !== "move") {
           // Start line resize, but also remember if this is an arrow tip click
-          console.log(`[DEBUG] Starting line resize`);
           lineResizeHandler.startLineResize(shape, mousePoint);
           
           // If this is also an arrow tip click, store that information for later
           if (arrowTipState.isArrowTipClick) {
-            console.log(`[DEBUG] Setting arrow tip click state for ${arrowTipState.arrowTipMode}`);
             setMouseEventState({
               mouseDownShape: {
                 shape,
