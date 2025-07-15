@@ -523,10 +523,22 @@ export const renderShape = (
     switch (shape.type) {
       case "curved-arrow": {
         const curvedArrow = shape as any; // Cast to access from, to, control
-        const { from, to, control, arrowTipEnd, arrowTipSize } = curvedArrow;
+        const { from, to, control, arrowTipStart, arrowTipEnd, arrowTipSize } = curvedArrow;
         const pathData = `M ${from.x} ${from.y} Q ${control.x} ${control.y} ${to.x} ${to.y}`;
 
-        // For the arrowhead, the direction is from the control point to the end point
+        // For the start arrow tip, direction is from control point to start point
+        const startArrow = arrowTipStart && arrowTipStart !== "none"
+          ? renderArrowTip(
+            from,
+            control, // Use control point for direction
+            arrowTipStart,
+            arrowTipSize || 10,
+            shape.style.stroke,
+            shape.style.strokeWidth || 2,
+          )
+          : null;
+
+        // For the end arrow tip, direction is from control point to end point
         const endArrow = arrowTipEnd && arrowTipEnd !== "none"
           ? renderArrowTip(
             to,
@@ -547,6 +559,7 @@ export const renderShape = (
               fill="none"
               strokeLinecap="round"
             />
+            {startArrow}
             {endArrow}
           </g>
         );
@@ -665,33 +678,49 @@ export const renderShape = (
             strokeWidth={shape.style.strokeWidth || 2}
           />
         );
-      case "straight-arrow":
-        const [straightArrowP1, straightArrowP2] = calculateArrowhead(
-          shape.from,
-          shape.to,
-        );
+      case "straight-arrow": {
+        const straightArrow = shape as any; // Cast to access from, to, arrowTipStart, arrowTipEnd
+        const { from, to, arrowTipStart, arrowTipEnd, arrowTipSize } = straightArrow;
+
+        const startArrow = arrowTipStart && arrowTipStart !== "none"
+          ? renderArrowTip(
+            from,
+            to,
+            arrowTipStart,
+            arrowTipSize || 10,
+            shape.style.stroke,
+            shape.style.strokeWidth || 2,
+          )
+          : null;
+
+        const endArrow = arrowTipEnd && arrowTipEnd !== "none"
+          ? renderArrowTip(
+            to,
+            from,
+            arrowTipEnd,
+            arrowTipSize || 10,
+            shape.style.stroke,
+            shape.style.strokeWidth || 2,
+          )
+          : null;
+
         return (
           <g key={shape.id} {...baseProps}>
             <line
               key={`${shape.id}-line`}
-              x1={shape.from.x}
-              y1={shape.from.y}
-              x2={shape.to.x}
-              y2={shape.to.y}
+              x1={from.x}
+              y1={from.y}
+              x2={to.x}
+              y2={to.y}
               stroke={shape.style.stroke}
               strokeWidth={shape.style.strokeWidth || 2}
               strokeLinecap="round"
             />
-            <polyline
-              key={`${shape.id}-arrowhead`}
-              points={`${shape.to.x},${shape.to.y} ${straightArrowP1.x},${straightArrowP1.y} ${straightArrowP2.x},${straightArrowP2.y} ${shape.to.x},${shape.to.y}`}
-              fill={shape.style.stroke}
-              stroke={shape.style.stroke}
-              strokeWidth={shape.style.strokeWidth || 2}
-              strokeLinejoin="round"
-            />
+            {startArrow}
+            {endArrow}
           </g>
         );
+      }
       case "text":
         return (
           <text

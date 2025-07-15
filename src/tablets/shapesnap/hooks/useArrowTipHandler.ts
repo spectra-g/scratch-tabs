@@ -74,26 +74,36 @@ export const useArrowTipHandler = ({
 
   const handleArrowTipClick = useCallback(
     (shape: Shape, arrowTipMode: "resize-start" | "resize-end") => {
+      console.log(`[DEBUG] handleArrowTipClick called for shape ${shape.id} (${shape.type}), mode: ${arrowTipMode}`);
+      
       const isLineLike =
         shape.type === "line" ||
         shape.type === "straight-arrow" ||
         shape.type === "curved-arrow" ||
         shape.type === "orthogonal-arrow";
 
-      if (!isLineLike) return;
+      if (!isLineLike) {
+        console.log(`[DEBUG] Shape ${shape.id} is not line-like, skipping`);
+        return;
+      }
 
       let updates: Partial<Shape> = {};
 
       if (arrowTipMode === "resize-start") {
         const newArrowTipStart = cycleArrowTip((shape as any).arrowTipStart);
         updates = { arrowTipStart: newArrowTipStart };
+        console.log(`[DEBUG] Cycling start arrow tip from ${(shape as any).arrowTipStart} to ${newArrowTipStart}`);
       } else if (arrowTipMode === "resize-end") {
         const newArrowTipEnd = cycleArrowTip((shape as any).arrowTipEnd);
         updates = { arrowTipEnd: newArrowTipEnd };
+        console.log(`[DEBUG] Cycling end arrow tip from ${(shape as any).arrowTipEnd} to ${newArrowTipEnd}`);
       }
 
       if (Object.keys(updates).length > 0) {
+        console.log(`[DEBUG] Calling onUpdateShape with updates:`, updates);
         onUpdateShape(shape.id, updates);
+      } else {
+        console.log(`[DEBUG] No updates to apply`);
       }
     },
     [onUpdateShape],

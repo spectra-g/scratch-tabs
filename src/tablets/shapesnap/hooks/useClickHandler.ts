@@ -76,7 +76,7 @@ export const useClickHandler = ({
   // Handle canvas double click (add text)
   const handleCanvasDoubleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (currentTool !== "text") return;
+      if (currentTool !== "draw") return;
 
       const mouseX = e.nativeEvent.offsetX;
       const mouseY = e.nativeEvent.offsetY;
@@ -175,10 +175,10 @@ export const useClickHandler = ({
     handleDrawingClick,
 
     // Setters
-    setSelectedShapeId: (id: string | undefined) =>
-      setClickState((prev) => ({ ...prev, selectedShapeId: id })),
-    setEditingShape: (shape: Shape | null) =>
-      setClickState((prev) => ({ ...prev, editingShape: shape })),
+    setSelectedShapeId: useCallback((id: string | undefined) =>
+      setClickState((prev) => ({ ...prev, selectedShapeId: id })), []),
+    setEditingShape: useCallback((shape: Shape | null) =>
+      setClickState((prev) => ({ ...prev, editingShape: shape })), []),
 
     // Computed values
     selectedShapeId: clickState.selectedShapeId,

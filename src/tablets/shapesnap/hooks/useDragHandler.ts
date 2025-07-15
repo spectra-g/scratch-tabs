@@ -135,6 +135,28 @@ export const useDragHandler = ({
           } as Shape;
           break;
         }
+        case "curved-arrow": {
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const arrowShape = shape as Shape & { from: Point; to: Point; control: Point };
+          updatedShape = {
+            ...updatedShape,
+            from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
+            to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
+            control: { x: arrowShape.control.x + dx, y: arrowShape.control.y + dy },
+          } as Shape;
+          break;
+        }
+        case "orthogonal-arrow": {
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const arrowShape = shape as Shape & { points: Point[] };
+          updatedShape = {
+            ...updatedShape,
+            points: arrowShape.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+          } as Shape;
+          break;
+        }
         case "line": {
           // Move all points by the delta
           const dx = newCenterX - center.x;
@@ -221,12 +243,15 @@ export const useDragHandler = ({
               break;
             }
             case "straight-arrow":
+            case "curved-arrow":
+            case "orthogonal-arrow":
             case "line": {
               // For lines and arrows, use the bounding box of all points
               const lineShape = updatedShape as Shape & {
                 points?: Point[];
                 from?: Point;
                 to?: Point;
+                control?: Point;
               };
               let points: Point[] = [];
 
@@ -234,6 +259,10 @@ export const useDragHandler = ({
                 points = lineShape.points;
               } else if (lineShape.from && lineShape.to) {
                 points = [lineShape.from, lineShape.to];
+                // For curved arrows, include control point
+                if (lineShape.control) {
+                  points.push(lineShape.control);
+                }
               }
 
               if (points.length > 0) {
@@ -336,6 +365,26 @@ export const useDragHandler = ({
             from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
             to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
           } as Partial<Shape & { from: Point; to: Point }>;
+          break;
+        }
+        case "curved-arrow": {
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const arrowShape = shape as Shape & { from: Point; to: Point; control: Point };
+          updates = {
+            from: { x: arrowShape.from.x + dx, y: arrowShape.from.y + dy },
+            to: { x: arrowShape.to.x + dx, y: arrowShape.to.y + dy },
+            control: { x: arrowShape.control.x + dx, y: arrowShape.control.y + dy },
+          } as Partial<Shape & { from: Point; to: Point; control: Point }>;
+          break;
+        }
+        case "orthogonal-arrow": {
+          const dx = newCenterX - center.x;
+          const dy = newCenterY - center.y;
+          const arrowShape = shape as Shape & { points: Point[] };
+          updates = {
+            points: arrowShape.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+          } as Partial<Shape & { points: Point[] }>;
           break;
         }
         case "line": {

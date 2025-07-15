@@ -77,12 +77,62 @@ export const useMouseEventCoordinator = ({
 
   const handleShapeMouseDown = useCallback(
     (shape: Shape, e: React.MouseEvent) => {
+      console.log(`[DEBUG] handleShapeMouseDown called for shape ${shape.id} (${shape.type})`);
       const mousePoint = {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
       };
+      console.log(`[DEBUG] Mouse point:`, mousePoint);
 
+      // Check for arrow tip click, but don't handle it yet - let line resize handler take precedence for dragging
       const arrowTipState = arrowTipHandler.detectArrowTipClick(shape, mousePoint);
+      console.log(`[DEBUG] Arrow tip state:`, arrowTipState);
+
+      const resizeHandle = resizeHandler.detectResizeHandle(shape, mousePoint);
+      console.log(`[DEBUG] Resize handle:`, resizeHandle);
+      if (resizeHandle) {
+        console.log(`[DEBUG] Starting resize with handle: ${resizeHandle}`);
+        resizeHandler.startResize(shape, mousePoint, resizeHandle);
+        return;
+      }
+
+      const isLineLike =
+        shape.type === "line" ||
+        shape.type === "straight-arrow" ||
+        shape.type === "curved-arrow" ||
+        shape.type === "orthogonal-arrow";
+      console.log(`[DEBUG] Is line-like: ${isLineLike}`);
+
+      if (isLineLike) {
+        const lineDragMode = lineResizeHandler.detectLineDragMode(
+          shape,
+          mousePoint,
+        );
+        console.log(`[DEBUG] Line drag mode: ${lineDragMode}`);
+        if (lineDragMode !== "move") {
+          // Start line resize, but also remember if this is an arrow tip click
+          console.log(`[DEBUG] Starting line resize`);
+          lineResizeHandler.startLineResize(shape, mousePoint);
+          
+          // If this is also an arrow tip click, store that information for later
+          if (arrowTipState.isArrowTipClick) {
+            console.log(`[DEBUG] Setting arrow tip click state for ${arrowTipState.arrowTipMode}`);
+            setMouseEventState({
+              mouseDownShape: {
+                shape,
+                initialPos: mousePoint,
+                center: mousePoint,
+                isArrowTipClick: true,
+                arrowTipMode: arrowTipState.arrowTipMode!,
+              },
+              hasMoved: false,
+            });
+          }
+          return;
+        }
+      }
+
+      // If we reach here for a line-like shape and it's an arrow tip click, handle it
       if (arrowTipState.isArrowTipClick) {
         setMouseEventState({
           mouseDownShape: {
@@ -95,29 +145,6 @@ export const useMouseEventCoordinator = ({
           hasMoved: false,
         });
         return;
-      }
-
-      const resizeHandle = resizeHandler.detectResizeHandle(shape, mousePoint);
-      if (resizeHandle) {
-        resizeHandler.startResize(shape, mousePoint, resizeHandle);
-        return;
-      }
-
-      const isLineLike =
-        shape.type === "line" ||
-        shape.type === "straight-arrow" ||
-        shape.type === "curved-arrow" ||
-        shape.type === "orthogonal-arrow";
-
-      if (isLineLike) {
-        const lineDragMode = lineResizeHandler.detectLineDragMode(
-          shape,
-          mousePoint,
-        );
-        if (lineDragMode !== "move") {
-          lineResizeHandler.startLineResize(shape, mousePoint);
-          return;
-        }
       }
 
       dragHandler.startDrag(shape, mousePoint);
@@ -167,6 +194,7 @@ export const useMouseEventCoordinator = ({
         y: e.nativeEvent.offsetY,
       };
 
+      // Handle arrow tip clicking (but only if user didn't move much)
       if (
         mouseEventState.mouseDownShape?.isArrowTipClick &&
         !mouseEventState.hasMoved
@@ -174,6 +202,10 @@ export const useMouseEventCoordinator = ({
         const { shape, arrowTipMode } = mouseEventState.mouseDownShape;
         if (arrowTipMode) {
           arrowTipHandler.handleArrowTipClick(shape, arrowTipMode);
+        }
+        // Also end line resize if it was active
+        if (lineResizeHandler.isLineResizing) {
+          lineResizeHandler.cancelLineResize();
         }
       } else if (resizeHandler.isResizing) {
         resizeHandler.endResize(mousePoint);

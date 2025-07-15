@@ -275,17 +275,22 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     }
   };
 
+
   // Helper function to render resize indicators for selected shapes
   const renderResizeIndicators = (shape: Shape): React.ReactNode => {
     // Show resize handles for all selected shapes (not just the one being dragged)
-    if (
-      !selectedShapeIds.includes(shape.id) ||
-      shape.type === "line" ||
-      shape.type === "straight-arrow" ||
-      shape.type === "curved-arrow" ||
-      shape.type === "orthogonal-arrow"
-    ) {
+    if (!selectedShapeIds.includes(shape.id)) {
       return null;
+    }
+
+    // Handle arrow types - don't show resize indicators for lines/arrows
+    const isLineLike = shape.type === "line" || 
+                      shape.type === "straight-arrow" || 
+                      shape.type === "curved-arrow" || 
+                      shape.type === "orthogonal-arrow";
+    
+    if (isLineLike) {
+      return null; // Don't render visual indicators for arrows - they block arrow tips
     }
 
     const bounds = getShapeBoundingBox(shape);

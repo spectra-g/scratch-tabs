@@ -43,7 +43,13 @@ export const useResizeHandler = ({
   // Detect resize handle for non-line shapes
   const detectResizeHandle = useCallback(
     (shape: Shape, mousePoint: Point): string | null => {
-      if (shape.type === "line") return null;
+      // Exclude line-like shapes from traditional resize handles
+      if (shape.type === "line" || 
+          shape.type === "straight-arrow" || 
+          shape.type === "curved-arrow" || 
+          shape.type === "orthogonal-arrow") {
+        return null;
+      }
 
       const bounds = getShapeBoundingBox(shape);
       const handleSize = 12;
