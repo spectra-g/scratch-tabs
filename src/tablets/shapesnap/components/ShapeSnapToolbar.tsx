@@ -228,9 +228,9 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           </button>
 
           {showExportOptions && (
-            <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
+            <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 min-w-max">
               <button
-                className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors whitespace-nowrap"
                 onClick={() => {
                   onExport();
                   setShowExportOptions(false);

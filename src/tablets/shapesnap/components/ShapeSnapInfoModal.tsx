@@ -117,7 +117,7 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
                   </svg>
                   <span>Triangles</span>
                 </div>
-                <div className="flex items-center gap-2 col-span-2">
+                <div className="flex items-center gap-2">
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -131,20 +131,74 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
                       d="M7 17L17 7M17 7H7M17 7V17"
                     />
                   </svg>
-                  <span>Arrows</span>
+                  <span>Straight Arrows</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 7 Q12 4 20 7"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 4 L20 7 L17 10"
+                    />
+                  </svg>
+                  <span>Curved Arrows</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 7 L4 12 L20 12 L20 17"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 14 L20 17 L23 14"
+                    />
+                  </svg>
+                  <span>Orthogonal Arrows</span>
                 </div>
               </div>
             </div>
 
-            {/* Arrow Tips */}
+            {/* Arrow Types & Tips */}
             <div>
               <h3 className="text-lg font-semibold mb-2 text-purple-500">
-                Arrow Tips
+                Arrow Types & Tips
               </h3>
-              <p className="text-sm">
-                Click on an arrow's tip to cycle through different arrow head
-                styles. This works for both the start and end points of arrows.
-              </p>
+              <div className="space-y-2 text-sm">
+                <p>
+                  <strong>Arrow Types:</strong> Draw different arrow styles:
+                </p>
+                <ul className="ml-4 space-y-1">
+                  <li>• <strong>Straight arrows:</strong> Direct line with arrow heads</li>
+                  <li>• <strong>Curved arrows:</strong> Smooth curved path between points</li>
+                  <li>• <strong>Orthogonal arrows:</strong> Right-angled path (like flowcharts)</li>
+                </ul>
+                <p className="mt-2">
+                  <strong>Arrow Tips:</strong> Click on any arrow's tip to cycle through different arrow head
+                  styles. This works for both the start and end points of all arrow types.
+                </p>
+              </div>
             </div>
 
             {/* Interaction */}
@@ -220,6 +274,22 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
+                      d="M3 3h18v18H3zM9 9h6v6H9z"
+                    />
+                  </svg>
+                  <span>Background Patterns</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
                       d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
@@ -244,6 +314,28 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
               </div>
             </div>
 
+            {/* Background Patterns */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-cyan-500">
+                Background Patterns
+              </h3>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Click the grid icon to cycle through different background patterns:
+                </p>
+                <ul className="ml-4 space-y-1">
+                  <li>• <strong>Notepad:</strong> Classic lined paper grid (default)</li>
+                  <li>• <strong>None:</strong> Clean background without grid</li>
+                  <li>• <strong>Dot Grid:</strong> Subtle dots for precise positioning</li>
+                  <li>• <strong>Graph Paper:</strong> Fine grid lines for detailed work</li>
+                  <li>• <strong>Isometric:</strong> 60-degree grid for 3D-style diagrams</li>
+                </ul>
+                <p className="mt-2">
+                  Background patterns are independent of sketch mode and provide a soft paper texture.
+                </p>
+              </div>
+            </div>
+
             {/* Tips */}
             <div>
               <h3 className="text-lg font-semibold mb-2 text-yellow-500">
@@ -259,6 +351,9 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
                 </li>
                 <li>
                   • Try <strong>sketch mode</strong> for a more hand-drawn look
+                </li>
+                <li>
+                  • Cycle through <strong>background patterns</strong> for different drawing styles
                 </li>
                 <li>
                   • Use <strong>text tool</strong> to add labels and
