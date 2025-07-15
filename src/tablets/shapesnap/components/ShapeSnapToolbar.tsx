@@ -129,6 +129,13 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         </button>
       </div>
 
+      {/* Instructional Text */}
+      <div className="flex items-center px-3">
+        <span className="text-sm text-gray-400 font-medium">
+          Draw freely and Shape Snap will auto detect and correct
+        </span>
+      </div>
+
       <div className="flex items-center space-x-1">
         <button
           className={`p-2 rounded-md transition-colors ${
