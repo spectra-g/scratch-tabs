@@ -1,4 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
+import { useState } from "react";
 import { useClickHandler } from "../hooks/useClickHandler";
 import { Shape, Point, ShapeSnapTool } from "../types";
 
@@ -42,12 +43,35 @@ describe("useClickHandler", () => {
     (detectShape as jest.Mock).mockReturnValue(null);
   });
 
+  // Helper function to create a test with managed editing state
+  const createTestWithEditingState = (initialEditingShape: Shape | null = null) => {
+    const { result } = renderHook(() => {
+      const [editingShape, setEditingShape] = useState<Shape | null>(initialEditingShape);
+      
+      const hookResult = useClickHandler({
+        shapes: mockShapes,
+        currentTool: "select",
+        editingShape,
+        setEditingShape,
+        onShapeClick: mockOnShapeClick,
+        onUpdateLabel: mockOnUpdateLabel,
+        onAddShape: mockOnAddShape,
+      });
+
+      return { ...hookResult, editingShape, setEditingShape };
+    });
+
+    return result;
+  };
+
   describe("initial state", () => {
     it("should initialize with default state", () => {
       const { result } = renderHook(() =>
         useClickHandler({
           shapes: mockShapes,
           currentTool: "select",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -69,6 +93,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "select",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -92,6 +118,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "select",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
         }),
@@ -111,20 +139,7 @@ describe("useClickHandler", () => {
 
   describe("handleLabelSave", () => {
     it("should save label and clear editing state", () => {
-      const { result } = renderHook(() =>
-        useClickHandler({
-          shapes: mockShapes,
-          currentTool: "select",
-          onShapeClick: mockOnShapeClick,
-          onUpdateLabel: mockOnUpdateLabel,
-          onAddShape: mockOnAddShape,
-        }),
-      );
-
-      // Set editing state first
-      act(() => {
-        result.current.setEditingShape(mockShapes[1]);
-      });
+      const result = createTestWithEditingState(mockShapes[1]);
 
       expect(result.current.editingShape).toBe(mockShapes[1]);
 
@@ -142,6 +157,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "select",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onAddShape: mockOnAddShape,
         }),
@@ -163,20 +180,7 @@ describe("useClickHandler", () => {
 
   describe("handleLabelCancel", () => {
     it("should clear editing state", () => {
-      const { result } = renderHook(() =>
-        useClickHandler({
-          shapes: mockShapes,
-          currentTool: "select",
-          onShapeClick: mockOnShapeClick,
-          onUpdateLabel: mockOnUpdateLabel,
-          onAddShape: mockOnAddShape,
-        }),
-      );
-
-      // Set editing state first
-      act(() => {
-        result.current.setEditingShape(mockShapes[1]);
-      });
+      const result = createTestWithEditingState(mockShapes[1]);
 
       expect(result.current.editingShape).toBe(mockShapes[1]);
 
@@ -196,6 +200,8 @@ describe("useClickHandler", () => {
           shapes: mockShapes,
           currentTool: "text",
           currentFontSize: 18,
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -218,7 +224,7 @@ describe("useClickHandler", () => {
           type: "text",
           x: 150,
           y: 150,
-          text: "Double-click to edit",
+          text: "Enter text",
           fontSize: 18,
         }),
       );
@@ -229,10 +235,15 @@ describe("useClickHandler", () => {
     });
 
     it("should not create text shape when text tool is not active", () => {
-      const { result } = renderHook(() =>
+      const result = createTestWithEditingState();
+
+      // Update the hook to use "eraser" tool which should not create text
+      const { result: eraserResult } = renderHook(() =>
         useClickHandler({
           shapes: mockShapes,
-          currentTool: "select",
+          currentTool: "eraser",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -247,7 +258,7 @@ describe("useClickHandler", () => {
       } as React.MouseEvent;
 
       act(() => {
-        result.current.handleCanvasDoubleClick(mockEvent);
+        eraserResult.current.handleCanvasDoubleClick(mockEvent);
       });
 
       expect(mockOnAddShape).not.toHaveBeenCalled();
@@ -258,6 +269,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "text",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -285,15 +298,7 @@ describe("useClickHandler", () => {
 
   describe("handleShapeDoubleClick", () => {
     it("should start editing text shapes", () => {
-      const { result } = renderHook(() =>
-        useClickHandler({
-          shapes: mockShapes,
-          currentTool: "select",
-          onShapeClick: mockOnShapeClick,
-          onUpdateLabel: mockOnUpdateLabel,
-          onAddShape: mockOnAddShape,
-        }),
-      );
+      const result = createTestWithEditingState();
 
       const textShape = mockShapes[1];
 
@@ -310,6 +315,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "select",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -343,6 +350,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "draw",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -391,6 +400,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "draw",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -420,6 +431,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "select",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -449,6 +462,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "draw",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -478,6 +493,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "select",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,
@@ -492,15 +509,7 @@ describe("useClickHandler", () => {
     });
 
     it("should set editing shape", () => {
-      const { result } = renderHook(() =>
-        useClickHandler({
-          shapes: mockShapes,
-          currentTool: "select",
-          onShapeClick: mockOnShapeClick,
-          onUpdateLabel: mockOnUpdateLabel,
-          onAddShape: mockOnAddShape,
-        }),
-      );
+      const result = createTestWithEditingState();
 
       const textShape = mockShapes[1];
 
@@ -512,20 +521,7 @@ describe("useClickHandler", () => {
     });
 
     it("should clear editing shape when set to null", () => {
-      const { result } = renderHook(() =>
-        useClickHandler({
-          shapes: mockShapes,
-          currentTool: "select",
-          onShapeClick: mockOnShapeClick,
-          onUpdateLabel: mockOnUpdateLabel,
-          onAddShape: mockOnAddShape,
-        }),
-      );
-
-      // Set editing shape first
-      act(() => {
-        result.current.setEditingShape(mockShapes[1]);
-      });
+      const result = createTestWithEditingState(mockShapes[1]);
 
       expect(result.current.editingShape).toBe(mockShapes[1]);
 
@@ -544,6 +540,8 @@ describe("useClickHandler", () => {
         useClickHandler({
           shapes: mockShapes,
           currentTool: "text",
+          editingShape: null,
+          setEditingShape: jest.fn(),
           onShapeClick: mockOnShapeClick,
           onUpdateLabel: mockOnUpdateLabel,
           onAddShape: mockOnAddShape,

@@ -132,19 +132,14 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     onAddShape,
   });
 
-  // Aggressively clear editing state in select mode - use useLayoutEffect for immediate execution
+  // Clear editing state when switching away from compatible modes
+  // Allow text editing in draw, text, and select modes only
   useLayoutEffect(() => {
-    if (currentTool === "select" && editingShape) {
+    const isCompatibleTool = currentTool === "draw" || currentTool === "text" || currentTool === "select";
+    if (!isCompatibleTool && editingShape) {
       setEditingShape(null);
     }
   }, [currentTool, editingShape, setEditingShape]);
-
-  // Also clear on any state change that might trigger editing in select mode
-  useEffect(() => {
-    if (currentTool === "select") {
-      setEditingShape(null);
-    }
-  }, [currentTool, setEditingShape]);
 
   // Wrapper functions to control when the hook's mouse events should be handled
   const handleWrappedMouseDown = (shape: Shape, e: React.MouseEvent) => {
@@ -283,14 +278,14 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       return null;
     }
 
-    // Handle arrow types - don't show resize indicators for lines/arrows
+    // Handle arrow types and text - don't show resize indicators for lines/arrows/text
     const isLineLike = shape.type === "line" || 
                       shape.type === "straight-arrow" || 
                       shape.type === "curved-arrow" || 
                       shape.type === "orthogonal-arrow";
     
-    if (isLineLike) {
-      return null; // Don't render visual indicators for arrows - they block arrow tips
+    if (isLineLike || shape.type === "text") {
+      return null; // Don't render visual indicators for arrows/text - they block arrow tips or aren't resizable
     }
 
     const bounds = getShapeBoundingBox(shape);

@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { ShapeSnapData, Point, Shape, ShapeSnapTool } from "../types";
+import { ShapeSnapData, Point, Shape, ShapeSnapTool, TextShape } from "../types";
 import { detectShape } from "../utils/shapeDetection";
 import { ShapeRegistry } from "../core/ShapeRegistry";
 import {
@@ -42,11 +42,19 @@ export const useShapeSnapEngineV2 = (
   // Update a shape's label
   const updateShapeLabel = useCallback(
     (shapeId: string, label: string) => {
+      const currentState = getCurrentState();
+      const shape = currentState.shapes.find(s => s.id === shapeId);
+      
+      // For text shapes, update the 'text' property; for others, update the 'label' property
+      const updates = shape?.type === "text" 
+        ? { text: label || undefined }
+        : { label: label || undefined };
+      
       const command = new UpdateShapeCommand(
         getCurrentState,
         onChange,
         shapeId,
-        { label: label || undefined },
+        updates,
       );
       commandManager.executeCommand(command);
     },
@@ -394,24 +402,27 @@ export const useShapeSnapEngineV2 = (
     const nextIndex = (currentIndex + 1) % fontSizes.length;
     const newFontSize = fontSizes[nextIndex];
 
-    // Update all text shapes with the new font size
-    const textShapes = state.shapes.filter((shape) => shape.type === "text");
-    textShapes.forEach((shape) => {
-      const command = new UpdateShapeCommand(
-        getCurrentState,
-        onChange,
-        shape.id,
-        { fontSize: newFontSize },
-      );
-      commandManager.executeCommand(command);
+    // Get current state to ensure we have the latest shape data
+    const currentState = getCurrentState();
+    
+    // Update all text shapes with the new font size in a single state update
+    const updatedShapes = currentState.shapes.map((shape) => {
+      if (shape.type === "text") {
+        return {
+          ...shape,
+          fontSize: newFontSize,
+        } as TextShape;
+      }
+      return shape;
     });
 
-    // Update current font size
+    // Update both shapes and current font size in one go
     onChange({
-      ...getCurrentState(),
+      ...currentState,
+      shapes: updatedShapes,
       currentFontSize: newFontSize,
     });
-  }, [state, getCurrentState, onChange, commandManager]);
+  }, [state, getCurrentState, onChange]);
 
   // Move shape by delta
   const moveShape = useCallback(

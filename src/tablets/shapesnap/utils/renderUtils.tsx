@@ -726,6 +726,10 @@ export const renderShape = (
         );
       }
       case "text":
+        // Hide text when editing to prevent overlap with editor
+        if (isEditing) {
+          return null;
+        }
         return (
           <text
             key={`${shape.id}-${shape.fontSize || 16}`}
@@ -1095,7 +1099,7 @@ export const renderResizeHandles = (
   selectedShapeId?: string,
   canvasMode: "light" | "dark" = "dark",
 ): React.ReactNode => {
-  if (shape.type === "line" || selectedShapeId !== shape.id) {
+  if (shape.type === "line" || shape.type === "text" || selectedShapeId !== shape.id) {
     return null;
   }
 

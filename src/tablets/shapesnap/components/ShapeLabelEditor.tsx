@@ -31,14 +31,23 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
     }
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [hasUserFocused, setHasUserFocused] = useState(false);
+
 
   // Auto-focus and select text on mount
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.select();
+      // Use setTimeout to ensure the component is fully mounted before focusing
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.select();
+          // Set the flag to indicate the user has now focused the textarea
+          setHasUserFocused(true);
+        }
+      }, 10);
     }
-  }, []);
+  }, [shape.id]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -67,9 +76,13 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
   };
 
   const handleBlur = () => {
-    setTimeout(() => {
-      handleSave();
-    }, 100);
+    // Only handle blur if the user has actually focused the textarea
+    // This prevents the blur from firing immediately on mount
+    if (hasUserFocused) {
+      setTimeout(() => {
+        handleSave();
+      }, 100);
+    }
   };
 
   const textColor = canvasMode === "dark" ? "#ffffff" : "#000000";
@@ -90,6 +103,7 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
         onChange={(e) => setLabel(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
+        onFocus={() => setHasUserFocused(true)}
         placeholder="Enter label..."
         style={{
           color: textColor,

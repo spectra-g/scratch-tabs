@@ -1,8 +1,9 @@
 import { renderHook, act } from "@testing-library/react";
+import { useState } from "react";
 import { useMouseEventCoordinator } from "../useMouseEventCoordinator";
 import { useLineResizeHandler } from "../useLineResizeHandler";
 import { useArrowTipHandler } from "../useArrowTipHandler";
-import { ShapeSnapTool } from "../../types";
+import { ShapeSnapTool, Shape } from "../../types";
 
 describe("Mouse Event Coordinator Debug", () => {
   const mockShapes = [
@@ -56,43 +57,57 @@ describe("Mouse Event Coordinator Debug", () => {
   });
 
   it("should debug mouse event coordinator behavior", () => {
-    const { result } = renderHook(() =>
-      useMouseEventCoordinator({
+    const { result } = renderHook(() => {
+      const [editingShape, setEditingShape] = useState<Shape | null>(null);
+      
+      return useMouseEventCoordinator({
         shapes: mockShapes,
         canvasSettings: mockCanvasSettings,
         currentTool: "draw" as ShapeSnapTool,
         onUpdateShape: mockOnUpdateShape,
         onShapeClick: mockOnShapeClick,
-      })
-    );
+      });
+    });
 
     const arrow = mockShapes[0];
     const mouseDownEvent = {
       nativeEvent: { offsetX: 50, offsetY: 50 }, // Exactly on endpoint
     } as React.MouseEvent;
 
-    // Test just the mouse down event
+    // Test mouse down event
     act(() => {
       result.current.handleShapeMouseDown(arrow, mouseDownEvent);
     });
 
-    // At this point, if line resize is properly detected, result.current.lineResizeDraggedShape should be set
-    console.log("Line resize dragged shape:", result.current.lineResizeDraggedShape);
+    console.log("Line resize dragged shape after mouseDown:", result.current.lineResizeDraggedShape);
 
-    // Check if line resize handler was activated
+    // Add a mouse move to trigger the line resize
+    const mouseMoveEvent = {
+      nativeEvent: { offsetX: 52, offsetY: 52 }, // Small movement to trigger resize
+    } as React.MouseEvent;
+
+    act(() => {
+      result.current.handleMouseMove(mouseMoveEvent);
+    });
+
+    console.log("Line resize dragged shape after mouseMove:", result.current.lineResizeDraggedShape);
+
+    // Check if line resize handler was activated after mouse move
     expect(result.current.lineResizeDraggedShape).toBeTruthy();
   });
 
   it("should debug full resize flow", () => {
-    const { result } = renderHook(() =>
-      useMouseEventCoordinator({
+    const { result } = renderHook(() => {
+      const [editingShape, setEditingShape] = useState<Shape | null>(null);
+      
+      return useMouseEventCoordinator({
         shapes: mockShapes,
         canvasSettings: mockCanvasSettings,
         currentTool: "draw" as ShapeSnapTool,
         onUpdateShape: mockOnUpdateShape,
         onShapeClick: mockOnShapeClick,
-      })
-    );
+      });
+    });
 
     const arrow = mockShapes[0];
     

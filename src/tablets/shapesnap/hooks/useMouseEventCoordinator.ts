@@ -32,6 +32,7 @@ export interface UseMouseEventCoordinatorProps {
 
 export const useMouseEventCoordinator = ({
   shapes,
+  canvasSettings,
   currentTool,
   currentFontSize,
   gridSnappingEnabled,
@@ -44,6 +45,10 @@ export const useMouseEventCoordinator = ({
     mouseDownShape: null,
     hasMoved: false,
   });
+
+  // Manage editing state at this level to persist across re-renders
+  const [editingShape, setEditingShape] = useState<Shape | null>(null);
+  
 
   const dragHandler = useDragHandler({
     shapes,
@@ -70,6 +75,9 @@ export const useMouseEventCoordinator = ({
     shapes,
     currentTool,
     currentFontSize,
+    canvasMode: canvasSettings?.mode || "dark",
+    editingShape,
+    setEditingShape,
     onShapeClick,
     onUpdateLabel,
     onAddShape,
@@ -248,11 +256,11 @@ export const useMouseEventCoordinator = ({
   }, [clickHandler]);
 
   return {
-    editingShape: clickHandler.editingShape,
+    editingShape,
     draggedShape: dragHandler.draggedShape,
     dragGuides: dragHandler.dragGuides,
     resizeHandle: resizeHandler.resizeHandle,
-    setEditingShape: clickHandler.setEditingShape,
+    setEditingShape,
     handleLabelSave,
     handleLabelCancel,
     handleCanvasDoubleClick,
