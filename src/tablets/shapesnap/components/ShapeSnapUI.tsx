@@ -365,6 +365,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
           onShapeClick={onShapeClick}
           onUpdateLabel={onUpdateLabel}
           onUpdateShape={onUpdateShape}
+          onMoveMultipleShapes={engine.moveMultipleShapes}
           onDeleteShape={onDeleteShape}
           onAddShape={onAddShape}
           onDrawEnd={onDrawEnd}

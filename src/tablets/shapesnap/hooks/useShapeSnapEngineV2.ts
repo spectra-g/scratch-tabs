@@ -9,6 +9,7 @@ import {
   DeleteShapeCommand,
   DeleteSelectedShapesCommand,
   MoveShapeCommand,
+  MoveMultipleShapesCommand,
   AddMultipleShapesCommand,
 } from "../core/Commands";
 import { SelectionManager } from "../core/SelectionManager";
@@ -438,6 +439,19 @@ export const useShapeSnapEngineV2 = (
     [getCurrentState, onChange, commandManager],
   );
 
+  // Move multiple shapes by delta
+  const moveMultipleShapes = useCallback(
+    (updates: { shapeId: string; delta: Point }[]) => {
+      const command = new MoveMultipleShapesCommand(
+        getCurrentState,
+        onChange,
+        updates,
+      );
+      commandManager.executeCommand(command);
+    },
+    [getCurrentState, onChange, commandManager],
+  );
+
   // Selection manager methods
   const getSelectedShapes = useCallback(() => {
     return selectionManager.getSelectedShapes();
@@ -508,6 +522,7 @@ export const useShapeSnapEngineV2 = (
     deleteShape,
     deleteSelectedShapes,
     moveShape,
+    moveMultipleShapes,
 
     // Clipboard operations
     copySelectedShapes,

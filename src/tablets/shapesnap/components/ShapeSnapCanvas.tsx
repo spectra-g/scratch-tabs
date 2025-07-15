@@ -32,6 +32,7 @@ interface ShapeSnapCanvasProps {
   onShapeClick?: (shape: Shape, position: Point, event?: React.MouseEvent) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onUpdateShape?: (shapeId: string, updates: Partial<Shape>) => void;
+  onMoveMultipleShapes?: (updates: { shapeId: string; delta: Point }[]) => void;
   onDeleteShape?: (shapeId: string) => void;
   onAddShape?: (shape: Shape) => void;
   onDrawEnd?: (points: Point[]) => Shape | null;
@@ -57,6 +58,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onShapeClick,
   onUpdateLabel,
   onUpdateShape,
+  onMoveMultipleShapes,
   onDeleteShape,
   onAddShape,
   onSelectionChange,
@@ -71,6 +73,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const { createEventHandler } = useModalAwareHandlers(showInfoModal);
 
   const svgRef = useRef<SVGSVGElement>(null);
+  const isDraggingRef = useRef<boolean>(false);
+  const dragCompletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const mouseInteractionActiveRef = useRef<boolean>(false);
 
   // Track modifier key states
   const [modifierKeys, setModifierKeys] = useState({
@@ -119,8 +124,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const {
     editingShape,
     draggedShape,
+    draggedShapes,
+    dragHasMoved,
     dragGuides,
     resizeHandle,
+    justCompletedDrag,
     setEditingShape,
     handleLabelSave,
     handleLabelCancel,
@@ -136,10 +144,12 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     canvasSettings,
     currentTool,
     currentFontSize,
+    selectedShapeIds,
     gridSnappingEnabled,
     onShapeClick,
     onUpdateLabel,
     onUpdateShape,
+    onMoveMultipleShapes,
     onDeleteShape,
     onAddShape,
   });
@@ -155,6 +165,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 
   // Wrapper functions to control when the hook's mouse events should be handled
   const handleWrappedMouseDown = (shape: Shape, e: React.MouseEvent) => {
+    // Mark that a mouse interaction is starting
+    mouseInteractionActiveRef.current = true;
+    
     // Always allow the hook to handle mouse down for dragging and resizing
     // The key is that we prevent the hook's onShapeClick callback, not the mouse tracking
     handleShapeMouseDown(shape, e);
@@ -169,7 +182,22 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     // Always allow the hook to handle mouseUp for proper state cleanup
     // We already disabled the hook's onShapeClick callback (passed undefined),
     // so the hook's internal click detection won't trigger label editing
-    handleMouseUp(e);
+    const result = handleMouseUp(e);
+    
+    // Don't clear mouse interaction flag immediately - let the drag blocking handle it
+    // If there's an active drag, the drag blocking will clear both flags together
+    // If there's no drag, clear after a short delay
+    const wasRealDrag = !!(draggedShapes && dragHasMoved);
+    if (!wasRealDrag) {
+      setTimeout(() => {
+        if (!isDraggingRef.current) { // Only clear if drag blocking isn't active
+          mouseInteractionActiveRef.current = false;
+        }
+      }, 50);
+    }
+    // If there was a real drag, the drag blocking useEffect will clear both flags
+    
+    return result;
   };
 
   // Custom shape click handler that properly handles multi-selection
@@ -226,6 +254,27 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
 
   // Handle canvas click to clear selection
   const handleCanvasClick = (e: React.MouseEvent) => {
+    // Block canvas clicks during any mouse interaction sequence
+    if (mouseInteractionActiveRef.current) {
+      return;
+    }
+    
+    // Use ref-based blocking which persists across event cycles
+    if (isDraggingRef.current) {
+      return;
+    }
+    
+    // Prevent clearing selection immediately after a drag operation (backup)
+    if (justCompletedDrag) {
+      return;
+    }
+    
+    // Be very conservative - block canvas clicks if ANY drag state exists
+    // This includes initial mouse down before movement occurs
+    if (draggedShape || draggedShapes || lineResizeDraggedShape) {
+      return;
+    }
+    
     // Only clear selection if clicking on empty space (not on a shape)
     if (e.target === e.currentTarget && onClearSelection) {
       onClearSelection();
@@ -240,8 +289,18 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   const shapesToRender = (() => {
     let shapes = sortedShapes;
 
-    // Replace with regular dragged shape if available
-    if (draggedShape) {
+    // Replace with multi-selection dragged shapes if available
+    if (draggedShapes && draggedShapes.length > 0) {
+      const draggedShapeIds = new Set(draggedShapes.map(s => s.id));
+      shapes = shapes.map((shape) => {
+        if (draggedShapeIds.has(shape.id)) {
+          const draggedVersion = draggedShapes.find(s => s.id === shape.id);
+          return draggedVersion || shape;
+        }
+        return shape;
+      });
+    } else if (draggedShape) {
+      // Replace with single dragged shape if available
       shapes = shapes.map((shape) =>
         shape.id === draggedShape.id ? draggedShape : shape,
       );
@@ -570,8 +629,54 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     };
   };
 
+  // Track drag state changes to set our ref-based flag
+  useEffect(() => {
+    // Only consider it "dragging" if shapes are being dragged AND movement has occurred
+    const isCurrentlyDragging = !!(draggedShape || draggedShapes || lineResizeDraggedShape) && dragHasMoved;
+    
+    if (isCurrentlyDragging && !isDraggingRef.current) {
+      // Real drag started (with movement)
+      isDraggingRef.current = true;
+      
+      // Clear any existing timeout
+      if (dragCompletionTimeoutRef.current) {
+        clearTimeout(dragCompletionTimeoutRef.current);
+        dragCompletionTimeoutRef.current = null;
+      }
+    } else if (!isCurrentlyDragging && isDraggingRef.current) {
+      // Drag ended - keep blocking clicks for a short period
+      
+      dragCompletionTimeoutRef.current = setTimeout(() => {
+        isDraggingRef.current = false;
+        mouseInteractionActiveRef.current = false; // Clear both flags together
+        dragCompletionTimeoutRef.current = null;
+      }, 150); // Longer timeout to ensure all spurious events are blocked
+    }
+    
+    return () => {
+      if (dragCompletionTimeoutRef.current) {
+        clearTimeout(dragCompletionTimeoutRef.current);
+      }
+    };
+  }, [draggedShape, draggedShapes, lineResizeDraggedShape, dragHasMoved]);
+
   // Wrapper function that handles shape clicks and prevents hook's click logic in select mode
   const handleShapeClickWrapper = (shape: Shape, position: Point, event?: React.MouseEvent) => {
+    // Use ref-based blocking which persists across event cycles
+    if (isDraggingRef.current) {
+      return;
+    }
+    
+    // Prevent clicks immediately after a drag operation (backup)
+    if (justCompletedDrag) {
+      return;
+    }
+    
+    // Also prevent clicks during active dragging (backup)
+    if (draggedShape || draggedShapes || lineResizeDraggedShape) {
+      return;
+    }
+    
     // Handle the click with our custom logic
     handleCustomShapeClick(shape, position, event);
 
@@ -706,8 +811,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                             fill: "transparent",
                           },
                         },
-                        (s, pos) => {
-                          handleShapeClickWrapper(s, pos);
+                        (s, pos, e) => {
+                          handleShapeClickWrapper(s, pos, e);
                         },
                         selectedShapeIds.includes(shape.id)
                           ? shape.id
@@ -732,8 +837,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
                 default:
                   return renderShape(
                     shape,
-                    (s, pos) => {
-                      handleShapeClickWrapper(s, pos);
+                    (s, pos, e) => {
+                      handleShapeClickWrapper(s, pos, e);
                     },
                     selectedShapeIds.includes(shape.id)
                       ? shape.id
@@ -750,8 +855,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             })()
             : renderShape(
               shape,
-              (s, pos) => {
-                handleShapeClickWrapper(s, pos);
+              (s, pos, e) => {
+                handleShapeClickWrapper(s, pos, e);
               },
               selectedShapeIds.includes(shape.id) ? shape.id : undefined,
               editingShape ? editingShape.id : undefined,

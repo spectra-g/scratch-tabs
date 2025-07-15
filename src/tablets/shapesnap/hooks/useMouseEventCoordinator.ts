@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Shape, Point, ShapeSnapTool } from "../types";
 import { useDragHandler } from "./useDragHandler";
 import { useResizeHandler } from "./useResizeHandler";
@@ -15,6 +15,7 @@ export interface MouseEventState {
     arrowTipMode?: "resize-start" | "resize-end";
   } | null;
   hasMoved: boolean;
+  justCompletedDrag: boolean;
 }
 
 export interface UseMouseEventCoordinatorProps {
@@ -22,10 +23,12 @@ export interface UseMouseEventCoordinatorProps {
   canvasSettings: any;
   currentTool: ShapeSnapTool;
   currentFontSize?: number;
+  selectedShapeIds?: string[];
   gridSnappingEnabled?: boolean;
   onShapeClick?: (shape: Shape, position: Point) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onUpdateShape?: (shapeId: string, updates: Partial<Shape>) => void;
+  onMoveMultipleShapes?: (updates: { shapeId: string; delta: Point }[]) => void;
   onDeleteShape?: (shapeId: string) => void;
   onAddShape?: (shape: Shape) => void;
 }
@@ -35,16 +38,30 @@ export const useMouseEventCoordinator = ({
   canvasSettings,
   currentTool,
   currentFontSize,
+  selectedShapeIds = [],
   gridSnappingEnabled,
   onShapeClick,
   onUpdateLabel,
   onUpdateShape,
+  onMoveMultipleShapes,
   onAddShape,
 }: UseMouseEventCoordinatorProps) => {
   const [mouseEventState, setMouseEventState] = useState<MouseEventState>({
     mouseDownShape: null,
     hasMoved: false,
+    justCompletedDrag: false,
   });
+  
+  // Clear the justCompletedDrag flag after a short delay
+  useEffect(() => {
+    if (mouseEventState.justCompletedDrag) {
+      const timer = setTimeout(() => {
+        setMouseEventState(prev => ({ ...prev, justCompletedDrag: false }));
+      }, 50); // Very short delay to prevent immediate click processing
+      
+      return () => clearTimeout(timer);
+    }
+  }, [mouseEventState.justCompletedDrag]);
 
   // Manage editing state at this level to persist across re-renders
   const [editingShape, setEditingShape] = useState<Shape | null>(null);
@@ -52,8 +69,10 @@ export const useMouseEventCoordinator = ({
 
   const dragHandler = useDragHandler({
     shapes,
+    selectedShapeIds,
     gridSnappingEnabled,
     onUpdateShape: onUpdateShape!,
+    onMoveMultipleShapes: onMoveMultipleShapes!,
     onShapeClick,
   });
 
@@ -125,6 +144,7 @@ export const useMouseEventCoordinator = ({
                 arrowTipMode: arrowTipState.arrowTipMode!,
               },
               hasMoved: false,
+              justCompletedDrag: false,
             });
           }
           return;
@@ -142,13 +162,14 @@ export const useMouseEventCoordinator = ({
             arrowTipMode: arrowTipState.arrowTipMode!,
           },
           hasMoved: false,
+          justCompletedDrag: false,
         });
         return;
       }
 
       dragHandler.startDrag(shape, mousePoint);
     },
-    [dragHandler, resizeHandler, lineResizeHandler, arrowTipHandler],
+    [dragHandler, resizeHandler, lineResizeHandler, arrowTipHandler, selectedShapeIds],
   );
 
   const handleMouseMove = useCallback(
@@ -211,12 +232,19 @@ export const useMouseEventCoordinator = ({
       } else if (lineResizeHandler.isLineResizing) {
         lineResizeHandler.endLineResize();
       } else if (dragHandler.isDragging) {
-        dragHandler.endDrag(mousePoint);
+        const dragResult = dragHandler.endDrag(mousePoint);
+        setMouseEventState({
+          mouseDownShape: null,
+          hasMoved: false,
+          justCompletedDrag: dragResult.wasDrag || false,
+        });
+        return;
       }
 
       setMouseEventState({
         mouseDownShape: null,
         hasMoved: false,
+        justCompletedDrag: false,
       });
     },
     [
@@ -258,8 +286,11 @@ export const useMouseEventCoordinator = ({
   return {
     editingShape,
     draggedShape: dragHandler.draggedShape,
+    draggedShapes: dragHandler.draggedShapes,
+    dragHasMoved: dragHandler.hasMoved,
     dragGuides: dragHandler.dragGuides,
     resizeHandle: resizeHandler.resizeHandle,
+    justCompletedDrag: mouseEventState.justCompletedDrag,
     setEditingShape,
     handleLabelSave,
     handleLabelCancel,
