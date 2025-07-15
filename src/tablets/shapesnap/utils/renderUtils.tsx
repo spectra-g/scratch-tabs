@@ -392,7 +392,7 @@ const renderArrowTip = (
 // Render a shape with label and click handlers
 export const renderShape = (
   shape: Shape,
-  onShapeClick?: (shape: Shape, position: Point) => void,
+  onShapeClick?: (shape: Shape, position: Point, event?: React.MouseEvent) => void,
   selectedShapeId?: string,
   editingShapeId?: string,
   onDoubleClick?: (shape: Shape, position: Point) => void,
@@ -414,7 +414,7 @@ export const renderShape = (
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
       };
-      onShapeClick(shape, position);
+      onShapeClick(shape, position, e);
     }
   };
 
@@ -495,7 +495,8 @@ export const renderShape = (
         x: touch.clientX - rect.left,
         y: touch.clientY - rect.top,
       };
-      onShapeClick(shape, position);
+      // Touch events don't have modifier keys like mouse events, so pass undefined
+      onShapeClick(shape, position, undefined);
     }
   };
 

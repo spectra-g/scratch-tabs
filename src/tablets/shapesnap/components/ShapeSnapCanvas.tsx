@@ -29,7 +29,7 @@ interface ShapeSnapCanvasProps {
   currentTool: ShapeSnapTool;
   currentFontSize?: number;
   selectedShapeIds?: string[];
-  onShapeClick?: (shape: Shape, position: Point) => void;
+  onShapeClick?: (shape: Shape, position: Point, event?: React.MouseEvent) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onUpdateShape?: (shapeId: string, updates: Partial<Shape>) => void;
   onDeleteShape?: (shapeId: string) => void;
@@ -96,12 +96,22 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       }));
     };
 
+    const handleMouseDown = (e: MouseEvent) => {
+      setModifierKeys((prev) => ({
+        ...prev,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+      }));
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("mousedown", handleMouseDown);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("mousedown", handleMouseDown);
     };
   }, []);
 
@@ -163,10 +173,10 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   };
 
   // Custom shape click handler that properly handles multi-selection
-  const handleCustomShapeClick = (shape: Shape, position: Point) => {
+  const handleCustomShapeClick = (shape: Shape, position: Point, event?: React.MouseEvent) => {
     // Call the original onShapeClick if provided
     if (onShapeClick) {
-      onShapeClick(shape, position);
+      onShapeClick(shape, position, event);
     }
 
     // Handle different tools
@@ -174,8 +184,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       case "select":
       case "draw":
         // Both select and draw modes should allow shape selection and show resize handles
-        // Handle multi-selection with tracked modifier keys
-        const isMultiSelect = modifierKeys.ctrlKey || modifierKeys.metaKey;
+        // Handle multi-selection with real-time modifier keys from the event
+        const isMultiSelect = event ? (event.ctrlKey || event.metaKey) : (modifierKeys.ctrlKey || modifierKeys.metaKey);
 
         if (isMultiSelect && onToggleShapeSelection) {
           // Multi-selection: toggle this shape in the selection
@@ -561,9 +571,9 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   };
 
   // Wrapper function that handles shape clicks and prevents hook's click logic in select mode
-  const handleShapeClickWrapper = (shape: Shape, position: Point) => {
+  const handleShapeClickWrapper = (shape: Shape, position: Point, event?: React.MouseEvent) => {
     // Handle the click with our custom logic
-    handleCustomShapeClick(shape, position);
+    handleCustomShapeClick(shape, position, event);
 
     // In select mode, we don't want the hook's internal click logic to run at all
     // So we don't call the hook's click handler

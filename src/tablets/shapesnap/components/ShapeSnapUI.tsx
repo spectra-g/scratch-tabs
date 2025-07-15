@@ -70,16 +70,16 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
     engine.addShape(shape);
   }, [engine]);
 
-  const onShapeClick = useCallback((shape: Shape, _position: Point) => {
+  const onShapeClick = useCallback((shape: Shape, _position: Point, _event?: React.MouseEvent) => {
     // If in eraser mode, delete the shape
     if (state.currentTool === "eraser") {
       engine.deleteShape(shape.id);
       return;
     }
     
-    // Otherwise, select the shape when clicked
-    engine.setSelectedShapes([shape.id]);
-  }, [engine, state.selectedShapeIds, state.currentTool]);
+    // Don't handle selection here - let the Canvas component handle it
+    // This prevents interference with multi-selection logic
+  }, [engine, state.currentTool]);
 
   const onDrawEnd = useCallback((points: Point[]) => {
     return engine.detectAndAddShape(points);

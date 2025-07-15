@@ -14,7 +14,7 @@ export interface UseClickHandlerProps {
   canvasMode?: "light" | "dark";
   editingShape: Shape | null;
   setEditingShape: (shape: Shape | null) => void;
-  onShapeClick?: (shape: Shape, position: Point) => void;
+  onShapeClick?: (shape: Shape, position: Point, event?: React.MouseEvent) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
   onAddShape?: (shape: Shape) => void;
 }
@@ -42,7 +42,7 @@ export const useClickHandler = ({
 
   // Handle shape click
   const handleShapeClick = useCallback(
-    (shape: Shape, position: Point) => {
+    (shape: Shape, position: Point, event?: React.MouseEvent) => {
       setClickState((prev) => ({
         ...prev,
         selectedShapeId: shape.id,
@@ -52,7 +52,7 @@ export const useClickHandler = ({
       setEditingShape(null);
 
       if (onShapeClick) {
-        onShapeClick(shape, position);
+        onShapeClick(shape, position, event);
       }
     },
     [onShapeClick, setEditingShape],
