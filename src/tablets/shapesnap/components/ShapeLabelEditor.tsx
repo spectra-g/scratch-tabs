@@ -91,8 +91,8 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
 
   return (
     <foreignObject
-      x={x - width / 2}
-      y={y - height / 2}
+      x={x}
+      y={y}
       width={width}
       height={height}
       style={{ pointerEvents: "auto", zIndex: 100 }}

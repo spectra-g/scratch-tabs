@@ -80,8 +80,10 @@ export const useClickHandler = ({
     (e: React.MouseEvent) => {
       if (currentTool !== "draw" && currentTool !== "text" && currentTool !== "select") return;
 
-      const mouseX = e.nativeEvent.offsetX;
-      const mouseY = e.nativeEvent.offsetY;
+      // Use getBoundingClientRect for consistent coordinate calculation
+      const rect = e.currentTarget.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
       // Get the correct text color based on canvas mode
       const textColor = canvasMode === "dark" ? "#ffffff" : "#000000";
