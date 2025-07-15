@@ -76,7 +76,7 @@ export const useClickHandler = ({
   // Handle canvas double click (add text)
   const handleCanvasDoubleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (currentTool !== "draw") return;
+      if (currentTool !== "draw" && currentTool !== "text") return;
 
       const mouseX = e.nativeEvent.offsetX;
       const mouseY = e.nativeEvent.offsetY;

@@ -221,11 +221,18 @@ export const useShapeSnapEngineV2 = (
           zIndex: Date.now(),
         } as Shape;
 
-        // Add default arrow tip to all arrow types
+        // Add default arrow tip to all arrow types and straight lines
         if (
           newShape.type === "straight-arrow" ||
           newShape.type === "curved-arrow" ||
           newShape.type === "orthogonal-arrow"
+        ) {
+          (newShape as any).arrowTipEnd = "simple";
+          (newShape as any).arrowTipSize = 10;
+        } else if (
+          newShape.type === "line" &&
+          (newShape as any).points &&
+          (newShape as any).points.length === 2
         ) {
           (newShape as any).arrowTipEnd = "simple";
           (newShape as any).arrowTipSize = 10;
