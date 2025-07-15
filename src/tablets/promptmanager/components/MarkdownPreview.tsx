@@ -25,7 +25,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
           // Custom styling for code blocks
           code: ({ node, inline, className, children, ...props }: any) => {
             return !inline ? (
-              <pre className="bg-gray-800 rounded-md p-4 overflow-x-auto">
+              <pre className="bg-gray-800 rounded-md p-4 overflow-x-auto custom-scrollbar">
                 <code className={className} {...props}>
                   {children}
                 </code>
@@ -41,7 +41,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
           },
           // Custom styling for tables
           table: ({ children }) => (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <table className="min-w-full border-collapse border border-gray-600">
                 {children}
               </table>

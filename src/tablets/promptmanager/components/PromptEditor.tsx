@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Copy, Tag as TagIcon, Check, X, Plus, History } from "lucide-react";
+import { Tag as TagIcon, Check, X, Plus, History, Play } from "lucide-react";
 import { Prompt, Tag, Snippet, Template } from "../types";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { HistoryViewer } from "./HistoryViewer";
 import { EditorInsertPanel } from "./EditorInsertPanel";
 import { FormattingToolbar } from "./FormattingToolbar";
+import { VariableFillModal } from "./VariableFillModal";
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
+import { parseVariables, substituteVariables } from "../utils/variables";
 
 interface PromptEditorProps {
   prompt: Prompt;
@@ -40,6 +43,13 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   const [copied, setCopied] = useState(false);
   const [isInsertPanelOpen, setIsInsertPanelOpen] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [copyVariableModal, setCopyVariableModal] = useState<{
+    isOpen: boolean;
+    variables: string[];
+  }>({
+    isOpen: false,
+    variables: [],
+  });
 
   // Undo/Redo state
   const [history, setHistory] = useState<HistoryState[]>([]);
@@ -197,13 +207,44 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(prompt.content);
+    const variables = parseVariables(prompt.content);
+    
+    if (variables.length > 0) {
+      // Open variable fill modal
+      setCopyVariableModal({
+        isOpen: true,
+        variables,
+      });
+    } else {
+      // No variables, copy directly
+      copyToClipboard(prompt.content);
+    }
+  };
+
+  const copyToClipboard = (content: string) => {
+    navigator.clipboard.writeText(content);
     setCopied(true);
     onIncrementUsage(prompt.id);
 
     setTimeout(() => {
       setCopied(false);
     }, 2000);
+  };
+
+  const handleCopyVariableSubmit = (values: Record<string, string>) => {
+    const substitutedContent = substituteVariables(prompt.content, values, true);
+    copyToClipboard(substitutedContent);
+    setCopyVariableModal({
+      isOpen: false,
+      variables: [],
+    });
+  };
+
+  const handleCopyVariableClose = () => {
+    setCopyVariableModal({
+      isOpen: false,
+      variables: [],
+    });
   };
 
   const handleTagToggle = (tagId: string) => {
@@ -400,7 +441,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
                 {copied ? (
                   <Check size={18} className="text-green-400" />
                 ) : (
-                  <Copy size={18} />
+                  <Play size={18} />
                 )}
               </button>
             </div>
@@ -514,10 +555,30 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
         )}
       </div>
 
+      {/* Token Count Status Bar */}
+      <div className="flex-none px-4 py-2 border-t border-gray-700/50 bg-gray-800/30">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-gray-400">Token Count:</span>
+          <span className={getTokenCountColor(estimateTokenCount(isEditing ? content : prompt.content))}>
+            {formatTokenCount(estimateTokenCount(isEditing ? content : prompt.content))}
+          </span>
+        </div>
+      </div>
+
       {/* History Viewer */}
       {showHistory && (
         <HistoryViewer prompt={prompt} onClose={() => setShowHistory(false)} />
       )}
+
+      {/* Variable Fill Modal for Copy */}
+      <VariableFillModal
+        isOpen={copyVariableModal.isOpen}
+        variables={copyVariableModal.variables}
+        onSubmit={handleCopyVariableSubmit}
+        onClose={handleCopyVariableClose}
+        submitButtonLabel="Generate & Copy"
+        allowEmpty={true}
+      />
     </div>
   );
 };

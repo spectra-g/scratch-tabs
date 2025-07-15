@@ -73,7 +73,7 @@ ARG BUILD_NUMBER=1
     const trimmedContent = content.trim(); // Used for some initial checks
     let confidenceScore = 0.0;
     let instructionCount = 0;
-    let distinctInstructions = new Set<string>();
+    const distinctInstructions = new Set<string>();
 
     // 1. Check for common Dockerfile instructions (case-insensitive for instruction name)
     //    Instructions should generally be at the start of a line (after optional whitespace/comments).

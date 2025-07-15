@@ -301,7 +301,7 @@ $squared = array_map(fn($n) => $n * $n, $numbers);
         const indentChar = "    "; // Common: 4 spaces for PHP
 
         const formattedLines = lines.map((line: string) => {
-          let trimmedLine = line.trim();
+          const trimmedLine = line.trim();
           let currentIndent = "";
 
           // Heuristic: Decrease indent for closing braces/parens/brackets

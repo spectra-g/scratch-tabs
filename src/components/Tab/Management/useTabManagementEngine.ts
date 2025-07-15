@@ -419,7 +419,7 @@ export const useTabManagementEngine = (
       return;
     }
     const sorted = [...selected].sort((a, b) => a.title.localeCompare(b.title));
-    let processedDelimiter = mergeDelimiter
+    const processedDelimiter = mergeDelimiter
       .replace(/\\n/g, "\n")
       .replace(/\\t/g, "\t");
     const mergedContent = sorted

@@ -205,7 +205,7 @@ const mockSplitViewState: SplitViewStore = {
     rightTabs: [],
     activeLeftTabId: null,
     activeRightTabId: null,
-    activeSide: "left" as "left",
+    activeSide: "left" as const,
     splitRatio: 0.5,
     workspaceId: workspaceId || "test-workspace-id",
     leftTabHistory: [],

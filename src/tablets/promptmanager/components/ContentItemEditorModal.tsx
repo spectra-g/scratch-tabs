@@ -3,6 +3,7 @@ import { X, Eye, Code } from "lucide-react";
 import { Template, Snippet } from "../types";
 import { FormattingToolbar } from "./FormattingToolbar";
 import { MarkdownPreview } from "./MarkdownPreview";
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from "../utils/tokenCount";
 
 type Item = Omit<Template, "id"> | Omit<Snippet, "id">;
 
@@ -63,7 +64,7 @@ export const ContentItemEditorModal: React.FC<ContentItemEditorModalProps> = ({
             <X size={20} />
           </button>
         </div>
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Title
@@ -122,10 +123,10 @@ export const ContentItemEditorModal: React.FC<ContentItemEditorModalProps> = ({
                     setEditedItem({ ...editedItem, content: e.target.value })
                   }
                   rows={15}
-                  className={`w-full bg-gray-900 p-2 text-white focus:outline-none resize-none ${showPreview ? "rounded-bl-md" : "rounded-b-md"}`}
+                  className={`w-full bg-gray-900 p-2 text-white focus:outline-none resize-none custom-scrollbar ${showPreview ? "rounded-bl-md" : "rounded-b-md"}`}
                 />
                 {showPreview && (
-                  <div className="bg-gray-900 p-2 overflow-y-auto rounded-br-md">
+                  <div className="bg-gray-900 p-2 overflow-y-auto rounded-br-md custom-scrollbar">
                     <MarkdownPreview content={editedItem.content} />
                   </div>
                 )}
@@ -134,13 +135,21 @@ export const ContentItemEditorModal: React.FC<ContentItemEditorModalProps> = ({
           </div>
         </div>
         <div className="flex items-center justify-between p-4 border-t border-gray-700">
-          <button
-            onClick={() => setShowPreview(!showPreview)}
-            className="flex items-center space-x-2 text-gray-400 hover:text-white"
-          >
-            {showPreview ? <Code size={16} /> : <Eye size={16} />}
-            <span>{showPreview ? "Editor" : "Preview"}</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="flex items-center space-x-2 text-gray-400 hover:text-white"
+            >
+              {showPreview ? <Code size={16} /> : <Eye size={16} />}
+              <span>{showPreview ? "Editor" : "Preview"}</span>
+            </button>
+            <div className="flex items-center space-x-2 text-xs">
+              <span className="text-gray-400">Token Count:</span>
+              <span className={getTokenCountColor(estimateTokenCount(editedItem.content))}>
+                {formatTokenCount(estimateTokenCount(editedItem.content))}
+              </span>
+            </div>
+          </div>
           <div>
             <button
               onClick={onClose}

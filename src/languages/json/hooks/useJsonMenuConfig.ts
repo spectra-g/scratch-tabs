@@ -155,7 +155,7 @@ export const useJsonMenuConfig = (
     }
 
     // Determine if Un-stringify should be enabled
-    let enableUnstringify = true;
+    const enableUnstringify = true;
 
     return [
       {

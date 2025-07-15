@@ -2,6 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { Snippet } from '../types';
 import { MarkdownPreview } from './MarkdownPreview';
+import { estimateTokenCount, formatTokenCount, getTokenCountColor } from '../utils/tokenCount';
 
 interface SnippetDetailModalProps {
   snippet: Snippet;
@@ -18,8 +19,18 @@ export const SnippetDetailModal: React.FC<SnippetDetailModalProps> = ({ snippet,
             <X size={24} />
           </button>
         </div>
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
           <MarkdownPreview content={snippet.content} />
+        </div>
+        
+        {/* Token Count Status Bar */}
+        <div className="px-4 py-2 border-t border-gray-700 bg-gray-800/30">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-400">Token Count:</span>
+            <span className={getTokenCountColor(estimateTokenCount(snippet.content))}>
+              {formatTokenCount(estimateTokenCount(snippet.content))}
+            </span>
+          </div>
         </div>
       </div>
     </div>

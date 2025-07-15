@@ -523,7 +523,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
       const indent = (node.depth - 1) * 16;
       const isSelected = selectedPath === node.path;
       let valueDisplay: React.ReactNode;
-      let valueStringForCopy: any = node.value; // Use raw value for copy
+      const valueStringForCopy: any = node.value; // Use raw value for copy
 
       switch (node.type) {
         case "string":
