@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Shape, Point, ArrowTipStyle } from "../types";
+import { Shape, Point } from "../types";
 import { cycleArrowTip } from "../utils/arrowTipUtils";
 
 export interface ArrowTipState {

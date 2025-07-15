@@ -321,8 +321,10 @@ export class MoveShapeCommand extends BaseCommand {
   private getShapePosition(shape: Shape): Point {
     switch (shape.type) {
       case "line":
+      case "orthogonal-arrow":
         return shape.points[0] || { x: 0, y: 0 };
       case "straight-arrow":
+      case "curved-arrow":
         return shape.from;
       default:
         return { x: (shape as any).x || 0, y: (shape as any).y || 0 };
@@ -334,12 +336,14 @@ export class MoveShapeCommand extends BaseCommand {
 
     switch (shape.type) {
       case "line":
+      case "orthogonal-arrow":
         (newShape as any).points = shape.points.map((p) => ({
           x: p.x + delta.x,
           y: p.y + delta.y,
         }));
         break;
       case "straight-arrow":
+      case "curved-arrow":
         (newShape as any).from = {
           x: shape.from.x + delta.x,
           y: shape.from.y + delta.y,
@@ -348,6 +352,13 @@ export class MoveShapeCommand extends BaseCommand {
           x: shape.to.x + delta.x,
           y: shape.to.y + delta.y,
         };
+        // For curved arrows, also move the control point
+        if (shape.type === "curved-arrow") {
+          (newShape as any).control = {
+            x: (shape as any).control.x + delta.x,
+            y: (shape as any).control.y + delta.y,
+          };
+        }
         break;
       default:
         (newShape as any).x = (shape as any).x + delta.x;

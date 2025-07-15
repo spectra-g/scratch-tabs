@@ -597,6 +597,7 @@ export const renderShape = (
               fill="none"
               strokeLinecap="round"
             />
+            {startArrow}
             {endArrow}
           </g>
         );

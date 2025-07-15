@@ -1,4 +1,4 @@
-import { Shape, ShapeType, Point } from "../types";
+import { Shape, ShapeType } from "../types";
 
 export interface ShapeDefinition {
   type: ShapeType;

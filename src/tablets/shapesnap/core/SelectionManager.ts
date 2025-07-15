@@ -1,6 +1,6 @@
 import { Shape, Point, ShapeSnapData } from "../types";
 import { shapeRegistry } from "./ShapeRegistry";
-import { getShapeCenter, getShapeBoundingBox } from "../utils/geometryUtils";
+import { getShapeBoundingBox } from "../utils/geometryUtils";
 
 export interface SelectionBounds {
   left: number;
@@ -222,7 +222,7 @@ export class SelectionManager {
   // Handle shape click with modifier keys
   handleShapeClick(
     shape: Shape,
-    point: Point,
+    _point: Point,
     modifiers: { ctrl: boolean; shift: boolean; alt: boolean },
   ): void {
     if (modifiers.ctrl || modifiers.shift) {
@@ -236,7 +236,7 @@ export class SelectionManager {
 
   // Handle canvas click (deselect if no modifiers)
   handleCanvasClick(
-    point: Point,
+    _point: Point,
     modifiers: { ctrl: boolean; shift: boolean; alt: boolean },
   ): void {
     if (!modifiers.ctrl && !modifiers.shift) {

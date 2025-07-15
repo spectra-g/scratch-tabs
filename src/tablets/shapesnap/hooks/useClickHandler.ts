@@ -17,7 +17,7 @@ export interface UseClickHandlerProps {
 }
 
 export const useClickHandler = ({
-  shapes,
+  shapes: _shapes,
   currentTool,
   currentFontSize = 16,
   onShapeClick,
