@@ -40,6 +40,7 @@ interface ShapeSnapCanvasProps {
   onClearSelection?: () => void;
   gridSnappingEnabled?: boolean;
   sketchModeEnabled?: boolean;
+  backgroundMode?: "notepad" | "none" | "dot-grid" | "graph-paper" | "isometric";
   showInfoModal: boolean;
   onShowInfoModal: (show: boolean) => void;
 }
@@ -63,6 +64,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   onClearSelection,
   gridSnappingEnabled,
   sketchModeEnabled,
+  backgroundMode = "notepad",
   showInfoModal,
   onShowInfoModal,
 }) => {
@@ -248,6 +250,175 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   // Determine stroke color based on canvas mode
   const strokeColor = canvasSettings.mode === "dark" ? "#ffffff" : "#000000";
 
+  // Generate grid pattern based on background mode
+  const generateGridPattern = () => {
+    if (backgroundMode === "none") return null;
+
+    const gridId = `grid-pattern-${backgroundMode}-${canvasSettings.mode}`;
+    
+    // Grid colors - subtle and appropriate for each mode
+    const gridColor = canvasSettings.mode === "dark" 
+      ? "rgba(255, 255, 255, 0.1)" 
+      : "rgba(156, 163, 175, 0.15)"; // Subtle gray for light mode
+    
+    const dotColor = canvasSettings.mode === "dark" 
+      ? "rgba(255, 255, 255, 0.2)" 
+      : "rgba(156, 163, 175, 0.25)";
+    
+    switch (backgroundMode) {
+      case "notepad": {
+        const gridSize = 20; // Grid cell size in pixels
+        return (
+          <defs>
+            <pattern
+              id={gridId}
+              x="0"
+              y="0"
+              width={gridSize}
+              height={gridSize}
+              patternUnits="userSpaceOnUse"
+            >
+              {/* Horizontal lines */}
+              <line
+                x1="0"
+                y1={gridSize}
+                x2={gridSize}
+                y2={gridSize}
+                stroke={gridColor}
+                strokeWidth="0.5"
+              />
+              {/* Vertical lines */}
+              <line
+                x1={gridSize}
+                y1="0"
+                x2={gridSize}
+                y2={gridSize}
+                stroke={gridColor}
+                strokeWidth="0.5"
+              />
+            </pattern>
+          </defs>
+        );
+      }
+      
+      case "dot-grid": {
+        const dotSpacing = 15;
+        return (
+          <defs>
+            <pattern
+              id={gridId}
+              x="0"
+              y="0"
+              width={dotSpacing}
+              height={dotSpacing}
+              patternUnits="userSpaceOnUse"
+            >
+              <circle
+                cx={dotSpacing / 2}
+                cy={dotSpacing / 2}
+                r="0.8"
+                fill={dotColor}
+              />
+            </pattern>
+          </defs>
+        );
+      }
+      
+      case "graph-paper": {
+        const gridSize = 10; // Smaller grid for graph paper
+        return (
+          <defs>
+            <pattern
+              id={gridId}
+              x="0"
+              y="0"
+              width={gridSize}
+              height={gridSize}
+              patternUnits="userSpaceOnUse"
+            >
+              {/* Fine grid lines */}
+              <line
+                x1="0"
+                y1={gridSize}
+                x2={gridSize}
+                y2={gridSize}
+                stroke={gridColor}
+                strokeWidth="0.3"
+              />
+              <line
+                x1={gridSize}
+                y1="0"
+                x2={gridSize}
+                y2={gridSize}
+                stroke={gridColor}
+                strokeWidth="0.3"
+              />
+            </pattern>
+          </defs>
+        );
+      }
+      
+      case "isometric": {
+        const gridSize = 20;
+        return (
+          <defs>
+            <pattern
+              id={gridId}
+              x="0"
+              y="0"
+              width={gridSize * 2}
+              height={gridSize * Math.sqrt(3)}
+              patternUnits="userSpaceOnUse"
+            >
+              {/* Isometric grid lines - 60 degree angles */}
+              <line
+                x1="0"
+                y1={gridSize * Math.sqrt(3) / 2}
+                x2={gridSize}
+                y2={gridSize * Math.sqrt(3)}
+                stroke={gridColor}
+                strokeWidth="0.4"
+              />
+              <line
+                x1={gridSize}
+                y1="0"
+                x2={gridSize * 2}
+                y2={gridSize * Math.sqrt(3) / 2}
+                stroke={gridColor}
+                strokeWidth="0.4"
+              />
+              <line
+                x1={gridSize}
+                y1={gridSize * Math.sqrt(3)}
+                x2={gridSize * 2}
+                y2={gridSize * Math.sqrt(3) / 2}
+                stroke={gridColor}
+                strokeWidth="0.4"
+              />
+            </pattern>
+          </defs>
+        );
+      }
+      
+      default:
+        return null;
+    }
+  };
+
+  // Get background style based on background mode
+  const getBackgroundStyle = () => {
+    if (backgroundMode === "none") {
+      return { backgroundColor: canvasSettings.background };
+    }
+
+    // Soft paper colors for textured backgrounds
+    const paperColor = canvasSettings.mode === "dark" 
+      ? "#1e1e1e" // Keep dark mode as is
+      : "#fefcf6"; // Soft cream/paper color for light mode
+
+    return { backgroundColor: paperColor };
+  };
+
   // Helper function to get cursor style for resize handles
   const getResizeCursor = (handle: string | null): string => {
     if (!handle) return "default";
@@ -424,7 +595,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         width={width}
         height={height}
         style={{
-          backgroundColor: canvasSettings.background,
+          ...getBackgroundStyle(),
           touchAction: "none",
           cursor: getResizeCursor(resizeHandle),
           pointerEvents: showInfoModal ? "none" : "auto",
@@ -471,6 +642,21 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
             },
           })}
       >
+        {/* Generate grid pattern definition */}
+        {generateGridPattern()}
+
+        {/* Render grid background based on background mode */}
+        {backgroundMode !== "none" && (
+          <rect
+            x="0"
+            y="0"
+            width={width}
+            height={height}
+            fill={`url(#grid-pattern-${backgroundMode}-${canvasSettings.mode})`}
+            style={{ pointerEvents: "none" }}
+          />
+        )}
+
         {/* Render all shapes */}
         {shapesToRender.map((shape) =>
           sketchModeEnabled && svgRef.current

@@ -25,6 +25,18 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
 
+  // Background modes
+  type BackgroundMode = "notepad" | "none" | "dot-grid" | "graph-paper" | "isometric";
+  const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>("notepad");
+
+  const backgroundModes: BackgroundMode[] = ["notepad", "none", "dot-grid", "graph-paper", "isometric"];
+
+  const cycleBackgroundMode = useCallback(() => {
+    const currentIndex = backgroundModes.indexOf(backgroundMode);
+    const nextIndex = (currentIndex + 1) % backgroundModes.length;
+    setBackgroundMode(backgroundModes[nextIndex]);
+  }, [backgroundMode, backgroundModes]);
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const uiRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -321,6 +333,8 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
         onToggleGridSnapping={() => setGridSnappingEnabled((s) => !s)}
         sketchModeEnabled={sketchModeEnabled}
         onToggleSketchMode={() => setSketchModeEnabled((s) => !s)}
+        backgroundMode={backgroundMode}
+        onToggleBackgroundMode={cycleBackgroundMode}
         onToggleTemplates={() => setShowTemplatesPanel((s) => !s)}
       />
 
@@ -359,6 +373,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
           onClearSelection={onClearSelection}
           gridSnappingEnabled={gridSnappingEnabled}
           sketchModeEnabled={sketchModeEnabled}
+          backgroundMode={backgroundMode}
           showInfoModal={showInfoModal}
           onShowInfoModal={setShowInfoModal}
         />

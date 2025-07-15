@@ -12,8 +12,11 @@ import {
   Signature,
   Type,
   Layers,
+  Grid3X3,
 } from "lucide-react";
 import { ShapeSnapTool, ShapeSnapMode } from "../types";
+
+type BackgroundMode = "notepad" | "none" | "dot-grid" | "graph-paper" | "isometric";
 
 interface ShapeSnapToolbarProps {
   currentTool: ShapeSnapTool;
@@ -32,6 +35,8 @@ interface ShapeSnapToolbarProps {
   onToggleGridSnapping: () => void;
   sketchModeEnabled: boolean;
   onToggleSketchMode: () => void;
+  backgroundMode: BackgroundMode;
+  onToggleBackgroundMode: () => void;
   onToggleTemplates: () => void;
 }
 
@@ -52,6 +57,8 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
   onToggleGridSnapping,
   sketchModeEnabled,
   onToggleSketchMode,
+  backgroundMode,
+  onToggleBackgroundMode,
   onToggleTemplates,
 }) => {
   const [showExportOptions, setShowExportOptions] = useState(false);
@@ -163,6 +170,22 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           }
         >
           <Signature size={18} />
+        </button>
+
+        <button
+          className={`p-2 rounded-md transition-colors ${
+            backgroundMode !== "none"
+              ? "bg-green-500/20 text-green-400"
+              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+          }`}
+          onClick={onToggleBackgroundMode}
+          title={`Background: ${backgroundMode === "notepad" ? "Notepad" : 
+                              backgroundMode === "none" ? "None" : 
+                              backgroundMode === "dot-grid" ? "Dot Grid" : 
+                              backgroundMode === "graph-paper" ? "Graph Paper" : 
+                              "Isometric"}`}
+        >
+          <Grid3X3 size={18} />
         </button>
 
         <button
