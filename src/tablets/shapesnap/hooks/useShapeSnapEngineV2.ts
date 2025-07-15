@@ -117,20 +117,24 @@ export const useShapeSnapEngineV2 = (
       };
 
       // Apply offset based on shape type
-      if (shape.type === "line" && (shape as any).points) {
-        return {
-          ...newShape,
-          points: (shape as any).points.map((point: Point) => ({
-            x: point.x + offset,
-            y: point.y + offset,
-          })),
-        };
+      if (shape.type === "line" || shape.type === "orthogonal-arrow") {
+        // Handle line and orthogonal-arrow with points array
+        if ((shape as any).points) {
+          return {
+            ...newShape,
+            points: (shape as any).points.map((point: Point) => ({
+              x: point.x + offset,
+              y: point.y + offset,
+            })),
+          };
+        }
       } else if (
-        shape.type === "straight-arrow" &&
+        (shape.type === "straight-arrow" || shape.type === "curved-arrow") &&
         (shape as any).from &&
         (shape as any).to
       ) {
-        return {
+        // Handle straight-arrow and curved-arrow with from/to points
+        const updates: any = {
           ...newShape,
           from: {
             x: (shape as any).from.x + offset,
@@ -141,7 +145,18 @@ export const useShapeSnapEngineV2 = (
             y: (shape as any).to.y + offset,
           },
         };
+        
+        // Handle curved-arrow control point
+        if (shape.type === "curved-arrow" && (shape as any).control) {
+          updates.control = {
+            x: (shape as any).control.x + offset,
+            y: (shape as any).control.y + offset,
+          };
+        }
+        
+        return updates;
       } else {
+        // Handle all other shapes with x/y coordinates
         return {
           ...newShape,
           x: (shape as any).x + offset,
