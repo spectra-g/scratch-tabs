@@ -369,6 +369,10 @@ export const RestClientTablet: Tablet = {
       updateState({ conversionFormat: format });
     };
 
+    const handleClearError = () => {
+      updateState({ error: null });
+    };
+
     useEffect(() => {
       const now = Date.now();
       const ONE_HOUR = 60 * 60 * 1000;
@@ -461,6 +465,7 @@ export const RestClientTablet: Tablet = {
                   isLoading={data.isExecuting}
                   onShowHistory={() => setShowResponseHistory(true)}
                   historyCount={data.responseHistory.length}
+                  onClearError={handleClearError}
                 />
               )}
             </div>

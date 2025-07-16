@@ -19,10 +19,7 @@ export class ParameterSyncManager {
    */
   static syncFromUrl(newUrl: string, currentParams: KeyValuePair[]): SyncResult {
     try {
-      const { baseUrl, params: parsedParams } = parseUrl(newUrl);
-      
-      // Create a map of existing params for lookup
-      const existingParamsMap = new Map(currentParams.map(p => [p.key, p]));
+      const { params: parsedParams } = parseUrl(newUrl);
       
       // Build new params list
       const newParams: KeyValuePair[] = [];
