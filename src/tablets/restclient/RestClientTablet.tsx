@@ -15,6 +15,7 @@ import {
 } from "./types";
 import { executeRequest } from "./utils/requestUtils";
 import { SensitiveDataManager } from "../../utils/sensitiveDataManager";
+import { ParameterSyncManager } from "./utils/paramSync";
 
 interface RestClientTabletState extends TabletState {
   type: "restclient";
@@ -62,6 +63,7 @@ export const RestClientTablet: Tablet = {
               enabled: true,
             },
           ],
+          curlFlags: [],
         },
         response: null,
         responseHistory: [],
@@ -296,12 +298,18 @@ export const RestClientTablet: Tablet = {
         });
       } catch (error) {
         console.error("Request execution error:", error);
+        
+        let errorMessage = "Failed to execute request";
+        
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else {
+          errorMessage = String(error);
+        }
+        
         updateState({
           isExecuting: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to execute request",
+          error: errorMessage,
           // Still save request to history even if it fails
           requestHistory: [requestHistoryItem, ...currentRequestHistory],
         });
@@ -425,7 +433,11 @@ export const RestClientTablet: Tablet = {
                   request={data.request}
                   format={data.conversionFormat}
                   onFormatChange={handleSetConversionFormat}
-                  onUpdateRequest={updateRequest}
+                  onUpdateRequest={(parsedRequest) => {
+                    // Use sync manager to handle external updates (like curl parsing)
+                    const syncedRequest = ParameterSyncManager.syncFromExternal(parsedRequest, data.request);
+                    updateRequest(syncedRequest);
+                  }}
                   onShowRequestHistory={() => setShowRequestHistory(true)}
                   requestHistoryCount={currentRequestHistory.length}
                 />

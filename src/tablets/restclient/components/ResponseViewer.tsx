@@ -58,11 +58,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
 
   if (error) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center max-w-md">
+      <div className="h-full flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl max-h-full overflow-auto custom-scrollbar">
           <div className="bg-red-500/20 text-red-400 p-4 rounded-md">
-            <h3 className="text-lg font-medium mb-2">Request Error</h3>
-            <p>{error}</p>
+            <h3 className="text-lg font-medium mb-2 text-center">Request Error</h3>
+            <pre className="text-sm text-left whitespace-pre-wrap overflow-auto max-h-96 bg-red-500/10 p-3 rounded border custom-scrollbar">{error}</pre>
           </div>
         </div>
       </div>

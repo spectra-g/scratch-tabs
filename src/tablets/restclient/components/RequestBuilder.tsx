@@ -8,6 +8,7 @@ import { AuthEditor } from "./AuthEditor";
 import { BodyEditor } from "./BodyEditor";
 import { VariablesEditor } from "./VariablesEditor";
 import { RequestExplainer } from "./RequestExplainer";
+import { ParameterSyncManager } from "../utils/paramSync";
 
 interface RequestBuilderProps {
   request: HttpRequest;
@@ -27,6 +28,79 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
   onExplanationLevelChange,
 }) => {
   const [activeTab, setActiveTab] = useState("headers");
+  const [editingSource, setEditingSource] = useState<'url' | 'params' | null>(null);
+
+  // Handle URL changes - when editing URL, it's the source of truth
+  const handleUrlChange = (url: string) => {
+    setEditingSource('url');
+    
+    // Use sync manager to coordinate URL/params update
+    const syncResult = ParameterSyncManager.syncFromUrl(url, request.params);
+    onUpdateRequest(syncResult);
+  };
+
+  // Handle query parameter changes - when editing params, they're the source of truth
+  const handleParamsChange = (params: typeof request.params) => {
+    setEditingSource('params');
+    
+    // Use sync manager to coordinate params/URL update
+    const syncResult = ParameterSyncManager.syncFromParams(params, request.url);
+    onUpdateRequest(syncResult);
+  };
+
+  // Handle when URL editing stops
+  const handleUrlBlur = () => {
+    setEditingSource(null);
+  };
+
+  // Handle when params editing stops
+  const handleParamsBlur = () => {
+    setEditingSource(null);
+  };
+
+  // Get the full URL with query parameters for display (human-readable, not encoded)
+  const getFullUrl = () => {
+    if (!request.url) return "";
+    
+    const result = (() => {
+      // If user is editing URL, show exactly what they typed
+      if (editingSource === 'url') {
+        return request.url;
+      }
+      
+      // If user is editing params, build URL from base URL + params
+      if (editingSource === 'params') {
+        const enabledParams = request.params.filter(p => p.enabled);
+        
+        // Extract base URL without query parameters
+        const baseUrl = request.url.split('?')[0];
+        
+        if (enabledParams.length === 0) {
+          return baseUrl;
+        }
+        
+        // Build query string manually to avoid URL encoding
+        const queryParams = enabledParams.map(param => `${param.key}=${param.value}`).join('&');
+        return queryParams ? `${baseUrl}?${queryParams}` : baseUrl;
+      }
+      
+      // Neither is being edited - show URL as-is if it has query params, otherwise build from params
+      if (request.url.includes('?')) {
+        return request.url;
+      }
+      
+      const enabledParams = request.params.filter(p => p.enabled);
+      if (enabledParams.length === 0) {
+        return request.url;
+      }
+      
+      // Build query string manually to avoid URL encoding
+      const queryParams = enabledParams.map(param => `${param.key}=${param.value}`).join('&');
+      return queryParams ? `${request.url}?${queryParams}` : request.url;
+    })();
+    
+    return result;
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -34,9 +108,10 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
       <div className="flex-none p-4 border-b border-gray-700/50">
         <UrlBar
           method={request.method}
-          url={request.url}
+          url={getFullUrl()}
           onMethodChange={(method) => onUpdateRequest({ method })}
-          onUrlChange={(url) => onUpdateRequest({ url })}
+          onUrlChange={handleUrlChange}
+          onUrlBlur={handleUrlBlur}
         />
 
         <div className="mt-4 flex justify-between items-center">
@@ -115,7 +190,8 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
         {activeTab === "params" && (
           <KeyValueEditor
             pairs={request.params}
-            onChange={(params) => onUpdateRequest({ params })}
+            onChange={handleParamsChange}
+            onBlur={handleParamsBlur}
             placeholder="Parameter name"
             valuePlaceholder="Parameter value"
           />

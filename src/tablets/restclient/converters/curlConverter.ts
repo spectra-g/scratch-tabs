@@ -75,6 +75,11 @@ export function requestToCurl(request: HttpRequest): string {
   // Start with the basic curl command
   let curlCommand = "curl";
 
+  // Add preserved curl flags first
+  if (request.curlFlags && request.curlFlags.length > 0) {
+    curlCommand += ` ${request.curlFlags.join(' ')}`;
+  }
+
   // Add method if not GET
   if (method !== "GET") {
     curlCommand += ` -X ${method}`;
@@ -82,21 +87,25 @@ export function requestToCurl(request: HttpRequest): string {
 
   // Build the URL with query parameters
   let fullUrl = url;
+  
+  // Check if URL already has query parameters (e.g., when user typed them in URL bar)
+  const urlAlreadyHasParams = url.includes('?');
+  
   if (
-    params.length > 0 ||
-    (unmaskedAuth.type === "apikey" && unmaskedAuth.params.addTo === "query")
+    !urlAlreadyHasParams && 
+    (params.length > 0 || (unmaskedAuth.type === "apikey" && unmaskedAuth.params.addTo === "query"))
   ) {
     const urlObj = new URL(url.startsWith("http") ? url : `http://${url}`);
 
     // Add regular query parameters
-    params
-      .filter((p) => p.enabled)
-      .forEach((param) => {
-        urlObj.searchParams.append(
-          param.key,
-          resolveVariables(param.value, unmaskedVariables),
-        );
-      });
+    const enabledParams = params.filter((p) => p.enabled);
+    
+    enabledParams.forEach((param) => {
+      urlObj.searchParams.append(
+        param.key,
+        resolveVariables(param.value, unmaskedVariables),
+      );
+    });
 
     // Add API key as query parameter if specified
     if (
@@ -114,6 +123,9 @@ export function requestToCurl(request: HttpRequest): string {
     }
 
     fullUrl = urlObj.toString();
+  } else if (urlAlreadyHasParams) {
+    // URL already has params, just use it as-is
+    fullUrl = url;
   }
 
   // Resolve variables in the URL
@@ -240,7 +252,38 @@ export function parseCurl(curlCommand: string): HttpRequest | null {
         params: [],
       },
       variables: [],
+      curlFlags: [], // Store curl-specific flags
     };
+    
+    // Define curl flags that don't affect the HTTP request but should be preserved
+    const preservedFlags = [
+      '-i', '--include',        // Include headers in output
+      '-v', '--verbose',        // Verbose output
+      '-s', '--silent',         // Silent mode
+      '-S', '--show-error',     // Show error even in silent mode
+      '-f', '--fail',           // Fail silently on HTTP errors
+      '-L', '--location',       // Follow redirects
+      '-k', '--insecure',       // Allow insecure SSL connections
+      '-o', '--output',         // Output to file
+      '-O', '--remote-name',    // Save with remote filename
+      '-w', '--write-out',      // Custom output format
+      '-c', '--cookie-jar',     // Cookie jar file
+      '-b', '--cookie',         // Cookie file/string
+      '--compressed',           // Request compressed response
+      '--max-time',             // Maximum time allowed
+      '--connect-timeout',      // Connection timeout
+      '--retry',                // Retry on failure
+      '--retry-delay',          // Delay between retries
+      '--retry-max-time',       // Maximum retry time
+      '--user-agent',           // User agent string
+      '--referer',              // Referer URL
+      '--proxy',                // Proxy settings
+      '--proxy-user',           // Proxy authentication
+      '--cert',                 // Client certificate
+      '--key',                  // Private key
+      '--cacert',               // CA certificate
+      '--capath',               // CA certificate directory
+    ];
 
     // Remove 'curl' from the beginning if present
     let cmd = curlCommand.trim();
@@ -449,6 +492,32 @@ export function parseCurl(curlCommand: string): HttpRequest | null {
               value,
               enabled: true,
             });
+          }
+        }
+        continue;
+      }
+
+      // Check for preserved flags
+      if (preservedFlags.includes(token)) {
+        if (!request.curlFlags) {
+          request.curlFlags = [];
+        }
+        request.curlFlags.push(token);
+        
+        // Handle flags that take arguments
+        if (token === '-o' || token === '--output' || 
+            token === '-w' || token === '--write-out' ||
+            token === '-c' || token === '--cookie-jar' ||
+            token === '-b' || token === '--cookie' ||
+            token === '--max-time' || token === '--connect-timeout' ||
+            token === '--retry' || token === '--retry-delay' ||
+            token === '--retry-max-time' || token === '--user-agent' ||
+            token === '--referer' || token === '--proxy' ||
+            token === '--proxy-user' || token === '--cert' ||
+            token === '--key' || token === '--cacert' ||
+            token === '--capath') {
+          if (i + 1 < tokens.length) {
+            request.curlFlags.push(tokens[++i]);
           }
         }
         continue;
