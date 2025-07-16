@@ -13,7 +13,7 @@ import {
   Check,
   X,
   Hash,
-  LayoutGrid,
+  Grid,
   List,
   CopyPlus,
   Globe,
@@ -867,7 +867,7 @@ export const VaultTablet: Tablet = {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="z-20 absolute top-0 left-0 h-full bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50"
+              className="z-20 absolute top-0 left-0 h-full bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50 w-64"
             >
               <SidebarContent />
             </motion.div>
@@ -876,7 +876,7 @@ export const VaultTablet: Tablet = {
 
         {/* Desktop Sidebar */}
         {!isMobile && (
-          <div className="flex-shrink-0">
+          <div className="w-64 flex-shrink-0 border-r border-gray-700/50">
             <SidebarContent />
           </div>
         )}
@@ -897,33 +897,34 @@ export const VaultTablet: Tablet = {
         <div className="flex-1 overflow-auto custom-scrollbar p-6">
           {/* Header with item count and view mode toggle */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-100">
-              {filteredItems.length}{" "}
-              {filteredItems.length === 1 ? "item" : "items"}
-            </h2>
+            <div className="text-sm text-gray-400">
+              {filteredItems.length} of {state.data.items.length} items showing
+            </div>
             <div className="flex items-center space-x-2">
-              <button
-                onClick={handleToggleViewMode}
-                className={`p-1.5 rounded-md transition-colors ${
-                  state.data.viewMode === "card"
-                    ? "text-blue-400 bg-blue-500/20"
-                    : "text-gray-400 hover:text-blue-400 hover:bg-blue-500/10"
-                }`}
-                title="Card view"
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                onClick={handleToggleViewMode}
-                className={`p-1.5 rounded-md transition-colors ${
-                  state.data.viewMode === "list"
-                    ? "text-blue-400 bg-blue-500/20"
-                    : "text-gray-400 hover:text-blue-400 hover:bg-blue-500/10"
-                }`}
-                title="List view"
-              >
-                <List size={16} />
-              </button>
+              <div className="flex items-center bg-gray-800/50 border border-gray-700/50 rounded-md">
+                <button
+                  onClick={handleToggleViewMode}
+                  className={`p-1.5 rounded-l-md ${
+                    state.data.viewMode === "list"
+                      ? "bg-blue-500/20 text-blue-300"
+                      : "text-gray-400 hover:bg-gray-700/50"
+                  }`}
+                  title="List View"
+                >
+                  <List size={16} />
+                </button>
+                <button
+                  onClick={handleToggleViewMode}
+                  className={`p-1.5 rounded-r-md ${
+                    state.data.viewMode === "card"
+                      ? "bg-blue-500/20 text-blue-300"
+                      : "text-gray-400 hover:bg-gray-700/50"
+                  }`}
+                  title="Card View"
+                >
+                  <Grid size={16} />
+                </button>
+              </div>
               <button
                 onClick={handleAddItem}
                 className="flex items-center space-x-2 ml-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
@@ -939,24 +940,39 @@ export const VaultTablet: Tablet = {
             state.data.viewMode === "card" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {sortedItems.map((item) => (
-                  <VaultItemCard
+                  <motion.div
                     key={item.id}
-                    item={item}
-                    onEdit={() => handleEditItem(item)}
-                    onDelete={() => handleDeleteItem(item.id)}
-                    onTogglePin={() => handleTogglePin(item.id)}
-                    onCopy={() => handleCopyContent(item.id)}
-                    onDuplicate={() => handleDuplicateItem(item.id)}
-                    onOpenInNewTab={() => handleOpenInNewTab(item.id)}
-                    onOpenUrl={() => handleOpenUrl(item.id)}
-                    isCopied={copiedItemId === item.id}
-                    isOpened={openedItemId === item.id}
-                  />
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <VaultItemCard
+                      item={item}
+                      onEdit={() => handleEditItem(item)}
+                      onDelete={() => handleDeleteItem(item.id)}
+                      onTogglePin={() => handleTogglePin(item.id)}
+                      onCopy={() => handleCopyContent(item.id)}
+                      onDuplicate={() => handleDuplicateItem(item.id)}
+                      onOpenInNewTab={() => handleOpenInNewTab(item.id)}
+                      onOpenUrl={() => handleOpenUrl(item.id)}
+                      isCopied={copiedItemId === item.id}
+                      isOpened={openedItemId === item.id}
+                    />
+                  </motion.div>
                 ))}
               </div>
             ) : (
               <div className="flex flex-col space-y-0 border-t border-gray-700/50">
-                {sortedItems.map((item) => renderListItem(item))}
+                {sortedItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {renderListItem(item)}
+                  </motion.div>
+                ))}
               </div>
             )
           ) : (
