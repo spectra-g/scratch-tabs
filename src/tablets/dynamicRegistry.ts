@@ -95,14 +95,17 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
   }
 
   search(query: string): TabletMetadata[] {
-    if (!query) return tabletMetadata;
-    const normalizedQuery = query.toLowerCase();
-    return tabletMetadata.filter(
-      (tablet) =>
-        tablet.id.toLowerCase().includes(normalizedQuery) ||
-        tablet.label.toLowerCase().includes(normalizedQuery) ||
-        tablet.keywords.some((k) => k.toLowerCase().includes(normalizedQuery)),
-    );
+    const results = query 
+      ? tabletMetadata.filter(
+          (tablet) =>
+            tablet.id.toLowerCase().includes(query.toLowerCase()) ||
+            tablet.label.toLowerCase().includes(query.toLowerCase()) ||
+            tablet.keywords.some((k) => k.toLowerCase().includes(query.toLowerCase())),
+        )
+      : tabletMetadata;
+    
+    // Sort by label alphabetically
+    return results.sort((a, b) => a.label.localeCompare(b.label));
   }
 
   isLoaded(id: string): boolean {
