@@ -63,9 +63,9 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
     activeFilters.showPinnedOnly;
 
   return (
-    <div className="w-64 border-r border-gray-700/50 flex flex-col bg-gray-800/30">
+    <div className="flex flex-col p-4 space-y-6 h-full">
       {/* Header */}
-      <div className="p-4 border-b border-gray-700/50">
+      <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <Archive className="text-gray-400" size={20} />
@@ -93,7 +93,7 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search vault..."
-            className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500"
           />
         </div>
 

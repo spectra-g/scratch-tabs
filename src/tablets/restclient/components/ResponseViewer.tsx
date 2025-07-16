@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Editor } from "@monaco-editor/react";
-import { Clock, Copy, Check, History } from "lucide-react";
+import { Clock, Copy, Check, History, X } from "lucide-react";
 import { HttpResponse } from "../types";
 import {
   formatResponseBody,
@@ -15,6 +15,7 @@ interface ResponseViewerProps {
   isLoading: boolean;
   onShowHistory: () => void;
   historyCount: number;
+  onClearError?: () => void;
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = ({
@@ -23,6 +24,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
   isLoading,
   onShowHistory,
   historyCount,
+  onClearError,
 }) => {
   const [activeTab, setActiveTab] = useState("body");
   const [isCopied, setIsCopied] = useState(false);
@@ -58,11 +60,20 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
 
   if (error) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <div className="bg-red-500/20 text-red-400 p-4 rounded-md">
-            <h3 className="text-lg font-medium mb-2">Request Error</h3>
-            <p>{error}</p>
+      <div className="h-full flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl max-h-full overflow-auto custom-scrollbar">
+          <div className="bg-red-500/20 text-red-400 p-4 rounded-md relative">
+            {onClearError && (
+              <button
+                onClick={onClearError}
+                className="absolute top-2 right-2 p-1 hover:bg-red-500/30 rounded-md transition-colors"
+                title="Clear error"
+              >
+                <X size={16} />
+              </button>
+            )}
+            <h3 className="text-lg font-medium mb-2 text-center pr-8">Request Error</h3>
+            <pre className="text-sm text-left whitespace-pre-wrap overflow-auto max-h-96 bg-red-500/10 p-3 rounded border custom-scrollbar">{error}</pre>
           </div>
         </div>
       </div>

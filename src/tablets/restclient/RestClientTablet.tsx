@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tablet, TabletState } from "../types";
-import { Network } from "lucide-react";
+import { Network, AlertCircle } from "lucide-react";
 import { RequestBuilder } from "./components/RequestBuilder";
 import { RequestConverter } from "./components/RequestConverter";
 import { ResponseViewer } from "./components/ResponseViewer";
@@ -15,6 +15,7 @@ import {
 } from "./types";
 import { executeRequest } from "./utils/requestUtils";
 import { SensitiveDataManager } from "../../utils/sensitiveDataManager";
+import { ParameterSyncManager } from "./utils/paramSync";
 
 interface RestClientTabletState extends TabletState {
   type: "restclient";
@@ -62,6 +63,7 @@ export const RestClientTablet: Tablet = {
               enabled: true,
             },
           ],
+          curlFlags: [],
         },
         response: null,
         responseHistory: [],
@@ -296,12 +298,18 @@ export const RestClientTablet: Tablet = {
         });
       } catch (error) {
         console.error("Request execution error:", error);
+        
+        let errorMessage = "Failed to execute request";
+        
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else {
+          errorMessage = String(error);
+        }
+        
         updateState({
           isExecuting: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to execute request",
+          error: errorMessage,
           // Still save request to history even if it fails
           requestHistory: [requestHistoryItem, ...currentRequestHistory],
         });
@@ -361,6 +369,10 @@ export const RestClientTablet: Tablet = {
       updateState({ conversionFormat: format });
     };
 
+    const handleClearError = () => {
+      updateState({ error: null });
+    };
+
     useEffect(() => {
       const now = Date.now();
       const ONE_HOUR = 60 * 60 * 1000;
@@ -388,9 +400,15 @@ export const RestClientTablet: Tablet = {
       <div className="h-full bg-gray-900 flex flex-col">
         {/* Header */}
         <div className="flex-none p-4 border-b border-gray-700/50">
-          <div className="flex items-center space-x-3">
-            <Network className="text-gray-400" size={24} />
-            <h2 className="text-xl font-semibold text-gray-100">REST Client</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Network className="text-gray-400" size={24} />
+              <h2 className="text-xl font-semibold text-gray-100">REST Client</h2>
+            </div>
+            <div className="text-xs text-gray-500 flex items-center">
+              <AlertCircle size={12} className="mr-1" />
+              <span>Browser CORS limitations may apply</span>
+            </div>
           </div>
         </div>
 
@@ -425,7 +443,11 @@ export const RestClientTablet: Tablet = {
                   request={data.request}
                   format={data.conversionFormat}
                   onFormatChange={handleSetConversionFormat}
-                  onUpdateRequest={updateRequest}
+                  onUpdateRequest={(parsedRequest) => {
+                    // Use sync manager to handle external updates (like curl parsing)
+                    const syncedRequest = ParameterSyncManager.syncFromExternal(parsedRequest, data.request);
+                    updateRequest(syncedRequest);
+                  }}
                   onShowRequestHistory={() => setShowRequestHistory(true)}
                   requestHistoryCount={currentRequestHistory.length}
                 />
@@ -449,6 +471,7 @@ export const RestClientTablet: Tablet = {
                   isLoading={data.isExecuting}
                   onShowHistory={() => setShowResponseHistory(true)}
                   historyCount={data.responseHistory.length}
+                  onClearError={handleClearError}
                 />
               )}
             </div>

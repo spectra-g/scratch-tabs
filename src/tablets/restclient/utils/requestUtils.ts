@@ -145,9 +145,10 @@ export async function executeRequest(
     total: 0,
   };
 
+  // Build URL with query parameters - moved outside try block so it's accessible in catch
+  const url = buildUrl(request.url, request.params, request.variables);
+
   try {
-    // Build URL with query parameters
-    const url = buildUrl(request.url, request.params, request.variables);
 
     // Build headers
     const headers = buildHeaders(
@@ -167,6 +168,8 @@ export async function executeRequest(
       ...(request.method !== "GET" && request.method !== "HEAD"
         ? { body: body as any }
         : {}),
+      // Add timeout and other options
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     };
 
     // Execute request
@@ -205,7 +208,42 @@ export async function executeRequest(
     };
   } catch (error) {
     console.error("Request execution error:", error);
-    throw error;
+    
+    // Extract as much detail as possible from the error object
+    const errorDetails = {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      type: typeof error,
+      constructor: error?.constructor?.name,
+    };
+    
+    // Build detailed error message with all available information
+    let errorMessage = `Request failed: ${errorDetails.message}\n\n`;
+    
+    // Add URL context
+    errorMessage += `URL: ${url}\n`;
+    errorMessage += `Method: ${request.method}\n\n`;
+    
+    // Add error type information
+    errorMessage += `ERROR DETAILS:\n`;
+    errorMessage += `• Type: ${errorDetails.name} (${errorDetails.type})\n`;
+    if (errorDetails.constructor && errorDetails.constructor !== errorDetails.name) {
+      errorMessage += `• Constructor: ${errorDetails.constructor}\n`;
+    }
+    
+    
+    errorMessage += `\nTIMESTAMP: ${new Date().toISOString()}\n`;
+    
+    // Add helpful note about console
+    errorMessage += `\nNOTE: Check browser console for additional error details and network information.`;
+    
+    // Create enhanced error object that preserves original error
+    const enhancedError = new Error(errorMessage);
+    (enhancedError as any).originalError = error;
+    (enhancedError as any).url = url;
+    (enhancedError as any).method = request.method;
+    
+    throw enhancedError;
   }
 }
 

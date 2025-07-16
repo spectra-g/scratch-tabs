@@ -556,6 +556,7 @@ export const detectShape = (
       return {
         type: 'orthogonal-arrow',
         points: orthogonalPoints,
+        cornerRadius: 8, // Default corner radius for rounded corners
       };
     }
 

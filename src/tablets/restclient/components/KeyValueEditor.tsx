@@ -10,6 +10,7 @@ interface KeyValueEditorProps {
   valuePlaceholder?: string;
   suggestions?: string[];
   showSecrets?: boolean;
+  onBlur?: () => void;
 }
 
 export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
@@ -19,6 +20,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
   valuePlaceholder = "Value",
   suggestions = [],
   showSecrets = true,
+  onBlur,
 }) => {
   const handleAddPair = () => {
     onChange([...pairs, { key: "", value: "", enabled: true }]);
@@ -146,6 +148,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
                 type="text"
                 value={pair.key}
                 onChange={(e) => handleChangePair(index, "key", e.target.value)}
+                onBlur={onBlur}
                 placeholder={placeholder}
                 className={`
                   flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm
@@ -162,6 +165,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
                 onChange={(e) =>
                   handleChangePair(index, "value", e.target.value)
                 }
+                onBlur={onBlur}
                 placeholder={valuePlaceholder}
                 className={`
                   flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm

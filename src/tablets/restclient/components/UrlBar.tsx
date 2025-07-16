@@ -6,6 +6,7 @@ interface UrlBarProps {
   url: string;
   onMethodChange: (method: HttpMethod) => void;
   onUrlChange: (url: string) => void;
+  onUrlBlur?: () => void;
 }
 
 const HTTP_METHODS: HttpMethod[] = [
@@ -23,6 +24,7 @@ export const UrlBar: React.FC<UrlBarProps> = ({
   url,
   onMethodChange,
   onUrlChange,
+  onUrlBlur,
 }) => {
   return (
     <div className="flex space-x-2">
@@ -42,6 +44,7 @@ export const UrlBar: React.FC<UrlBarProps> = ({
         type="text"
         value={url}
         onChange={(e) => onUrlChange(e.target.value)}
+        onBlur={onUrlBlur}
         placeholder="https://api.example.com/endpoint"
         className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
       />

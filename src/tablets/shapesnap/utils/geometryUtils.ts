@@ -196,3 +196,65 @@ export const isWithinThreshold = (
   point2: Point,
   threshold: number,
 ): boolean => distance(point1, point2) <= threshold;
+
+/**
+ * Creates an SVG path with rounded corners for orthogonal arrows
+ * @param points - Array of points representing the path
+ * @param radius - Corner radius for rounding
+ * @returns SVG path string with rounded corners
+ */
+export const createRoundedOrthogonalPath = (
+  points: Point[],
+  radius: number,
+): string => {
+  if (points.length < 2) return "";
+  if (points.length === 2 || radius <= 0) {
+    // For straight lines or zero radius, return regular path
+    return `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}`;
+  }
+
+  let path = `M ${points[0].x},${points[0].y}`;
+  
+  for (let i = 1; i < points.length - 1; i++) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    const next = points[i + 1];
+    
+    // Calculate vectors from current point to previous and next
+    const toPrev = { x: prev.x - curr.x, y: prev.y - curr.y };
+    const toNext = { x: next.x - curr.x, y: next.y - curr.y };
+    
+    // Calculate distances
+    const distToPrev = Math.sqrt(toPrev.x * toPrev.x + toPrev.y * toPrev.y);
+    const distToNext = Math.sqrt(toNext.x * toNext.x + toNext.y * toNext.y);
+    
+    // Normalize vectors
+    const prevUnit = { x: toPrev.x / distToPrev, y: toPrev.y / distToPrev };
+    const nextUnit = { x: toNext.x / distToNext, y: toNext.y / distToNext };
+    
+    // Use the smaller of the available distances or radius
+    const actualRadius = Math.min(radius, distToPrev / 2, distToNext / 2);
+    
+    // Calculate start and end points of the rounded corner
+    const cornerStart = {
+      x: curr.x + prevUnit.x * actualRadius,
+      y: curr.y + prevUnit.y * actualRadius,
+    };
+    
+    const cornerEnd = {
+      x: curr.x + nextUnit.x * actualRadius,
+      y: curr.y + nextUnit.y * actualRadius,
+    };
+    
+    // Draw line to corner start
+    path += ` L ${cornerStart.x},${cornerStart.y}`;
+    
+    // Draw quadratic curve for the rounded corner
+    path += ` Q ${curr.x},${curr.y} ${cornerEnd.x},${cornerEnd.y}`;
+  }
+  
+  // Draw final line to the last point
+  path += ` L ${points[points.length - 1].x},${points[points.length - 1].y}`;
+  
+  return path;
+};

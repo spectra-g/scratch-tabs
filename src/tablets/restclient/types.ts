@@ -54,6 +54,7 @@ export interface HttpRequest {
   params: KeyValuePair[];
   body: HttpRequestBody;
   variables: KeyValuePair[];
+  curlFlags?: string[]; // Store curl-specific flags that don't affect the HTTP request
 }
 
 export interface HttpResponseTiming {
