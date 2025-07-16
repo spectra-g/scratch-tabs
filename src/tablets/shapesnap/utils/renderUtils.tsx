@@ -1,6 +1,7 @@
 import React from "react";
 import { Shape, Point, ArrowTipStyle } from "../types";
 import rough from "roughjs/bin/rough";
+import { createRoundedOrthogonalPath } from "./geometryUtils";
 
 // Utility function to create modal-aware event handlers
 const createModalAwareHandler = (
@@ -565,7 +566,61 @@ export const renderShape = (
           </g>
         );
       }
-      case "orthogonal-arrow":
+      case "orthogonal-arrow": {
+        const orthogonalShape = shape as Shape & {
+          points: Point[];
+          arrowTipStart?: ArrowTipStyle;
+          arrowTipEnd?: ArrowTipStyle;
+          arrowTipSize?: number;
+          cornerRadius?: number;
+        };
+
+        const startArrow =
+          orthogonalShape.arrowTipStart &&
+            orthogonalShape.arrowTipStart !== "none" &&
+            orthogonalShape.points.length >= 2
+            ? renderArrowTip(
+              orthogonalShape.points[0],
+              orthogonalShape.points[1],
+              orthogonalShape.arrowTipStart,
+              orthogonalShape.arrowTipSize,
+              shape.style.stroke,
+              shape.style.strokeWidth,
+            )
+            : null;
+
+        const endArrow =
+          orthogonalShape.arrowTipEnd &&
+            orthogonalShape.arrowTipEnd !== "none" &&
+            orthogonalShape.points.length >= 2
+            ? renderArrowTip(
+              orthogonalShape.points[orthogonalShape.points.length - 1],
+              orthogonalShape.points[orthogonalShape.points.length - 2],
+              orthogonalShape.arrowTipEnd,
+              orthogonalShape.arrowTipSize,
+              shape.style.stroke,
+              shape.style.strokeWidth,
+            )
+            : null;
+
+        // Use rounded corners for orthogonal arrows
+        const cornerRadius = orthogonalShape.cornerRadius ?? 8;
+        const pathData = createRoundedOrthogonalPath(orthogonalShape.points, cornerRadius);
+
+        return (
+          <g key={shape.id} {...baseProps}>
+            <path
+              d={pathData}
+              stroke={shape.style.stroke}
+              strokeWidth={shape.style.strokeWidth || 2}
+              fill="none"
+              strokeLinecap="round"
+            />
+            {startArrow}
+            {endArrow}
+          </g>
+        );
+      }
       case "line": {
         const lineShape = shape as Shape & {
           points: Point[];

@@ -122,6 +122,7 @@ export interface OrthogonalArrowShape extends BaseShape {
   arrowTipStart?: ArrowTipStyle; // Arrow tip style for the start of the line
   arrowTipEnd?: ArrowTipStyle; // Arrow tip style for the end of the line
   arrowTipSize?: number; // Size of the arrow tips (default: 10)
+  cornerRadius?: number; // Radius for rounded corners (default: 8)
 }
 
 export type Shape =

@@ -373,6 +373,7 @@ export class ShapeRegistry {
           style: { stroke: "#000000", strokeWidth: 2 },
           arrowTipEnd: "simple",
           arrowTipSize: 10,
+          cornerRadius: 8,
         },
         requiredProperties: ["points"],
         supportedOperations: [
