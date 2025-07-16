@@ -1,5 +1,6 @@
 import React from "react";
 import { ShapeSnapTool, ShapeSnapMode } from "../types";
+import { useIsMobile } from "../../../hooks/useIsMobile";
 
 interface ShapeSnapStatusBarProps {
   shapeCount: number;
@@ -16,6 +17,7 @@ export const ShapeSnapStatusBar: React.FC<ShapeSnapStatusBarProps> = ({
   selectedCount = 0,
   hasClipboard = false,
 }) => {
+  const isMobile = useIsMobile();
   return (
     <div className="flex items-center justify-between p-2 border-t border-gray-700 bg-gray-800 text-xs text-gray-400">
       <div className="flex items-center space-x-4">
@@ -39,9 +41,11 @@ export const ShapeSnapStatusBar: React.FC<ShapeSnapStatusBarProps> = ({
           Mode: <span className="text-gray-300 capitalize">{canvasMode}</span>
         </div>
 
-        <div className="text-gray-500 text-xs">
-          Ctrl+C Copy | Ctrl+V Paste | Ctrl+X Cut | Del Delete
-        </div>
+        {!isMobile && (
+          <div className="text-gray-500 text-xs">
+            Ctrl+C Copy | Ctrl+V Paste | Ctrl+X Cut | Del Delete
+          </div>
+        )}
       </div>
     </div>
   );
