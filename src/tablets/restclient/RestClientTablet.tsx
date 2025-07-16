@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tablet, TabletState } from "../types";
-import { Network } from "lucide-react";
+import { Network, AlertCircle } from "lucide-react";
 import { RequestBuilder } from "./components/RequestBuilder";
 import { RequestConverter } from "./components/RequestConverter";
 import { ResponseViewer } from "./components/ResponseViewer";
@@ -400,9 +400,15 @@ export const RestClientTablet: Tablet = {
       <div className="h-full bg-gray-900 flex flex-col">
         {/* Header */}
         <div className="flex-none p-4 border-b border-gray-700/50">
-          <div className="flex items-center space-x-3">
-            <Network className="text-gray-400" size={24} />
-            <h2 className="text-xl font-semibold text-gray-100">REST Client</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Network className="text-gray-400" size={24} />
+              <h2 className="text-xl font-semibold text-gray-100">REST Client</h2>
+            </div>
+            <div className="text-xs text-gray-500 flex items-center">
+              <AlertCircle size={12} className="mr-1" />
+              <span>Browser CORS limitations may apply</span>
+            </div>
           </div>
         </div>
 

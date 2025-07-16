@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Play, AlertCircle } from "lucide-react";
+import { Play } from "lucide-react";
 import { HttpRequest, ExplanationLevel } from "../types";
 import { UrlBar } from "./UrlBar";
 import { Tabs } from "./ui/Tabs";
@@ -131,11 +131,6 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
             <Play size={16} />
             <span>{isExecuting ? "Executing..." : "Send"}</span>
           </button>
-
-          <div className="text-sm text-yellow-400 flex items-center">
-            <AlertCircle size={16} className="mr-2" />
-            <span>Browser CORS limitations may apply</span>
-          </div>
         </div>
       </div>
 
