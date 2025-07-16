@@ -110,7 +110,7 @@ describe("useClickHandler", () => {
 
       expect(result.current.selectedShapeId).toBe("rect-1");
       expect(result.current.editingShape).toBe(null);
-      expect(mockOnShapeClick).toHaveBeenCalledWith(shape, position);
+      expect(mockOnShapeClick).toHaveBeenCalledWith(shape, position, undefined);
     });
 
     it("should handle shape click without onShapeClick callback", () => {
@@ -213,7 +213,15 @@ describe("useClickHandler", () => {
           offsetX: 150,
           offsetY: 150,
         },
-      } as React.MouseEvent;
+        currentTarget: {
+          getBoundingClientRect: jest.fn().mockReturnValue({
+            left: 10,
+            top: 20,
+          }),
+        },
+        clientX: 160,
+        clientY: 170,
+      } as unknown as React.MouseEvent;
 
       act(() => {
         result.current.handleCanvasDoubleClick(mockEvent);
@@ -255,7 +263,7 @@ describe("useClickHandler", () => {
           offsetX: 150,
           offsetY: 150,
         },
-      } as React.MouseEvent;
+      } as unknown as React.MouseEvent;
 
       act(() => {
         eraserResult.current.handleCanvasDoubleClick(mockEvent);
@@ -282,7 +290,15 @@ describe("useClickHandler", () => {
           offsetX: 150,
           offsetY: 150,
         },
-      } as React.MouseEvent;
+        currentTarget: {
+          getBoundingClientRect: jest.fn().mockReturnValue({
+            left: 10,
+            top: 20,
+          }),
+        },
+        clientX: 160,
+        clientY: 170,
+      } as unknown as React.MouseEvent;
 
       act(() => {
         result.current.handleCanvasDoubleClick(mockEvent);
@@ -550,11 +566,27 @@ describe("useClickHandler", () => {
 
       const mockEvent1 = {
         nativeEvent: { offsetX: 100, offsetY: 100 },
-      } as React.MouseEvent;
+        currentTarget: {
+          getBoundingClientRect: jest.fn().mockReturnValue({
+            left: 10,
+            top: 20,
+          }),
+        },
+        clientX: 110,
+        clientY: 120,
+      } as unknown as React.MouseEvent;
 
       const mockEvent2 = {
         nativeEvent: { offsetX: 200, offsetY: 200 },
-      } as React.MouseEvent;
+        currentTarget: {
+          getBoundingClientRect: jest.fn().mockReturnValue({
+            left: 10,
+            top: 20,
+          }),
+        },
+        clientX: 210,
+        clientY: 220,
+      } as unknown as React.MouseEvent;
 
       act(() => {
         result.current.handleCanvasDoubleClick(mockEvent1);

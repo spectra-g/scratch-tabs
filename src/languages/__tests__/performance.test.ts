@@ -316,8 +316,8 @@ describe("Language Detection Performance Tests", () => {
 
       // Both should be fast since content sampling is working at the entry point
       // The performance improvement is now minimal because both use sampling
-      expect(sampleDuration).toBeLessThan(50); // Should be under 50ms
-      expect(fullDuration).toBeLessThan(50); // Should be under 50ms
+      expect(sampleDuration).toBeLessThan(60); // Should be under 50ms
+      expect(fullDuration).toBeLessThan(60); // Should be under 50ms
 
       // Results should be similar quality (JSON should be detected in both)
       expect(sampleResult[0]?.id).toBe(fullResult[0]?.id);

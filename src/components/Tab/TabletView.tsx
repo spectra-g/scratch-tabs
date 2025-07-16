@@ -180,7 +180,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     return () => {
       isMounted = false;
     };
-  }, [tabletType, tab.id, tab.tabletState]); // Added tab.tabletState back to ensure re-renders when state changes
+ }, [tabletType, tab.id]); // Removed tab.tabletState to prevent unnecessary re-renders that cause cache issues
 
   // Error boundary recovery functions
   const handleCloseTab = () => {

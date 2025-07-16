@@ -27,6 +27,7 @@ describe("useDragHandler", () => {
 
   const mockOnUpdateShape = jest.fn();
   const mockOnShapeClick = jest.fn();
+  const mockOnMoveMultipleShapes = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -38,6 +39,7 @@ describe("useDragHandler", () => {
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -45,7 +47,9 @@ describe("useDragHandler", () => {
         draggingShapeId: null,
         dragOffset: null,
         draggedShape: null,
+        draggedShapes: null,
         hasMoved: false,
+        justCompletedMultiDrag: false,
         dragGuides: null,
       });
       expect(result.current.isDragging).toBe(false);
@@ -60,6 +64,7 @@ describe("useDragHandler", () => {
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -81,6 +86,7 @@ describe("useDragHandler", () => {
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -103,6 +109,7 @@ describe("useDragHandler", () => {
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -127,6 +134,7 @@ describe("useDragHandler", () => {
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -148,6 +156,7 @@ describe("useDragHandler", () => {
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
           onShapeClick: mockOnShapeClick,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -173,6 +182,7 @@ describe("useDragHandler", () => {
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -208,6 +218,7 @@ describe("useDragHandler", () => {
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -243,6 +254,7 @@ describe("useDragHandler", () => {
         useDragHandler({
           shapes: mockShapes,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -272,6 +284,7 @@ describe("useDragHandler", () => {
           shapes: mockShapes,
           gridSnappingEnabled: true,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
@@ -307,6 +320,7 @@ describe("useDragHandler", () => {
           shapes: mockShapes,
           gridSnappingEnabled: false,
           onUpdateShape: mockOnUpdateShape,
+          onMoveMultipleShapes: mockOnMoveMultipleShapes,
         }),
       );
 
