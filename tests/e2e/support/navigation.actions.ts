@@ -76,6 +76,10 @@ export class NavigationActions {
     await this.waitForPageStabilization();
   }
 
+  async refreshPage() {
+    await this.reloadPage();
+  }
+
   async goBack() {
     await this.page.goBack();
     await this.waitForPageStabilization();

@@ -133,4 +133,8 @@ When('I click the three dots menu', async function() {
 
 When('I click in the editor', async function() {
   await this.editor.clickInEditor();
-}); 
+});
+
+When('I refresh the page', async function() {
+  await this.navigation.refreshPage();
+});
