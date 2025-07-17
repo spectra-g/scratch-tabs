@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "jest",
     "e2e": "./run-e2e-tests.sh",
-    "e2e:full": "./run-e2e-tests.sh",
+    "e2e:full": "./run-e2e-full.sh",
     "e2e:compile": "tsc -p tests/e2e/tsconfig.json",
     "e2e:report": "open reports/cucumber-report.html",
     "tsc": "tsc --noEmit",
