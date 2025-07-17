@@ -252,6 +252,10 @@ class ModelManager {
     const timeout = setTimeout(async () => {
       try {
         await this.storage.updateTabCursor(tabId, cursorPosition);
+        
+        // CRITICAL: Update the cursor position in the store so it's available for tab switching
+        useTabsStore.getState().updateTabState(tabId, { cursorPosition });
+        
         this.debouncedCursorPersistence.delete(tabId);
       } catch (error) {
         console.warn(

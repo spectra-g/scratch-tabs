@@ -138,11 +138,17 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
   // SIMPLIFIED: This effect manages model switching with the corrected ModelManager
   useEffect(() => {
-    if (!editorRef.current || !monacoRef.current || !activeTabWithoutCursor)
+    if (!editorRef.current || !monacoRef.current || !activeTabWithoutCursor) {
       return;
+    }
 
     const editor = editorRef.current;
     const previousTabId = currentTabIdRef.current;
+    
+    // Skip if we're not actually switching tabs
+    if (previousTabId === activeTabId) {
+      return;
+    }
 
     (async () => {
       try {
@@ -167,6 +173,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         const newViewState = tabViewStates.get(activeTabWithoutCursor.id);
         if (newViewState) {
           editor.restoreViewState(newViewState);
+        } else {
+          // No view state found - restore cursor position from database
+          const dbCursorPos = activeTabWithoutCursor.cursorPosition;
+          if (dbCursorPos && dbCursorPos.lineNumber > 0 && dbCursorPos.column > 0) {
+            editor.setPosition({
+              lineNumber: dbCursorPos.lineNumber,
+              column: dbCursorPos.column,
+            });
+          }
         }
 
         // Focus the editor
@@ -250,6 +265,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
             const initialViewState = tabViewStates.get(activeTab.id);
             if (initialViewState) {
               editor.restoreViewState(initialViewState);
+            } else {
+              // No view state found - restore cursor position from database
+              const dbCursorPos = activeTab.cursorPosition;
+              if (dbCursorPos && dbCursorPos.lineNumber > 0 && dbCursorPos.column > 0) {
+                editor.setPosition({
+                  lineNumber: dbCursorPos.lineNumber,
+                  column: dbCursorPos.column,
+                });
+              }
             }
           } catch (error) {
             console.error(

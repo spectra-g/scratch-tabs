@@ -14,6 +14,7 @@ jest.mock("../../stores/tabsStore", () => ({
   useTabsStore: {
     getState: jest.fn(() => ({
       updateTabContent: jest.fn(),
+      updateTabState: jest.fn(),
     })),
   },
 }));
@@ -341,6 +342,74 @@ describe("ModelManager", () => {
       expect(() =>
         modelManager.updateModelLanguage("test-tab", "typescript"),
       ).not.toThrow();
+    });
+  });
+
+  describe("cursor position management", () => {
+    it("should update cursor position in both database and store", async () => {
+      const mockStorage = {
+        getTabContent: jest.fn(() => Promise.resolve("test content")),
+        updateTabCursor: jest.fn(() => Promise.resolve()),
+      };
+      
+      const mockTabsStore = {
+        updateTabContent: jest.fn(),
+        updateTabState: jest.fn(),
+      };
+
+      // Mock the storage and tabs store
+      jest.doMock("../../db", () => ({
+        StorageProviderFactory: {
+          getProvider: () => mockStorage,
+        },
+      }));
+
+      jest.doMock("../../stores/tabsStore", () => ({
+        useTabsStore: {
+          getState: () => mockTabsStore,
+        },
+      }));
+
+      // Create a mock editor with cursor position listener
+      const mockEditor = {
+        onDidChangeCursorPosition: jest.fn(),
+      };
+
+      const cursorPosition = { lineNumber: 10, column: 5 };
+
+      // Register cursor position listener
+      modelManager.registerCursorPositionListener("test-tab", mockEditor as any);
+
+      // Simulate cursor position change
+      const cursorChangeCallback = mockEditor.onDidChangeCursorPosition.mock.calls[0][0];
+      cursorChangeCallback({
+        position: cursorPosition,
+      });
+
+      // Wait for debounced save (1 second + a bit)
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
+      // Verify database update was called
+      expect(mockStorage.updateTabCursor).toHaveBeenCalledWith("test-tab", cursorPosition);
+      
+      // Verify store update was called
+      expect(mockTabsStore.updateTabState).toHaveBeenCalledWith("test-tab", { cursorPosition });
+    });
+
+    it("should handle cursor position listener registration and cleanup", () => {
+      const mockEditor = {
+        onDidChangeCursorPosition: jest.fn(() => ({ dispose: jest.fn() })),
+      };
+
+      // Register listener
+      modelManager.registerCursorPositionListener("test-tab", mockEditor as any);
+      expect(mockEditor.onDidChangeCursorPosition).toHaveBeenCalled();
+
+      // Unregister listener
+      modelManager.unregisterCursorPositionListener("test-tab");
+      
+      // Should not throw
+      expect(() => modelManager.unregisterCursorPositionListener("test-tab")).not.toThrow();
     });
   });
 
