@@ -1,4 +1,5 @@
 const { When } = require('@cucumber/cucumber');
+const { expect } = require('@playwright/test');
 
 // Updated to use action classes directly instead of delegate methods
 // Aliases for quoted and unquoted variants
@@ -57,6 +58,23 @@ When('I wait for the tablet to be ready', async function() {
 When('I wait for the application to load', async function() {
   // Wait for the application to fully load after refresh
   await this.navigation.waitForPageStabilization();
+});
+
+When('I wait for the state to be saved', async function() {
+  // Wait for the app's save operation to complete by observing DOM changes
+  // The app updates a hidden element's data-last-save attribute after each save
+  const saveIndicator = this.page.locator('#test-save-indicator');
+  await expect(saveIndicator).toBeAttached();
+  
+  // Get the current save timestamp
+  let initialSave = await saveIndicator.getAttribute('data-last-save');
+
+  if (initialSave === '0') {
+    // If no save has happened yet, wait for the first save
+    await expect(saveIndicator).not.toHaveAttribute('data-last-save', initialSave);
+    initialSave = await saveIndicator.getAttribute('data-last-save');
+  }
+  await expect(saveIndicator).not.toHaveAttribute('data-last-save', initialSave);
 });
 
 When('I refresh the page', async function() {

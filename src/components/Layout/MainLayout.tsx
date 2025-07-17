@@ -109,10 +109,16 @@ const MainLayout: React.FC = () => {
 
   // Set up periodic save interval
   useEffect(() => {
-    const saveInterval = setInterval(() => {
+    const saveInterval = setInterval(async () => {
       // Use getState to ensure we always get the latest version of the saveState function
       // and prevent issues with stale closures.
-      usePersistenceStore.getState().saveState();
+      await usePersistenceStore.getState().saveState();
+      
+      // Update test indicator after save completes
+      const saveIndicator = document.getElementById('test-save-indicator');
+      if (saveIndicator) {
+        saveIndicator.setAttribute('data-last-save', Date.now().toString());
+      }
     }, 2500); // Save every 2.5 seconds
 
     return () => {
@@ -391,6 +397,14 @@ const MainLayout: React.FC = () => {
       )}
       {isSearchOpen && <SearchModal />}
       <AIModelManagementModal />
+      
+      {/* Hidden element for E2E tests to detect when saves complete */}
+      <div 
+        id="test-save-indicator" 
+        data-last-save="0"
+        style={{ display: 'none' }}
+        aria-hidden="true"
+      />
     </div>
   );
 };
