@@ -159,4 +159,32 @@ export class EditorActions {
     const previewPane = this.page.locator('[data-testid="preview-pane"]');
     await expect(previewPane).toBeVisible();
   }
+
+  async clickAtLine(lineNumber: number) {
+    // Click at a specific line in the Monaco editor
+    await this.page.evaluate((line) => {
+      const editor = (window as any).monaco?.editor?.getEditors()?.[0];
+      if (editor) {
+        // Set cursor position to the beginning of the specified line
+        editor.setPosition({ lineNumber: line, column: 1 });
+        editor.focus();
+      }
+    }, lineNumber);
+  }
+
+  async expectCursorAtLine(expectedLine: number) {
+    // Check if cursor is at the expected line
+    const actualLine = await this.page.evaluate(() => {
+      const editor = (window as any).monaco?.editor?.getEditors()?.[0];
+      if (editor) {
+        const position = editor.getPosition();
+        return position?.lineNumber || 1;
+      }
+      return 1;
+    });
+
+    if (actualLine !== expectedLine) {
+      throw new Error(`Expected cursor at line ${expectedLine}, but found at line ${actualLine}`);
+    }
+  }
 } 

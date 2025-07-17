@@ -1,4 +1,6 @@
 const { When } = require('@cucumber/cucumber');
+const { expect } = require('@playwright/test');
+import { waitForSaveIndicator, waitForCursorIndicator } from '../support/testIndicator.utils';
 
 // Updated to use action classes directly instead of delegate methods
 // Aliases for quoted and unquoted variants
@@ -48,6 +50,36 @@ When('I click the "{string}" tab', async function(tabTitle) {
 When('I click the "{string}" button', async function(buttonText) {
   await this.navigation.clickButton(buttonText);
 });
+
+When('I wait for the tablet to be ready', async function() {
+  // Wait for any tablet loading to complete and DOM to stabilize
+  await this.navigation.waitForPageStabilization();
+});
+
+When('I wait for the application to load', async function() {
+  // Wait for the application to fully load after refresh
+  await this.navigation.waitForPageStabilization();
+});
+
+When('I wait for the state to be saved', async function() {
+  // Wait for the app's save operation to complete by observing DOM changes
+  await waitForSaveIndicator(this.page);
+});
+
+When('I refresh the page', async function() {
+  await this.navigation.refreshPage();
+});
+
+When('I click in the editor at line {int}', async function(lineNumber) {
+
+  await this.editor.clickAtLine(lineNumber);
+});
+
+When('I wait for cursor position to stabilize', async function() {
+  // Wait for cursor position changes to settle and be persisted
+  await waitForCursorIndicator(this.page);
+});
+
 When('I click the "{string}" link', async function(linkText) {
   await this.navigation.clickLink(linkText);
 });
@@ -91,14 +123,6 @@ When('I type {string} into the editor', async function(text) {
   await this.editor.typeText(text);
 });
 
-When('I wait for {int} second', async function(seconds) {
-  await this.navigation.waitForSeconds(seconds);
-});
-
-When('I wait for {int} seconds', async function(seconds) {
-  await this.navigation.waitForSeconds(seconds);
-});
-
 When('I press Ctrl+Z', async function() {
   await this.editor.pressCtrlZ();
 });
@@ -133,4 +157,4 @@ When('I click the three dots menu', async function() {
 
 When('I click in the editor', async function() {
   await this.editor.clickInEditor();
-}); 
+});

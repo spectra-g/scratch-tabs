@@ -23,6 +23,7 @@ tests/e2e/
 The framework uses a **modular action-based approach** to avoid the "God Object" anti-pattern:
 
 - **`world.ts`**: **Essential** lightweight orchestrator and dependency injection container
+- **`testIndicator.utils.ts`**: DOM-based operation detection utilities
 - **`editor.actions.ts`**: Editor-specific interactions (typing, undo, etc.)
 - **`tabBar.actions.ts`**: Tab management (clicking tabs, context menus, etc.)
 - **`contextMenu.actions.ts`**: Context menu interactions
@@ -203,25 +204,84 @@ async expectTabIsActive(tabTitle: string) {
 - **Intent-Clear**: Selectors clearly express what they're testing
 - **Maintainable**: Easy to update when UI structure changes
 
-### 2. Avoid Arbitrary Timeouts
+### 2. DOM-Based Operation Detection (CRITICAL)
+
+**🎯 The Foundation: Never use arbitrary timeouts - use DOM-based detection instead**
+
+This framework implements a **DOM-based detection system** to know when asynchronous operations complete:
+
+**✅ For Save Operations:**
+```typescript
+// Application updates a hidden DOM element after each save
+<div id="test-save-indicator" data-last-save="0" style={{ display: 'none' }} />
+
+// Test waits for the DOM attribute to change
+When('I wait for the state to be saved', async function() {
+  await waitForSaveIndicator(this.page);
+});
+```
+
+**✅ For Cursor Position Changes:**
+```typescript
+// Application updates a hidden DOM element after cursor position saves
+<div id="test-cursor-indicator" data-last-cursor-save="0" style={{ display: 'none' }} />
+
+// Test waits for the DOM attribute to change
+When('I wait for cursor position to stabilize', async function() {
+  await waitForCursorIndicator(this.page);
+});
+```
+
+**✅ Implementation Pattern:**
+```typescript
+// In application code (e.g., MainLayout.tsx)
+useEffect(() => {
+  const saveInterval = setInterval(async () => {
+    await saveState();
+    // Update DOM indicator after save completes
+    updateSaveIndicator();
+  }, 2500);
+  return () => clearInterval(saveInterval);
+}, []);
+
+// In test utilities (testIndicator.utils.ts)
+export async function waitForSaveIndicator(page: Page): Promise<void> {
+  const testIndicator = page.locator('#test-save-indicator');
+  await expect(testIndicator).toBeAttached();
+  
+  let initialValue = await testIndicator.getAttribute('data-last-save');
+  if (initialValue === '0') {
+    // Wait for first save
+    await expect(testIndicator).not.toHaveAttribute('data-last-save', initialValue);
+    initialValue = await testIndicator.getAttribute('data-last-save');
+  }
+  // Wait for next save
+  await expect(testIndicator).not.toHaveAttribute('data-last-save', initialValue);
+}
+```
+
+**Why This Matters:**
+- **No Race Conditions**: Tests wait for actual business logic completion
+- **No Arbitrary Timeouts**: No `waitForTimeout(5000)` that breaks in CI/CD
+- **Reliable Timing**: Works regardless of system performance
+- **Business Logic Aligned**: Tests wait for actual operations, not arbitrary delays
 
 **❌ Never do this:**
 ```typescript
 await page.waitForTimeout(5000); // Arbitrary timeout
+await page.waitFor(2000); // Still arbitrary
 ```
 
-**✅ Always use Playwright's built-in waiting:**
+**✅ Always use DOM-based detection or Playwright's built-in waiting:**
 ```typescript
-// Wait for element to be visible
+// DOM-based detection for app operations
+await waitForSaveIndicator(page);
+await waitForCursorIndicator(page);
+
+// Playwright built-in waits for UI changes
 await expect(page.locator('[data-testid="my-button"]')).toBeVisible();
-
-// Wait for element to be in DOM
 await page.waitForSelector('[data-testid="my-button"]');
-
-// Wait for network requests
 await page.waitForResponse(response => response.url().includes('/api/data'));
-
-// Wait for specific state
 await page.waitForLoadState('networkidle');
 ```
 
@@ -343,6 +403,7 @@ tests/e2e/
 ├── support/                    # Test infrastructure
 │   ├── world.ts               # Main test world
 │   ├── hooks.ts               # Setup/teardown
+│   ├── testIndicator.utils.ts # DOM-based operation detection
 │   ├── editor.actions.ts      # Editor interactions
 │   ├── tabBar.actions.ts      # Tab management
 │   ├── contextMenu.actions.ts # Context menus

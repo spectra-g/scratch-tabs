@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "jest",
     "e2e": "./run-e2e-tests.sh",
-    "e2e:full": "npm run e2e:compile && find dist/e2e -name '*.js' -exec bash -c 'mv \"$0\" \"${0%.js}.cjs\"' {} \\; && find dist/e2e -name '*.cjs' -exec sed -i '' 's/require(\"\\.\\\/\\([^\"]*\\)\\.actions\")/require(\".\\\/\\1.actions.cjs\")/g' {} \\; && find dist/e2e -name '*.cjs' -exec sed -i '' 's/require(\"\\.\\\/\\([^\"]*\\)\\.actions\\.js\")/require(\".\\\/\\1.actions.cjs\")/g' {} \\; && node run-cucumber.cjs",
+    "e2e:full": "./run-e2e-full.sh",
     "e2e:compile": "tsc -p tests/e2e/tsconfig.json",
     "e2e:report": "open reports/cucumber-report.html",
     "tsc": "tsc --noEmit",

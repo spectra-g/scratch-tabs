@@ -121,11 +121,12 @@ const toTabRecord = (tab: Tab): TabRecord => ({
 
 const toTab = (record: TabRecord): Tab => {
   const now = Date.now();
+  const cursor = record.cursorPosition || { lineNumber: 1, column: 1 };
   return {
     ...record,
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
-    cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },
+    cursorPosition: cursor,
     workspaceId: record.workspaceId,
   };
 };

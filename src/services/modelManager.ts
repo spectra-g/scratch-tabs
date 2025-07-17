@@ -4,6 +4,7 @@ import { useTabsStore } from "../stores/tabsStore";
 import { useRootStore } from "../stores/rootStore";
 import { StorageProviderFactory } from "../db";
 import { detectLanguage, isAmbiguousLanguage } from "../languages";
+import { updateCursorIndicator } from "../utils/testIndicators";
 
 // The maximum number of models to keep in memory
 const MAX_MODELS = 10;
@@ -252,6 +253,13 @@ class ModelManager {
     const timeout = setTimeout(async () => {
       try {
         await this.storage.updateTabCursor(tabId, cursorPosition);
+        
+        // CRITICAL: Update the cursor position in the store so it's available for tab switching
+        useTabsStore.getState().updateTabState(tabId, { cursorPosition });
+        
+        // Update DOM element for E2E tests to detect cursor position save completion
+        updateCursorIndicator();
+        
         this.debouncedCursorPersistence.delete(tabId);
       } catch (error) {
         console.warn(

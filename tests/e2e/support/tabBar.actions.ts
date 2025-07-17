@@ -15,7 +15,11 @@ export class TabBarActions {
   }
 
   async expectTabIsActive(tabTitle: string) {
-    // Use stable ARIA attribute instead of brittle CSS classes
+    // First check if tab exists at all
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+    
+    // Then check if it's active using aria-selected
     const activeTab = this.page.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
     await expect(activeTab).toBeVisible();
   }
@@ -49,13 +53,17 @@ export class TabBarActions {
   }
 
   async selectTablet(tabletName: string) {
-    // Wait for the tablet selector modal to appear
+    // Wait for the tablet selector modal to appear - use the actual CSS classes from the component
     const tabletSelector = this.page.locator('.bg-gray-800.border.border-gray-700.rounded-lg');
-    await tabletSelector.waitFor({ state: 'visible' });
+    await expect(tabletSelector).toBeVisible();
     
-    // Click on the tablet with the specified name
+    // Click on the tablet with the specified name - use the actual structure
     const tabletOption = this.page.locator('.font-medium.text-base', { hasText: tabletName });
+    await expect(tabletOption).toBeVisible();
     await tabletOption.click();
+    
+    // Wait for the modal to close after selection
+    await expect(tabletSelector).toBeHidden();
   }
 
   async expectTabletIsActive(tabletName: string) {
