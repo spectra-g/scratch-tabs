@@ -24,10 +24,9 @@ Feature: URL Tab Handling
     Then the "Scratch 2" tab should be active
     And the active editor content should contain "Content for Scratch 2"
 
-  @smoke
   Scenario: Refreshing the page preserves active tab state
-    When I refresh the page
     When I wait for the state to be saved
+    And I refresh the page
     And I wait for the application to load
     Then the "Scratch 2" tab should be active
     And the active editor content should contain "Content for Scratch 2" 
