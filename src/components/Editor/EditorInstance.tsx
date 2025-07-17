@@ -173,15 +173,16 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         const newViewState = tabViewStates.get(activeTabWithoutCursor.id);
         if (newViewState) {
           editor.restoreViewState(newViewState);
-        } else {
-          // No view state found - restore cursor position from database
-          const dbCursorPos = activeTabWithoutCursor.cursorPosition;
-          if (dbCursorPos && dbCursorPos.lineNumber > 0 && dbCursorPos.column > 0) {
-            editor.setPosition({
-              lineNumber: dbCursorPos.lineNumber,
-              column: dbCursorPos.column,
-            });
-          }
+        }
+        
+        // Always check for and apply cursor position from database if available
+        // This ensures that debounced cursor position updates are applied even when view state exists
+        const dbCursorPos = activeTabWithoutCursor.cursorPosition;
+        if (dbCursorPos && dbCursorPos.lineNumber > 0 && dbCursorPos.column > 0) {
+          editor.setPosition({
+            lineNumber: dbCursorPos.lineNumber,
+            column: dbCursorPos.column,
+          });
         }
 
         // Focus the editor

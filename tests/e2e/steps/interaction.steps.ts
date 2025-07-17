@@ -80,6 +80,16 @@ When('I wait for the state to be saved', async function() {
 When('I refresh the page', async function() {
   await this.navigation.refreshPage();
 });
+
+When('I click in the editor at line {int}', async function(lineNumber) {
+  await this.editor.clickAtLine(lineNumber);
+});
+
+When('I wait for cursor position to stabilize', async function() {
+  // Wait for cursor position changes to settle and be persisted
+  // The cursor position is debounced with 1 second timeout, so we need to wait for it
+  await this.navigation.waitForSeconds(1.2);
+});
 When('I click the "{string}" link', async function(linkText) {
   await this.navigation.clickLink(linkText);
 });
