@@ -48,6 +48,20 @@ When('I click the "{string}" tab', async function(tabTitle) {
 When('I click the "{string}" button', async function(buttonText) {
   await this.navigation.clickButton(buttonText);
 });
+
+When('I wait for the tablet to be ready', async function() {
+  // Wait for any tablet loading to complete and DOM to stabilize
+  await this.navigation.waitForPageStabilization();
+});
+
+When('I wait for the application to load', async function() {
+  // Wait for the application to fully load after refresh
+  await this.navigation.waitForPageStabilization();
+});
+
+When('I refresh the page', async function() {
+  await this.navigation.refreshPage();
+});
 When('I click the "{string}" link', async function(linkText) {
   await this.navigation.clickLink(linkText);
 });
@@ -133,8 +147,4 @@ When('I click the three dots menu', async function() {
 
 When('I click in the editor', async function() {
   await this.editor.clickInEditor();
-});
-
-When('I refresh the page', async function() {
-  await this.navigation.refreshPage();
 });

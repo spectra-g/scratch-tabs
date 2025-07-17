@@ -16,14 +16,17 @@ Feature: URL Tab Handling
       """
     When I click the icon for "New tablet"
     And I select "Calculator" from the tablet selector
-    When I wait for 1 second
+    And I wait for the tablet to be ready
     When I click the icon for "New tablet"
     And I select "Password Generator" from the tablet selector
+    And I wait for the tablet to be ready
     When I click the "Scratch 2" tab
     Then the "Scratch 2" tab should be active
     And the active editor content should contain "Content for Scratch 2"
 
-  Scenario: Refreshing the page lands back on the active tab
+  @smoke
+  Scenario: Refreshing the page preserves active tab state
     When I refresh the page
+    And I wait for the application to load
     Then the "Scratch 2" tab should be active
     And the active editor content should contain "Content for Scratch 2" 

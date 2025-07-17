@@ -40,6 +40,9 @@ Then('the active editor content should be:', async function(expectedContent) {
 Then('the active editor content should contain "{string}"', async function(text) {
   await this.editor.expectEditorContentToContain(text);
 });
+Then('the active editor content should contain {string}', async function(text) {
+  await this.editor.expectEditorContentToContain(text);
+});
 Then('the tab with title "{string}" should be active', async function(tabTitle) {
   await this.tabBar.expectTabIsActive(tabTitle);
 });
