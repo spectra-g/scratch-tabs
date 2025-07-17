@@ -56,10 +56,10 @@ Feature: Cursor Position Persistence
       """
     
     # Position cursor at specific location
+    And I wait for the state to be saved
     When I click in the editor at line 4
     And I wait for cursor position to stabilize
-    And I wait for the state to be saved
-    
+
     # Refresh page and verify cursor position is restored
     When I refresh the page
     And I wait for the application to load
@@ -73,6 +73,7 @@ Feature: Cursor Position Persistence
       Tab 1 content line 1
       Tab 1 content line 2
       Tab 1 content line 3
+      Tab 1 content line 4
       """
     
     When I click the icon for "New tab"
@@ -81,6 +82,7 @@ Feature: Cursor Position Persistence
       Tab 2 content line 1
       Tab 2 content line 2
       Tab 2 content line 3
+      Tab 2 content line 4
       """
     
     When I click the icon for "New tab"
@@ -89,27 +91,28 @@ Feature: Cursor Position Persistence
       Tab 3 content line 1
       Tab 3 content line 2
       Tab 3 content line 3
+      Tab 3 content line 4
       """
     
     # Set different cursor positions in each tab
     When I click the "Scratch 1" tab
-    And I click in the editor at line 1
-    And I wait for cursor position to stabilize
-    
-    When I click the "Scratch 2" tab
     And I click in the editor at line 2
     And I wait for cursor position to stabilize
     
-    When I click the "Scratch 3" tab
+    When I click the "Scratch 2" tab
     And I click in the editor at line 3
+    And I wait for cursor position to stabilize
+    
+    When I click the "Scratch 3" tab
+    And I click in the editor at line 4
     And I wait for cursor position to stabilize
     
     # Verify each tab remembers its cursor position
     When I click the "Scratch 1" tab
-    Then the cursor should be at line 1
-    
-    When I click the "Scratch 2" tab
     Then the cursor should be at line 2
     
-    When I click the "Scratch 3" tab
+    When I click the "Scratch 2" tab
     Then the cursor should be at line 3
+
+    When I click the "Scratch 3" tab
+    Then the cursor should be at line 4

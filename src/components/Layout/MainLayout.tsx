@@ -18,6 +18,8 @@ import { DiffModal } from "../DiffModal";
 import { SummarizeModal } from "../AI/SummarizeModal";
 import { SearchModal } from "../Search/SearchModal";
 import { AIModelManagementModal } from "../AI/AIModelManagementModal";
+import { TestFields } from "../TestFields/TestFields";
+import { updateSaveIndicator } from "../../utils/testIndicators";
 import { useAIStore } from "../../stores/aiStore";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
@@ -115,10 +117,7 @@ const MainLayout: React.FC = () => {
       await usePersistenceStore.getState().saveState();
       
       // Update test indicator after save completes
-      const saveIndicator = document.getElementById('test-save-indicator');
-      if (saveIndicator) {
-        saveIndicator.setAttribute('data-last-save', Date.now().toString());
-      }
+      updateSaveIndicator();
     }, 2500); // Save every 2.5 seconds
 
     return () => {
@@ -398,13 +397,7 @@ const MainLayout: React.FC = () => {
       {isSearchOpen && <SearchModal />}
       <AIModelManagementModal />
       
-      {/* Hidden element for E2E tests to detect when saves complete */}
-      <div 
-        id="test-save-indicator" 
-        data-last-save="0"
-        style={{ display: 'none' }}
-        aria-hidden="true"
-      />
+      <TestFields />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 const { When } = require('@cucumber/cucumber');
 const { expect } = require('@playwright/test');
+import { waitForSaveIndicator, waitForCursorIndicator } from '../support/testIndicator.utils';
 
 // Updated to use action classes directly instead of delegate methods
 // Aliases for quoted and unquoted variants
@@ -62,19 +63,7 @@ When('I wait for the application to load', async function() {
 
 When('I wait for the state to be saved', async function() {
   // Wait for the app's save operation to complete by observing DOM changes
-  // The app updates a hidden element's data-last-save attribute after each save
-  const saveIndicator = this.page.locator('#test-save-indicator');
-  await expect(saveIndicator).toBeAttached();
-  
-  // Get the current save timestamp
-  let initialSave = await saveIndicator.getAttribute('data-last-save');
-
-  if (initialSave === '0') {
-    // If no save has happened yet, wait for the first save
-    await expect(saveIndicator).not.toHaveAttribute('data-last-save', initialSave);
-    initialSave = await saveIndicator.getAttribute('data-last-save');
-  }
-  await expect(saveIndicator).not.toHaveAttribute('data-last-save', initialSave);
+  await waitForSaveIndicator(this.page);
 });
 
 When('I refresh the page', async function() {
@@ -82,14 +71,15 @@ When('I refresh the page', async function() {
 });
 
 When('I click in the editor at line {int}', async function(lineNumber) {
+
   await this.editor.clickAtLine(lineNumber);
 });
 
 When('I wait for cursor position to stabilize', async function() {
   // Wait for cursor position changes to settle and be persisted
-  // The cursor position is debounced with 1 second timeout, so we need to wait for it
-  await this.navigation.waitForSeconds(1.2);
+  await waitForCursorIndicator(this.page);
 });
+
 When('I click the "{string}" link', async function(linkText) {
   await this.navigation.clickLink(linkText);
 });
@@ -131,14 +121,6 @@ When('I type the following markdown content into the editor:', async function(co
 
 When('I type {string} into the editor', async function(text) {
   await this.editor.typeText(text);
-});
-
-When('I wait for {int} second', async function(seconds) {
-  await this.navigation.waitForSeconds(seconds);
-});
-
-When('I wait for {int} seconds', async function(seconds) {
-  await this.navigation.waitForSeconds(seconds);
 });
 
 When('I press Ctrl+Z', async function() {
