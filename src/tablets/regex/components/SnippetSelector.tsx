@@ -26,6 +26,13 @@ export function SnippetSelector({
     setIsOpen(false);
   };
 
+  const handleSnippetKeyDown = (e: React.KeyboardEvent, snippetId: string) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleSnippetClick(snippetId);
+    }
+  };
+
   return (
     <div className="relative">
       <button
@@ -77,6 +84,7 @@ export function SnippetSelector({
                     <button
                       key={snippet.id}
                       onClick={() => handleSnippetClick(snippet.id)}
+                      onKeyDown={(e) => handleSnippetKeyDown(e, snippet.id)}
                       className={`w-full text-left p-3 hover:bg-gray-700/30 transition-colors border-l-2 ${
                         selectedSnippet === snippet.id
                           ? "border-blue-500/50 bg-blue-500/10"
