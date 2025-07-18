@@ -95,6 +95,33 @@ export interface HttpRequestHistoryItem {
   isPinned: boolean;
 }
 
+export interface ComparisonItem {
+  id: string;
+  label: string;
+  response: HttpResponse;
+  timestamp: number;
+  method: HttpMethod;
+  url: string;
+}
+
+export interface ComparisonDiff {
+  type: "added" | "removed" | "modified" | "unchanged";
+  path: string;
+  oldValue?: any;
+  newValue?: any;
+  description: string;
+}
+
+export interface ResponseComparison {
+  left: ComparisonItem;
+  right: ComparisonItem;
+  statusDiff: ComparisonDiff | null;
+  headersDiff: ComparisonDiff[];
+  bodyDiff: ComparisonDiff[];
+  timingDiff: ComparisonDiff[];
+  sizeDiff: ComparisonDiff | null;
+}
+
 export interface RestClientState {
   request: HttpRequest;
   response: HttpResponse | null;
@@ -104,6 +131,11 @@ export interface RestClientState {
   explanationLevel: ExplanationLevel;
   isExecuting: boolean;
   error: string | null;
+  comparison: {
+    isComparing: boolean;
+    selectedItems: ComparisonItem[];
+    activeComparison: ResponseComparison | null;
+  };
 }
 
 export interface RequestConverter {

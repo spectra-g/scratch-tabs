@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Editor } from "@monaco-editor/react";
-import { Clock, Copy, Check, History, X } from "lucide-react";
+import { Clock, Copy, Check, History, X, ArrowRightLeft } from "lucide-react";
 import { HttpResponse } from "../types";
 import {
   formatResponseBody,
@@ -16,6 +16,7 @@ interface ResponseViewerProps {
   onShowHistory: () => void;
   historyCount: number;
   onClearError?: () => void;
+  onStartComparison?: () => void;
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = ({
@@ -25,6 +26,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
   onShowHistory,
   historyCount,
   onClearError,
+  onStartComparison,
 }) => {
   const [activeTab, setActiveTab] = useState("body");
   const [isCopied, setIsCopied] = useState(false);
@@ -88,15 +90,26 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
             No response yet. Click "Send" to execute the request.
           </p>
 
-          {historyCount > 0 && (
-            <button
-              onClick={onShowHistory}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors mx-auto"
-            >
-              <History size={16} />
-              <span>View Response History ({historyCount})</span>
-            </button>
-          )}
+          <div className="flex flex-col gap-2 items-center">
+            {historyCount > 0 && (
+              <button
+                onClick={onShowHistory}
+                className="flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+              >
+                <History size={16} />
+                <span>View Response History ({historyCount})</span>
+              </button>
+            )}
+            {historyCount > 0 && onStartComparison && (
+              <button
+                onClick={onStartComparison}
+                className="flex items-center space-x-2 px-3 py-1.5 bg-blue-600/50 hover:bg-blue-600/70 rounded-md text-sm text-gray-300 transition-colors"
+              >
+                <ArrowRightLeft size={16} />
+                <span>Compare Responses</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -145,6 +158,16 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
               <History size={14} />
               <span>History ({historyCount})</span>
             </button>
+            {onStartComparison && (
+              <button
+                onClick={onStartComparison}
+                className="flex items-center space-x-1 px-2 py-1 bg-blue-600/50 hover:bg-blue-600/70 rounded-md text-sm text-gray-300 transition-colors"
+                title="Compare responses"
+              >
+                <ArrowRightLeft size={14} />
+                <span>Compare</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

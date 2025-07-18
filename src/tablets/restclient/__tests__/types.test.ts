@@ -367,6 +367,11 @@ describe("REST Client Types", () => {
         explanationLevel: "medium",
         isExecuting: false,
         error: null,
+        comparison: {
+          isComparing: false,
+          selectedItems: [],
+          activeComparison: null,
+        },
       };
 
       expect(state.request).toBeDefined();
@@ -377,6 +382,10 @@ describe("REST Client Types", () => {
       expect(state.explanationLevel).toBe("medium");
       expect(state.isExecuting).toBe(false);
       expect(state.error).toBeNull();
+      expect(state.comparison).toBeDefined();
+      expect(state.comparison.isComparing).toBe(false);
+      expect(state.comparison.selectedItems).toEqual([]);
+      expect(state.comparison.activeComparison).toBeNull();
     });
   });
 
