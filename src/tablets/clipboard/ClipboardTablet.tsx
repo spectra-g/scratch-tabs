@@ -182,15 +182,26 @@ const ExpiryCountdown: React.FC<{ item: ClipboardItem }> = ({ item }) => {
 
   if (item.isPinned) {
     return (
-      <div className="flex items-center space-x-1 text-xs text-yellow-500">
+      <div 
+        className="flex items-center space-x-1 text-xs text-yellow-500"
+        title="This item is pinned and will not expire"
+      >
         <Pin size={12} />
         <span>Pinned</span>
       </div>
     );
   }
 
+  const isExpired = remaining <= 0;
+  const tooltipText = isExpired 
+    ? "This item has expired and will be removed"
+    : "This item will expire when the timer finishes. Pin to keep it permanently.";
+
   return (
-    <div className="flex items-center space-x-1 text-xs text-gray-500">
+    <div 
+      className="flex items-center space-x-1 text-xs text-gray-500"
+      title={tooltipText}
+    >
       <Clock size={12} />
       <span>{formatDuration(remaining)}</span>
     </div>
