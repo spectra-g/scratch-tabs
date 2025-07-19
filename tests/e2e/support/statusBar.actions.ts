@@ -104,4 +104,59 @@ export class StatusBarActions {
     // Verify the change
     await this.expectStatusBarLanguage(toLanguage);
   }
+
+  // CSV-specific methods
+  getTableViewButton() {
+    return this.page.locator('[title="Open Table View"], [title="Close Table View"]');
+  }
+
+  async expectTableViewButtonVisible() {
+    const tableViewButton = this.getTableViewButton();
+    await expect(tableViewButton).toBeVisible();
+  }
+
+  async expectTableViewButtonNotVisible() {
+    const openButton = this.page.locator('[title="Open Table View"]');
+    const closeButton = this.page.locator('[title="Close Table View"]');
+    await expect(openButton).not.toBeVisible();
+    await expect(closeButton).not.toBeVisible();
+  }
+
+  async clickTableViewButton() {
+    const openButton = this.page.locator('[title="Open Table View"]');
+    const closeButton = this.page.locator('[title="Close Table View"]');
+    
+    if (await openButton.isVisible()) {
+      await openButton.click();
+    } else if (await closeButton.isVisible()) {
+      await closeButton.click();
+    } else {
+      throw new Error('Table View button not found');
+    }
+    
+    // Wait for view transition
+    await this.page.waitForTimeout(500);
+  }
+
+  async isTableViewOpen() {
+    const closeButton = this.page.locator('[title="Close Table View"]');
+    return await closeButton.isVisible();
+  }
+
+  async waitForLanguageDetection(expectedLanguage: string, timeout: number = 5000) {
+    await this.page.waitForFunction((language) => {
+      const languageElement = document.querySelector('[data-testid="status-language"]');
+      return languageElement?.textContent === language;
+    }, expectedLanguage, { timeout });
+  }
+
+  async expectExtendedViewButtonsVisible() {
+    const extendedViewButtons = this.page.locator('[data-testid="extended-view-buttons"]');
+    await expect(extendedViewButtons).toBeVisible();
+  }
+
+  async expectExtendedViewButtonsNotVisible() {
+    const extendedViewButtons = this.page.locator('[data-testid="extended-view-buttons"]');
+    await expect(extendedViewButtons).not.toBeVisible();
+  }
 } 

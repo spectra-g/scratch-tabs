@@ -330,7 +330,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">
+    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs" data-testid="status-bar">
       <div className="flex items-center space-x-4">
         {activeTab && (
           <>
