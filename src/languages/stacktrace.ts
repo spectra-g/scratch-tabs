@@ -11,8 +11,8 @@ export class StacktraceLanguageDetector
 {
   id = "stacktrace"; // Custom ID, as Monaco might not have a specific one for generic stacktraces
   name = "Stack Trace";
-  extensions = ["stacktrace", "trace", "log", "err"]; // Common extensions where stacktraces are found
-  priority = 7; // High priority - higher than Kotlin to win tie-breakers
+  extensions = ["log", "trace", "txt"]; // Common extensions where stacktraces are found
+  priority = 3; // High priority - higher than Kotlin to win tie-breakers
 
   sampleContent(): string {
     return `Error: Cannot read properties of undefined (reading 'length')

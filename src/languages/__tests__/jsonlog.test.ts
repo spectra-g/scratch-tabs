@@ -187,6 +187,7 @@ This is not JSON
           setLanguageConfiguration: jest.fn(),
           setMonarchTokensProvider: jest.fn(),
           registerDocumentFormattingEditProvider: jest.fn(),
+          getLanguages: jest.fn(() => []),
           registerCompletionItemProvider: jest.fn(),
           CompletionItemKind: {
             Property: 1,

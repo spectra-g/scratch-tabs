@@ -1048,109 +1048,118 @@ export class JsonLanguageDetector
   }
 
   /**
-   * Check if content is valid JSON or matches JSON patterns
-   * Works with both complete and partial content
+   * Simplified JSON detection optimized for paste-based workflow
+   * Three-step approach: bail-out, definitive parsing, pattern matching
    */
   detect(content: string): DetectionResult {
     const trimmed = content.trim();
+
+    // --- Step 1: Quick Bail-Outs ---
     if (trimmed.length < 2) {
-      return this.noMatch();
+      return this.noMatch(); // Not enough content to be JSON
     }
 
     const startsWithBrace = trimmed.startsWith("{");
     const startsWithBracket = trimmed.startsWith("[");
 
+    // If it doesn't start with a brace or bracket, it's definitively not JSON.
     if (!startsWithBrace && !startsWithBracket) {
       return this.noMatch();
     }
 
-    const endsWithBrace = trimmed.endsWith("}");
-    const endsWithBracket = trimmed.endsWith("]");
+    // --- Step 2: The "Fast Path" for Valid, Complete JSON ---
+    // Check if the content appears to be a complete object or array.
     const isPotentiallyComplete =
-      (startsWithBrace && endsWithBrace) ||
-      (startsWithBracket && endsWithBracket);
-
-    // Special case: if content is sampled (large but truncated), treat as potentially complete
-    // This helps with the performance fix where we sample large JSON files
-    // For sampled content, we expect it to be around 5000-6000 characters
-    const isSampledContent = content.length >= 5000 && content.length <= 7000;
-    const shouldTreatAsComplete = isPotentiallyComplete || isSampledContent;
+      (startsWithBrace && trimmed.endsWith("}")) ||
+      (startsWithBracket && trimmed.endsWith("]"));
 
     if (isPotentiallyComplete) {
       try {
         JSON.parse(trimmed);
-        return { match: true, confidence: 0.98 }; // It's valid JSON.
+        // It's valid JSON. Return a very high confidence score to win against other detectors.
+        return { match: true, confidence: 0.98 };
       } catch (e) {
-        // Fall through to pattern matching for invalid but JSON-like content.
+        // It's not valid, but it still looks like JSON.
+        // We'll fall through to the pattern matching below, but with a slight confidence boost.
       }
     }
 
-    let confidenceScore = shouldTreatAsComplete ? 0.3 : 0.4;
-    let specificJsonPatternsHit = 0;
+    // --- Step 3: Pattern Matching for Partial or Malformed JSON ---
+    // This is for content that is truncated or has syntax errors.
 
-    const jsonPatterns = this.getJsonPatterns();
-    for (const p of jsonPatterns) {
-      const matches = trimmed.match(p.pattern);
-      if (matches) {
-        confidenceScore += p.weight / (shouldTreatAsComplete ? 1.5 : 1);
-        if (p.perMatch) {
-          confidenceScore += Math.min(matches.length, 5) * (p.perMatch / 2);
-        }
-        if (p.specific) {
-          specificJsonPatternsHit++;
-        }
+    let confidenceScore = 0.0;
+
+    // If it looks like it was intended to be complete JSON, give it a head start.
+    if (isPotentiallyComplete) {
+      confidenceScore += 0.3;
+    }
+
+    // The most reliable indicator in partial JSON is the presence of quoted keys followed by a colon.
+    const keyValueRegex = /"[^"\\]*(?:\\.[^"\\]*)*"\s*:/g;
+    const keyValueMatches = trimmed.match(keyValueRegex);
+
+    if (keyValueMatches) {
+      // Add confidence for each key-value pair found, up to a limit.
+      confidenceScore += 0.3; // Base confidence for finding at least one pair
+      confidenceScore += Math.min(keyValueMatches.length, 10) * 0.05; // Add 0.05 for each pair up to 10
+    }
+
+    // Check for other JSON structural elements, but give them less weight.
+    const otherJsonChars = (trimmed.match(/[{}[\]:,]/g) || []).length;
+    const nonWhitespaceChars = trimmed.replace(/\s/g, "").length;
+
+    if (nonWhitespaceChars > 0) {
+      const structuralCharRatio = otherJsonChars / nonWhitespaceChars;
+      if (structuralCharRatio > 0.4) {
+        confidenceScore += 0.1; // If >40% of chars are structural, that's a good sign.
       }
     }
 
-    // Boost confidence for clear JSON structure patterns
-    if (startsWithBrace) {
-      // Count JSON key-value pairs
-      const keyValueMatches = trimmed.match(/"[^"\\]*(?:\\.[^"\\]*)*"\s*:/g);
-      if (keyValueMatches && keyValueMatches.length >= 5) {
-        confidenceScore += shouldTreatAsComplete ? 0.3 : 0.15; // Strong boost for complete JSON, moderate for partial
-      } else if (keyValueMatches && keyValueMatches.length >= 2) {
-        confidenceScore += shouldTreatAsComplete ? 0.2 : 0.1; // Moderate boost for complete JSON, small for partial
-      }
-
-      // Additional boost for nested structure (only for complete JSON)
-      if (shouldTreatAsComplete) {
-        const nestedObjectCount = (trimmed.match(/:\s*\{/g) || []).length;
-        const nestedArrayCount = (trimmed.match(/:\s*\[/g) || []).length;
-        if (nestedObjectCount + nestedArrayCount >= 3) {
-          confidenceScore += 0.15; // Boost for complex nested structure
-        }
-      }
+    // --- Penalties for things that are NEVER in valid JSON ---
+    // These help distinguish from JavaScript objects or other formats.
+    if (trimmed.includes("//") || trimmed.includes("/*")) {
+      confidenceScore -= 0.3; // JSON doesn't have comments.
     }
-
+    // Handle single quotes (invalid JSON but common in JS)
+    const singleQuoteMatches = trimmed.match(/'[^']*'\s*:/g);
+    if (singleQuoteMatches) {
+      confidenceScore += 0.2; // Give base confidence for quote-colon patterns
+      confidenceScore += Math.min(singleQuoteMatches.length, 5) * 0.03; // Add for each match
+      confidenceScore -= 0.1; // But penalize since it's not valid JSON
+    }
+    // Check for trailing commas, which are invalid in standard JSON.
     if (/,(\s*)}/g.test(trimmed) || /,(\s*)]/g.test(trimmed)) {
-      confidenceScore -= 0.2;
-    }
-    if (/\/\/|\/\*/.test(trimmed)) {
       confidenceScore -= 0.15;
     }
-    if (/'/.test(trimmed)) {
-      confidenceScore -= 0.1;
+    // Check for unquoted keys (common in JS/YAML, invalid in JSON)
+    // Give it some confidence but less than proper JSON
+    const unquotedKeyMatches = trimmed.match(/^\s*[a-zA-Z_]\w*\s*:/gm);
+    if (unquotedKeyMatches) {
+      confidenceScore += 0.2; // Give some base confidence for JS-style objects
+      confidenceScore += Math.min(unquotedKeyMatches.length, 5) * 0.03; // Add a bit for each unquoted key
+      confidenceScore -= 0.15; // But apply a penalty since it's not valid JSON
     }
 
-    const antiPatterns = [
-      { pattern: /^\s*[\w.-]+:/m, weight: -0.4 },
-      { pattern: /^\s*</m, weight: -0.5 },
-      { pattern: /\b(function|class|var|let|const)\b/i, weight: -0.3 },
-    ];
-    for (const ap of antiPatterns) {
-      if (ap.pattern.test(trimmed)) {
-        confidenceScore += ap.weight;
+    // Special case: reject obvious non-JSON patterns early
+    // This catches cases like "{{{{{" that shouldn't match
+    if (!keyValueMatches && otherJsonChars > 0 && nonWhitespaceChars > 0) {
+      const keyValueRatio = 0 / nonWhitespaceChars;
+      const structuralRatio = otherJsonChars / nonWhitespaceChars;
+      // If it's all structural chars with no key-value pairs, it's probably not JSON
+      if (structuralRatio > 0.8 && keyValueRatio === 0) {
+        return this.noMatch();
       }
     }
 
-    const confidenceCap = shouldTreatAsComplete ? 0.95 : 0.75; // Lower cap for partial JSON
-    confidenceScore = Math.min(confidenceCap, Math.max(0.0, confidenceScore));
+    // Clamp the score between 0 and 1.
+    const finalConfidence = Math.min(1.0, Math.max(0.0, confidenceScore));
 
-    const isMatch = confidenceScore >= 0.3;
+    // A match requires a reasonable confidence level after all checks.
+    const isMatch = finalConfidence >= 0.3;
 
     return {
       match: isMatch,
-      confidence: isMatch ? confidenceScore : 0.0,
+      confidence: isMatch ? finalConfidence : 0.0,
     };
   }
 

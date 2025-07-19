@@ -11,8 +11,8 @@ export class RLanguageDetector
 {
   id = "r"; // Monaco's built-in ID for R
   name = "R";
-  extensions = ["r", "R", "Rmd", "Rnw", "Rpres"]; // Common R related extensions
-  priority = 6; // R syntax is quite distinct
+  extensions = ["r", "R"];
+  priority = 4; // R syntax is quite distinct
 
   sampleContent(): string {
     return `# R Script Example for Statistical Analysis
