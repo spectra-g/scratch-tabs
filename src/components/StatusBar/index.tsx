@@ -138,11 +138,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   const LanguageStatusItem =
     activeTab && !activeTab.isTablet
-      ? getLanguageStatusItem(
-          activeTab.language,
-          languageDetectionData.contentSample,
-          activeTab,
-        )
+      ? getLanguageStatusItem(activeTab.language)
       : null;
 
   const LanguageOptionsMenu =
@@ -342,7 +338,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             )}
             <div className="p-0.5 flex items-center space-x-2">
               {renderLanguageSection()}
-              {LanguageStatusItem && <LanguageStatusItem />}
+              {LanguageStatusItem && (
+                <LanguageStatusItem 
+                  content={languageDetectionData.contentSample} 
+                  activeTab={activeTab} 
+                />
+              )}
               {LanguageOptionsMenu && editor && (
                 <LanguageOptionsMenu editor={editor} />
               )}
