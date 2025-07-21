@@ -2,15 +2,24 @@
 
 import { useCallback } from "react";
 import { evaluate } from "mathjs";
+import { formatDisplay } from "./utils/formatters";
+import { CALCULATOR_CONSTANTS } from "./constants";
 
 // --- State Interface ---
 export type CalculatorMode = "standard" | "scientific" | "programmer";
+
+export interface HistoryEntry {
+  expression: string;
+  result: string;
+  mode: CalculatorMode;
+  base?: "HEX" | "DEC" | "OCT" | "BIN";
+}
 
 export interface CalculatorData {
   mode: CalculatorMode;
   expression: string;
   display: string;
-  history: { expression: string; result: string }[];
+  history: HistoryEntry[];
   notes: string;
   base: "HEX" | "DEC" | "OCT" | "BIN";
 }
@@ -23,16 +32,10 @@ export interface CalculatorEngine {
   handleEquals: () => void;
   handleModeChange: (mode: CalculatorMode) => void;
   handleBaseChange: (base: "HEX" | "DEC" | "OCT" | "BIN") => void;
-  handleHistoryClick: (entry: { expression: string; result: string }) => void;
+  handleHistoryClick: (entry: HistoryEntry) => void;
   handleNotesChange: (notes: string) => void;
 }
 
-const formatDisplay = (value: any): string => {
-  if (typeof value === "number") {
-    return parseFloat(value.toPrecision(14)).toString();
-  }
-  return String(value);
-};
 
 export const useCalculatorEngine = (
   initialData: CalculatorData,
@@ -48,10 +51,11 @@ export const useCalculatorEngine = (
   const handleInput = useCallback(
     (input: string) => {
       // Don't add operators to an error state
-      if (initialData.display === "Error" && isNaN(Number(input))) return;
+      if (initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY && isNaN(Number(input))) return;
 
       const currentExpression =
-        initialData.expression === "0" || initialData.display === "Error"
+        initialData.expression === CALCULATOR_CONSTANTS.DEFAULT_DISPLAY || 
+        initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY
           ? ""
           : initialData.expression;
 
@@ -62,12 +66,12 @@ export const useCalculatorEngine = (
   );
 
   const handleClear = useCallback(() => {
-    updateData({ expression: "0", display: "0" });
+    updateData({ expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY, display: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY });
   }, [updateData]);
 
   const handleBackspace = useCallback(() => {
-    if (initialData.expression.length <= 1 || initialData.display === "Error") {
-      updateData({ expression: "0", display: "0" });
+    if (initialData.expression.length <= 1 || initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY) {
+      updateData({ expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY, display: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY });
     } else {
       const newExpression = initialData.expression.slice(0, -1);
       updateData({ expression: newExpression, display: newExpression });
@@ -75,22 +79,24 @@ export const useCalculatorEngine = (
   }, [initialData.expression, initialData.display, updateData]);
 
   const handleEquals = useCallback(() => {
-    if (initialData.display === "Error") return;
+    if (initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY) return;
     try {
       const result = evaluate(initialData.expression);
       const formattedResult = formatDisplay(result);
-      const newHistoryEntry = {
+      const newHistoryEntry: HistoryEntry = {
         expression: initialData.expression,
         result: formattedResult,
+        mode: initialData.mode,
+        base: initialData.base,
       };
 
       updateData({
         display: formattedResult,
         expression: formattedResult,
-        history: [newHistoryEntry, ...initialData.history].slice(0, 50),
+        history: [newHistoryEntry, ...initialData.history].slice(0, CALCULATOR_CONSTANTS.HISTORY_LIMIT),
       });
     } catch (error) {
-      updateData({ display: "Error", expression: "0" });
+      updateData({ display: CALCULATOR_CONSTANTS.ERROR_DISPLAY, expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY });
     }
   }, [
     initialData.expression,
@@ -101,7 +107,7 @@ export const useCalculatorEngine = (
 
   const handleModeChange = useCallback(
     (mode: CalculatorMode) => {
-      updateData({ mode, expression: "0", display: "0" });
+      updateData({ mode, expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY, display: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY });
     },
     [updateData],
   );
@@ -114,10 +120,15 @@ export const useCalculatorEngine = (
   );
 
   const handleHistoryClick = useCallback(
-    (entry: { expression: string; result: string }) => {
-      updateData({ expression: entry.expression, display: entry.expression });
+    (entry: HistoryEntry) => {
+      updateData({ 
+        expression: entry.expression, 
+        display: entry.expression,
+        mode: entry.mode,
+        base: entry.base || initialData.base,
+      });
     },
-    [updateData],
+    [updateData, initialData.base],
   );
 
   const handleNotesChange = useCallback(

@@ -4,7 +4,6 @@ import React from "react";
 import { Tablet, TabletState } from "../types";
 import {
   CalculatorData,
-  CalculatorMode,
   useCalculatorEngine,
 } from "./useCalculatorEngine";
 import { CalculatorUI } from "./CalculatorUI";
