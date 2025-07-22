@@ -138,11 +138,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   const LanguageStatusItem =
     activeTab && !activeTab.isTablet
-      ? getLanguageStatusItem(
-          activeTab.language,
-          languageDetectionData.contentSample,
-          activeTab,
-        )
+      ? getLanguageStatusItem(activeTab.language)
       : null;
 
   const LanguageOptionsMenu =
@@ -330,7 +326,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs">
+    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs" data-testid="status-bar">
       <div className="flex items-center space-x-4">
         {activeTab && (
           <>
@@ -342,7 +338,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             )}
             <div className="p-0.5 flex items-center space-x-2">
               {renderLanguageSection()}
-              {LanguageStatusItem && <LanguageStatusItem />}
+              {LanguageStatusItem && (
+                <LanguageStatusItem 
+                  content={languageDetectionData.contentSample} 
+                  activeTab={activeTab} 
+                />
+              )}
               {LanguageOptionsMenu && editor && (
                 <LanguageOptionsMenu editor={editor} />
               )}

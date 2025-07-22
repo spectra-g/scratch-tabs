@@ -649,14 +649,10 @@ export const PromptManagerTablet: Tablet = {
       return parseVariables(template.content);
     };
 
-    const allTemplates = [...defaultTemplates, ...data.templates];
-    const allSnippets = [...defaultSnippets, ...data.snippets];
-
     return (
       <PromptManagerUI
         data={data}
-        allTemplates={allTemplates}
-        allSnippets={allSnippets}
+        updateData={updateData}
         updateUI={updateUI}
         updateSettings={updateSettings}
         createPrompt={createPrompt}

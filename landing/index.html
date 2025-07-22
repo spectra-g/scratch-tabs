@@ -193,8 +193,8 @@
         top: 0;
         left: 0;
         right: 0;
-        /* Animation: 16s total duration, ease-in-out for smooth scrolling, infinite loop */
-        animation: scroll-headlines 16s infinite ease-in-out;
+        /* Animation: 25s total duration, ease-in-out for smooth scrolling, infinite loop */
+        animation: scroll-headlines 25s infinite ease-in-out;
       }
 
       .headline-item {
@@ -230,47 +230,59 @@
         }
 
         /* Start at the top (item 1 visible) */
-        20% {
+        16% {
           top: 0;
         }
 
         /* Stay on item 1 for a while */
 
         /* -- Item 2 -- */
-        25% {
+        20% {
           top: -100%;
         }
 
         /* Smoothly scroll to item 2 */
-        45% {
+        36% {
           top: -100%;
         }
 
         /* Stay on item 2 */
 
         /* -- Item 3 -- */
-        50% {
+        40% {
           top: -200%;
         }
 
         /* Smoothly scroll to item 3 */
-        70% {
+        56% {
           top: -200%;
         }
 
         /* Stay on item 3 */
 
         /* -- Item 4 -- */
-        75% {
+        60% {
           top: -300%;
         }
 
         /* Smoothly scroll to item 4 */
-        95% {
+        76% {
           top: -300%;
         }
 
         /* Stay on item 4 */
+
+        /* -- Item 5 -- */
+        80% {
+          top: -400%;
+        }
+
+        /* Smoothly scroll to item 5 */
+        96% {
+          top: -400%;
+        }
+
+        /* Stay on item 5 */
 
         100% {
           top: 0;
@@ -364,7 +376,7 @@
           <img
             src="img/favicon-gray.svg"
             alt="Scratch Tabs Logo"
-            class="w-8 h-8"
+            class="w-6 h-6"
           />
           <!-- Responsive text size for the brand name -->
           <span class="text-xl sm:text-2xl font-semibold text-white"
@@ -462,9 +474,8 @@
               <p
                 class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4"
               >
-                The perfect temporary home for JSON, cURL commands, stack
-                traces, logs, and notes. Instantly recognized, beautifully
-                formatted.
+                The perfect temporary home for JSON, code snippets, cURL commands, stack
+                traces, logs, and more. Instantly recognized, beautifully formatted.
               </p>
             </div>
             <div class="headline-item">
@@ -478,8 +489,8 @@
                 class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4"
               >
                 Go beyond text with a suite of 50+ integrated tools. Decode
-                JWTs, test regex, transform data, and manage your clipboard
-                without leaving the tab.
+                JWTs, test regex, convert JSON, generate passwords, sketch diagrams and more
+                without leaving the application.
               </p>
             </div>
             <div class="headline-item">
@@ -508,7 +519,20 @@
               >
                 Code snippets, API responses, log files, random JSON blobs—they
                 don't belong in your project files, but you need a place to work
-                with them. Scratch Tabs allows you to instantly
+                with them.
+              </p>
+            </div>
+            <div class="headline-item">
+              <h1
+                class="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight"
+              >
+                Transform Your Data with
+                <span class="text-blue-400">Instant Power</span>.
+              </h1>
+              <p
+                class="text-base sm:text-lg md:text-xl text-gray-300 mt-3 sm:mt-4 md:mt-6 max-w-3xl mx-auto px-4"
+              >
+                Scratch Tabs allows you to instantly
                 <strong>compare, clean, transform, and validate</strong> that
                 data before it moves to its final destination.
               </p>
@@ -519,7 +543,7 @@
           href="https://app.scratchtabs.com"
           target="_blank"
           class="primary-button text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105 cta-button-glow"
-          >Launch App & Start Building</a
+          >Launch App</a
         >
         <p class="text-sm text-gray-500 mt-6">
           No registration required. Instant access.
@@ -604,8 +628,7 @@
         </h2>
         <p class="text-gray-400 text-center text-lg mb-12 max-w-3xl mx-auto">
           Everyone works with temporary data <strong>daily</strong>, but nothing
-          exists to help you manage it. Say you need to quickly compare two JSON
-          objects. The "quick" task that ends up polluting your editor and
+          exists to help you manage it. What should be quick tasks—like comparing JSON objects or formatting messy data—end up polluting your editor and
           wasting your time.
         </p>
         <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
@@ -914,7 +937,7 @@
           Everything You Need, Right In Your Browser
         </h2>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div class="feature-card rounded-lg p-6 shadow-lg">
+          <div class="feature-card text-center rounded-lg p-6 shadow-lg">
             <div class="icon-placeholder">
               <svg class="icon-tool" viewBox="0 0 24 24">
                 <polyline points="16 18 22 12 16 6"></polyline>
@@ -930,7 +953,7 @@
               models and more from your data.
             </p>
           </div>
-          <div class="feature-card rounded-lg p-6 shadow-lg">
+          <div class="feature-card text-center rounded-lg p-6 shadow-lg">
             <div class="icon-placeholder">
               <svg class="icon-tool" viewBox="0 0 24 24">
                 <path
@@ -946,7 +969,7 @@
               transformation toolkit you won't find anywhere else.
             </p>
           </div>
-          <div class="feature-card rounded-lg p-6 shadow-lg">
+          <div class="feature-card text-center rounded-lg p-6 shadow-lg">
             <div class="icon-placeholder">
               <svg class="icon-tool" viewBox="0 0 24 24">
                 <path d="M12 2a10 10 0 0 0-7.07 17.07H12V2Z"></path>
@@ -962,7 +985,7 @@
               and more AI-powered features.
             </p>
           </div>
-          <div class="feature-card rounded-lg p-6 shadow-lg">
+          <div class="feature-card text-center rounded-lg p-6 shadow-lg">
             <div class="icon-placeholder">
               <svg class="icon-tool" viewBox="0 0 24 24">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -979,7 +1002,7 @@
               time.
             </p>
           </div>
-          <div class="feature-card rounded-lg p-6 shadow-lg">
+          <div class="feature-card text-center rounded-lg p-6 shadow-lg">
             <div class="icon-placeholder">
               <svg class="icon-tool" viewBox="0 0 24 24">
                 <path
@@ -997,7 +1020,7 @@
               macros.
             </p>
           </div>
-          <div class="feature-card rounded-lg p-6 shadow-lg">
+          <div class="feature-card text-center rounded-lg p-6 shadow-lg">
             <div class="icon-placeholder">
               <svg class="icon-tool" viewBox="0 0 24 24">
                 <path

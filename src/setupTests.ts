@@ -31,3 +31,19 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
+
+// Mock crypto.randomUUID
+// Object.defineProperty(global, 'crypto', {
+//   value: {
+//     randomUUID: jest.fn(() => 'test-uuid-' + Math.random().toString(36).substr(2, 9)),
+//   },
+// });
+//
+// // Mock navigator.clipboard
+// Object.defineProperty(global, 'navigator', {
+//   value: {
+//     clipboard: {
+//       writeText: jest.fn(() => Promise.resolve()),
+//     },
+//   },
+// });

@@ -31,6 +31,7 @@ The framework uses a **modular action-based approach** to avoid the "God Object"
 - **`clipboard.actions.ts`**: Clipboard operations
 - **`fileActions.ts`**: File upload and drag-drop operations
 - **`statusBar.actions.ts`**: Status bar interactions
+- **`csvTableView.actions.ts`**: CSV table view operations and data manipulation
 
 Each action class encapsulates specific UI interactions and business logic, making tests more maintainable and reusable.
 
@@ -80,6 +81,9 @@ npm run e2e:full
 ```bash
 # Run specific feature file
 npm run e2e:full -- tests/e2e/features/undo.feature
+
+# Run CSV view tests specifically
+npm run e2e:full -- tests/e2e/features/csv-view.feature
 
 # Run specific scenario by name
 npm run e2e:full -- tests/e2e/features/undo.feature --name "Test undo functionality across multiple tabs"
@@ -394,12 +398,14 @@ Failed tests automatically capture screenshots and videos in the `reports/` dire
 tests/e2e/
 ├── features/                    # Cucumber feature files
 │   ├── undo.feature           # Undo functionality tests
+│   ├── csv-view.feature       # CSV view and auto-detection tests
 │   ├── welcome-screen-entry-points.feature
 │   └── performance.feature
 ├── steps/                      # Step definitions
 │   ├── interaction.steps.ts   # User interactions
 │   ├── navigation.steps.ts    # Page navigation
-│   └── assertion.steps.ts     # Verifications
+│   ├── assertion.steps.ts     # Verifications
+│   └── csv.steps.ts           # CSV-specific step definitions
 ├── support/                    # Test infrastructure
 │   ├── world.ts               # Main test world
 │   ├── hooks.ts               # Setup/teardown
@@ -410,7 +416,8 @@ tests/e2e/
 │   ├── navigation.actions.ts  # Navigation
 │   ├── clipboard.actions.ts   # Clipboard operations
 │   ├── fileActions.ts         # File operations
-│   └── statusBar.actions.ts  # Status bar
+│   ├── statusBar.actions.ts  # Status bar
+│   └── csvTableView.actions.ts # CSV table view operations
 └── README.md                  # This file
 ```
 

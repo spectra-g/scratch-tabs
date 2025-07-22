@@ -547,7 +547,6 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
         {isEditing && isInsertPanelOpen && (
           <div className="w-96 border-l border-gray-700/50">
             <EditorInsertPanel
-              templates={templates}
               snippets={snippets}
               onInsert={handleInsertContent}
             />

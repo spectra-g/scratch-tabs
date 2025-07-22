@@ -22,7 +22,7 @@ export function RegexEditor({ value, onChange, error }: RegexEditorProps) {
         </div>
         <input
           type="text"
-          value={value}
+          value={value || ""}
           onChange={handleChange}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}

@@ -1,14 +1,19 @@
-import { modelManager } from "../modelManager";
 import { Tab } from "../../types";
 
 // Mock the dependencies
+const mockStorage = {
+  getTabContent: jest.fn(() => Promise.resolve("test content from db")),
+  updateTabCursor: jest.fn(() => Promise.resolve()),
+};
+
 jest.mock("../../db", () => ({
   StorageProviderFactory: {
-    getProvider: jest.fn(() => ({
-      getTabContent: jest.fn(() => Promise.resolve("test content from db")),
-    })),
+    getProvider: jest.fn(() => mockStorage),
   },
 }));
+
+// Import modelManager after mocking the dependencies
+import { modelManager } from "../modelManager";
 
 jest.mock("../../stores/tabsStore", () => ({
   useTabsStore: {
@@ -347,28 +352,18 @@ describe("ModelManager", () => {
 
   describe("cursor position management", () => {
     it("should update cursor position in both database and store", async () => {
-      const mockStorage = {
-        getTabContent: jest.fn(() => Promise.resolve("test content")),
-        updateTabCursor: jest.fn(() => Promise.resolve()),
-      };
+      const mockUpdateTabState = jest.fn();
       
-      const mockTabsStore = {
+      // Mock the tabs store
+      (
+        require("../../stores/tabsStore").useTabsStore.getState as jest.Mock
+      ).mockReturnValue({
         updateTabContent: jest.fn(),
-        updateTabState: jest.fn(),
-      };
+        updateTabState: mockUpdateTabState,
+      });
 
-      // Mock the storage and tabs store
-      jest.doMock("../../db", () => ({
-        StorageProviderFactory: {
-          getProvider: () => mockStorage,
-        },
-      }));
-
-      jest.doMock("../../stores/tabsStore", () => ({
-        useTabsStore: {
-          getState: () => mockTabsStore,
-        },
-      }));
+      // Clear the mock call history
+      mockStorage.updateTabCursor.mockClear();
 
       // Create a mock editor with cursor position listener
       const mockEditor = {
@@ -393,7 +388,7 @@ describe("ModelManager", () => {
       expect(mockStorage.updateTabCursor).toHaveBeenCalledWith("test-tab", cursorPosition);
       
       // Verify store update was called
-      expect(mockTabsStore.updateTabState).toHaveBeenCalledWith("test-tab", { cursorPosition });
+      expect(mockUpdateTabState).toHaveBeenCalledWith("test-tab", { cursorPosition });
     });
 
     it("should handle cursor position listener registration and cleanup", () => {

@@ -253,9 +253,11 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
   // Memoize parsed JSON
   const parsedJson = useMemo(() => {
     setParseError(null); // Clear previous parse errors
-    if (!jsonString) return {}; // Treat empty string as empty object
+    if (!jsonString || !jsonString.trim()) return null; // Treat empty/whitespace string as null
     try {
-      return JSON.parse(jsonString);
+      const parsed = JSON.parse(jsonString);
+      // Treat null as empty data
+      return parsed === null ? null : parsed;
     } catch (e: any) {
       setParseError(`Invalid JSON: ${e.message}`);
       return null;
@@ -695,6 +697,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
   return (
     <div
       ref={containerRef}
+      data-testid="json-tree-view"
       className="flex flex-col h-full bg-gray-900 text-gray-200 overflow-hidden"
     >
       {/* Header */}

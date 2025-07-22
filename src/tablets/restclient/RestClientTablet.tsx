@@ -6,16 +6,21 @@ import { RequestConverter } from "./components/RequestConverter";
 import { ResponseViewer } from "./components/ResponseViewer";
 import { ResponseHistory } from "./components/ResponseHistory";
 import { RequestHistoryViewer } from "./components/RequestHistoryViewer";
+import { ComparisonSelector } from "./components/ComparisonSelector";
+import { ResponseComparisonViewer } from "./components/ResponseComparison";
 import {
   HttpRequest,
   RestClientState,
   ResponseHistoryItem,
   HttpRequestHistoryItem,
   ExplanationLevel,
+  ComparisonItem,
+  ResponseComparison,
 } from "./types";
 import { executeRequest } from "./utils/requestUtils";
 import { SensitiveDataManager } from "../../utils/sensitiveDataManager";
 import { ParameterSyncManager } from "./utils/paramSync";
+import { compareResponses, createComparisonItem, createCurrentComparisonItem } from "./utils/comparisonUtils";
 
 interface RestClientTabletState extends TabletState {
   type: "restclient";
@@ -72,6 +77,11 @@ export const RestClientTablet: Tablet = {
         explanationLevel: "medium",
         isExecuting: false,
         error: null,
+        comparison: {
+          isComparing: false,
+          selectedItems: [],
+          activeComparison: null,
+        },
       },
     };
   },
@@ -87,6 +97,14 @@ export const RestClientTablet: Tablet = {
         // Ensure new fields have default values if loading old state
         if (!parsed.data.requestHistory) {
           parsed.data.requestHistory = [];
+        }
+        
+        if (!parsed.data.comparison) {
+          parsed.data.comparison = {
+            isComparing: false,
+            selectedItems: [],
+            activeComparison: null,
+          };
         }
 
         // Migrate sensitive data in authentication parameters
@@ -373,6 +391,48 @@ export const RestClientTablet: Tablet = {
       updateState({ error: null });
     };
 
+    // --- Comparison Handlers ---
+    const handleStartComparison = () => {
+      updateState({
+        comparison: {
+          ...data.comparison,
+          isComparing: true,
+          selectedItems: [],
+          activeComparison: null,
+        },
+      });
+    };
+
+    const handleComparisonSelectionChange = (items: ComparisonItem[]) => {
+      updateState({
+        comparison: {
+          ...data.comparison,
+          selectedItems: items,
+        },
+      });
+    };
+
+    const handleStartComparisonView = (items: ComparisonItem[]) => {
+      const comparison = compareResponses(items[0], items[1]);
+      updateState({
+        comparison: {
+          ...data.comparison,
+          activeComparison: comparison,
+        },
+      });
+    };
+
+    const handleCloseComparison = () => {
+      updateState({
+        comparison: {
+          ...data.comparison,
+          isComparing: false,
+          selectedItems: [],
+          activeComparison: null,
+        },
+      });
+    };
+
     useEffect(() => {
       const now = Date.now();
       const ONE_HOUR = 60 * 60 * 1000;
@@ -454,9 +514,27 @@ export const RestClientTablet: Tablet = {
               )}
             </div>
 
-            {/* Response Panel / Response History */}
+            {/* Response Panel / Response History / Comparison */}
             <div className="flex-1 overflow-hidden">
-              {showResponseHistory ? (
+              {data.comparison.isComparing ? (
+                data.comparison.activeComparison ? (
+                  <ResponseComparisonViewer
+                    comparison={data.comparison.activeComparison}
+                    onClose={handleCloseComparison}
+                  />
+                ) : (
+                  <ComparisonSelector
+                    responseHistory={data.responseHistory}
+                    currentResponse={data.response}
+                    currentMethod={data.request.method}
+                    currentUrl={data.request.url}
+                    selectedItems={data.comparison.selectedItems}
+                    onSelectionChange={handleComparisonSelectionChange}
+                    onStartComparison={handleStartComparisonView}
+                    onClose={handleCloseComparison}
+                  />
+                )
+              ) : showResponseHistory ? (
                 <ResponseHistory
                   history={data.responseHistory}
                   onPinItem={handlePinResponseHistoryItem}
@@ -472,6 +550,7 @@ export const RestClientTablet: Tablet = {
                   onShowHistory={() => setShowResponseHistory(true)}
                   historyCount={data.responseHistory.length}
                   onClearError={handleClearError}
+                  onStartComparison={handleStartComparison}
                 />
               )}
             </div>

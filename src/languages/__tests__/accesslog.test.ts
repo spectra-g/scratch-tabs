@@ -233,6 +233,7 @@ describe("AccessLogLanguageDetector", () => {
           setLanguageConfiguration: jest.fn(),
           setMonarchTokensProvider: jest.fn(),
           registerDocumentFormattingEditProvider: jest.fn(),
+          getLanguages: jest.fn(() => []),
           registerCompletionItemProvider: jest.fn(),
           CompletionItemKind: {
             Snippet: 1,

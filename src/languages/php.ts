@@ -11,8 +11,8 @@ export class PhpLanguageDetector
 {
   id = "php"; // Monaco's built-in ID for PHP
   name = "PHP";
-  extensions = ["php", "php3", "php4", "php5", "phtml"];
-  priority = 7; // High priority due to its specific tags
+  extensions = ["php", "phtml", "php3", "php4", "php5", "phps"];
+  priority = 5; // High priority due to its specific tags
 
   sampleContent(): string {
     return `<?php
@@ -123,7 +123,7 @@ $squared = array_map(fn($n) => $n * $n, $numbers);
     if (openTagMatch) {
       hasPhpTags = true;
       confidenceScore = 0.75; // High base confidence for any PHP tag
-      patternsMatched++;
+      // Don't increment patternsMatched here - only count actual PHP content patterns
       isDefinitivePhp = true; // Opening tag is a definitive signal
 
       if (openTagMatch[0] === "<?=") {
@@ -264,7 +264,8 @@ $squared = array_map(fn($n) => $n * $n, $numbers);
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
     // PHP match is primarily determined by the presence of PHP tags and a reasonable overall score.
-    const isMatch = hasPhpTags && confidenceScore >= 0.55; // Increased threshold slightly
+    // Require more than just the opening tag - need some actual PHP content
+    const isMatch = hasPhpTags && confidenceScore >= 0.55 && patternsMatched > 0;
 
     return {
       match: isMatch,

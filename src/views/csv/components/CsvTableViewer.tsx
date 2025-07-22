@@ -57,6 +57,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [showSnapshotsPanel, setShowSnapshotsPanel] = useState(false);
+  const [duplicateSearchPerformed, setDuplicateSearchPerformed] = useState(false);
 
   // Stats popover state
   const [statsPopover, setStatsPopover] = useState<{
@@ -162,11 +163,13 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
 
     setDuplicateGroups(duplicates);
     setShowDuplicatesOnly(duplicates.length > 0);
+    setDuplicateSearchPerformed(true);
   }, [data]);
 
   const clearDuplicates = useCallback(() => {
     setDuplicateGroups([]);
     setShowDuplicatesOnly(false);
+    setDuplicateSearchPerformed(false);
   }, []);
 
   const removeDuplicateRows = useCallback(() => {
@@ -296,6 +299,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
                     onClick={() => tableColumn.toggleSorting()}
                     className="p-1 hover:bg-gray-700/30 rounded"
                     title="Sort column"
+                    data-testid="sort-column"
                   >
                     {tableColumn.getIsSorted() === "asc" ? (
                       <SortAsc size={12} />
@@ -345,6 +349,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
                 <button
                   onClick={() => addColumn(columnIndex + 1)}
                   title="Add column after"
+                  data-testid="add-column-after"
                 >
                   <Plus size={12} />
                 </button>
@@ -681,6 +686,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
       className="flex flex-col h-full bg-gray-900 text-gray-200"
       onKeyDown={handleKeyDown}
       tabIndex={0}
+      data-testid="csv-table-viewer"
     >
       {/* Toolbar */}
       <CsvToolbar
@@ -696,6 +702,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
         onDeleteSnapshot={deleteSnapshot}
         duplicateGroups={duplicateGroups}
         showDuplicatesOnly={showDuplicatesOnly}
+        duplicateSearchPerformed={duplicateSearchPerformed}
         onFindDuplicates={findDuplicates}
         onToggleDuplicatesOnly={setShowDuplicatesOnly}
         onRemoveDuplicates={removeDuplicateRows}
@@ -725,6 +732,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
         ref={tableContainerRef}
         className="flex-1 overflow-auto custom-scrollbar"
         style={{ contain: "strict" }}
+        data-testid="csv-table-container"
       >
         {/* Fixed Header */}
         <div
@@ -734,11 +742,13 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
             gridTemplateColumns,
             minWidth: "fit-content",
           }}
+          data-testid="csv-table"
         >
           {table.getHeaderGroups()[0]?.headers.map((header) => (
             <div
               key={header.id}
               className="border-r border-gray-700 p-2 text-left font-medium text-gray-300 bg-gray-800"
+              data-testid="column-header"
             >
               {flexRender(header.column.columnDef.header, header.getContext())}
             </div>
@@ -751,6 +761,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
             height: `${rowVirtualizer.getTotalSize()}px`,
             position: "relative",
           }}
+          data-testid="virtualized-table"
         >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const row = table.getRowModel().rows[virtualRow.index];
@@ -769,6 +780,7 @@ export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
                   gridTemplateColumns,
                   minWidth: "fit-content",
                 }}
+                data-testid={isDuplicate ? "duplicate-row-indicator" : "csv-row"}
               >
                 {row.getVisibleCells().map((cell) => (
                   <div key={cell.id} className="border-r border-gray-700">

@@ -10,18 +10,9 @@ export class HclLanguageDetector
   implements LanguageDetector
 {
   id = "hcl"; // Monaco uses 'hcl' for Terraform syntax
-  name = "HCL (Terraform/Packer)";
-  extensions = [
-    "tf",
-    "hcl",
-    "pkr.hcl",
-    "pkr",
-    "nomad",
-    "sentinel",
-    "consul.hcl",
-    "vault.hcl",
-  ]; // Common HCL extensions
-  priority = 6; // High priority, fairly unique syntax
+  name = "HCL (Terraform)";
+  extensions = ["tf", "hcl", "tfvars"];
+  priority = 4; // High priority, fairly unique syntax
 
   sampleContent(): string {
     return `# main.tf (Terraform example)
@@ -205,7 +196,7 @@ data "aws_ami" "latest_amazon_linux" {
   }
 
   getFileExtension(): string {
-    return "tf"; // Common default for HCL, especially Terraform
+    return "hcl";
   }
 
   registerProvider(monaco: any): void {

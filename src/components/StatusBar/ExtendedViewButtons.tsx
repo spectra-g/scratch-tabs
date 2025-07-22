@@ -21,7 +21,7 @@ export const ExtendedViewButtons: React.FC<ExtendedViewButtonsProps> = ({
   }
 
   return (
-    <>
+    <div data-testid="extended-view-buttons">
       {availableViews.map((view) => {
         const isActive = activeViewId === view.id;
         const Icon = view.icon;
@@ -36,11 +36,12 @@ export const ExtendedViewButtons: React.FC<ExtendedViewButtonsProps> = ({
                 : "hover:bg-gray-700 text-gray-300"
             }`}
             title={`${isActive ? "Close" : "Open"} ${view.label}`}
+            data-testid="table-view-button"
           >
             <Icon size={14} />
           </button>
         );
       })}
-    </>
+    </div>
   );
 };

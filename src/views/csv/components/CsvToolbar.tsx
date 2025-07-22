@@ -40,6 +40,7 @@ interface CsvToolbarProps {
   // Duplicates
   duplicateGroups: DuplicateGroup[];
   showDuplicatesOnly: boolean;
+  duplicateSearchPerformed: boolean;
   onFindDuplicates: () => void;
   onToggleDuplicatesOnly: (show: boolean) => void;
   onRemoveDuplicates: () => void;
@@ -69,6 +70,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   onCreateSnapshot,
   duplicateGroups,
   showDuplicatesOnly,
+  duplicateSearchPerformed,
   onFindDuplicates,
   onToggleDuplicatesOnly,
   onRemoveDuplicates,
@@ -114,6 +116,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           disabled={!canUndo}
           title="Undo"
           className={`p-2 rounded ${canUndo ? "hover:bg-gray-700" : "opacity-50 cursor-not-allowed"}`}
+          data-testid="undo-button"
         >
           <RotateCcw size={16} />
         </button>
@@ -122,6 +125,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           disabled={!canRedo}
           title="Redo"
           className={`p-2 rounded transform scale-x-[-1] ${canRedo ? "hover:bg-gray-700" : "opacity-50 cursor-not-allowed"}`}
+          data-testid="redo-button"
         >
           <RotateCcw size={16} />
         </button>
@@ -133,6 +137,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           onClick={() => onCreateSnapshot(`Snapshot ${snapshots.length + 1}`)}
           title="Create snapshot"
           className="p-2 rounded hover:bg-gray-700"
+          data-testid="create-snapshot-button"
         >
           <Camera size={16} />
         </button>
@@ -154,6 +159,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
             onClick={() => setShowExportMenu(!showExportMenu)}
             title="Export data"
             className={`flex items-center space-x-1 px-3 py-2 rounded ${showExportMenu ? "bg-blue-500/20 text-blue-400" : "hover:bg-gray-700"}`}
+            data-testid="export-dropdown"
           >
             <Download size={16} />
             <span className="text-sm">Export</span>
@@ -174,6 +180,8 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
                   <button
                     onClick={handleExportCsv}
                     className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    data-testid="export-option"
+                    data-format="csv"
                   >
                     <div className="flex items-center space-x-2">
                       <FileText size={16} className="text-green-400" />
@@ -184,6 +192,8 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
                   <button
                     onClick={handleExportJson}
                     className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    data-testid="export-option"
+                    data-format="json"
                   >
                     <div className="flex items-center space-x-2">
                       <Code size={16} className="text-blue-400" />
@@ -194,6 +204,8 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
                   <button
                     onClick={handleExportMarkdown}
                     className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    data-testid="export-option"
+                    data-format="markdown"
                   >
                     <div className="flex items-center space-x-2">
                       <FileText size={16} className="text-purple-400" />
@@ -219,6 +231,8 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
                     onClick={handleExportSql}
                     disabled={!sqlTableName.trim()}
                     className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="export-option"
+                    data-format="sql"
                   >
                     <div className="flex items-center space-x-2">
                       <Database size={16} className="text-orange-400" />
@@ -238,13 +252,24 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
 
         {/* Duplicates Controls */}
         {duplicateGroups.length === 0 ? (
-          <button
-            onClick={onFindDuplicates}
-            title="Find duplicate rows"
-            className="p-2 rounded hover:bg-gray-700"
-          >
-            <Replace size={16} />
-          </button>
+          <>
+            <button
+              onClick={onFindDuplicates}
+              title="Find duplicate rows"
+              className="p-2 rounded hover:bg-gray-700"
+              data-testid="find-duplicates-button"
+            >
+              <Replace size={16} />
+            </button>
+            {duplicateSearchPerformed && (
+              <span 
+                className="text-sm text-green-400" 
+                data-testid="duplicate-message"
+              >
+                No duplicates found
+              </span>
+            )}
+          </>
         ) : (
           <div className="flex items-center space-x-2">
             <button
@@ -280,7 +305,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
 
       {/* Status Info */}
       <div className="flex items-center space-x-4 text-sm text-gray-400">
-        <span>
+        <span data-testid="row-column-status">
           {rowCount} rows × {columnCount} columns
         </span>
         {duplicateGroups.length > 0 && (

@@ -1,0 +1,5 @@
+export const CALCULATOR_CONSTANTS = {
+  HISTORY_LIMIT: 50,
+  DEFAULT_DISPLAY: "0",
+  ERROR_DISPLAY: "Error",
+} as const;

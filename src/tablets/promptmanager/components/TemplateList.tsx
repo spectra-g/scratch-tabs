@@ -17,7 +17,7 @@ interface TemplateListProps {
     updates: Partial<Omit<Template, "id">>,
   ) => void;
   onDeleteTemplate: (id: string) => void;
-  onCreatePromptFromTemplate: (templateId: string) => void;
+  onCreatePromptFromTemplate: (templateId: string, variableValues?: Record<string, string>) => void;
 }
 
 export const TemplateList: React.FC<TemplateListProps> = ({
@@ -92,8 +92,8 @@ export const TemplateList: React.FC<TemplateListProps> = ({
   const handleQuickUseSubmit = (values: Record<string, string>) => {
     if (!quickUseTemplate) return;
     
-    const substitutedContent = substituteVariables(quickUseTemplate.content, values, true);
-    copyToClipboard(substitutedContent, quickUseTemplate.id);
+    // Create prompt from template with filled variables
+    onCreatePromptFromTemplate(quickUseTemplate.id, values);
     
     // Close modal
     setQuickUseTemplate(null);

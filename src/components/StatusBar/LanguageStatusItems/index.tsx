@@ -2,17 +2,13 @@ import { languageRegistry } from "../../../languages";
 import * as monaco from "monaco-editor";
 import { Tab } from "../../../types";
 
-export const getLanguageStatusItem = (
-  language: string,
-  content: string,
-  activeTab?: Tab,
-) => {
+export const getLanguageStatusItem = (language: string) => {
   // First check if the language detector provides a status item
   const detector = languageRegistry.getById(language);
   if (detector?.getStatusItem) {
-    const StatusItem = detector.getStatusItem();
-    return () => <StatusItem content={content} activeTab={activeTab} />;
+    return detector.getStatusItem();
   }
+  return null;
 };
 
 export const getLanguageOptionsMenu = (
