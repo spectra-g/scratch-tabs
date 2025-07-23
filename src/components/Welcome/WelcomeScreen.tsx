@@ -4,8 +4,9 @@ import { useTabletSelector } from "../../hooks/useTabletSelector";
 import { TabletSelector } from "../../tablets";
 import { Tablet } from "../../tablets";
 import { TabActions } from "../Tab/TabActions";
-import { FileText, Layers, Upload, FolderOpen, File } from "lucide-react";
+import { FileText, Layers, Upload, FolderOpen, File, Package } from "lucide-react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { ImportExportService } from "../../features/import-export/ImportExportService";
 
 export const WelcomeScreen: React.FC = () => {
   const { handleNewTab, handleNewPopulatedTab } = useRootStore();
@@ -124,6 +125,49 @@ export const WelcomeScreen: React.FC = () => {
     input.click();
   }, [handleNewTab]);
 
+  const handleImportWorkspace = useCallback(async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".scratch";
+    input.style.display = "none";
+
+    input.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          // Check if it's a .scratch file
+          if (!file.name.endsWith(".scratch")) {
+            alert("Invalid file type. Please select a '.scratch' file.");
+            return;
+          }
+
+          const service = new ImportExportService();
+          const importResult = await service.importWorkspaces(file);
+          
+          if (importResult.errors.length > 0) {
+            const errorMessage = importResult.errors.join("\n");
+            alert(`Import encountered errors:\n${errorMessage}`);
+          }
+          
+          if (importResult.importedWorkspaces.length > 0) {
+            const importedCount = importResult.importedWorkspaces.length;
+            alert(`Successfully imported ${importedCount} workspace${importedCount === 1 ? "" : "s"}! Reloading page...`);
+            window.location.reload();
+          } else if (importResult.errors.length === 0) {
+            alert("No workspaces were imported. The file might have been empty or contained no new data.");
+          }
+        } catch (error) {
+          alert(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      // Clean up
+      document.body.removeChild(input);
+    };
+
+    document.body.appendChild(input);
+    input.click();
+  }, []);
+
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (
@@ -172,6 +216,13 @@ export const WelcomeScreen: React.FC = () => {
       title: "Import from clipboard",
       action: "Paste text here",
       onClick: handleImportFromClipboard,
+      clickable: true,
+    },
+    {
+      icon: Package,
+      title: "Import an exported Workspace",
+      action: "Load all workspaces from a .scratch file",
+      onClick: handleImportWorkspace,
       clickable: true,
     },
     {

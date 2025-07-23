@@ -51,7 +51,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
     loadWorkspaces: async () => {
       const { activeWorkspaceId: currentActiveWsId } = get();
-
       set({ isLoading: true, error: null });
 
       try {
@@ -110,6 +109,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
               rightTabHistory: splitView.rightTabHistory || [],
             };
             useSplitViewStore.setState({ splitView: finalSplitViewState });
+          } else {
+            useSplitViewStore.setState({ splitView: undefined });
           }
         } else {
           // Clear all data if no workspace to activate
@@ -209,7 +210,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         }
         return currentActiveId;
       } catch (error) {
-        console.error("[ensureWorkspace] Error:", error);
+        console.error("Error ensuring workspace:", error);
         set({
           error:
             error instanceof Error
@@ -277,7 +278,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         const tabsToLoad = await storage.getTabsByWorkspace(workspaceId);
 
         if (!splitViewToLoad) {
-          console.error(`[switchWorkspace] No split view for ${workspaceId}.`);
+          console.error(`No split view found for workspace ${workspaceId}`);
           return;
         }
 
@@ -320,7 +321,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
             : finalSplitViewState.activeLeftTabId;
         useTabsStore.setState({ activeTabId: newActiveTabId });
       } catch (error) {
-        console.error(`[switchWorkspace] Error:`, error);
+        console.error(`Error switching workspace:`, error);
         set({
           error:
             error instanceof Error
