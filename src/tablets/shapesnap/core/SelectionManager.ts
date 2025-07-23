@@ -306,7 +306,7 @@ export class SelectionManager {
     const validShapeIds = shapeIds.filter((id) =>
       this.state.shapes.some((shape) => shape.id === id),
     );
-
+    
     this.onChange({
       ...this.state,
       selectedShapeIds: validShapeIds,

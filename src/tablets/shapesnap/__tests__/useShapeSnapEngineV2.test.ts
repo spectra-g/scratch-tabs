@@ -264,8 +264,6 @@ describe("useShapeSnapEngineV2", () => {
       expect(mockOnChange).toHaveBeenCalled();
       const lastCall =
         mockOnChange.mock.calls[mockOnChange.mock.calls.length - 1][0];
-      console.log("Debug - lastCall.shapes:", lastCall.shapes);
-      console.log("Debug - lastCall.shapes.length:", lastCall.shapes.length);
       expect(lastCall.shapes.length).toBe(2);
       // IDs should not match originals
       expect(lastCall.shapes[0].id).not.toBe("shape1");
