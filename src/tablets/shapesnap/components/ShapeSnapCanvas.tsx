@@ -244,12 +244,10 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     }
   };
 
-  // Custom double-click handler that only opens label editor in Draw mode
+  // Custom double-click handler that opens label editor in both draw and select modes
   const handleCustomShapeDoubleClick = (shape: Shape) => {
-    // Only allow label editing in draw mode, not select mode
-    if (currentTool === "draw") {
-      handleShapeDoubleClick(shape);
-    }
+    // Allow label editing in both draw and select modes
+    handleShapeDoubleClick(shape);
   };
 
   // Handle canvas click to clear selection

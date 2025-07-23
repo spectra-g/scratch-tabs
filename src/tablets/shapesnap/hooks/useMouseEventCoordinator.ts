@@ -258,11 +258,10 @@ export const useMouseEventCoordinator = ({
 
   const handleShapeDoubleClick = useCallback(
     (shape: Shape) => {
-      if (currentTool === "draw") {
-        clickHandler.setEditingShape(shape);
-      }
+      // Allow editing in both draw and select modes
+      clickHandler.setEditingShape(shape);
     },
-    [currentTool, clickHandler],
+    [clickHandler],
   );
 
   const handleCanvasDoubleClick = useCallback(
