@@ -16,7 +16,7 @@ const WordCountTabletComponent: React.FC<{
   state: WordCountTabletState;
   onChange: (state: WordCountTabletState) => void;
 }> = ({ state, onChange }) => {
-  const { data } = state;
+  const data = state.data || { text: '' };
 
   // Memoized text analysis - only recalculates when text changes
   const stats: WordCountStats = useMemo(() => {
