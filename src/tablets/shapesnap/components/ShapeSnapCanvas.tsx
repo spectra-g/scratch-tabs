@@ -341,6 +341,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   // Sort shapes by zIndex for proper rendering order
   const sortedShapes = [...shapes].sort((a, b) => a.zIndex - b.zIndex);
 
+
   // If we're dragging a shape, replace it with the dragged version for visual feedback
   // Handle both regular drag and line resize drag
   const shapesToRender = (() => {
@@ -684,7 +685,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     );
 
     return roughMarkup ? (
-      <g key={shape.id}>
+      <g>
         <g dangerouslySetInnerHTML={{ __html: roughMarkup }} />
         {renderShape(
           createInvisibleHitArea(shape),
@@ -823,9 +824,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         )}
 
         {/* Render all shapes */}
-        {shapesToRender.map((shape) =>
-          sketchModeEnabled ? renderSketchShape(shape) : renderNormalShape(shape)
-        )}
+        {shapesToRender.map((shape) => (
+          <React.Fragment key={`${shape.id}-shape`}>
+            {sketchModeEnabled ? renderSketchShape(shape) : renderNormalShape(shape)}
+          </React.Fragment>
+        ))}
 
         {/* Render current drawing stroke */}
         {currentPoints.length > 1 && (
@@ -917,7 +920,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         />
 
         {/* Render resize indicators */}
-        {shapesToRender.map((shape) => renderResizeIndicators(shape))}
+        {shapesToRender.map((shape) => 
+          <React.Fragment key={`${shape.id}-indicators`}>
+            {renderResizeIndicators(shape)}
+          </React.Fragment>
+        )}
       </svg>
 
       {/* Information Modal */}
