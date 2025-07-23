@@ -76,6 +76,13 @@ export class AddShapeCommand extends BaseCommand {
 
   execute(): void {
     if (!this.shapeAdded) {
+      // Check for duplicate IDs before adding (CRITICAL for redo safety)
+      const existingShape = this.state.shapes.find(s => s.id === this.shape.id);
+      if (existingShape) {
+        this.shapeAdded = true; // Mark as added to prevent undo issues
+        return; // Don't add duplicate
+      }
+      
       const newShapes = [...this.state.shapes, this.shape];
       this.updateState({
         ...this.state,

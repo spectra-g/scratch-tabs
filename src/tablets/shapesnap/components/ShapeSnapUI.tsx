@@ -174,6 +174,27 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
             engine.setSelectedShapes(allShapeIds);
           }
           break;
+        case "z":
+        case "Z":
+          if (ctrlOrCmd) {
+            e.preventDefault();
+            if (e.shiftKey) {
+              // Ctrl+Shift+Z for redo
+              engine.redo();
+            } else {
+              // Ctrl+Z for undo
+              engine.undo();
+            }
+          }
+          break;
+        case "y":
+        case "Y":
+          if (ctrlOrCmd) {
+            e.preventDefault();
+            // Ctrl+Y for redo (Windows convention)
+            engine.redo();
+          }
+          break;
       }
     };
 

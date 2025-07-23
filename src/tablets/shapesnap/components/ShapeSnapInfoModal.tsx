@@ -70,11 +70,14 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
               <h3 className="text-lg font-semibold mb-2 text-blue-500">
                 Purpose
               </h3>
+              <p className="text-sm leading-relaxed mb-3">
+                  Shape Snap is an intuitive sketching tool that transforms rough hand-drawn shapes into clean, precise diagrams. Simply draw freehand shapes like rectangles, circles, triangles, arrows, and
+                  lines—Shape Snap automatically detects and snaps them into polished geometric forms.
+              </p>
               <p className="text-sm leading-relaxed">
-                Shape Snap is a quick, frictionless way to draw sketches that
-                explain concepts or systems. It's not specific to any diagram
-                type (like UML or system architecture) but provides a freehand
-                way to explain ideas visually.
+                  With features like smart shape detection, editable text labels, multiple drawing tools, and flexible canvas modes, Shape Snap makes it effortless to create visual explanations of concepts,
+                  systems, or ideas. It's designed for quick, frictionless diagramming without the constraints of formal diagram types, letting you focus on expressing your thoughts visually rather than
+                  wrestling with complex drawing tools.
               </p>
             </div>
 

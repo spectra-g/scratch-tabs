@@ -276,9 +276,6 @@ describe("Arrow Movement in Different Tools", () => {
       result.current.handleMouseUp(mouseUpEvent);
     });
 
-    // Debug: Check what actually got called
-    console.log("mockOnUpdateShape calls:", mockOnUpdateShape.mock.calls);
-    console.log("mockOnShapeClick calls:", mockOnShapeClick.mock.calls);
 
     // Check if arrow endpoint was resized
     expect(mockOnUpdateShape).toHaveBeenCalledWith(arrow.id, expect.objectContaining({

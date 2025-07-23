@@ -124,7 +124,7 @@ describe("useMouseEventCoordinator", () => {
       );
     });
 
-    it("should not handle shape double-click in select mode", () => {
+    it("should handle shape double-click in select mode", () => {
       const { result } = renderHook(() =>
         useMouseEventCoordinator({
           shapes: mockShapes,
@@ -142,7 +142,7 @@ describe("useMouseEventCoordinator", () => {
         result.current.handleShapeDoubleClick(mockShapes[0]);
       });
 
-      expect(mockClickHandler.setEditingShape).not.toHaveBeenCalled();
+      expect(mockClickHandler.setEditingShape).toHaveBeenCalledWith(mockShapes[0]);
     });
 
     it("should handle canvas double-click", () => {

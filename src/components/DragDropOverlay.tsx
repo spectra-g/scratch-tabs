@@ -4,6 +4,7 @@ import { useRootStore } from "../stores";
 import { useSplitViewStore } from "../stores/splitViewStore";
 import { useModalStore } from "../stores/modalStore";
 import { languageRegistry } from "../languages";
+import { ImportExportService } from "../features/import-export/ImportExportService";
 
 const readFileAsText = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -55,6 +56,28 @@ const detectLanguageFromFileName = (fileName: string): string => {
     .find((detector) => detector.extensions.includes(extension));
 
   return detector?.id || "plaintext";
+};
+
+const handleWorkspaceImport = async (file: File): Promise<void> => {
+  try {
+    const service = new ImportExportService();
+    const importResult = await service.importWorkspaces(file);
+    
+    if (importResult.errors.length > 0) {
+      const errorMessage = importResult.errors.join("\n");
+      alert(`Import encountered errors:\n${errorMessage}`);
+    }
+    
+    if (importResult.importedWorkspaces.length > 0) {
+      const importedCount = importResult.importedWorkspaces.length;
+      alert(`Successfully imported ${importedCount} workspace${importedCount === 1 ? "" : "s"}! Reloading page...`);
+      window.location.reload();
+    } else if (importResult.errors.length === 0) {
+      alert("No workspaces were imported. The file might have been empty or contained no new data.");
+    }
+  } catch (error) {
+    alert(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
 };
 
 const DragDropOverlay: React.FC = () => {
@@ -191,33 +214,49 @@ const DragDropOverlay: React.FC = () => {
         results.forEach((fileList) => allFiles.push(...fileList));
 
         if (allFiles.length > 0) {
-          const toRightSide = splitView?.activeSide === "right" || false;
-          for (const file of allFiles) {
+          // Check if any files are .scratch files
+          const scratchFiles = allFiles.filter(file => file.name.endsWith('.scratch'));
+          const regularFiles = allFiles.filter(file => !file.name.endsWith('.scratch'));
+
+          // Handle .scratch files as workspace imports
+          for (const scratchFile of scratchFiles) {
             try {
-              const fileContent = await readFileAsText(file);
-              const fileName = file.name.replace(/\.[^/.]+$/, ""); // Title without extension
+              await handleWorkspaceImport(scratchFile);
+              // Only process one .scratch file at a time, then reload
+              return;
+            } catch (error) {
+              console.error(`Error importing workspace from ${scratchFile.name}:`, error);
+            }
+          }
 
-              // Detect language from file extension
-              const language = detectLanguageFromFileName(file.name);
+          // Handle regular files as tab imports
+          if (regularFiles.length > 0) {
+            const toRightSide = splitView?.activeSide === "right" || false;
+            for (const file of regularFiles) {
+              try {
+                const fileContent = await readFileAsText(file);
+                const fileName = file.name.replace(/\.[^/.]+$/, ""); // Title without extension
 
-              // TODO: Add a small delay or batch tab creation if many files are dropped
-              // to avoid overwhelming the system or hitting rate limits if any.
-              handleNewPopulatedTab(
-                {
-                  id: crypto.randomUUID(),
-                  title: fileName,
-                  content: fileContent,
-                  language: language,
-                  languageLocked: language !== "plaintext", // Only lock if we detected a specific language
-                  cursorPosition: { lineNumber: 1, column: 1 },
-                  dateCreated: Date.now(),
-                  lastModified: Date.now(),
-                  workspaceId: "", // Empty string, will be handled by handleNewPopulatedTab
-                },
-                toRightSide,
-              );
-            } catch (fileReadError) {
-              console.error(`Error reading file ${file.name}:`, fileReadError);
+                // Detect language from file extension
+                const language = detectLanguageFromFileName(file.name);
+
+                handleNewPopulatedTab(
+                  {
+                    id: crypto.randomUUID(),
+                    title: fileName,
+                    content: fileContent,
+                    language: language,
+                    languageLocked: language !== "plaintext", // Only lock if we detected a specific language
+                    cursorPosition: { lineNumber: 1, column: 1 },
+                    dateCreated: Date.now(),
+                    lastModified: Date.now(),
+                    workspaceId: "", // Empty string, will be handled by handleNewPopulatedTab
+                  },
+                  toRightSide,
+                );
+              } catch (fileReadError) {
+                console.error(`Error reading file ${file.name}:`, fileReadError);
+              }
             }
           }
         }
@@ -266,6 +305,9 @@ const DragDropOverlay: React.FC = () => {
             </p>
             <p className="text-gray-400 mt-2">
               Content will be opened in new tabs
+            </p>
+            <p className="text-gray-500 text-sm mt-1">
+              Drop .scratch files to import workspaces
             </p>
           </div>
         )}
