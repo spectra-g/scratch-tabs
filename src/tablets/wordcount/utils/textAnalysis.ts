@@ -401,33 +401,36 @@ export function getTopNGrams(text: string, n: number, limit: number = 5): Array<
  * Main function to calculate all word count statistics
  */
 export function analyzeText(text: string): WordCountStats {
+  // Defensive check: ensure text is always a string
+  const safeText = text ?? '';
+  
   return {
     // Core counts
-    words: countWords(text),
-    uniqueWords: countUniqueWords(text),
-    characters: countCharacters(text),
-    charactersNoSpaces: countCharactersNoSpaces(text),
-    sentences: countSentences(text),
-    paragraphs: countParagraphs(text),
-    lines: countLines(text),
+    words: countWords(safeText),
+    uniqueWords: countUniqueWords(safeText),
+    characters: countCharacters(safeText),
+    charactersNoSpaces: countCharactersNoSpaces(safeText),
+    sentences: countSentences(safeText),
+    paragraphs: countParagraphs(safeText),
+    lines: countLines(safeText),
     
     // Averages & lengths
-    longestSentence: getLongestSentence(text),
-    shortestSentence: getShortestSentence(text),
-    avgSentenceLength: getAvgSentenceLength(text),
-    avgSentenceLengthChars: getAvgSentenceLengthChars(text),
-    avgWordLength: getAvgWordLength(text),
+    longestSentence: getLongestSentence(safeText),
+    shortestSentence: getShortestSentence(safeText),
+    avgSentenceLength: getAvgSentenceLength(safeText),
+    avgSentenceLengthChars: getAvgSentenceLengthChars(safeText),
+    avgWordLength: getAvgWordLength(safeText),
     
     // Readability & time
-    syllables: countSyllables(text),
-    fleschKincaidGrade: calculateFleschKincaidGrade(text),
-    readingTime: calculateReadingTime(text),
-    speakingTime: calculateSpeakingTime(text),
-    handwritingTime: calculateHandwritingTime(text),
+    syllables: countSyllables(safeText),
+    fleschKincaidGrade: calculateFleschKincaidGrade(safeText),
+    readingTime: calculateReadingTime(safeText),
+    speakingTime: calculateSpeakingTime(safeText),
+    handwritingTime: calculateHandwritingTime(safeText),
     
     // SEO & keywords
-    topKeywords: getTopKeywords(text, 5),
-    topBigrams: getTopNGrams(text, 2, 5),
-    topTrigrams: getTopNGrams(text, 3, 5)
+    topKeywords: getTopKeywords(safeText, 5),
+    topBigrams: getTopNGrams(safeText, 2, 5),
+    topTrigrams: getTopNGrams(safeText, 3, 5)
   };
 }
