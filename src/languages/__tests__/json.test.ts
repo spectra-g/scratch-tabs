@@ -1,5 +1,4 @@
 // Mock the random number generator to make theme selection deterministic
-const mockRandomInt = jest.fn(() => 0); // Always returns 0, selecting the 'user' theme
 jest.mock("../json", () => {
   const originalModule = jest.requireActual("../json");
   return {
@@ -289,9 +288,49 @@ list:
       expect(result.match).toBe(false);
     });
 
-    test("should reject if it does not start with { or [", () => {
-      const text = ' "key": "value" }';
+    test("should reject if it does not start with {, [, or \"", () => {
+      const text = ' key: "value" }';
       const result = detector.detect(text);
+      expect(result.match).toBe(false);
+    });
+
+    test("should detect escaped JSON string with very high confidence", () => {
+      const escapedJson = '"{\\"name\\":\\"John Doe\\",\\"age\\":30,\\"isStudent\\":false,\\"courses\\":[{\\"id\\":1,\\"name\\":\\"History\\"},{\\"id\\":2,\\"name\\":\\"Math\\"}]}"';
+      const result = detector.detect(escapedJson);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.95);
+    });
+
+    test("should detect simple escaped JSON string", () => {
+      const escapedJson = '"{\\"key\\":\\"value\\"}"';
+      const result = detector.detect(escapedJson);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.9);
+    });
+
+    test("should detect escaped JSON array", () => {
+      const escapedJson = '"[1,2,3,\\"test\\"]"';
+      const result = detector.detect(escapedJson);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.9);
+    });
+
+    test("should detect escaped JSON with nested objects", () => {
+      const escapedJson = '"{\\"user\\":{\\"name\\":\\"John\\",\\"age\\":30}}"';
+      const result = detector.detect(escapedJson);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.95);
+    });
+
+    test("should reject invalid escaped JSON string", () => {
+      const invalidEscapedJson = '"{\\"key\\":\\"value\\""'; // Missing closing brace
+      const result = detector.detect(invalidEscapedJson);
+      expect(result.match).toBe(false);
+    });
+
+    test("should reject non-JSON string content", () => {
+      const nonJsonString = '"This is just a regular string"';
+      const result = detector.detect(nonJsonString);
       expect(result.match).toBe(false);
     });
   });
