@@ -499,4 +499,94 @@ describe("useLineResizeHandler", () => {
       );
     });
   });
+
+  describe("original shape resolution", () => {
+    it("should use original shape from shapes array instead of hit area shape", () => {
+      const originalShape: Shape = {
+        id: "line-1",
+        type: "line",
+        points: [
+          { x: 100, y: 100 },
+          { x: 200, y: 200 },
+        ],
+        style: { stroke: "#ff0000", fill: "transparent", strokeWidth: 2 }, // Red stroke
+        zIndex: 1,
+      } as Shape;
+
+      const hitAreaShape: Shape = {
+        id: "line-1",
+        type: "line",
+        points: [
+          { x: 100, y: 100 },
+          { x: 200, y: 200 },
+        ],
+        style: { stroke: "transparent", fill: "transparent", strokeWidth: 2 }, // Transparent stroke
+        zIndex: 1,
+      } as Shape;
+
+      const { result } = renderHook(() =>
+        useLineResizeHandler({
+          onUpdateShape: mockOnUpdateShape,
+          shapes: [originalShape], // Provide the original shape
+        }),
+      );
+
+      // Start resize with the hit area shape (transparent stroke)
+      act(() => {
+        result.current.startLineResize(hitAreaShape, { x: 100, y: 100 }, "resize-start");
+      });
+
+      // Update resize
+      act(() => {
+        result.current.updateLineResize({ x: 150, y: 150 });
+      });
+
+      // Check dragged shape before ending resize
+      expect(result.current.draggedShape).toBeDefined();
+      expect(result.current.draggedShape?.style?.stroke).toBe("#ff0000");
+
+      // End resize
+      act(() => {
+        result.current.endLineResize();
+      });
+
+      // Should have used the original shape with red stroke, not the transparent hit area
+      expect(mockOnUpdateShape).toHaveBeenCalledWith(
+        "line-1",
+        expect.objectContaining({
+          points: expect.arrayContaining([
+            { x: 150, y: 150 }, // Updated first point
+            { x: 200, y: 200 }, // Unchanged second point
+          ]),
+        }),
+      );
+    });
+
+    it("should fallback to provided shape when not found in shapes array", () => {
+      const hitAreaShape: Shape = {
+        id: "line-2",
+        type: "line",
+        points: [
+          { x: 100, y: 100 },
+          { x: 200, y: 200 },
+        ],
+        style: { stroke: "transparent", fill: "transparent", strokeWidth: 2 },
+        zIndex: 1,
+      } as Shape;
+
+      const { result } = renderHook(() =>
+        useLineResizeHandler({
+          onUpdateShape: mockOnUpdateShape,
+          shapes: [], // Empty shapes array
+        }),
+      );
+
+      // Should not throw error and use the provided shape as fallback
+      act(() => {
+        result.current.startLineResize(hitAreaShape, { x: 100, y: 100 }, "resize-start");
+      });
+
+      expect(result.current.lineResizeState.lineDragShape).toEqual(hitAreaShape);
+    });
+  });
 });

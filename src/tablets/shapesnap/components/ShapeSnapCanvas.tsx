@@ -665,10 +665,11 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
   });
 
   const renderSketchShape = (shape: Shape) => {
-    const supportedTypes = ["rectangle", "square", "circle", "diamond", "triangle", "line"];
+    const supportedTypes = ["rectangle", "square", "circle", "diamond", "triangle", "line", "straight-arrow", "curved-arrow", "orthogonal-arrow"];
     if (!supportedTypes.includes(shape.type) || !svgRef.current) {
       return renderNormalShape(shape);
     }
+
 
     const roughMarkup = renderRoughShapeSVG(
       svgRef.current,
@@ -683,6 +684,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         seed: hashCode(shape.id),
       },
     );
+
 
     return roughMarkup ? (
       <g>

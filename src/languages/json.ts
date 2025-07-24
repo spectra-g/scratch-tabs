@@ -995,57 +995,6 @@ export class JsonLanguageDetector
     }
   }
 
-  /**
-   * Check if content is valid JSON or matches JSON patterns
-   * Works with both complete and partial content
-   */
-  private getJsonPatterns(): Array<{
-    pattern: RegExp;
-    weight: number;
-    perMatch?: number;
-    specific?: boolean;
-  }> {
-    return [
-      // Core structure
-      { pattern: /^\s*\{[\s\S]*\}\s*$/m, weight: 0.2, specific: true }, // Object as root
-      { pattern: /^\s*\[[\s\S]*\]\s*$/m, weight: 0.2, specific: true }, // Array as root
-      // Key-value pairs
-      {
-        pattern: /"[^"\\]*(?:\\.[^"\\]*)*"\s*:/g,
-        weight: 0.25,
-        perMatch: 0.05,
-        specific: true,
-      }, // "key": (handles escaped quotes in key)
-      // Common values
-      {
-        pattern: /:\s*"(?:[^"\\]*(?:\\.[^"\\]*)*)"/g,
-        weight: 0.1,
-        perMatch: 0.02,
-        specific: true,
-      }, // : "value"
-      {
-        pattern: /:\s*(true|false|null)\b/g,
-        weight: 0.1,
-        perMatch: 0.02,
-        specific: true,
-      }, // : true/false/null
-      {
-        pattern: /:\s*-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g,
-        weight: 0.1,
-        perMatch: 0.02,
-        specific: true,
-      }, // : number
-      { pattern: /:\s*\{/g, weight: 0.05, perMatch: 0.01 }, // : { (start of nested object)
-      { pattern: /:\s*\[/g, weight: 0.05, perMatch: 0.01 }, // : [ (start of nested array)
-      // Commas separating elements/pairs
-      {
-        pattern: /,(?=\s*["{[tf\d-])/g,
-        weight: 0.05,
-        perMatch: 0.01,
-        specific: true,
-      }, // Comma followed by a likely JSON value start
-    ];
-  }
 
   /**
    * Simplified JSON detection optimized for paste-based workflow
@@ -1057,6 +1006,40 @@ export class JsonLanguageDetector
     // --- Step 1: Quick Bail-Outs ---
     if (trimmed.length < 2) {
       return this.noMatch(); // Not enough content to be JSON
+    }
+
+    // Check for escaped JSON string (starts and ends with quotes, contains escaped JSON)
+    const isEscapedJsonString = trimmed.startsWith('"') && trimmed.endsWith('"');
+    if (isEscapedJsonString) {
+      try {
+        // Unescape the string and try to parse as JSON
+        const unescaped = JSON.parse(trimmed);
+        // Only consider it JSON if the unescaped content is also valid JSON structure
+        if (typeof unescaped === 'string') {
+          const innerTrimmed = unescaped.trim();
+          if ((innerTrimmed.startsWith('{') && innerTrimmed.endsWith('}')) ||
+              (innerTrimmed.startsWith('[') && innerTrimmed.endsWith(']'))) {
+            try {
+              JSON.parse(innerTrimmed);
+              return { match: true, confidence: 0.99 }; // Very high confidence for double-escaped JSON
+            } catch (e) {
+              // Inner content looks like JSON structure but isn't valid - still give some confidence
+              // but only if it has JSON-like patterns
+              if (/"[^"]*"\s*:/.test(innerTrimmed) || /^\s*\[.*\]\s*$/.test(innerTrimmed)) {
+                return { match: true, confidence: 0.85 };
+              }
+              // Not JSON-like, don't match
+              return this.noMatch();
+            }
+          }
+          // If it doesn't look like JSON structure, don't match
+          return this.noMatch();
+        }
+        // If unescaped content is not a string, don't match
+        return this.noMatch();
+      } catch (e) {
+        // Not a valid JSON string, continue with normal detection
+      }
     }
 
     const startsWithBrace = trimmed.startsWith("{");
@@ -1102,6 +1085,14 @@ export class JsonLanguageDetector
       // Add confidence for each key-value pair found, up to a limit.
       confidenceScore += 0.3; // Base confidence for finding at least one pair
       confidenceScore += Math.min(keyValueMatches.length, 10) * 0.05; // Add 0.05 for each pair up to 10
+    }
+
+    // Check for escaped JSON patterns (like \"key\":\"value\")
+    const escapedJsonPattern = /\\"[^\\"]*\\"\s*:\s*(?:\\"[^\\"]*\\"|[\d.]+|true|false|null|\\\[|\\\{)/g;
+    const escapedJsonMatches = trimmed.match(escapedJsonPattern);
+    if (escapedJsonMatches) {
+      confidenceScore += 0.4; // High confidence for escaped JSON patterns
+      confidenceScore += Math.min(escapedJsonMatches.length, 5) * 0.1; // Add 0.1 for each match up to 5
     }
 
     // Check for other JSON structural elements, but give them less weight.

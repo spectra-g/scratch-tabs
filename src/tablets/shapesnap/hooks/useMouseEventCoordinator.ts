@@ -84,6 +84,7 @@ export const useMouseEventCoordinator = ({
   const lineResizeHandler = useLineResizeHandler({
     gridSnappingEnabled,
     onUpdateShape: onUpdateShape!,
+    shapes,
   });
 
   const arrowTipHandler = useArrowTipHandler({
