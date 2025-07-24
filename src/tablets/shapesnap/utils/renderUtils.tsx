@@ -984,6 +984,8 @@ export function renderRoughShapeSVG(
   if (!svgRef) return null;
   const rc = rough.svg(svgRef);
   let node: SVGElement | null = null;
+  
+  
   switch (type) {
     case "rectangle":
       node = rc.rectangle(
@@ -1041,7 +1043,7 @@ export function renderRoughShapeSVG(
     }
     case "line": {
       const { points } = props;
-      if (points.length < 2) return null;
+      if (!points || points.length < 2) return null;
       node = rc.linearPath(
         points.map(
           (p: { x: number; y: number }) => [p.x, p.y] as [number, number],
@@ -1064,12 +1066,9 @@ export function renderRoughShapeSVG(
       break;
     }
     case "orthogonal-arrow": {
-      if (props.points && props.points.length >= 2) {
-        const pathPoints = props.points.map((p: { x: number; y: number }) => [p.x, p.y] as [number, number]);
-        node = rc.linearPath(pathPoints, roughOptions);
-      } else {
-        node = rc.line(props.from.x, props.from.y, props.to.x, props.to.y, roughOptions);
-      }
+      if (!props.points || props.points.length < 2) return null;
+      const pathPoints = props.points.map((p: { x: number; y: number }) => [p.x, p.y] as [number, number]);
+      node = rc.linearPath(pathPoints, roughOptions);
       break;
     }
     default:

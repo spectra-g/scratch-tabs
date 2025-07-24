@@ -670,6 +670,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       return renderNormalShape(shape);
     }
 
+
     const roughMarkup = renderRoughShapeSVG(
       svgRef.current,
       shape.type,
@@ -683,6 +684,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
         seed: hashCode(shape.id),
       },
     );
+
 
     return roughMarkup ? (
       <g>
