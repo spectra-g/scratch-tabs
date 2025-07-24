@@ -3,6 +3,15 @@ import { Shape, Point, ArrowTipStyle } from "../types";
 import rough from "roughjs/bin/rough";
 import { createRoundedOrthogonalPath } from "./geometryUtils";
 
+// Constants for sketch mode rendering
+export const SKETCH_MODE_CONSTANTS = {
+  SQUARE_CORNER_RADIUS: 8,
+  SUPPORTED_SKETCH_TYPES: [
+    "rectangle", "square", "circle", "diamond", "triangle", "line", 
+    "straight-arrow", "curved-arrow", "orthogonal-arrow"
+  ] as const,
+} as const;
+
 // Utility function to create modal-aware event handlers
 const createModalAwareHandler = (
   handler: (e: any) => void,
@@ -888,14 +897,24 @@ export function renderRoughShape(
         props.height,
         { ...roughOptions, roughness: 0.5 },
       );
-    case "square":
-      return rc.rectangle(
-        props.x,
-        props.y,
-        props.width,
-        props.height,
-        { ...roughOptions, roughness: 0.5 },
-      );
+    case "square": {
+      // Create a rounded rectangle path to match the normal mode's rx=8 ry=8
+      const cornerRadius = SKETCH_MODE_CONSTANTS.SQUARE_CORNER_RADIUS;
+      const { x, y, width: w, height: h } = props;
+      const path = [
+        `M ${x + cornerRadius} ${y}`,
+        `L ${x + w - cornerRadius} ${y}`,
+        `Q ${x + w} ${y} ${x + w} ${y + cornerRadius}`,
+        `L ${x + w} ${y + h - cornerRadius}`,
+        `Q ${x + w} ${y + h} ${x + w - cornerRadius} ${y + h}`,
+        `L ${x + cornerRadius} ${y + h}`,
+        `Q ${x} ${y + h} ${x} ${y + h - cornerRadius}`,
+        `L ${x} ${y + cornerRadius}`,
+        `Q ${x} ${y} ${x + cornerRadius} ${y}`,
+        'Z'
+      ].join(' ');
+      return rc.path(path, { ...roughOptions, roughness: 0.5 });
+    }
     case "circle":
       return rc.circle(props.x, props.y, props.radius * 2, roughOptions);
     case "diamond": {
@@ -930,6 +949,26 @@ export function renderRoughShape(
         roughOptions,
       );
     }
+    case "straight-arrow": {
+      const line = rc.line(props.from.x, props.from.y, props.to.x, props.to.y, roughOptions);
+      return line;
+    }
+    case "curved-arrow": {
+      if (props.controlPoint) {
+        const path = `M ${props.from.x} ${props.from.y} Q ${props.controlPoint.x} ${props.controlPoint.y} ${props.to.x} ${props.to.y}`;
+        return rc.path(path, roughOptions);
+      } else {
+        return rc.line(props.from.x, props.from.y, props.to.x, props.to.y, roughOptions);
+      }
+    }
+    case "orthogonal-arrow": {
+      if (props.points && props.points.length >= 2) {
+        const pathPoints = props.points.map((p: { x: number; y: number }) => [p.x, p.y] as [number, number]);
+        return rc.linearPath(pathPoints, roughOptions);
+      } else {
+        return rc.line(props.from.x, props.from.y, props.to.x, props.to.y, roughOptions);
+      }
+    }
     default:
       return null;
   }
@@ -955,15 +994,25 @@ export function renderRoughShapeSVG(
         { ...roughOptions, roughness: 0.5 },
       );
       break;
-    case "square":
-      node = rc.rectangle(
-        props.x,
-        props.y,
-        props.width,
-        props.height,
-        { ...roughOptions, roughness: 0.5 },
-      );
+    case "square": {
+      // Create a rounded rectangle path to match the normal mode's rx=8 ry=8
+      const cornerRadius = SKETCH_MODE_CONSTANTS.SQUARE_CORNER_RADIUS;
+      const { x, y, width: w, height: h } = props;
+      const path = [
+        `M ${x + cornerRadius} ${y}`,
+        `L ${x + w - cornerRadius} ${y}`,
+        `Q ${x + w} ${y} ${x + w} ${y + cornerRadius}`,
+        `L ${x + w} ${y + h - cornerRadius}`,
+        `Q ${x + w} ${y + h} ${x + w - cornerRadius} ${y + h}`,
+        `L ${x + cornerRadius} ${y + h}`,
+        `Q ${x} ${y + h} ${x} ${y + h - cornerRadius}`,
+        `L ${x} ${y + cornerRadius}`,
+        `Q ${x} ${y} ${x + cornerRadius} ${y}`,
+        'Z'
+      ].join(' ');
+      node = rc.path(path, { ...roughOptions, roughness: 0.5 });
       break;
+    }
     case "circle":
       node = rc.circle(props.x, props.y, props.radius * 2, roughOptions);
       break;
@@ -1001,6 +1050,28 @@ export function renderRoughShapeSVG(
       );
       break;
     }
+    case "straight-arrow": {
+      node = rc.line(props.from.x, props.from.y, props.to.x, props.to.y, roughOptions);
+      break;
+    }
+    case "curved-arrow": {
+      if (props.controlPoint) {
+        const path = `M ${props.from.x} ${props.from.y} Q ${props.controlPoint.x} ${props.controlPoint.y} ${props.to.x} ${props.to.y}`;
+        node = rc.path(path, roughOptions);
+      } else {
+        node = rc.line(props.from.x, props.from.y, props.to.x, props.to.y, roughOptions);
+      }
+      break;
+    }
+    case "orthogonal-arrow": {
+      if (props.points && props.points.length >= 2) {
+        const pathPoints = props.points.map((p: { x: number; y: number }) => [p.x, p.y] as [number, number]);
+        node = rc.linearPath(pathPoints, roughOptions);
+      } else {
+        node = rc.line(props.from.x, props.from.y, props.to.x, props.to.y, roughOptions);
+      }
+      break;
+    }
     default:
       return null;
   }
@@ -1016,62 +1087,125 @@ export const renderShapeOverlay = (
   const isEditing = editingShapeId === shape.id;
   const center = getShapeCenter(shape);
 
-  // Render arrow tips for line shapes
+  // Render arrow tips for line and arrow shapes
   const arrowTipsElement =
-    shape.type === "line"
+    (shape.type === "line" || shape.type === "straight-arrow" || shape.type === "curved-arrow" || shape.type === "orthogonal-arrow")
       ? (() => {
-        const lineShape = shape as Shape & {
-          points: Point[];
-          arrowTipStart?: ArrowTipStyle;
-          arrowTipEnd?: ArrowTipStyle;
-          arrowTipSize?: number;
-        };
-        const hasStartArrow =
-          lineShape.arrowTipStart &&
-          lineShape.arrowTipStart !== "none" &&
-          lineShape.points.length >= 2;
-        const hasEndArrow =
-          lineShape.arrowTipEnd &&
-          lineShape.arrowTipEnd !== "none" &&
-          lineShape.points.length >= 2;
+        let arrowTips: React.ReactNode[] = [];
 
-        if (!hasStartArrow && !hasEndArrow) return null;
+        if (shape.type === "line" || shape.type === "orthogonal-arrow") {
+          const lineShape = shape as Shape & {
+            points: Point[];
+            arrowTipStart?: ArrowTipStyle;
+            arrowTipEnd?: ArrowTipStyle;
+            arrowTipSize?: number;
+          };
+          const hasStartArrow =
+            lineShape.arrowTipStart &&
+            lineShape.arrowTipStart !== "none" &&
+            lineShape.points.length >= 2;
+          const hasEndArrow =
+            lineShape.arrowTipEnd &&
+            lineShape.arrowTipEnd !== "none" &&
+            lineShape.points.length >= 2;
 
-        const arrowTipSize = lineShape.arrowTipSize || 10;
-        const arrowTips = [];
+          const arrowTipSize = lineShape.arrowTipSize || 10;
 
-        // Render start arrow tip
-        if (hasStartArrow) {
-          const startPoint = lineShape.points[0];
-          const directionPoint = lineShape.points[1];
-          arrowTips.push(
-            renderArrowTip(
-              startPoint,
-              directionPoint,
-              lineShape.arrowTipStart!,
-              arrowTipSize,
-              shape.style.stroke,
-              shape.style.strokeWidth || 2,
-            ),
-          );
+          // Render start arrow tip
+          if (hasStartArrow) {
+            const startPoint = lineShape.points[0];
+            const directionPoint = lineShape.points[1];
+            arrowTips.push(
+              renderArrowTip(
+                startPoint,
+                directionPoint,
+                lineShape.arrowTipStart!,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+              ),
+            );
+          }
+
+          // Render end arrow tip
+          if (hasEndArrow) {
+            const endPoint = lineShape.points[lineShape.points.length - 1];
+            const directionPoint =
+              lineShape.points[lineShape.points.length - 2];
+            arrowTips.push(
+              renderArrowTip(
+                endPoint,
+                directionPoint,
+                lineShape.arrowTipEnd!,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+              ),
+            );
+          }
+        } else if (shape.type === "straight-arrow") {
+          const arrowShape = shape as Shape & {
+            from: Point;
+            to: Point;
+            arrowTipStart?: ArrowTipStyle;
+            arrowTipEnd?: ArrowTipStyle;
+            arrowTipSize?: number;
+          };
+          const arrowTipSize = arrowShape.arrowTipSize || 10;
+
+          // Render start arrow tip
+          if (arrowShape.arrowTipStart && arrowShape.arrowTipStart !== "none") {
+            arrowTips.push(
+              renderArrowTip(
+                arrowShape.from,
+                arrowShape.to,
+                arrowShape.arrowTipStart,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+              ),
+            );
+          }
+
+          // Render end arrow tip
+          if (arrowShape.arrowTipEnd && arrowShape.arrowTipEnd !== "none") {
+            arrowTips.push(
+              renderArrowTip(
+                arrowShape.to,
+                arrowShape.from,
+                arrowShape.arrowTipEnd,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+              ),
+            );
+          }
+        } else if (shape.type === "curved-arrow") {
+          const arrowShape = shape as Shape & {
+            from: Point;
+            to: Point;
+            control: Point;
+            arrowTipEnd?: ArrowTipStyle;
+            arrowTipSize?: number;
+          };
+          const arrowTipSize = arrowShape.arrowTipSize || 10;
+
+          // Render end arrow tip (curved arrows typically only have end tips)
+          if (arrowShape.arrowTipEnd && arrowShape.arrowTipEnd !== "none") {
+            arrowTips.push(
+              renderArrowTip(
+                arrowShape.to,
+                arrowShape.control,
+                arrowShape.arrowTipEnd,
+                arrowTipSize,
+                shape.style.stroke,
+                shape.style.strokeWidth || 2,
+              ),
+            );
+          }
         }
 
-        // Render end arrow tip
-        if (hasEndArrow) {
-          const endPoint = lineShape.points[lineShape.points.length - 1];
-          const directionPoint =
-            lineShape.points[lineShape.points.length - 2];
-          arrowTips.push(
-            renderArrowTip(
-              endPoint,
-              directionPoint,
-              lineShape.arrowTipEnd!,
-              arrowTipSize,
-              shape.style.stroke,
-              shape.style.strokeWidth || 2,
-            ),
-          );
-        }
+        if (arrowTips.length === 0) return null;
 
         return (
           <g key={`${shape.id}-arrow-tips`}>
