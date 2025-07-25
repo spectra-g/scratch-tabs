@@ -89,6 +89,10 @@ export interface WordCountStats {
   // Readability & time
   syllables: number;
   fleschKincaidGrade: number;
+  gunningFogIndex: number;
+  smogIndex: number;
+  colemanLiauIndex: number;
+  lexicalDensity: number;
   readingTime: { minutes: number; seconds: number };
   speakingTime: { minutes: number; seconds: number };
   handwritingTime: { hours: number; minutes: number };
@@ -103,6 +107,13 @@ export interface WordCountStats {
   passiveVoiceSentences: Array<{ sentence: string; startIndex: number; endIndex: number }>;
   adverbs: Array<{ word: string; startIndex: number; endIndex: number }>;
   weakeningPhrases: Array<{ phrase: string; startIndex: number; endIndex: number }>;
+  fillerWords: Array<{ word: string; startIndex: number; endIndex: number }>;
+  redundantPhrases: Array<{ phrase: string; startIndex: number; endIndex: number }>;
+  longSentences: Array<{ sentence: string; startIndex: number; endIndex: number }>;
+  
+  // Punctuation analysis
+  questionCount: number;
+  exclamationCount: number;
   
   // Device-specific metrics
   pages: number;
@@ -371,6 +382,283 @@ export function calculateFleschKincaidGrade(text: string): number {
   
   const grade = 0.39 * avgSentenceLength + 11.8 * avgSyllablesPerWord - 15.59;
   return Math.round(Math.max(0, grade) * 10) / 10;
+}
+
+/**
+ * Count complex words (3+ syllables)
+ */
+export function countComplexWords(text: string): number {
+  if (!text.trim()) return 0;
+  
+  const words = text
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 0);
+  
+  return words.filter(word => countSyllablesInWord(word) >= 3).length;
+}
+
+/**
+ * Calculate Gunning Fog Index
+ */
+export function calculateGunningFogIndex(text: string): number {
+  const words = countWords(text);
+  const sentences = countSentences(text);
+  const complexWords = countComplexWords(text);
+  
+  if (sentences === 0 || words === 0) return 0;
+  
+  const avgSentenceLength = words / sentences;
+  const complexWordPercentage = (complexWords / words) * 100;
+  
+  const fogIndex = 0.4 * (avgSentenceLength + complexWordPercentage);
+  return Math.round(Math.max(0, fogIndex) * 10) / 10;
+}
+
+/**
+ * Calculate SMOG Index (requires polysyllabic words - 3+ syllables)
+ */
+export function calculateSmogIndex(text: string): number {
+  const sentences = countSentences(text);
+  const polysyllabicWords = countComplexWords(text); // Same as complex words
+  
+  if (sentences === 0) return 0;
+  
+  // SMOG formula: 3 + sqrt((polysyllabic words * 30) / sentences)
+  const smogIndex = 3 + Math.sqrt((polysyllabicWords * 30) / sentences);
+  return Math.round(Math.max(0, smogIndex) * 10) / 10;
+}
+
+/**
+ * Calculate Coleman-Liau Index
+ */
+export function calculateColemanLiauIndex(text: string): number {
+  const words = countWords(text);
+  const sentences = countSentences(text);
+  const characters = text.replace(/\s/g, '').length;
+  
+  if (words === 0) return 0;
+  
+  // Coleman-Liau formula: 0.0588 * L - 0.296 * S - 15.8
+  // Where L = average letters per 100 words, S = average sentences per 100 words
+  const avgLettersPer100Words = (characters / words) * 100;
+  const avgSentencesPer100Words = (sentences / words) * 100;
+  
+  const cliIndex = 0.0588 * avgLettersPer100Words - 0.296 * avgSentencesPer100Words - 15.8;
+  return Math.round(Math.max(0, cliIndex) * 10) / 10;
+}
+
+/**
+ * Calculate lexical density (uniqueWords / totalWords * 100)
+ */
+export function calculateLexicalDensity(text: string): number {
+  const totalWords = countWords(text);
+  const uniqueWords = countUniqueWords(text);
+  
+  if (totalWords === 0) return 0;
+  
+  const density = (uniqueWords / totalWords) * 100;
+  return Math.round(density * 100) / 100; // 2 decimal places
+}
+
+// Common filler words that weaken writing
+const FILLER_WORDS = new Set([
+  'just', 'really', 'basically', 'actually', 'quite', 'very', 'rather',
+  'pretty', 'somewhat', 'kind of', 'sort of', 'a bit', 'a little',
+  'totally', 'completely', 'absolutely', 'definitely', 'certainly',
+  'obviously', 'clearly', 'literally', 'honestly', 'frankly',
+  'simply', 'merely', 'only', 'even', 'still', 'yet', 'already',
+  'perhaps', 'maybe', 'probably', 'possibly', 'apparently',
+  'seemingly', 'supposedly', 'allegedly', 'virtually', 'essentially'
+]);
+
+/**
+ * Detect filler words in text with their positions
+ */
+export function detectFillerWords(text: string): Array<{ word: string; startIndex: number; endIndex: number }> {
+  const results: Array<{ word: string; startIndex: number; endIndex: number }> = [];
+  
+  if (!text.trim()) return results;
+  
+  // Handle multi-word filler phrases first
+  const multiWordFillers = ['kind of', 'sort of', 'a bit', 'a little'];
+  multiWordFillers.forEach(phrase => {
+    const regex = new RegExp(`\\b${phrase.replace(/\s+/g, '\\s+')}\\b`, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      results.push({
+        word: phrase,
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+  });
+  
+  // Then handle single words
+  const singleWordFillers = Array.from(FILLER_WORDS).filter(word => !word.includes(' '));
+  singleWordFillers.forEach(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      // Skip if this position is already covered by a multi-word phrase
+      const alreadyCovered = results.some(result => 
+        match.index >= result.startIndex && match.index < result.endIndex
+      );
+      
+      if (!alreadyCovered) {
+        results.push({
+          word: word,
+          startIndex: match.index,
+          endIndex: match.index + match[0].length
+        });
+      }
+    }
+  });
+  
+  return results.sort((a, b) => a.startIndex - b.startIndex);
+}
+
+// Common redundant phrases
+const REDUNDANT_PHRASES = [
+  'each and every', 'absolutely essential', 'completely surrounded',
+  'totally unique', 'very unique', 'exact same', 'completely finished',
+  'end result', 'final outcome', 'advance planning', 'future plans',
+  'past history', 'true facts', 'close proximity', 'general consensus',
+  'mutual cooperation', 'personal opinion', 'serious crisis',
+  'terrible tragedy', 'unexpected surprise', 'added bonus',
+  'first priority', 'join together', 'merge together', 'combine together',
+  'connect together', 'gather together', 'mix together', 'blend together'
+];
+
+/**
+ * Detect redundant phrases in text with their positions
+ */
+export function detectRedundantPhrases(text: string): Array<{ phrase: string; startIndex: number; endIndex: number }> {
+  const results: Array<{ phrase: string; startIndex: number; endIndex: number }> = [];
+  
+  if (!text.trim()) return results;
+  
+  REDUNDANT_PHRASES.forEach(phrase => {
+    const regex = new RegExp(`\\b${phrase.replace(/\s+/g, '\\s+')}\\b`, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      results.push({
+        phrase: phrase,
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+  });
+  
+  return results.sort((a, b) => a.startIndex - b.startIndex);
+}
+
+/**
+ * Find long sentences that may be run-on sentences
+ */
+export function findLongSentences(text: string, wordThreshold: number = 35): Array<{ sentence: string; startIndex: number; endIndex: number }> {
+  const results: Array<{ sentence: string; startIndex: number; endIndex: number }> = [];
+  
+  if (!text.trim()) return results;
+  
+  // Split text into sentences with their positions
+  const sentenceRegex = /[.!?]+/g;
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = sentenceRegex.exec(text)) !== null) {
+    const sentence = text.slice(lastIndex, match.index + match[0].length).trim();
+    
+    if (sentence) {
+      // Count words in this sentence
+      const words = sentence.replace(/[^\w\s]/g, ' ').split(/\s+/).filter(word => word.length > 0);
+      
+      if (words.length > wordThreshold) {
+        results.push({
+          sentence: sentence,
+          startIndex: lastIndex,
+          endIndex: match.index + match[0].length
+        });
+      }
+    }
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Handle the last sentence if it doesn't end with punctuation
+  if (lastIndex < text.length) {
+    const sentence = text.slice(lastIndex).trim();
+    if (sentence) {
+      const words = sentence.replace(/[^\w\s]/g, ' ').split(/\s+/).filter(word => word.length > 0);
+      
+      if (words.length > wordThreshold) {
+        results.push({
+          sentence: sentence,
+          startIndex: lastIndex,
+          endIndex: text.length
+        });
+      }
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * Count question marks in text
+ */
+export function countQuestions(text: string): number {
+  if (!text.trim()) return 0;
+  
+  const matches = text.match(/\?/g);
+  return matches ? matches.length : 0;
+}
+
+/**
+ * Count exclamation marks in text
+ */
+export function countExclamations(text: string): number {
+  if (!text.trim()) return 0;
+  
+  const matches = text.match(/!/g);
+  return matches ? matches.length : 0;
+}
+
+/**
+ * Get sentence length distribution grouped into buckets
+ */
+export function getSentenceLengthDistribution(text: string): Array<{ bucket: string; count: number }> {
+  if (!text.trim()) return [];
+  
+  // Get all sentences with their word counts
+  const sentences = text
+    .split(/[.!?]+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+    .map(sentence => {
+      const words = sentence.replace(/[^\w\s]/g, ' ').split(/\s+/).filter(word => word.length > 0);
+      return words.length;
+    });
+  
+  // Define buckets
+  const buckets = [
+    { range: '1-5 words', min: 1, max: 5 },
+    { range: '6-10 words', min: 6, max: 10 },
+    { range: '11-15 words', min: 11, max: 15 },
+    { range: '16-20 words', min: 16, max: 20 },
+    { range: '21-25 words', min: 21, max: 25 },
+    { range: '26-30 words', min: 26, max: 30 },
+    { range: '31+ words', min: 31, max: Infinity }
+  ];
+  
+  // Count sentences in each bucket
+  const distribution = buckets.map(bucket => ({
+    bucket: bucket.range,
+    count: sentences.filter(length => length >= bucket.min && length <= bucket.max).length
+  }));
+  
+  // Only return buckets that have at least one sentence
+  return distribution.filter(item => item.count > 0);
 }
 
 /**
@@ -956,6 +1244,10 @@ export function analyzeText(text: string, deviceType: DeviceType = 'standard', t
     // Readability & time
     syllables: countSyllables(safeText),
     fleschKincaidGrade: calculateFleschKincaidGrade(safeText),
+    gunningFogIndex: calculateGunningFogIndex(safeText),
+    smogIndex: calculateSmogIndex(safeText),
+    colemanLiauIndex: calculateColemanLiauIndex(safeText),
+    lexicalDensity: calculateLexicalDensity(safeText),
     readingTime: calculateDeviceReadingTime(safeText, deviceType),
     speakingTime: calculateSpeakingTime(safeText),
     handwritingTime: calculateHandwritingTime(safeText),
@@ -970,6 +1262,13 @@ export function analyzeText(text: string, deviceType: DeviceType = 'standard', t
     passiveVoiceSentences: detectPassiveVoice(safeText),
     adverbs: countAdverbs(safeText),
     weakeningPhrases: detectWeakeningPhrases(safeText),
+    fillerWords: detectFillerWords(safeText),
+    redundantPhrases: detectRedundantPhrases(safeText),
+    longSentences: findLongSentences(safeText),
+    
+    // Punctuation analysis
+    questionCount: countQuestions(safeText),
+    exclamationCount: countExclamations(safeText),
     
     // Mobile readability
     wallOfTextParagraphs: detectWallOfTextParagraphs(safeText)

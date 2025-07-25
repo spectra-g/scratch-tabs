@@ -19,7 +19,8 @@ import {
   WritingGoal, 
   WRITING_TARGETS, 
   evaluateMetricTarget,
-  calculateKeywordDensity 
+  calculateKeywordDensity,
+  getSentenceLengthDistribution
 } from '../utils/textAnalysis';
 
 interface WordCountDisplayProps {
@@ -27,6 +28,7 @@ interface WordCountDisplayProps {
   deviceType: DeviceType;
   writingGoal: WritingGoal;
   targetKeyword?: string;
+  text: string;
   onHighlight?: (type: string, data?: any) => void;
   activeHighlight?: string;
   onDeviceChange: (device: DeviceType) => void;
@@ -39,6 +41,7 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
   deviceType,
   writingGoal,
   targetKeyword,
+  text,
   onHighlight,
   activeHighlight,
   onDeviceChange,
@@ -95,6 +98,47 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
 
 
   const targets = WRITING_TARGETS[writingGoal];
+
+  // PacingGraph sub-component for sentence length distribution
+  const PacingGraph: React.FC<{ text: string }> = ({ text }) => {
+    const distribution = getSentenceLengthDistribution(text);
+    
+    if (distribution.length === 0) {
+      return (
+        <div className="text-center text-gray-500 text-xs py-2">
+          No sentences to analyze
+        </div>
+      );
+    }
+    
+    const maxCount = Math.max(...distribution.map(item => item.count));
+    
+    return (
+      <div className="space-y-2 mt-3">
+        <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          Sentence Length Distribution
+        </h4>
+        <div className="space-y-1">
+          {distribution.map(item => (
+            <div key={item.bucket} className="flex items-center text-xs">
+              <div className="w-16 text-gray-400 text-right mr-2 flex-shrink-0">
+                {item.bucket}
+              </div>
+              <div className="flex-1 flex items-center">
+                <div 
+                  className="bg-blue-500/30 h-3 rounded-sm mr-2"
+                  style={{ width: `${Math.max(8, (item.count / maxCount) * 100)}%` }}
+                />
+                <span className="text-gray-300 font-mono">
+                  {item.count}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   // Scroll detection for sticky preview
   useEffect(() => {
@@ -274,10 +318,50 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
             </div>
           </div>
 
-          {/* Averages & Lengths */}
+
+          {/* Advanced Readability */}
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
             <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
-              Averages & Lengths
+              Advanced Readability
+            </h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Syllables</span>
+                <span className="text-gray-200 font-mono">{stats.syllables.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Flesch-Kincaid Grade</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-200 font-mono">{stats.fleschKincaidGrade}</span>
+                  {getTargetIndicator(stats.fleschKincaidGrade, {
+                    min: targets.fleschKincaidMin,
+                    max: targets.fleschKincaidMax
+                  })}
+                </div>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Gunning Fog Index</span>
+                <span className="text-gray-200 font-mono">{stats.gunningFogIndex}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">SMOG Index</span>
+                <span className="text-gray-200 font-mono">{stats.smogIndex}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Coleman-Liau Index</span>
+                <span className="text-gray-200 font-mono">{stats.colemanLiauIndex}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Lexical Density</span>
+                <span className="text-gray-200 font-mono">{stats.lexicalDensity}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Pacing & Rhythm */}
+          <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
+              Pacing & Rhythm
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
@@ -322,28 +406,17 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
                 <span className="text-gray-200 font-mono">{stats.avgWordLength} chars</span>
               </div>
             </div>
+            
+            {/* Sentence Length Distribution Graph */}
+            <PacingGraph text={text} />
           </div>
 
-          {/* Readability & Time */}
+          {/* Time Estimates */}
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
             <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
-              Readability & Time
+              Time Estimates
             </h3>
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Syllables</span>
-                <span className="text-gray-200 font-mono">{stats.syllables.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Flesch-Kincaid Grade</span>
-                <div className="flex items-center space-x-2">
-                  <span className="text-gray-200 font-mono">{stats.fleschKincaidGrade}</span>
-                  {getTargetIndicator(stats.fleschKincaidGrade, {
-                    min: targets.fleschKincaidMin,
-                    max: targets.fleschKincaidMax
-                  })}
-                </div>
-              </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">
                   Reading Time ({deviceType})
@@ -361,11 +434,11 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
             </div>
           </div>
 
-          {/* Stylistic Suggestions */}
+          {/* Style & Redundancy */}
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
             <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide flex items-center">
               <AlertTriangle size={16} className="mr-2 text-yellow-400" />
-              Stylistic Suggestions
+              Style & Redundancy
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -418,6 +491,74 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
                   <Eye size={14} className="text-gray-500" />
                   {getTargetIndicator(stats.weakeningPhrases.length, { max: 2 })}
                 </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 flex items-center">
+                  <AlertTriangle size={14} className="mr-2 text-purple-400" />
+                  Run-on Sentences
+                </span>
+                <div className="flex items-center space-x-2">
+                  <span 
+                    className={`text-gray-200 font-mono ${getClickableStyle('run-on-sentences')}`}
+                    onClick={() => handleHighlight('run-on-sentences')}
+                    title="Click to highlight run-on sentences"
+                  >
+                    {stats.longSentences.length}
+                  </span>
+                  <Eye size={14} className="text-gray-500" />
+                  {getTargetIndicator(stats.longSentences.length, { max: 0 })}
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 flex items-center">
+                  <Zap size={14} className="mr-2 text-cyan-400" />
+                  Filler Words
+                </span>
+                <div className="flex items-center space-x-2">
+                  <span 
+                    className={`text-gray-200 font-mono ${getClickableStyle('filler-words')}`}
+                    onClick={() => handleHighlight('filler-words')}
+                    title="Click to highlight filler words"
+                  >
+                    {stats.fillerWords.length}
+                  </span>
+                  <Eye size={14} className="text-gray-500" />
+                  {getTargetIndicator(stats.fillerWords.length, { max: 5 })}
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 flex items-center">
+                  <Target size={14} className="mr-2 text-pink-400" />
+                  Redundant Phrases
+                </span>
+                <div className="flex items-center space-x-2">
+                  <span 
+                    className={`text-gray-200 font-mono ${getClickableStyle('redundant-phrases')}`}
+                    onClick={() => handleHighlight('redundant-phrases')}
+                    title="Click to highlight redundant phrases"
+                  >
+                    {stats.redundantPhrases.length}
+                  </span>
+                  <Eye size={14} className="text-gray-500" />
+                  {getTargetIndicator(stats.redundantPhrases.length, { max: 0 })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Punctuation */}
+          <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
+              Punctuation
+            </h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Question Count</span>
+                <span className="text-gray-200 font-mono">{stats.questionCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Exclamation Count</span>
+                <span className="text-gray-200 font-mono">{stats.exclamationCount}</span>
               </div>
             </div>
           </div>

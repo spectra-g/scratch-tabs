@@ -100,6 +100,9 @@ const WordCountTabletComponent: React.FC<{
       .highlight-adverb { background-color: rgba(249, 115, 22, 0.3) !important; }
       .highlight-weakening-phrase { background-color: rgba(239, 68, 68, 0.3) !important; }
       .highlight-wall-of-text { background-color: rgba(168, 85, 247, 0.3) !important; }
+      .highlight-run-on-sentence { background-color: rgba(147, 51, 234, 0.3) !important; }
+      .highlight-filler-word { background-color: rgba(6, 182, 212, 0.3) !important; }
+      .highlight-redundant-phrase { background-color: rgba(236, 72, 153, 0.3) !important; }
     `;
     document.head.appendChild(style);
     
@@ -146,6 +149,7 @@ const WordCountTabletComponent: React.FC<{
                 deviceType={deviceType}
                 writingGoal={writingGoal}
                 targetKeyword={targetKeyword}
+                text={text}
                 onHighlight={handleHighlight}
                 activeHighlight={activeHighlight}
                 onDeviceChange={handleDeviceChange}

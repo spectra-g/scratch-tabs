@@ -151,6 +151,33 @@ export const useHighlighting = (text: string, stats: WordCountStats) => {
         }));
         break;
       }
+      
+      case 'run-on-sentences': {
+        ranges = stats.longSentences.map(sentence => ({
+          startIndex: sentence.startIndex,
+          endIndex: sentence.endIndex,
+          className: 'highlight-run-on-sentence'
+        }));
+        break;
+      }
+      
+      case 'filler-words': {
+        ranges = stats.fillerWords.map(word => ({
+          startIndex: word.startIndex,
+          endIndex: word.endIndex,
+          className: 'highlight-filler-word'
+        }));
+        break;
+      }
+      
+      case 'redundant-phrases': {
+        ranges = stats.redundantPhrases.map(phrase => ({
+          startIndex: phrase.startIndex,
+          endIndex: phrase.endIndex,
+          className: 'highlight-redundant-phrase'
+        }));
+        break;
+      }
     }
 
     if (ranges.length > 0) {
