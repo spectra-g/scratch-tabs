@@ -398,6 +398,108 @@ export function getTopNGrams(text: string, n: number, limit: number = 5): Array<
 }
 
 /**
+ * Find all instances of a keyword or phrase in text with their positions
+ */
+export function findKeywordInstances(text: string, keyword: string): Array<{ word: string; startIndex: number; endIndex: number }> {
+  const instances: Array<{ word: string; startIndex: number; endIndex: number }> = [];
+  const safeText = text ?? '';
+  const safeKeyword = keyword ?? '';
+  
+  if (!safeText || !safeKeyword) return instances;
+  
+  const lowerText = safeText.toLowerCase();
+  const lowerKeyword = safeKeyword.toLowerCase();
+  
+  let startIndex = 0;
+  while (true) {
+    const index = lowerText.indexOf(lowerKeyword, startIndex);
+    if (index === -1) break;
+    
+    instances.push({
+      word: safeText.substring(index, index + safeKeyword.length),
+      startIndex: index,
+      endIndex: index + safeKeyword.length
+    });
+    
+    startIndex = index + 1;
+  }
+  
+  return instances;
+}
+
+/**
+ * Find the longest sentence with its position in the text
+ */
+export function findLongestSentence(text: string): { sentence: string; startIndex: number; endIndex: number } | null {
+  const safeText = text ?? '';
+  if (!safeText.trim()) return null;
+  
+  const sentences = getSentences(safeText);
+  if (sentences.length === 0) return null;
+  
+  let longestSentence = '';
+  let longestWordCount = 0;
+  let longestIndex = -1;
+  
+  sentences.forEach((sentence, index) => {
+    const wordCount = countWords(sentence);
+    if (wordCount > longestWordCount) {
+      longestWordCount = wordCount;
+      longestSentence = sentence;
+      longestIndex = index;
+    }
+  });
+  
+  if (longestIndex === -1) return null;
+  
+  // Find the position of this sentence in the original text
+  const startIndex = safeText.indexOf(longestSentence);
+  const endIndex = startIndex + longestSentence.length;
+  
+  return {
+    sentence: longestSentence,
+    startIndex,
+    endIndex
+  };
+}
+
+/**
+ * Find the shortest sentence with its position in the text
+ */
+export function findShortestSentence(text: string): { sentence: string; startIndex: number; endIndex: number } | null {
+  const safeText = text ?? '';
+  if (!safeText.trim()) return null;
+  
+  const sentences = getSentences(safeText);
+  if (sentences.length === 0) return null;
+  
+  let shortestSentence = '';
+  let shortestWordCount = Infinity;
+  let shortestIndex = -1;
+  
+  sentences.forEach((sentence, index) => {
+    const wordCount = countWords(sentence);
+    if (wordCount < shortestWordCount) {
+      shortestWordCount = wordCount;
+      shortestSentence = sentence;
+      shortestIndex = index;
+    }
+  });
+  
+  if (shortestIndex === -1) return null;
+  
+  // Find the position of this sentence in the original text
+  const startIndex = safeText.indexOf(shortestSentence);
+  const endIndex = startIndex + shortestSentence.length;
+  
+  return {
+    sentence: shortestSentence,
+    startIndex,
+    endIndex
+  };
+}
+
+/**
  * Main function to calculate all word count statistics
  */
 export function analyzeText(text: string): WordCountStats {
