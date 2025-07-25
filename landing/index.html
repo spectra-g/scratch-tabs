@@ -242,6 +242,58 @@
         top: 0;
       }
     }
+
+    /* Mobile-friendly code blocks */
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    code {
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+
+    /* Ensure code containers don't overflow on mobile */
+    .bg-gray-800 pre,
+    .bg-gray-900 pre {
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    /* Mobile-specific adjustments */
+    @media (max-width: 768px) {
+      pre {
+        font-size: 0.75rem;
+        line-height: 1.4;
+      }
+      
+      .bg-gray-800,
+      .bg-gray-900 {
+        padding: 0.75rem;
+      }
+    }
+
+    /* JSON Syntax Highlighting */
+    .json-highlight .json-key {
+      color: #9cdcfe;
+    }
+    
+    .json-highlight .json-string {
+      color: #ce9178;
+    }
+    
+    .json-highlight .json-number {
+      color: #b5cea8;
+    }
+    
+    .json-highlight .json-boolean {
+      color: #569cd6;
+    }
   </style>
 </head>
 
@@ -488,7 +540,7 @@
             A messy, unformatted JSON string copied from a log file.
           </p>
           <div class="bg-gray-800 p-4 rounded-md text-xs text-gray-400 overflow-x-auto">
-            <pre><code>"{\"name\":\"John Doe\",\"age\":30,\"isStudent\":false,\"courses\":[{\"id\":1,\"name\":\"History\"},{\"id\":2,\"name\":\"Math\"}]}"</code></pre>
+            <pre class="whitespace-pre-wrap break-words"><code>"{\"name\":\"John Doe\",\"age\":30,\"isStudent\":false,\"courses\":[{\"id\":1,\"name\":\"History\"},{\"id\":2,\"name\":\"Math\"}]}"</code></pre>
           </div>
           <p class="text-xs text-gray-500 mt-4">You can't work with this.</p>
         </div>
@@ -503,13 +555,13 @@
           </p>
           <div class="bg-gray-800 p-4 rounded-md">
             <div class="text-xs text-gray-300 overflow-x-auto">
-              <pre><code>{
-  "name": "John Doe",
-  "age": 30,
-  "isStudent": false,
-  "courses": [
-    { "id": 1, "name": "History" },
-    { "id": 2, "name": "Math" }
+              <pre class="whitespace-pre-wrap break-words json-highlight"><code>{
+  <span class="json-key">"name"</span>: <span class="json-string">"John Doe"</span>,
+  <span class="json-key">"age"</span>: <span class="json-number">30</span>,
+  <span class="json-key">"isStudent"</span>: <span class="json-boolean">false</span>,
+  <span class="json-key">"courses"</span>: [
+    { <span class="json-key">"id"</span>: <span class="json-number">1</span>, <span class="json-key">"name"</span>: <span class="json-string">"History"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">2</span>, <span class="json-key">"name"</span>: <span class="json-string">"Math"</span> }
   ]
 }</code></pre>
             </div>
