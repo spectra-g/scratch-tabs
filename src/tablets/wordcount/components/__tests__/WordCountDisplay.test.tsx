@@ -12,6 +12,8 @@ const mockStats: WordCountStats = {
   sentences: 5,
   paragraphs: 2,
   lines: 10,
+  pages: 2,
+  screenfuls: 3,
   longestSentence: 25,
   shortestSentence: 8,
   avgSentenceLength: 20.0,
@@ -19,6 +21,10 @@ const mockStats: WordCountStats = {
   avgWordLength: 5.0,
   syllables: 150,
   fleschKincaidGrade: 8.5,
+  gunningFogIndex: 10.2,
+  smogIndex: 9.8,
+  colemanLiauIndex: 11.5,
+  lexicalDensity: 65.5,
   readingTime: { minutes: 2, seconds: 30 },
   speakingTime: { minutes: 3, seconds: 15 },
   handwritingTime: { hours: 1, minutes: 30 },
@@ -41,23 +47,48 @@ const mockStats: WordCountStats = {
   weakeningPhrases: [
     { phrase: 'I think', startIndex: 30, endIndex: 37 }
   ],
+  fillerWords: [
+    { word: 'just', startIndex: 40, endIndex: 44 }
+  ],
+  redundantPhrases: [
+    { phrase: 'each and every', startIndex: 50, endIndex: 64 }
+  ],
+  longSentences: [
+    { sentence: 'This is a very long sentence that exceeds thirty-five words and should be considered a run-on sentence according to our analysis criteria.', startIndex: 70, endIndex: 210 }
+  ],
+  questionCount: 2,
+  exclamationCount: 1,
+  wallOfTextParagraphs: [
+    { startIndex: 220, endIndex: 420 }
+  ]
+};
+
+// Mock functions for required props
+const mockProps = {
+  deviceType: 'standard' as const,
+  writingGoal: 'general' as const,
+  text: 'This is a sample text for testing purposes.',
+  onHighlight: jest.fn(),
+  onDeviceChange: jest.fn(),
+  onWritingGoalChange: jest.fn(),
+  onTargetKeywordChange: jest.fn(),
 };
 
 describe('WordCountDisplay', () => {
   it('should render all core counts', () => {
-    render(<WordCountDisplay stats={mockStats} />);
+    render(<WordCountDisplay stats={mockStats} {...mockProps} />);
     
     expect(screen.getByText('100')).toBeInTheDocument();
     expect(screen.getByText('75')).toBeInTheDocument();
     expect(screen.getByText('500')).toBeInTheDocument();
     expect(screen.getByText('400')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getAllByText('2')).toHaveLength(3); // Multiple instances of '2'
     expect(screen.getByText('10')).toBeInTheDocument();
   });
 
   it('should render averages and lengths', () => {
-    render(<WordCountDisplay stats={mockStats} />);
+    render(<WordCountDisplay stats={mockStats} {...mockProps} />);
     
     expect(screen.getByText('25 words')).toBeInTheDocument();
     expect(screen.getByText('8 words')).toBeInTheDocument();
@@ -67,7 +98,7 @@ describe('WordCountDisplay', () => {
   });
 
   it('should render readability and time metrics', () => {
-    render(<WordCountDisplay stats={mockStats} />);
+    render(<WordCountDisplay stats={mockStats} {...mockProps} />);
     
     expect(screen.getByText('150')).toBeInTheDocument();
     expect(screen.getByText('8.5')).toBeInTheDocument();
@@ -77,7 +108,7 @@ describe('WordCountDisplay', () => {
   });
 
   it('should render keywords with density', () => {
-    render(<WordCountDisplay stats={mockStats} />);
+    render(<WordCountDisplay stats={mockStats} {...mockProps} />);
     
     expect(screen.getByText('test')).toBeInTheDocument();
     expect(screen.getByText('5×')).toBeInTheDocument();
@@ -89,16 +120,16 @@ describe('WordCountDisplay', () => {
   });
 
   it('should render bigrams and trigrams', () => {
-    render(<WordCountDisplay stats={mockStats} />);
+    render(<WordCountDisplay stats={mockStats} {...mockProps} />);
     
     expect(screen.getByText('test example')).toBeInTheDocument();
     expect(screen.getByText('test example phrase')).toBeInTheDocument();
   });
 
   it('should render stylistic suggestions', () => {
-    render(<WordCountDisplay stats={mockStats} />);
+    render(<WordCountDisplay stats={mockStats} {...mockProps} />);
     
-    expect(screen.getByText('Stylistic Suggestions')).toBeInTheDocument();
+    expect(screen.getByText('Advanced Readability')).toBeInTheDocument();
     expect(screen.getByText('Passive Voice')).toBeInTheDocument();
     expect(screen.getByText('Adverbs (-ly)')).toBeInTheDocument();
     expect(screen.getByText('Weakening Phrases')).toBeInTheDocument();
@@ -114,7 +145,7 @@ describe('WordCountDisplay', () => {
       adverbs: [],
       weakeningPhrases: []
     };
-    render(<WordCountDisplay stats={emptyStats} />);
+    render(<WordCountDisplay stats={emptyStats} {...mockProps} />);
     
     expect(screen.getAllByText('No keywords found')).toHaveLength(1);
     expect(screen.getAllByText('No phrases found')).toHaveLength(2);
@@ -127,7 +158,7 @@ describe('WordCountDisplay', () => {
       speakingTime: { minutes: 0, seconds: 30 },
     };
     
-    render(<WordCountDisplay stats={statsWithSecondsOnly} />);
+    render(<WordCountDisplay stats={statsWithSecondsOnly} {...mockProps} />);
     
     expect(screen.getByText('45s')).toBeInTheDocument();
     expect(screen.getByText('30s')).toBeInTheDocument();
@@ -139,7 +170,7 @@ describe('WordCountDisplay', () => {
       handwritingTime: { hours: 0, minutes: 45 },
     };
     
-    render(<WordCountDisplay stats={statsWithMinutesOnly} />);
+    render(<WordCountDisplay stats={statsWithMinutesOnly} {...mockProps} />);
     
     expect(screen.getByText('45m')).toBeInTheDocument();
   });

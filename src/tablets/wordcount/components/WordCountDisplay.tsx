@@ -88,11 +88,11 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
     const status = evaluateMetricTarget(value, target);
     switch (status) {
       case 'good':
-        return <CheckCircle size={12} className="text-green-400" title="Within target range" />;
+        return <div title="Within target range"><CheckCircle size={12} className="text-green-400" /></div>;
       case 'warning':
-        return <AlertCircle size={12} className="text-yellow-400" title="Close to target boundary" />;
+        return <div title="Close to target boundary"><AlertCircle size={12} className="text-yellow-400" /></div>;
       case 'poor':
-        return <XCircle size={12} className="text-red-400" title="Outside target range" />;
+        return <div title="Outside target range"><XCircle size={12} className="text-red-400" /></div>;
     }
   };
 

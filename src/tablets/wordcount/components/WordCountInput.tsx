@@ -3,7 +3,7 @@ import { FileText, ClipboardPaste, Trash2, Copy, ExternalLink, Check } from 'luc
 import Editor from '@monaco-editor/react';
 import { useRootStore } from '../../../stores';
 import { useWorkspaceStore } from '../../../stores/workspaceStore';
-import type { Tab } from '../../../types/tab';
+import type { Tab } from '../../../types';
 
 interface WordCountInputProps {
   value: string;
@@ -84,7 +84,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
   }, [reportContent]);
 
   const handleOpenInNewTab = useCallback(() => {
-    if (!reportContent) return;
+    if (!reportContent || !activeWorkspaceId) return;
     
     // Create a new application tab with the report content
     const newTab: Tab = {
@@ -92,9 +92,11 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
       title: `Word Count Report - ${new Date().toLocaleDateString()}`,
       content: reportContent,
       language: 'markdown',
+      languageLocked: false,
+      cursorPosition: { lineNumber: 1, column: 1 },
+      dateCreated: Date.now(),
+      lastModified: Date.now(),
       workspaceId: activeWorkspaceId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
     
     // Add as background tab (doesn't steal focus)

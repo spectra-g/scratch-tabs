@@ -17,6 +17,10 @@ const mockStats: WordCountStats = {
   avgWordLength: 4.0,
   syllables: 15,
   fleschKincaidGrade: 8.0,
+  gunningFogIndex: 10.0,
+  smogIndex: 8.0,
+  colemanLiauIndex: 9.0,
+  lexicalDensity: 0.6,
   readingTime: { minutes: 0, seconds: 30 },
   speakingTime: { minutes: 0, seconds: 40 },
   handwritingTime: { hours: 0, minutes: 1 },
@@ -34,6 +38,14 @@ const mockStats: WordCountStats = {
   weakeningPhrases: [
     { phrase: 'I think', startIndex: 30, endIndex: 37 }
   ],
+  fillerWords: [],
+  redundantPhrases: [],
+  longSentences: [],
+  questionCount: 0,
+  exclamationCount: 0,
+  pages: 1,
+  screenfuls: 1,
+  wallOfTextParagraphs: [],
 };
 
 describe('useHighlighting', () => {

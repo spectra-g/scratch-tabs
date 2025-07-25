@@ -8,6 +8,7 @@ export default {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^dexie$": "<rootDir>/src/__mocks__/dexie.js",
     "^monaco-editor(.*)$": "<rootDir>/src/__mocks__/monaco-editor.js",
+    "^@monaco-editor/react$": "<rootDir>/src/__mocks__/@monaco-editor/react.js",
   },
   transform: {
     "^.+\\.(ts|tsx)$": [

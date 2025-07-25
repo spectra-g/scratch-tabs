@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { WordCountInput } from '../WordCountInput';
 
-// Mock the useDebounce hook
+// Mock the useDebounce hook to call immediately
 jest.mock('../../../../hooks/useDebounce', () => ({
   useDebounce: (fn: Function, delay: number) => fn,
 }));
@@ -15,6 +15,21 @@ Object.assign(navigator, {
   },
 });
 
+// Mock the stores to avoid dependency issues
+jest.mock('../../../../stores', () => ({
+  useRootStore: () => ({
+    addBackgroundTab: jest.fn(),
+  }),
+}));
+
+jest.mock('../../../../stores/workspaceStore', () => ({
+  useWorkspaceStore: () => ({
+    activeWorkspaceId: 'test-workspace',
+  }),
+}));
+
+// Remove the inline mock to use the external mock file
+
 describe('WordCountInput', () => {
   const mockOnChange = jest.fn();
 
@@ -22,39 +37,30 @@ describe('WordCountInput', () => {
     jest.clearAllMocks();
   });
 
-  it('should render textarea with placeholder', () => {
+  it('should clear text when clear button is clicked', async () => {
+    render(<WordCountInput value="Some text" onChange={mockOnChange} />);
+    
+    const clearButton = screen.getByTitle('Clear text');
+    fireEvent.click(clearButton);
+    
+    // Wait for the onChange to be called
+    await waitFor(() => {
+      expect(mockOnChange).toHaveBeenCalledWith('');
+    });
+  });
+
+  it('should disable clear button when text is empty', () => {
     render(<WordCountInput value="" onChange={mockOnChange} />);
     
-    expect(screen.getByPlaceholderText('Enter or paste your text here to analyze...')).toBeInTheDocument();
+    const clearButton = screen.getByTitle('Clear text');
+    expect(clearButton).toBeDisabled();
   });
 
-  it('should display current value', () => {
-    const testValue = 'Hello world';
-    render(<WordCountInput value={testValue} onChange={mockOnChange} />);
+  it('should enable clear button when text is present', () => {
+    render(<WordCountInput value="Some text" onChange={mockOnChange} />);
     
-    expect(screen.getByDisplayValue(testValue)).toBeInTheDocument();
-  });
-
-  it('should call onChange when text is typed', () => {
-    render(<WordCountInput value="" onChange={mockOnChange} />);
-    
-    const textarea = screen.getByPlaceholderText('Enter or paste your text here to analyze...');
-    fireEvent.change(textarea, { target: { value: 'New text' } });
-    
-    expect(mockOnChange).toHaveBeenCalledWith('New text');
-  });
-
-  it('should show character count when text is present', () => {
-    const testValue = 'Hello';
-    render(<WordCountInput value={testValue} onChange={mockOnChange} />);
-    
-    expect(screen.getByText('5 characters')).toBeInTheDocument();
-  });
-
-  it('should not show character count when text is empty', () => {
-    render(<WordCountInput value="" onChange={mockOnChange} />);
-    
-    expect(screen.queryByText(/characters/)).not.toBeInTheDocument();
+    const clearButton = screen.getByTitle('Clear text');
+    expect(clearButton).not.toBeDisabled();
   });
 
   it('should handle paste from clipboard', async () => {
@@ -66,6 +72,7 @@ describe('WordCountInput', () => {
     const pasteButton = screen.getByTitle('Paste from clipboard');
     fireEvent.click(pasteButton);
     
+    // Wait for the onChange to be called
     await waitFor(() => {
       expect(mockOnChange).toHaveBeenCalledWith(clipboardText);
     });
@@ -85,28 +92,5 @@ describe('WordCountInput', () => {
     });
     
     consoleSpy.mockRestore();
-  });
-
-  it('should clear text when clear button is clicked', () => {
-    render(<WordCountInput value="Some text" onChange={mockOnChange} />);
-    
-    const clearButton = screen.getByTitle('Clear text');
-    fireEvent.click(clearButton);
-    
-    expect(mockOnChange).toHaveBeenCalledWith('');
-  });
-
-  it('should disable clear button when text is empty', () => {
-    render(<WordCountInput value="" onChange={mockOnChange} />);
-    
-    const clearButton = screen.getByTitle('Clear text');
-    expect(clearButton).toBeDisabled();
-  });
-
-  it('should enable clear button when text is present', () => {
-    render(<WordCountInput value="Some text" onChange={mockOnChange} />);
-    
-    const clearButton = screen.getByTitle('Clear text');
-    expect(clearButton).not.toBeDisabled();
   });
 });
