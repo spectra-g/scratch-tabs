@@ -10,6 +10,7 @@ import {
   handleInitialUrl,
 } from "../../hooks/useUrlTabHandler";
 import { useSearchStore } from "../../stores/searchStore";
+import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { WelcomeScreen } from "../Welcome/WelcomeScreen";
 import { TabBar } from "../Tab/TabBar";
 import { EditorPaneWrapper } from "../Editor/EditorPaneWrapper";
@@ -25,6 +26,9 @@ import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 
 const MainLayout: React.FC = () => {
+  // Update document title with workspace name
+  useDocumentTitle();
+  
   // FIX: Use selective subscription for tab count only
   const tabCount = useTabsStore((state) => state.tabs.length);
 

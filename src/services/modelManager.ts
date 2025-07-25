@@ -247,12 +247,10 @@ class ModelManager {
         return;
       }
       
-      // Special case: Allow content processing even when language is locked
-      // The framework will only process content when appropriate (e.g., JSON formatting)
-      // and won't change the language if it's already correctly set
-      if (currentTab.languageLocked) {
-        // For locked languages, we still allow content processing but restrict language changes
-        // The content processors themselves will decide if processing is appropriate
+      // If language is locked and this is not initial content processing, skip language detection
+      // This prevents manually set languages (like from Sample menu) from being overridden
+      if (currentTab.languageLocked && !isInitialContent) {
+        return;
       }
 
       const trimmedNewContent = newContent.trim();
