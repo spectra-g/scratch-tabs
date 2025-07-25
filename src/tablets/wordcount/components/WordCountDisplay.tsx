@@ -200,5 +200,3 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ stats }) => 
     </div>
   );
 };
-
-export { WordCountDisplay }
