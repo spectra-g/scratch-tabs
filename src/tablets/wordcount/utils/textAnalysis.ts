@@ -652,6 +652,87 @@ export function detectWeakeningPhrases(text: string): Array<{ phrase: string; st
 }
 
 /**
+ * Calculate number of standard pages (250 words per page)
+ */
+export function calculatePages(text: string): number {
+  const words = countWords(text);
+  return Math.ceil(words / 250);
+}
+
+/**
+ * Calculate number of screenfuls based on device type
+ */
+export function calculateScreenfuls(text: string, deviceType: DeviceType): number {
+  const config = DEVICE_CONFIGS[deviceType];
+  const characters = countCharacters(text);
+  
+  // Estimate characters per screenful based on device config
+  const charsPerLine = Math.floor(config.viewportWidth / config.avgCharWidth);
+  const linesPerScreen = Math.floor(config.viewportHeight / config.lineHeight);
+  const charsPerScreen = charsPerLine * linesPerScreen;
+  
+  return Math.ceil(characters / charsPerScreen);
+}
+
+/**
+ * Calculate reading time adjusted for device type
+ */
+export function calculateDeviceReadingTime(text: string, deviceType: DeviceType): { minutes: number; seconds: number } {
+  const words = countWords(text);
+  const config = DEVICE_CONFIGS[deviceType];
+  const totalSeconds = Math.round((words / config.readingWPM) * 60);
+  
+  return {
+    minutes: Math.floor(totalSeconds / 60),
+    seconds: totalSeconds % 60
+  };
+}
+
+/**
+ * Detect paragraphs that would be "wall of text" on mobile devices
+ */
+export function detectWallOfTextParagraphs(text: string): Array<{ startIndex: number; endIndex: number }> {
+  const safeText = text ?? '';
+  if (!safeText.trim()) return [];
+  
+  const wallOfTextParagraphs: Array<{ startIndex: number; endIndex: number }> = [];
+  const paragraphs = safeText.split(/\n\s*\n/);
+  
+  let currentIndex = 0;
+  paragraphs.forEach(paragraph => {
+    const trimmedParagraph = paragraph.trim();
+    if (!trimmedParagraph) {
+      currentIndex += paragraph.length + 2; // Account for paragraph separator
+      return;
+    }
+    
+    const startIndex = safeText.indexOf(trimmedParagraph, currentIndex);
+    const endIndex = startIndex + trimmedParagraph.length;
+    
+    // Check if paragraph is too dense for mobile reading
+    const wordCount = countWords(trimmedParagraph);
+    const charCount = trimmedParagraph.length;
+    const sentences = getSentences(trimmedParagraph);
+    const avgSentenceLength = sentences.length > 0 ? wordCount / sentences.length : 0;
+    
+    // Criteria for "wall of text":
+    // 1. More than 150 words, OR
+    // 2. More than 800 characters, OR  
+    // 3. Average sentence length > 25 words
+    if (wordCount > 150 || charCount > 800 || avgSentenceLength > 25) {
+      wallOfTextParagraphs.push({
+        startIndex,
+        endIndex
+      });
+    }
+    
+    currentIndex = endIndex + 2; // Account for paragraph separator
+  });
+  
+  return wallOfTextParagraphs;
+}
+
+/**
  * Main function to calculate all word count statistics
  */
 export function analyzeText(text: string, deviceType: DeviceType = 'standard'): WordCountStats {
