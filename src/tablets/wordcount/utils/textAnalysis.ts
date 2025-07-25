@@ -500,6 +500,119 @@ export function findShortestSentence(text: string): { sentence: string; startInd
 }
 
 /**
+ * Detect passive voice sentences in text
+ */
+export function detectPassiveVoice(text: string): Array<{ sentence: string; startIndex: number; endIndex: number }> {
+  const safeText = text ?? '';
+  if (!safeText.trim()) return [];
+  
+  const passiveVoice: Array<{ sentence: string; startIndex: number; endIndex: number }> = [];
+  const sentences = getSentences(safeText);
+  
+  // Common passive voice patterns
+  const passivePatterns = [
+    /\b(was|were|is|are|am|be|been|being)\s+\w*ed\b/i,
+    /\b(was|were|is|are|am|be|been|being)\s+\w*en\b/i,
+    /\b(was|were|is|are|am|be|been|being)\s+(given|taken|made|done|seen|heard|felt|known|shown|told|asked|brought|sent|found|left|kept|held|put|set|cut|hit|hurt|let|met|read|said|sold|paid|laid|led|fed|built|caught|taught|thought|bought|fought|sought|brought)\b/i
+  ];
+  
+  let currentIndex = 0;
+  sentences.forEach(sentence => {
+    const startIndex = safeText.indexOf(sentence, currentIndex);
+    const endIndex = startIndex + sentence.length;
+    
+    // Check if sentence contains passive voice patterns
+    const hasPassiveVoice = passivePatterns.some(pattern => pattern.test(sentence));
+    
+    if (hasPassiveVoice) {
+      passiveVoice.push({
+        sentence: sentence.trim(),
+        startIndex,
+        endIndex
+      });
+    }
+    
+    currentIndex = endIndex;
+  });
+  
+  return passiveVoice;
+}
+
+/**
+ * Count adverbs (words ending in -ly) with smart filtering
+ */
+export function countAdverbs(text: string): Array<{ word: string; startIndex: number; endIndex: number }> {
+  const safeText = text ?? '';
+  if (!safeText.trim()) return [];
+  
+  const adverbs: Array<{ word: string; startIndex: number; endIndex: number }> = [];
+  
+  // Words ending in -ly that are NOT adverbs
+  const nonAdverbs = new Set([
+    'family', 'early', 'daily', 'weekly', 'monthly', 'yearly', 'holy', 'jolly',
+    'belly', 'jelly', 'silly', 'hilly', 'billy', 'lily', 'july', 'supply',
+    'apply', 'reply', 'comply', 'imply', 'multiply', 'butterfly', 'assembly',
+    'elderly', 'friendly', 'lovely', 'lonely', 'likely', 'unlikely', 'lively',
+    'deadly', 'costly', 'mostly', 'partly', 'nearly', 'barely', 'rarely'
+  ]);
+  
+  // Find all words ending in -ly
+  const lyWordPattern = /\b\w+ly\b/gi;
+  let match;
+  
+  while ((match = lyWordPattern.exec(safeText)) !== null) {
+    const word = match[0].toLowerCase();
+    
+    // Skip if it's in the non-adverbs list
+    if (!nonAdverbs.has(word)) {
+      adverbs.push({
+        word: match[0],
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+  }
+  
+  return adverbs;
+}
+
+/**
+ * Detect weakening phrases that undermine confidence
+ */
+export function detectWeakeningPhrases(text: string): Array<{ phrase: string; startIndex: number; endIndex: number }> {
+  const safeText = text ?? '';
+  if (!safeText.trim()) return [];
+  
+  const weakeningPhrases: Array<{ phrase: string; startIndex: number; endIndex: number }> = [];
+  
+  // Common weakening phrases
+  const phrases = [
+    'I think', 'I believe', 'I feel', 'I guess', 'I suppose',
+    'Maybe', 'Perhaps', 'Possibly', 'Probably', 'Likely',
+    'Sort of', 'Kind of', 'Somewhat', 'Rather', 'Quite',
+    'It seems', 'It appears', 'It looks like', 'It might be',
+    'In my opinion', 'I would say', 'I tend to think',
+    'To some extent', 'To a certain degree', 'More or less',
+    'Pretty much', 'Fairly', 'Relatively', 'Basically'
+  ];
+  
+  phrases.forEach(phrase => {
+    const pattern = new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    let match;
+    
+    while ((match = pattern.exec(safeText)) !== null) {
+      weakeningPhrases.push({
+        phrase: match[0],
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+  });
+  
+  return weakeningPhrases;
+}
+
+/**
  * Main function to calculate all word count statistics
  */
 export function analyzeText(text: string): WordCountStats {
