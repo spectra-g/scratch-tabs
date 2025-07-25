@@ -329,11 +329,39 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         modelManager.registerCursorPositionListener(activeTab.id, editor);
       }
 
-      // Paste Detection Listener
+      // Paste Detection Listener - Use keyboard event to catch paste BEFORE content changes
+      editor.onKeyDown((e) => {
+        try {
+          
+          // Detect Ctrl+V (Windows/Linux) or Cmd+V (Mac)
+          // Try multiple ways to detect V key
+          const isPasteShortcut = (e.ctrlKey || e.metaKey) && (
+            e.keyCode === 86 || // KeyCode for 'V'
+            e.browserEvent?.key === 'v' || 
+            e.browserEvent?.key === 'V' ||
+            e.browserEvent?.code === 'KeyV'
+          );
+          
+          if (isPasteShortcut) {
+            const currentTab = latestActiveTabRef.current;
+            if (currentTab) {
+              modelManager.markNextChangeAsPaste(currentTab.id);
+            }
+          }
+        } catch (error) {
+          console.warn(
+            "[EditorInstance] Failed to handle paste detection:",
+            error,
+          );
+        }
+      });
+
+      // Keep the original onDidPaste as backup (though it fires too late)
       editor.onDidPaste(() => {
         try {
           const currentTab = latestActiveTabRef.current;
           if (currentTab) {
+            // This is likely too late, but keep as fallback
             modelManager.markNextChangeAsPaste(currentTab.id);
           }
         } catch (error) {

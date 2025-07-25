@@ -5,6 +5,7 @@ import { useRootStore } from "../stores/rootStore";
 import { StorageProviderFactory } from "../db";
 import { detectLanguage, isAmbiguousLanguage } from "../languages";
 import { updateCursorIndicator } from "../utils/testIndicators";
+import { contentProcessingService } from "./contentProcessing";
 
 // The maximum number of models to keep in memory
 const MAX_MODELS = 10;
@@ -25,6 +26,8 @@ class ModelManager {
   private formatActionQueue = new Set<string>(); // Track pending format operations
   private cursorPositionListeners = new Map<string, Monaco.IDisposable>(); // Track cursor position listeners
   private debouncedCursorPersistence = new Map<string, NodeJS.Timeout>(); // Debounced cursor position saves
+  private isProcessingContent = new Map<string, boolean>(); // Track content processing operations to prevent recursion
+  private pasteFlagTimeouts = new Map<string, NodeJS.Timeout>(); // Timeout to clear paste flags
 
   public initialize(monacoInstance: typeof Monaco) {
     if (this.monaco) return;
@@ -73,6 +76,45 @@ class ModelManager {
   }
 
   /**
+   * Process content using the new content processing framework
+   */
+  private async processContent(
+    content: string,
+    tabId: string,
+    currentLanguage: string,
+    languageLocked: boolean,
+    isFromPaste: boolean,
+    previousContent: string,
+    isInitialContent: boolean = false
+  ): Promise<{ processed: boolean; content: string; language?: string }> {
+    try {
+      const context = contentProcessingService.createContext(
+        tabId,
+        currentLanguage,
+        languageLocked,
+        isFromPaste,
+        previousContent,
+        { isInitialContent }
+      );
+
+      const result = await contentProcessingService.processContent(content, context);
+      
+      return {
+        processed: result.processed,
+        content: result.content,
+        language: result.language
+      };
+    } catch (error) {
+      console.warn('[ModelManager] Content processing failed:', error);
+      return {
+        processed: false,
+        content,
+        language: currentLanguage
+      };
+    }
+  }
+
+  /**
    * Ensures tab has content, fetching from database if necessary
    */
   private async ensureTabContent(tab: Tab): Promise<Tab> {
@@ -108,29 +150,113 @@ class ModelManager {
   /**
    * Handles language detection and auto-formatting logic
    */
-  private handleLanguageDetection(
+  private async handleLanguageDetection(
     tabId: string,
     newContent: string,
     prevContent: string,
     isFromPaste: boolean = false,
+    isInitialContent: boolean = false,
   ) {
     try {
+      // Clear the paste flag at the start of language detection
+      if (isFromPaste) {
+        this.isPasteRef.delete(tabId);
+        
+        // Clear the timeout since we consumed the flag
+        const timeout = this.pasteFlagTimeouts.get(tabId);
+        if (timeout) {
+          clearTimeout(timeout);
+          this.pasteFlagTimeouts.delete(tabId);
+        }
+        
+      }
       const currentTab = useTabsStore
         .getState()
         .tabs.find((t) => t.id === tabId);
-      if (!currentTab || currentTab.languageLocked) {
-        return; // Skip if tab not found or language is locked
+
+      if (!currentTab) {
+        return;
+      }
+      
+      // Special case: Allow content processing even when language is locked
+      // The framework will only process content when appropriate (e.g., JSON formatting)
+      // and won't change the language if it's already correctly set
+      if (currentTab.languageLocked) {
+        // For locked languages, we still allow content processing but restrict language changes
+        // The content processors themselves will decide if processing is appropriate
       }
 
       const trimmedNewContent = newContent.trim();
       const trimmedOldContent = prevContent.trim();
 
-      // Handle empty content
       if (trimmedNewContent.length === 0) {
         if (currentTab.language !== "plaintext") {
           useRootStore.getState().updateTabLanguage(tabId, "plaintext", false);
         }
         return;
+      }
+
+      const newDetectedLanguage = detectLanguage(trimmedNewContent);
+
+
+      // =================================================================
+      // Content processing using the new framework
+      // =================================================================
+      
+      const processingResult = await this.processContent(
+        newContent,
+        tabId,
+        currentTab.language,
+        currentTab.languageLocked,
+        isFromPaste,
+        prevContent,
+        isInitialContent
+      );
+
+      if (processingResult.processed) {
+          const model = this.models.get(tabId);
+          if (!model || model.isDisposed()) {
+            return;
+          }
+
+          // Find the editor instance that hosts this model
+          const editors = this.monaco?.editor.getEditors() || [];
+          const editor = editors.find((e) => e.getModel() === model);
+
+          if (editor) {
+              // Set flag to prevent recursive language detection
+              this.isProcessingContent.set(tabId, true);
+              
+              // Replace the text with the processed content
+              // Use pushUndoStop to create proper undo boundaries
+              editor.pushUndoStop();
+              editor.executeEdits('content-processor', [{
+                  range: model.getFullModelRange(),
+                  text: processingResult.content,
+                  forceMoveMarkers: false,
+              }]);
+              editor.pushUndoStop();
+
+              // Clear the flag after processing is done and update language
+              setTimeout(() => {
+                  this.isProcessingContent.delete(tabId);
+                  
+                  // Update language if processor determined a new one
+                  if (processingResult.language && processingResult.language !== currentTab.language) {
+                    useRootStore.getState().updateTabLanguage(tabId, processingResult.language, false);
+                    this.updateModelLanguage(tabId, processingResult.language);
+                  }
+                  
+                  // Trigger formatting if this was from a paste operation
+                  if (isFromPaste && processingResult.language) {
+                    this.triggerAutoFormat(tabId, processingResult.language);
+                  }
+              }, 50);
+
+              // IMPORTANT: Stop further processing of this event.
+              // We have manually handled the entire flow.
+              return;
+          }
       }
 
       // Determine if the change is significant
@@ -150,43 +276,33 @@ class ModelManager {
           !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) &&
           lengthDifference > 5);
 
-      // Perform language detection
-      const newDetectedLanguage = detectLanguage(trimmedNewContent);
       const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent);
 
-      // Decide whether to update the tab's language
       let shouldUpdate = false;
       let shouldTriggerAutoFormat = false;
 
       if (isSignificantChange) {
-        // On significant changes, ALWAYS update if the detected language is different from current
         if (newDetectedLanguage !== currentTab.language) {
           shouldUpdate = true;
-          // Only trigger auto-format if this was from a paste operation, not programmatic changes
           shouldTriggerAutoFormat = isFromPaste;
         }
       } else {
-        // For normal typing (non-significant change):
-        // Only update if the detected language is different and we're in plaintext or detection is confident
         if (newDetectedLanguage !== currentTab.language) {
           if (currentTab.language === "plaintext" || !newDetectionIsAmbiguous) {
             shouldUpdate = true;
-            // Don't trigger auto-format for regular typing-induced language changes
           }
         }
       }
 
-      // Perform update
       if (shouldUpdate) {
         useRootStore
           .getState()
           .updateTabLanguage(tabId, newDetectedLanguage, false);
 
-        // Trigger auto-format if this was a paste operation that resulted in language detection
         if (shouldTriggerAutoFormat) {
           setTimeout(() => {
             this.triggerAutoFormat(tabId, newDetectedLanguage);
-          }, 50); // Small delay to ensure language is set before formatting
+          }, 50);
         }
       }
     } catch (error) {
@@ -376,15 +492,38 @@ class ModelManager {
     );
     this.listeners.get(tab.id)?.dispose();
 
+    // Check for content processing on initial model creation
+    if (content && content.trim().length > 0) {
+      
+      // Trigger language detection for initial content to handle "New tab from Paste" case
+      setTimeout(async () => {
+        try {
+          await this.handleLanguageDetection(tab.id, content, "", false, true);
+        } catch (error) {
+          console.warn(`[ModelManager] Initial language detection failed for tab ${tab.id}:`, error);
+        }
+      }, 10);
+    }
+
     const contentListener = model.onDidChangeContent(() => {
       try {
         const newContent = model.getValue();
         const prevContent = this.lastContent.get(tab.id) || "";
         const wasFromPaste = this.isPasteRef.get(tab.id) || false;
+        const isProcessingContent = this.isProcessingContent.get(tab.id) || false;
+        
+        
+        // Don't clear the paste flag yet - let handleLanguageDetection consume it
+        // This ensures the paste flag is available when we need to check for content processing
 
         // Update tab content in store
         useTabsStore.getState().updateTabContent(tab.id, newContent);
         this.lastContent.set(tab.id, newContent);
+
+        // Skip language detection if we're in the middle of content processing
+        if (isProcessingContent) {
+          return;
+        }
 
         // Handle language detection and auto-formatting
         this.handleLanguageDetection(
@@ -392,7 +531,9 @@ class ModelManager {
           newContent,
           prevContent,
           wasFromPaste,
-        );
+        ).catch(error => {
+          console.warn(`[ModelManager] Language detection failed for tab ${tab.id}:`, error);
+        });
       } catch (error) {
         console.warn(
           `[ModelManager] Failed to update content for tab ${tab.id}:`,
@@ -431,6 +572,14 @@ class ModelManager {
       this.listeners.delete(tabId);
       this.lastContent.delete(tabId); // Clean up content tracking
       this.isPasteRef.delete(tabId); // Clean up paste tracking
+      this.isProcessingContent.delete(tabId); // Clean up content processing tracking
+
+      // Clean up paste flag timeout
+      const timeout = this.pasteFlagTimeouts.get(tabId);
+      if (timeout) {
+        clearTimeout(timeout);
+        this.pasteFlagTimeouts.delete(tabId);
+      }
 
       // Clean up cursor position listeners
       this.unregisterCursorPositionListener(tabId);
@@ -512,11 +661,24 @@ class ModelManager {
 
   // Method to mark that the next content change for a tab is from a paste operation
   public markNextChangeAsPaste(tabId: string): void {
+    
+    // Clear any existing timeout
+    const existingTimeout = this.pasteFlagTimeouts.get(tabId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+    
     this.isPasteRef.set(tabId, true);
-    // Clear the flag after a short delay
-    setTimeout(() => {
-      this.isPasteRef.delete(tabId);
-    }, 100);
+    
+    // Set a timeout to clear the flag if it's not consumed within 500ms
+    const timeout = setTimeout(() => {
+      if (this.isPasteRef.has(tabId)) {
+        this.isPasteRef.delete(tabId);
+      }
+      this.pasteFlagTimeouts.delete(tabId);
+    }, 500);
+    
+    this.pasteFlagTimeouts.set(tabId, timeout);
   }
 }
 
