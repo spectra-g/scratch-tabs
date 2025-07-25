@@ -1,6 +1,59 @@
 // Text analysis utilities for word count statistics
 // Pure functions with no React dependencies
 
+// Device configuration for different screen types
+export type DeviceType = 'standard' | 'desktop' | 'tablet' | 'mobile';
+export type WritingGoal = 'general' | 'technical' | 'blog' | 'academic';
+
+export interface DeviceConfig {
+  viewportWidth: number;
+  viewportHeight: number;
+  avgCharWidth: number;
+  lineHeight: number;
+  readingWPM: number;
+}
+
+export interface WritingTarget {
+  fleschKincaidMin: number;
+  fleschKincaidMax: number;
+  avgSentenceLengthMax: number;
+  passiveVoiceMax: number;
+  adverbsMax: number;
+  keywordDensityMin: number;
+  keywordDensityMax: number;
+}
+
+export const DEVICE_CONFIGS: Record<DeviceType, DeviceConfig> = {
+  standard: {
+    viewportWidth: 800,
+    viewportHeight: 600,
+    avgCharWidth: 8,
+    lineHeight: 20,
+    readingWPM: 225
+  },
+  desktop: {
+    viewportWidth: 1200,
+    viewportHeight: 800,
+    avgCharWidth: 8,
+    lineHeight: 22,
+    readingWPM: 250
+  },
+  tablet: {
+    viewportWidth: 768,
+    viewportHeight: 1024,
+    avgCharWidth: 9,
+    lineHeight: 24,
+    readingWPM: 200
+  },
+  mobile: {
+    viewportWidth: 375,
+    viewportHeight: 667,
+    avgCharWidth: 10,
+    lineHeight: 26,
+    readingWPM: 180
+  }
+};
+
 // Common English stop words for keyword density filtering
 const STOP_WORDS = new Set([
   'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
