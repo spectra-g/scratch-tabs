@@ -9,7 +9,6 @@ import {
   Tablet, 
   Smartphone, 
   FileText,
-  Download,
   CheckCircle,
   AlertCircle,
   XCircle
@@ -19,8 +18,7 @@ import {
   DeviceType, 
   WritingGoal, 
   WRITING_TARGETS, 
-  evaluateMetricTarget,
-  generateExportReport 
+  evaluateMetricTarget 
 } from '../utils/textAnalysis';
 
 interface WordCountDisplayProps {
@@ -94,18 +92,6 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
     }
   };
 
-  const handleExportReport = () => {
-    const report = generateExportReport(stats, deviceType, writingGoal, targetKeyword);
-    const blob = new Blob([report], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `word-count-analysis-${new Date().toISOString().split('T')[0]}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
   const targets = WRITING_TARGETS[writingGoal];
 
@@ -193,58 +179,49 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
 
       {/* Control Panel */}
       <div ref={controlPanelRef} className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Column 1 - Device Preview + Export Button */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Column 1 - Device Preview */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Preview As
+            </label>
+            <DeviceSelector />
+          </div>
+
+          {/* Column 2 - Writing Goal and Target Keyword */}
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Preview As
+                Writing Goal
               </label>
-              <DeviceSelector />
+              <select
+                value={writingGoal}
+                onChange={(e) => onWritingGoalChange(e.target.value as WritingGoal)}
+                className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+              >
+                <option value="general">General Audience</option>
+                <option value="technical">Technical Document</option>
+                <option value="blog">Blog Post (SEO)</option>
+                <option value="academic">Academic Paper</option>
+              </select>
             </div>
-            
-            {/* Export Button - Always below Preview As */}
-            <button
-              onClick={handleExportReport}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-md transition-colors"
-            >
-              <Download size={16} />
-              <span>Export Report</span>
-            </button>
-          </div>
 
-          {/* Column 2 - Writing Goal */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Writing Goal
-            </label>
-            <select
-              value={writingGoal}
-              onChange={(e) => onWritingGoalChange(e.target.value as WritingGoal)}
-              className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
-            >
-              <option value="general">General Audience</option>
-              <option value="technical">Technical Document</option>
-              <option value="blog">Blog Post (SEO)</option>
-              <option value="academic">Academic Paper</option>
-            </select>
+            {/* Target Keyword (for SEO) */}
+            {writingGoal === 'blog' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Target Keyword
+                </label>
+                <input
+                  type="text"
+                  value={targetKeyword || ''}
+                  onChange={(e) => onTargetKeywordChange(e.target.value)}
+                  placeholder="Enter target keyword..."
+                  className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                />
+              </div>
+            )}
           </div>
-
-          {/* Column 3 - Target Keyword (for SEO) */}
-          {writingGoal === 'blog' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Target Keyword
-              </label>
-              <input
-                type="text"
-                value={targetKeyword || ''}
-                onChange={(e) => onTargetKeywordChange(e.target.value)}
-                placeholder="Enter target keyword..."
-                className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
-              />
-            </div>
-          )}
         </div>
       </div>
 
@@ -476,6 +453,91 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
 
         {/* Right Column */}
         <div className="space-y-6">
+          {/* Keyword Density (only show when target keyword is set) */}
+          {writingGoal === 'blog' && targetKeyword && (
+            <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide flex items-center">
+                <Target size={16} className="mr-2 text-green-400" />
+                Keyword Density
+              </h3>
+              {(() => {
+                const keywordMatch = stats.topKeywords.find(k => k.word.toLowerCase() === targetKeyword.toLowerCase());
+                const density = keywordMatch?.density || 0;
+                const count = keywordMatch?.count || 0;
+                
+                return (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Target Keyword</span>
+                      <div className="flex items-center space-x-2">
+                        <span 
+                          className={`text-gray-200 font-mono ${getClickableStyle('keyword', targetKeyword)}`}
+                          onClick={() => handleHighlight('keyword', targetKeyword)}
+                          title={`Click to highlight all instances of "${targetKeyword}"`}
+                        >
+                          "{targetKeyword}"
+                        </span>
+                        <Eye size={12} className="text-gray-500" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Current Density</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-400 text-sm font-mono">{density}%</span>
+                        <span className="text-gray-500 text-xs">({count} occurrences)</span>
+                        {getTargetIndicator(density, {
+                          min: targets.keywordDensityMin,
+                          max: targets.keywordDensityMax
+                        })}
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Target Range</span>
+                      <span className="text-gray-300 text-sm font-mono">
+                        {targets.keywordDensityMin}% - {targets.keywordDensityMax}%
+                      </span>
+                    </div>
+                    
+                    {/* Progress bar showing density relative to target */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>0%</span>
+                        <span>{Math.max(targets.keywordDensityMax, density)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="relative h-2 rounded-full overflow-hidden">
+                          {/* Target range background */}
+                          <div 
+                            className="absolute bg-green-500/30 h-full"
+                            style={{
+                              left: `${(targets.keywordDensityMin / Math.max(targets.keywordDensityMax, density)) * 100}%`,
+                              width: `${((targets.keywordDensityMax - targets.keywordDensityMin) / Math.max(targets.keywordDensityMax, density)) * 100}%`
+                            }}
+                          />
+                          {/* Current density indicator */}
+                          <div 
+                            className={`absolute h-full w-1 ${
+                              density >= targets.keywordDensityMin && density <= targets.keywordDensityMax
+                                ? 'bg-green-400'
+                                : density < targets.keywordDensityMin
+                                ? 'bg-yellow-400'
+                                : 'bg-red-400'
+                            }`}
+                            style={{
+                              left: `${(density / Math.max(targets.keywordDensityMax, density)) * 100}%`
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           {/* Top Keywords */}
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
             <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">

@@ -5,7 +5,8 @@ import {
   analyzeText, 
   WordCountStats, 
   DeviceType, 
-  WritingGoal 
+  WritingGoal,
+  generateExportReport 
 } from './utils/textAnalysis';
 import { WordCountInput } from './components/WordCountInput';
 import { WordCountDisplay } from './components/WordCountDisplay';
@@ -35,6 +36,12 @@ const WordCountTabletComponent: React.FC<{
   const stats: WordCountStats = useMemo(() => {
     return analyzeText(text, deviceType);
   }, [text, deviceType]);
+  
+  // Memoized report generation - recalculates when any relevant data changes
+  const reportContent: string = useMemo(() => {
+    if (!text.trim()) return '';
+    return generateExportReport(stats, deviceType, writingGoal, targetKeyword);
+  }, [stats, deviceType, writingGoal, targetKeyword, text]);
   
   const {
     activeHighlight,
@@ -102,7 +109,7 @@ const WordCountTabletComponent: React.FC<{
   }, []);
 
   return (
-    <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
+    <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden custom-scrollbar">
       {/* Header */}
       <div className="flex-none border-b border-gray-700/50 p-4">
         <div className="flex items-center space-x-3">
@@ -117,7 +124,7 @@ const WordCountTabletComponent: React.FC<{
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden custom-scrollbar">
         {/* Left Column - Editor (60% width) */}
         <div className="flex-1 flex flex-col p-4 pr-2 min-w-0">
           <div className="flex-1 min-h-0">
@@ -125,6 +132,7 @@ const WordCountTabletComponent: React.FC<{
               value={text}
               onChange={handleTextChange}
               onEditorReady={setEditorRef}
+              reportContent={reportContent}
             />
           </div>
         </div>
