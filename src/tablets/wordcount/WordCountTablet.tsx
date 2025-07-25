@@ -1,7 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Tablet, TabletState } from '../types';
 import { FileText } from 'lucide-react';
-import { analyzeText, WordCountStats } from './utils/textAnalysis';
+import { 
+  analyzeText, 
+  WordCountStats, 
+  DeviceType, 
+  WritingGoal 
+} from './utils/textAnalysis';
 import { WordCountInput } from './components/WordCountInput';
 import { WordCountDisplay } from './components/WordCountDisplay';
 import { useHighlighting } from './hooks/useHighlighting';
@@ -10,6 +15,9 @@ interface WordCountTabletState extends TabletState {
   type: 'wordcount';
   data: {
     text: string;
+    deviceType: DeviceType;
+    writingGoal: WritingGoal;
+    targetKeyword: string;
   };
 }
 
@@ -17,13 +25,16 @@ const WordCountTabletComponent: React.FC<{
   state: WordCountTabletState;
   onChange: (state: WordCountTabletState) => void;
 }> = ({ state, onChange }) => {
-  const data = state.data || { text: '' };
+  const data = state.data || { text: '', deviceType: 'standard', writingGoal: 'general', targetKeyword: '' };
   const text = data.text || '';
+  const deviceType = data.deviceType || 'standard';
+  const writingGoal = data.writingGoal || 'general';
+  const targetKeyword = data.targetKeyword || '';
 
   // Memoized text analysis - only recalculates when text changes
   const stats: WordCountStats = useMemo(() => {
-    return analyzeText(text);
-  }, [text]);
+    return analyzeText(text, deviceType);
+  }, [text, deviceType]);
   
   const {
     activeHighlight,
@@ -35,7 +46,38 @@ const WordCountTabletComponent: React.FC<{
     onChange({
       ...state,
       data: {
+        ...data,
         text: newText,
+      },
+    });
+  };
+
+  const handleDeviceChange = (newDeviceType: DeviceType) => {
+    onChange({
+      ...state,
+      data: {
+        ...data,
+        deviceType: newDeviceType,
+      },
+    });
+  };
+
+  const handleWritingGoalChange = (newWritingGoal: WritingGoal) => {
+    onChange({
+      ...state,
+      data: {
+        ...data,
+        writingGoal: newWritingGoal,
+      },
+    });
+  };
+
+  const handleTargetKeywordChange = (newTargetKeyword: string) => {
+    onChange({
+      ...state,
+      data: {
+        ...data,
+        targetKeyword: newTargetKeyword,
       },
     });
   };
@@ -50,6 +92,7 @@ const WordCountTabletComponent: React.FC<{
       .highlight-passive-voice { background-color: rgba(245, 158, 11, 0.3) !important; }
       .highlight-adverb { background-color: rgba(249, 115, 22, 0.3) !important; }
       .highlight-weakening-phrase { background-color: rgba(239, 68, 68, 0.3) !important; }
+      .highlight-wall-of-text { background-color: rgba(168, 85, 247, 0.3) !important; }
     `;
     document.head.appendChild(style);
     
@@ -86,9 +129,15 @@ const WordCountTabletComponent: React.FC<{
           {/* Stats Display */}
           {text.trim() ? (
             <WordCountDisplay 
-              stats={stats} 
+              stats={stats}
+              deviceType={deviceType}
+              writingGoal={writingGoal}
+              targetKeyword={targetKeyword}
               onHighlight={handleHighlight}
               activeHighlight={activeHighlight}
+              onDeviceChange={handleDeviceChange}
+              onWritingGoalChange={handleWritingGoalChange}
+              onTargetKeywordChange={handleTargetKeywordChange}
             />
           ) : (
             <div className="bg-gray-800/30 border border-gray-700/30 rounded-lg p-8 text-center">
@@ -134,6 +183,9 @@ export const WordCountTablet: Tablet = {
       type: 'wordcount',
       data: {
         text: '',
+        deviceType: 'standard',
+        writingGoal: 'general',
+        targetKeyword: '',
       },
     };
   },
@@ -151,6 +203,9 @@ export const WordCountTablet: Tablet = {
           type: 'wordcount',
           data: {
             text: parsed.data.text || '',
+            deviceType: parsed.data.deviceType || 'standard',
+            writingGoal: parsed.data.writingGoal || 'general',
+            targetKeyword: parsed.data.targetKeyword || '',
           },
         };
       }

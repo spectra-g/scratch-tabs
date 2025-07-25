@@ -615,7 +615,7 @@ export function detectWeakeningPhrases(text: string): Array<{ phrase: string; st
 /**
  * Main function to calculate all word count statistics
  */
-export function analyzeText(text: string): WordCountStats {
+export function analyzeText(text: string, deviceType: DeviceType = 'standard'): WordCountStats {
   // Defensive check: ensure text is always a string
   const safeText = text ?? '';
   
@@ -628,6 +628,8 @@ export function analyzeText(text: string): WordCountStats {
     sentences: countSentences(safeText),
     paragraphs: countParagraphs(safeText),
     lines: countLines(safeText),
+    pages: calculatePages(safeText),
+    screenfuls: calculateScreenfuls(safeText, deviceType),
     
     // Averages & lengths
     longestSentence: getLongestSentence(safeText),
@@ -639,7 +641,7 @@ export function analyzeText(text: string): WordCountStats {
     // Readability & time
     syllables: countSyllables(safeText),
     fleschKincaidGrade: calculateFleschKincaidGrade(safeText),
-    readingTime: calculateReadingTime(safeText),
+    readingTime: calculateDeviceReadingTime(safeText, deviceType),
     speakingTime: calculateSpeakingTime(safeText),
     handwritingTime: calculateHandwritingTime(safeText),
     
@@ -651,6 +653,9 @@ export function analyzeText(text: string): WordCountStats {
     // Stylistic analysis
     passiveVoiceSentences: detectPassiveVoice(safeText),
     adverbs: countAdverbs(safeText),
-    weakeningPhrases: detectWeakeningPhrases(safeText)
+    weakeningPhrases: detectWeakeningPhrases(safeText),
+    
+    // Mobile readability
+    wallOfTextParagraphs: detectWallOfTextParagraphs(safeText)
   };
 }

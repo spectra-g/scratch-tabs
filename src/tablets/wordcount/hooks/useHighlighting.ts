@@ -144,6 +144,15 @@ export const useHighlighting = (text: string, stats: WordCountStats) => {
   const setEditorRef = useCallback((editor: any) => {
     editorRef.current = editor;
     
+    case 'wall-of-text': {
+      ranges = stats.wallOfTextParagraphs.map(paragraph => ({
+        startIndex: paragraph.startIndex,
+        endIndex: paragraph.endIndex,
+        className: 'highlight-wall-of-text'
+      }));
+      break;
+    }
+    
     // Apply any pending highlights
     if (highlights.length > 0) {
       applyHighlights(highlights, activeHighlight);
