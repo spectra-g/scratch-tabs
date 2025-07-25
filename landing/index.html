@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scratch Tabs - Your Local Data Playground & JSON Toolkit</title>
+  <title>Scratch Tabs: The Private, Offline-First Developer Toolkit for JSON, REST, JWT & More</title>
   <meta name="description"
     content="Scratch Tabs: The ultimate client-side toolkit for JSON editing, API testing, data conversion, and developer utilities. Free, private, no tracking, no accounts required. Works offline." />
   <meta name="keywords"
@@ -29,37 +29,83 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
 
-  <!-- Structured Data for SEO -->
+  <!-- Enhanced Structured Data for SEO -->
   <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Scratch Tabs",
-        "description": "The ultimate client-side toolkit for JSON editing, data scratching, and powerful in-browser utilities. Free, private, no tracking, no accounts.",
-        "url": "https://scratchtabs.com",
-        "applicationCategory": "DeveloperApplication",
-        "operatingSystem": "Web Browser",
-        "browserRequirements": "Requires JavaScript. Requires HTML5.",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "Scratch Tabs",
+          "url": "https://scratchtabs.com",
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https://scratchtabs.com"
+          },
+          "description": "Your private, persistent, browser-based data workspace. Scratch Tabs is the ultimate client-side toolkit for JSON editing, REST client requests, JWT decoding, Base64 encoding, and more. All tools work offline with no accounts or tracking.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "All (Web Browser)",
+          "browserRequirements": "Requires modern web browser with JavaScript and IndexedDB.",
+          "keywords": "developer tools, json editor, json formatter, rest client, jwt decoder, base64 encoder, cron builder, regex tester, offline dev tools, privacy first, client-side tools, data scratching",
+          "featureList": [
+            "Persistent Workspaces & Split-View UI",
+            "Client-Side AI: In-browser text summarization",
+            "REST API Client with variable support",
+            "JWT Decoder, Verifier, and Signer",
+            "JSON, CSV, and OpenMetrics Viewers with advanced tools",
+            "Base64 & URL Encoder/Decoder",
+            "Password & UUID Generator",
+            "Live Markdown & HTML Preview",
+            "Batch text transformation engine",
+            "Diagramming Tool (Shape Snap)",
+            "Works 100% Offline"
+          ],
+          "isAccessibleForFree": true,
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "screenshot": "https://scratchtabs.b-cdn.net/app-screenshot.png",
+          "author": { "@type": "Organization", "name": "Scratch Tabs" },
+          "publisher": { "@type": "Organization", "name": "Scratch Tabs" },
+          "softwareHelp": {
+            "@type": "CreativeWork",
+            "url": "https://github.com/spectra-g/scratch-tabs-feedback/issues"
+          }
         },
-        "featureList": [
-          "JSON Editor with syntax highlighting",
-          "Content auto-detect auto-format on paste",
-          "Password generator",
-          "JWT token decoder",
-          "Data conversion tools",
-          "Client-side AI processing",
-          "Multi-workspace support",
-          "Offline functionality"
-        ],
-        "screenshot": "https://scratchtabs.b-cdn.net/app-screenshot.png",
-        "author": { "@type": "Organization", "name": "Scratch Tabs" },
-        "publisher": { "@type": "Organization", "name": "Scratch Tabs" }
-      }
-    </script>
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Is Scratch Tabs free to use?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, Scratch Tabs is completely free. There are no paid plans, subscriptions, or hidden costs."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is my data private and secure?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Absolutely. Scratch Tabs is a 100% client-side application. All your data, including tab content, API requests, and JWT secrets, is stored exclusively in your browser's local database (IndexedDB). No data is ever sent to our servers. It's completely private."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does Scratch Tabs work offline?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, Scratch Tabs is designed to be fully functional offline. Once the application is loaded, all core features—from the text editor to the JWT verifier—work without an internet connection. AI features require a one-time model download but also work offline after that."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  </script>
 
   <style>
     html {
