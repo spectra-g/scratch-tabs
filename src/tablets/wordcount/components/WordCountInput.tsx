@@ -80,8 +80,8 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
   }, [highlights]);
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div className="flex items-center space-x-2">
           <FileText size={16} className="text-gray-400" />
           <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
@@ -107,7 +107,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
         </div>
       </div>
       
-      <div className="h-64 border border-gray-600/50 rounded-md overflow-hidden">
+      <div className="flex-1 border border-gray-600/50 rounded-md overflow-hidden min-h-0">
         <Editor
           height="100%"
           defaultLanguage="plaintext"
@@ -127,7 +127,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
       </div>
       
       {localValue && (
-        <div className="mt-2 text-xs text-gray-500">
+        <div className="mt-2 text-xs text-gray-500 flex-shrink-0">
           {localValue.length} characters
         </div>
       )}

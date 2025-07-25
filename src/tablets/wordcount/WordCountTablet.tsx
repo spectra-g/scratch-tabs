@@ -116,40 +116,46 @@ const WordCountTabletComponent: React.FC<{
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto p-4 custom-scrollbar">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Input Section */}
-          <WordCountInput
-            value={text}
-            onChange={handleTextChange}
-            onEditorReady={setEditorRef}
-          />
-
-          {/* Stats Display */}
-          {text.trim() ? (
-            <WordCountDisplay 
-              stats={stats}
-              deviceType={deviceType}
-              writingGoal={writingGoal}
-              targetKeyword={targetKeyword}
-              onHighlight={handleHighlight}
-              activeHighlight={activeHighlight}
-              onDeviceChange={handleDeviceChange}
-              onWritingGoalChange={handleWritingGoalChange}
-              onTargetKeywordChange={handleTargetKeywordChange}
+      {/* Main Content - Two Column Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Column - Editor (60% width) */}
+        <div className="flex-1 flex flex-col p-4 pr-2 min-w-0">
+          <div className="flex-1 min-h-0">
+            <WordCountInput
+              value={text}
+              onChange={handleTextChange}
+              onEditorReady={setEditorRef}
             />
-          ) : (
-            <div className="bg-gray-800/30 border border-gray-700/30 rounded-lg p-8 text-center">
-              <FileText size={48} className="mx-auto mb-4 text-gray-600" />
-              <h3 className="text-lg font-medium text-gray-400 mb-2">
-                No Text to Analyze
-              </h3>
-              <p className="text-gray-500">
-                Enter or paste some text above to see detailed statistics and analysis.
-              </p>
-            </div>
-          )}
+          </div>
+        </div>
+
+        {/* Right Column - Stats (40% width) */}
+        <div className="w-2/5 flex flex-col p-4 pl-2 border-l border-gray-700/30">
+          <div className="flex-1 overflow-auto custom-scrollbar">
+            {text.trim() ? (
+              <WordCountDisplay 
+                stats={stats}
+                deviceType={deviceType}
+                writingGoal={writingGoal}
+                targetKeyword={targetKeyword}
+                onHighlight={handleHighlight}
+                activeHighlight={activeHighlight}
+                onDeviceChange={handleDeviceChange}
+                onWritingGoalChange={handleWritingGoalChange}
+                onTargetKeywordChange={handleTargetKeywordChange}
+              />
+            ) : (
+              <div className="bg-gray-800/30 border border-gray-700/30 rounded-lg p-6 text-center">
+                <FileText size={32} className="mx-auto mb-3 text-gray-600" />
+                <h3 className="text-base font-medium text-gray-400 mb-2">
+                  No Text to Analyze
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Enter text to see statistics.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

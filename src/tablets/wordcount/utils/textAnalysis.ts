@@ -34,21 +34,21 @@ export const DEVICE_CONFIGS: Record<DeviceType, {
     viewportHeight: 800,
     avgCharWidth: 8,
     lineHeight: 22,
-    readingWPM: 250,
+    readingWPM: 240, // Fast but potential for distractions
   },
   tablet: {
     viewportWidth: 768,
     viewportHeight: 1024,
     avgCharWidth: 9,
     lineHeight: 24,
-    readingWPM: 200,
+    readingWPM: 255, // Fastest - focused, comfortable reading experience
   },
   mobile: {
     viewportWidth: 375,
     viewportHeight: 667,
     avgCharWidth: 10,
     lineHeight: 26,
-    readingWPM: 180,
+    readingWPM: 260, // Faster for mobile scanning behavior
   },
 };
 
@@ -720,27 +720,133 @@ export function calculatePages(text: string): number {
 }
 
 /**
- * Calculate number of screenfuls based on device type
+ * Calculate number of screenfuls based on device type with realistic text rendering
  */
 export function calculateScreenfuls(text: string, deviceType: DeviceType): number {
   const config = DEVICE_CONFIGS[deviceType];
-  const characters = countCharacters(text);
+  const safeText = text ?? '';
   
-  // Estimate characters per screenful based on device config
-  const charsPerLine = Math.floor(config.viewportWidth / config.avgCharWidth);
-  const linesPerScreen = Math.floor(config.viewportHeight / config.lineHeight);
-  const charsPerScreen = charsPerLine * linesPerScreen;
+  if (!safeText.trim()) return 0;
   
-  return Math.ceil(characters / charsPerScreen);
+  // Account for UI padding and margins (reduce available space by ~20%)
+  const availableWidth = Math.floor(config.viewportWidth * 0.8);
+  const availableHeight = Math.floor(config.viewportHeight * 0.8);
+  
+  // Calculate usable lines per screen
+  const linesPerScreen = Math.floor(availableHeight / config.lineHeight);
+  
+  // Calculate characters per line accounting for word wrapping
+  const charsPerLine = Math.floor(availableWidth / config.avgCharWidth);
+  
+  // Split text into paragraphs and process each
+  const paragraphs = safeText.split(/\n\s*\n/);
+  let totalLines = 0;
+  
+  paragraphs.forEach(paragraph => {
+    if (!paragraph.trim()) {
+      totalLines += 1; // Empty paragraph = 1 line
+      return;
+    }
+    
+    // Split paragraph into words for realistic line wrapping
+    const words = paragraph.trim().split(/\s+/);
+    let currentLineLength = 0;
+    let paragraphLines = 0;
+    
+    words.forEach(word => {
+      const wordLength = word.length + 1; // +1 for space
+      
+      if (currentLineLength + wordLength > charsPerLine) {
+        // Start new line
+        paragraphLines++;
+        currentLineLength = wordLength;
+      } else {
+        currentLineLength += wordLength;
+      }
+    });
+    
+    // Add the last line if there's content
+    if (currentLineLength > 0) {
+      paragraphLines++;
+    }
+    
+    totalLines += Math.max(1, paragraphLines); // At least 1 line per paragraph
+  });
+  
+  // Add extra spacing between paragraphs (0.5 line per paragraph break)
+  const paragraphBreaks = Math.max(0, paragraphs.length - 1);
+  totalLines += Math.ceil(paragraphBreaks * 0.5);
+  
+  // Calculate screenfuls with device-specific adjustments
+  let screenfuls = Math.ceil(totalLines / linesPerScreen);
+  
+  // Device-specific adjustments for scrolling behavior
+  switch (deviceType) {
+    case 'mobile':
+      // Mobile users scroll more frequently, count partial screens
+      screenfuls = Math.ceil(totalLines / (linesPerScreen * 0.7));
+      break;
+    case 'tablet':
+      // Tablet users scroll in larger chunks
+      screenfuls = Math.ceil(totalLines / (linesPerScreen * 0.8));
+      break;
+    case 'desktop':
+      // Desktop users typically view full screens
+      screenfuls = Math.ceil(totalLines / linesPerScreen);
+      break;
+  }
+  
+  return Math.max(1, screenfuls);
 }
 
 /**
- * Calculate reading time adjusted for device type
+ * Calculate reading time adjusted for device type and reading patterns
  */
 export function calculateDeviceReadingTime(text: string, deviceType: DeviceType): { minutes: number; seconds: number } {
-  const words = countWords(text);
+  const safeText = text ?? '';
+  const words = countWords(safeText);
   const config = DEVICE_CONFIGS[deviceType];
-  const totalSeconds = Math.round((words / config.readingWPM) * 60);
+  
+  if (words === 0) return { minutes: 0, seconds: 0 };
+  
+  let adjustedWPM = config.readingWPM;
+  
+  // Device-specific reading pattern adjustments
+  switch (deviceType) {
+    case 'mobile':
+      // Mobile users scan more and read in bursts, but also get distracted
+      // Account for scrolling pauses and smaller screen context
+      const sentences = countSentences(safeText);
+      const avgSentenceLength = words / Math.max(1, sentences);
+      
+      // Longer sentences slow down mobile reading
+      if (avgSentenceLength > 20) {
+        adjustedWPM *= 0.85; // 15% slower for complex sentences
+      }
+      break;
+      
+    case 'tablet':
+      // Tablet reading is comfortable and consistent - no adjustment needed
+      break;
+      
+    case 'desktop':
+      // Desktop allows for focused reading, but account for text density
+      const paragraphs = countParagraphs(safeText);
+      const avgWordsPerParagraph = words / Math.max(1, paragraphs);
+      
+      // Dense paragraphs slow down desktop reading
+      if (avgWordsPerParagraph > 100) {
+        adjustedWPM *= 0.9; // 10% slower for dense text
+      }
+      break;
+      
+    case 'standard':
+    default:
+      // Standard calculation remains unchanged
+      break;
+  }
+  
+  const totalSeconds = Math.round((words / adjustedWPM) * 60);
   
   return {
     minutes: Math.floor(totalSeconds / 60),

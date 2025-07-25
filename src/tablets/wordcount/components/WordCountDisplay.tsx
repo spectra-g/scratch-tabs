@@ -111,60 +111,71 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
       {/* Control Panel */}
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Device Preview */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Preview As
-            </label>
-            <div className="grid grid-cols-2 gap-1 bg-gray-700/50 rounded-md p-1">
-              <button
-                onClick={() => onDeviceChange('standard')}
-                className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
-                  deviceType === 'standard' 
-                    ? 'bg-blue-500/20 text-blue-300' 
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                <FileText size={12} />
-                <span>Standard</span>
-              </button>
-              <button
-                onClick={() => onDeviceChange('desktop')}
-                className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
-                  deviceType === 'desktop' 
-                    ? 'bg-blue-500/20 text-blue-300' 
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                <Monitor size={12} />
-                <span>Desktop</span>
-              </button>
-              <button
-                onClick={() => onDeviceChange('tablet')}
-                className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
-                  deviceType === 'tablet' 
-                    ? 'bg-blue-500/20 text-blue-300' 
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                <Tablet size={12} />
-                <span>Tablet</span>
-              </button>
-              <button
-                onClick={() => onDeviceChange('mobile')}
-                className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
-                  deviceType === 'mobile' 
-                    ? 'bg-blue-500/20 text-blue-300' 
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                <Smartphone size={12} />
-                <span>Mobile</span>
-              </button>
+          {/* Column 1 - Device Preview + Export Button */}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Preview As
+              </label>
+              <div className="grid grid-cols-2 gap-1 bg-gray-700/50 rounded-md p-1">
+                <button
+                  onClick={() => onDeviceChange('standard')}
+                  className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
+                    deviceType === 'standard' 
+                      ? 'bg-blue-500/20 text-blue-300' 
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <FileText size={12} />
+                  <span>Standard</span>
+                </button>
+                <button
+                  onClick={() => onDeviceChange('desktop')}
+                  className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
+                    deviceType === 'desktop' 
+                      ? 'bg-blue-500/20 text-blue-300' 
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <Monitor size={12} />
+                  <span>Desktop</span>
+                </button>
+                <button
+                  onClick={() => onDeviceChange('tablet')}
+                  className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
+                    deviceType === 'tablet' 
+                      ? 'bg-blue-500/20 text-blue-300' 
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <Tablet size={12} />
+                  <span>Tablet</span>
+                </button>
+                <button
+                  onClick={() => onDeviceChange('mobile')}
+                  className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
+                    deviceType === 'mobile' 
+                      ? 'bg-blue-500/20 text-blue-300' 
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <Smartphone size={12} />
+                  <span>Mobile</span>
+                </button>
+              </div>
             </div>
+            
+            {/* Export Button - Always below Preview As */}
+            <button
+              onClick={handleExportReport}
+              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-md transition-colors"
+            >
+              <Download size={16} />
+              <span>Export Report</span>
+            </button>
           </div>
 
-          {/* Writing Goal */}
+          {/* Column 2 - Writing Goal */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Writing Goal
@@ -181,7 +192,7 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
             </select>
           </div>
 
-          {/* Target Keyword (for SEO) */}
+          {/* Column 3 - Target Keyword (for SEO) */}
           {writingGoal === 'blog' && (
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -196,17 +207,6 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
               />
             </div>
           )}
-
-          {/* Export Button */}
-          <div className="flex items-end">
-            <button
-              onClick={handleExportReport}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-md transition-colors"
-            >
-              <Download size={16} />
-              <span>Export Report</span>
-            </button>
-          </div>
         </div>
       </div>
 
