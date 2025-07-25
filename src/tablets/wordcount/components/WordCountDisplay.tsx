@@ -18,7 +18,8 @@ import {
   DeviceType, 
   WritingGoal, 
   WRITING_TARGETS, 
-  evaluateMetricTarget 
+  evaluateMetricTarget,
+  calculateKeywordDensity 
 } from '../utils/textAnalysis';
 
 interface WordCountDisplayProps {
@@ -461,9 +462,9 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
                 Keyword Density
               </h3>
               {(() => {
-                const keywordMatch = stats.topKeywords.find(k => k.word.toLowerCase() === targetKeyword.toLowerCase());
-                const density = keywordMatch?.density || 0;
-                const count = keywordMatch?.count || 0;
+                // Use the target keyword density from stats
+                const density = stats.targetKeywordDensity?.density || 0;
+                const count = stats.targetKeywordDensity?.count || 0;
                 
                 return (
                   <div className="space-y-3">

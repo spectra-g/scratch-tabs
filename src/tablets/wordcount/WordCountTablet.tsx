@@ -34,8 +34,8 @@ const WordCountTabletComponent: React.FC<{
 
   // Memoized text analysis - only recalculates when text changes
   const stats: WordCountStats = useMemo(() => {
-    return analyzeText(text, deviceType);
-  }, [text, deviceType]);
+    return analyzeText(text, deviceType, targetKeyword);
+  }, [text, deviceType, targetKeyword]);
   
   // Memoized report generation - recalculates when any relevant data changes
   const reportContent: string = useMemo(() => {

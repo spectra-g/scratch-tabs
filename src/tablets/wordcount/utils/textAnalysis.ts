@@ -97,6 +97,7 @@ export interface WordCountStats {
   topKeywords: Array<{ word: string; count: number; density: number }>;
   topBigrams: Array<{ phrase: string; count: number; density: number }>;
   topTrigrams: Array<{ phrase: string; count: number; density: number }>;
+  targetKeywordDensity?: { count: number; density: number }; // Added for specific target keyword
   
   // Stylistic analysis
   passiveVoiceSentences: Array<{ sentence: string; startIndex: number; endIndex: number }>;
@@ -476,6 +477,34 @@ export function getTopKeywords(text: string, limit: number = 5): Array<{ word: s
       count,
       density: Math.round((count / totalWords) * 10000) / 100 // Percentage with 2 decimal places
     }));
+}
+
+/**
+ * Calculate keyword density for any specific keyword (even if not in top keywords)
+ */
+export function calculateKeywordDensity(text: string, keyword: string): { count: number; density: number } {
+  const safeText = text ?? '';
+  const safeKeyword = keyword ?? '';
+  
+  if (!safeText || !safeKeyword) return { count: 0, density: 0 };
+  
+  // Count all words including stop words for total word count
+  const allWords = safeText
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 0);
+  
+  const totalWords = allWords.length;
+  if (totalWords === 0) return { count: 0, density: 0 };
+  
+  // Count occurrences of the specific keyword
+  const keywordLower = safeKeyword.toLowerCase();
+  const count = allWords.filter(word => word === keywordLower).length;
+  
+  const density = Math.round((count / totalWords) * 10000) / 100; // Percentage with 2 decimal places
+  
+  return { count, density };
 }
 
 /**
@@ -901,7 +930,7 @@ export function detectWallOfTextParagraphs(text: string): Array<{ startIndex: nu
 /**
  * Main function to calculate all word count statistics
  */
-export function analyzeText(text: string, deviceType: DeviceType = 'standard'): WordCountStats {
+export function analyzeText(text: string, deviceType: DeviceType = 'standard', targetKeyword?: string): WordCountStats {
   // Defensive check: ensure text is always a string
   const safeText = text ?? '';
   
@@ -935,6 +964,7 @@ export function analyzeText(text: string, deviceType: DeviceType = 'standard'): 
     topKeywords: getTopKeywords(safeText, 5),
     topBigrams: getTopNGrams(safeText, 2, 5),
     topTrigrams: getTopNGrams(safeText, 3, 5),
+    targetKeywordDensity: targetKeyword ? calculateKeywordDensity(safeText, targetKeyword) : undefined,
     
     // Stylistic analysis
     passiveVoiceSentences: detectPassiveVoice(safeText),
@@ -1123,6 +1153,37 @@ export function generateExportReport(
     report += `\n`;
   }
   
+  // Target Keyword Density (for SEO analysis)
+  if (targetKeyword && writingGoal === 'blog') {
+    report += `## Target Keyword Density\n\n`;
+    const keywordData = stats.targetKeywordDensity;
+    
+    if (!keywordData || keywordData.count === 0) {
+      report += `**Target Keyword:** "${targetKeyword}"  \n`;
+      report += `**Current Density:** 0% (0 occurrences) ❌  \n`;
+      report += `**Target Range:** ${targets.keywordDensityMin}% - ${targets.keywordDensityMax}%  \n`;
+      report += `**Status:** Keyword not found in text\n\n`;
+    } else {
+      const densityStatus = evaluateMetricTarget(keywordData.density, {
+        min: targets.keywordDensityMin,
+        max: targets.keywordDensityMax
+      });
+      const statusIcon = densityStatus === 'good' ? '✅' : densityStatus === 'warning' ? '⚠️' : '❌';
+      
+      report += `**Target Keyword:** "${targetKeyword}"  \n`;
+      report += `**Current Density:** ${keywordData.density}% (${keywordData.count} occurrences) ${statusIcon}  \n`;
+      report += `**Target Range:** ${targets.keywordDensityMin}% - ${targets.keywordDensityMax}%  \n`;
+      
+      if (densityStatus === 'good') {
+        report += `**Status:** Optimal keyword density for SEO\n\n`;
+      } else if (keywordData.density < targets.keywordDensityMin) {
+        report += `**Status:** Below target range - consider adding more usage\n\n`;
+      } else {
+        report += `**Status:** Above target range - may be over-optimized\n\n`;
+      }
+    }
+  }
+  
   // Recommendations
   report += `## Recommendations\n\n`;
   const recommendations: string[] = [];
@@ -1156,16 +1217,17 @@ export function generateExportReport(
   }
   
   if (targetKeyword) {
-    const keywordMatch = stats.topKeywords.find(k => k.word.toLowerCase() === targetKeyword.toLowerCase());
-    if (!keywordMatch) {
+    // Use the direct keyword density calculation instead of looking in topKeywords
+    const keywordData = stats.targetKeywordDensity;
+    if (!keywordData || keywordData.count === 0) {
       recommendations.push(`🔍 **Add target keyword**: The keyword "${targetKeyword}" doesn't appear in your text.`);
     } else {
-      const densityStatus = evaluateMetricTarget(keywordMatch.density, {
+      const densityStatus = evaluateMetricTarget(keywordData.density, {
         min: targets.keywordDensityMin,
         max: targets.keywordDensityMax
       });
       if (densityStatus === 'poor') {
-        if (keywordMatch.density < targets.keywordDensityMin) {
+        if (keywordData.density < targets.keywordDensityMin) {
           recommendations.push(`🔍 **Increase keyword density**: Use "${targetKeyword}" more frequently (target: ${targets.keywordDensityMin}-${targets.keywordDensityMax}%).`);
         } else {
           recommendations.push(`🔍 **Reduce keyword density**: You may be over-optimizing for "${targetKeyword}" (target: ${targets.keywordDensityMin}-${targets.keywordDensityMax}%).`);
