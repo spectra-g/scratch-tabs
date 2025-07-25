@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { FileText, ClipboardPaste, Trash2, Code } from 'lucide-react';
+import { FileText, ClipboardPaste, Trash2 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
 interface WordCountInputProps {
@@ -16,7 +16,6 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
   onEditorReady 
 }) => {
   const [localValue, setLocalValue] = useState(value);
-  const [useMonaco, setUseMonaco] = useState(false);
   const editorRef = useRef<any>(null);
 
   // Sync local state with parent value
@@ -53,9 +52,6 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
     handleChange('');
   }, [handleChange]);
 
-  const toggleEditor = useCallback(() => {
-    setUseMonaco(!useMonaco);
-  }, [useMonaco]);
 
   const handleEditorMount = useCallback((editor: any) => {
     editorRef.current = editor;
@@ -72,7 +68,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
 
   // Apply highlights to Monaco editor
   useEffect(() => {
-    if (useMonaco && editorRef.current && highlights.length > 0) {
+    if (editorRef.current && highlights.length > 0) {
       const decorations = highlights.map(highlight => ({
         range: editorRef.current.getModel().getPositionAt(highlight.startIndex),
         options: {
@@ -81,7 +77,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
         }
       }));
     }
-  }, [highlights, useMonaco]);
+  }, [highlights]);
 
   return (
     <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
@@ -93,13 +89,6 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
           </h3>
         </div>
         <div className="flex items-center space-x-2">
-          <button
-            onClick={toggleEditor}
-            className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
-            title={useMonaco ? "Switch to simple editor" : "Switch to Monaco editor"}
-          >
-            <Code size={16} />
-          </button>
           <button
             onClick={handlePaste}
             className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
@@ -118,34 +107,24 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
         </div>
       </div>
       
-      {useMonaco ? (
-        <div className="h-64 border border-gray-600/50 rounded-md overflow-hidden">
-          <Editor
-            height="100%"
-            defaultLanguage="plaintext"
-            value={localValue}
-            onChange={handleEditorChange}
-            onMount={handleEditorMount}
-            theme="vs-dark"
-            options={{
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              fontSize: 14,
-              lineNumbers: 'on',
-              wordWrap: 'on',
-              automaticLayout: true,
-            }}
-          />
-        </div>
-      ) : (
-        <textarea
+      <div className="h-64 border border-gray-600/50 rounded-md overflow-hidden">
+        <Editor
+          height="100%"
+          defaultLanguage="plaintext"
           value={localValue}
-          onChange={(e) => handleChange(e.target.value)}
-          placeholder="Enter or paste your text here to analyze..."
-          className="w-full h-64 bg-gray-900/50 border border-gray-600/50 rounded-md p-3 text-gray-200 placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500/50 transition-colors font-mono text-sm leading-relaxed"
-          spellCheck={false}
+          onChange={handleEditorChange}
+          onMount={handleEditorMount}
+          theme="vs-dark"
+          options={{
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            fontSize: 14,
+            lineNumbers: 'on',
+            wordWrap: 'on',
+            automaticLayout: true,
+          }}
         />
-      )}
+      </div>
       
       {localValue && (
         <div className="mt-2 text-xs text-gray-500">

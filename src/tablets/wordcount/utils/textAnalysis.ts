@@ -488,6 +488,7 @@ export function getTopNGrams(text: string, n: number, limit: number = 5): Array<
   if (totalWords === 0) return [];
   
   return Array.from(frequency.entries())
+    .filter(([, count]) => count >= 2) // Only show phrases with 2 or more occurrences
     .sort(([, a], [, b]) => b - a)
     .slice(0, limit)
     .map(([phrase, count]) => ({
@@ -507,21 +508,19 @@ export function findKeywordInstances(text: string, keyword: string): Array<{ wor
   
   if (!safeText || !safeKeyword) return instances;
   
-  const lowerText = safeText.toLowerCase();
-  const lowerKeyword = safeKeyword.toLowerCase();
+  // Escape special regex characters in the keyword
+  const escapedKeyword = safeKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   
-  let startIndex = 0;
-  while (true) {
-    const index = lowerText.indexOf(lowerKeyword, startIndex);
-    if (index === -1) break;
-    
+  // Create regex with word boundaries to match whole words only
+  const regex = new RegExp(`\\b${escapedKeyword}\\b`, 'gi');
+  let match;
+  
+  while ((match = regex.exec(safeText)) !== null) {
     instances.push({
-      word: safeText.substring(index, index + safeKeyword.length),
-      startIndex: index,
-      endIndex: index + safeKeyword.length
+      word: match[0],
+      startIndex: match.index,
+      endIndex: match.index + match[0].length
     });
-    
-    startIndex = index + 1;
   }
   
   return instances;

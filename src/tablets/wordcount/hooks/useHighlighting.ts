@@ -58,6 +58,14 @@ export const useHighlighting = (text: string, stats: WordCountStats) => {
     });
 
     decorationsRef.current = editorRef.current.deltaDecorations([], decorations);
+    
+    // Scroll to first occurrence if there are highlights
+    if (ranges.length > 0) {
+      const firstRange = ranges[0];
+      const firstPos = editorRef.current.getModel().getPositionAt(firstRange.startIndex);
+      editorRef.current.revealPositionInCenter(firstPos);
+    }
+    
     setHighlights(ranges);
     setActiveHighlight(highlightType);
   }, []);
