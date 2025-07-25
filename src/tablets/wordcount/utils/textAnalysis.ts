@@ -752,3 +752,192 @@ export function evaluateMetricTarget(
   // No targets defined
   return 'good';
 }
+/**
+ * Generate a comprehensive export report in Markdown format
+ */
+export function generateExportReport(
+  stats: WordCountStats,
+  deviceType: DeviceType,
+  writingGoal: WritingGoal,
+  targetKeyword?: string
+): string {
+  const targets = WRITING_TARGETS[writingGoal];
+  const timestamp = new Date().toLocaleString();
+  
+  let report = `# Word Count Analysis Report\n\n`;
+  report += `**Generated:** ${timestamp}  \n`;
+  report += `**Device Preview:** ${deviceType}  \n`;
+  report += `**Writing Goal:** ${writingGoal}  \n`;
+  if (targetKeyword) {
+    report += `**Target Keyword:** ${targetKeyword}  \n`;
+  }
+  report += `\n---\n\n`;
+  
+  // Core Statistics
+  report += `## Core Statistics\n\n`;
+  report += `| Metric | Value |\n`;
+  report += `|--------|-------|\n`;
+  report += `| Words | ${stats.words.toLocaleString()} |\n`;
+  report += `| Unique Words | ${stats.uniqueWords.toLocaleString()} |\n`;
+  report += `| Characters | ${stats.characters.toLocaleString()} |\n`;
+  report += `| Characters (no spaces) | ${stats.charactersNoSpaces.toLocaleString()} |\n`;
+  report += `| Sentences | ${stats.sentences.toLocaleString()} |\n`;
+  report += `| Paragraphs | ${stats.paragraphs.toLocaleString()} |\n`;
+  report += `| Lines | ${stats.lines.toLocaleString()} |\n`;
+  
+  if (deviceType === 'standard') {
+    report += `| Pages | ${stats.pages} |\n`;
+  } else {
+    report += `| Screenfuls (${deviceType}) | ${stats.screenfuls} |\n`;
+  }
+  
+  report += `\n`;
+  
+  // Readability Analysis
+  report += `## Readability Analysis\n\n`;
+  report += `| Metric | Value | Target | Status |\n`;
+  report += `|--------|-------|--------|--------|\n`;
+  
+  const fleschStatus = evaluateMetricTarget(stats.fleschKincaidGrade, {
+    min: targets.fleschKincaidMin,
+    max: targets.fleschKincaidMax
+  });
+  const fleschIcon = fleschStatus === 'good' ? '✅' : fleschStatus === 'warning' ? '⚠️' : '❌';
+  report += `| Flesch-Kincaid Grade | ${stats.fleschKincaidGrade} | ${targets.fleschKincaidMin}-${targets.fleschKincaidMax} | ${fleschIcon} |\n`;
+  
+  const sentenceStatus = evaluateMetricTarget(stats.avgSentenceLength, { max: targets.avgSentenceLengthMax });
+  const sentenceIcon = sentenceStatus === 'good' ? '✅' : sentenceStatus === 'warning' ? '⚠️' : '❌';
+  report += `| Avg. Sentence Length | ${stats.avgSentenceLength} words | ≤${targets.avgSentenceLengthMax} words | ${sentenceIcon} |\n`;
+  
+  report += `| Syllables | ${stats.syllables.toLocaleString()} | - | - |\n`;
+  report += `\n`;
+  
+  // Time Estimates
+  const formatTime = (time: { minutes: number; seconds: number }) => {
+    if (time.minutes === 0) return `${time.seconds}s`;
+    return `${time.minutes}m ${time.seconds}s`;
+  };
+  
+  const formatHandwritingTime = (time: { hours: number; minutes: number }) => {
+    if (time.hours === 0) return `${time.minutes}m`;
+    return `${time.hours}h ${time.minutes}m`;
+  };
+  
+  report += `## Time Estimates\n\n`;
+  report += `| Activity | Time |\n`;
+  report += `|----------|------|\n`;
+  report += `| Reading (${deviceType}) | ${formatTime(stats.readingTime)} |\n`;
+  report += `| Speaking | ${formatTime(stats.speakingTime)} |\n`;
+  report += `| Handwriting | ${formatHandwritingTime(stats.handwritingTime)} |\n`;
+  report += `\n`;
+  
+  // Stylistic Analysis
+  report += `## Stylistic Analysis\n\n`;
+  report += `| Issue | Count | Target | Status |\n`;
+  report += `|-------|-------|--------|--------|\n`;
+  
+  const passiveStatus = evaluateMetricTarget(stats.passiveVoiceSentences.length, { max: targets.passiveVoiceMax });
+  const passiveIcon = passiveStatus === 'good' ? '✅' : passiveStatus === 'warning' ? '⚠️' : '❌';
+  report += `| Passive Voice Sentences | ${stats.passiveVoiceSentences.length} | ≤${targets.passiveVoiceMax} | ${passiveIcon} |\n`;
+  
+  const adverbStatus = evaluateMetricTarget(stats.adverbs.length, { max: targets.adverbsMax });
+  const adverbIcon = adverbStatus === 'good' ? '✅' : adverbStatus === 'warning' ? '⚠️' : '❌';
+  report += `| Adverbs (-ly) | ${stats.adverbs.length} | ≤${targets.adverbsMax} | ${adverbIcon} |\n`;
+  
+  const weakeningStatus = evaluateMetricTarget(stats.weakeningPhrases.length, { max: 2 });
+  const weakeningIcon = weakeningStatus === 'good' ? '✅' : weakeningStatus === 'warning' ? '⚠️' : '❌';
+  report += `| Weakening Phrases | ${stats.weakeningPhrases.length} | ≤2 | ${weakeningIcon} |\n`;
+  
+  if (deviceType === 'mobile') {
+    const wallStatus = evaluateMetricTarget(stats.wallOfTextParagraphs.length, { max: 0 });
+    const wallIcon = wallStatus === 'good' ? '✅' : wallStatus === 'warning' ? '⚠️' : '❌';
+    report += `| Wall of Text Paragraphs | ${stats.wallOfTextParagraphs.length} | 0 | ${wallIcon} |\n`;
+  }
+  
+  report += `\n`;
+  
+  // Keywords Analysis
+  if (stats.topKeywords.length > 0) {
+    report += `## Top Keywords\n\n`;
+    report += `| Rank | Keyword | Count | Density |\n`;
+    report += `|------|---------|-------|----------|\n`;
+    
+    stats.topKeywords.forEach((keyword, index) => {
+      let status = '';
+      if (targetKeyword && keyword.word.toLowerCase() === targetKeyword.toLowerCase()) {
+        const densityStatus = evaluateMetricTarget(keyword.density, {
+          min: targets.keywordDensityMin,
+          max: targets.keywordDensityMax
+        });
+        status = densityStatus === 'good' ? ' ✅' : densityStatus === 'warning' ? ' ⚠️' : ' ❌';
+      }
+      report += `| ${index + 1} | ${keyword.word}${status} | ${keyword.count}× | ${keyword.density}% |\n`;
+    });
+    report += `\n`;
+  }
+  
+  // Recommendations
+  report += `## Recommendations\n\n`;
+  const recommendations: string[] = [];
+  
+  if (fleschStatus !== 'good') {
+    if (stats.fleschKincaidGrade > targets.fleschKincaidMax) {
+      recommendations.push('📚 **Simplify language**: Your text may be too complex for the target audience. Consider shorter sentences and simpler words.');
+    } else {
+      recommendations.push('📈 **Add complexity**: Your text may be too simple for the target audience. Consider more varied sentence structures.');
+    }
+  }
+  
+  if (sentenceStatus !== 'good') {
+    recommendations.push('✂️ **Shorten sentences**: Break up long sentences to improve readability.');
+  }
+  
+  if (passiveStatus !== 'good') {
+    recommendations.push('🎯 **Reduce passive voice**: Convert passive constructions to active voice for more engaging writing.');
+  }
+  
+  if (adverbStatus !== 'good') {
+    recommendations.push('⚡ **Minimize adverbs**: Replace adverbs with stronger verbs or more specific descriptions.');
+  }
+  
+  if (weakeningStatus !== 'good') {
+    recommendations.push('💪 **Strengthen language**: Remove weakening phrases like "I think" or "maybe" to sound more confident.');
+  }
+  
+  if (deviceType === 'mobile' && stats.wallOfTextParagraphs.length > 0) {
+    recommendations.push('📱 **Break up paragraphs**: Large paragraphs are hard to read on mobile. Aim for 2-3 sentences per paragraph.');
+  }
+  
+  if (targetKeyword) {
+    const keywordMatch = stats.topKeywords.find(k => k.word.toLowerCase() === targetKeyword.toLowerCase());
+    if (!keywordMatch) {
+      recommendations.push(`🔍 **Add target keyword**: The keyword "${targetKeyword}" doesn't appear in your text.`);
+    } else {
+      const densityStatus = evaluateMetricTarget(keywordMatch.density, {
+        min: targets.keywordDensityMin,
+        max: targets.keywordDensityMax
+      });
+      if (densityStatus === 'poor') {
+        if (keywordMatch.density < targets.keywordDensityMin) {
+          recommendations.push(`🔍 **Increase keyword density**: Use "${targetKeyword}" more frequently (target: ${targets.keywordDensityMin}-${targets.keywordDensityMax}%).`);
+        } else {
+          recommendations.push(`🔍 **Reduce keyword density**: You may be over-optimizing for "${targetKeyword}" (target: ${targets.keywordDensityMin}-${targets.keywordDensityMax}%).`);
+        }
+      }
+    }
+  }
+  
+  if (recommendations.length === 0) {
+    report += `🎉 **Excellent work!** Your text meets all the targets for ${writingGoal} writing.\n\n`;
+  } else {
+    recommendations.forEach(rec => {
+      report += `- ${rec}\n`;
+    });
+    report += `\n`;
+  }
+  
+  report += `---\n\n`;
+  report += `*Report generated by Scratch Tabs Word Count Analyzer*`;
+  
+  return report;
+}
