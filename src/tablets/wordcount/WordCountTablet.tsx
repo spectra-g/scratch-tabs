@@ -17,17 +17,17 @@ const WordCountTabletComponent: React.FC<{
   onChange: (state: WordCountTabletState) => void;
 }> = ({ state, onChange }) => {
   const data = state.data || { text: '' };
+  const text = data.text || '';
 
   // Memoized text analysis - only recalculates when text changes
   const stats: WordCountStats = useMemo(() => {
-    return analyzeText(data.text);
-  }, [data.text]);
+    return analyzeText(text);
+  }, [text]);
 
   const handleTextChange = (newText: string) => {
     onChange({
       ...state,
       data: {
-        ...data,
         text: newText,
       },
     });
@@ -53,12 +53,12 @@ const WordCountTabletComponent: React.FC<{
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Input Section */}
           <WordCountInput
-            value={data.text}
+            value={text}
             onChange={handleTextChange}
           />
 
           {/* Stats Display */}
-          {data.text.trim() ? (
+          {text.trim() ? (
             <WordCountDisplay stats={stats} />
           ) : (
             <div className="bg-gray-800/30 border border-gray-700/30 rounded-lg p-8 text-center">

@@ -1,6 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FileText, ClipboardPaste, Trash2 } from 'lucide-react';
-import { useDebounce } from '../../../hooks/useDebounce';
 
 interface WordCountInputProps {
   value: string;
@@ -10,8 +9,21 @@ interface WordCountInputProps {
 export const WordCountInput: React.FC<WordCountInputProps> = ({ value, onChange }) => {
   const [localValue, setLocalValue] = useState(value);
 
-  // Debounce the onChange to avoid excessive recalculations
-  const debouncedOnChange = useDebounce(onChange, 300);
+  // Sync local state with parent value
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  // Create a debounced onChange function
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const debouncedOnChange = useCallback((value: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      onChange(value);
+    }, 300);
+  }, [onChange]);
 
   const handleChange = useCallback((newValue: string) => {
     setLocalValue(newValue);
