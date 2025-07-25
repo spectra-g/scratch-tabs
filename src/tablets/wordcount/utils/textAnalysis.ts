@@ -431,6 +431,11 @@ export function analyzeText(text: string): WordCountStats {
     // SEO & keywords
     topKeywords: getTopKeywords(safeText, 5),
     topBigrams: getTopNGrams(safeText, 2, 5),
-    topTrigrams: getTopNGrams(safeText, 3, 5)
+    topTrigrams: getTopNGrams(safeText, 3, 5),
+    
+    // Stylistic analysis
+    passiveVoiceSentences: detectPassiveVoice(safeText),
+    adverbs: countAdverbs(safeText),
+    weakeningPhrases: detectWeakeningPhrases(safeText)
   };
 }

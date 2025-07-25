@@ -4,6 +4,7 @@ import { FileText } from 'lucide-react';
 import { analyzeText, WordCountStats } from './utils/textAnalysis';
 import { WordCountInput } from './components/WordCountInput';
 import { WordCountDisplay } from './components/WordCountDisplay';
+import { useHighlighting } from './hooks/useHighlighting';
 
 interface WordCountTabletState extends TabletState {
   type: 'wordcount';
@@ -23,6 +24,12 @@ const WordCountTabletComponent: React.FC<{
   const stats: WordCountStats = useMemo(() => {
     return analyzeText(text);
   }, [text]);
+  
+  const {
+    activeHighlight,
+    handleHighlight,
+    setEditorRef
+  } = useHighlighting(text, stats);
 
   const handleTextChange = (newText: string) => {
     onChange({
@@ -32,6 +39,24 @@ const WordCountTabletComponent: React.FC<{
       },
     });
   };
+
+  // Add CSS for highlighting classes
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .highlight-longest-sentence { background-color: rgba(59, 130, 246, 0.3) !important; }
+      .highlight-shortest-sentence { background-color: rgba(16, 185, 129, 0.3) !important; }
+      .highlight-keyword { background-color: rgba(34, 197, 94, 0.3) !important; }
+      .highlight-passive-voice { background-color: rgba(245, 158, 11, 0.3) !important; }
+      .highlight-adverb { background-color: rgba(249, 115, 22, 0.3) !important; }
+      .highlight-weakening-phrase { background-color: rgba(239, 68, 68, 0.3) !important; }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   return (
     <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
@@ -55,11 +80,16 @@ const WordCountTabletComponent: React.FC<{
           <WordCountInput
             value={text}
             onChange={handleTextChange}
+            onEditorReady={setEditorRef}
           />
 
           {/* Stats Display */}
           {text.trim() ? (
-            <WordCountDisplay stats={stats} />
+            <WordCountDisplay 
+              stats={stats} 
+              onHighlight={handleHighlight}
+              activeHighlight={activeHighlight}
+            />
           ) : (
             <div className="bg-gray-800/30 border border-gray-700/30 rounded-lg p-8 text-center">
               <FileText size={48} className="mx-auto mb-4 text-gray-600" />

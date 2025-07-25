@@ -226,6 +226,9 @@ describe('textAnalysis', () => {
       expect(stats.readingTime).toBeDefined();
       expect(stats.fleschKincaidGrade).toBeGreaterThanOrEqual(0);
     });
+    expect(stats.passiveVoiceSentences).toBeDefined();
+    expect(stats.adverbs).toBeDefined();
+    expect(stats.weakeningPhrases).toBeDefined();
 
     it('should handle empty text', () => {
       const stats = analyzeText('');
@@ -233,5 +236,93 @@ describe('textAnalysis', () => {
       expect(stats.sentences).toBe(0);
       expect(stats.topKeywords).toEqual([]);
     });
+    expect(stats.passiveVoiceSentences).toEqual([]);
+    expect(stats.adverbs).toEqual([]);
+    expect(stats.weakeningPhrases).toEqual([]);
+  });
+});
+
+describe('detectPassiveVoice', () => {
+  it('should detect passive voice constructions', () => {
+    const text = 'The ball was thrown by John. Mary is eating lunch.';
+    const passive = detectPassiveVoice(text);
+    expect(passive.length).toBe(1);
+    expect(passive[0].sentence).toContain('ball was thrown');
+  });
+
+  it('should handle empty text', () => {
+    expect(detectPassiveVoice('')).toEqual([]);
+  });
+});
+
+describe('countAdverbs', () => {
+  it('should count adverbs ending in -ly', () => {
+    const text = 'She quickly ran slowly through the early morning.';
+    const adverbs = countAdverbs(text);
+    expect(adverbs.length).toBe(2); // quickly, slowly (early is filtered out)
+    expect(adverbs[0].word).toBe('quickly');
+    expect(adverbs[1].word).toBe('slowly');
+  });
+
+  it('should filter out non-adverbs', () => {
+    const text = 'The family went to July early.';
+    const adverbs = countAdverbs(text);
+    expect(adverbs.length).toBe(0); // family, July, early are filtered out
+  });
+});
+
+describe('detectWeakeningPhrases', () => {
+  it('should detect weakening phrases', () => {
+    const text = 'I think this is good. Maybe it works. Sort of interesting.';
+    const phrases = detectWeakeningPhrases(text);
+    expect(phrases.length).toBe(3);
+    expect(phrases[0].phrase).toBe('I think');
+    expect(phrases[1].phrase).toBe('Maybe');
+    expect(phrases[2].phrase).toBe('Sort of');
+  });
+});
+
+describe('findKeywordInstances', () => {
+  it('should find all instances of a keyword', () => {
+    const text = 'The cat sat on the mat. The cat was happy.';
+    const instances = findKeywordInstances(text, 'cat');
+    expect(instances.length).toBe(2);
+    expect(instances[0].word).toBe('cat');
+    expect(instances[1].word).toBe('cat');
+  });
+
+  it('should find phrase instances', () => {
+    const text = 'The quick brown fox jumps. The quick brown dog runs.';
+    const instances = findKeywordInstances(text, 'quick brown');
+    expect(instances.length).toBe(2);
+  });
+});
+
+describe('findLongestSentence', () => {
+  it('should find the longest sentence with position', () => {
+    const text = 'Short. This is a much longer sentence with many words. Medium.';
+    const longest = findLongestSentence(text);
+    expect(longest).not.toBeNull();
+    expect(longest!.sentence).toContain('much longer sentence');
+    expect(longest!.startIndex).toBeGreaterThan(0);
+    expect(longest!.endIndex).toBeGreaterThan(longest!.startIndex);
+  });
+
+  it('should return null for empty text', () => {
+    expect(findLongestSentence('')).toBeNull();
+  });
+});
+
+describe('findShortestSentence', () => {
+  it('should find the shortest sentence with position', () => {
+    const text = 'Short. This is a much longer sentence with many words. Medium.';
+    const shortest = findShortestSentence(text);
+    expect(shortest).not.toBeNull();
+    expect(shortest!.sentence).toBe('Short');
+    expect(shortest!.startIndex).toBe(0);
+  });
+
+  it('should return null for empty text', () => {
+    expect(findShortestSentence('')).toBeNull();
   });
 });

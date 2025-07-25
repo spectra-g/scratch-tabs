@@ -32,6 +32,15 @@ const mockStats: WordCountStats = {
   topTrigrams: [
     { phrase: 'test example phrase', count: 1, density: 1.0 },
   ],
+  passiveVoiceSentences: [
+    { sentence: 'The ball was thrown', startIndex: 0, endIndex: 19 }
+  ],
+  adverbs: [
+    { word: 'quickly', startIndex: 20, endIndex: 27 }
+  ],
+  weakeningPhrases: [
+    { phrase: 'I think', startIndex: 30, endIndex: 37 }
+  ],
 };
 
 describe('WordCountDisplay', () => {
@@ -86,8 +95,25 @@ describe('WordCountDisplay', () => {
     expect(screen.getByText('test example phrase')).toBeInTheDocument();
   });
 
+  it('should render stylistic suggestions', () => {
+    render(<WordCountDisplay stats={mockStats} />);
+    
+    expect(screen.getByText('Stylistic Suggestions')).toBeInTheDocument();
+    expect(screen.getByText('Passive Voice')).toBeInTheDocument();
+    expect(screen.getByText('Adverbs (-ly)')).toBeInTheDocument();
+    expect(screen.getByText('Weakening Phrases')).toBeInTheDocument();
+  });
+
   it('should handle empty keywords gracefully', () => {
-    const emptyStats = { ...mockStats, topKeywords: [], topBigrams: [], topTrigrams: [] };
+    const emptyStats = { 
+      ...mockStats, 
+      topKeywords: [], 
+      topBigrams: [], 
+      topTrigrams: [],
+      passiveVoiceSentences: [],
+      adverbs: [],
+      weakeningPhrases: []
+    };
     render(<WordCountDisplay stats={emptyStats} />);
     
     expect(screen.getAllByText('No keywords found')).toHaveLength(1);
