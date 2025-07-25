@@ -698,3 +698,57 @@ export function analyzeText(text: string, deviceType: DeviceType = 'standard'): 
     wallOfTextParagraphs: detectWallOfTextParagraphs(safeText)
   };
 }
+
+/**
+ * Evaluate how a metric value compares to its target range
+ */
+export function evaluateMetricTarget(
+  value: number, 
+  target: { min?: number; max?: number }
+): 'good' | 'warning' | 'poor' {
+  const { min, max } = target;
+  
+  // If both min and max are defined (range target)
+  if (min !== undefined && max !== undefined) {
+    if (value >= min && value <= max) {
+      return 'good';
+    }
+    // Check if close to boundaries (within 20% tolerance)
+    const range = max - min;
+    const tolerance = range * 0.2;
+    if ((value >= min - tolerance && value < min) || 
+        (value > max && value <= max + tolerance)) {
+      return 'warning';
+    }
+    return 'poor';
+  }
+  
+  // If only max is defined (upper limit target)
+  if (max !== undefined) {
+    if (value <= max) {
+      return 'good';
+    }
+    // Check if close to limit (within 20% tolerance)
+    const tolerance = max * 0.2;
+    if (value <= max + tolerance) {
+      return 'warning';
+    }
+    return 'poor';
+  }
+  
+  // If only min is defined (lower limit target)
+  if (min !== undefined) {
+    if (value >= min) {
+      return 'good';
+    }
+    // Check if close to limit (within 20% tolerance)
+    const tolerance = min * 0.2;
+    if (value >= min - tolerance) {
+      return 'warning';
+    }
+    return 'poor';
+  }
+  
+  // No targets defined
+  return 'good';
+}
