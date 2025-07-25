@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Eye, 
   Target, 
@@ -46,6 +46,9 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
   onWritingGoalChange,
   onTargetKeywordChange
 }) => {
+  const [showStickyPreview, setShowStickyPreview] = useState(false);
+  const controlPanelRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const formatTime = (time: { minutes: number; seconds: number }) => {
     if (time.minutes === 0) {
       return `${time.seconds}s`;
@@ -106,10 +109,90 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
 
   const targets = WRITING_TARGETS[writingGoal];
 
+  // Scroll detection for sticky preview
+  useEffect(() => {
+    const container = containerRef.current?.parentElement; // The scrollable container
+    const controlPanel = controlPanelRef.current;
+    
+    if (!container || !controlPanel) return;
+    
+    const handleScroll = () => {
+      const controlPanelRect = controlPanel.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      // Show sticky when control panel is scrolled out of view (top edge above container)
+      const shouldShow = controlPanelRect.bottom < containerRect.top + 50; // 50px buffer
+      setShowStickyPreview(shouldShow);
+    };
+    
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Device selector component for reuse
+  const DeviceSelector: React.FC<{ compact?: boolean }> = ({ compact = false }) => (
+    <div className={compact ? "flex space-x-1" : "grid grid-cols-2 gap-1 bg-gray-700/50 rounded-md p-1"}>
+      <button
+        onClick={() => onDeviceChange('standard')}
+        className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
+          deviceType === 'standard' 
+            ? 'bg-blue-500/20 text-blue-300' 
+            : 'text-gray-400 hover:text-gray-200'
+        } ${compact ? 'bg-gray-700/50' : ''}`}
+      >
+        <FileText size={12} />
+        <span>Standard</span>
+      </button>
+      <button
+        onClick={() => onDeviceChange('desktop')}
+        className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
+          deviceType === 'desktop' 
+            ? 'bg-blue-500/20 text-blue-300' 
+            : 'text-gray-400 hover:text-gray-200'
+        } ${compact ? 'bg-gray-700/50' : ''}`}
+      >
+        <Monitor size={12} />
+        <span>Desktop</span>
+      </button>
+      <button
+        onClick={() => onDeviceChange('tablet')}
+        className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
+          deviceType === 'tablet' 
+            ? 'bg-blue-500/20 text-blue-300' 
+            : 'text-gray-400 hover:text-gray-200'
+        } ${compact ? 'bg-gray-700/50' : ''}`}
+      >
+        <Tablet size={12} />
+        <span>Tablet</span>
+      </button>
+      <button
+        onClick={() => onDeviceChange('mobile')}
+        className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
+          deviceType === 'mobile' 
+            ? 'bg-blue-500/20 text-blue-300' 
+            : 'text-gray-400 hover:text-gray-200'
+        } ${compact ? 'bg-gray-700/50' : ''}`}
+      >
+        <Smartphone size={12} />
+        <span>Mobile</span>
+      </button>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div ref={containerRef} className="space-y-6 relative">
+      {/* Sticky Preview As - Only shown when scrolled */}
+      {showStickyPreview && (
+        <div className="sticky top-0 z-10 bg-gray-800/95 backdrop-blur-sm border-b border-gray-700/50 p-3 rounded-lg mb-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-300 uppercase tracking-wide">Preview As</span>
+            <DeviceSelector compact={true} />
+          </div>
+        </div>
+      )}
+
       {/* Control Panel */}
-      <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+      <div ref={controlPanelRef} className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Column 1 - Device Preview + Export Button */}
           <div className="space-y-3">
@@ -117,52 +200,7 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Preview As
               </label>
-              <div className="grid grid-cols-2 gap-1 bg-gray-700/50 rounded-md p-1">
-                <button
-                  onClick={() => onDeviceChange('standard')}
-                  className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
-                    deviceType === 'standard' 
-                      ? 'bg-blue-500/20 text-blue-300' 
-                      : 'text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  <FileText size={12} />
-                  <span>Standard</span>
-                </button>
-                <button
-                  onClick={() => onDeviceChange('desktop')}
-                  className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
-                    deviceType === 'desktop' 
-                      ? 'bg-blue-500/20 text-blue-300' 
-                      : 'text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  <Monitor size={12} />
-                  <span>Desktop</span>
-                </button>
-                <button
-                  onClick={() => onDeviceChange('tablet')}
-                  className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
-                    deviceType === 'tablet' 
-                      ? 'bg-blue-500/20 text-blue-300' 
-                      : 'text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  <Tablet size={12} />
-                  <span>Tablet</span>
-                </button>
-                <button
-                  onClick={() => onDeviceChange('mobile')}
-                  className={`flex items-center justify-center space-x-1 px-2 py-1.5 rounded text-xs transition-colors ${
-                    deviceType === 'mobile' 
-                      ? 'bg-blue-500/20 text-blue-300' 
-                      : 'text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  <Smartphone size={12} />
-                  <span>Mobile</span>
-                </button>
-              </div>
+              <DeviceSelector />
             </div>
             
             {/* Export Button - Always below Preview As */}
