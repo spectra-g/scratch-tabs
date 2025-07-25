@@ -51,14 +51,14 @@ describe('ContentProcessingService', () => {
       });
     });
 
-    it('should detect likely clipboard content', () => {
+    it('should detect likely clipboard content when explicitly marked', () => {
       const context = service.createContext(
         'tab-1',
         'plaintext',
         false,
         false, // not from paste
         '', // empty previous content
-        { isInitialContent: true }
+        { isInitialContent: true, isFromClipboardImport: true }
       );
 
       expect(context.flags?.isLikelyFromClipboard).toBe(true);
@@ -205,7 +205,7 @@ describe('ContentProcessingService', () => {
         false,
         false, // not from paste event
         '', // empty previous content
-        { isInitialContent: true } // initial content (like clipboard import)
+        { isInitialContent: true, isFromClipboardImport: true } // initial content from clipboard import
       );
 
       const result = await service.processContent(stringifiedJson, context);

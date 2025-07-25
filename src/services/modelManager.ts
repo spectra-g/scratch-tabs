@@ -85,7 +85,8 @@ class ModelManager {
     languageLocked: boolean,
     isFromPaste: boolean,
     previousContent: string,
-    isInitialContent: boolean = false
+    isInitialContent: boolean = false,
+    additionalFlags?: { isFromClipboardImport?: boolean }
   ): Promise<{ processed: boolean; content: string; language?: string }> {
     try {
       const context = contentProcessingService.createContext(
@@ -94,7 +95,7 @@ class ModelManager {
         languageLocked,
         isFromPaste,
         previousContent,
-        { isInitialContent }
+        { isInitialContent, ...additionalFlags }
       );
 
       const result = await contentProcessingService.processContent(content, context);
@@ -112,6 +113,74 @@ class ModelManager {
         language: currentLanguage
       };
     }
+  }
+
+  /**
+   * Applies processed content to the Monaco editor
+   */
+  private async applyProcessedContent(
+    tabId: string,
+    processingResult: { processed: boolean; content: string; language?: string },
+    currentTab: { language: string },
+    isFromPaste: boolean
+  ): Promise<void> {
+    const model = this.models.get(tabId);
+    if (!model || model.isDisposed()) {
+      return;
+    }
+
+    const editors = this.monaco?.editor.getEditors() || [];
+    const editor = editors.find((e) => e.getModel() === model);
+
+    if (editor) {
+      this.isProcessingContent.set(tabId, true);
+      
+      editor.pushUndoStop();
+      editor.executeEdits('content-processor', [{
+        range: model.getFullModelRange(),
+        text: processingResult.content,
+        forceMoveMarkers: false,
+      }]);
+      editor.pushUndoStop();
+
+      setTimeout(() => {
+        this.isProcessingContent.delete(tabId);
+        
+        if (processingResult.language && processingResult.language !== currentTab.language) {
+          useRootStore.getState().updateTabLanguage(tabId, processingResult.language, false);
+          this.updateModelLanguage(tabId, processingResult.language);
+        }
+        
+        if (isFromPaste && processingResult.language) {
+          this.triggerAutoFormat(tabId, processingResult.language);
+        }
+      }, 50);
+    }
+  }
+
+  /**
+   * Determines if content is new and should be processed
+   */
+  private async isNewContent(tab: Tab, content: string): Promise<boolean> {
+    if (!content || content.trim().length === 0) {
+      return false;
+    }
+    
+    const fetchedContent = await this.fetchContentFromDatabase(tab.id);
+    return !fetchedContent || fetchedContent.trim().length === 0;
+  }
+
+  /**
+   * Triggers initial content processing for new content
+   */
+  private scheduleInitialContentProcessing(tabId: string, content: string): void {
+    setTimeout(async () => {
+      try {
+        await this.handleLanguageDetection(tabId, content, "", false, true);
+      } catch (error) {
+        console.warn(`[ModelManager] Initial language detection failed for tab ${tabId}:`, error);
+      }
+    }, 10);
   }
 
   /**
@@ -198,11 +267,7 @@ class ModelManager {
 
       const newDetectedLanguage = detectLanguage(trimmedNewContent);
 
-
-      // =================================================================
-      // Content processing using the new framework
-      // =================================================================
-      
+      const additionalFlags = isInitialContent ? { isFromClipboardImport: true } : undefined;
       const processingResult = await this.processContent(
         newContent,
         tabId,
@@ -210,53 +275,13 @@ class ModelManager {
         currentTab.languageLocked,
         isFromPaste,
         prevContent,
-        isInitialContent
+        isInitialContent,
+        additionalFlags
       );
 
       if (processingResult.processed) {
-          const model = this.models.get(tabId);
-          if (!model || model.isDisposed()) {
-            return;
-          }
-
-          // Find the editor instance that hosts this model
-          const editors = this.monaco?.editor.getEditors() || [];
-          const editor = editors.find((e) => e.getModel() === model);
-
-          if (editor) {
-              // Set flag to prevent recursive language detection
-              this.isProcessingContent.set(tabId, true);
-              
-              // Replace the text with the processed content
-              // Use pushUndoStop to create proper undo boundaries
-              editor.pushUndoStop();
-              editor.executeEdits('content-processor', [{
-                  range: model.getFullModelRange(),
-                  text: processingResult.content,
-                  forceMoveMarkers: false,
-              }]);
-              editor.pushUndoStop();
-
-              // Clear the flag after processing is done and update language
-              setTimeout(() => {
-                  this.isProcessingContent.delete(tabId);
-                  
-                  // Update language if processor determined a new one
-                  if (processingResult.language && processingResult.language !== currentTab.language) {
-                    useRootStore.getState().updateTabLanguage(tabId, processingResult.language, false);
-                    this.updateModelLanguage(tabId, processingResult.language);
-                  }
-                  
-                  // Trigger formatting if this was from a paste operation
-                  if (isFromPaste && processingResult.language) {
-                    this.triggerAutoFormat(tabId, processingResult.language);
-                  }
-              }, 50);
-
-              // IMPORTANT: Stop further processing of this event.
-              // We have manually handled the entire flow.
-              return;
-          }
+        await this.applyProcessedContent(tabId, processingResult, currentTab, isFromPaste);
+        return;
       }
 
       // Determine if the change is significant
@@ -455,7 +480,7 @@ class ModelManager {
     }
   }
 
-  public async get(tab: Tab): Promise<Monaco.editor.ITextModel> {
+  public async get(tab: Tab, options?: { isNewTabFromPaste?: boolean }): Promise<Monaco.editor.ITextModel> {
     if (!this.monaco) {
       throw new Error("ModelManager not initialized");
     }
@@ -492,17 +517,10 @@ class ModelManager {
     );
     this.listeners.get(tab.id)?.dispose();
 
-    // Check for content processing on initial model creation
-    if (content && content.trim().length > 0) {
-      
-      // Trigger language detection for initial content to handle "New tab from Paste" case
-      setTimeout(async () => {
-        try {
-          await this.handleLanguageDetection(tab.id, content, "", false, true);
-        } catch (error) {
-          console.warn(`[ModelManager] Initial language detection failed for tab ${tab.id}:`, error);
-        }
-      }, 10);
+    const shouldProcessInitialContent = await this.isNewContent(tab, content) || options?.isNewTabFromPaste;
+    
+    if (shouldProcessInitialContent) {
+      this.scheduleInitialContentProcessing(tab.id, content);
     }
 
     const contentListener = model.onDidChangeContent(() => {

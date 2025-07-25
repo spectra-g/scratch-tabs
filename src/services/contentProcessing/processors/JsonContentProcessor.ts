@@ -27,8 +27,9 @@ export class JsonContentProcessor implements ContentProcessor {
     // 2. Language is detected as JSON (trust language detection completely)
     const isFromPasteOrClipboard = context.isFromPaste || (context.flags?.isLikelyFromClipboard === true);
     const isJsonContext = context.currentLanguage === 'json';
+    const needsProcessing = this.needsProcessing(trimmed, true);
     
-    return isFromPasteOrClipboard && isJsonContext && this.needsProcessing(trimmed, true);
+    return isFromPasteOrClipboard && isJsonContext && needsProcessing;
   }
 
   /**

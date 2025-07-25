@@ -77,12 +77,15 @@ export class ContentProcessingService {
     additionalFlags?: {
       isLikelyFromClipboard?: boolean;
       isInitialContent?: boolean;
+      isFromClipboardImport?: boolean; // Explicit flag for clipboard/paste scenarios
     }
   ): ContentProcessingContext {
     // Determine if this is likely from clipboard based on context
-    const isLikelyFromClipboard = !isFromPaste && 
-      previousContent.trim() === '' && 
-      additionalFlags?.isInitialContent;
+    const isLikelyFromClipboard = additionalFlags?.isFromClipboardImport || 
+      additionalFlags?.isLikelyFromClipboard ||
+      (!isFromPaste && 
+       previousContent.trim() === '' && 
+       additionalFlags?.isInitialContent); // Restore original auto-detection logic
 
     return {
       tabId,
