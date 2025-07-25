@@ -399,7 +399,7 @@ describe("TabsStore", () => {
 
       const duplicateTab = state.tabs.find((t) => t.id === duplicateId);
       expect(duplicateTab).toBeDefined();
-      expect(duplicateTab?.title).toBe(`${mockTab.title} (copy)`);
+      expect(duplicateTab?.title).toBe(`${mockTab.title} (Copy)`);
       expect(duplicateTab?.content).toBe(mockTab.content);
       expect(duplicateTab?.language).toBe(mockTab.language);
       expect(duplicateTab?.workspaceId).toBe(mockTab.workspaceId);
@@ -502,6 +502,204 @@ describe("TabsStore", () => {
       expect(store1.removeTab).toBe(store2.removeTab);
       expect(store1.updateTabContent).toBe(store2.updateTabContent);
       expect(store1.duplicateTab).toBe(store2.duplicateTab);
+    });
+  });
+});
+
+import { useTabsStore } from '../tabsStore';
+import { Tab } from '../../types';
+
+// Mock the workspace store
+jest.mock('../workspaceStore', () => ({
+  useWorkspaceStore: {
+    getState: jest.fn(() => ({ activeWorkspaceId: 'workspace-1' })),
+  },
+}));
+
+describe('TabsStore - Font Size Support', () => {
+  beforeEach(() => {
+    // Clear the store state before each test
+    useTabsStore.setState({
+      tabs: [],
+      activeTabId: null,
+    });
+  });
+
+  describe('updateTabState with fontSize', () => {
+    it('should update font size for existing tab', () => {
+      const initialTab: Tab = {
+        id: 'tab-1',
+        title: 'Test Tab',
+        content: 'test content',
+        language: 'javascript',
+        languageLocked: false,
+        isTablet: false,
+        fontSize: 14,
+        workspaceId: 'workspace-1',
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 },
+      };
+
+      // Add initial tab
+      useTabsStore.getState().addTab(initialTab);
+
+      // Update font size
+      useTabsStore.getState().updateTabState('tab-1', { fontSize: 18 });
+
+      const updatedTab = useTabsStore.getState().tabs.find(t => t.id === 'tab-1');
+      expect(updatedTab?.fontSize).toBe(18);
+      expect(updatedTab?.lastModified).toBeGreaterThanOrEqual(initialTab.lastModified);
+    });
+
+    it('should create new tab with font size if tab does not exist', () => {
+      const now = Date.now();
+      
+      useTabsStore.getState().updateTabState('new-tab', { 
+        fontSize: 16,
+        title: 'New Tab',
+        language: 'javascript',
+      });
+
+      const newTab = useTabsStore.getState().tabs.find(t => t.id === 'new-tab');
+      expect(newTab).toBeDefined();
+      expect(newTab?.fontSize).toBe(16);
+      expect(newTab?.title).toBe('New Tab');
+      expect(newTab?.language).toBe('javascript');
+      expect(newTab?.dateCreated).toBeGreaterThanOrEqual(now);
+      expect(newTab?.lastModified).toBeGreaterThanOrEqual(now);
+    });
+
+    it('should preserve other tab properties when updating font size', () => {
+      const initialTab: Tab = {
+        id: 'tab-1',
+        title: 'Test Tab',
+        content: 'test content',
+        language: 'javascript',
+        languageLocked: true,
+        isTablet: false,
+        fontSize: 14,
+        workspaceId: 'workspace-1',
+        dateCreated: 1000,
+        lastModified: 2000,
+        cursorPosition: { lineNumber: 5, column: 10 },
+        isPinned: true,
+        previewMode: true,
+      };
+
+      useTabsStore.getState().addTab(initialTab);
+
+      // Update only font size
+      useTabsStore.getState().updateTabState('tab-1', { fontSize: 20 });
+
+      const updatedTab = useTabsStore.getState().tabs.find(t => t.id === 'tab-1');
+      expect(updatedTab?.fontSize).toBe(20);
+      expect(updatedTab?.title).toBe('Test Tab');
+      expect(updatedTab?.content).toBe('test content');
+      expect(updatedTab?.language).toBe('javascript');
+      expect(updatedTab?.languageLocked).toBe(true);
+      expect(updatedTab?.isTablet).toBe(false);
+      expect(updatedTab?.workspaceId).toBe('workspace-1');
+      expect(updatedTab?.dateCreated).toBe(1000);
+      expect(updatedTab?.cursorPosition).toEqual({ lineNumber: 5, column: 10 });
+      expect(updatedTab?.isPinned).toBe(true);
+      expect(updatedTab?.previewMode).toBe(true);
+    });
+  });
+
+  describe('addTab with font size', () => {
+    it('should add tab with custom font size', () => {
+      const tabWithFontSize: Tab = {
+        id: 'tab-1',
+        title: 'Test Tab',
+        content: 'test content',
+        language: 'javascript',
+        languageLocked: false,
+        isTablet: false,
+        fontSize: 16,
+        workspaceId: 'workspace-1',
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 },
+      };
+
+      useTabsStore.getState().addTab(tabWithFontSize);
+
+      const addedTab = useTabsStore.getState().tabs.find(t => t.id === 'tab-1');
+      expect(addedTab?.fontSize).toBe(16);
+    });
+
+    it('should use default font size when not specified', () => {
+      const tabWithoutFontSize: Omit<Tab, 'fontSize'> = {
+        id: 'tab-1',
+        title: 'Test Tab',
+        content: 'test content',
+        language: 'javascript',
+        languageLocked: false,
+        isTablet: false,
+        workspaceId: 'workspace-1',
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 },
+      };
+
+      useTabsStore.getState().addTab(tabWithoutFontSize as Tab);
+
+      const addedTab = useTabsStore.getState().tabs.find(t => t.id === 'tab-1');
+      expect(addedTab?.fontSize).toBeUndefined();
+    });
+  });
+
+  describe('duplicateTab with font size', () => {
+    it('should duplicate tab with font size', () => {
+      const originalTab: Tab = {
+        id: 'tab-1',
+        title: 'Original Tab',
+        content: 'original content',
+        language: 'javascript',
+        languageLocked: false,
+        isTablet: false,
+        fontSize: 18,
+        workspaceId: 'workspace-1',
+        dateCreated: 1000,
+        lastModified: 2000,
+        cursorPosition: { lineNumber: 1, column: 1 },
+      };
+
+      useTabsStore.getState().addTab(originalTab);
+
+      const newTabId = useTabsStore.getState().duplicateTab('tab-1');
+
+      const duplicatedTab = useTabsStore.getState().tabs.find(t => t.id === newTabId);
+      expect(duplicatedTab?.fontSize).toBe(18);
+      expect(duplicatedTab?.title).toBe('Original Tab (Copy)');
+      expect(duplicatedTab?.content).toBe('original content');
+      expect(duplicatedTab?.language).toBe('javascript');
+    });
+  });
+
+  describe('tablet tabs', () => {
+    it('should not store font size for tablet tabs', () => {
+      const tabletTab: Tab = {
+        id: 'tablet-1',
+        title: 'Tablet Tab',
+        content: 'tablet content',
+        language: 'plaintext',
+        languageLocked: false,
+        isTablet: true,
+        fontSize: 16, // This should be ignored for tablets
+        workspaceId: 'workspace-1',
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 },
+      };
+
+      useTabsStore.getState().addTab(tabletTab);
+
+      const addedTab = useTabsStore.getState().tabs.find(t => t.id === 'tablet-1');
+      expect(addedTab?.isTablet).toBe(true);
+      // Font size can still be stored but won't be used by the UI
+      expect(addedTab?.fontSize).toBe(16);
     });
   });
 });

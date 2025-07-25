@@ -6,7 +6,7 @@ import {
 import { Macro } from "../Macro";
 import { tabletRegistry } from "../../tablets";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { Tab } from "../../types.ts";
+import { Tab } from "../../types";
 import { AIStatusIcon } from "../AI/AIStatusIcon";
 import { useRootStore } from "../../stores";
 import { useSplitViewStore } from "../../stores/splitViewStore";
@@ -16,6 +16,7 @@ import { languageRegistry } from "../../languages";
 import { getPotentialLanguageMatches } from "../../languages";
 import { LanguageSelectionPopup } from "./LanguageSelectionPopup";
 import { ExtendedViewButtons } from "./ExtendedViewButtons";
+import { FontSizeControls } from "./FontSizeControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import type { PopupMenuItem } from "./types";
 
@@ -356,6 +357,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         )}
       </div>
       <div className="flex items-center space-x-2">
+        <FontSizeControls 
+          editor={editor} 
+          isTablet={activeTab?.isTablet || false} 
+          activeTabId={activeTab?.id || null}
+        />
+        
         {showAIIcon && (
           <button
             onClick={() =>

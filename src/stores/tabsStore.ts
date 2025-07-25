@@ -38,6 +38,9 @@ const initializeTab = (tab: Tab): Tab => {
     isTablet: tab.isTablet ?? false,
     tabletState: tab.tabletState ?? "",
     workspaceId: tab.workspaceId ?? activeWorkspaceId ?? "default",
+    fontSize: tab.fontSize, // Preserve fontSize if provided
+    isPinned: tab.isPinned, // Preserve isPinned if provided
+    previewMode: tab.previewMode, // Preserve previewMode if provided
   };
 };
 

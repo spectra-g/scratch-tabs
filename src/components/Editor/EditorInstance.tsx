@@ -471,7 +471,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
             key={side} // Key by side to ensure we have two distinct editor instances
             options={{
               minimap: { enabled: false },
-              fontSize: 14,
+              fontSize: activeTab?.fontSize || 14,
               wordWrap: "on",
               automaticLayout: true,
               copyWithSyntaxHighlighting: false,

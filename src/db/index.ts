@@ -16,6 +16,7 @@ interface TabRecord {
   isPinned?: boolean;
   activeViewId?: string | null;
   previewMode?: boolean;
+  fontSize?: number;
 }
 
 interface WorkspaceRecord {

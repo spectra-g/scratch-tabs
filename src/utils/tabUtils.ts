@@ -44,9 +44,9 @@ export function createTab(options: Partial<Tab> = {}): Tab {
 /**
  * Creates a duplicate of an existing tab with a new ID
  * @param tab The tab to duplicate
- * @param suffix Optional suffix to add to the title (default: " (copy)")
+ * @param suffix Optional suffix to add to the title (default: " (Copy)")
  */
-export function duplicateTab(tab: Tab, suffix: string = " (copy)"): Tab {
+export function duplicateTab(tab: Tab, suffix: string = " (Copy)"): Tab {
   return {
     ...tab,
     id: generateTabId(),
