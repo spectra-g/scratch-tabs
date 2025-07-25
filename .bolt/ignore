@@ -5,14 +5,18 @@ node_modules/
 dist/
 build/
 
-src/components/AI/
-src/components/BatchTools/
+src/components/
+src/hooks/
+src/constants/
+src/db/
+src/features/
+src/services/
+src/stores/
+src/utils/
+src/views/
+src/workers/
 
-src/languages/json/components/JsonTreeView/
-src/languages/json/hooks/
-src/languages/json/utils/
-src/languages/__tests__
-
+src/languages/
 src/tablets/base64/
 src/tablets/promptmanager/
 src/tablets/password/
@@ -29,6 +33,10 @@ src/tablets/pomodoro/
 src/tablets/regex/
 src/tablets/shapesnap/
 src/tablets/cron/
+
+landing/
+public/
+src/__mocks__/
 
 *.md
 *.svg
