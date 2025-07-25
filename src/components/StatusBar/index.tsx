@@ -6,7 +6,7 @@ import {
 import { Macro } from "../Macro";
 import { tabletRegistry } from "../../tablets";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { Tab } from "../../types.ts";
+import { Tab } from "../../types";
 import { AIStatusIcon } from "../AI/AIStatusIcon";
 import { useRootStore } from "../../stores";
 import { useSplitViewStore } from "../../stores/splitViewStore";
@@ -16,6 +16,7 @@ import { languageRegistry } from "../../languages";
 import { getPotentialLanguageMatches } from "../../languages";
 import { LanguageSelectionPopup } from "./LanguageSelectionPopup";
 import { ExtendedViewButtons } from "./ExtendedViewButtons";
+import { FontSizeControls } from "./FontSizeControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import type { PopupMenuItem } from "./types";
 
@@ -327,6 +328,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   return (
     <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs" data-testid="status-bar">
+      {/* Left side: Language/Position info */}
       <div className="flex items-center space-x-4">
         {activeTab && (
           <>
@@ -355,31 +357,60 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           </>
         )}
       </div>
-      <div className="flex items-center space-x-2">
-        {showAIIcon && (
-          <button
-            onClick={() =>
-              window.open("https://ko-fi.com/scratchtabs", "_blank")
-            }
-            className="p-0.5 hover:bg-gray-700 rounded transition-colors"
-            title="Support on Ko-fi"
-          >
-            <Coffee size={14} />
-          </button>
-        )}
-
-        {showAIIcon && (
-          <button
-            onClick={() => toggleSearch()} // Open search with no initial query
-            className="p-0.5 hover:bg-gray-700 rounded transition-colors"
-            title="Find in Tabs (Ctrl+Shift+F)"
-          >
-            <Search size={14} />
-          </button>
-        )}
-
-        {showAIIcon && <AIStatusIcon />}
-        {!isMobile && <Macro editor={editor} />}
+      
+      {/* Right side: New organized pattern with dividers */}
+      <div className="flex items-center space-x-3">
+        {/* Group 1: Font Size */}
+        <div className="flex items-center">
+          <FontSizeControls 
+            editor={editor} 
+            isTablet={activeTab?.isTablet || false} 
+            activeTabId={activeTab?.id || null}
+          />
+        </div>
+        
+        {/* Divider 1 */}
+        <div className="w-px h-4 bg-gray-600"></div>
+        
+        {/* Group 2: Search and Init AI */}
+        <div className="flex items-center space-x-2">
+          {showAIIcon && (
+            <button
+              onClick={() => toggleSearch()}
+              className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+              title="Find in Tabs (Ctrl+Shift+F)"
+            >
+              <Search size={14} />
+            </button>
+          )}
+          {showAIIcon && <AIStatusIcon />}
+        </div>
+        
+        {/* Divider 2 */}
+        <div className="w-px h-4 bg-gray-600"></div>
+        
+        {/* Group 3: Macro controls (Record, Stop, Play, Play to End) + Status */}
+        <div className="flex items-center">
+          {!isMobile && <Macro editor={editor} />}
+        </div>
+        
+        {/* Divider 3 */}
+        <div className="w-px h-4 bg-gray-600"></div>
+        
+        {/* Group 4: Support */}
+        <div className="flex items-center">
+          {showAIIcon && (
+            <button
+              onClick={() =>
+                window.open("https://ko-fi.com/scratchtabs", "_blank")
+              }
+              className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+              title="Support on Ko-fi"
+            >
+              <Coffee size={14} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

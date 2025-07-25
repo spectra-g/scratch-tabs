@@ -182,7 +182,7 @@ console.log("Exiting the script.");
 
     // 2. Common JavaScript Patterns
     const commonPatterns = [
-      { pattern: /\bfunction\s+\w+\s*\(/g, weight: 0.1, perMatch: 0.02 },
+      { pattern: /\bfunction\s+\w+\s*\(/g, weight: 0.5, perMatch: 0.05 },
       { pattern: /\b(const|let)\s+\w+\s*=/g, weight: 0.15, perMatch: 0.02 },
       { pattern: /\bvar\s+\w+\s*=/g, weight: 0.05, perMatch: 0.01 }, // Less distinct
       { pattern: /\bnew\s+\w+\s*\(/g, weight: 0.05, perMatch: 0.01 },
@@ -248,9 +248,11 @@ console.log("Exiting the script.");
 
     // Final match decision
     // Needs either a strong signal with decent confidence, or multiple patterns with higher confidence
+    // OR a simple function declaration with reasonable confidence
     const isMatch =
       (strongSignalFound && confidenceScore >= 0.45 && specificJsHits >= 1) ||
-      (patternsMatched >= 3 && confidenceScore >= 0.55);
+      (patternsMatched >= 3 && confidenceScore >= 0.55) ||
+      (patternsMatched >= 1 && confidenceScore >= 0.12 && /\bfunction\s+\w+\s*\(/.test(content));
 
     // console.log(`JS: Score=${confidenceScore.toFixed(3)}, Patterns=${patternsMatched}, Specific=${specificJsHits}, Strong=${strongSignalFound}, Match=${isMatch}`);
 

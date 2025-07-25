@@ -39,21 +39,38 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
               </code>
             );
           },
-          // Custom styling for tables
+          // Enhanced table styling from Word Count tablet
           table: ({ children }) => (
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="min-w-full border-collapse border border-gray-600">
+              <table className="w-full text-xs border-collapse border border-gray-600 mb-4">
                 {children}
               </table>
             </div>
           ),
+          thead: ({ children }) => (
+            <thead className="bg-gray-700/50">
+              {children}
+            </thead>
+          ),
+          tbody: ({ children }) => (
+            <tbody>
+              {children}
+            </tbody>
+          ),
           th: ({ children }) => (
-            <th className="border border-gray-600 px-4 py-2 bg-gray-700 text-left font-semibold">
+            <th className="border border-gray-600 px-2 py-1 text-left text-gray-300 font-medium">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-gray-600 px-4 py-2">{children}</td>
+            <td className="border border-gray-600 px-2 py-1 text-gray-300">
+              {children}
+            </td>
+          ),
+          tr: ({ children }) => (
+            <tr className="hover:bg-gray-800/30 transition-colors">
+              {children}
+            </tr>
           ),
           // Custom styling for blockquotes
           blockquote: ({ children }) => (
@@ -85,6 +102,20 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
               );
             }
             return null;
+          },
+          // Enhanced status icon rendering from Word Count tablet
+          p: ({ children }) => {
+            if (typeof children === 'string') {
+              const processedContent = children
+                .replace(/✅/g, '<span class="text-green-400">✅</span>')
+                .replace(/⚠️/g, '<span class="text-yellow-400">⚠️</span>')
+                .replace(/❌/g, '<span class="text-red-400">❌</span>');
+              
+              if (processedContent !== children) {
+                return <p dangerouslySetInnerHTML={{ __html: processedContent }} />;
+              }
+            }
+            return <p>{children}</p>;
           },
         }}
       >
