@@ -48,6 +48,45 @@ export interface WordCountStats {
   topTrigrams: Array<{ phrase: string; count: number; density: number }>;
 }
 
+export const WRITING_TARGETS: Record<WritingGoal, WritingTarget> = {
+  general: {
+    fleschKincaidMin: 6,
+    fleschKincaidMax: 10,
+    avgSentenceLengthMax: 20,
+    passiveVoiceMax: 10,
+    adverbsMax: 5,
+    keywordDensityMin: 0.5,
+    keywordDensityMax: 2.0
+  },
+  technical: {
+    fleschKincaidMin: 10,
+    fleschKincaidMax: 15,
+    avgSentenceLengthMax: 25,
+    passiveVoiceMax: 15,
+    adverbsMax: 8,
+    keywordDensityMin: 1.0,
+    keywordDensityMax: 3.0
+  },
+  blog: {
+    fleschKincaidMin: 5,
+    fleschKincaidMax: 8,
+    avgSentenceLengthMax: 15,
+    passiveVoiceMax: 5,
+    adverbsMax: 3,
+    keywordDensityMin: 1.0,
+    keywordDensityMax: 2.5
+  },
+  academic: {
+    fleschKincaidMin: 12,
+    fleschKincaidMax: 18,
+    avgSentenceLengthMax: 30,
+    passiveVoiceMax: 20,
+    adverbsMax: 10,
+    keywordDensityMin: 0.5,
+    keywordDensityMax: 1.5
+  }
+};
+
 /**
  * Count words in text, handling punctuation and edge cases
  */
