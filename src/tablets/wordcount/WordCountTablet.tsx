@@ -40,7 +40,7 @@ const WordCountTabletComponent: React.FC<{
   // Memoized report generation - recalculates when any relevant data changes
   const reportContent: string = useMemo(() => {
     if (!text.trim()) return '';
-    return generateExportReport(stats, deviceType, writingGoal, targetKeyword);
+    return generateExportReport(stats, deviceType, writingGoal, targetKeyword, text);
   }, [stats, deviceType, writingGoal, targetKeyword, text]);
   
   const {

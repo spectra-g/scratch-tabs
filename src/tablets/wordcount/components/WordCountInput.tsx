@@ -63,6 +63,15 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
     handleChange('');
   }, [handleChange]);
 
+  const handleCopyText = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(localValue);
+      // Could add a toast notification here if needed
+    } catch (error) {
+      console.error('Failed to copy text:', error);
+    }
+  }, [localValue]);
+
   const handleCopyReport = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(reportContent);
@@ -241,6 +250,14 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
                 title="Paste from clipboard"
               >
                 <ClipboardPaste size={16} />
+              </button>
+              <button
+                onClick={handleCopyText}
+                className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                title="Copy text to clipboard"
+                disabled={!localValue}
+              >
+                <Copy size={16} />
               </button>
               <button
                 onClick={handleClear}

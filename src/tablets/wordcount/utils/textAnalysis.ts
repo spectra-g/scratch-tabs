@@ -1335,7 +1335,8 @@ export function generateExportReport(
   stats: WordCountStats,
   deviceType: DeviceType,
   writingGoal: WritingGoal,
-  targetKeyword?: string
+  targetKeyword?: string,
+  text?: string
 ): string {
   const targets = WRITING_TARGETS[writingGoal];
   const timestamp = new Date().toLocaleString();
@@ -1369,8 +1370,8 @@ export function generateExportReport(
   
   report += `\n`;
   
-  // Readability Analysis
-  report += `## Readability Analysis\n\n`;
+  // Advanced Readability Analysis
+  report += `## Advanced Readability Analysis\n\n`;
   report += `| Metric | Value | Target | Status |\n`;
   report += `|--------|-------|--------|--------|\n`;
   
@@ -1381,11 +1382,42 @@ export function generateExportReport(
   const fleschIcon = fleschStatus === 'good' ? '✅' : fleschStatus === 'warning' ? '⚠️' : '❌';
   report += `| Flesch-Kincaid Grade | ${stats.fleschKincaidGrade} | ${targets.fleschKincaidMin}-${targets.fleschKincaidMax} | ${fleschIcon} |\n`;
   
+  // Add new readability metrics
+  report += `| Gunning Fog Index | ${stats.gunningFogIndex} | - | - |\n`;
+  report += `| SMOG Index | ${stats.smogIndex} | - | - |\n`;
+  report += `| Coleman-Liau Index | ${stats.colemanLiauIndex} | - | - |\n`;
+  report += `| Lexical Density | ${stats.lexicalDensity}% | - | - |\n`;
+  report += `| Syllables | ${stats.syllables.toLocaleString()} | - | - |\n`;
+  report += `\n`;
+  
+  // Pacing & Rhythm Analysis
+  report += `## Pacing & Rhythm Analysis\n\n`;
+  report += `| Metric | Value | Target | Status |\n`;
+  report += `|--------|-------|--------|--------|\n`;
+  
   const sentenceStatus = evaluateMetricTarget(stats.avgSentenceLength, { max: targets.avgSentenceLengthMax });
   const sentenceIcon = sentenceStatus === 'good' ? '✅' : sentenceStatus === 'warning' ? '⚠️' : '❌';
   report += `| Avg. Sentence Length | ${stats.avgSentenceLength} words | ≤${targets.avgSentenceLengthMax} words | ${sentenceIcon} |\n`;
+  report += `| Avg. Sentence Length | ${stats.avgSentenceLengthChars} chars | - | - |\n`;
+  report += `| Avg. Word Length | ${stats.avgWordLength} chars | - | - |\n`;
+  report += `| Longest Sentence | ${stats.longestSentence} words | - | - |\n`;
+  report += `| Shortest Sentence | ${stats.shortestSentence} words | - | - |\n`;
   
-  report += `| Syllables | ${stats.syllables.toLocaleString()} | - | - |\n`;
+  // Add sentence length distribution if text is available
+  if (text && text.trim()) {
+    const distribution = getSentenceLengthDistribution(text);
+    if (distribution.length > 0) {
+      const maxCount = Math.max(...distribution.map(item => item.count));
+      report += `\n**Sentence Length Distribution:**\n\n`;
+      distribution.forEach(item => {
+        const barLength = Math.round((item.count / maxCount) * 20); // Scale to max 20 characters
+        const bar = '█'.repeat(Math.max(1, barLength)); // Use block character instead of asterisks
+        const padding = ' '.repeat(Math.max(0, 15 - item.bucket.length)); // Right-align labels
+        report += `${item.bucket}${padding} ${bar} (${item.count})  \n`;
+      });
+      report += `\n`;
+    }
+  }
   report += `\n`;
   
   // Time Estimates
@@ -1407,8 +1439,8 @@ export function generateExportReport(
   report += `| Handwriting | ${formatHandwritingTime(stats.handwritingTime)} |\n`;
   report += `\n`;
   
-  // Stylistic Analysis
-  report += `## Stylistic Analysis\n\n`;
+  // Style & Redundancy Analysis
+  report += `## Style & Redundancy Analysis\n\n`;
   report += `| Issue | Count | Target | Status |\n`;
   report += `|-------|-------|--------|--------|\n`;
   
@@ -1424,12 +1456,33 @@ export function generateExportReport(
   const weakeningIcon = weakeningStatus === 'good' ? '✅' : weakeningStatus === 'warning' ? '⚠️' : '❌';
   report += `| Weakening Phrases | ${stats.weakeningPhrases.length} | ≤2 | ${weakeningIcon} |\n`;
   
+  // Add new stylistic metrics
+  const runOnStatus = evaluateMetricTarget(stats.longSentences.length, { max: 0 });
+  const runOnIcon = runOnStatus === 'good' ? '✅' : runOnStatus === 'warning' ? '⚠️' : '❌';
+  report += `| Run-on Sentences (35+ words) | ${stats.longSentences.length} | 0 | ${runOnIcon} |\n`;
+  
+  const fillerStatus = evaluateMetricTarget(stats.fillerWords.length, { max: 5 });
+  const fillerIcon = fillerStatus === 'good' ? '✅' : fillerStatus === 'warning' ? '⚠️' : '❌';
+  report += `| Filler Words | ${stats.fillerWords.length} | ≤5 | ${fillerIcon} |\n`;
+  
+  const redundantStatus = evaluateMetricTarget(stats.redundantPhrases.length, { max: 0 });
+  const redundantIcon = redundantStatus === 'good' ? '✅' : redundantStatus === 'warning' ? '⚠️' : '❌';
+  report += `| Redundant Phrases | ${stats.redundantPhrases.length} | 0 | ${redundantIcon} |\n`;
+  
   if (deviceType === 'mobile') {
     const wallStatus = evaluateMetricTarget(stats.wallOfTextParagraphs.length, { max: 0 });
     const wallIcon = wallStatus === 'good' ? '✅' : wallStatus === 'warning' ? '⚠️' : '❌';
     report += `| Wall of Text Paragraphs | ${stats.wallOfTextParagraphs.length} | 0 | ${wallIcon} |\n`;
   }
   
+  report += `\n`;
+  
+  // Punctuation Analysis
+  report += `## Punctuation Analysis\n\n`;
+  report += `| Type | Count |\n`;
+  report += `|------|-------|\n`;
+  report += `| Questions | ${stats.questionCount} |\n`;
+  report += `| Exclamations | ${stats.exclamationCount} |\n`;
   report += `\n`;
   
   // Keywords Analysis
@@ -1509,6 +1562,30 @@ export function generateExportReport(
   
   if (weakeningStatus !== 'good') {
     recommendations.push('💪 **Strengthen language**: Remove weakening phrases like "I think" or "maybe" to sound more confident.');
+  }
+  
+  // Add recommendations for new metrics
+  if (runOnStatus !== 'good') {
+    recommendations.push('✂️ **Break up run-on sentences**: Sentences with 35+ words are hard to follow. Split them into shorter, clearer statements.');
+  }
+  
+  if (fillerStatus !== 'good') {
+    recommendations.push('🔥 **Remove filler words**: Eliminate words like "just", "really", "basically" that weaken your message.');
+  }
+  
+  if (redundantStatus !== 'good') {
+    recommendations.push('🎯 **Eliminate redundancy**: Remove redundant phrases like "each and every" or "absolutely essential" for cleaner writing.');
+  }
+  
+  // Readability recommendations based on new indices
+  if (stats.gunningFogIndex > 12) {
+    recommendations.push('🌫️ **Reduce complexity**: High Gunning Fog Index suggests text may be too complex. Use simpler words and shorter sentences.');
+  }
+  
+  if (stats.lexicalDensity < 40) {
+    recommendations.push('📚 **Increase vocabulary variety**: Low lexical density indicates repetitive word use. Vary your vocabulary for richer content.');
+  } else if (stats.lexicalDensity > 70) {
+    recommendations.push('🔄 **Balance vocabulary**: Very high lexical density might make text hard to follow. Consider some repetition of key concepts.');
   }
   
   if (deviceType === 'mobile' && stats.wallOfTextParagraphs.length > 0) {
