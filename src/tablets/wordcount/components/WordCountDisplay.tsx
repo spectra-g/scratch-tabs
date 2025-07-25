@@ -1,11 +1,18 @@
 import React from 'react';
+import { Eye, Target, AlertTriangle, Zap, MessageSquare } from 'lucide-react';
 import { WordCountStats } from '../utils/textAnalysis';
 
 interface WordCountDisplayProps {
   stats: WordCountStats;
+  onHighlight?: (type: string, data?: any) => void;
+  activeHighlight?: string;
 }
 
-export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ stats }) => {
+export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ 
+  stats, 
+  onHighlight,
+  activeHighlight 
+}) => {
   const formatTime = (time: { minutes: number; seconds: number }) => {
     if (time.minutes === 0) {
       return `${time.seconds}s`;
@@ -20,8 +27,27 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ stats }) => 
     return `${time.hours}h ${time.minutes}m`;
   };
 
+  const handleHighlight = (type: string, data?: any) => {
+    if (onHighlight) {
+      onHighlight(type, data);
+    }
+  };
+
+  const isActive = (type: string, data?: any) => {
+    if (type === 'keyword') {
+      return activeHighlight === `keyword-${data}`;
+    }
+    return activeHighlight === type;
+  };
+
+  const getClickableStyle = (type: string, data?: any) => {
+    const baseStyle = "cursor-pointer transition-colors hover:bg-blue-500/10 rounded px-1 -mx-1";
+    const activeStyle = isActive(type, data) ? "bg-blue-500/20 text-blue-300" : "";
+    return `${baseStyle} ${activeStyle}`;
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column */}
       <div className="space-y-6">
         {/* Core Counts */}
@@ -67,13 +93,31 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ stats }) => 
             Averages & Lengths
           </h3>
           <div className="space-y-2">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-gray-400">Longest Sentence</span>
-              <span className="text-gray-200 font-mono">{stats.longestSentence} words</span>
+              <div className="flex items-center space-x-2">
+                <span 
+                  className={`text-gray-200 font-mono ${getClickableStyle('longest-sentence')}`}
+                  onClick={() => handleHighlight('longest-sentence')}
+                  title="Click to highlight longest sentence"
+                >
+                  {stats.longestSentence} words
+                </span>
+                <Eye size={14} className="text-gray-500" />
+              </div>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-gray-400">Shortest Sentence</span>
-              <span className="text-gray-200 font-mono">{stats.shortestSentence} words</span>
+              <div className="flex items-center space-x-2">
+                <span 
+                  className={`text-gray-200 font-mono ${getClickableStyle('shortest-sentence')}`}
+                  onClick={() => handleHighlight('shortest-sentence')}
+                  title="Click to highlight shortest sentence"
+                >
+                  {stats.shortestSentence} words
+                </span>
+                <Eye size={14} className="text-gray-500" />
+              </div>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Avg. Sentence Length</span>
@@ -118,6 +162,64 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ stats }) => 
             </div>
           </div>
         </div>
+
+        {/* NEW: Stylistic Suggestions */}
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide flex items-center">
+            <AlertTriangle size={16} className="mr-2 text-yellow-400" />
+            Stylistic Suggestions
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 flex items-center">
+                <MessageSquare size={14} className="mr-2 text-orange-400" />
+                Passive Voice
+              </span>
+              <div className="flex items-center space-x-2">
+                <span 
+                  className={`text-gray-200 font-mono ${getClickableStyle('passive-voice')}`}
+                  onClick={() => handleHighlight('passive-voice')}
+                  title="Click to highlight passive voice sentences"
+                >
+                  {stats.passiveVoiceSentences.length}
+                </span>
+                <Eye size={14} className="text-gray-500" />
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 flex items-center">
+                <Zap size={14} className="mr-2 text-orange-400" />
+                Adverbs (-ly)
+              </span>
+              <div className="flex items-center space-x-2">
+                <span 
+                  className={`text-gray-200 font-mono ${getClickableStyle('adverbs')}`}
+                  onClick={() => handleHighlight('adverbs')}
+                  title="Click to highlight adverbs"
+                >
+                  {stats.adverbs.length}
+                </span>
+                <Eye size={14} className="text-gray-500" />
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 flex items-center">
+                <Target size={14} className="mr-2 text-red-400" />
+                Weakening Phrases
+              </span>
+              <div className="flex items-center space-x-2">
+                <span 
+                  className={`text-gray-200 font-mono ${getClickableStyle('weakening-phrases')}`}
+                  onClick={() => handleHighlight('weakening-phrases')}
+                  title="Click to highlight weakening phrases"
+                >
+                  {stats.weakeningPhrases.length}
+                </span>
+                <Eye size={14} className="text-gray-500" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Right Column */}
@@ -135,7 +237,14 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ stats }) => 
                 <div key={keyword.word} className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-500 w-4">#{index + 1}</span>
-                    <span className="text-gray-200 font-mono">{keyword.word}</span>
+                    <span 
+                      className={`text-gray-200 font-mono ${getClickableStyle('keyword', keyword.word)}`}
+                      onClick={() => handleHighlight('keyword', keyword.word)}
+                      title={`Click to highlight all instances of "${keyword.word}"`}
+                    >
+                      {keyword.word}
+                    </span>
+                    <Eye size={12} className="text-gray-500" />
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-400 text-sm">{keyword.count}×</span>
@@ -160,7 +269,14 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ stats }) => 
                 <div key={bigram.phrase} className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-500 w-4">#{index + 1}</span>
-                    <span className="text-gray-200 font-mono text-sm">{bigram.phrase}</span>
+                    <span 
+                      className={`text-gray-200 font-mono text-sm ${getClickableStyle('keyword', bigram.phrase)}`}
+                      onClick={() => handleHighlight('keyword', bigram.phrase)}
+                      title={`Click to highlight all instances of "${bigram.phrase}"`}
+                    >
+                      {bigram.phrase}
+                    </span>
+                    <Eye size={12} className="text-gray-500" />
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-400 text-sm">{bigram.count}×</span>
@@ -185,7 +301,14 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({ stats }) => 
                 <div key={trigram.phrase} className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-500 w-4">#{index + 1}</span>
-                    <span className="text-gray-200 font-mono text-sm">{trigram.phrase}</span>
+                    <span 
+                      className={`text-gray-200 font-mono text-sm ${getClickableStyle('keyword', trigram.phrase)}`}
+                      onClick={() => handleHighlight('keyword', trigram.phrase)}
+                      title={`Click to highlight all instances of "${trigram.phrase}"`}
+                    >
+                      {trigram.phrase}
+                    </span>
+                    <Eye size={12} className="text-gray-500" />
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-400 text-sm">{trigram.count}×</span>
