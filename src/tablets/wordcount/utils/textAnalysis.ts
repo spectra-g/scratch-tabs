@@ -1,17 +1,9 @@
 // Text analysis utilities for word count statistics
 // Pure functions with no React dependencies
 
-// Device configuration for different screen types
+// Device configuration for reading time and layout calculations
 export type DeviceType = 'standard' | 'desktop' | 'tablet' | 'mobile';
 export type WritingGoal = 'general' | 'technical' | 'blog' | 'academic';
-
-export interface DeviceConfig {
-  viewportWidth: number;
-  viewportHeight: number;
-  avgCharWidth: number;
-  lineHeight: number;
-  readingWPM: number;
-}
 
 export interface WritingTarget {
   fleschKincaidMin: number;
@@ -23,35 +15,41 @@ export interface WritingTarget {
   keywordDensityMax: number;
 }
 
-export const DEVICE_CONFIGS: Record<DeviceType, DeviceConfig> = {
+export const DEVICE_CONFIGS: Record<DeviceType, {
+  viewportWidth: number;
+  viewportHeight: number;
+  avgCharWidth: number;
+  lineHeight: number;
+  readingWPM: number;
+}> = {
   standard: {
     viewportWidth: 800,
     viewportHeight: 600,
     avgCharWidth: 8,
     lineHeight: 20,
-    readingWPM: 225
+    readingWPM: 225,
   },
   desktop: {
     viewportWidth: 1200,
     viewportHeight: 800,
     avgCharWidth: 8,
     lineHeight: 22,
-    readingWPM: 250
+    readingWPM: 250,
   },
   tablet: {
     viewportWidth: 768,
     viewportHeight: 1024,
     avgCharWidth: 9,
     lineHeight: 24,
-    readingWPM: 200
+    readingWPM: 200,
   },
   mobile: {
     viewportWidth: 375,
     viewportHeight: 667,
     avgCharWidth: 10,
     lineHeight: 26,
-    readingWPM: 180
-  }
+    readingWPM: 180,
+  },
 };
 
 // Common English stop words for keyword density filtering
@@ -99,6 +97,16 @@ export interface WordCountStats {
   topKeywords: Array<{ word: string; count: number; density: number }>;
   topBigrams: Array<{ phrase: string; count: number; density: number }>;
   topTrigrams: Array<{ phrase: string; count: number; density: number }>;
+  
+  // Stylistic analysis
+  passiveVoiceSentences: Array<{ sentence: string; startIndex: number; endIndex: number }>;
+  adverbs: Array<{ word: string; startIndex: number; endIndex: number }>;
+  weakeningPhrases: Array<{ phrase: string; startIndex: number; endIndex: number }>;
+  
+  // Device-specific metrics
+  pages: number;
+  screenfuls: number;
+  wallOfTextParagraphs: Array<{ startIndex: number; endIndex: number }>;
 }
 
 export const WRITING_TARGETS: Record<WritingGoal, WritingTarget> = {
