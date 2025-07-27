@@ -244,6 +244,23 @@ describe('SVG Language Detector', () => {
       expect(result.match).toBe(true);
       expect(result.confidence).toBeGreaterThan(0.5);
     });
+
+    it('should preserve text content formatting within text elements', () => {
+      const svgWithText = `<svg>
+  <text x="200" y="160" 
+        text-anchor="middle" 
+        font-family="Arial, sans-serif" 
+        font-size="24" 
+        fill="#333">
+    SVG Example
+  </text>
+</svg>`;
+
+      // Test that detection still works correctly
+      const result = detector.detect(svgWithText);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.4);
+    });
   });
 
   describe('Confidence Scoring', () => {

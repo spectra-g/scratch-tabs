@@ -331,9 +331,10 @@ export class SvgLanguageDetector
         const content = model.getValue();
         const indentChar = options.insertSpaces ? " ".repeat(options.tabSize) : "\t";
         
+        // Use a simpler, more effective approach that preserves structure
         let formattedSvg = "";
         let indentLevel = 0;
-        let currentLine = '';
+        let inTextElement = false;
         
         // Split content into tokens while preserving structure
         const tokens = this.tokenizeSvg(content);
@@ -341,43 +342,49 @@ export class SvgLanguageDetector
         for (let i = 0; i < tokens.length; i++) {
           const token = tokens[i];
           
-          // Always start a new line for these token types
-          const shouldStartNewLine = [
-            'openTag', 'closeTag', 'selfClosingTag', 
-            'comment', 'cdata', 'processingInstruction'
-          ].includes(token.type);
-          
-          if (shouldStartNewLine) {
-            if (currentLine.trim()) {
-              formattedSvg += currentLine + '\n';
-              currentLine = '';
+          if (token.type === 'processingInstruction') {
+            // XML declarations and PIs
+            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
+          } else if (token.type === 'comment') {
+            // Comments
+            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
+          } else if (token.type === 'openTag') {
+            // Opening tags
+            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
+            if (!token.value.includes('/>')) {
+              indentLevel++;
             }
-            currentLine = indentChar.repeat(indentLevel) + token.value;
+            // Check if this is a text element
+            if (token.value.includes('<text') || token.value.includes('<tspan')) {
+              inTextElement = true;
+            }
+          } else if (token.type === 'closeTag') {
+            // Closing tags
+            indentLevel = Math.max(0, indentLevel - 1);
+            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
+            // Check if we're closing a text element
+            if (token.value.includes('</text') || token.value.includes('</tspan')) {
+              inTextElement = false;
+            }
+          } else if (token.type === 'selfClosingTag') {
+            // Self-closing tags
+            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
           } else if (token.type === 'text') {
-            // Handle text content
-            if (token.value.trim()) {
-              if (currentLine.trim()) {
-                formattedSvg += currentLine + '\n';
-                currentLine = '';
+            // Text content - preserve original formatting within text elements
+            if (inTextElement) {
+              // For text elements, preserve the original text formatting
+              formattedSvg += token.value;
+            } else {
+              // For other text content, trim and format
+              const trimmedText = token.value.trim();
+              if (trimmedText) {
+                formattedSvg += indentChar.repeat(indentLevel) + trimmedText + '\n';
               }
-              currentLine = indentChar.repeat(indentLevel) + token.value;
             }
           } else {
-            // Handle other token types (attributes, strings, etc.)
-            currentLine += token.value;
+            // Other token types (shouldn't happen in normal SVG)
+            formattedSvg += token.value;
           }
-          
-          // Check if we need to increase indent level
-          if (token.type === 'openTag' && !token.value.includes('/>')) {
-            indentLevel++;
-          } else if (token.type === 'closeTag') {
-            indentLevel = Math.max(0, indentLevel - 1);
-          }
-        }
-        
-        // Add any remaining content
-        if (currentLine.trim()) {
-          formattedSvg += currentLine;
         }
         
         // Ensure proper line endings
