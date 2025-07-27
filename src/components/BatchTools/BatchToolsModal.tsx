@@ -165,8 +165,8 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
           </div>
 
           {/* Right Panel - Preview */}
-          <div className="flex-1 flex flex-col">
-            <div className="p-4 border-b border-gray-700/60">
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="p-4 border-b border-gray-700/60 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-200">Preview</h3>
                 <div className="flex items-center space-x-4">
@@ -184,13 +184,15 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
               </div>
             </div>
 
-            <div className="flex-1 p-4 overflow-hidden">
-              <BatchToolsPreview
-                originalContent={contentToTransform}
-                transformedContent={transformedContent}
-                previewMode={previewMode}
-                isProcessing={isProcessing}
-              />
+            <div className="flex-1 p-4 min-h-0 overflow-hidden">
+              <div className="h-full max-h-full overflow-hidden">
+                <BatchToolsPreview
+                  originalContent={contentToTransform}
+                  transformedContent={transformedContent}
+                  previewMode={previewMode}
+                  isProcessing={isProcessing}
+                />
+              </div>
             </div>
           </div>
         </div>
