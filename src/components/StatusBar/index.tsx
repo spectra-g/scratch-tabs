@@ -338,6 +338,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({
                 {realTimeCursorPosition.column}
               </span>
             )}
+            {!activeTab.isTablet && (
+              <div className="w-px h-4 bg-gray-600"></div>
+            )}
             <div className="p-0.5 flex items-center space-x-2">
               {renderLanguageSection()}
               {LanguageStatusItem && (
@@ -390,12 +393,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         <div className="w-px h-4 bg-gray-600"></div>
         
         {/* Group 3: Macro controls (Record, Stop, Play, Play to End) + Status */}
-        <div className="flex items-center">
-          {!isMobile && <Macro editor={editor} />}
-        </div>
-        
-        {/* Divider 3 */}
-        <div className="w-px h-4 bg-gray-600"></div>
+        {!isMobile && (
+          <>
+            <div className="flex items-center">
+              <Macro editor={editor} />
+            </div>
+            
+            {/* Divider 3 */}
+            <div className="w-px h-4 bg-gray-600"></div>
+          </>
+        )}
         
         {/* Group 4: Support */}
         <div className="flex items-center">

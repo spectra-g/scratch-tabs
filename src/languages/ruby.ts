@@ -253,6 +253,8 @@ end
       { pattern: /^\s*#include\s*<.+>/m, weight: -0.6 }, // C/C++ include
       { pattern: /<\w.*?>/g, weight: -0.5 }, // HTML/XML tags
       { pattern: /^\s*def\s+\w+\s*\(.*?\)\s*:/m, weight: -0.5 }, // Python def func(): (colon at end)
+      { pattern: /"[^"]*"\s*:/g, weight: -0.8 }, // JSON key-value pairs (strong negative)
+      { pattern: /^\s*\{[^}]*"[^"]*"\s*:[^}]*\}\s*$/m, weight: -0.9 }, // Complete JSON object (very strong negative)
     ];
 
     for (const ap of antiPatterns) {

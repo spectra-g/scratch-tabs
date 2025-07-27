@@ -337,7 +337,12 @@ function applyTransformationsToLines(
     result = wrapText(result, config.wrapLines);
   }
 
-  // 13. Advanced Transformations (only regex find/replace, JS is handled separately)
+  // 13. Redaction
+  if (config.redaction) {
+    result = applyRedaction(result, config.redaction);
+  }
+
+  // 14. Advanced Transformations (only regex find/replace, JS is handled separately)
   if (config.findReplaceRegex) {
     result = applyRegexFindReplace(result, config.findReplaceRegex);
   }
@@ -506,6 +511,83 @@ function applyRegexFindReplace(
   } catch (error) {
     console.error("Regex find/replace error:", error);
     return text; // Return original text if regex is invalid
+  }
+}
+
+function applyRedaction(
+  text: string,
+  config: Exclude<TransformationConfig["redaction"], false>,
+): string {
+  let result = text;
+
+  // Built-in patterns
+  const builtInRegexes: { [key: string]: RegExp } = {
+    emails: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+    ipAddresses: /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g,
+    creditCards: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3[0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b/g,
+    ssn: /\b(?:\d{3}-\d{2}-\d{4}|\d{9})\b/g,
+    phoneNumbers: /(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}/g,
+    dates: /\b(?:\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2}|\d{1,2}-\d{1,2}-\d{2,4})\b/g,
+    urls: /https?:\/\/(?:[-\w.])+(?:[:\d]+)?(?:\/(?:[\w\/_.])*(?:\?(?:[\w&=%.])*)?(?:#(?:[\w.])*)?)?/g,
+    secrets: /\b(?:(?:api[_-]?key|token|secret|password|auth[_-]?key)[_-]?[:=]\s*[^\s\n"']+|[A-Za-z0-9]{32,})\b/gi,
+  };
+
+  // Apply built-in patterns
+  for (const [patternType, regex] of Object.entries(builtInRegexes)) {
+    if (config.builtInPatterns[patternType as keyof typeof config.builtInPatterns]) {
+      result = result.replace(regex, (match) => getRedactedValue(match, config));
+    }
+  }
+
+  // Apply custom patterns
+  for (const pattern of config.customPatterns) {
+    if (!pattern.trim()) continue;
+
+    try {
+      let regex: RegExp;
+      
+      if (config.patternType === "exact") {
+        // Escape special regex characters for exact matching
+        const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        regex = new RegExp(escapedPattern, 'g');
+      } else if (config.patternType === "wildcard") {
+        // Convert wildcard pattern to regex
+        const wildcardPattern = pattern
+          .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape regex chars except * and ?
+          .replace(/\*/g, '[^\\s]*') // Convert * to [^\s]* (match non-whitespace)
+          .replace(/\?/g, '.'); // Convert ? to .
+        regex = new RegExp(`\\b${wildcardPattern}\\b`, 'g');
+      } else {
+        // Use as regex pattern
+        regex = new RegExp(pattern, 'g');
+      }
+
+      result = result.replace(regex, (match) => getRedactedValue(match, config));
+    } catch (error) {
+      // Skip invalid patterns
+      console.warn(`Invalid redaction pattern: ${pattern}`, error);
+    }
+  }
+
+  return result;
+}
+
+function getRedactedValue(
+  originalValue: string,
+  config: Exclude<TransformationConfig["redaction"], false>,
+): string {
+  switch (config.redactionMode) {
+    case "block":
+      return "█".repeat(originalValue.length);
+    case "placeholder":
+      return config.placeholderText || "[REDACTED]";
+    case "mask":
+      const maskChar = config.maskCharacter || "*";
+      return maskChar.repeat(originalValue.length);
+    case "delete":
+      return "";
+    default:
+      return "[REDACTED]";
   }
 }
 

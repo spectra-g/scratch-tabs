@@ -69,6 +69,14 @@ const STOP_WORDS = new Set([
   'after', 'above', 'below', 'between', 'through', 'into', 'onto'
 ]);
 
+export interface LLMTokenCounts {
+  gpt35: number;
+  gpt4: number;
+  claude: number;
+  llama: number;
+  gemini: number;
+}
+
 export interface WordCountStats {
   // Core counts
   words: number;
@@ -96,6 +104,9 @@ export interface WordCountStats {
   readingTime: { minutes: number; seconds: number };
   speakingTime: { minutes: number; seconds: number };
   handwritingTime: { hours: number; minutes: number };
+  
+  // LLM token counts
+  llmTokens: LLMTokenCounts;
   
   // SEO & keywords
   topKeywords: Array<{ word: string; count: number; density: number }>;
@@ -622,6 +633,87 @@ export function countExclamations(text: string): number {
   
   const matches = text.match(/!/g);
   return matches ? matches.length : 0;
+}
+
+/**
+ * Estimate token count for GPT-3.5/4 models
+ * Based on approximation: ~4 characters per token for English text
+ */
+export function estimateGPTTokens(text: string): number {
+  if (!text.trim()) return 0;
+  
+  // More accurate approximation accounting for:
+  // - Whitespace and punctuation
+  // - Word boundaries
+  // - Special characters
+  const cleanText = text.replace(/\s+/g, ' ').trim();
+  const approximateTokens = Math.ceil(cleanText.length / 4);
+  
+  // Add slight buffer for tokenizer overhead
+  return Math.max(1, Math.ceil(approximateTokens * 1.1));
+}
+
+/**
+ * Estimate token count for Claude models
+ * Claude tends to be slightly more efficient than GPT models
+ */
+export function estimateClaudeTokens(text: string): number {
+  if (!text.trim()) return 0;
+  
+  // Claude is roughly 10-15% more efficient in tokenization
+  const gptEstimate = estimateGPTTokens(text);
+  return Math.max(1, Math.ceil(gptEstimate * 0.9));
+}
+
+/**
+ * Estimate token count for LLaMA models
+ * Similar to GPT but with different tokenizer characteristics
+ */
+export function estimateLlamaTokens(text: string): number {
+  if (!text.trim()) return 0;
+  
+  // LLaMA tends to be slightly less efficient than GPT
+  const gptEstimate = estimateGPTTokens(text);
+  return Math.max(1, Math.ceil(gptEstimate * 1.05));
+}
+
+/**
+ * Estimate token count for Google Gemini models
+ * Similar efficiency to Claude
+ */
+export function estimateGeminiTokens(text: string): number {
+  if (!text.trim()) return 0;
+  
+  // Gemini has similar efficiency to Claude
+  const gptEstimate = estimateGPTTokens(text);
+  return Math.max(1, Math.ceil(gptEstimate * 0.92));
+}
+
+/**
+ * Calculate LLM token counts for all major models
+ */
+export function calculateLLMTokens(text: string): LLMTokenCounts {
+  const safeText = text ?? '';
+  
+  if (!safeText.trim()) {
+    return {
+      gpt35: 0,
+      gpt4: 0,
+      claude: 0,
+      llama: 0,
+      gemini: 0
+    };
+  }
+  
+  const gptTokens = estimateGPTTokens(safeText);
+  
+  return {
+    gpt35: gptTokens,
+    gpt4: gptTokens, // GPT-4 uses same tokenizer as GPT-3.5
+    claude: estimateClaudeTokens(safeText),
+    llama: estimateLlamaTokens(safeText),
+    gemini: estimateGeminiTokens(safeText)
+  };
 }
 
 /**
@@ -1252,6 +1344,9 @@ export function analyzeText(text: string, deviceType: DeviceType = 'standard', t
     speakingTime: calculateSpeakingTime(safeText),
     handwritingTime: calculateHandwritingTime(safeText),
     
+    // LLM token counts
+    llmTokens: calculateLLMTokens(safeText),
+    
     // SEO & keywords
     topKeywords: getTopKeywords(safeText, 5),
     topBigrams: getTopNGrams(safeText, 2, 5),
@@ -1336,12 +1431,22 @@ export function generateExportReport(
   deviceType: DeviceType,
   writingGoal: WritingGoal,
   targetKeyword?: string,
-  text?: string
+  text?: string,
+  title?: string
 ): string {
   const targets = WRITING_TARGETS[writingGoal];
   const timestamp = new Date().toLocaleString();
   
-  let report = `# Word Count Analysis Report\n\n`;
+  let report = '';
+  
+  // Add title if provided
+  if (title && title.trim()) {
+    report += `# ${title.trim()}\n\n`;
+    report += `## Word Count Analysis Report\n\n`;
+  } else {
+    report += `# Word Count Analysis Report\n\n`;
+  }
+  
   report += `**Generated:** ${timestamp}  \n`;
   report += `**Device Preview:** ${deviceType}  \n`;
   report += `**Writing Goal:** ${writingGoal}  \n`;
@@ -1437,6 +1542,17 @@ export function generateExportReport(
   report += `| Reading (${deviceType}) | ${formatTime(stats.readingTime)} |\n`;
   report += `| Speaking | ${formatTime(stats.speakingTime)} |\n`;
   report += `| Handwriting | ${formatHandwritingTime(stats.handwritingTime)} |\n`;
+  report += `\n`;
+  
+  // LLM Token Counts
+  report += `## LLM Token Estimates\n\n`;
+  report += `| Model | Tokens |\n`;
+  report += `|-------|--------|\n`;
+  report += `| GPT-3.5 | ${stats.llmTokens.gpt35.toLocaleString()} |\n`;
+  report += `| GPT-4 | ${stats.llmTokens.gpt4.toLocaleString()} |\n`;
+  report += `| Claude | ${stats.llmTokens.claude.toLocaleString()} |\n`;
+  report += `| LLaMA | ${stats.llmTokens.llama.toLocaleString()} |\n`;
+  report += `| Gemini | ${stats.llmTokens.gemini.toLocaleString()} |\n`;
   report += `\n`;
   
   // Style & Redundancy Analysis

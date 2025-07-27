@@ -93,6 +93,13 @@ const TempEmailTabletUI: React.FC<{
   const [isChecking, setIsChecking] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
+  const handleCopyEmail = async () => {
+    await navigator.clipboard.writeText(state.data.emailAddress);
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
+  };
 
   const generateEmail = async () => {
     setIsGenerating(true);
@@ -252,8 +259,21 @@ const TempEmailTabletUI: React.FC<{
             </button>
           ) : (
             <div className="mt-4 bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
-              <div className="font-mono text-gray-200 break-all">
-                {state.data.emailAddress}
+              <div className="flex items-center justify-between">
+                <div className="font-mono text-gray-200 break-all flex-1 mr-3">
+                  {state.data.emailAddress}
+                </div>
+                <button
+                  onClick={handleCopyEmail}
+                  className={`p-2 rounded transition-colors ${
+                    copiedEmail 
+                      ? "text-green-400 bg-green-400/10" 
+                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                  }`}
+                  title={copiedEmail ? "Copied!" : "Copy email address"}
+                >
+                  {copiedEmail ? <Check size={20} /> : <Copy size={20} />}
+                </button>
               </div>
             </div>
           )}

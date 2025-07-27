@@ -65,16 +65,16 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
 
   if (previewMode === "side-by-side") {
     return (
-      <div className="grid grid-cols-2 gap-4 h-full">
+      <div className="grid grid-cols-2 gap-4 h-full max-h-full">
         {/* Original */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">
+        <div className="flex flex-col h-full max-h-full min-h-0">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700 flex-shrink-0">
             <h3 className="text-sm font-medium text-gray-300">Original</h3>
             <span className="text-xs text-gray-500">
-              {originalContent.split("\n").length} lines
+              {originalContent.split("\n").length} lines • {originalContent.length} chars
             </span>
           </div>
-          <div className="flex-1 overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
+          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
             <pre className="p-3 text-sm text-gray-300 whitespace-pre-wrap break-words">
               {originalContent || (
                 <span className="text-gray-500 italic">No content</span>
@@ -84,16 +84,16 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
         </div>
 
         {/* Transformed */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">
+        <div className="flex flex-col h-full max-h-full min-h-0">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700 flex-shrink-0">
             <h3 className="text-sm font-medium text-gray-300">Transformed</h3>
             <span className="text-xs text-gray-500">
-              {transformedContent.split("\n").length} lines
+              {transformedContent.split("\n").length} lines • {transformedContent.length} chars
             </span>
           </div>
-          <div className="flex-1 overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
+          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
             {isProcessing ? (
-              <div className="flex items-center justify-center h-full">
+              <div className="flex items-center justify-center h-full min-h-[200px]">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
                 <span className="ml-2 text-gray-400">
                   Processing transformations...
@@ -126,16 +126,16 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">
+      <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700 flex-shrink-0">
         <h3 className="text-sm font-medium text-gray-300">Unified Diff</h3>
         <span className="text-xs text-gray-500">
           {diff?.length || 0} changes
         </span>
       </div>
 
-      <div className="flex-1 overflow-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-gray-900 rounded border border-gray-700 custom-scrollbar">
         {diff && diff.length > 0 ? (
-          <div className="text-sm">
+          <div className="text-sm min-h-full">
             {diff.map((line, index) => (
               <div
                 key={index}
@@ -164,7 +164,7 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
             ))}
           </div>
         ) : (
-          <div className="p-3 text-center text-gray-500 italic">
+          <div className="p-3 text-center text-gray-500 italic min-h-[200px] flex items-center justify-center">
             No changes detected
           </div>
         )}

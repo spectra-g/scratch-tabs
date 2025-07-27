@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Tablet, TabletState } from '../types';
 import { FileText } from 'lucide-react';
 import { 
@@ -16,6 +16,7 @@ interface WordCountTabletState extends TabletState {
   type: 'wordcount';
   data: {
     text: string;
+    title: string;
     deviceType: DeviceType;
     writingGoal: WritingGoal;
     targetKeyword: string;
@@ -26,8 +27,9 @@ const WordCountTabletComponent: React.FC<{
   state: WordCountTabletState;
   onChange: (state: WordCountTabletState) => void;
 }> = ({ state, onChange }) => {
-  const data = state.data || { text: '', deviceType: 'standard', writingGoal: 'general', targetKeyword: '' };
+  const data = state.data || { text: '', title: '', deviceType: 'standard', writingGoal: 'general', targetKeyword: '' };
   const text = data.text || '';
+  const title = data.title || '';
   const deviceType = data.deviceType || 'standard';
   const writingGoal = data.writingGoal || 'general';
   const targetKeyword = data.targetKeyword || '';
@@ -40,8 +42,8 @@ const WordCountTabletComponent: React.FC<{
   // Memoized report generation - recalculates when any relevant data changes
   const reportContent: string = useMemo(() => {
     if (!text.trim()) return '';
-    return generateExportReport(stats, deviceType, writingGoal, targetKeyword, text);
-  }, [stats, deviceType, writingGoal, targetKeyword, text]);
+    return generateExportReport(stats, deviceType, writingGoal, targetKeyword, text, title);
+  }, [stats, deviceType, writingGoal, targetKeyword, text, title]);
   
   const {
     activeHighlight,
@@ -85,6 +87,16 @@ const WordCountTabletComponent: React.FC<{
       data: {
         ...data,
         targetKeyword: newTargetKeyword,
+      },
+    });
+  };
+
+  const handleTitleChange = (newTitle: string) => {
+    onChange({
+      ...state,
+      data: {
+        ...data,
+        title: newTitle,
       },
     });
   };
@@ -133,7 +145,9 @@ const WordCountTabletComponent: React.FC<{
           <div className="flex-1 min-h-0">
             <WordCountInput
               value={text}
+              title={title}
               onChange={handleTextChange}
+              onTitleChange={handleTitleChange}
               onEditorReady={setEditorRef}
               reportContent={reportContent}
             />
@@ -201,6 +215,7 @@ export const WordCountTablet: Tablet = {
       type: 'wordcount',
       data: {
         text: '',
+        title: '',
         deviceType: 'standard',
         writingGoal: 'general',
         targetKeyword: '',
@@ -221,6 +236,7 @@ export const WordCountTablet: Tablet = {
           type: 'wordcount',
           data: {
             text: parsed.data.text || '',
+            title: parsed.data.title || '',
             deviceType: parsed.data.deviceType || 'standard',
             writingGoal: parsed.data.writingGoal || 'general',
             targetKeyword: parsed.data.targetKeyword || '',

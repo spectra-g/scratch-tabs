@@ -32,6 +32,7 @@ describe('WordCountTablet', () => {
         type: 'wordcount',
         data: {
           text: '',
+          title: '',
           deviceType: 'standard',
           writingGoal: 'general',
           targetKeyword: '',
@@ -168,7 +169,7 @@ describe('WordCountTablet', () => {
       expect(screen.getByText('No Text to Analyze')).toBeInTheDocument();
       
       // Update state with text
-      const newState = { ...state, data: { text: 'Hello world' } };
+      const newState = { ...state, data: { ...state.data, text: 'Hello world' } };
       rerender(WordCountTablet.render(newState, mockOnChange));
       
       // Now stats should be shown

@@ -360,8 +360,19 @@ export const useShapeSnapEngineV2 = (
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, width, height);
 
-    // Serialize the SVG
-    const svgData = new XMLSerializer().serializeToString(svgElement);
+    // Clone the SVG to avoid modifying the original
+    const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+    
+    // Add font embedding for "Architects Daughter" font
+    const styleElement = document.createElement("style");
+    styleElement.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap');
+      text { font-family: "Architects Daughter", Arial, sans-serif !important; }
+    `;
+    clonedSvg.insertBefore(styleElement, clonedSvg.firstChild);
+
+    // Serialize the SVG with embedded font
+    const svgData = new XMLSerializer().serializeToString(clonedSvg);
     const svgBlob = new Blob([svgData], {
       type: "image/svg+xml;charset=utf-8",
     });

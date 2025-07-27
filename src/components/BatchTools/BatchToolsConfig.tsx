@@ -12,6 +12,7 @@ import {
   Search,
   RotateCcw,
   SortAsc,
+  Shield,
 } from "lucide-react";
 
 interface BatchToolsConfigProps {
@@ -901,6 +902,324 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
           max={500}
           description="Set to 0 for no wrapping"
         />
+      </ConfigSection>
+
+      {/* Redaction */}
+      <ConfigSection
+        title={
+          <div className="flex items-center space-x-2">
+            <Shield className="w-4 h-4 text-red-400" />
+            <span>Redact</span>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          <Checkbox
+            label="Enable redaction"
+            checked={!!config.redaction}
+            onChange={(checked) => {
+              if (checked) {
+                onChange({
+                  redaction: {
+                    patternType: "exact",
+                    customPatterns: [],
+                    builtInPatterns: {
+                      emails: false,
+                      ipAddresses: false,
+                      creditCards: false,
+                      ssn: false,
+                      phoneNumbers: false,
+                      dates: false,
+                      urls: false,
+                      secrets: false,
+                    },
+                    redactionMode: "placeholder",
+                    placeholderText: "[REDACTED]",
+                    maskCharacter: "*",
+                  },
+                });
+              } else {
+                onChange({ redaction: false });
+              }
+            }}
+            description="Hide sensitive information using pattern matching"
+          />
+
+          {config.redaction && (
+            <>
+              <Select
+                label="Pattern recognition type"
+                value={config.redaction.patternType}
+                onChange={(value) =>
+                  onChange({
+                    redaction: {
+                      ...config.redaction!,
+                      patternType: value as "exact" | "wildcard" | "regex",
+                    },
+                  })
+                }
+                options={[
+                  { value: "exact", label: "Exact match" },
+                  { value: "wildcard", label: "Wildcard (* and ?)" },
+                  { value: "regex", label: "Regular expression" },
+                ]}
+                description="How custom patterns should be interpreted"
+              />
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2">
+                  Built-in sensitive patterns
+                </label>
+                <div className="space-y-2">
+                  <Checkbox
+                    label="Email addresses"
+                    checked={config.redaction.builtInPatterns.emails}
+                    onChange={(checked) =>
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          builtInPatterns: {
+                            ...config.redaction!.builtInPatterns,
+                            emails: checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Checkbox
+                    label="IP addresses"
+                    checked={config.redaction.builtInPatterns.ipAddresses}
+                    onChange={(checked) =>
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          builtInPatterns: {
+                            ...config.redaction!.builtInPatterns,
+                            ipAddresses: checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Checkbox
+                    label="Credit card numbers"
+                    checked={config.redaction.builtInPatterns.creditCards}
+                    onChange={(checked) =>
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          builtInPatterns: {
+                            ...config.redaction!.builtInPatterns,
+                            creditCards: checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Checkbox
+                    label="Social Security numbers"
+                    checked={config.redaction.builtInPatterns.ssn}
+                    onChange={(checked) =>
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          builtInPatterns: {
+                            ...config.redaction!.builtInPatterns,
+                            ssn: checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Checkbox
+                    label="Phone numbers"
+                    checked={config.redaction.builtInPatterns.phoneNumbers}
+                    onChange={(checked) =>
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          builtInPatterns: {
+                            ...config.redaction!.builtInPatterns,
+                            phoneNumbers: checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Checkbox
+                    label="Dates"
+                    checked={config.redaction.builtInPatterns.dates}
+                    onChange={(checked) =>
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          builtInPatterns: {
+                            ...config.redaction!.builtInPatterns,
+                            dates: checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Checkbox
+                    label="URLs"
+                    checked={config.redaction.builtInPatterns.urls}
+                    onChange={(checked) =>
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          builtInPatterns: {
+                            ...config.redaction!.builtInPatterns,
+                            urls: checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Checkbox
+                    label="API keys & secrets"
+                    checked={config.redaction.builtInPatterns.secrets}
+                    onChange={(checked) =>
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          builtInPatterns: {
+                            ...config.redaction!.builtInPatterns,
+                            secrets: checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">
+                  Custom patterns
+                </label>
+                <div className="space-y-2">
+                  {config.redaction.customPatterns.map((pattern, index) => (
+                    <div key={index} className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={pattern}
+                        onChange={(e) => {
+                          const newPatterns = [...config.redaction!.customPatterns];
+                          newPatterns[index] = e.target.value;
+                          onChange({
+                            redaction: {
+                              ...config.redaction!,
+                              customPatterns: newPatterns,
+                            },
+                          });
+                        }}
+                        placeholder={
+                          config.redaction.patternType === "exact"
+                            ? "Enter exact text to redact"
+                            : config.redaction.patternType === "wildcard"
+                              ? "Use * and ? wildcards"
+                              : "Enter regex pattern"
+                        }
+                        className="flex-1 px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-500 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors"
+                      />
+                      <button
+                        onClick={() => {
+                          const newPatterns = config.redaction!.customPatterns.filter(
+                            (_, i) => i !== index,
+                          );
+                          onChange({
+                            redaction: {
+                              ...config.redaction!,
+                              customPatterns: newPatterns,
+                            },
+                          });
+                        }}
+                        className="px-2 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded text-sm transition-colors"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      onChange({
+                        redaction: {
+                          ...config.redaction!,
+                          customPatterns: [...config.redaction!.customPatterns, ""],
+                        },
+                      });
+                    }}
+                    className="w-full px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded text-sm transition-colors"
+                  >
+                    + Add custom pattern
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  {config.redaction.patternType === "exact"
+                    ? "Patterns will match exactly as typed"
+                    : config.redaction.patternType === "wildcard"
+                      ? "Use * for any characters, ? for single character"
+                      : "JavaScript regex patterns (case-insensitive)"}
+                </p>
+              </div>
+
+              <Select
+                label="Redaction mode"
+                value={config.redaction.redactionMode}
+                onChange={(value) =>
+                  onChange({
+                    redaction: {
+                      ...config.redaction!,
+                      redactionMode: value as "block" | "placeholder" | "mask" | "delete",
+                    },
+                  })
+                }
+                options={[
+                  { value: "block", label: "Block style (█████)" },
+                  { value: "placeholder", label: "Placeholder text" },
+                  { value: "mask", label: "Character masking" },
+                  { value: "delete", label: "Delete entirely" },
+                ]}
+                description="How redacted content should appear"
+              />
+
+              {config.redaction.redactionMode === "placeholder" && (
+                <TextInput
+                  label="Placeholder text"
+                  value={config.redaction.placeholderText}
+                  onChange={(value) =>
+                    onChange({
+                      redaction: {
+                        ...config.redaction!,
+                        placeholderText: value,
+                      },
+                    })
+                  }
+                  placeholder="[REDACTED]"
+                  description="Text to show in place of redacted content"
+                />
+              )}
+
+              {config.redaction.redactionMode === "mask" && (
+                <TextInput
+                  label="Mask character"
+                  value={config.redaction.maskCharacter}
+                  onChange={(value) =>
+                    onChange({
+                      redaction: {
+                        ...config.redaction!,
+                        maskCharacter: value || "*",
+                      },
+                    })
+                  }
+                  placeholder="*"
+                  description="Character to use for masking (e.g., *, #, X)"
+                />
+              )}
+            </>
+          )}
+        </div>
       </ConfigSection>
 
       {/* Advanced Transformations */}

@@ -1,5 +1,4 @@
-import React, { useRef } from "react";
-import { useClickOutside } from "../../hooks/useClickOutside";
+import React, { useRef, useEffect } from "react";
 import type { PopupMenuItem } from "./types";
 
 interface LanguageSelectionPopupProps {
@@ -17,7 +16,20 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
 
-  useClickOutside(popupRef, onClose);
+  // Handle click outside to close - using a more direct approach that works better with Monaco editor
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
 
   const handleSelectLanguage = (languageId: string) => {
     onSelectLanguage(languageId);

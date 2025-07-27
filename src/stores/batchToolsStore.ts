@@ -98,6 +98,31 @@ export interface TransformationConfig {
   // Advanced Transformations
   findReplaceRegex?: { find: string; replace: string; flags?: string } | false;
   javascriptSnippet?: string | false;
+
+  // Redaction
+  redaction?: {
+    // Pattern recognition type
+    patternType: "exact" | "wildcard" | "regex";
+    // Custom patterns to redact
+    customPatterns: string[];
+    // Built-in sensitive patterns
+    builtInPatterns: {
+      emails: boolean;
+      ipAddresses: boolean;
+      creditCards: boolean;
+      ssn: boolean;
+      phoneNumbers: boolean;
+      dates: boolean;
+      urls: boolean;
+      secrets: boolean; // API keys, tokens, etc.
+    };
+    // Redaction mode
+    redactionMode: "block" | "placeholder" | "mask" | "delete";
+    // Custom placeholder text for placeholder mode
+    placeholderText: string;
+    // Character to use for masking mode
+    maskCharacter: string;
+  } | false;
 }
 
 interface BatchToolsState {

@@ -517,4 +517,602 @@ describe("Text Transformations", () => {
       );
     });
   });
+
+  // Redaction Tests
+  describe("Redaction", () => {
+    describe("Built-in patterns", () => {
+      it("should redact email addresses", () => {
+        const input = "Contact us at support@example.com or admin@test.org";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: true,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("Contact us at [REDACTED] or [REDACTED]");
+      });
+
+      it("should redact IP addresses", () => {
+        const input = "Server at 192.168.1.1 and backup at 10.0.0.1";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: true,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("Server at [REDACTED] and backup at [REDACTED]");
+      });
+
+      it("should redact credit card numbers", () => {
+        const input = "Card: 4532015112830366 or 5555555555554444";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: true,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("Card: [REDACTED] or [REDACTED]");
+      });
+
+      it("should redact SSN numbers", () => {
+        const input = "SSN: 123-45-6789 or 987654321";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: true,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("SSN: [REDACTED] or [REDACTED]");
+      });
+
+      it("should redact phone numbers", () => {
+        const input = "Call (555) 123-4567 or +1-800-555-0123";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: true,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("Call [REDACTED] or [REDACTED]");
+      });
+
+      it("should redact dates", () => {
+        const input = "Born on 12/25/1990 or 2023-01-15";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: true,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("Born on [REDACTED] or [REDACTED]");
+      });
+
+      it("should redact URLs", () => {
+        const input = "Visit https://example.com or http://test.org/path";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: true,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("Visit [REDACTED] or [REDACTED]");
+      });
+
+      it("should redact API keys and secrets", () => {
+        const input = "api_key: abc123def456 and token=xyz789abc123def456ghi789";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: true,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toContain("[REDACTED]");
+      });
+
+      it("should redact multiple built-in patterns simultaneously", () => {
+        const input = "Email: user@example.com, Phone: (555) 123-4567, IP: 192.168.1.1";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: true,
+              ipAddresses: true,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: true,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("Email: [REDACTED], Phone: [REDACTED], IP: [REDACTED]");
+      });
+    });
+
+    describe("Custom patterns", () => {
+      it("should redact exact match patterns", () => {
+        const input = 'password: "mypass" and secret: "topsecret"';
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: ['"mypass"', '"topsecret"'],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe('password: [REDACTED] and secret: [REDACTED]');
+      });
+
+      it("should redact wildcard patterns", () => {
+        const input = "user123 and admin456 and guest789";
+        const config = {
+          redaction: {
+            patternType: "wildcard" as const,
+            customPatterns: ["user*", "admin*"],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("[REDACTED] and [REDACTED] and guest789");
+      });
+
+      it("should redact regex patterns", () => {
+        const input = 'password: "mypass" and token: "abc123"';
+        const config = {
+          redaction: {
+            patternType: "regex" as const,
+            customPatterns: ['password:\\s*"[^"]*"', 'token:\\s*"[^"]*"'],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: 'password: "[REDACTED]"',
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe('password: "[REDACTED]" and password: "[REDACTED]"');
+      });
+
+      it("should handle invalid regex patterns gracefully", () => {
+        const input = "test content";
+        const config = {
+          redaction: {
+            patternType: "regex" as const,
+            customPatterns: ["[invalid", "valid\\w+"],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        // Should still work for valid patterns and skip invalid ones
+        expect(result).toContain("test");
+      });
+
+      it("should skip empty patterns", () => {
+        const input = "test content";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: ["", "  ", "test"],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("[REDACTED] content");
+      });
+    });
+
+    describe("Redaction modes", () => {
+      const testConfig = {
+        patternType: "exact" as const,
+        customPatterns: ["secret"],
+        builtInPatterns: {
+          emails: false,
+          ipAddresses: false,
+          creditCards: false,
+          ssn: false,
+          phoneNumbers: false,
+          dates: false,
+          urls: false,
+          secrets: false,
+        },
+      };
+
+      it("should use block mode redaction", () => {
+        const input = "This is a secret message";
+        const config = {
+          redaction: {
+            ...testConfig,
+            redactionMode: "block" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("This is a ██████ message");
+      });
+
+      it("should use placeholder mode redaction", () => {
+        const input = "This is a secret message";
+        const config = {
+          redaction: {
+            ...testConfig,
+            redactionMode: "placeholder" as const,
+            placeholderText: "[CONFIDENTIAL]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("This is a [CONFIDENTIAL] message");
+      });
+
+      it("should use mask mode redaction", () => {
+        const input = "This is a secret message";
+        const config = {
+          redaction: {
+            ...testConfig,
+            redactionMode: "mask" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "#",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("This is a ###### message");
+      });
+
+      it("should use delete mode redaction", () => {
+        const input = "This is a secret message";
+        const config = {
+          redaction: {
+            ...testConfig,
+            redactionMode: "delete" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("This is a  message");
+      });
+
+      it("should handle default placeholder text", () => {
+        const input = "This is a secret message";
+        const config = {
+          redaction: {
+            ...testConfig,
+            redactionMode: "placeholder" as const,
+            placeholderText: "",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("This is a [REDACTED] message");
+      });
+
+      it("should handle default mask character", () => {
+        const input = "This is a secret message";
+        const config = {
+          redaction: {
+            ...testConfig,
+            redactionMode: "mask" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("This is a ****** message");
+      });
+    });
+
+    describe("Complex redaction scenarios", () => {
+      it("should handle overlapping patterns correctly", () => {
+        const input = "user@example.com is the email";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: ["user@example.com", "@example.com"],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        // First pattern should match and replace the entire email
+        expect(result).toBe("[REDACTED] is the email");
+      });
+
+      it("should work with other transformations", () => {
+        const input = "user@example.com and ADMIN@TEST.COM";
+        const config = {
+          caseTransform: "lower" as const,
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: [],
+            builtInPatterns: {
+              emails: true,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[EMAIL]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("[EMAIL] and [EMAIL]");
+      });
+
+      it("should preserve line structure with redaction", () => {
+        const input = "Line 1: secret123\nLine 2: normal\nLine 3: secret456";
+        const config = {
+          redaction: {
+            patternType: "wildcard" as const,
+            customPatterns: ["secret*"],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("Line 1: [REDACTED]\nLine 2: normal\nLine 3: [REDACTED]");
+      });
+
+      it("should handle case sensitivity correctly", () => {
+        const input = "Secret and SECRET and secret";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: ["secret"],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        // Only exact case match should be redacted
+        expect(result).toBe("Secret and SECRET and [REDACTED]");
+      });
+
+      it("should handle multiple custom patterns", () => {
+        const input = "password: mypass, token: abc123, key: def456";
+        const config = {
+          redaction: {
+            patternType: "exact" as const,
+            customPatterns: ["mypass", "abc123", "def456"],
+            builtInPatterns: {
+              emails: false,
+              ipAddresses: false,
+              creditCards: false,
+              ssn: false,
+              phoneNumbers: false,
+              dates: false,
+              urls: false,
+              secrets: false,
+            },
+            redactionMode: "placeholder" as const,
+            placeholderText: "[REDACTED]",
+            maskCharacter: "*",
+          },
+        };
+        const result = applyTransformations(input, config);
+        expect(result).toBe("password: [REDACTED], token: [REDACTED], key: [REDACTED]");
+      });
+    });
+
+    it("should not redact when redaction is disabled", () => {
+      const input = "email@example.com and secret password";
+      const config = {
+        redaction: false as const,
+      };
+      const result = applyTransformations(input, config);
+      expect(result).toBe(input);
+    });
+  });
 });
