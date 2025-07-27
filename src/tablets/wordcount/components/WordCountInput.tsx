@@ -7,7 +7,9 @@ import type { Tab } from '../../../types';
 
 interface WordCountInputProps {
   value: string;
+  title?: string;
   onChange: (value: string) => void;
+  onTitleChange?: (title: string) => void;
   highlights?: Array<{ startIndex: number; endIndex: number; className: string }>;
   onEditorReady?: (editor: any) => void;
   reportContent?: string;
@@ -15,7 +17,9 @@ interface WordCountInputProps {
 
 export const WordCountInput: React.FC<WordCountInputProps> = ({ 
   value, 
+  title = '',
   onChange, 
+  onTitleChange,
   highlights = [],
   onEditorReady,
   reportContent = ''
@@ -207,16 +211,28 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
 
   return (
     <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 h-full flex flex-col">
-      {/* Header with Tabs */}
+      {/* Header */}
+      <div className="flex items-center space-x-2 mb-3 flex-shrink-0">
+        <FileText size={16} className="text-gray-400" />
+        <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+          Content
+        </h3>
+      </div>
+
+      {/* Title Input Field */}
+      <div className="mb-3 flex-shrink-0">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => onTitleChange?.(e.target.value)}
+          placeholder="Enter document title (optional)"
+          className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
+        />
+      </div>
+
+      {/* Tabs and Actions */}
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <FileText size={16} className="text-gray-400" />
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
-              Content
-            </h3>
-          </div>
-          
           {/* Tabs */}
           <div className="flex space-x-1 bg-gray-700/30 rounded-md p-1">
             <button

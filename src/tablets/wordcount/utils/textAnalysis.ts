@@ -1431,12 +1431,22 @@ export function generateExportReport(
   deviceType: DeviceType,
   writingGoal: WritingGoal,
   targetKeyword?: string,
-  text?: string
+  text?: string,
+  title?: string
 ): string {
   const targets = WRITING_TARGETS[writingGoal];
   const timestamp = new Date().toLocaleString();
   
-  let report = `# Word Count Analysis Report\n\n`;
+  let report = '';
+  
+  // Add title if provided
+  if (title && title.trim()) {
+    report += `# ${title.trim()}\n\n`;
+    report += `## Word Count Analysis Report\n\n`;
+  } else {
+    report += `# Word Count Analysis Report\n\n`;
+  }
+  
   report += `**Generated:** ${timestamp}  \n`;
   report += `**Device Preview:** ${deviceType}  \n`;
   report += `**Writing Goal:** ${writingGoal}  \n`;
