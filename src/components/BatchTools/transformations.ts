@@ -516,7 +516,7 @@ function applyRegexFindReplace(
 
 function applyRedaction(
   text: string,
-  config: NonNullable<TransformationConfig["redaction"]>,
+  config: Exclude<TransformationConfig["redaction"], false>,
 ): string {
   let result = text;
 
@@ -526,7 +526,7 @@ function applyRedaction(
     ipAddresses: /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g,
     creditCards: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3[0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b/g,
     ssn: /\b(?:\d{3}-\d{2}-\d{4}|\d{9})\b/g,
-    phoneNumbers: /\b(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b/g,
+    phoneNumbers: /(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}/g,
     dates: /\b(?:\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2}|\d{1,2}-\d{1,2}-\d{2,4})\b/g,
     urls: /https?:\/\/(?:[-\w.])+(?:[:\d]+)?(?:\/(?:[\w\/_.])*(?:\?(?:[\w&=%.])*)?(?:#(?:[\w.])*)?)?/g,
     secrets: /\b(?:(?:api[_-]?key|token|secret|password|auth[_-]?key)[_-]?[:=]\s*[^\s\n"']+|[A-Za-z0-9]{32,})\b/gi,
@@ -553,10 +553,10 @@ function applyRedaction(
       } else if (config.patternType === "wildcard") {
         // Convert wildcard pattern to regex
         const wildcardPattern = pattern
-          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape regex chars
-          .replace(/\\\*/g, '.*') // Convert * to .*
-          .replace(/\\\?/g, '.'); // Convert ? to .
-        regex = new RegExp(wildcardPattern, 'g');
+          .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape regex chars except * and ?
+          .replace(/\*/g, '[^\\s]*') // Convert * to [^\s]* (match non-whitespace)
+          .replace(/\?/g, '.'); // Convert ? to .
+        regex = new RegExp(`\\b${wildcardPattern}\\b`, 'g');
       } else {
         // Use as regex pattern
         regex = new RegExp(pattern, 'g');
@@ -574,7 +574,7 @@ function applyRedaction(
 
 function getRedactedValue(
   originalValue: string,
-  config: NonNullable<TransformationConfig["redaction"]>,
+  config: Exclude<TransformationConfig["redaction"], false>,
 ): string {
   switch (config.redactionMode) {
     case "block":
