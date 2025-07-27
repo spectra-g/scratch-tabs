@@ -24,6 +24,13 @@ const mockStats: WordCountStats = {
   readingTime: { minutes: 0, seconds: 30 },
   speakingTime: { minutes: 0, seconds: 40 },
   handwritingTime: { hours: 0, minutes: 1 },
+  llmTokens: {
+    gpt35: 8,
+    gpt4: 8,
+    claude: 7,
+    llama: 9,
+    gemini: 7
+  },
   topKeywords: [
     { word: 'test', count: 2, density: 20.0 }
   ],

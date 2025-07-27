@@ -28,6 +28,13 @@ const mockStats: WordCountStats = {
   readingTime: { minutes: 2, seconds: 30 },
   speakingTime: { minutes: 3, seconds: 15 },
   handwritingTime: { hours: 1, minutes: 30 },
+  llmTokens: {
+    gpt35: 75,
+    gpt4: 75,
+    claude: 68,
+    llama: 79,
+    gemini: 69
+  },
   topKeywords: [
     { word: 'test', count: 5, density: 5.0 },
     { word: 'example', count: 3, density: 3.0 },
@@ -79,7 +86,7 @@ describe('WordCountDisplay', () => {
     render(<WordCountDisplay stats={mockStats} {...mockProps} />);
     
     expect(screen.getByText('100')).toBeInTheDocument();
-    expect(screen.getByText('75')).toBeInTheDocument();
+    expect(screen.getAllByText('75')).toHaveLength(2); // Unique words and GPT tokens
     expect(screen.getByText('500')).toBeInTheDocument();
     expect(screen.getByText('400')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
@@ -173,5 +180,21 @@ describe('WordCountDisplay', () => {
     render(<WordCountDisplay stats={statsWithMinutesOnly} {...mockProps} />);
     
     expect(screen.getByText('45m')).toBeInTheDocument();
+  });
+
+  it('should render LLM token estimates', () => {
+    render(<WordCountDisplay stats={mockStats} {...mockProps} />);
+    
+    expect(screen.getByText('LLM Token Estimates')).toBeInTheDocument();
+    expect(screen.getByText('GPT-3.5/4')).toBeInTheDocument();
+    expect(screen.getByText('Claude')).toBeInTheDocument();
+    expect(screen.getByText('LLaMA')).toBeInTheDocument();
+    expect(screen.getByText('Gemini')).toBeInTheDocument();
+    
+    // Check that we have all token counts (multiple instances of some numbers are okay)
+    expect(screen.getAllByText('75')).toHaveLength(2); // GPT tokens and unique words
+    expect(screen.getByText('68')).toBeInTheDocument(); // Claude tokens
+    expect(screen.getByText('79')).toBeInTheDocument(); // LLaMA tokens
+    expect(screen.getByText('69')).toBeInTheDocument(); // Gemini tokens
   });
 });

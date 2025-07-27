@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Tablet, TabletState } from '../types';
 import { FileText } from 'lucide-react';
 import { 

@@ -11,7 +11,8 @@ import {
   FileText,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Cpu
 } from 'lucide-react';
 import { 
   WordCountStats, 
@@ -19,7 +20,6 @@ import {
   WritingGoal, 
   WRITING_TARGETS, 
   evaluateMetricTarget,
-  calculateKeywordDensity,
   getSentenceLengthDistribution
 } from '../utils/textAnalysis';
 
@@ -430,6 +430,32 @@ export const WordCountDisplay: React.FC<WordCountDisplayProps> = ({
               <div className="flex justify-between">
                 <span className="text-gray-400">Handwriting Time</span>
                 <span className="text-gray-200 font-mono">{formatHandwritingTime(stats.handwritingTime)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* LLM Token Estimates */}
+          <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide flex items-center">
+              <Cpu size={16} className="mr-2 text-blue-400" />
+              LLM Token Estimates
+            </h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-400">GPT-3.5/4</span>
+                <span className="text-gray-200 font-mono">{stats.llmTokens.gpt35.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Claude</span>
+                <span className="text-gray-200 font-mono">{stats.llmTokens.claude.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">LLaMA</span>
+                <span className="text-gray-200 font-mono">{stats.llmTokens.llama.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Gemini</span>
+                <span className="text-gray-200 font-mono">{stats.llmTokens.gemini.toLocaleString()}</span>
               </div>
             </div>
           </div>
