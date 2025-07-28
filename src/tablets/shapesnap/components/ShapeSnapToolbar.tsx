@@ -15,7 +15,7 @@ import {
   Grid3X3,
 } from "lucide-react";
 import { ShapeSnapTool, ShapeSnapMode } from "../types";
-import { useIsMobile } from "../../../hooks/useIsMobile";
+import { useTabletDeviceInfo } from "../../bridge";
 
 type BackgroundMode = "notepad" | "none" | "dot-grid" | "graph-paper" | "isometric";
 
@@ -63,7 +63,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
   onToggleTemplates,
 }) => {
   const [showExportOptions, setShowExportOptions] = useState(false);
-  const isMobile = useIsMobile();
+  const { isMobile } = useTabletDeviceInfo();
 
   const handleDrawToggle = () => {
     // Toggle between 'draw' and 'select' modes

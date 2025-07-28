@@ -2,9 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Tablet, TabletState } from "../types";
 import { Editor } from "@monaco-editor/react";
 import { Users, Copy, RotateCw, Check, ExternalLink } from "lucide-react";
-import { useRootStore } from "../../stores";
-import { useSplitViewStore } from "../../stores/splitViewStore";
-import { useWorkspaceStore } from "../../stores/workspaceStore";
+import { useTabletTabCreation } from "../bridge";
 
 interface GenerationResult {
   timestamp: number;
@@ -89,9 +87,7 @@ export const RandomUserTablet: Tablet = {
       null,
     );
     const containerRef = useRef<HTMLDivElement>(null);
-    const { addBackgroundTab } = useRootStore();
-    const { splitView } = useSplitViewStore();
-    const { activeWorkspaceId } = useWorkspaceStore();
+    const { createBackgroundTab } = useTabletTabCreation();
     const [error, setError] = useState<string | null>(null);
 
     const generateUsers = async () => {
@@ -241,34 +237,18 @@ export const RandomUserTablet: Tablet = {
       (index: number) => {
         if (index < 0) return;
         setOpenedResultIndex(index);
-        const paneElem = containerRef.current?.closest(
-          "[data-editor-pane-side]",
-        );
-        const sideAttr = paneElem?.getAttribute("data-editor-pane-side");
-        const isRightSideLocal = splitView.isSplit && sideAttr === "right";
+        // Remove split view logic for bridge pattern simplicity
         const result = state.data.results[index];
-        const newTabId = crypto.randomUUID();
-        addBackgroundTab(
-          {
-            id: newTabId,
-            title: `Random User ${new Date(result.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
-            content: result.content,
-            language: result.format,
-            languageLocked: true,
-            cursorPosition: { lineNumber: 1, column: 1 },
-            dateCreated: Date.now(),
-            lastModified: Date.now(),
-            workspaceId: activeWorkspaceId || "",
-          },
-          isRightSideLocal,
+        createBackgroundTab(
+          `Random User ${new Date(result.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+          result.content,
+          result.format
         );
         setTimeout(() => setOpenedResultIndex(null), 1500);
       },
       [
         state.data.results,
-        addBackgroundTab,
-        splitView.isSplit,
-        activeWorkspaceId,
+        createBackgroundTab,
       ],
     );
 

@@ -12,9 +12,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Workflow, WorkflowStep, Prompt, Tag } from "../types";
-import { useRootStore } from "../../../stores";
-import { useSplitViewStore } from "../../../stores/splitViewStore";
-import { useWorkspaceStore } from "../../../stores/workspaceStore";
+import { useTabletTabCreation } from "../../bridge";
 
 interface PromptSelectorProps {
   prompts: Prompt[];
@@ -125,10 +123,8 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get stores for opening tabs
-  const { addBackgroundTab } = useRootStore();
-  const { splitView } = useSplitViewStore();
-  const { activeWorkspaceId } = useWorkspaceStore();
+  // Get bridge for tab creation
+  const { createBackgroundTab } = useTabletTabCreation();
 
   // Auto-enter edit mode for new workflows
   React.useEffect(() => {
@@ -352,24 +348,12 @@ ${content}`;
     const fullContent = `${header}\n\n${stepsText}`;
 
     // Determine which side to open the tab on
-    const paneElem = containerRef.current?.closest("[data-editor-pane-side]");
-    const sideAttr = paneElem?.getAttribute("data-editor-pane-side");
-    const isRightSideLocal = splitView.isSplit && sideAttr === "right";
+    // Remove split view logic for bridge pattern simplicity
 
-    const newTabId = crypto.randomUUID();
-    addBackgroundTab(
-      {
-        id: newTabId,
-        title: `${workflow.title} (${selectedSteps.size} steps)`,
-        content: fullContent,
-        language: "markdown",
-        languageLocked: true,
-        cursorPosition: { lineNumber: 1, column: 1 },
-        dateCreated: Date.now(),
-        lastModified: Date.now(),
-        workspaceId: activeWorkspaceId || "",
-      },
-      isRightSideLocal,
+    createBackgroundTab(
+      `${workflow.title} (${selectedSteps.size} steps)`,
+      fullContent,
+      "markdown"
     );
 
     // Exit selection mode and show success
@@ -378,9 +362,7 @@ ${content}`;
   }, [
     selectedSteps,
     workflow,
-    addBackgroundTab,
-    splitView.isSplit,
-    activeWorkspaceId,
+    createBackgroundTab,
   ]);
 
   const getPromptById = (promptId: string) => {
