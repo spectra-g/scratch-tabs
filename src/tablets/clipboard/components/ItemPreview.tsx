@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link2 } from 'lucide-react';
+import { Link2 } from '../../../components/Icons';
 import { ClipboardItem, ViewMode } from '../types';
 
 interface ItemPreviewProps {

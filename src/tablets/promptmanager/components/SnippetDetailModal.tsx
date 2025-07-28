@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X } from '../../../components/Icons';
 import { Snippet } from '../types';
 import { MarkdownPreview } from './MarkdownPreview';
 import { estimateTokenCount, formatTokenCount, getTokenCountColor } from '../utils/tokenCount';

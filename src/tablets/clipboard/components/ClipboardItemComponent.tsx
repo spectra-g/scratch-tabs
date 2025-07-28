@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Copy, Check, Star, Pin, Trash2 } from 'lucide-react';
+import { Copy, Check, Star, Pin, Trash2 } from '../../../components/Icons';
 import { ClipboardItem, ViewMode, ContentType } from '../types';
 import { ContentTypeIcon } from './ContentTypeIcon';
 import { ItemPreview } from './ItemPreview';

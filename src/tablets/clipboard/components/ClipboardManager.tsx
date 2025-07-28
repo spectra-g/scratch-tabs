@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu } from 'lucide-react';
+import { Menu } from '../../../components/Icons';
 import { ClipboardTabletState, ClipboardData, ViewMode, ContentType } from '../types';
 import { ClipboardSidebar } from './ClipboardSidebar';
 import { ClipboardHeader } from './ClipboardHeader';

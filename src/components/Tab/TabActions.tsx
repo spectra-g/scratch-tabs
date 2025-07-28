@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, ClipboardPlus, Tablet } from "lucide-react";
+import { Plus, ClipboardPlus, Tablet } from "../Icons";
 import { useRootStore } from "../../stores";
 
 interface TabActionsProps {

@@ -10,7 +10,7 @@ import { Tab } from "../../types";
 import { AIStatusIcon } from "../AI/AIStatusIcon";
 import { useRootStore } from "../../stores";
 import { useSplitViewStore } from "../../stores/splitViewStore";
-import { Search, Coffee } from "lucide-react";
+import { Search, Coffee } from "../Icons";
 import { useSearchStore } from "../../stores/searchStore";
 import { languageRegistry } from "../../languages";
 import { getPotentialLanguageMatches } from "../../languages";

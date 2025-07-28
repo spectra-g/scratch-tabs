@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Minus, Plus, Type } from 'lucide-react';
+import { Minus, Plus, Type } from '../../components/Icons';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { useTabsStore } from '../../stores/tabsStore';
 import { useRootStore } from '../../stores/rootStore';

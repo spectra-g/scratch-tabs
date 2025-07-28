@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Brain } from "lucide-react";
+import { Brain } from "../Icons";
 import { useAIStore } from "../../stores/aiStore";
 import { useModalStore } from "../../stores/modalStore";
 import { AITooltip } from "./AIToolTip";

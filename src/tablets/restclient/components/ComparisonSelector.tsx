@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ArrowRightLeft, Check, Clock, Plus } from 'lucide-react';
+import { X, ArrowRightLeft, Check, Clock, Plus } from '../../../components/Icons';
 import { ComparisonItem, ResponseHistoryItem, HttpResponse } from '../types';
 import { 
   createComparisonItem, 

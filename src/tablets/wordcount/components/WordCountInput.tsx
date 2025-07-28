@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { FileText, ClipboardPaste, Trash2, Copy, ExternalLink, Check } from 'lucide-react';
+import { FileText, ClipboardPaste, Trash2, Copy, ExternalLink, Check } from '../../../components/Icons';
 import Editor from '@monaco-editor/react';
 import { useTabletTabCreation } from '../../bridge';
 
