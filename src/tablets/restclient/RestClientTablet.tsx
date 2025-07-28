@@ -226,6 +226,13 @@ export const RestClientTablet: Tablet = {
   render(state: RestClientTabletState, onChange) {
     const { data } = state;
     const currentRequestHistory = data.requestHistory || []; // This line is key!
+    
+    // Ensure comparison object exists with defaults (for backward compatibility)
+    const comparison = data.comparison || {
+      isComparing: false,
+      selectedItems: [],
+      activeComparison: null,
+    };
 
     const [showResponseHistory, setShowResponseHistory] = useState(false);
     const [showRequestHistory, setShowRequestHistory] = useState(false);
@@ -311,6 +318,7 @@ export const RestClientTablet: Tablet = {
         updateState({
           response,
           isExecuting: false,
+          error: null, // Clear any previous error on successful response
           responseHistory: [responseHistoryItem, ...data.responseHistory],
           requestHistory: [requestHistoryItem, ...currentRequestHistory],
         });
@@ -395,7 +403,7 @@ export const RestClientTablet: Tablet = {
     const handleStartComparison = () => {
       updateState({
         comparison: {
-          ...data.comparison,
+          ...comparison,
           isComparing: true,
           selectedItems: [],
           activeComparison: null,
@@ -406,18 +414,18 @@ export const RestClientTablet: Tablet = {
     const handleComparisonSelectionChange = (items: ComparisonItem[]) => {
       updateState({
         comparison: {
-          ...data.comparison,
+          ...comparison,
           selectedItems: items,
         },
       });
     };
 
     const handleStartComparisonView = (items: ComparisonItem[]) => {
-      const comparison = compareResponses(items[0], items[1]);
+      const comparisonResult = compareResponses(items[0], items[1]);
       updateState({
         comparison: {
-          ...data.comparison,
-          activeComparison: comparison,
+          ...comparison,
+          activeComparison: comparisonResult,
         },
       });
     };
@@ -425,7 +433,7 @@ export const RestClientTablet: Tablet = {
     const handleCloseComparison = () => {
       updateState({
         comparison: {
-          ...data.comparison,
+          ...comparison,
           isComparing: false,
           selectedItems: [],
           activeComparison: null,
@@ -516,10 +524,10 @@ export const RestClientTablet: Tablet = {
 
             {/* Response Panel / Response History / Comparison */}
             <div className="flex-1 overflow-hidden">
-              {data.comparison.isComparing ? (
-                data.comparison.activeComparison ? (
+              {comparison.isComparing ? (
+                comparison.activeComparison ? (
                   <ResponseComparisonViewer
-                    comparison={data.comparison.activeComparison}
+                    comparison={comparison.activeComparison}
                     onClose={handleCloseComparison}
                   />
                 ) : (
@@ -528,7 +536,7 @@ export const RestClientTablet: Tablet = {
                     currentResponse={data.response}
                     currentMethod={data.request.method}
                     currentUrl={data.request.url}
-                    selectedItems={data.comparison.selectedItems}
+                    selectedItems={comparison.selectedItems}
                     onSelectionChange={handleComparisonSelectionChange}
                     onStartComparison={handleStartComparisonView}
                     onClose={handleCloseComparison}
