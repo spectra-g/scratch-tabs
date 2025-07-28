@@ -3,7 +3,6 @@ import { useDropzone } from "react-dropzone";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
 import { ImportProcessSummary } from "../../features/import-export/types";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
-import { useRootStore } from "../../stores";
 import { X, UploadCloud, AlertTriangle, CheckCircle } from "../Icons";
 
 interface ImportWorkspacesModalProps {

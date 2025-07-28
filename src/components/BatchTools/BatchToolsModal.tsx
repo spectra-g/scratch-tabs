@@ -1,20 +1,8 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useCallback, useMemo, useRef, useEffect } from "react";
 import { useBatchToolsStore } from "../../stores/batchToolsStore";
-import { useEditorStore } from "../../stores/editorStore";
-import { useRootStore } from "../../stores";
-import { useSplitViewStore } from "../../stores/splitViewStore";
-import { useTabsStore } from "../../stores/tabsStore";
-import { useWorkspaceStore } from "../../stores/workspaceStore";
-import { useActionLock } from "../../hooks/useActionLock";
 import {
   X,
-  Play,
-  Pause,
   RotateCcw,
-  RotateCw,
-  SkipForward,
-  Undo2,
-  Redo2,
   Check,
   Eye,
   EyeOff,

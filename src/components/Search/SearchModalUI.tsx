@@ -1,21 +1,7 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { useSearchStore } from "../../stores/searchStore";
-import { useEditorStore } from "../../stores/editorStore";
-import { useRootStore } from "../../stores";
-import { useSplitViewStore } from "../../stores/splitViewStore";
-import { useTabsStore } from "../../stores/tabsStore";
-import { useWorkspaceStore } from "../../stores/workspaceStore";
-import { useActionLock } from "../../hooks/useActionLock";
+import React, { useMemo, useEffect } from "react";
 import {
-  X,
   Search,
   ChevronDown,
-  ChevronUp,
-  ArrowUp,
-  ArrowDown,
-  Check,
-  Eye,
-  EyeOff,
   History,
   Trash2,
   CaseSensitive,

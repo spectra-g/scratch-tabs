@@ -1,14 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { useRootStore } from "../../stores";
-import { useSplitViewStore } from "../../stores/splitViewStore";
-import { useEditorStore } from "../../stores/editorStore";
-import { useTabsStore } from "../../stores/tabsStore";
-import { useWorkspaceStore } from "../../stores/workspaceStore";
 import {
   AlertTriangle,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
   ExternalLink,
   RefreshCw,
   Archive,
