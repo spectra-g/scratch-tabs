@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Editor } from "@monaco-editor/react";
-import { Copy, Code, History } from "lucide-react";
+import { Copy, Code, History, Check } from "lucide-react";
 import { HttpRequest } from "../types";
 import { converters, getConverter } from "../converters";
 import { requestToCurl } from "../converters/curlConverter";
@@ -123,31 +123,40 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
         </div>
 
         <div className="flex items-center space-x-2">
-          <button
-            onClick={handleCopyCurl}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
-            title="Copy as cURL"
-          >
-            <Code size={14} />
-            <span>{isCurlCopied ? "Copied!" : "Copy cURL"}</span>
-          </button>
+          {format !== "curl" && (
+            <button
+              onClick={handleCopyCurl}
+              className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+              title="Copy as cURL"
+            >
+              <Code size={14} />
+              <span>{isCurlCopied ? "Copied!" : "Copy cURL"}</span>
+            </button>
+          )}
 
           <button
             onClick={handleCopy}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+            className={`p-2 rounded-md transition-colors ${
+              isCopied
+                ? "text-green-400"
+                : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+            }`}
             title="Copy"
           >
-            <Copy size={14} />
-            <span>{isCopied ? "Copied!" : "Copy"}</span>
+            {isCopied ? <Check size={14} /> : <Copy size={14} />}
           </button>
 
           <button
             onClick={onShowRequestHistory}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors relative"
             title="View request history"
           >
             <History size={14} />
-            <span>History ({requestHistoryCount})</span>
+            {requestHistoryCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                {requestHistoryCount}
+              </span>
+            )}
           </button>
         </div>
       </div>

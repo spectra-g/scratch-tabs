@@ -559,6 +559,7 @@ export const RestClientTablet: Tablet = {
                   historyCount={data.responseHistory.length}
                   onClearError={handleClearError}
                   onStartComparison={handleStartComparison}
+                  selectedItemsCount={comparison.selectedItems.length}
                 />
               )}
             </div>

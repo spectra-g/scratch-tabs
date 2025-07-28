@@ -17,6 +17,7 @@ interface ResponseViewerProps {
   historyCount: number;
   onClearError?: () => void;
   onStartComparison?: () => void;
+  selectedItemsCount?: number;
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = ({
@@ -27,6 +28,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
   historyCount,
   onClearError,
   onStartComparison,
+  selectedItemsCount = 0,
 }) => {
   const [activeTab, setActiveTab] = useState("body");
   const [isCopied, setIsCopied] = useState(false);
@@ -143,29 +145,39 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={handleCopy}
-              className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+              className={`p-2 rounded-md transition-colors ${
+                isCopied
+                  ? "text-green-400"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+              }`}
               title="Copy response body"
             >
               {isCopied ? <Check size={14} /> : <Copy size={14} />}
-              <span>{isCopied ? "Copied!" : "Copy"}</span>
             </button>
 
             <button
               onClick={onShowHistory}
-              className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors relative"
               title="View response history"
             >
               <History size={14} />
-              <span>History ({historyCount})</span>
+              {historyCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {historyCount}
+                </span>
+              )}
             </button>
             {onStartComparison && (
               <button
                 onClick={onStartComparison}
-                className="flex items-center space-x-1 px-2 py-1 bg-blue-600/50 hover:bg-blue-600/70 rounded-md text-sm text-gray-300 transition-colors"
+                className={`p-2 rounded-md transition-colors ${
+                  selectedItemsCount >= 2
+                    ? "text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                }`}
                 title="Compare responses"
               >
                 <ArrowRightLeft size={14} />
-                <span>Compare</span>
               </button>
             )}
           </div>
