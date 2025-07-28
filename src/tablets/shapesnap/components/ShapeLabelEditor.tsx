@@ -146,21 +146,13 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
     e.stopPropagation();
   };
 
-  // Calculate position to center the editor and avoid truncation
-  // Note: We don't have canvas dimensions here, so we'll use reasonable defaults
-  const canvasWidth = 1200; // Assume reasonable canvas width
-  const canvasHeight = 800; // Assume reasonable canvas height
-  
+  // Center the editor around the provided coordinates (shape center or double-click position)
   let editorX = x - dynamicSize.width / 2;
   let editorY = y - dynamicSize.height / 2;
   
-  // Ensure the editor doesn't go off the left or top edges
-  editorX = Math.max(10, editorX);
-  editorY = Math.max(10, editorY);
-  
-  // Ensure the editor doesn't go off the right or bottom edges
-  editorX = Math.min(canvasWidth - dynamicSize.width - 10, editorX);
-  editorY = Math.min(canvasHeight - dynamicSize.height - 10, editorY);
+  // Basic bounds checking to prevent going completely off screen
+  editorX = Math.max(5, editorX);
+  editorY = Math.max(5, editorY);
 
   return (
     <foreignObject
@@ -179,7 +171,7 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
         onFocus={() => setHasUserFocused(true)}
         onClick={handleTextareaClick}
         onMouseDown={handleTextareaMouseDown}
-        placeholder="Enter text... (Shift+Enter to save, Esc to cancel)"
+        placeholder="Enter text"
         style={{
           color: textColor,
           backgroundColor,
