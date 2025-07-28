@@ -108,10 +108,17 @@ export const getShapeBoundingBox = (
         fontSize?: number;
       };
       const fontSize = textShape.fontSize || 16;
-      const textWidth = (textShape as any).text
-        ? (textShape as any).text.length * fontSize * 0.6
-        : 50; // rough estimate
-      const textHeight = fontSize;
+      const text = (textShape as any).text || '';
+      const textLines = text.split('\n');
+      
+      // Calculate width based on the longest line
+      const maxLineLength = Math.max(...textLines.map(line => line.length), 1);
+      const textWidth = maxLineLength * fontSize * 0.6; // rough estimate
+      
+      // Calculate height based on number of lines
+      const lineHeight = fontSize * 1.2;
+      const textHeight = textLines.length * lineHeight;
+      
       return {
         left: textShape.x - textWidth / 2,
         right: textShape.x + textWidth / 2,

@@ -11,7 +11,7 @@ describe("XmlLanguageDetector", () => {
     test("should have correct basic properties", () => {
       expect(detector.id).toBe("xml");
       expect(detector.name).toBe("XML");
-      expect(detector.extensions).toEqual(["xml", "xsd", "svg", "rss", "atom", "plist", "xaml", "csproj", "vbproj", "fsproj", "xsl", "xslt", "wsdl", "config", "manifest", "pom", "jnlp", "kml", "gpx", "collada", "dae", "drawio"]);
+      expect(detector.extensions).toEqual(["xml", "xsd", "rss", "atom", "plist", "xaml", "csproj", "vbproj", "fsproj", "xsl", "xslt", "wsdl", "config", "manifest", "pom", "jnlp", "kml", "gpx", "collada", "dae", "drawio"]);
       expect(detector.priority).toBe(4);
     });
 

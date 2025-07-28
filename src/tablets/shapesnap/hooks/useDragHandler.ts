@@ -336,10 +336,18 @@ export const useDragHandler = ({
                 fontSize: number;
                 text: string;
               };
-              const textWidth = textShape.text
-                ? textShape.text.length * textShape.fontSize * 0.6
-                : 100;
-              const textHeight = textShape.fontSize;
+              const fontSize = textShape.fontSize || 16;
+              const text = textShape.text || '';
+              const textLines = text.split('\n');
+              
+              // Calculate width based on the longest line
+              const maxLineLength = Math.max(...textLines.map(line => line.length), 1);
+              const textWidth = maxLineLength * fontSize * 0.6; // rough estimate
+              
+              // Calculate height based on number of lines
+              const lineHeight = fontSize * 1.2;
+              const textHeight = textLines.length * lineHeight;
+              
               dragGuides = {
                 left: textShape.x - textWidth / 2,
                 right: textShape.x + textWidth / 2,

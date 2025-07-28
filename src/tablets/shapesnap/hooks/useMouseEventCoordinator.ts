@@ -44,6 +44,7 @@ export const useMouseEventCoordinator = ({
   onUpdateLabel,
   onUpdateShape,
   onMoveMultipleShapes,
+  onDeleteShape,
   onAddShape,
 }: UseMouseEventCoordinatorProps) => {
   const [mouseEventState, setMouseEventState] = useState<MouseEventState>({
@@ -100,6 +101,7 @@ export const useMouseEventCoordinator = ({
     setEditingShape,
     onShapeClick,
     onUpdateLabel,
+    onDeleteShape,
     onAddShape,
   });
 

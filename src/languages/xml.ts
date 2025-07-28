@@ -14,7 +14,6 @@ export class XmlLanguageDetector
   extensions = [
     "xml",
     "xsd",
-    "svg",
     "rss",
     "atom",
     "plist",

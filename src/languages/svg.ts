@@ -9,10 +9,10 @@ export class SvgLanguageDetector
   extends BaseLanguageDetector
   implements LanguageDetector
 {
-  id = "svg";
+  id = "xml"; // Use Monaco's built-in XML language
   name = "SVG";
   extensions = ["svg"];
-  priority = 5; // Higher priority than XML since SVG is more specific
+  priority = 3; // Higher priority than XML since SVG is more specific
 
   sampleContent(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -180,27 +180,25 @@ export class SvgLanguageDetector
       { pattern: /=>|->/g, weight: -0.2 },
       { pattern: /^package\s|System\.out\.println|#include/gi, weight: -0.5 },
       { pattern: /\b(html|head|body|div|span|p)\b/gi, weight: -0.2 }, // HTML elements
+      { pattern: /\b(import|export|require|module\.exports)\b/gi, weight: -0.3 }, // JavaScript/Node.js
+      { pattern: /\b(public|private|protected|static|final|abstract)\b/gi, weight: -0.2 }, // Java/C#
+      { pattern: /\b(def|class|end|do|if|else|elsif|unless|while|for|in)\b/gi, weight: -0.3 }, // Ruby
+      { pattern: /\b(def|class|if|else|elif|for|while|try|except|import|from)\b/gi, weight: -0.3 }, // Python
+      { pattern: /\b(fn|let|mut|struct|enum|impl|trait|use|mod)\b/gi, weight: -0.3 }, // Rust
+      { pattern: /\b(func|var|const|type|struct|interface|package|import)\b/gi, weight: -0.3 }, // Go
     ];
 
-    // If no strong SVG signals were found initially, apply anti-patterns more aggressively
-    if (confidenceScore < 0.4) {
-      for (const ap of antiPatterns) {
-        if (ap.pattern.test(content)) {
-          confidenceScore += ap.weight;
-        }
+    antiPatterns.forEach(({ pattern, weight }) => {
+      if (pattern.test(trimmedContent)) {
+        confidenceScore += weight;
       }
-    }
+    });
 
-    // 10. Final Adjustments and Clamping
-    if (strongSignalFound && patternsMatched >= 2) {
-      confidenceScore += 0.1;
-    }
+    // 10. Final confidence calculation
+    confidenceScore = Math.max(0.0, Math.min(1.0, confidenceScore));
 
-    confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
-
-    const isMatch =
-      (strongSignalFound && confidenceScore >= 0.3) ||
-      (patternsMatched >= 2 && confidenceScore >= 0.4);
+    // Determine if this is a match
+    const isMatch = strongSignalFound && confidenceScore >= 0.4;
 
     return {
       match: isMatch,
@@ -213,303 +211,11 @@ export class SvgLanguageDetector
     return "svg";
   }
 
-  registerProvider(monaco: any): void {
-    const languageId = this.id;
-
-    // Register the language if not already registered
-    if (!monaco.languages.getLanguages().some((lang: any) => lang.id === languageId)) {
-      monaco.languages.register({ id: languageId });
-    }
-
-    // Define SVG syntax highlighting
-    monaco.languages.setMonarchTokensProvider(languageId, {
-      defaultToken: '',
-      tokenPostfix: '.svg',
-
-      // SVG keywords
-      keywords: [
-        'svg', 'circle', 'rect', 'path', 'line', 'polyline', 'polygon', 'ellipse',
-        'text', 'tspan', 'g', 'defs', 'use', 'symbol', 'pattern', 'filter',
-        'linearGradient', 'radialGradient', 'stop', 'animate', 'animateTransform',
-        'animateMotion', 'feGaussianBlur', 'feDropShadow', 'feOffset', 'feMerge',
-        'feMergeNode', 'feColorMatrix', 'feComponentTransfer', 'feFuncR', 'feFuncG',
-        'feFuncB', 'feFuncA', 'feBlend', 'feComposite', 'feConvolveMatrix',
-        'feDiffuseLighting', 'feDisplacementMap', 'feFlood', 'feImage', 'feMorphology',
-        'feSpecularLighting', 'feTile', 'feTurbulence', 'feDistantLight', 'fePointLight',
-        'feSpotLight', 'metadata', 'title', 'desc'
-      ],
-
-      // SVG attributes
-      attributes: [
-        'viewBox', 'preserveAspectRatio', 'd', 'points', 'cx', 'cy', 'r',
-        'x', 'y', 'width', 'height', 'fill', 'stroke', 'stroke-width',
-        'text-anchor', 'font-family', 'font-size', 'transform', 'filter',
-        'gradientUnits', 'spreadMethod', 'xlink:href', 'opacity', 'fill-opacity',
-        'stroke-opacity', 'stroke-linecap', 'stroke-linejoin', 'stroke-dasharray',
-        'stroke-dashoffset', 'fill-rule', 'clip-path', 'mask', 'marker',
-        'marker-start', 'marker-mid', 'marker-end', 'vector-effect', 'pathLength',
-        'startOffset', 'textLength', 'lengthAdjust', 'dx', 'dy', 'rotate',
-        'font-weight', 'font-style', 'font-variant', 'text-decoration',
-        'letter-spacing', 'word-spacing', 'textLength', 'lengthAdjust'
-      ],
-
-      // XML keywords
-      xmlKeywords: [
-        'xml', 'version', 'encoding', 'standalone'
-      ],
-
-      // The main tokenizer for our languages
-      tokenizer: {
-        root: [
-          // XML declaration
-          [/<\?xml/, 'metatag', '@xmlDecl'],
-          
-          // Comments
-          [/<!--/, 'comment', '@comment'],
-          
-          // DOCTYPE
-          [/<!DOCTYPE/, 'metatag', '@doctype'],
-          
-          // CDATA
-          [/<!\[CDATA\[/, 'metatag', '@cdata'],
-          
-          // Processing instructions
-          [/<\?[^?]*\?>/, 'metatag'],
-          
-          // Tags
-          [/<(\w+)/, 'tag', '@tag'],
-          [/<\/(\w+)/, 'tag'],
-          
-          // Self-closing tags
-          [/<(\w+)([^>]*)\/>/, 'tag'],
-          
-          // Attributes
-          [/"([^"]*)"/, 'string'],
-          [/'([^']*)'/, 'string'],
-          [/[\w\-]+(?=\s*=)/, 'attribute'],
-          
-          // Numbers
-          [/\d+\.?\d*/, 'number'],
-          
-          // Whitespace
-          [/\s+/, 'white']
-        ],
-
-        xmlDecl: [
-          [/[^?>]+/, 'metatag'],
-          [/\?>/, 'metatag', '@pop']
-        ],
-
-        comment: [
-          [/[^<\-]+/, 'comment'],
-          [/-->/, 'comment', '@pop'],
-          [/<!--/, 'comment']
-        ],
-
-        doctype: [
-          [/[^>]+/, 'metatag'],
-          [/>/, 'metatag', '@pop']
-        ],
-
-        cdata: [
-          [/[^\]]+/, 'metatag'],
-          [/\]>/, 'metatag', '@pop']
-        ],
-
-        tag: [
-          [/[^\/\s>]+/, 'tag'],
-          [/>/, 'tag', '@pop'],
-          [/\//, 'tag'],
-          [/\s+/, 'white']
-        ]
-      }
-    });
-
-    // Register document formatting provider
-    monaco.languages.registerDocumentFormattingEditProvider(languageId, {
-      provideDocumentFormattingEdits(model: any, options: any) {
-        const content = model.getValue();
-        const indentChar = options.insertSpaces ? " ".repeat(options.tabSize) : "\t";
-        
-        // Use a simpler, more effective approach that preserves structure
-        let formattedSvg = "";
-        let indentLevel = 0;
-        let inTextElement = false;
-        
-        // Split content into tokens while preserving structure
-        const tokens = this.tokenizeSvg(content);
-        
-        for (let i = 0; i < tokens.length; i++) {
-          const token = tokens[i];
-          
-          if (token.type === 'processingInstruction') {
-            // XML declarations and PIs
-            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
-          } else if (token.type === 'comment') {
-            // Comments
-            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
-          } else if (token.type === 'openTag') {
-            // Opening tags
-            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
-            if (!token.value.includes('/>')) {
-              indentLevel++;
-            }
-            // Check if this is a text element
-            if (token.value.includes('<text') || token.value.includes('<tspan')) {
-              inTextElement = true;
-            }
-          } else if (token.type === 'closeTag') {
-            // Closing tags
-            indentLevel = Math.max(0, indentLevel - 1);
-            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
-            // Check if we're closing a text element
-            if (token.value.includes('</text') || token.value.includes('</tspan')) {
-              inTextElement = false;
-            }
-          } else if (token.type === 'selfClosingTag') {
-            // Self-closing tags
-            formattedSvg += indentChar.repeat(indentLevel) + token.value + '\n';
-          } else if (token.type === 'text') {
-            // Text content - preserve original formatting within text elements
-            if (inTextElement) {
-              // For text elements, preserve the original text formatting
-              formattedSvg += token.value;
-            } else {
-              // For other text content, trim and format
-              const trimmedText = token.value.trim();
-              if (trimmedText) {
-                formattedSvg += indentChar.repeat(indentLevel) + trimmedText + '\n';
-              }
-            }
-          } else {
-            // Other token types (shouldn't happen in normal SVG)
-            formattedSvg += token.value;
-          }
-        }
-        
-        // Ensure proper line endings
-        formattedSvg = formattedSvg.trim();
-        if (content.trim().length > 0 && content.endsWith('\n')) {
-          formattedSvg += '\n';
-        }
-        
-        return [{
-          range: model.getFullModelRange(),
-          text: formattedSvg
-        }];
-      },
-      
-      // Helper method to tokenize SVG content
-      tokenizeSvg(content: string) {
-        const tokens: Array<{type: string, value: string}> = [];
-        
-        // More specific regex patterns to avoid overlaps
-        const commentRegex = /<!--[\s\S]*?-->/g;
-        const cdataRegex = /<!\[CDATA\[[\s\S]*?\]\]>/g;
-        const piRegex = /<\?[^>]*\?>/g;
-        const tagRegex = /<(\/?)([^>]+)>/g;
-        
-        let lastIndex = 0;
-        let match: RegExpExecArray | null;
-        
-        // Find all tags and special elements
-        const allMatches: Array<{index: number, type: string, value: string}> = [];
-        
-        // Find comments first (highest priority)
-        while ((match = commentRegex.exec(content)) !== null) {
-          allMatches.push({
-            index: match.index,
-            type: 'comment',
-            value: match[0]
-          });
-        }
-        
-        // Find CDATA
-        while ((match = cdataRegex.exec(content)) !== null) {
-          allMatches.push({
-            index: match.index,
-            type: 'cdata',
-            value: match[0]
-          });
-        }
-        
-        // Find processing instructions (XML declarations, etc.)
-        while ((match = piRegex.exec(content)) !== null) {
-          allMatches.push({
-            index: match.index,
-            type: 'processingInstruction',
-            value: match[0]
-          });
-        }
-        
-        // Find tags (excluding processing instructions and comments)
-        while ((match = tagRegex.exec(content)) !== null) {
-          const tagContent = match[0];
-          
-          // Skip if this is already matched as a processing instruction or comment
-          const isAlreadyMatched = allMatches.some(m => 
-            m.index <= match!.index && 
-            m.index + m.value.length > match!.index
-          );
-          
-          if (!isAlreadyMatched) {
-            const isClosing = match[1] === '/';
-            const tagName = match[2];
-            const isSelfClosing = tagName.endsWith('/');
-            
-            let type = 'openTag';
-            if (isClosing) {
-              type = 'closeTag';
-            } else if (isSelfClosing) {
-              type = 'selfClosingTag';
-            }
-            
-            allMatches.push({
-              index: match.index,
-              type,
-              value: match[0]
-            });
-          }
-        }
-        
-        // Sort matches by index
-        allMatches.sort((a, b) => a.index - b.index);
-        
-        // Process matches and extract text
-        for (const match of allMatches) {
-          // Add text before this match
-          if (match.index > lastIndex) {
-            const text = content.substring(lastIndex, match.index);
-            // Preserve whitespace, including blank lines
-            if (text) {
-              tokens.push({ type: 'text', value: text });
-            }
-          }
-          
-          // Add the match
-          tokens.push({ type: match.type, value: match.value });
-          lastIndex = match.index + match.value.length;
-        }
-        
-        // Add remaining text
-        if (lastIndex < content.length) {
-          const text = content.substring(lastIndex);
-          if (text) {
-            tokens.push({ type: 'text', value: text });
-          }
-        }
-        
-        return tokens;
-      }
-    });
-  }
+  // No registerProvider needed - using Monaco's built-in XML language
 }
 
 // Create and register the detector
 const svgDetector = new SvgLanguageDetector();
 languageRegistry.register(svgDetector);
 
-// Export for backward compatibility (optional)
-export const registerSvgProvider = (monaco: any) => {
-  svgDetector.registerProvider(monaco);
-}; 
+// No need for registerSvgProvider - using Monaco's built-in XML language 
