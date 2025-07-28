@@ -89,6 +89,16 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
   const backgroundColor = canvasMode === "dark" ? "#23272f" : "#f5f5f5";
   const borderColor = canvasMode === "dark" ? "#3b82f6" : "#2563eb";
 
+  const handleTextareaClick = (e: React.MouseEvent) => {
+    // Prevent click from bubbling up to the canvas
+    e.stopPropagation();
+  };
+
+  const handleTextareaMouseDown = (e: React.MouseEvent) => {
+    // Prevent mousedown from bubbling up to the canvas
+    e.stopPropagation();
+  };
+
   return (
     <foreignObject
       x={x}
@@ -104,6 +114,8 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         onFocus={() => setHasUserFocused(true)}
+        onClick={handleTextareaClick}
+        onMouseDown={handleTextareaMouseDown}
         placeholder="Enter label..."
         style={{
           color: textColor,
