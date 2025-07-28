@@ -145,7 +145,7 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
               </button>
             </div>
           </div>
-          <pre className="bg-gray-900 p-2 rounded text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap">
+          <pre className="bg-gray-900 p-2 rounded text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap custom-scrollbar">
             {toCurl(url)}
           </pre>
         </div>
