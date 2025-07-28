@@ -19,7 +19,7 @@ import {
   Globe,
   Menu,
 } from "lucide-react";
-import { useTabletBridge } from "../bridge";
+import { useTabletBridge, useTabletDeviceInfo } from "../bridge";
 import { VaultItemCard } from "./components/VaultItemCard";
 import { VaultItemModal } from "./components/VaultItemModal";
 import { VaultSidebar } from "./components/VaultSidebar";
@@ -108,6 +108,7 @@ export const VaultTablet: Tablet = {
 
   render(state: VaultTabletState, onChange) {
     const bridge = useTabletBridge();
+    const { isMobile } = useTabletDeviceInfo();
 
     // Local state for UI interactions
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
@@ -126,13 +127,12 @@ export const VaultTablet: Tablet = {
 
     // Handle mobile state changes
     useEffect(() => {
-      const { isMobile } = bridge.getDeviceInfo();
       if (!isMobile) {
         setIsSidebarOpen(true);
       } else {
         setIsSidebarOpen(false);
       }
-    }, [bridge]);
+    }, [isMobile]);
 
     // Memoized filtered and sorted items
     const filteredItems = useMemo(() => {
@@ -729,14 +729,14 @@ export const VaultTablet: Tablet = {
           </div>
 
           {/* Main Content - Use flex-1 and min-w-0 to allow proper truncation */}
-          <div className={`flex-1 min-w-0 font-mono text-sm text-gray-200 truncate ${bridge.getDeviceInfo().isMobile ? "mr-2" : "mr-4"}`}>
+                          <div className={`flex-1 min-w-0 font-mono text-sm text-gray-200 truncate ${isMobile ? "mr-2" : "mr-4"}`}>
             {item.content}
           </div>
 
           {/* Actions - Hidden by default, visible on hover */}
           <div
             className={`flex items-center opacity-0 group-hover:opacity-100 transition-opacity ${
-              bridge.getDeviceInfo().isMobile 
+                                isMobile 
                 ? "absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800/95 backdrop-blur-sm rounded-md px-1 space-x-0.5" 
                 : "ml-auto flex-shrink-0 space-x-1"
             }`}
@@ -760,7 +760,7 @@ export const VaultTablet: Tablet = {
                   )}
                 </button>
 
-                {!bridge.getDeviceInfo().isMobile && (
+                {!isMobile && (
                   <button
                     onClick={() => handleEditItem(item)}
                     className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
@@ -770,7 +770,7 @@ export const VaultTablet: Tablet = {
                   </button>
                 )}
 
-                {!bridge.getDeviceInfo().isMobile && (
+                {!isMobile && (
                   <button
                     onClick={() => handleDuplicateItem(item.id)}
                     className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
@@ -844,7 +844,7 @@ export const VaultTablet: Tablet = {
         onClearFilters={handleClearFilters}
         sortOrder={state.data.sortOrder}
         onChangeSortOrder={handleChangeSortOrder}
-        isMobile={bridge.getDeviceInfo().isMobile}
+        isMobile={isMobile}
         onCloseSidebar={() => setIsSidebarOpen(false)}
       />
     );
@@ -853,7 +853,7 @@ export const VaultTablet: Tablet = {
       <div className="h-full bg-gray-900 flex relative overflow-hidden">
         {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
-          {isSidebarOpen && bridge.getDeviceInfo().isMobile && (
+          {isSidebarOpen && isMobile && (
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
@@ -867,14 +867,14 @@ export const VaultTablet: Tablet = {
         </AnimatePresence>
 
         {/* Desktop Sidebar */}
-        {!bridge.getDeviceInfo().isMobile && (
+                    {!isMobile && (
           <div className="w-64 flex-shrink-0 border-r border-gray-700/50">
             <SidebarContent />
           </div>
         )}
 
         {/* Hamburger Menu Button */}
-        {!isSidebarOpen && bridge.getDeviceInfo().isMobile && (
+                    {!isSidebarOpen && isMobile && (
           <div className="absolute top-0 left-0 z-30 p-2">
             <button
               onClick={() => setIsSidebarOpen(true)}

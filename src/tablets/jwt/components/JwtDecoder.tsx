@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Editor } from "@monaco-editor/react";
 import { FileDown, FileUp, Trash2 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
@@ -34,11 +34,21 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   onTokenChange,
 }) => {
   const [localToken, setLocalToken] = useState(token);
+  const decodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update local token when prop changes
   useEffect(() => {
     setLocalToken(token);
   }, [token]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (decodeTimeoutRef.current) {
+        clearTimeout(decodeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Decode token when local token changes
   const decodeToken = useCallback(
@@ -66,11 +76,20 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
     [onTokenChange],
   );
 
-  // Handle token input change
+  // Handle token input change with debounce
   const handleTokenChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newToken = e.target.value;
     setLocalToken(newToken);
-    decodeToken(newToken);
+    
+    // Clear any existing timeout
+    if (decodeTimeoutRef.current) {
+      clearTimeout(decodeTimeoutRef.current);
+    }
+    
+    // Debounce the decode operation to handle paste events better
+    decodeTimeoutRef.current = setTimeout(() => {
+      decodeToken(newToken);
+    }, 100); // 100ms delay
   };
 
   // Clear token

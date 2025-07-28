@@ -44,8 +44,9 @@ const Base64TabletUI: React.FC<{
   const [showHistory, setShowHistory] = useState(false);
   const [isValidBase64, setIsValidBase64] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastProcessedInput = useRef<string>("");
 
-  // Process input based on mode
+  // Process input based on mode (without adding to history)
   const processInput = useCallback(() => {
     if (!input) {
       onChange({
@@ -88,29 +89,12 @@ const Base64TabletUI: React.FC<{
       const newStats = calculateBase64Stats(input, result);
       setStats(newStats);
 
-      // Add to history
-      const historyItem: HistoryItem = {
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        action:
-          mode === "line-by-line"
-            ? isLikelyBase64(input.split("\n")[0] || "")
-              ? "decode"
-              : "encode"
-            : mode,
-        input,
-        output: result,
-        format: selectedFormat,
-        encoding: selectedEncoding,
-      };
-
       onChange({
         ...state,
         data: {
           ...state.data,
           output: result,
           error: null,
-          history: [historyItem, ...state.data.history.slice(0, 99)], // Keep last 100 items
         },
       });
     } catch (err) {
@@ -132,6 +116,81 @@ const Base64TabletUI: React.FC<{
     state,
     onChange,
   ]);
+
+  // Add to history (separate function)
+  const addToHistory = useCallback(() => {
+    if (!input || input === lastProcessedInput.current) {
+      return; // Don't add to history if input is empty or hasn't changed
+    }
+
+    try {
+      let result = "";
+
+      if (mode === "encode") {
+        result = encodeBase64(
+          input,
+          selectedFormat,
+          selectedEncoding,
+          wrapOutput,
+        );
+      } else if (mode === "decode") {
+        result = decodeBase64(input, selectedFormat, selectedEncoding);
+      } else if (mode === "line-by-line") {
+        // Determine if we should encode or decode based on input
+        const shouldEncode = !isLikelyBase64(input.split("\n")[0] || "");
+        result = processLineByLine(
+          input,
+          shouldEncode ? "encode" : "decode",
+          selectedFormat,
+          selectedEncoding,
+          preserveNewlines,
+        );
+      }
+
+      // Add to history
+      const historyItem: HistoryItem = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        action:
+          mode === "line-by-line"
+            ? isLikelyBase64(input.split("\n")[0] || "")
+              ? "decode"
+              : "encode"
+            : mode,
+        input,
+        output: result,
+        format: selectedFormat,
+        encoding: selectedEncoding,
+      };
+
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          history: [historyItem, ...state.data.history.slice(0, 99)], // Keep last 100 items
+        },
+      });
+
+      lastProcessedInput.current = input;
+    } catch (err) {
+      // Don't add to history if processing fails
+      console.error("Failed to add to history:", err);
+    }
+  }, [
+    input,
+    mode,
+    selectedFormat,
+    selectedEncoding,
+    wrapOutput,
+    preserveNewlines,
+    state,
+    onChange,
+  ]);
+
+  // Handle input blur to add to history
+  const handleInputBlur = useCallback(() => {
+    addToHistory();
+  }, [addToHistory]);
 
   // Validate Base64 input
   useEffect(() => {
@@ -518,6 +577,7 @@ const Base64TabletUI: React.FC<{
         <Base64Input
           value={input}
           onChange={setInput}
+          onBlur={handleInputBlur}
           placeholder={
             mode === "encode"
               ? "Enter text to encode..."

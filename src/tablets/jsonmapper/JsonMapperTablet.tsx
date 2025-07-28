@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Tablet, TabletState } from "../types";
-import { Search, FileJson, Upload } from "lucide-react";
+import { Search, FileJson, Upload, Info } from "lucide-react";
 import { MappingList } from "./components/MappingList";
 import { MappingEditor } from "./components/MappingEditor";
 import { TestMappingModal } from "./components/TestMappingModal";
 import { CodeGenerationModal } from "./components/CodeGenerationModal";
 import { BatchTransformModal } from "./components/BatchTransformModal";
+import { HelpGuide } from "./components/HelpGuide";
 import { JsonMapperState, MappingConfig } from "./types";
 
 export const JsonMapperTablet: Tablet = {
@@ -52,6 +53,7 @@ export const JsonMapperTablet: Tablet = {
 
   render(state: JsonMapperState, onChange) {
     const [showBatchTransform, setShowBatchTransform] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
 
     const handleSearchChange = (query: string) => {
       onChange({
@@ -231,6 +233,13 @@ export const JsonMapperTablet: Tablet = {
               <h2 className="text-xl font-semibold text-gray-100">
                 JSON Mapper
               </h2>
+              <button
+                onClick={() => setShowHelp(!showHelp)}
+                className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                title="Show help guide"
+              >
+                <Info size={16} />
+              </button>
             </div>
 
             {!state.data.isEditingMapping && !state.data.isCreatingMapping && (
@@ -262,6 +271,16 @@ export const JsonMapperTablet: Tablet = {
             )}
           </div>
         </div>
+
+        {/* Help Guide */}
+        {showHelp && (
+          <div className="flex-none p-4 border-b border-gray-700/50">
+            <HelpGuide 
+              isExpanded={showHelp}
+              onToggle={(expanded) => setShowHelp(expanded)}
+            />
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">

@@ -7,6 +7,7 @@ import { handleFileDrop } from "../utils/base64Utils";
 interface Base64InputProps {
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder: string;
   error: string | null;
   mode: "encode" | "decode" | "line-by-line";
@@ -17,6 +18,7 @@ interface Base64InputProps {
 export const Base64Input: React.FC<Base64InputProps> = ({
   value,
   onChange,
+  onBlur,
   placeholder,
   error,
   mode,
@@ -72,7 +74,10 @@ export const Base64Input: React.FC<Base64InputProps> = ({
             : "focus:border-blue-500/50"
         } ${isFocused ? "border-blue-500/50" : ""}`}
         onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onBlur={() => {
+          setIsFocused(false);
+          onBlur?.();
+        }}
         spellCheck={false}
       />
       <input {...getInputProps()} />
