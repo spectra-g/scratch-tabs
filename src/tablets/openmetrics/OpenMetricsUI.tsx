@@ -43,15 +43,7 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
         setParseResult(result);
         setParseError(null);
 
-        // Update the active snapshot with the new metrics
-        if (state.activeSnapshotId) {
-          const updatedSnapshots = state.snapshots.map((snapshot) =>
-            snapshot.id === state.activeSnapshotId
-              ? { ...snapshot, metrics: result.metrics }
-              : snapshot,
-          );
-          onChange({ ...state, snapshots: updatedSnapshots });
-        }
+        // Snapshots are now immutable - no auto-updating
       } catch (error) {
         setParseError(error instanceof Error ? error.message : String(error));
       } finally {
@@ -75,6 +67,21 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
   const handleTakeSnapshot = (name: string) => {
     if (!parseResult) return;
 
+    // Check for duplicate against most recent snapshot
+    const mostRecentSnapshot = state.snapshots[0];
+    if (mostRecentSnapshot && mostRecentSnapshot.metrics.length === parseResult.metrics.length) {
+      const isDuplicate = mostRecentSnapshot.metrics.every((metric, index) => {
+        const newMetric = parseResult.metrics[index];
+        return metric.name === newMetric.name && 
+               metric.value === newMetric.value &&
+               JSON.stringify(metric.labels) === JSON.stringify(newMetric.labels);
+      });
+      
+      if (isDuplicate) {
+        return; // Don't create duplicate
+      }
+    }
+
     const newSnapshot: Snapshot = {
       id: `snapshot_${Date.now()}`,
       name,
@@ -82,7 +89,9 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
       metrics: parseResult.metrics,
     };
 
-    const updatedSnapshots = [...state.snapshots, newSnapshot];
+    // Add new snapshot to the beginning of the array (most recent first)
+    const updatedSnapshots = [newSnapshot, ...state.snapshots];
+    
     onChange({
       ...state,
       snapshots: updatedSnapshots,
@@ -193,9 +202,10 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
           />
         )}
 
-        {state.activeTab === "chart" && activeSnapshot && (
+        {state.activeTab === "chart" && (
           <MetricsChart
-            metrics={activeSnapshot.metrics}
+            metrics={parseResult?.metrics || []}
+            snapshots={state.snapshots}
             selectedMetricName={state.selectedMetricName}
             selectedLabels={state.selectedLabels}
             chartConfig={state.chartConfig}
@@ -204,9 +214,10 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
           />
         )}
 
-        {state.activeTab === "query" && activeSnapshot && (
+        {state.activeTab === "query" && (
           <QueryPanel
-            metrics={activeSnapshot.metrics}
+            metrics={parseResult?.metrics || []}
+            snapshots={state.snapshots}
             queryString={state.queryString}
             onUpdateQuery={handleUpdateQuery}
           />

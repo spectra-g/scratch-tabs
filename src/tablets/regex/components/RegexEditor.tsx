@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Copy, Check } from "lucide-react";
 import { RegexError } from "../types";
 
 interface RegexEditorProps {
@@ -9,9 +10,22 @@ interface RegexEditorProps {
 
 export function RegexEditor({ value, onChange, error }: RegexEditorProps) {
   const [focused, setFocused] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
+  };
+
+  const handleCopy = async () => {
+    if (value) {
+      try {
+        await navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("Failed to copy:", err);
+      }
+    }
   };
 
   return (
@@ -36,8 +50,21 @@ export function RegexEditor({ value, onChange, error }: RegexEditorProps) {
           placeholder="Enter regex pattern..."
           spellCheck={false}
         />
-        <div className="flex-shrink-0 text-gray-400 font-mono text-sm pl-2">
+        <div className="flex-shrink-0 text-gray-400 font-mono text-sm pl-2 flex items-center gap-1">
           /
+          {value && (
+            <button
+              onClick={handleCopy}
+              className={`p-1 rounded transition-colors ${
+                copied
+                  ? "text-green-400"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+              }`}
+              title="Copy regex pattern"
+            >
+              {copied ? <Check size={14} data-testid="check" /> : <Copy size={14} />}
+            </button>
+          )}
         </div>
       </div>
 

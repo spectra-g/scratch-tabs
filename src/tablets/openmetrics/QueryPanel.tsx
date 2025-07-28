@@ -4,13 +4,15 @@ import { MetricSample, QueryResult } from "./types";
 import { executeQuery } from "./QueryEngine";
 
 interface QueryPanelProps {
-  metrics: MetricSample[];
+  metrics: MetricSample[]; // Current parsed metrics
+  snapshots: { id: string; name: string; metrics: MetricSample[] }[];
   queryString: string;
   onUpdateQuery: (query: string) => void;
 }
 
 export const QueryPanel: React.FC<QueryPanelProps> = ({
   metrics,
+  snapshots,
   queryString,
   onUpdateQuery,
 }) => {
@@ -18,6 +20,27 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [selectedDataSources, setSelectedDataSources] = useState<string[]>(["current"]);
+
+  // Combine metrics from selected data sources
+  const combinedMetrics = React.useMemo(() => {
+    let allMetrics: MetricSample[] = [];
+    
+    if (selectedDataSources.includes("current")) {
+      allMetrics = [...allMetrics, ...metrics];
+    }
+    
+    selectedDataSources.forEach(sourceId => {
+      if (sourceId !== "current") {
+        const snapshot = snapshots.find(s => s.id === sourceId);
+        if (snapshot) {
+          allMetrics = [...allMetrics, ...snapshot.metrics];
+        }
+      }
+    });
+    
+    return allMetrics;
+  }, [metrics, snapshots, selectedDataSources]);
 
   // Execute query when button is clicked
   const handleExecuteQuery = () => {
@@ -31,7 +54,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
     setError(null);
 
     try {
-      const queryResult = executeQuery(metrics, queryString);
+      const queryResult = executeQuery(combinedMetrics, queryString);
       setResult(queryResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -44,6 +67,26 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
   // Clear query and results
   const handleClearQuery = () => {
     onUpdateQuery("");
+    setResult(null);
+    setError(null);
+  };
+
+  // Toggle data source selection
+  const toggleDataSource = (sourceId: string) => {
+    const newSources = [...selectedDataSources];
+    const index = newSources.indexOf(sourceId);
+    
+    if (index === -1) {
+      newSources.push(sourceId);
+    } else {
+      // Don't allow removing all sources
+      if (newSources.length > 1) {
+        newSources.splice(index, 1);
+      }
+    }
+    
+    setSelectedDataSources(newSources);
+    // Clear results when data sources change
     setResult(null);
     setError(null);
   };
@@ -117,6 +160,33 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
             </ul>
           </div>
         )}
+
+        {/* Data source selector */}
+        <div className="mb-3">
+          <div className="text-xs text-gray-400 mb-2">Data Sources</div>
+          <div className="flex flex-wrap gap-2">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedDataSources.includes("current")}
+                onChange={() => toggleDataSource("current")}
+                className="mr-2"
+              />
+              <span className="text-sm text-gray-300">Current</span>
+            </label>
+            {snapshots.map((snapshot) => (
+              <label key={snapshot.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedDataSources.includes(snapshot.id)}
+                  onChange={() => toggleDataSource(snapshot.id)}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-300">{snapshot.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
 
         <div className="flex space-x-2">
           <div className="relative flex-1">

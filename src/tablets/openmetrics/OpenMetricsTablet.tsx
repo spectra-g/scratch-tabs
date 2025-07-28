@@ -34,13 +34,6 @@ export const OpenMetricsTablet: Tablet = {
   ],
 
   createInitialState(): OpenMetricsTabletState {
-    const initialSnapshot: Snapshot = {
-      id: "initial",
-      name: "Initial",
-      createdAt: Date.now(),
-      metrics: [],
-    };
-
     return {
       type: "openmetrics",
       data: {
@@ -65,8 +58,8 @@ process_cpu_seconds_total 29323.04
 # TYPE process_resident_memory_bytes gauge
 process_resident_memory_bytes 2478268416
 # EOF`,
-        snapshots: [initialSnapshot],
-        activeSnapshotId: "initial",
+        snapshots: [],
+        activeSnapshotId: null,
         compareSnapshotId: null,
         selectedMetricName: null,
         selectedLabels: {},

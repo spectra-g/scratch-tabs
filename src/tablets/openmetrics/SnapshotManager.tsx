@@ -32,6 +32,17 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
   const [newSnapshotName, setNewSnapshotName] = useState("");
   const [isCreatingSnapshot, setIsCreatingSnapshot] = useState(false);
 
+  // Generate next snapshot name
+  const getNextSnapshotName = () => {
+    const existingNumbers = snapshots
+      .map(s => s.name.match(/^Snapshot (\d+)$/))
+      .filter(match => match)
+      .map(match => parseInt(match![1], 10));
+    
+    const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+    return `Snapshot ${nextNumber}`;
+  };
+
   const activeSnapshot = useMemo(
     () => snapshots.find((s) => s.id === activeSnapshotId),
     [snapshots, activeSnapshotId],
@@ -188,7 +199,10 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium text-gray-300">Snapshots</h3>
           <button
-            onClick={() => setIsCreatingSnapshot(true)}
+            onClick={() => {
+              setIsCreatingSnapshot(true);
+              setNewSnapshotName(getNextSnapshotName());
+            }}
             className="p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200"
             title="Take new snapshot"
           >
@@ -224,7 +238,10 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
           </div>
         ) : (
           <button
-            onClick={() => setIsCreatingSnapshot(true)}
+            onClick={() => {
+              setIsCreatingSnapshot(true);
+              setNewSnapshotName(getNextSnapshotName());
+            }}
             className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 mb-4"
           >
             <Camera size={16} />
