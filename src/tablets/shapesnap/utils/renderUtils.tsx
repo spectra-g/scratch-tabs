@@ -808,7 +808,7 @@ export const renderShape = (
             style={{
               fontFamily: sketchFont
                 ? '"Comic Sans MS", "Marker Felt", "Bradley Hand ITC", cursive'
-                : undefined,
+                : 'Arial, Helvetica, sans-serif',
               fontSize: `${shape.fontSize || 16}px !important`,
             }}
           >
@@ -1224,7 +1224,7 @@ export const renderShapeOverlay = (
       ? (() => {
         const fontFamily = sketchFont
           ? '"Comic Sans MS", "Marker Felt", "Bradley Hand ITC", cursive'
-          : undefined;
+          : 'Arial, Helvetica, sans-serif';
         if (shape.type === "line") {
           // Use special positioning for lines based on orientation
           const labelPos = getLineLabelPosition(
