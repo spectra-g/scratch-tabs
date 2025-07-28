@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Edit3, Copy, Eye, EyeOff } from "lucide-react";
+import { Edit3, Copy, Eye, EyeOff } from "../../../components/Icons";
 
 interface MaskedCellProps {
   value: string;

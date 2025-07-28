@@ -1,11 +1,11 @@
-import { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component, ErrorInfo, ReactNode } from "react";
 import {
   AlertTriangle,
   ExternalLink,
-  X,
-  Archive,
   RefreshCw,
-} from "lucide-react";
+  Archive,
+  X,
+} from "../Icons";
 
 interface Props {
   children: ReactNode;

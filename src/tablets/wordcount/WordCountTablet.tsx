@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Tablet, TabletState } from '../types';
-import { FileText } from 'lucide-react';
+import { FileText } from '../../components/Icons';
 import { 
   analyzeText, 
   WordCountStats, 

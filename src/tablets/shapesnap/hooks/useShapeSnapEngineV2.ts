@@ -363,11 +363,11 @@ export const useShapeSnapEngineV2 = (
     // Clone the SVG to avoid modifying the original
     const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
     
-    // Add font embedding for "Architects Daughter" font
+    // Add font styles for both sketch and non-sketch modes (system fonts work in export)
     const styleElement = document.createElement("style");
     styleElement.textContent = `
-      @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap');
-      text { font-family: "Architects Daughter", Arial, sans-serif !important; }
+      text[style*="Comic Sans"] { font-family: "Comic Sans MS", "Marker Felt", "Bradley Hand ITC", cursive !important; }
+      text[style*="Arial"] { font-family: Arial, Helvetica, sans-serif !important; }
     `;
     clonedSvg.insertBefore(styleElement, clonedSvg.firstChild);
 

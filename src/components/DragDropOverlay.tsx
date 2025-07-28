@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Upload } from "lucide-react";
+import { Upload } from "./Icons";
 import { useRootStore } from "../stores";
 import { useSplitViewStore } from "../stores/splitViewStore";
 import { useModalStore } from "../stores/modalStore";

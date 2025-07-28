@@ -19,11 +19,7 @@ import {
   Globe,
   Menu,
 } from "lucide-react";
-import { useRootStore } from "../../stores";
-import { useSplitViewStore } from "../../stores/splitViewStore";
-import { useWorkspaceStore } from "../../stores/workspaceStore";
-import { useIsMobile } from "../../hooks/useIsMobile";
-import { detectLanguage } from "../../languages";
+import { useTabletBridge, useTabletDeviceInfo } from "../bridge";
 import { VaultItemCard } from "./components/VaultItemCard";
 import { VaultItemModal } from "./components/VaultItemModal";
 import { VaultSidebar } from "./components/VaultSidebar";
@@ -111,10 +107,8 @@ export const VaultTablet: Tablet = {
   },
 
   render(state: VaultTabletState, onChange) {
-    const { addBackgroundTab } = useRootStore();
-    const { splitView } = useSplitViewStore();
-    const { activeWorkspaceId } = useWorkspaceStore();
-    const isMobile = useIsMobile();
+    const bridge = useTabletBridge();
+    const { isMobile } = useTabletDeviceInfo();
 
     // Local state for UI interactions
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
@@ -554,7 +548,7 @@ export const VaultTablet: Tablet = {
     );
 
     const handleOpenInNewTab = useCallback(
-      (id: string) => {
+      async (id: string) => {
         const item = state.data.items.find((item) => item.id === id);
         if (!item) return;
 
@@ -563,29 +557,21 @@ export const VaultTablet: Tablet = {
         // Determine which pane to open in
         const paneElem = document.querySelector("[data-editor-pane-side]");
         const sideAttr = paneElem?.getAttribute("data-editor-pane-side");
-        const isRightSide = splitView.isSplit && sideAttr === "right";
+        const isRightSide = bridge.splitView.isSplitViewActive() && sideAttr === "right";
 
         // Detect language if not already set
-        const language =
-          item.contentType === "plaintext"
-            ? detectLanguage(item.content)
-            : item.contentType;
+        const languageResult = item.contentType === "plaintext"
+          ? bridge.detectLanguage(item.content)
+          : { language: item.contentType };
 
         // Create a new tab with the content
-        addBackgroundTab(
-          {
-            id: crypto.randomUUID(),
-            title: item.title,
-            content: item.content,
-            language,
-            languageLocked: true,
-            cursorPosition: { lineNumber: 1, column: 1 },
-            dateCreated: Date.now(),
-            lastModified: Date.now(),
-            workspaceId: activeWorkspaceId || "",
-          },
-          isRightSide,
-        );
+        await bridge.createBackgroundTab({
+          title: item.title,
+          content: item.content,
+          language: languageResult.language,
+          languageLocked: true,
+          workspaceId: bridge.getCurrentWorkspaceId() || undefined,
+        });
 
         // Save the current order before updating
         if (
@@ -623,9 +609,7 @@ export const VaultTablet: Tablet = {
       [
         state,
         onChange,
-        addBackgroundTab,
-        splitView.isSplit,
-        activeWorkspaceId,
+        bridge,
         sortedItems,
       ],
     );
@@ -745,14 +729,14 @@ export const VaultTablet: Tablet = {
           </div>
 
           {/* Main Content - Use flex-1 and min-w-0 to allow proper truncation */}
-          <div className={`flex-1 min-w-0 font-mono text-sm text-gray-200 truncate ${isMobile ? "mr-2" : "mr-4"}`}>
+                          <div className={`flex-1 min-w-0 font-mono text-sm text-gray-200 truncate ${isMobile ? "mr-2" : "mr-4"}`}>
             {item.content}
           </div>
 
           {/* Actions - Hidden by default, visible on hover */}
           <div
             className={`flex items-center opacity-0 group-hover:opacity-100 transition-opacity ${
-              isMobile 
+                                isMobile 
                 ? "absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800/95 backdrop-blur-sm rounded-md px-1 space-x-0.5" 
                 : "ml-auto flex-shrink-0 space-x-1"
             }`}
@@ -883,14 +867,14 @@ export const VaultTablet: Tablet = {
         </AnimatePresence>
 
         {/* Desktop Sidebar */}
-        {!isMobile && (
+                    {!isMobile && (
           <div className="w-64 flex-shrink-0 border-r border-gray-700/50">
             <SidebarContent />
           </div>
         )}
 
         {/* Hamburger Menu Button */}
-        {!isSidebarOpen && isMobile && (
+                    {!isSidebarOpen && isMobile && (
           <div className="absolute top-0 left-0 z-30 p-2">
             <button
               onClick={() => setIsSidebarOpen(true)}

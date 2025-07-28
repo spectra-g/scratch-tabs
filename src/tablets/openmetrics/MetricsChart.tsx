@@ -25,7 +25,8 @@ import { MetricSample } from "./types";
 import { groupMetricsByLabels, formatLabelsForDisplay } from "./utils";
 
 interface MetricsChartProps {
-  metrics: MetricSample[];
+  metrics: MetricSample[]; // Current parsed metrics
+  snapshots: { id: string; name: string; metrics: MetricSample[] }[];
   selectedMetricName: string | null;
   selectedLabels: Record<string, string>;
   chartConfig: {
@@ -41,6 +42,7 @@ interface MetricsChartProps {
 
 export const MetricsChart: React.FC<MetricsChartProps> = ({
   metrics,
+  snapshots,
   selectedMetricName,
   selectedLabels,
   chartConfig,
@@ -48,13 +50,34 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
   onSelectMetric,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDataSources, setSelectedDataSources] = useState<string[]>(["current"]);
+
+  // Combine metrics from selected data sources
+  const combinedMetrics = useMemo(() => {
+    let allMetrics: MetricSample[] = [];
+    
+    if (selectedDataSources.includes("current")) {
+      allMetrics = [...allMetrics, ...metrics];
+    }
+    
+    selectedDataSources.forEach(sourceId => {
+      if (sourceId !== "current") {
+        const snapshot = snapshots.find(s => s.id === sourceId);
+        if (snapshot) {
+          allMetrics = [...allMetrics, ...snapshot.metrics];
+        }
+      }
+    });
+    
+    return allMetrics;
+  }, [metrics, snapshots, selectedDataSources]);
 
   // Get all unique metric names
   const metricNames = useMemo(() => {
     const names = new Set<string>();
-    metrics.forEach((metric) => names.add(metric.name));
+    combinedMetrics.forEach((metric) => names.add(metric.name));
     return Array.from(names).sort();
-  }, [metrics]);
+  }, [combinedMetrics]);
 
   // Filter metric names by search term
   const filteredMetricNames = useMemo(() => {
@@ -69,7 +92,7 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
 
     // If we have specific labels selected, filter by those
     if (Object.keys(selectedLabels).length > 0) {
-      return metrics.filter(
+      return combinedMetrics.filter(
         (metric) =>
           metric.name === selectedMetricName &&
           Object.entries(selectedLabels).every(
@@ -79,8 +102,8 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
     }
 
     // Otherwise, get all samples for this metric name
-    return metrics.filter((metric) => metric.name === selectedMetricName);
-  }, [metrics, selectedMetricName, selectedLabels]);
+    return combinedMetrics.filter((metric) => metric.name === selectedMetricName);
+  }, [combinedMetrics, selectedMetricName, selectedLabels]);
 
   // Get all unique label keys for the selected metric
   const availableLabelKeys = useMemo(() => {
@@ -136,6 +159,23 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
       ...chartConfig,
       type,
     });
+  };
+
+  // Toggle data source selection
+  const toggleDataSource = (sourceId: string) => {
+    const newSources = [...selectedDataSources];
+    const index = newSources.indexOf(sourceId);
+    
+    if (index === -1) {
+      newSources.push(sourceId);
+    } else {
+      // Don't allow removing all sources
+      if (newSources.length > 1) {
+        newSources.splice(index, 1);
+      }
+    }
+    
+    setSelectedDataSources(newSources);
   };
 
   // Generate colors for chart elements
@@ -292,6 +332,33 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
             >
               <PieChartIcon size={16} />
             </button>
+          </div>
+        </div>
+
+        {/* Data source selector */}
+        <div className="mb-3">
+          <div className="text-xs text-gray-400 mb-2">Data Sources</div>
+          <div className="flex flex-wrap gap-2">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedDataSources.includes("current")}
+                onChange={() => toggleDataSource("current")}
+                className="mr-2"
+              />
+              <span className="text-sm text-gray-300">Current</span>
+            </label>
+            {snapshots.map((snapshot) => (
+              <label key={snapshot.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedDataSources.includes(snapshot.id)}
+                  onChange={() => toggleDataSource(snapshot.id)}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-300">{snapshot.name}</span>
+              </label>
+            ))}
           </div>
         </div>
 

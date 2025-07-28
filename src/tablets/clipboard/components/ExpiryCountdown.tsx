@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Pin, Clock } from 'lucide-react';
+import { Pin, Clock } from '../../../components/Icons';
 import { ClipboardItem } from '../types';
 import { formatDuration } from '../utils/contentUtils';
 

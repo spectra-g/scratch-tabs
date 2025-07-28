@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu } from 'lucide-react';
+import { Menu } from '../../../components/Icons';
 import { ClipboardTabletState, ClipboardData, ViewMode, ContentType } from '../types';
 import { ClipboardSidebar } from './ClipboardSidebar';
 import { ClipboardHeader } from './ClipboardHeader';
@@ -9,7 +9,7 @@ import { useClipboardOperations } from '../hooks/useClipboardOperations';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useAutoExpiry } from '../hooks/useAutoExpiry';
 import { filterItems } from '../utils/clipboardUtils';
-import { useIsMobile } from '../../../hooks/useIsMobile';
+import { useTabletDeviceInfo } from '../../bridge';
 
 interface ClipboardManagerProps {
   state: ClipboardTabletState;
@@ -20,7 +20,7 @@ export const ClipboardManager: React.FC<ClipboardManagerProps> = ({ state, onCha
   const { data } = state;
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const { isMobile } = useTabletDeviceInfo();
 
   const updateData = useCallback(
     (updates: Partial<ClipboardData>) => {

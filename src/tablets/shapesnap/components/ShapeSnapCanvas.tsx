@@ -622,8 +622,8 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
     const width = 120;
     const height = 60;
     return {
-      x: center.x - width / 2,
-      y: center.y - height / 2,
+      x: center.x,  // Pass center coordinates directly, let ShapeLabelEditor handle centering
+      y: center.y,  // Pass center coordinates directly, let ShapeLabelEditor handle centering
       width,
       height,
     };

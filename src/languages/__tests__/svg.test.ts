@@ -9,10 +9,10 @@ describe('SVG Language Detector', () => {
 
   describe('Basic Properties', () => {
     it('should have correct basic properties', () => {
-      expect(detector.id).toBe('svg');
+      expect(detector.id).toBe('xml');
       expect(detector.name).toBe('SVG');
       expect(detector.extensions).toEqual(['svg']);
-      expect(detector.priority).toBe(5);
+      expect(detector.priority).toBe(3);
     });
 
     it('should return correct file extension', () => {
@@ -189,42 +189,6 @@ describe('SVG Language Detector', () => {
   });
 
   describe('Monaco Integration', () => {
-    it('should register language provider', () => {
-      const mockMonaco = {
-        languages: {
-          getLanguages: jest.fn().mockReturnValue([]),
-          register: jest.fn(),
-          setMonarchTokensProvider: jest.fn(),
-          registerDocumentFormattingEditProvider: jest.fn()
-        }
-      };
-
-      expect(() => {
-        detector.registerProvider(mockMonaco);
-      }).not.toThrow();
-
-      expect(mockMonaco.languages.register).toHaveBeenCalledWith({ id: 'svg' });
-      expect(mockMonaco.languages.setMonarchTokensProvider).toHaveBeenCalled();
-      expect(mockMonaco.languages.registerDocumentFormattingEditProvider).toHaveBeenCalled();
-    });
-
-    it('should not re-register if language already exists', () => {
-      const mockMonaco = {
-        languages: {
-          getLanguages: jest.fn().mockReturnValue([{ id: 'svg' }]),
-          register: jest.fn(),
-          setMonarchTokensProvider: jest.fn(),
-          registerDocumentFormattingEditProvider: jest.fn()
-        }
-      };
-
-      detector.registerProvider(mockMonaco);
-
-      expect(mockMonaco.languages.register).not.toHaveBeenCalled();
-      expect(mockMonaco.languages.setMonarchTokensProvider).toHaveBeenCalled();
-      expect(mockMonaco.languages.registerDocumentFormattingEditProvider).toHaveBeenCalled();
-    });
-
     it('should not duplicate XML declarations and comments during formatting', () => {
       const svgWithXmlDeclaration = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">

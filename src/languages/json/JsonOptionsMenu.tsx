@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "../../components/Icons";
 import * as monaco from "monaco-editor";
 
 import { useClickOutside } from "../../hooks/useClickOutside";

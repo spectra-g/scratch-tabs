@@ -7,7 +7,7 @@ import {
   Star, 
   ClipboardPaste, 
   Keyboard 
-} from 'lucide-react';
+} from '../../../components/Icons';
 import { ContentType, ClipboardFilters } from '../types';
 import { ContentTypeIcon } from './ContentTypeIcon';
 

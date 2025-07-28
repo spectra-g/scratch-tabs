@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ArrowRightLeft, Check, Clock, Plus } from 'lucide-react';
+import { X, ArrowRightLeft, Check, Clock, Plus } from '../../../components/Icons';
 import { ComparisonItem, ResponseHistoryItem, HttpResponse } from '../types';
 import { 
   createComparisonItem, 
@@ -169,10 +169,14 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
             <button
               onClick={handleStartComparison}
               disabled={!canCompareItems(selectedItems)}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`p-2 rounded-md transition-colors ${
+                canCompareItems(selectedItems)
+                  ? "text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                  : "text-gray-400 opacity-50 cursor-not-allowed"
+              }`}
+              title="Compare selected responses"
             >
               <ArrowRightLeft size={14} />
-              <span>Compare</span>
             </button>
           </div>
         </div>

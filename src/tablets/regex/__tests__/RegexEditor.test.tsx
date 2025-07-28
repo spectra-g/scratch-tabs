@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { RegexEditor } from "../components/RegexEditor";
 import { RegexError } from "../types";
@@ -274,6 +274,94 @@ describe("RegexEditor", () => {
       
       const input = screen.getByPlaceholderText("Enter regex pattern...");
       expect(input).toHaveValue("");
+    });
+  });
+
+  describe("copy functionality", () => {
+    beforeEach(() => {
+      // Mock the clipboard API
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: jest.fn(),
+        },
+      });
+    });
+
+    it("should show copy button when there is a value", () => {
+      render(<RegexEditor value="test" onChange={mockOnChange} />);
+      
+      const copyButton = screen.getByTitle("Copy regex pattern");
+      expect(copyButton).toBeInTheDocument();
+    });
+
+    it("should not show copy button when there is no value", () => {
+      render(<RegexEditor value="" onChange={mockOnChange} />);
+      
+      const copyButton = screen.queryByTitle("Copy regex pattern");
+      expect(copyButton).not.toBeInTheDocument();
+    });
+
+    it("should copy pattern to clipboard when clicked", async () => {
+      const mockWriteText = jest.fn().mockResolvedValue(undefined);
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: mockWriteText,
+        },
+      });
+
+      render(<RegexEditor value="test[0-9]+" onChange={mockOnChange} />);
+      
+      const copyButton = screen.getByTitle("Copy regex pattern");
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
+      
+      expect(mockWriteText).toHaveBeenCalledWith("test[0-9]+");
+    });
+
+    it("should show check icon after copying", async () => {
+      const mockWriteText = jest.fn().mockResolvedValue(undefined);
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: mockWriteText,
+        },
+      });
+
+      render(<RegexEditor value="test" onChange={mockOnChange} />);
+      
+      const copyButton = screen.getByTitle("Copy regex pattern");
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
+      
+      // Should show check icon
+      await waitFor(() => {
+        expect(screen.getByTestId("check")).toBeInTheDocument();
+      });
+    });
+
+    it("should handle clipboard error gracefully", async () => {
+      const mockWriteText = jest.fn().mockRejectedValue(new Error("Clipboard error"));
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: mockWriteText,
+        },
+      });
+
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      
+      render(<RegexEditor value="test" onChange={mockOnChange} />);
+      
+      const copyButton = screen.getByTitle("Copy regex pattern");
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
+      
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith("Failed to copy:", expect.any(Error));
+      });
+      
+      consoleSpy.mockRestore();
     });
   });
 }); 

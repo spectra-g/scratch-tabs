@@ -37,5 +37,5 @@ export default {
   ],
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
-  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor)/)"],
+  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose)/)"],
 };

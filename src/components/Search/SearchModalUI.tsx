@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import {
   Search,
+  ChevronDown,
+  History,
+  Trash2,
   CaseSensitive,
   WholeWord,
   ListFilter,
-  History,
-  Trash2,
-  ChevronDown,
   Loader2,
-} from "lucide-react";
+} from "../Icons";
 import { BaseModal } from "../../languages/json/components/modals/BaseModal";
 import { SearchResult, SearchOptions } from "../../stores/searchStore";
 import { highlightMatchesInText } from "../../services/searchService";

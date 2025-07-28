@@ -107,7 +107,6 @@ const PomodoroTabletUI: React.FC<{
                     : "Time to relax..."
                 }
                 className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 placeholder-gray-500 text-center"
-                disabled={status === "running"}
               />
             </div>
             <div className="mt-8 w-full max-w-md">

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "../../../components/Icons";
 import { CsvDiagnostic } from "../types";
 
 interface CsvDiagnosticsFooterProps {

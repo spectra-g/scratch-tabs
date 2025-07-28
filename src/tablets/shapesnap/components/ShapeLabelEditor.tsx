@@ -32,6 +32,7 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [hasUserFocused, setHasUserFocused] = useState(false);
+  const [dynamicSize, setDynamicSize] = useState({ width, height });
 
 
   // Auto-focus and select text on mount
@@ -49,18 +50,50 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
     }
   }, [shape.id]);
 
-  // Auto-resize textarea
+  // Auto-resize textarea and container
   useEffect(() => {
     if (textareaRef.current) {
+      // Reset height to calculate scrollHeight accurately
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      textareaRef.current.style.width = "auto";
+      
+      // Calculate dimensions based on content
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const scrollWidth = textareaRef.current.scrollWidth;
+      
+      // Set minimum dimensions
+      const minWidth = 100;
+      const minHeight = 32;
+      const padding = 20; // Extra padding for comfort
+      
+      // Calculate dynamic width based on content, with some limits
+      const lines = label.split('\n');
+      const maxLineLength = Math.max(...lines.map(line => line.length), 10);
+      const estimatedWidth = Math.max(minWidth, Math.min(maxLineLength * 8 + padding, 400));
+      
+      // Update dynamic size
+      const newWidth = Math.max(estimatedWidth, scrollWidth + padding);
+      const newHeight = Math.max(minHeight, scrollHeight + 10);
+      
+      setDynamicSize({ 
+        width: newWidth, 
+        height: newHeight 
+      });
+      
+      // Apply the calculated height to the textarea
+      textareaRef.current.style.height = `${newHeight}px`;
+      textareaRef.current.style.width = `${newWidth}px`;
     }
   }, [label]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && e.shiftKey) {
+      // Shift+Enter saves the text
       e.preventDefault();
       handleSave();
+    } else if (e.key === "Enter") {
+      // Regular Enter allows new line (default textarea behavior)
+      // Don't prevent default, let the textarea handle it
     } else if (e.key === "Escape") {
       e.preventDefault();
       handleCancel();
@@ -68,7 +101,21 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
   };
 
   const handleSave = () => {
-    onSave(shape.id, label.trim());
+    const trimmedLabel = label.trim();
+    
+    // Don't save if the text is still the default placeholder
+    if (trimmedLabel === "Enter text") {
+      onCancel();
+      return;
+    }
+    
+    // Don't save if the text is empty
+    if (trimmedLabel === "") {
+      onCancel();
+      return;
+    }
+    
+    onSave(shape.id, trimmedLabel);
   };
 
   const handleCancel = () => {
@@ -89,12 +136,30 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
   const backgroundColor = canvasMode === "dark" ? "#23272f" : "#f5f5f5";
   const borderColor = canvasMode === "dark" ? "#3b82f6" : "#2563eb";
 
+  const handleTextareaClick = (e: React.MouseEvent) => {
+    // Prevent click from bubbling up to the canvas
+    e.stopPropagation();
+  };
+
+  const handleTextareaMouseDown = (e: React.MouseEvent) => {
+    // Prevent mousedown from bubbling up to the canvas
+    e.stopPropagation();
+  };
+
+  // Center the editor around the provided coordinates (shape center or double-click position)
+  let editorX = x - dynamicSize.width / 2;
+  let editorY = y - dynamicSize.height / 2;
+  
+  // Basic bounds checking to prevent going completely off screen
+  editorX = Math.max(5, editorX);
+  editorY = Math.max(5, editorY);
+
   return (
     <foreignObject
-      x={x}
-      y={y}
-      width={width}
-      height={height}
+      x={editorX}
+      y={editorY}
+      width={dynamicSize.width}
+      height={dynamicSize.height}
       style={{ pointerEvents: "auto", zIndex: 100 }}
     >
       <textarea
@@ -104,13 +169,13 @@ export const ShapeLabelEditor: React.FC<ShapeLabelEditorProps> = ({
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         onFocus={() => setHasUserFocused(true)}
-        placeholder="Enter label..."
+        onClick={handleTextareaClick}
+        onMouseDown={handleTextareaMouseDown}
+        placeholder="Enter text"
         style={{
           color: textColor,
           backgroundColor,
           border: `2px solid ${borderColor}`,
-          minHeight: 32,
-          maxHeight: 120,
           width: "100%",
           height: "100%",
           resize: "none",

@@ -1,9 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { FileText, ClipboardPaste, Trash2, Copy, ExternalLink, Check } from 'lucide-react';
+import { FileText, ClipboardPaste, Trash2, Copy, ExternalLink, Check } from '../../../components/Icons';
 import Editor from '@monaco-editor/react';
-import { useRootStore } from '../../../stores';
-import { useWorkspaceStore } from '../../../stores/workspaceStore';
-import type { Tab } from '../../../types';
+import { useTabletTabCreation } from '../../bridge';
 
 interface WordCountInputProps {
   value: string;
@@ -29,9 +27,8 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const editorRef = useRef<any>(null);
   
-  // Store hooks
-  const { addBackgroundTab } = useRootStore();
-  const { activeWorkspaceId } = useWorkspaceStore();
+  // Bridge hooks
+  const { createBackgroundTab } = useTabletTabCreation();
 
   // Sync local state with parent value
   useEffect(() => {
@@ -87,25 +84,19 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
     }
   }, [reportContent]);
 
-  const handleOpenInNewTab = useCallback(() => {
-    if (!reportContent || !activeWorkspaceId) return;
+  const handleOpenInNewTab = useCallback(async () => {
+    if (!reportContent) return;
     
-    // Create a new application tab with the report content
-    const newTab: Tab = {
-      id: crypto.randomUUID(),
-      title: `Word Count Report - ${new Date().toLocaleDateString()}`,
-      content: reportContent,
-      language: 'markdown',
-      languageLocked: false,
-      cursorPosition: { lineNumber: 1, column: 1 },
-      dateCreated: Date.now(),
-      lastModified: Date.now(),
-      workspaceId: activeWorkspaceId,
-    };
-    
-    // Add as background tab (doesn't steal focus)
-    addBackgroundTab(newTab);
-  }, [reportContent, activeWorkspaceId, addBackgroundTab]);
+    try {
+      await createBackgroundTab(
+        `Word Count Report - ${new Date().toLocaleDateString()}`,
+        reportContent,
+        'markdown'
+      );
+    } catch (error) {
+      console.error('Failed to create background tab:', error);
+    }
+  }, [reportContent, createBackgroundTab]);
 
 
   const handleEditorMount = useCallback((editor: any) => {

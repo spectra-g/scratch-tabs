@@ -6,6 +6,7 @@ import { decodeJwt } from "../utils/jwtUtils";
 import { CopyButton } from "./ui/CopyButton";
 import { Alert } from "./ui/Alert";
 import { Button } from "./ui/Button";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 interface JwtDecoderProps {
   token: string;
@@ -66,17 +67,26 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
     [onTokenChange],
   );
 
+  // Use debounced token for decoding to avoid excessive calls
+  const debouncedToken = useDebounce(localToken, 100);
+
+  // Decode when debounced token changes
+  useEffect(() => {
+    // Only decode if the token has actually changed
+    if (debouncedToken !== token) {
+      decodeToken(debouncedToken);
+    }
+  }, [debouncedToken, decodeToken, token]);
+
   // Handle token input change
   const handleTokenChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newToken = e.target.value;
     setLocalToken(newToken);
-    decodeToken(newToken);
   };
 
   // Clear token
   const handleClearToken = () => {
     setLocalToken("");
-    onTokenChange("", {}, {}, "", null, null);
   };
 
   // File upload handling
@@ -90,12 +100,11 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
       reader.onload = () => {
         const content = reader.result as string;
         setLocalToken(content.trim());
-        decodeToken(content.trim());
       };
 
       reader.readAsText(file);
     },
-    [decodeToken],
+    [],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

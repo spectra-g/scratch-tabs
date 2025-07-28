@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useEffect } from "react";
+import { useBatchToolsStore } from "../../stores/batchToolsStore";
 import {
   X,
   RotateCcw,
@@ -7,8 +8,7 @@ import {
   EyeOff,
   Wrench,
   CheckCircle,
-} from "lucide-react";
-import { useBatchToolsStore } from "../../stores/batchToolsStore";
+} from "../Icons";
 import { BatchToolsConfig } from "./BatchToolsConfig";
 import { BatchToolsPreview } from "./BatchToolsPreview";
 import { applyTransformations } from "./transformations";

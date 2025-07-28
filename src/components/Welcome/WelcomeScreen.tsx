@@ -4,7 +4,7 @@ import { useTabletSelector } from "../../hooks/useTabletSelector";
 import { TabletSelector } from "../../tablets";
 import { Tablet } from "../../tablets";
 import { TabActions } from "../Tab/TabActions";
-import { FileText, Layers, Upload, FolderOpen, File, Package } from "lucide-react";
+import { FileText, Layers, Upload, FolderOpen, File, Package } from "../Icons";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
 

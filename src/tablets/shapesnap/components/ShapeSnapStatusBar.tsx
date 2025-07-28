@@ -1,6 +1,6 @@
 import React from "react";
 import { ShapeSnapTool, ShapeSnapMode } from "../types";
-import { useIsMobile } from "../../../hooks/useIsMobile";
+import { useTabletDeviceInfo } from "../../bridge";
 
 interface ShapeSnapStatusBarProps {
   shapeCount: number;
@@ -17,7 +17,7 @@ export const ShapeSnapStatusBar: React.FC<ShapeSnapStatusBarProps> = ({
   selectedCount = 0,
   hasClipboard = false,
 }) => {
-  const isMobile = useIsMobile();
+  const { isMobile } = useTabletDeviceInfo();
   return (
     <div className="flex items-center justify-between p-2 border-t border-gray-700 bg-gray-800 text-xs text-gray-400">
       <div className="flex items-center space-x-4">

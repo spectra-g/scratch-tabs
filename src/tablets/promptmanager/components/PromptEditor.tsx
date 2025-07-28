@@ -459,12 +459,17 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
               return tag ? (
                 <div
                   key={tag.id}
-                  className="flex items-center px-2 py-1 text-xs text-white bg-gray-700 rounded-full"
+                  className="flex items-center px-2 py-1 text-xs rounded-full"
+                  style={{
+                    backgroundColor: `${tag.color}20`,
+                    color: tag.color,
+                  }}
                 >
                   <span>{tag.name}</span>
                   <button
                     onClick={() => handleTagToggle(tagId)}
-                    className="ml-1.5 text-gray-400 hover:text-white"
+                    className="ml-1.5 hover:text-white transition-colors"
+                    style={{ color: tag.color }}
                   >
                     <X size={12} />
                   </button>
@@ -489,9 +494,13 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
                           handleTagToggle(tag.id);
                           setShowTagSelector(false);
                         }}
-                        className="px-2 py-1 cursor-pointer hover:bg-gray-700"
+                        className="px-2 py-1 cursor-pointer hover:bg-gray-700 flex items-center space-x-2"
                       >
-                        {tag.name}
+                        <span
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: tag.color }}
+                        />
+                        <span style={{ color: tag.color }}>{tag.name}</span>
                       </div>
                     ))}
                 </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Filter } from 'lucide-react';
+import { Filter } from '../../../components/Icons';
 import { ClipboardItem, ViewMode, ContentType } from '../types';
 import { ClipboardItemComponent } from './ClipboardItemComponent';
 

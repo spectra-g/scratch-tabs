@@ -1,4 +1,4 @@
-import { FileText, FileCode, Terminal, Link } from "lucide-react";
+import { FileText, FileCode, Terminal, Link } from "../../../components/Icons";
 import { ContentType } from "../types";
 import { detectLanguage } from "../../../languages";
 

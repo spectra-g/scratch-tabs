@@ -795,24 +795,43 @@ export const renderShape = (
         if (isEditing) {
           return null;
         }
+        
+        // Split text into lines for multi-line support
+        const textLines = (shape.text || '').split('\n');
+        const fontSize = shape.fontSize || 16;
+        const lineHeight = fontSize * 1.2; // Standard line height
+        
+        // Calculate the total height of all lines to center the text block
+        const totalHeight = textLines.length * lineHeight;
+        const startY = shape.y - (totalHeight / 2) + (lineHeight / 2);
+        
         return (
           <text
             key={`${shape.id}-${shape.fontSize || 16}`}
             {...baseProps}
             x={shape.x}
-            y={shape.y}
+            y={startY}
             fill={shape.style.stroke}
-            fontSize={shape.fontSize || 16}
+            fontSize={fontSize}
             dominantBaseline="middle"
             textAnchor="middle"
             style={{
               fontFamily: sketchFont
-                ? '"Architects Daughter", Arial, sans-serif'
-                : undefined,
-              fontSize: `${shape.fontSize || 16}px !important`,
+                ? '"Comic Sans MS", "Marker Felt", "Bradley Hand ITC", cursive'
+                : 'Arial, Helvetica, sans-serif',
+              fontSize: `${fontSize}px !important`,
             }}
           >
-            {shape.text}
+            {textLines.map((line, index) => (
+              <tspan
+                key={index}
+                x={shape.x}
+                y={startY + (index * lineHeight)}
+                textAnchor="middle"
+              >
+                {line}
+              </tspan>
+            ))}
           </text>
         );
       default:
@@ -824,18 +843,28 @@ export const renderShape = (
   const labelElement =
     !isEditing && shape.label
       ? (() => {
+        // Split label into lines for multi-line support
+        const labelLines = shape.label.split('\n');
+        const fontSize = currentFontSize || 12;
+        const lineHeight = fontSize * 1.2;
+        
         if (shape.type === "line") {
           // Use special positioning for lines based on orientation
           const labelPos = getLineLabelPosition(
             shape as Shape & { points: Point[] },
           );
+          
+          // For line labels, calculate start position for multi-line
+          const totalHeight = labelLines.length * lineHeight;
+          const startY = labelPos.y - (totalHeight / 2) + (lineHeight / 2);
+          
           return (
             <text
               key={`${shape.id}-label`}
               x={labelPos.x}
-              y={labelPos.y}
+              y={startY}
               fill={shape.style.stroke}
-              fontSize={currentFontSize || 12}
+              fontSize={fontSize}
               dominantBaseline={labelPos.dominantBaseline}
               textAnchor={labelPos.textAnchor}
               style={{
@@ -844,18 +873,30 @@ export const renderShape = (
                 textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
               }}
             >
-              {shape.label}
+              {labelLines.map((line, index) => (
+                <tspan
+                  key={index}
+                  x={labelPos.x}
+                  y={startY + (index * lineHeight)}
+                  textAnchor={labelPos.textAnchor}
+                >
+                  {line}
+                </tspan>
+              ))}
             </text>
           );
         } else {
           // Use standard center positioning for other shapes
+          const totalHeight = labelLines.length * lineHeight;
+          const startY = center.y - (totalHeight / 2) + (lineHeight / 2);
+          
           return (
             <text
               key={`${shape.id}-label`}
               x={center.x}
-              y={center.y}
+              y={startY}
               fill={shape.style.stroke}
-              fontSize={currentFontSize || 12}
+              fontSize={fontSize}
               dominantBaseline="middle"
               textAnchor="middle"
               style={{
@@ -864,7 +905,16 @@ export const renderShape = (
                 textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
               }}
             >
-              {shape.label}
+              {labelLines.map((line, index) => (
+                <tspan
+                  key={index}
+                  x={center.x}
+                  y={startY + (index * lineHeight)}
+                  textAnchor="middle"
+                >
+                  {line}
+                </tspan>
+              ))}
             </text>
           );
         }
@@ -1223,20 +1273,31 @@ export const renderShapeOverlay = (
     !isEditing && shape.label
       ? (() => {
         const fontFamily = sketchFont
-          ? '"Architects Daughter", Arial, sans-serif'
-          : undefined;
+          ? '"Comic Sans MS", "Marker Felt", "Bradley Hand ITC", cursive'
+          : 'Arial, Helvetica, sans-serif';
+          
+        // Split label into lines for multi-line support
+        const labelLines = shape.label.split('\n');
+        const fontSize = currentFontSize || 12;
+        const lineHeight = fontSize * 1.2;
+        
         if (shape.type === "line") {
           // Use special positioning for lines based on orientation
           const labelPos = getLineLabelPosition(
             shape as Shape & { points: Point[] },
           );
+          
+          // For line labels, calculate start position for multi-line
+          const totalHeight = labelLines.length * lineHeight;
+          const startY = labelPos.y - (totalHeight / 2) + (lineHeight / 2);
+          
           return (
             <text
               key={`${shape.id}-label`}
               x={labelPos.x}
-              y={labelPos.y}
+              y={startY}
               fill={shape.style.stroke}
-              fontSize={currentFontSize || 12}
+              fontSize={fontSize}
               dominantBaseline={labelPos.dominantBaseline}
               textAnchor={labelPos.textAnchor}
               style={{
@@ -1246,18 +1307,30 @@ export const renderShapeOverlay = (
                 fontFamily,
               }}
             >
-              {shape.label}
+              {labelLines.map((line, index) => (
+                <tspan
+                  key={index}
+                  x={labelPos.x}
+                  y={startY + (index * lineHeight)}
+                  textAnchor={labelPos.textAnchor}
+                >
+                  {line}
+                </tspan>
+              ))}
             </text>
           );
         } else {
           // For circles and all other shapes, label is centered
+          const totalHeight = labelLines.length * lineHeight;
+          const startY = center.y - (totalHeight / 2) + (lineHeight / 2);
+          
           return (
             <text
               key={`${shape.id}-label`}
               x={center.x}
-              y={center.y}
+              y={startY}
               fill={shape.style.stroke}
-              fontSize={currentFontSize || 12}
+              fontSize={fontSize}
               dominantBaseline="middle"
               textAnchor="middle"
               style={{
@@ -1267,7 +1340,16 @@ export const renderShapeOverlay = (
                 fontFamily,
               }}
             >
-              {shape.label}
+              {labelLines.map((line, index) => (
+                <tspan
+                  key={index}
+                  x={center.x}
+                  y={startY + (index * lineHeight)}
+                  textAnchor="middle"
+                >
+                  {line}
+                </tspan>
+              ))}
             </text>
           );
         }
@@ -1350,10 +1432,17 @@ export const renderResizeHandles = (
           fontSize?: number;
         };
         const fontSize = textShape.fontSize || 16;
-        const textWidth = (textShape as any).text
-          ? (textShape as any).text.length * fontSize * 0.6
-          : 50; // rough estimate
-        const textHeight = fontSize;
+        const text = (textShape as any).text || '';
+        const textLines = text.split('\n');
+        
+        // Calculate width based on the longest line
+        const maxLineLength = Math.max(...textLines.map(line => line.length));
+        const textWidth = maxLineLength * fontSize * 0.6; // rough estimate
+        
+        // Calculate height based on number of lines
+        const lineHeight = fontSize * 1.2;
+        const textHeight = textLines.length * lineHeight;
+        
         return {
           left: textShape.x - textWidth / 2,
           right: textShape.x + textWidth / 2,

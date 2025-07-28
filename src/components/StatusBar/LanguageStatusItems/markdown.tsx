@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Edit2 } from "lucide-react";
+import { Eye, Edit2 } from "../../Icons";
 import { useRootStore } from "../../../stores";
 import { StatusItemProps } from "../types";
 

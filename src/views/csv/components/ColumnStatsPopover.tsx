@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X, BarChart3, Hash, Type, Calculator } from "lucide-react";
+import { X, BarChart3, Hash, Type, Calculator } from "../../../components/Icons";
 import { CsvColumnStats } from "../types";
 
 interface ColumnStatsPopoverProps {

@@ -1,5 +1,5 @@
 import { Tablet, TabletState } from "../types";
-import { Key } from "lucide-react";
+import { Key } from "../../components/Icons";
 import { JwtDecoder } from "./components/JwtDecoder";
 import { JwtEditor } from "./components/JwtEditor";
 import { JwtVerifier } from "./components/JwtVerifier";

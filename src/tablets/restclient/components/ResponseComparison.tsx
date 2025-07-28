@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ArrowRightLeft, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, ArrowRightLeft, ChevronDown, ChevronRight } from '../../../components/Icons';
 import { ResponseComparison, ComparisonDiff } from '../types';
 import { formatValueForDisplay, getDiffTypeClass } from '../utils/comparisonUtils';
 

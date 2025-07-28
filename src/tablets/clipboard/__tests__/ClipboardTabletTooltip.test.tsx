@@ -10,9 +10,12 @@ Object.defineProperty(global, 'crypto', {
   },
 });
 
-// Mock the hook
-jest.mock('../../../hooks/useIsMobile', () => ({
-  useIsMobile: () => false,
+// Mock the bridge hook
+jest.mock('../../bridge', () => ({
+  useTabletDeviceInfo: () => ({
+    getDeviceInfo: () => ({ isMobile: false }),
+    isMobile: false,
+  }),
 }));
 
 describe('ClipboardTablet Tooltip Integration', () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Grid } from 'lucide-react';
+import { List, Grid } from '../../../components/Icons';
 import { ViewMode } from '../types';
 
 interface ClipboardHeaderProps {

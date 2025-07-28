@@ -28,7 +28,7 @@ import {
   Clock,
   Menu,
 } from "lucide-react";
-import { useIsMobile } from "../../hooks/useIsMobile";
+import { useTabletDeviceInfo } from "../bridge";
 
 // --- Types & Constants ---
 type ContentType = "text" | "image" | "link" | "color";
@@ -219,7 +219,7 @@ const ClipboardTabletComponent: React.FC<{
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const latestStateRef = useRef(state);
-  const isMobile = useIsMobile();
+  const { isMobile } = useTabletDeviceInfo();
   latestStateRef.current = state;
 
   const updateData = useCallback(

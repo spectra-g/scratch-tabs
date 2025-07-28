@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Edit3, Copy } from "lucide-react";
+import { Edit3, Copy } from "../../../components/Icons";
 
 interface EditableCellProps {
   value: string;

@@ -530,22 +530,67 @@ console.log(MyMath.circumference(10));
       const jsResult = jsDetector.detect(content); // Pass original content
       if (jsResult.match) {
         jsConfidence = jsResult.confidence;
-        confidenceScore += jsConfidence * 0.4;
+        confidenceScore += jsConfidence * 0.3; // Reduced weight
         if (jsConfidence > 0.3) patternsMatched++;
         if (jsResult.matchedDefinitive) strongSignalFound = true;
       }
     }
 
-    // 2. TypeScript-specific patterns
+    // 2. MUST-HAVE: Code block detection with curly braces and semicolons
+    const lines = content.split('\n');
+    let codeBlocksFound = 0;
+    let totalCodeBlocks = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Look for lines ending with open curly brace
+      if (line.endsWith('{')) {
+        totalCodeBlocks++;
+        let semicolonCount = 0;
+        let totalStatements = 0;
+        let braceDepth = 1;
+        let j = i + 1;
+        
+        // Scan forward until we find the closing brace
+        while (j < lines.length && braceDepth > 0) {
+          const nextLine = lines[j].trim();
+          
+          // Skip empty lines and comments
+          if (nextLine && !nextLine.startsWith('//') && !nextLine.startsWith('/*')) {
+            totalStatements++;
+            
+            // Count semicolons
+            if (nextLine.includes(';')) {
+              semicolonCount++;
+            }
+          }
+          
+          // Track brace depth
+          const openBraces = (nextLine.match(/\{/g) || []).length;
+          const closeBraces = (nextLine.match(/\}/g) || []).length;
+          braceDepth += openBraces - closeBraces;
+          
+          j++;
+        }
+        
+        // Check if this is a valid TypeScript code block
+        if (totalStatements > 0 && (semicolonCount / totalStatements) >= 0.9) {
+          codeBlocksFound++;
+        }
+      }
+    }
+
+    // Strong signal for code blocks with proper semicolon usage
+    if (codeBlocksFound > 0) {
+      confidenceScore += 0.6;
+      strongSignalFound = true;
+      tsSpecificMatches++;
+      patternsMatched++;
+    }
+
+    // 3. TypeScript-specific patterns (more precise)
     const tsPatterns = [
-      {
-        pattern:
-          /:\s*(?:string|number|boolean|any|void|never|unknown|symbol|bigint)\b(?![=:(])/g,
-        weight: 0.35,
-        perMatch: 0.05,
-        specific: true,
-        maxMatches: 5,
-      },
       {
         pattern: /\binterface\s+[A-Z_][\w]*\s*(?:<[^>]+>)?\s*\{/g,
         weight: 0.4,
@@ -625,6 +670,14 @@ console.log(MyMath.circumference(10));
         specific: true,
         maxMatches: 2,
       },
+      // More precise type annotation pattern
+      {
+        pattern: /(?:^|\s)(?:\w+\s*:\s*)?(?:string|number|boolean|any|void|never|unknown|symbol|bigint)\s*[=:;,\]]/g,
+        weight: 0.25,
+        perMatch: 0.03,
+        specific: true,
+        maxMatches: 5,
+      },
     ];
 
     for (const p of tsPatterns) {
@@ -644,7 +697,7 @@ console.log(MyMath.circumference(10));
       strongSignalFound = true;
     }
 
-    // 3. Other Anti-patterns (already had some, ensure they don't conflict with Rust ones)
+    // 4. Other Anti-patterns (already had some, ensure they don't conflict with Rust ones)
     const otherAntiPatterns = [
       // PHP, Java, C/C++, Python shebangs are handled at the top
       { pattern: /System\.out\.println/i, weight: -0.6 },
@@ -664,9 +717,9 @@ console.log(MyMath.circumference(10));
       }
     }
 
-    // 4. Adjustments and Clamping
-    if (jsConfidence > 0.5 && tsSpecificMatches === 0) {
-      confidenceScore = jsConfidence * 0.3;
+    // 5. Adjustments and Clamping
+    if (jsConfidence > 0.5 && tsSpecificMatches === 0 && codeBlocksFound === 0) {
+      confidenceScore = jsConfidence * 0.2; // Much lower weight for JS-only
     } else if (
       tsSpecificMatches >= 1 &&
       jsConfidence < 0.2 &&
@@ -677,11 +730,18 @@ console.log(MyMath.circumference(10));
       confidenceScore += 0.25;
     }
 
+    // Bonus for having both code blocks and TypeScript patterns
+    if (codeBlocksFound > 0 && tsSpecificMatches > 0) {
+      confidenceScore += 0.2;
+    }
+
     confidenceScore = Math.min(1.0, Math.max(0.0, confidenceScore));
 
+    // Final match decision: requires stronger signals for TypeScript
     const isMatch =
-      (strongSignalFound && tsSpecificMatches >= 1 && confidenceScore >= 0.4) ||
-      (tsSpecificMatches >= 2 && confidenceScore >= 0.55);
+      (strongSignalFound && tsSpecificMatches >= 1 && confidenceScore >= 0.5) ||
+      (codeBlocksFound >= 2 && confidenceScore >= 0.6) ||
+      (tsSpecificMatches >= 2 && codeBlocksFound >= 1 && confidenceScore >= 0.55);
 
     return {
       match: isMatch,
@@ -689,7 +749,7 @@ console.log(MyMath.circumference(10));
       matchedDefinitive:
         isMatch &&
         strongSignalFound &&
-        tsSpecificMatches >= 2 &&
+        (tsSpecificMatches >= 2 || codeBlocksFound >= 2) &&
         confidenceScore > 0.65,
     };
   }

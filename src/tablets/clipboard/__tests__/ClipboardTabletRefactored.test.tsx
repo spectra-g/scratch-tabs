@@ -3,9 +3,12 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ClipboardTabletRefactored } from '../ClipboardTabletRefactored';
 
-// Mock the hook
-jest.mock('../../../hooks/useIsMobile', () => ({
-  useIsMobile: () => false,
+// Mock the bridge hook
+jest.mock('../../bridge', () => ({
+  useTabletDeviceInfo: () => ({
+    getDeviceInfo: () => ({ isMobile: false }),
+    isMobile: false,
+  }),
 }));
 
 // Mock crypto.randomUUID

@@ -16,6 +16,7 @@ export interface UseClickHandlerProps {
   setEditingShape: (shape: Shape | null) => void;
   onShapeClick?: (shape: Shape, position: Point, event?: React.MouseEvent) => void;
   onUpdateLabel?: (shapeId: string, label: string) => void;
+  onDeleteShape?: (shapeId: string) => void;
   onAddShape?: (shape: Shape) => void;
 }
 
@@ -28,6 +29,7 @@ export const useClickHandler = ({
   setEditingShape,
   onShapeClick,
   onUpdateLabel,
+  onDeleteShape,
   onAddShape,
 }: UseClickHandlerProps) => {
   const [clickState, setClickState] = useState<ClickState>({
@@ -72,8 +74,16 @@ export const useClickHandler = ({
 
   // Handle label cancel
   const handleLabelCancel = useCallback(() => {
+    // If we're editing a newly created text shape with default content, delete it
+    if (editingShape && editingShape.type === "text") {
+      const textShape = editingShape as any;
+      if (textShape.text === "Enter text" && onDeleteShape) {
+        onDeleteShape(editingShape.id);
+      }
+    }
+    
     setEditingShape(null);
-  }, [setEditingShape]);
+  }, [editingShape, onDeleteShape, setEditingShape]);
 
   // Handle canvas double click (add text)
   const handleCanvasDoubleClick = useCallback(

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageIcon, Link2, Palette, FileText } from 'lucide-react';
+import { ImageIcon, Link2, Palette, FileText } from '../../../components/Icons';
 import { ContentType } from '../types';
 
 interface ContentTypeIconProps {
