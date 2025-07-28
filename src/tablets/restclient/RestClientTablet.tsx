@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tablet, TabletState } from "../types";
-import { Network, AlertCircle } from "lucide-react";
+import { Network, AlertCircle } from "../../components/Icons";
 import { RequestBuilder } from "./components/RequestBuilder";
 import { RequestConverter } from "./components/RequestConverter";
 import { ResponseViewer } from "./components/ResponseViewer";

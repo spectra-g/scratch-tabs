@@ -1,14 +1,28 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { useSearchStore } from "../../stores/searchStore";
+import { useEditorStore } from "../../stores/editorStore";
+import { useRootStore } from "../../stores";
+import { useSplitViewStore } from "../../stores/splitViewStore";
+import { useTabsStore } from "../../stores/tabsStore";
+import { useWorkspaceStore } from "../../stores/workspaceStore";
+import { useActionLock } from "../../hooks/useActionLock";
 import {
+  X,
   Search,
+  ChevronDown,
+  ChevronUp,
+  ArrowUp,
+  ArrowDown,
+  Check,
+  Eye,
+  EyeOff,
+  History,
+  Trash2,
   CaseSensitive,
   WholeWord,
   ListFilter,
-  History,
-  Trash2,
-  ChevronDown,
   Loader2,
-} from "lucide-react";
+} from "../Icons";
 import { BaseModal } from "../../languages/json/components/modals/BaseModal";
 import { SearchResult, SearchOptions } from "../../stores/searchStore";
 import { highlightMatchesInText } from "../../services/searchService";

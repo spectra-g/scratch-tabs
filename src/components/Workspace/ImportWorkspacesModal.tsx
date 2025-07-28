@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
 import { ImportProcessSummary } from "../../features/import-export/types";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
-import { X, UploadCloud, AlertTriangle, CheckCircle } from "lucide-react";
+import { useRootStore } from "../../stores";
+import { X, UploadCloud, AlertTriangle, CheckCircle } from "../Icons";
 
 interface ImportWorkspacesModalProps {
   isOpen: boolean;

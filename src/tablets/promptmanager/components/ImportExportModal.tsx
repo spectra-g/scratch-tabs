@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { X, Upload, Download, AlertTriangle, Check } from "lucide-react";
+import { X, Upload, Download, AlertTriangle, Check } from "../../../components/Icons";
 import { PromptManagerData } from "../types";
 
 interface ImportExportModalProps {

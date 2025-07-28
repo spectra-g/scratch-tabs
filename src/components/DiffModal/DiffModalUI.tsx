@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Undo2, Redo2, Eye, EyeOff } from "lucide-react";
+import { X, Undo2, Redo2, Eye, EyeOff } from "../Icons";
 import { DiffEditorEngine } from "./useDiffEditor";
 
 interface DiffModalUIProps {

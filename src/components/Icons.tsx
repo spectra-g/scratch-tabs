@@ -140,6 +140,22 @@ export {
   Coffee,
   ExternalLink,
   RefreshCw,
+  
+  // Additional icons found in codebase
+  DivideIcon,
+  Archive,
+  Wrench,
+  CaseSensitive,
+  WholeWord,
+  ListFilter,
+  Keyboard,
+  Target,
+  Zap,
+  Monitor,
+  Smartphone,
+  Cpu,
+  User,
+  Anchor,
 } from 'lucide-react';
 
 // Export types separately

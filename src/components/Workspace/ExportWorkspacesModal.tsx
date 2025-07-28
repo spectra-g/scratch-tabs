@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { StorageProviderFactory } from "../../db";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
-import { CheckSquare, Square, X } from "lucide-react";
+import { CheckSquare, Square, X } from "../Icons";
 
 interface ExportWorkspacesModalProps {
   isOpen: boolean;

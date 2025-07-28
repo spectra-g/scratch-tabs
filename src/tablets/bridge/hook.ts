@@ -70,7 +70,16 @@ export function useTabletDeviceInfo() {
     return bridge.getDeviceInfo();
   }, [bridge]);
 
-  return { getDeviceInfo, isMobile: getDeviceInfo().isMobile };
+  // Get device info safely
+  let isMobile = false;
+  try {
+    isMobile = getDeviceInfo().isMobile;
+  } catch (error) {
+    // Bridge not initialized yet, default to false
+    isMobile = false;
+  }
+
+  return { getDeviceInfo, isMobile };
 }
 
 /**

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "../Icons";
 
 interface BatchToolsPreviewProps {
   originalContent: string;

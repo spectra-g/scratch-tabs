@@ -13,7 +13,7 @@ import {
   AlertCircle,
   XCircle,
   Cpu
-} from 'lucide-react';
+} from '../../../components/Icons';
 import { 
   WordCountStats, 
   DeviceType, 

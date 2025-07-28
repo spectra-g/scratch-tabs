@@ -1,4 +1,4 @@
-import { Table } from "lucide-react";
+import { Table } from "../../components/Icons";
 import { extendedViewRegistry } from "../registry";
 import { CsvTableViewer } from "./components/CsvTableViewer";
 

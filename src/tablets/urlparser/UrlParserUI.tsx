@@ -8,7 +8,7 @@ import {
   Search,
   Anchor,
   Link,
-} from "lucide-react";
+} from "../../components/Icons";
 import { UrlComponents, UrlParserState, UrlWarning } from "./types";
 import { UrlInput } from "./components/UrlInput";
 import { ComponentEditor } from "./components/ComponentEditor";

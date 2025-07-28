@@ -807,7 +807,7 @@ export const renderShape = (
             textAnchor="middle"
             style={{
               fontFamily: sketchFont
-                ? '"Architects Daughter", Arial, sans-serif'
+                ? '"Comic Sans MS", "Marker Felt", "Bradley Hand ITC", cursive'
                 : undefined,
               fontSize: `${shape.fontSize || 16}px !important`,
             }}
@@ -1223,7 +1223,7 @@ export const renderShapeOverlay = (
     !isEditing && shape.label
       ? (() => {
         const fontFamily = sketchFont
-          ? '"Architects Daughter", Arial, sans-serif'
+          ? '"Comic Sans MS", "Marker Felt", "Bradley Hand ITC", cursive'
           : undefined;
         if (shape.type === "line") {
           // Use special positioning for lines based on orientation
