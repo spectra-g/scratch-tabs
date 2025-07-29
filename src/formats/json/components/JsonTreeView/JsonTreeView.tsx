@@ -39,6 +39,7 @@ interface VisibleJsonNode extends JsonNodeData {
 
 interface JsonTreeViewProps {
   jsonString: string;
+  onNodeSelect?: (path: string) => void;
 }
 
 type SearchMode = "keyValue" | "path";
@@ -229,7 +230,7 @@ const findAllMatches = (
 
 // --- Main Component ---
 
-const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
+const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect }) => {
   const [searchMode, setSearchMode] = useState<SearchMode>("keyValue");
   const [inputValue, setInputValue] = useState("");
   const debouncedInputValue = useDebounce(inputValue, 300); // Debounce input value
@@ -561,7 +562,12 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString }) => {
         <div
           style={{ ...style, paddingLeft: `${indent}px` }}
           className={`flex items-center py-0.5 px-2 group cursor-pointer ${isSelected ? "bg-blue-900/30" : "hover:bg-gray-800/60"}`}
-          onClick={() => setSelectedPath(node.path)}
+          onClick={() => {
+            setSelectedPath(node.path);
+            if (onNodeSelect) {
+              onNodeSelect(node.path);
+            }
+          }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
