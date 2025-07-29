@@ -7,7 +7,7 @@ import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import { detectLanguage } from '../../languages';
+import { detectFormat } from '../../formats';
 import type { Tab } from '../../types';
 import type { 
   TabletBridge, 
@@ -101,7 +101,7 @@ class TabletBridgeImpl implements TabletBridge {
    * Detect language from content
    */
   detectLanguage(content: string): LanguageDetectionResult {
-    const result = detectLanguage(content);
+    const result = detectFormat(content);
     return {
       language: result || 'plaintext',
       confidence: 1 // detectLanguage doesn't return confidence, so we default to 1

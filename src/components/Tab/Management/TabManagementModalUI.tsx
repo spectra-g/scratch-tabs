@@ -1,7 +1,7 @@
 import React from "react";
 import { DndContext } from "@dnd-kit/core";
 import { FolderPlus } from "lucide-react";
-import { BaseModal } from "../../../languages/json/components/modals/BaseModal";
+import { BaseModal } from "../../../formats/json/components/modals/BaseModal";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import {

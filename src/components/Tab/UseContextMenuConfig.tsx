@@ -22,7 +22,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { LanguageSelector } from "./LanguageSelector";
-import { languageRegistry } from "../../languages";
+import { formatRegistry } from "../../formats";
 import { MenuItem } from "./types";
 import { useState, useCallback } from "react";
 import { ContextMenuAction, TabSide } from "../../constants";
@@ -198,7 +198,7 @@ export const useContextMenuConfig = (
   };
 
   const handleLanguageSelect = (languageId: string) => {
-    const language = languageRegistry.getById(languageId);
+    const language = formatRegistry.getById(languageId);
     if (language?.sampleContent) {
       const currentTab = tabsStore.tabs.find((t) => t.id === tabId);
       if (currentTab && !currentTab.isTablet) {
@@ -244,7 +244,7 @@ export const useContextMenuConfig = (
       closeContextMenu();
       return;
     }
-    const detector = languageRegistry.getById(tab.language);
+    const detector = formatRegistry.getById(tab.language);
     const extension = detector?.getFileExtension() || "txt";
     const blob = new Blob([tab.content || ""], { type: "text/plain" });
     const url = URL.createObjectURL(blob);

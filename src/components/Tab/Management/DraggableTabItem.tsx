@@ -4,7 +4,7 @@ import { useSplitViewStore } from "../../../stores/splitViewStore";
 import { useTabsStore } from "../../../stores/tabsStore";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { Tab } from "../../../types";
-import { languageRegistry } from "../../../languages";
+import { formatRegistry } from "../../../formats";
 import { getRelativeTimeString } from "./helpers";
 
 export interface DraggableTabItemProps {
@@ -126,7 +126,7 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
   const getLanguageLabel = () =>
     tab.isTablet
       ? "Tablet"
-      : languageRegistry.getById(tab.language)?.name || tab.language;
+      : formatRegistry.getById(tab.language)?.name || tab.language;
 
   const getLanguageColor = () => {
     if (tab.isTablet) return "bg-purple-500/20 text-purple-300";

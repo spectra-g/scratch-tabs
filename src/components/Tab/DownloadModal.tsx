@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { BaseModal } from "../../languages/json/components/modals/BaseModal";
+import { BaseModal } from "../../formats/json/components/modals/BaseModal";
 import { Download, CheckCircle2, Circle } from "lucide-react";
 import { Tab } from "../../types";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
-import { languageRegistry } from "../../languages";
+import { formatRegistry } from "../../formats";
 import JSZip from "jszip";
 
 interface DownloadModalProps {
@@ -87,7 +87,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
       // If only one file is selected, download it directly
       if (selectedTabObjects.length === 1) {
         const tab = selectedTabObjects[0];
-        const detector = languageRegistry.getById(tab.language);
+        const detector = formatRegistry.getById(tab.language);
         const extension = detector?.getFileExtension() || "txt";
         const filename = `${sanitizeFilename(tab.title)}.${extension}`;
         const blob = new Blob([tab.content || ""], {
@@ -107,7 +107,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
         const usedFilenames = new Set<string>();
 
         selectedTabObjects.forEach((tab: Tab) => {
-          const detector = languageRegistry.getById(tab.language);
+          const detector = formatRegistry.getById(tab.language);
           const extension = detector?.getFileExtension() || "txt";
 
           const baseFilename = sanitizeFilename(tab.title);
@@ -165,7 +165,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
           <span className="flex-1 truncate min-w-0">{tab.title}</span>
           <span className="text-xs text-gray-400 flex-shrink-0">
             .
-            {languageRegistry.getById(tab.language)?.getFileExtension() ||
+            {formatRegistry.getById(tab.language)?.getFileExtension() ||
               "txt"}
           </span>
         </button>

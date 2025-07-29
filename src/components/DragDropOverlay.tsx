@@ -3,7 +3,7 @@ import { Upload } from "./Icons";
 import { useRootStore } from "../stores";
 import { useSplitViewStore } from "../stores/splitViewStore";
 import { useModalStore } from "../stores/modalStore";
-import { languageRegistry } from "../languages";
+import { formatRegistry } from "../formats";
 import { ImportExportService } from "../features/import-export/ImportExportService";
 
 const readFileAsText = (file: File): Promise<string> => {
@@ -51,7 +51,7 @@ const detectLanguageFromFileName = (fileName: string): string => {
   if (!extension) return "plaintext";
 
   // Try to find a matching language detector by its supported extensions
-  const detector = languageRegistry
+  const detector = formatRegistry
     .getAll()
     .find((detector) => detector.extensions.includes(extension));
 

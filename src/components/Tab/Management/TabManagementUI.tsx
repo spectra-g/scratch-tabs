@@ -13,7 +13,7 @@ import {
   Copy,
 } from "lucide-react";
 import { Tab } from "../../../types";
-import { languageRegistry } from "../../../languages";
+import { formatRegistry } from "../../../formats";
 import { DragOverlay } from "@dnd-kit/core";
 import { TabGroup } from "./TabGroup";
 import { GroupOption, SortOption } from "./types";
@@ -119,7 +119,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
             <option key={lang} value={lang}>
               {lang === "tablet"
                 ? "Tablets"
-                : languageRegistry.getById(lang)?.name || lang}
+                : formatRegistry.getById(lang)?.name || lang}
             </option>
           ))}
         </select>

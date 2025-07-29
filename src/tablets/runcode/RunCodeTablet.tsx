@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tablet, TabletState } from "../types";
 import { Editor } from "@monaco-editor/react";
 import { Play, AlertCircle, CheckCircle2, Loader2, Code } from "lucide-react";
-import { detectLanguage } from "../../languages";
+import { detectFormat } from "../../formats";
 import {
   languageTemplates,
   languageToRuntime,
@@ -53,7 +53,7 @@ export const RunCodeTablet: Tablet = {
       if (code === undefined) return;
 
       // Detect language from code
-      const detectedLanguage = detectLanguage(code);
+      const detectedLanguage = detectFormat(code);
 
       onChange({
         ...state,

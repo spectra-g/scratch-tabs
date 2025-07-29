@@ -1,5 +1,5 @@
 import { ContentDetector } from '../types';
-import { detectLanguage, isAmbiguousLanguage } from '../../../languages';
+import { detectFormat, isAmbiguousFormat } from '../../../formats';
 
 /**
  * Adapter to integrate the existing language detection system
@@ -12,13 +12,13 @@ export class LanguageDetectorAdapter implements ContentDetector {
    * Detect language using the existing language detection system
    */
   detectLanguage(content: string): string {
-    return detectLanguage(content);
+    return detectFormat(content);
   }
 
   /**
    * Check if detection is ambiguous using the existing system
    */
   isAmbiguous(content: string): boolean {
-    return isAmbiguousLanguage(content);
+    return isAmbiguousFormat(content);
   }
 }

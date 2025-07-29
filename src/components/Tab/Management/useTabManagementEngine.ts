@@ -11,7 +11,7 @@ import { useRootStore, useCacheStore, useTabsStore } from "../../../stores";
 import { useSplitViewStore } from "../../../stores/splitViewStore";
 import { useWorkspaceStore } from "../../../stores/workspaceStore";
 import { Tab } from "../../../types";
-import { languageRegistry } from "../../../languages";
+import { formatRegistry } from "../../../formats";
 import {
   useFilteredTabs,
   useGroupedTabs,
@@ -278,7 +278,7 @@ export const useTabManagementEngine = (
     filteredTabs,
     groupOption,
     workspaces,
-    languageRegistry,
+    formatRegistry,
   );
   const duplicateTabs = useDuplicateTabs(localTabs, activeWorkspaceId);
   const emptyTabs = useEmptyTabs(localTabs, activeWorkspaceId);

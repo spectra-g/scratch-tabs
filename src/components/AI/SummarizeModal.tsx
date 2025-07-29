@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { BaseModal } from "../../languages/json/components/modals/BaseModal";
+import { BaseModal } from "../../formats/json/components/modals/BaseModal";
 import { useAIStore } from "../../stores/aiStore";
 import "./SummarizeModal.css";
 
