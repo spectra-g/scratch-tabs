@@ -29,6 +29,7 @@ interface EmojiTabletState extends TabletState {
     favorites: string[];
     recents: string[];
     selectedCategory: string;
+    sequenceMode: boolean; // true = append mode, false = replace mode
   };
 }
 
@@ -185,17 +186,21 @@ const SearchBar: React.FC<{
 // Component: Sequence Builder
 const SequenceBuilder: React.FC<{
   sequence: string;
+  sequenceMode: boolean;
   selectedFormat: EmojiTabletState["data"]["selectedFormat"];
   onCopy: () => void;
   onClear: () => void;
+  onToggleSequenceMode: () => void;
   onFormatSelect: (format: EmojiTabletState["data"]["selectedFormat"]) => void;
   showFormatPopover: boolean;
   onToggleFormatPopover: () => void;
 }> = ({
   sequence,
+  sequenceMode,
   selectedFormat,
   onCopy,
   onClear,
+  onToggleSequenceMode,
   onFormatSelect,
   showFormatPopover,
   onToggleFormatPopover,
@@ -232,6 +237,15 @@ const SequenceBuilder: React.FC<{
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-gray-300">Sequence Builder</h3>
         <div className="flex items-center space-x-2">
+          <label className="flex items-center space-x-2 text-xs text-gray-400">
+            <input
+              type="checkbox"
+              checked={sequenceMode}
+              onChange={onToggleSequenceMode}
+              className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900"
+            />
+            <span>Sequence Mode</span>
+          </label>
           <span className="text-xs text-gray-400">
             Format: {formatOptions.find((f) => f.key === selectedFormat)?.label}
           </span>
@@ -241,7 +255,9 @@ const SequenceBuilder: React.FC<{
       <div className="flex items-center space-x-2 mb-3">
         <div className="flex-1 bg-gray-900/50 border border-gray-600/50 rounded-md p-3 min-h-[2.5rem] font-mono text-sm text-gray-200 break-all">
           {sequence || (
-            <span className="text-gray-500 italic">Click emojis to build a sequence...</span>
+            <span className="text-gray-500 italic">
+              {sequenceMode ? "Click emojis to build a sequence..." : "Click an emoji to select it..."}
+            </span>
           )}
         </div>
         <button
@@ -709,7 +725,8 @@ const EmojiUI: React.FC<{
 
   const addToSequence = useCallback(
     (emoji: string) => {
-      updateData({ sequence: data.sequence + emoji });
+      // In sequence mode, append. In replace mode, replace.
+      const newSequence = data.sequenceMode ? data.sequence + emoji : emoji;
       
       // Add to recents (avoid duplicates, limit to 20)
       const newRecents = [emoji, ...data.recents.filter((r) => r !== emoji)].slice(0, 20);
@@ -722,11 +739,11 @@ const EmojiUI: React.FC<{
       
       // Update both sequence and recents in a single call
       updateData({ 
-        sequence: data.sequence + emoji,
+        sequence: newSequence,
         recents: newRecents 
       });
     },
-    [data.sequence, data.recents, updateData]
+    [data.sequence, data.sequenceMode, data.recents, updateData]
   );
 
   const toggleFavorite = useCallback(
@@ -802,9 +819,11 @@ const EmojiUI: React.FC<{
           <div className="lg:col-span-2 space-y-4">
             <SequenceBuilder
               sequence={data.sequence}
+              sequenceMode={data.sequenceMode}
               selectedFormat={data.selectedFormat}
               onCopy={copySequence}
               onClear={() => updateData({ sequence: "" })}
+              onToggleSequenceMode={() => updateData({ sequenceMode: !data.sequenceMode })}
               onFormatSelect={handleFormatSelect}
               showFormatPopover={showFormatPopover}
               onToggleFormatPopover={() => setShowFormatPopover(!showFormatPopover)}
@@ -917,6 +936,7 @@ export const EmojiTablet: Tablet = {
         favorites: [],
         recents: [],
         selectedCategory: "All",
+        sequenceMode: false,
       },
     };
   },
@@ -948,6 +968,10 @@ export const EmojiTablet: Tablet = {
             selectedCategory: categories.includes(parsed.data.selectedCategory)
               ? parsed.data.selectedCategory
               : "All",
+            // Ensure sequenceMode is valid
+            sequenceMode: typeof parsed.data.sequenceMode === "boolean" 
+              ? parsed.data.sequenceMode 
+              : false,
           },
         };
       }
