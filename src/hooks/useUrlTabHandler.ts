@@ -5,7 +5,7 @@ import { useTabsStore } from "../stores/tabsStore";
 import { useSplitViewStore } from "../stores/splitViewStore";
 import { useWorkspaceStore } from "../stores/workspaceStore";
 import { Tab } from "../types";
-import { languageRegistry } from "../languages/registry";
+import { formatRegistry } from "../formats/registry";
 import { tabletMetadata } from "../tablets/tabletMetadata";
 
 // Helper function to convert a label to URL identifier format
@@ -293,7 +293,7 @@ const createNewTabFromUrl = async (
   workspaceId: string,
 ): Promise<Tab> => {
   // Language
-  const language = languageRegistry.getById(urlIdentifier);
+  const language = formatRegistry.getById(urlIdentifier);
   if (language) {
     return {
       id: crypto.randomUUID(),

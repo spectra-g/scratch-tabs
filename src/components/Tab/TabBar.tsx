@@ -13,7 +13,7 @@ import { TabContextMenu } from "./TabContextMenu";
 import { TabActions } from "./TabActions";
 import { TabTooltip } from "./TabTooltip";
 import { Tab } from "../../types";
-import { languageRegistry } from "../../languages";
+import { formatRegistry } from "../../formats";
 import { WorkspaceSwitcher } from "../Workspace/WorkspaceSwitcher";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import {
@@ -339,7 +339,7 @@ export const TabBar: React.FC<TabBarProps> = ({
     if (!tab.isTablet) {
       content.lineCount = getTabLineCount(tab.content);
       try {
-        const detector = languageRegistry.getById(tab.language);
+        const detector = formatRegistry.getById(tab.language);
         if (detector) {
           content.language =
             detector.id === tab.language

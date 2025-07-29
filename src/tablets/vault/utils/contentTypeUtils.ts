@@ -1,6 +1,6 @@
 import { FileText, FileCode, Terminal, Link } from "../../../components/Icons";
 import { ContentType } from "../types";
-import { detectLanguage } from "../../../languages";
+import { detectFormat } from "../../../formats";
 
 export const CONTENT_TYPES = [
   { id: "plaintext", name: "Plain Text", icon: FileText },
@@ -27,7 +27,7 @@ export function detectContentType(content: string): ContentType {
   }
 
   // Detect language
-  const detectedLanguage = detectLanguage(content);
+      const detectedLanguage = detectFormat(content);
 
   // Map detected language to our simplified content types
   if (

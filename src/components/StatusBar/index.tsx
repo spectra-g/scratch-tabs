@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
-  getLanguageStatusItem,
-  getLanguageOptionsMenu,
-} from "./LanguageStatusItems";
+  getFormatStatusItem,
+  getFormatOptionsMenu,
+} from "./FormatStatusItems";
 import { Macro } from "../Macro";
 import { tabletRegistry } from "../../tablets";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
@@ -12,8 +12,8 @@ import { useRootStore } from "../../stores";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { Search, Coffee } from "../Icons";
 import { useSearchStore } from "../../stores/searchStore";
-import { languageRegistry } from "../../languages";
-import { getPotentialLanguageMatches } from "../../languages";
+import { formatRegistry } from "../../formats";
+import { getPotentialFormatMatches } from "../../formats";
 import { LanguageSelectionPopup } from "./LanguageSelectionPopup";
 import { ExtendedViewButtons } from "./ExtendedViewButtons";
 import { FontSizeControls } from "./FontSizeControls";
@@ -129,7 +129,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     }
 
     const contentSample = getContentForLanguageDetection(activeTab);
-    const potentialMatches = getPotentialLanguageMatches(contentSample);
+    const potentialMatches = getPotentialFormatMatches(contentSample);
 
     return {
       potentialMatches,
@@ -137,21 +137,21 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     };
   }, [activeTab?.id, activeTab?.content, activeTab?.isTablet]);
 
-  const LanguageStatusItem =
+  const FormatStatusItem =
     activeTab && !activeTab.isTablet
-      ? getLanguageStatusItem(activeTab.language)
+      ? getFormatStatusItem(activeTab.language)
       : null;
 
-  const LanguageOptionsMenu =
+  const FormatOptionsMenu =
     activeTab && !activeTab.isTablet
-      ? getLanguageOptionsMenu(activeTab.language, editor)
+      ? getFormatOptionsMenu(activeTab.language, editor)
       : null;
 
   // Get languages to display in the popup with the new ordering rules
   const getPopupLanguages = (): PopupMenuItem[] => {
     if (!activeTab || activeTab.isTablet) return [];
 
-    const allLangs = languageRegistry
+    const allLangs = formatRegistry
       .getAll()
       .map((lang) => ({
         id: lang.id,
@@ -262,7 +262,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
     // Language Info
     const currentLanguageId = activeTab.language;
-    const currentLanguageObject = languageRegistry.getById(currentLanguageId);
+    const currentLanguageObject = formatRegistry.getById(currentLanguageId);
     const currentLanguageName =
       currentLanguageObject?.name || currentLanguageId;
     const isLocked = activeTab.languageLocked;
@@ -343,14 +343,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             )}
             <div className="p-0.5 flex items-center space-x-2">
               {renderLanguageSection()}
-              {LanguageStatusItem && (
-                <LanguageStatusItem 
+              {FormatStatusItem && (
+                <FormatStatusItem 
                   content={languageDetectionData.contentSample} 
                   activeTab={activeTab} 
                 />
               )}
-              {LanguageOptionsMenu && editor && (
-                <LanguageOptionsMenu editor={editor} />
+              {FormatOptionsMenu && editor && (
+                <FormatOptionsMenu editor={editor} />
               )}
               <ExtendedViewButtons
                 language={activeTab.language}

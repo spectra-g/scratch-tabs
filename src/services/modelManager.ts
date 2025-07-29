@@ -3,7 +3,7 @@ import { Tab } from "../types";
 import { useTabsStore } from "../stores/tabsStore";
 import { useRootStore } from "../stores/rootStore";
 import { StorageProviderFactory } from "../db";
-import { detectLanguage, isAmbiguousLanguage } from "../languages";
+import { detectFormat, isAmbiguousFormat } from "../formats";
 import { updateCursorIndicator } from "../utils/testIndicators";
 import { contentProcessingService } from "./contentProcessing";
 
@@ -263,7 +263,7 @@ class ModelManager {
         return;
       }
 
-      const newDetectedLanguage = detectLanguage(trimmedNewContent);
+      const newDetectedLanguage = detectFormat(trimmedNewContent);
 
       const additionalFlags = isInitialContent ? { isFromClipboardImport: true } : undefined;
       const processingResult = await this.processContent(
@@ -299,7 +299,7 @@ class ModelManager {
           !trimmedOldContent.startsWith(trimmedNewContent.substring(0, 10)) &&
           lengthDifference > 5);
 
-      const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent);
+      const newDetectionIsAmbiguous = isAmbiguousFormat(newContent);
 
       let shouldUpdate = false;
       let shouldTriggerAutoFormat = false;

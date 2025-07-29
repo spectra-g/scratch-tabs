@@ -12,7 +12,7 @@ import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { searchTabs } from "../../services/searchService";
-import { languageRegistry } from "../../languages";
+import { formatRegistry } from "../../formats";
 import { Tab } from "../../types";
 
 const DEBOUNCE_DELAY = 300;
@@ -120,7 +120,7 @@ export const useSearchEngine = (): SearchEngine => {
   // Computed values
   const languages = useMemo(
     () =>
-      languageRegistry.getAll().sort((a, b) => a.name.localeCompare(b.name)),
+      formatRegistry.getAll().sort((a, b) => a.name.localeCompare(b.name)),
     [],
   );
   const currentResults = useSearchStore((state) => state.results);

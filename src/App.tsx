@@ -1,12 +1,12 @@
 import React, { Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { initializeLanguageProviders } from "./languages";
+import { initializeFormatProviders } from "./formats";
 import { broadcastManager } from "./stores/broadcastStore";
 import DragDropOverlay from "./components/DragDropOverlay";
 import "./views/csv";
 
 // Initialize language providers once when the app loads
-initializeLanguageProviders();
+  initializeFormatProviders();
 
 const MainLayout = React.lazy(() => import("./components/Layout/MainLayout"));
 // const OGWelcomeScreen = React.lazy(() => import('./components/Welcome/OGWelcomeScreen').then(module => ({ default: module.OGWelcomeScreen })));

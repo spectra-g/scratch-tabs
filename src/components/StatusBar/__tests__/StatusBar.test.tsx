@@ -23,9 +23,9 @@ jest.mock('../FontSizeControls', () => ({
 }));
 
 // Mock other components that might be imported
-jest.mock('../LanguageStatusItems', () => ({
-  getLanguageStatusItem: jest.fn(() => null),
-  getLanguageOptionsMenu: jest.fn(() => null),
+jest.mock('../FormatStatusItems', () => ({
+  getFormatStatusItem: jest.fn(() => null),
+  getFormatOptionsMenu: jest.fn(() => null),
 }));
 
 jest.mock('../LanguageSelectionPopup', () => ({
@@ -48,11 +48,11 @@ jest.mock('../../../hooks/useIsMobile', () => ({
   useIsMobile: jest.fn(() => false),
 }));
 
-jest.mock('../../../languages', () => ({
-  languageRegistry: {
+jest.mock('../../../formats', () => ({
+  formatRegistry: {
     getById: jest.fn(() => null),
   },
-  getPotentialLanguageMatches: jest.fn(() => []),
+  getPotentialFormatMatches: jest.fn(() => []),
 }));
 
 jest.mock('../../../tablets', () => ({

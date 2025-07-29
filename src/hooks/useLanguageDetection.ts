@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from "react";
-import { detectLanguage, isAmbiguousLanguage } from "../languages";
+import { detectFormat, isAmbiguousFormat } from "../formats";
 import { debounce } from "../utils/domUtils";
 
 // Define the type for the update function from the store for better type safety
@@ -76,8 +76,8 @@ export const useLanguageDetection = (
 
       // --- 4. Perform Language Detection ---
       // Always detect unless manually locked or empty
-      const newDetectedLanguage = detectLanguage(trimmedNewContent);
-      const newDetectionIsAmbiguous = isAmbiguousLanguage(newContent); // Use the ambiguity result from detection
+      const newDetectedLanguage = detectFormat(trimmedNewContent);
+      const newDetectionIsAmbiguous = isAmbiguousFormat(newContent); // Use the ambiguity result from detection
 
       // --- 5. Decide Whether to Update the Tab's Language ---
       let shouldUpdate = false;

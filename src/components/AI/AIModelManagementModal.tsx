@@ -1,7 +1,7 @@
 import React from "react";
 import { useAIStore } from "../../stores/aiStore";
 import { useModalStore } from "../../stores/modalStore";
-import { BaseModal } from "../../languages/json/components/modals/BaseModal";
+import { BaseModal } from "../../formats/json/components/modals/BaseModal";
 import {
   Brain,
   Shield,

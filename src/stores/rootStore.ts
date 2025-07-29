@@ -4,11 +4,11 @@ import { useSplitViewStore } from "./splitViewStore";
 import { useEditorStore } from "./editorStore";
 import { useWorkspaceStore } from "./workspaceStore";
 import { Tab } from "../types";
-import { languageRegistry } from "../languages/registry";
+import { formatRegistry } from "../formats/registry";
 import { incrementSetting } from "../db";
 import { NEW_TAB_PREFIX } from "../constants";
 import { isTabEmpty, countEmptyTabs, groupTabsByLanguage } from "../utils";
-import { detectLanguage, isAmbiguousLanguage } from "../languages";
+import { detectFormat, isAmbiguousFormat } from "../formats";
 import { StorageProviderFactory } from "../db";
 import { broadcastManager } from "./broadcastStore";
 import { modelManager } from "../services/modelManager";
@@ -75,9 +75,9 @@ export const useRootStore = create<RootStore>((set, get) => {
     // Use content from input, fallback to initialContent, then to empty string
     const content = partialInputTab.content ?? options.initialContent ?? "";
 
-    const language = content ? detectLanguage(content) : "plaintext";
+    const language = content ? detectFormat(content) : "plaintext";
     const languageLocked =
-      language !== "plaintext" && !isAmbiguousLanguage(content || "");
+      language !== "plaintext" && !isAmbiguousFormat(content || "");
 
     const finalTab = {
       id: partialInputTab.id || crypto.randomUUID(),
@@ -407,9 +407,9 @@ export const useRootStore = create<RootStore>((set, get) => {
         return;
       }
       const addNewTabToRight = !isRightSide;
-      const language = detectLanguage(clipboardContent);
+      const language = detectFormat(clipboardContent);
       const shouldLock =
-        language !== "plaintext" && !isAmbiguousLanguage(clipboardContent);
+        language !== "plaintext" && !isAmbiguousFormat(clipboardContent);
       const newTabId = crypto.randomUUID();
       const now = Date.now();
       const newTab: Tab = {
@@ -446,7 +446,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tabToSave = tabs.find((tab) => tab.id === tabId);
       if (!tabToSave || tabToSave.isTablet) return;
       try {
-        const detector = languageRegistry.getById(tabToSave.language);
+        const detector = formatRegistry.getById(tabToSave.language);
         const extension = detector?.getFileExtension() || "txt";
         const blob = new Blob([tabToSave.content || ""], {
           type: "text/plain;charset=utf-8",
