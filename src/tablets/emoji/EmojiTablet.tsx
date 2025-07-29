@@ -370,14 +370,19 @@ const SkinToneSelector: React.FC<{
 // Component: Inspector Panel
 const InspectorPanel: React.FC<{
   hoveredEmoji: CompactEmoji | null;
-}> = ({ hoveredEmoji }) => {
+  isSelected: boolean;
+  onClearSelection: () => void;
+}> = ({ hoveredEmoji, isSelected, onClearSelection }) => {
   if (!hoveredEmoji) {
     return (
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[200px]">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-gray-300">Inspector</h3>
+        </div>
         <div className="flex items-center justify-center h-32 text-gray-500">
           <div className="text-center">
             <Eye size={32} className="mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Hover over an emoji to inspect</p>
+            <p className="text-sm">Click or hover over an emoji to inspect</p>
           </div>
         </div>
       </div>
@@ -388,6 +393,21 @@ const InspectorPanel: React.FC<{
 
   return (
     <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[200px]">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-gray-300">
+          Inspector {isSelected && <span className="text-xs text-blue-400">(Selected)</span>}
+        </h3>
+        {isSelected && (
+          <button
+            onClick={onClearSelection}
+            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+            title="Clear selection"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+      
       <div className="flex items-center space-x-3 mb-4">
         <span className="text-3xl">{hoveredEmoji.c}</span>
         <div>
@@ -622,6 +642,7 @@ const EmojiUI: React.FC<{
 }> = ({ state, onChange }) => {
   const { data } = state;
   const [hoveredEmoji, setHoveredEmoji] = useState<CompactEmoji | null>(null);
+  const [selectedEmoji, setSelectedEmoji] = useState<CompactEmoji | null>(null);
   const [showFormatPopover, setShowFormatPopover] = useState(false);
   const [skinToneSelector, setSkinToneSelector] = useState<{
     emoji: CompactEmoji;
@@ -693,6 +714,12 @@ const EmojiUI: React.FC<{
       // Add to recents (avoid duplicates, limit to 20)
       const newRecents = [emoji, ...data.recents.filter((r) => r !== emoji)].slice(0, 20);
       updateData({ recents: newRecents });
+      
+      // Find and set the selected emoji for the inspector panel
+      const emojiData = emojiData.find((e) => e.c === emoji);
+      if (emojiData) {
+        setSelectedEmoji(emojiData);
+      }
     },
     [data.sequence, data.recents, updateData],
   );
@@ -737,6 +764,9 @@ const EmojiUI: React.FC<{
     },
     [data.sequence, updateData],
   );
+
+  // Determine which emoji to show in inspector (selected takes priority over hovered)
+  const inspectorEmoji = selectedEmoji || hoveredEmoji;
 
   return (
     <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
@@ -787,7 +817,11 @@ const EmojiUI: React.FC<{
 
           {/* Right Column - Inspector & Favorites */}
           <div className="space-y-4 w-full">
-            <InspectorPanel hoveredEmoji={hoveredEmoji} />
+            <InspectorPanel 
+              hoveredEmoji={inspectorEmoji} 
+              isSelected={!!selectedEmoji}
+              onClearSelection={() => setSelectedEmoji(null)}
+            />
 
             <FavoritesRecentsBar
               favorites={data.favorites}
@@ -802,26 +836,26 @@ const EmojiUI: React.FC<{
             <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[80px]">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Quick Actions</h3>
               <div className="space-y-2">
-                {hoveredEmoji && (
+                {inspectorEmoji && (
                   <button
-                    onClick={() => toggleFavorite(hoveredEmoji.c)}
+                    onClick={() => toggleFavorite(inspectorEmoji.c)}
                     className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
-                      data.favorites.includes(hoveredEmoji.c)
+                      data.favorites.includes(inspectorEmoji.c)
                         ? "bg-yellow-500/20 text-yellow-400"
                         : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
                     }`}
                   >
                     <Star size={14} />
                     <span>
-                      {data.favorites.includes(hoveredEmoji.c)
+                      {data.favorites.includes(inspectorEmoji.c)
                         ? "Remove from Favorites"
                         : "Add to Favorites"}
                     </span>
                   </button>
                 )}
-                {!hoveredEmoji && (
+                {!inspectorEmoji && (
                   <div className="flex items-center justify-center text-gray-500 text-sm py-4">
-                    Hover over an emoji for actions
+                    Click or hover over an emoji for actions
                   </div>
                 )}
               </div>
