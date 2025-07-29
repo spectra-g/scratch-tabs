@@ -1,10 +1,10 @@
-import { FormatDetector, DetectionResult } from "./types";
+import { FormatModule, DetectionResult  } from "./types";
 
 /**
  * Base class for format detectors
  * Provides common functionality and default implementations
  */
-export abstract class BaseFormatDetector implements FormatDetector {
+export abstract class BaseFormatDetector implements FormatModule {
   abstract id: string;
   abstract name: string;
   abstract extensions: string[];

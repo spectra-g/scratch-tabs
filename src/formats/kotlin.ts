@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Kotlin language detector
  */
-export class KotlinFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class KotlinFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "kotlin"; // Monaco's built-in ID for Kotlin
   name = "Kotlin";

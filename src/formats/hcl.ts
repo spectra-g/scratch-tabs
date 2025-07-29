@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * HCL (Terraform, Packer, etc.) language detector
  */
-export class HclFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class HclFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "hcl"; // Monaco uses 'hcl' for Terraform syntax
   name = "HCL (Terraform)";

@@ -2,14 +2,12 @@
 
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Bash/Shell language detector
  */
-export class BashFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class BashFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "shell";
   name = "Bash/Shell";

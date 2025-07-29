@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Scala language detector
  */
-export class ScalaFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class ScalaFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "scala"; // Monaco might have 'scala' or require a custom setup
   name = "Scala";

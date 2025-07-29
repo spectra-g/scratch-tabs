@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * XML language detector
  */
-export class XmlFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class XmlFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "xml"; // Monaco's built-in ID for XML
   name = "XML";

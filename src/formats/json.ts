@@ -1,4 +1,4 @@
-import { DetectionResult, FormatDetector } from "./types"; // Ensure correct import
+import { DetectionResult, FormatModule  } from "./types"; // Ensure correct import
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
 import { registerJsonValidationProvider } from "./json/validation";
@@ -932,9 +932,7 @@ async function generateRestaurantMenu(faker: any): Promise<string> {
 /**
  * JSON language detector
  */
-export class JsonFormatDetector
-extends BaseFormatDetector
-implements FormatDetector
+export class JsonFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "json";
   name = "JSON";

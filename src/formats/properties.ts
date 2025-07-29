@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Properties/INI language detector
  */
-export class PropertiesFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class PropertiesFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "ini"; // Monaco uses 'ini' for this type of file (often interchangeable with properties)
   name = "Properties / INI";

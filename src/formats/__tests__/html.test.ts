@@ -1,7 +1,3 @@
-// Mock the HTML status item component to avoid React/JSX compilation issues in Jest
-jest.mock("../../components/StatusBar/FormatStatusItems/html", () => ({
-  HtmlStatusItem: () => "MockedHtmlStatusItem",
-}));
 
 import { HtmlFormatDetector } from "../html";
 
@@ -80,20 +76,6 @@ describe("HtmlFormatDetector", () => {
     });
   });
 
-  describe("UI Components", () => {
-    test("should return a status item component function", () => {
-      const getStatusItemFn = detector.getStatusItem;
-      expect(typeof getStatusItemFn).toBe("function");
-
-      const StatusItemComponent = getStatusItemFn!();
-      expect(typeof StatusItemComponent).toBe("function");
-
-      // Call the mocked component function to verify it returns what we expect
-      expect(StatusItemComponent({ content: "test" })).toBe(
-        "MockedHtmlStatusItem",
-      );
-    });
-  });
 
   describe("Monaco Provider Registration", () => {
     test("should register monaco provider without errors", () => {

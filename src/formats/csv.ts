@@ -2,7 +2,7 @@
 
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 // Helper to escape characters for RegExp constructor
 function escapeRegExp(string: string): string {
@@ -12,9 +12,7 @@ function escapeRegExp(string: string): string {
 /**
  * CSV/TSV language detector (Simplified)
  */
-export class CsvFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class CsvFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "csv";
   name = "CSV / TSV";

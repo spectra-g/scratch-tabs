@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Detector for Groovy language files
  */
-export class GroovyDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class GroovyDetector extends BaseFormatDetector implements FormatModule
 {
   id = "groovy";
   name = "Groovy";

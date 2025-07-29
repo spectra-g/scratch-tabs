@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * VHost (Apache Virtual Host) language detector
  */
-export class VhostFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class VhostFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "vhost";
   name = "VHost";

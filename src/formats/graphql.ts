@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * GraphQL language detector
  */
-export class GraphqlFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class GraphqlFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "graphql"; // Monaco has built-in support for 'graphql'
   name = "GraphQL";

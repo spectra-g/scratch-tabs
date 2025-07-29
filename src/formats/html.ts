@@ -1,16 +1,12 @@
 import * as React from "react";
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
-import { HtmlStatusItem } from "../components/StatusBar/FormatStatusItems/html";
-import { StatusItemProps } from "../components/StatusBar/types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * HTML language detector
  */
-export class HtmlFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class HtmlFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "html"; // Monaco's built-in ID for HTML
   name = "HTML";
@@ -194,9 +190,6 @@ export class HtmlFormatDetector
     return "html";
   }
 
-  getStatusItem(): React.FC<StatusItemProps> {
-    return HtmlStatusItem;
-  }
 
   registerProvider(monaco: any): void {
     const languageId = this.id; // 'html'

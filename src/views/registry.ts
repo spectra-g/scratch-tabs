@@ -7,6 +7,7 @@ export interface ExtendedView {
   label: string;
   icon: LucideIcon;
   component: React.ComponentType<ExtendedViewProps>;
+  mode: 'replaces' | 'side-by-side'; // Define the view's behavior
   priority?: number; // For ordering multiple views for same language
 }
 

@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Ruby language detector
  */
-export class RubyFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class RubyFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "ruby"; // Monaco's built-in ID for Ruby
   name = "Ruby";

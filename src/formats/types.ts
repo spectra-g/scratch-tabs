@@ -1,6 +1,7 @@
 import React from "react";
 import { StatusItemProps } from "../components/StatusBar/types";
 import * as monaco from "monaco-editor";
+import { ExtendedView } from "../views/registry";
 
 export interface DetectionResult {
   match: boolean;
@@ -8,10 +9,26 @@ export interface DetectionResult {
   matchedDefinitive?: boolean;
 }
 
+export interface MenuItem {
+  id: string;
+  label: string;
+  icon?: React.ComponentType<{ size?: number; className?: string }>;
+  action: () => void;
+  disabled?: boolean;
+  separator?: boolean;
+}
+
+export interface EditorActionContext {
+  editor: monaco.editor.IStandaloneCodeEditor;
+  content: string;
+  language: string;
+  tabId: string;
+}
+
 /**
- * Interface for format detector implementations
+ * Interface for format module implementations
  */
-export interface FormatDetector {
+export interface FormatModule {
   /**
    * The format ID (e.g., 'json', 'yaml', 'markdown')
    */
@@ -48,18 +65,33 @@ export interface FormatDetector {
   sampleContent: () => string;
 
   /**
-   * Get status item component for this format (optional)
+   * Get file extension for this format
+   */
+  getFileExtension: () => string;
+
+  // --- NEW: Generic Mechanisms ---
+  /**
+   * Get context menu actions for this format (optional)
+   */
+  getContextMenuActions?(context: EditorActionContext): MenuItem[];
+
+  /**
+   * Get extended views for this format (optional)
+   */
+  getExtendedViews?(): ExtendedView[];
+
+  // --- LEGACY: For backward compatibility (Phase 1) ---
+  /**
+   * Get status item component for this format (optional) - LEGACY
    */
   getStatusItem?: () => React.FC<StatusItemProps>;
 
   /**
-   * Get options menu component for this format (optional)
+   * Get options menu component for this format (optional) - LEGACY
    */
   getOptionsMenu?: () => React.FC<{
     editor: monaco.editor.IStandaloneCodeEditor;
   }>;
-
-  getFileExtension: () => string;
 }
 
 /**
@@ -67,19 +99,19 @@ export interface FormatDetector {
  */
 export interface FormatRegistry {
   /**
-   * Register a format detector
+   * Register a format module
    */
-  register: (detector: FormatDetector) => void;
+  register: (module: FormatModule) => void;
 
   /**
-   * Get all registered format detectors
+   * Get all registered format modules
    */
-  getAll: () => FormatDetector[];
+  getAll: () => FormatModule[];
 
   /**
-   * Get a format detector by ID
+   * Get a format module by ID
    */
-  getById: (id: string) => FormatDetector | undefined;
+  getById: (id: string) => FormatModule | undefined;
 
   /**
    * Detect the format of content

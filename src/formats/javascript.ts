@@ -1,13 +1,11 @@
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
 
 /**
  * JavaScript/TypeScript language detector
  */
-export class JavaScriptFormatDetector
-extends BaseFormatDetector
-implements FormatDetector
+export class JavaScriptFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "javascript";
   name = "JavaScript";
@@ -353,9 +351,7 @@ console.log("Exiting the script.");
 /**
  * TypeScript language detector
  */
-export class TypeScriptFormatDetector
-extends BaseFormatDetector
-implements FormatDetector
+export class TypeScriptFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "typescript";
   name = "TypeScript";

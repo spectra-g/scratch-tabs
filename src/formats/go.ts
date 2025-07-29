@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Go language detector
  */
-export class GoFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class GoFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "go"; // Monaco's built-in ID for Go
   name = "Go";
