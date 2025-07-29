@@ -373,7 +373,7 @@ const InspectorPanel: React.FC<{
 }> = ({ hoveredEmoji }) => {
   if (!hoveredEmoji) {
     return (
-      <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+      <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[200px]">
         <div className="flex items-center justify-center h-32 text-gray-500">
           <div className="text-center">
             <Eye size={32} className="mx-auto mb-2 opacity-50" />
@@ -387,7 +387,7 @@ const InspectorPanel: React.FC<{
   const unicodeInfo = getUnicodeInfo(hoveredEmoji.c);
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[200px]">
       <div className="flex items-center space-x-3 mb-4">
         <span className="text-3xl">{hoveredEmoji.c}</span>
         <div>
@@ -400,24 +400,24 @@ const InspectorPanel: React.FC<{
         <div className="space-y-2 text-xs">
           <div className="flex justify-between">
             <span className="text-gray-400">Unicode:</span>
-            <span className="font-mono text-gray-200">{unicodeInfo.codepoint}</span>
+            <span className="font-mono text-gray-200 min-w-[80px] text-right">{unicodeInfo.codepoint}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">UTF-8:</span>
-            <span className="font-mono text-gray-200">{unicodeInfo.utf8}</span>
+            <span className="font-mono text-gray-200 min-w-[80px] text-right">{unicodeInfo.utf8}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">JS Escape:</span>
-            <span className="font-mono text-gray-200">{unicodeInfo.jsEscape}</span>
+            <span className="font-mono text-gray-200 min-w-[80px] text-right">{unicodeInfo.jsEscape}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Category:</span>
-            <span className="text-gray-200">{hoveredEmoji.cat}</span>
+            <span className="text-gray-200 min-w-[80px] text-right">{hoveredEmoji.cat}</span>
           </div>
           {hoveredEmoji.t && (
             <div className="flex justify-between">
               <span className="text-gray-400">Skin Tones:</span>
-              <span className="text-green-400">Supported</span>
+              <span className="text-green-400 min-w-[80px] text-right">Supported</span>
             </div>
           )}
         </div>
@@ -552,7 +552,7 @@ const FavoritesRecentsBar: React.FC<{
   const currentList = activeTab === "favorites" ? favorites : recents;
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[120px]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex space-x-1">
           <button
@@ -564,7 +564,7 @@ const FavoritesRecentsBar: React.FC<{
             }`}
           >
             <Star size={12} className="inline mr-1" />
-            Favorites ({favorites.length})
+            <span className="min-w-[60px] inline-block">Favorites ({favorites.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("recents")}
@@ -575,14 +575,14 @@ const FavoritesRecentsBar: React.FC<{
             }`}
           >
             <Clock size={12} className="inline mr-1" />
-            Recent ({recents.length})
+            <span className="min-w-[60px] inline-block">Recent ({recents.length})</span>
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1 min-h-[2.5rem]">
+      <div className="flex flex-wrap gap-1 min-h-[2.5rem] max-h-[60px] overflow-y-auto">
         {currentList.length === 0 ? (
-          <div className="flex items-center justify-center w-full text-gray-500 text-sm">
+          <div className="flex items-center justify-center w-full text-gray-500 text-sm min-h-[2.5rem]">
             {activeTab === "favorites" ? "No favorites yet" : "No recent emojis"}
           </div>
         ) : (
@@ -762,7 +762,7 @@ const EmojiUI: React.FC<{
 
       {/* Main Content */}
       <div className="flex-1 p-4 overflow-auto custom-scrollbar">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full" style={{ gridTemplateColumns: '1fr 1fr 400px' }}>
           {/* Left Column - Sequence Builder & Grid */}
           <div className="lg:col-span-2 space-y-4">
             <SequenceBuilder
@@ -786,7 +786,7 @@ const EmojiUI: React.FC<{
           </div>
 
           {/* Right Column - Inspector & Favorites */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             <InspectorPanel hoveredEmoji={hoveredEmoji} />
 
             <FavoritesRecentsBar
@@ -799,7 +799,7 @@ const EmojiUI: React.FC<{
             />
 
             {/* Quick Actions */}
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+            <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[80px]">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Quick Actions</h3>
               <div className="space-y-2">
                 {hoveredEmoji && (
@@ -818,6 +818,11 @@ const EmojiUI: React.FC<{
                         : "Add to Favorites"}
                     </span>
                   </button>
+                )}
+                {!hoveredEmoji && (
+                  <div className="flex items-center justify-center text-gray-500 text-sm py-4">
+                    Hover over an emoji for actions
+                  </div>
                 )}
               </div>
             </div>
