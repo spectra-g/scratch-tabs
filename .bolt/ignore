@@ -5,34 +5,27 @@ node_modules/
 dist/
 build/
 
-src/components/
+src/components/AI/
+src/components/BatchTools/
+src/components/DiffModal/
+src/components/Macro/
+src/components/Search/
+src/components/SplitView/
+src/components/Tablet/
+src/components/TestFields/
+src/components/Welcome/
+src/components/Workspace/
 src/hooks/
 src/constants/
 src/db/
 src/features/
 src/services/
 src/stores/
-src/utils/
 src/views/
 src/workers/
 
-src/languages/
-src/tablets/base64/
-src/tablets/promptmanager/
-src/tablets/password/
-src/tablets/runcode/
-src/tablets/email/
-src/tablets/usergen/
-src/tablets/ipdetails/
-src/tablets/converter/
-src/tablets/vault/
-src/tablets/restclient/
-src/tablets/jwt/
-src/tablets/jsonmapper/
-src/tablets/pomodoro/
-src/tablets/regex/
-src/tablets/shapesnap/
-src/tablets/cron/
+src/tablets/
+src/formats/__tests__/
 
 landing/
 public/
