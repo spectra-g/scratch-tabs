@@ -713,15 +713,20 @@ const EmojiUI: React.FC<{
       
       // Add to recents (avoid duplicates, limit to 20)
       const newRecents = [emoji, ...data.recents.filter((r) => r !== emoji)].slice(0, 20);
-      updateData({ recents: newRecents });
       
       // Find and set the selected emoji for the inspector panel
       const matchedEmoji = emojiData.find((e) => e.c === emoji);
       if (matchedEmoji) {
         setSelectedEmoji(matchedEmoji);
       }
+      
+      // Update both sequence and recents in a single call
+      updateData({ 
+        sequence: data.sequence + emoji,
+        recents: newRecents 
+      });
     },
-    [data.sequence, data.recents, updateData],
+    [data.sequence, data.recents, updateData]
   );
 
   const toggleFavorite = useCallback(
