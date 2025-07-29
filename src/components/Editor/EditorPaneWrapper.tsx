@@ -10,6 +10,7 @@ import { useMarkdownPreviewResizer } from "../../hooks/useMarkdownPreviewResizer
 import { PreviewDivider } from "../Preview/PreviewDivider";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
+import { modelManager } from "../../services/modelManager";
 
 interface EditorPaneWrapperProps {
   side: "left" | "right";
@@ -117,9 +118,11 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
               // Render replacement view (like CSV table editor)
               <extendedView.component
                 content={previewContent}
-                onContentChange={(newContent) =>
-                  updateTabState(activeTab.id, { content: newContent })
-                }
+                onContentChange={(newContent) => {
+                  updateTabState(activeTab.id, { content: newContent });
+                  // Invalidate the cached model so it gets recreated with fresh content
+                  modelManager.invalidateModel(activeTab.id);
+                }}
                 tabId={activeTab.id}
                 isActive={true}
               />
@@ -176,9 +179,11 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
             <Suspense fallback={<PreviewLoadingFallback />}>
               <extendedView.component
                 content={previewContent}
-                onContentChange={(newContent) =>
-                  updateTabState(activeTab.id, { content: newContent })
-                }
+                onContentChange={(newContent) => {
+                  updateTabState(activeTab.id, { content: newContent });
+                  // Invalidate the cached model so it gets recreated with fresh content
+                  modelManager.invalidateModel(activeTab.id);
+                }}
                 tabId={activeTab.id}
                 isActive={true}
               />

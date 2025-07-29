@@ -19,7 +19,7 @@ import "./hcl";
 import "./html/index";
 import "./java";
 import "./javascript";
-import "./json";
+import "./json/index";
 import "./jsonlog";
 import "./kotlin";
 import "./markdown/index";

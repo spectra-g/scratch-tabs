@@ -13,7 +13,15 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   tabId,
   isActive,
 }) => {
+  // Add cleanup effect to track unmounting
+  useEffect(() => {
+    return () => {
+      setEditor(null);
+      editorRef.current = null;
+    };
+  }, [tabId]);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
@@ -41,9 +49,13 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   const handleEditorMount = useCallback(
     (editor: monaco.editor.IStandaloneCodeEditor, monaco: typeof import("monaco-editor/esm/vs/editor/editor.api")) => {
       editorRef.current = editor;
+      setEditor(editor);
 
-      // Set initial content
-      editor.setValue(content);
+      // Set initial content WITHOUT triggering change events
+      const model = editor.getModel();
+      if (model && model.getValue() !== content) {
+        model.setValue(content);
+      }
 
       // Listen for content changes
       editor.onDidChangeModelContent(() => {
@@ -53,7 +65,6 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       });
 
       // Listen for undo/redo state changes
-      const model = editor.getModel();
       if (model) {
         model.onDidChangeContent(() => {
           updateUndoRedoState();
@@ -68,22 +79,29 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
 
   // Update editor content when prop changes (but avoid infinite loops)
   useEffect(() => {
-    if (editorRef.current && editorRef.current.getValue() !== content) {
-      editorRef.current.setValue(content);
+    if (editor) {
+      const currentValue = editor.getValue();
+      if (currentValue !== content) {
+        // Use model.setValue to avoid triggering change events
+        const model = editor.getModel();
+        if (model) {
+          model.setValue(content);
+        }
+      }
     }
-  }, [content]);
+  }, [content, editor]);
 
   const handleUndo = useCallback(() => {
-    if (editorRef.current && canUndo) {
-      editorRef.current.trigger("keyboard", "undo", null);
+    if (editor && canUndo) {
+      editor.trigger("keyboard", "undo", null);
     }
-  }, [canUndo]);
+  }, [editor, canUndo]);
 
   const handleRedo = useCallback(() => {
-    if (editorRef.current && canRedo) {
-      editorRef.current.trigger("keyboard", "redo", null);
+    if (editor && canRedo) {
+      editor.trigger("keyboard", "redo", null);
     }
-  }, [canRedo]);
+  }, [editor, canRedo]);
 
   const handlePathChange = useCallback((path: string) => {
     setCurrentPath(path);
@@ -107,7 +125,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         canRedo={canRedo}
         onUndo={handleUndo}
         onRedo={handleRedo}
-        editor={editorRef.current}
+        editor={editor}
         onContentChange={onContentChange}
       />
 
@@ -161,7 +179,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             <Toolbox
-              editor={editorRef.current}
+              editor={editor}
               onContentChange={onContentChange}
             />
           </div>
