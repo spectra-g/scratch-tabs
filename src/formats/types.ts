@@ -1,7 +1,7 @@
 import React from "react";
 import { StatusItemProps } from "../components/StatusBar/types";
 import * as monaco from "monaco-editor";
-import { ExtendedView } from "../views/registry";
+import { SmartView } from "../views/registry";
 
 export interface DetectionResult {
   match: boolean;
@@ -78,7 +78,7 @@ export interface FormatModule {
   /**
    * Get extended views for this format (optional)
    */
-  getExtendedViews?(): ExtendedView[];
+  getSmartViews?(): SmartView[];
 
   // --- LEGACY: For backward compatibility (Phase 1) ---
   /**

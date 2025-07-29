@@ -32,8 +32,8 @@ jest.mock('../LanguageSelectionPopup', () => ({
   LanguageSelectionPopup: () => <div data-testid="language-popup">Language Popup</div>,
 }));
 
-jest.mock('../ExtendedViewButtons', () => ({
-  ExtendedViewButtons: () => <div data-testid="extended-view-buttons">Extended View Buttons</div>,
+jest.mock('../SmartViewButtons', () => ({
+  SmartViewButtons: () => <div data-testid="smart-view-buttons">Smart View Buttons</div>,
 }));
 
 jest.mock('../../AI/AIStatusIcon', () => ({

@@ -15,7 +15,7 @@ import { useSearchStore } from "../../stores/searchStore";
 import { formatRegistry } from "../../formats";
 import { getPotentialFormatMatches } from "../../formats";
 import { LanguageSelectionPopup } from "./LanguageSelectionPopup";
-import { ExtendedViewButtons } from "./ExtendedViewButtons";
+import { SmartViewButtons } from "./SmartViewButtons";
 import { FontSizeControls } from "./FontSizeControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import type { PopupMenuItem } from "./types";
@@ -352,7 +352,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
               {FormatOptionsMenu && editor && (
                 <FormatOptionsMenu editor={editor} />
               )}
-              <ExtendedViewButtons
+              <SmartViewButtons
                 language={activeTab.language}
                 tabId={activeTab.id}
               />

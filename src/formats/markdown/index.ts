@@ -1,8 +1,8 @@
 import { FormatModule } from "../types";
 import { MarkdownFormatDetector } from "../markdown";
 import { formatRegistry } from "../registry";
-import { extendedViewRegistry } from "../../views/registry";
-import { ExtendedView } from "../../views/registry";
+import { smartViewRegistry } from "../../views/registry";
+import { SmartView } from "../../views/registry";
 import { Eye } from "../../components/Icons";
 import MarkdownPreview from "./components/MarkdownPreview";
 
@@ -46,8 +46,8 @@ export class MarkdownFormatModule implements FormatModule {
     return this.detector.getFileExtension();
   }
 
-  // New generic mechanism for extended views
-  getExtendedViews(): ExtendedView[] {
+  // New generic mechanism for smart views
+  getSmartViews(): SmartView[] {
     return [
       {
         id: "markdown-preview",
@@ -66,9 +66,9 @@ export class MarkdownFormatModule implements FormatModule {
 const markdownModule = new MarkdownFormatModule();
 formatRegistry.register(markdownModule);
 
-// Register the extended view
-markdownModule.getExtendedViews()?.forEach(view => {
-  extendedViewRegistry.register(view);
+// Register the smart view
+markdownModule.getSmartViews()?.forEach(view => {
+  smartViewRegistry.register(view);
 });
 
 // Export for backward compatibility

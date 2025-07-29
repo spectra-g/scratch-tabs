@@ -1,27 +1,27 @@
 import React from "react";
-import { extendedViewRegistry } from "../../views/registry";
+import { smartViewRegistry } from "../../views/registry";
 import { useRootStore } from "../../stores";
 
-interface ExtendedViewButtonsProps {
+interface SmartViewButtonsProps {
   language: string;
   tabId: string;
 }
 
-export const ExtendedViewButtons: React.FC<ExtendedViewButtonsProps> = ({
+export const SmartViewButtons: React.FC<SmartViewButtonsProps> = ({
   language,
   tabId,
 }) => {
   const { getActiveView, setActiveView } = useRootStore();
   const activeViewId = getActiveView(tabId);
 
-  const availableViews = extendedViewRegistry.getViewsForLanguage(language);
+  const availableViews = smartViewRegistry.getViewsForLanguage(language);
 
   if (availableViews.length === 0) {
     return null;
   }
 
   return (
-    <div data-testid="extended-view-buttons">
+    <div data-testid="smart-view-buttons">
       {availableViews.map((view) => {
         const isActive = activeViewId === view.id;
         const Icon = view.icon;

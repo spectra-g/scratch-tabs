@@ -4,7 +4,7 @@ import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { EditorInstance } from "./EditorInstance";
 import { TabletView } from "../Tab/TabletView";
-import { extendedViewRegistry } from "../../views/registry";
+import { smartViewRegistry } from "../../views/registry";
 import { StatusBar } from "../StatusBar";
 import { useMarkdownPreviewResizer } from "../../hooks/useMarkdownPreviewResizer";
 import { PreviewDivider } from "../Preview/PreviewDivider";
@@ -80,7 +80,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
   const extendedView =
     activeTab && activeViewId
-      ? extendedViewRegistry.getView(activeTab.language, activeViewId)
+      ? smartViewRegistry.getView(activeTab.language, activeViewId)
       : null;
 
   // Determine if we should show a side-by-side preview based on the view mode

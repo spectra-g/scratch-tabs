@@ -1,7 +1,7 @@
 import { FormatModule } from "../types";
 import { CsvFormatDetector } from "../csv";
 import { formatRegistry } from "../registry";
-import { extendedViewRegistry, ExtendedView } from "../../views/registry";
+import { smartViewRegistry, SmartView } from "../../views/registry";
 import { Table } from "../../components/Icons";
 import { CsvTableViewer } from "./views/components/CsvTableViewer";
 
@@ -45,8 +45,8 @@ export class CsvFormatModule implements FormatModule {
     return this.detector.getFileExtension();
   }
 
-  // New generic mechanism for extended views
-  getExtendedViews(): ExtendedView[] {
+  // New generic mechanism for smart views
+  getSmartViews(): SmartView[] {
     return [
       {
         id: "csv-table",
@@ -65,9 +65,9 @@ export class CsvFormatModule implements FormatModule {
 const csvModule = new CsvFormatModule();
 formatRegistry.register(csvModule);
 
-// Register the extended view
-csvModule.getExtendedViews()?.forEach(view => {
-  extendedViewRegistry.register(view);
+// Register the smart view
+csvModule.getSmartViews()?.forEach(view => {
+  smartViewRegistry.register(view);
 });
 
 // Export for backward compatibility

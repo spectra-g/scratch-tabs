@@ -1,8 +1,8 @@
 import { FormatModule } from "../types";
 import { HtmlFormatDetector } from "../html";
 import { formatRegistry } from "../registry";
-import { extendedViewRegistry } from "../../views/registry";
-import { ExtendedView } from "../../views/registry";
+import { smartViewRegistry } from "../../views/registry";
+import { SmartView } from "../../views/registry";
 import { Eye } from "../../components/Icons";
 import HtmlPreview from "./components/HtmlPreview";
 
@@ -46,8 +46,8 @@ export class HtmlFormatModule implements FormatModule {
     return this.detector.getFileExtension();
   }
 
-  // New generic mechanism for extended views
-  getExtendedViews(): ExtendedView[] {
+  // New generic mechanism for smart views
+  getSmartViews(): SmartView[] {
     return [
       {
         id: "html-preview",
@@ -66,9 +66,9 @@ export class HtmlFormatModule implements FormatModule {
 const htmlModule = new HtmlFormatModule();
 formatRegistry.register(htmlModule);
 
-// Register the extended view
-htmlModule.getExtendedViews()?.forEach(view => {
-  extendedViewRegistry.register(view);
+// Register the smart view
+htmlModule.getSmartViews()?.forEach(view => {
+  smartViewRegistry.register(view);
 });
 
 // Export for backward compatibility

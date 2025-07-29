@@ -21,7 +21,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { ExtendedViewProps } from "../../../../views/registry";
+import { SmartViewProps } from "../../../../views/registry";
 import { useCsvData } from "../hooks/useCsvData";
 import { CsvRow } from "../types";
 import { ColumnStatsPopover } from "./ColumnStatsPopover";
@@ -38,7 +38,7 @@ interface DuplicateGroup {
   count: number;
 }
 
-export const CsvTableViewer: React.FC<ExtendedViewProps> = ({
+export const CsvTableViewer: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
 }) => {
