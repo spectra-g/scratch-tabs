@@ -716,9 +716,9 @@ const EmojiUI: React.FC<{
       updateData({ recents: newRecents });
       
       // Find and set the selected emoji for the inspector panel
-      const emojiData = emojiData.find((e) => e.c === emoji);
-      if (emojiData) {
-        setSelectedEmoji(emojiData);
+      const matchedEmoji = emojiData.find((e) => e.c === emoji);
+      if (matchedEmoji) {
+        setSelectedEmoji(matchedEmoji);
       }
     },
     [data.sequence, data.recents, updateData],
