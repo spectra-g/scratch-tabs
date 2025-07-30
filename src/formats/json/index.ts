@@ -3,7 +3,7 @@ import { JsonFormatDetector } from "../json";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry } from "../../views/registry";
 import { JsonSmartView } from "./views/JsonSmartView";
-import { Wrench } from "../../components/Icons";
+import { Braces } from "../../components/Icons";
 
 // Create the JSON format module that implements the new interface
 // while preserving the legacy methods for backward compatibility
@@ -53,7 +53,7 @@ export class JsonFormatModule implements FormatModule {
         id: "json-workbench",
         languageId: "json",
         label: "JSON Workbench",
-        icon: Wrench,
+        icon: Braces,
         component: JsonSmartView,
         mode: "replaces" as const,
         priority: 1,

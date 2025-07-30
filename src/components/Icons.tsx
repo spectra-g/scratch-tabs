@@ -156,6 +156,7 @@ export {
   Cpu,
   User,
   Anchor,
+  Braces,
 } from 'lucide-react';
 
 // Export types separately
