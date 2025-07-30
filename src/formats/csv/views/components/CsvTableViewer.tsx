@@ -770,7 +770,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             return (
               <div
                 key={virtualRow.key}
-                className={`border-b border-gray-700 hover:bg-gray-800/50 ${
+                className={`absolute border-b border-gray-700 hover:bg-gray-800/50 ${
                   isDuplicate ? "bg-yellow-500/10 border-yellow-500/30" : ""
                 }`}
                 style={{
