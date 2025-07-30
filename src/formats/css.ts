@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * CSS language detector
  */
-export class CssFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class CssFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "css";
   name = "CSS";

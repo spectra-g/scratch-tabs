@@ -1,26 +1,27 @@
 import React from "react";
 import { LucideIcon } from "../components/Icons";
 
-export interface ExtendedView {
+export interface SmartView {
   id: string;
   languageId: string;
   label: string;
   icon: LucideIcon;
-  component: React.ComponentType<ExtendedViewProps>;
+  component: React.ComponentType<SmartViewProps>;
+  mode: 'replaces' | 'side-by-side'; // Define the view's behavior
   priority?: number; // For ordering multiple views for same language
 }
 
-export interface ExtendedViewProps {
+export interface SmartViewProps {
   content: string;
   onContentChange: (newContent: string) => void;
   tabId: string;
   isActive: boolean;
 }
 
-class ExtendedViewRegistry {
-  private views = new Map<string, ExtendedView[]>();
+class SmartViewRegistry {
+  private views = new Map<string, SmartView[]>();
 
-  register(view: ExtendedView): void {
+  register(view: SmartView): void {
     const existing = this.views.get(view.languageId) || [];
     const updated = [...existing, view].sort(
       (a, b) => (a.priority || 0) - (b.priority || 0),
@@ -28,16 +29,16 @@ class ExtendedViewRegistry {
     this.views.set(view.languageId, updated);
   }
 
-  getViewsForLanguage(languageId: string): ExtendedView[] {
+  getViewsForLanguage(languageId: string): SmartView[] {
     return this.views.get(languageId) || [];
   }
 
-  getView(languageId: string, viewId: string): ExtendedView | undefined {
+  getView(languageId: string, viewId: string): SmartView | undefined {
     const views = this.getViewsForLanguage(languageId);
     return views.find((view) => view.id === viewId);
   }
 
-  getAllViews(): ExtendedView[] {
+  getAllViews(): SmartView[] {
     return Array.from(this.views.values()).flat();
   }
 
@@ -46,4 +47,4 @@ class ExtendedViewRegistry {
   }
 }
 
-export const extendedViewRegistry = new ExtendedViewRegistry();
+export const smartViewRegistry = new SmartViewRegistry();

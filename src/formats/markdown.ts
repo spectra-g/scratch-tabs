@@ -2,9 +2,7 @@
 
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
-import { MarkdownStatusItem } from "../components/StatusBar/FormatStatusItems/markdown";
-import { StatusItemProps } from "../components/StatusBar/types";
+import { DetectionResult, FormatModule  } from "./types";
 
 const MAX_LINES_TO_ANALYZE_MD_FOR_YAML = 20;
 const MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE = 2;
@@ -17,9 +15,7 @@ const YAML_DIRECTIVE_REGEX = /^%YAML\s+[\d.]+\s*$/m;
 
 const MARKDOWN_HEADER_REGEX = /^\s*#{1,6}\s+.+/; // No 'm' flag needed for line-by-line check
 
-export class MarkdownFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class MarkdownFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "markdown";
   name = "Markdown";
@@ -403,9 +399,6 @@ That's all for this sample!`;
     });
   }
 
-  getStatusItem(): React.FC<StatusItemProps> {
-    return MarkdownStatusItem;
-  }
 }
 
 const markdownDetector = new MarkdownFormatDetector();

@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * C++ language detector
  */
-export class CppFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class CppFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "cpp";
   name = "C++";

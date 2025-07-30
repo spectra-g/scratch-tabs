@@ -1,6 +1,3 @@
-jest.mock("../../components/StatusBar/FormatStatusItems/markdown", () => ({
-  MarkdownStatusItem: () => "MockedMarkdownStatusItem",
-}));
 
 import { MarkdownFormatDetector } from "../markdown";
 
@@ -160,22 +157,6 @@ done
     });
   });
 
-  describe("UI Components", () => {
-    test("should return a status item component function", () => {
-      // Get the function that returns the component
-      const getStatusItemFn = detector.getStatusItem;
-      expect(typeof getStatusItemFn).toBe("function");
-
-      // Call it to get the component function (which is now mocked)
-      const StatusItemComponent = getStatusItemFn!();
-      expect(typeof StatusItemComponent).toBe("function");
-
-      // We can call the mocked component function to verify it returns what we expect.
-      expect(StatusItemComponent({ content: "test" })).toBe(
-        "MockedMarkdownStatusItem",
-      );
-    });
-  });
 
   describe("Monaco Provider Registration", () => {
     test("should register monaco provider without errors", () => {

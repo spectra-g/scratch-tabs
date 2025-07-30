@@ -1,14 +1,12 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * JSON Log (JSONL/NDJSON) language detector
  * Handles newline-delimited JSON where each line is a separate JSON object
  */
-export class JsonLogFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class JsonLogFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "jsonlog";
   name = "JSON Log";

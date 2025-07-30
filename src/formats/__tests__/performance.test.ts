@@ -1,7 +1,7 @@
 // src/languages/__tests__/performance.test.ts
 
 import { getPotentialLanguageMatches } from "../index";
-import { FormatDetector } from "../types";
+import { FormatModule  } from "../types";
 
 describe("Language Detection Performance Tests", () => {
   let largeJsonContent: string;
@@ -246,7 +246,7 @@ describe("Language Detection Performance Tests", () => {
       riskyDetectors.forEach((detectorName) => {
         const detector = formatRegistry
           .getAll()
-          .find((d: FormatDetector) => d.constructor.name === detectorName);
+          .find((d: FormatModule) => d.constructor.name === detectorName);
 
         if (detector) {
           const startTime = performance.now();

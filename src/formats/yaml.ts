@@ -1,15 +1,13 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * A simplified YAML language detector that focuses on the most distinctive
  * structural characteristics of the language to avoid aggressively misclassifying
  * other file types like Markdown.
  */
-export class YamlFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class YamlFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "yaml";
   name = "YAML";

@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * cURL language detector
  */
-export class CurlFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class CurlFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "curl"; // Keep 'curl' as the Monaco language ID, or use 'shell' if you want shell highlighting
   name = "cURL Command";

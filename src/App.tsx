@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { initializeFormatProviders } from "./formats";
 import { broadcastManager } from "./stores/broadcastStore";
 import DragDropOverlay from "./components/DragDropOverlay";
-import "./views/csv";
 
 // Initialize language providers once when the app loads
   initializeFormatProviders();

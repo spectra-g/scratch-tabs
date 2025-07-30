@@ -1,24 +1,24 @@
-import { FormatDetector, FormatRegistry, DetectionResult } from "./types";
+import { FormatModule, FormatRegistry, DetectionResult } from "./types";
 
 /**
  * Implementation of the format registry
- * Manages all registered format detectors and provides detection functionality
+ * Manages all registered format modules and provides detection functionality
  */
 class FormatRegistryImpl implements FormatRegistry {
-  private detectors: FormatDetector[] = [];
+  private modules: FormatModule[] = [];
 
-  register(detector: FormatDetector): void {
-    // Remove existing detector with same ID if it exists
-    this.detectors = this.detectors.filter((d) => d.id !== detector.id);
-    this.detectors.push(detector);
+  register(module: FormatModule): void {
+    // Remove existing module with same ID if it exists
+    this.modules = this.modules.filter((m) => m.id !== module.id);
+    this.modules.push(module);
   }
 
-  getAll(): FormatDetector[] {
-    return [...this.detectors];
+  getAll(): FormatModule[] {
+    return [...this.modules];
   }
 
-  getById(id: string): FormatDetector | undefined {
-    return this.detectors.find((detector) => detector.id === id);
+  getById(id: string): FormatModule | undefined {
+    return this.modules.find((module) => module.id === id);
   }
 
   detectFormat(content: string): string {
@@ -26,33 +26,33 @@ class FormatRegistryImpl implements FormatRegistry {
       return "plaintext";
     }
 
-    let bestMatch: FormatDetector | null = null;
+    let bestMatch: FormatModule | null = null;
     let bestConfidence = 0;
     let bestPriority = -1;
 
-    for (const detector of this.detectors) {
+    for (const module of this.modules) {
       try {
-        const result = detector.detect(content);
+        const result = module.detect(content);
         if (result.match) {
           // If we have a definitive match, return it immediately
           if (result.matchedDefinitive) {
-            return detector.id;
+            return module.id;
           }
 
           // Otherwise, track the best match based on confidence and priority
           if (
             result.confidence > bestConfidence ||
             (result.confidence === bestConfidence &&
-              detector.priority > bestPriority)
+              module.priority > bestPriority)
           ) {
-            bestMatch = detector;
+            bestMatch = module;
             bestConfidence = result.confidence;
-            bestPriority = detector.priority;
+            bestPriority = module.priority;
           }
         }
       } catch (error) {
         console.warn(
-          `Error detecting format with detector "${detector.id}":`,
+          `Error detecting format with module "${module.id}":`,
           error,
         );
       }
@@ -63,22 +63,22 @@ class FormatRegistryImpl implements FormatRegistry {
 
   isAmbiguous(content: string): boolean {
     const matches: Array<{
-      detector: FormatDetector;
+      module: FormatModule;
       confidence: number;
     }> = [];
 
-    for (const detector of this.detectors) {
+    for (const module of this.modules) {
       try {
-        const result = detector.detect(content);
+        const result = module.detect(content);
         if (result.match && result.confidence > 0.5) {
           matches.push({
-            detector,
+            module,
             confidence: result.confidence,
           });
         }
       } catch (error) {
         console.warn(
-          `Error checking ambiguity with detector "${detector.id}":`,
+          `Error checking ambiguity with module "${module.id}":`,
           error,
         );
       }
@@ -97,22 +97,22 @@ class FormatRegistryImpl implements FormatRegistry {
     score: number;
   }> {
     const matches: Array<{
-      detector: FormatDetector;
+      module: FormatModule;
       confidence: number;
     }> = [];
 
-    for (const detector of this.detectors) {
+    for (const module of this.modules) {
       try {
-        const result = detector.detect(content);
+        const result = module.detect(content);
         if (result.match) {
           matches.push({
-            detector,
+            module,
             confidence: result.confidence,
           });
         }
       } catch (error) {
         console.warn(
-          `Error getting potential matches with detector "${detector.id}":`,
+          `Error getting potential matches with module "${module.id}":`,
           error,
         );
       }
@@ -124,25 +124,25 @@ class FormatRegistryImpl implements FormatRegistry {
         if (a.confidence !== b.confidence) {
           return b.confidence - a.confidence;
         }
-        return b.detector.priority - a.detector.priority;
+        return b.module.priority - a.module.priority;
       })
       .slice(0, limit)
       .map((match) => ({
-        id: match.detector.id,
-        name: match.detector.name,
+        id: match.module.id,
+        name: match.module.name,
         score: match.confidence,
       }));
   }
 
   initializeProviders(monaco: any): void {
-    this.detectors.forEach((detector) => {
+    this.modules.forEach((module) => {
       try {
-        if (typeof detector.registerProvider === "function") {
-          detector.registerProvider(monaco);
+        if (typeof module.registerProvider === "function") {
+          module.registerProvider(monaco);
         }
       } catch (error) {
         console.error(
-          `Error initializing provider for format "${detector.id}":`,
+          `Error initializing provider for format "${module.id}":`,
           error,
         );
       }

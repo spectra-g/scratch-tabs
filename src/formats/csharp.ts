@@ -2,14 +2,12 @@
 
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types"; // Import updated types
+import { DetectionResult, FormatModule  } from "./types"; // Import updated types
 
 /**
  * C# language detector
  */
-export class CsharpFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class CsharpFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "csharp";
   name = "C#";

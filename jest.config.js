@@ -9,6 +9,8 @@ export default {
     "^dexie$": "<rootDir>/src/__mocks__/dexie.js",
     "^monaco-editor(.*)$": "<rootDir>/src/__mocks__/monaco-editor.js",
     "^@monaco-editor/react$": "<rootDir>/src/__mocks__/@monaco-editor/react.js",
+    "^react-markdown$": "<rootDir>/src/__mocks__/react-markdown.js",
+    "^remark-gfm$": "<rootDir>/src/__mocks__/remark-gfm.js"
   },
   transform: {
     "^.+\\.(ts|tsx)$": [
@@ -37,5 +39,5 @@ export default {
   ],
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
-  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose)/)"],
+  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose|react-markdown|remark-gfm)/)"],
 };

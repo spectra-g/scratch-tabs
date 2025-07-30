@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * SQL language detector
  */
-export class SqlFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class SqlFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "sql"; // Monaco's built-in ID for SQL
   name = "SQL";

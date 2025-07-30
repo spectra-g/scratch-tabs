@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * SVG language detector
  */
-export class SvgFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class SvgFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "xml"; // Use Monaco's built-in XML language
   name = "SVG";

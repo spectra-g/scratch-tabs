@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Diff/patch language detector
  */
-export class DiffFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class DiffFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "diff"; // Monaco's built-in ID for diff files
   name = "Diff / Patch";

@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * R language detector
  */
-export class RFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class RFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "r"; // Monaco's built-in ID for R
   name = "R";

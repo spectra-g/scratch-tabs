@@ -1,10 +1,8 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
-export class PythonFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class PythonFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "python";
   name = "Python";

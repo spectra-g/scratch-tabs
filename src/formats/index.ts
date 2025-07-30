@@ -1,14 +1,14 @@
 import { loader } from "@monaco-editor/react";
 import { formatRegistry } from "./registry";
-import { FormatDetector } from "./types";
+import { FormatModule } from "./types";
 
-// Import all format detectors explicitly
+// Import all format modules explicitly
 import "./accesslog";
 import "./bash";
 import "./cpp";
 import "./csharp";
 import "./css";
-import "./csv";
+import "./csv/index";
 import "./curl";
 import "./diff";
 import "./dockerfile";
@@ -16,13 +16,13 @@ import "./go";
 import "./graphql";
 import "./groovy";
 import "./hcl";
-import "./html";
+import "./html/index";
 import "./java";
 import "./javascript";
-import "./json";
+import "./json/index";
 import "./jsonlog";
 import "./kotlin";
-import "./markdown";
+import "./markdown/index";
 import "./php";
 import "./properties";
 import "./python";
@@ -59,19 +59,19 @@ const FORMAT_DETECTION_CONFIG = {
 } as const;
 
 export const registerAllFormatProviders = (monaco: any) => {
-  formatRegistry.getAll().forEach((detector: FormatDetector) => {
+  formatRegistry.getAll().forEach((module: FormatModule) => {
     try {
       // Ensure registerProvider exists before calling
-      if (typeof detector.registerProvider === "function") {
-        detector.registerProvider(monaco);
+      if (typeof module.registerProvider === "function") {
+        module.registerProvider(monaco);
       } else {
         console.warn(
-          `Detector "${detector.id}" is missing registerProvider method.`,
+          `Module "${module.id}" is missing registerProvider method.`,
         );
       }
     } catch (error) {
       console.error(
-        `Error registering provider for format "${detector.id}":`,
+        `Error registering provider for format "${module.id}":`,
         error,
       );
     }

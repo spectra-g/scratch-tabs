@@ -568,6 +568,34 @@ class ModelManager {
     return model;
   }
 
+  /**
+   * Invalidates the cached model for a tab, forcing it to be recreated on next get()
+   * Use this when tab content changes externally (e.g., from smart views)
+   */
+  public invalidateModel(tabId: string) {
+    const model = this.models.get(tabId);
+    if (model && !model.isDisposed()) {
+      // Remove from cache so get() will create a new one
+      this.models.delete(tabId);
+      this.lru.delete(tabId);
+      this.listeners.get(tabId)?.dispose();
+      this.listeners.delete(tabId);
+      this.lastContent.delete(tabId);
+      this.isPasteRef.delete(tabId);
+      this.isProcessingContent.delete(tabId);
+      
+      // Clean up paste flag timeout
+      const timeout = this.pasteFlagTimeouts.get(tabId);
+      if (timeout) {
+        clearTimeout(timeout);
+        this.pasteFlagTimeouts.delete(tabId);
+      }
+      
+      // Dispose the model
+      model.dispose();
+    }
+  }
+
   public dispose(tabId: string) {
     const model = this.models.get(tabId);
     if (model) {

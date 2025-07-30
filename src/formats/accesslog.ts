@@ -1,14 +1,12 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Access Log language detector
  * Handles various web server access log formats including Apache, Nginx, IIS, etc.
  */
-export class AccessLogFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class AccessLogFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "accesslog";
   name = "Access Log";

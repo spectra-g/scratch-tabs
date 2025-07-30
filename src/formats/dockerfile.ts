@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Dockerfile language detector
  */
-export class DockerfileFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class DockerfileFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "dockerfile"; // Monaco's built-in ID for Dockerfiles
   name = "Dockerfile";

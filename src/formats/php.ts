@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * PHP language detector
  */
-export class PhpFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class PhpFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "php"; // Monaco's built-in ID for PHP
   name = "PHP";

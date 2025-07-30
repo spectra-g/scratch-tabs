@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Stacktrace language detector
  */
-export class StacktraceFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class StacktraceFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "stacktrace"; // Custom ID, as Monaco might not have a specific one for generic stacktraces
   name = "Stack Trace";

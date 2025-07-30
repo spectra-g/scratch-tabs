@@ -1,13 +1,11 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatDetector } from "./types";
+import { DetectionResult, FormatModule  } from "./types";
 
 /**
  * Rust language detector
  */
-export class RustFormatDetector
-  extends BaseFormatDetector
-  implements FormatDetector
+export class RustFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "rust"; // Monaco's built-in ID for Rust
   name = "Rust";
