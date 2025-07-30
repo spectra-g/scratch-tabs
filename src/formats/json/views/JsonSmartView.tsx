@@ -6,6 +6,9 @@ import { Toolbar } from "./components/Toolbar";
 import { Navigator } from "./components/Navigator";
 import { Toolbox } from "./components/Toolbox";
 import { validateJson } from "../validation";
+import { useJsonModals } from "../hooks/useJsonModals";
+import { useRootStore } from "../../../stores";
+import { Tab } from "../../../types";
 
 export const JsonSmartView: React.FC<SmartViewProps> = ({
   content,
@@ -27,6 +30,17 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   const [currentPath, setCurrentPath] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
+  
+  // Initialize JSON modals
+  const { renderModal } = useJsonModals();
+  
+  // Get addBackgroundTab function from root store for background tab creation
+  const { addBackgroundTab: rootAddBackgroundTab } = useRootStore();
+  
+  // Create wrapper to match expected signature for modals (creates background tabs)
+  const addTab = useCallback((tab: Tab) => {
+    rootAddBackgroundTab(tab, false); // Add to left side by default, in background
+  }, [rootAddBackgroundTab]);
 
   // Validate JSON whenever content changes
   useEffect(() => {
@@ -181,10 +195,14 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
             <Toolbox
               editor={editor}
               onContentChange={onContentChange}
+              addTab={addTab}
             />
           </div>
         </div>
       </div>
+      
+      {/* Render modals */}
+      {renderModal()}
     </div>
   );
 };

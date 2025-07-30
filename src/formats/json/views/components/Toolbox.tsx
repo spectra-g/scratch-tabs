@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useJsonModals } from "../../hooks/useJsonModals";
+import { Tab } from "../../../../types";
 import {
   sortJsonKeys,
   flattenJson,
@@ -22,6 +23,7 @@ import { generateJsonSchema } from "../../utils/jsonSchema";
 interface ToolboxProps {
   editor: monaco.editor.IStandaloneCodeEditor | null;
   onContentChange: (content: string) => void;
+  addTab: (tab: Tab) => void;
 }
 
 interface AccordionSectionProps {
@@ -86,10 +88,10 @@ const ActionButton: React.FC<ActionButtonProps> = ({
 export const Toolbox: React.FC<ToolboxProps> = ({
   editor,
   onContentChange,
+  addTab,
 }) => {
   const {
     openCodeGenerationModal,
-    openStringifyModal,
     openSchemaValidationModal,
   } = useJsonModals();
 
@@ -121,7 +123,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               content: iface.code,
               language: "typescript",
             }));
-            openCodeGenerationModal(tabs, () => {});
+            openCodeGenerationModal(tabs, addTab);
           });
           break;
         case "java":
@@ -133,7 +135,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               content: cls.code,
               language: "java",
             }));
-            openCodeGenerationModal(tabs, () => {});
+            openCodeGenerationModal(tabs, addTab);
           });
           break;
         case "python":
@@ -145,7 +147,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               content: cls.code,
               language: "python",
             }));
-            openCodeGenerationModal(tabs, () => {});
+            openCodeGenerationModal(tabs, addTab);
           });
           break;
         case "go":
@@ -157,7 +159,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               content: struct.code,
               language: "go",
             }));
-            openCodeGenerationModal(tabs, () => {});
+            openCodeGenerationModal(tabs, addTab);
           });
           break;
         case "csharp":
@@ -169,7 +171,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               content: cls.code,
               language: "csharp",
             }));
-            openCodeGenerationModal(tabs, () => {});
+            openCodeGenerationModal(tabs, addTab);
           });
           break;
       }
@@ -197,7 +199,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               content: result.csv,
               language: "csv",
             };
-            openCodeGenerationModal([tab], () => {});
+            openCodeGenerationModal([tab], addTab);
           });
           break;
         case "yaml":
@@ -209,7 +211,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               content: yaml,
               language: "yaml",
             };
-            openCodeGenerationModal([tab], () => {});
+            openCodeGenerationModal([tab], addTab);
           });
           break;
         case "xml":
@@ -221,7 +223,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               content: xml,
               language: "xml",
             };
-            openCodeGenerationModal([tab], () => {});
+            openCodeGenerationModal([tab], addTab);
           });
           break;
       }
@@ -243,7 +245,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         content: JSON.stringify(schema, null, 2),
         language: "json",
       };
-      openCodeGenerationModal([tab], () => {});
+      openCodeGenerationModal([tab], addTab);
     } catch (error) {
       console.error("Failed to generate schema:", error);
     }
@@ -261,14 +263,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   };
 
   const handleStringify = () => {
-    if (!editor) return;
-    try {
-      const content = editor.getValue();
-      const stringified = stringifyJson(content);
-      openStringifyModal(stringified, () => {});
-    } catch (error) {
-      console.error("Failed to stringify:", error);
-    }
+    executeTransformation(stringifyJson);
   };
 
   return (
