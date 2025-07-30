@@ -5,16 +5,16 @@ node_modules/
 dist/
 build/
 
-src/components/AI/
-src/components/BatchTools/
-src/components/DiffModal/
-src/components/Macro/
-src/components/Search/
-src/components/SplitView/
-src/components/Tablet/
-src/components/TestFields/
-src/components/Welcome/
-src/components/Workspace/
+#src/components/AI/
+#src/components/BatchTools/
+#src/components/DiffModal/
+#src/components/Macro/
+#src/components/Search/
+#src/components/SplitView/
+#src/components/Tablet/
+#src/components/TestFields/
+#src/components/Welcome/
+#src/components/Workspace/
 src/hooks/
 src/constants/
 src/db/
