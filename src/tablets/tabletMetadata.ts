@@ -176,4 +176,9 @@ export const tabletMetadata: TabletMetadata[] = [
     "characters",
   ],
 },
+{
+  id: "emoji",
+  label: "Emoji as Data",
+  keywords: ["emoji", "unicode", "symbols", "formatter", "picker", "data", "encoding"],
+},
 ];
