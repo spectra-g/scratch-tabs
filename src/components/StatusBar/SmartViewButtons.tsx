@@ -30,7 +30,7 @@ export const SmartViewButtons: React.FC<SmartViewButtonsProps> = ({
           <button
             key={view.id}
             onClick={() => setActiveView(tabId, isActive ? null : view.id)}
-            className={`p-0.75 rounded transition-colors ${
+            className={`flex items-center p-0.75 rounded transition-colors ${
               isActive
                 ? "bg-blue-600 text-white"
                 : "hover:bg-gray-700 text-gray-300"
