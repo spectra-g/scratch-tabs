@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useRef,
   useEffect,
+  startTransition,
 } from "react";
 import {
   ChevronRight,
@@ -43,6 +44,7 @@ interface JsonTreeViewProps {
 }
 
 type SearchMode = "keyValue" | "path";
+type SearchExpansion = "matched" | "children";
 
 // --- Helper Functions ---
 
@@ -184,7 +186,8 @@ const getAncestorPaths = (path: string): Set<string> => {
 };
 
 // Helper to find all matching nodes in the entire tree structure (not just visible ones)
-const findAllMatches = (
+// Returns only the actual matched nodes, NOT their ancestors
+const findDirectMatches = (
   nodeData: JsonNodeData,
   searchTerm: string,
   matchedPaths: Set<string>,
@@ -197,9 +200,7 @@ const findAllMatches = (
     String(nodeData.value).toLowerCase().includes(lowerSearchTerm);
 
   if (keyMatch || valueMatch) {
-    // Add this node and all its ancestors to the matched paths
-    const ancestors = getAncestorPaths(nodeData.path);
-    ancestors.forEach((ancestorPath) => matchedPaths.add(ancestorPath));
+    // Add only this node to the matched paths (not ancestors)
     matchedPaths.add(nodeData.path);
   }
 
@@ -223,7 +224,95 @@ const findAllMatches = (
         nodeData.depth + 1,
         childPath,
       );
-      findAllMatches(childNode, searchTerm, matchedPaths);
+      findDirectMatches(childNode, searchTerm, matchedPaths);
+    });
+  }
+};
+
+// Helper to find all paths that should be visible (matches + ancestors + optionally children)
+const findAllVisiblePaths = (
+  nodeData: JsonNodeData,
+  searchTerm: string,
+  searchExpansion: "matched" | "children",
+): Set<string> => {
+  // First find direct matches
+  const directMatches = new Set<string>();
+  findDirectMatches(nodeData, searchTerm, directMatches);
+  
+  // Start with all direct matches
+  const pathsToShow = new Set<string>();
+  
+  // Add ancestors of all matches (so we can navigate to them)
+  directMatches.forEach(matchPath => {
+    const ancestors = getAncestorPaths(matchPath);
+    ancestors.forEach(ancestorPath => pathsToShow.add(ancestorPath));
+    pathsToShow.add(matchPath);
+  });
+  
+  // If expansion mode is "children", also include children of direct matches only
+  if (searchExpansion === "children") {
+    directMatches.forEach(matchPath => {
+      // Find the node data for this matched path and add its children
+      const addChildrenOfPath = (currentNode: JsonNodeData, targetPath: string): void => {
+        if (currentNode.path === targetPath) {
+          // Found the target node, add all its children
+          const childPaths = new Set<string>();
+          findAllChildrenPaths(currentNode, childPaths);
+          childPaths.forEach(childPath => pathsToShow.add(childPath));
+          return;
+        }
+        
+        // Continue searching in children
+        if (
+          (currentNode.type === "object" || currentNode.type === "array") &&
+          currentNode.value
+        ) {
+          Object.entries(currentNode.value).forEach(([key, value]) => {
+            const childKey = currentNode.type === "array" ? parseInt(key, 10) : key;
+            const childPath = currentNode.path
+              ? currentNode.type === "array"
+                ? `${currentNode.path}[${childKey}]`
+                : `${currentNode.path}.${childKey}`
+              : currentNode.type === "array"
+                ? `[${childKey}]`
+                : String(childKey);
+            const childNode = buildTree(childKey, value, currentNode.depth + 1, childPath);
+            addChildrenOfPath(childNode, targetPath);
+          });
+        }
+      };
+      
+      addChildrenOfPath(nodeData, matchPath);
+    });
+  }
+  
+  return pathsToShow;
+};
+
+// Helper to find all children of a node (for search expansion)
+const findAllChildrenPaths = (
+  nodeData: JsonNodeData,
+  childPaths: Set<string>,
+): void => {
+  if (
+    (nodeData.type === "object" || nodeData.type === "array") &&
+    nodeData.value
+  ) {
+    Object.entries(nodeData.value).forEach(([key, value]) => {
+      const childKey = nodeData.type === "array" ? parseInt(key, 10) : key;
+      const childPath = nodeData.path
+        ? nodeData.type === "array"
+          ? `${nodeData.path}[${childKey}]`
+          : `${nodeData.path}.${childKey}`
+        : nodeData.type === "array"
+          ? `[${childKey}]`
+          : String(childKey);
+      
+      childPaths.add(childPath);
+      
+      // Recursively find all descendants
+      const childNode = buildTree(childKey, value, nodeData.depth + 1, childPath);
+      findAllChildrenPaths(childNode, childPaths);
     });
   }
 };
@@ -232,6 +321,7 @@ const findAllMatches = (
 
 const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect }) => {
   const [searchMode, setSearchMode] = useState<SearchMode>("keyValue");
+  const [searchExpansion, setSearchExpansion] = useState<SearchExpansion>("matched");
   const [inputValue, setInputValue] = useState("");
   const debouncedInputValue = useDebounce(inputValue, 300); // Debounce input value
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
@@ -306,16 +396,15 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       }
     } else {
       // keyValue search mode
-      // Find all matches in the entire tree structure (not just visible nodes)
-      const matchedPaths = new Set<string>();
-      if (rootNodeData) {
-        findAllMatches(rootNodeData, searchTerm, matchedPaths);
-      }
+      // Find all paths that should be visible based on search term and expansion mode
+      const pathsToShow = rootNodeData 
+        ? findAllVisiblePaths(rootNodeData, searchTerm, searchExpansion)
+        : new Set<string>();
 
-      // Filter visible nodes based on matched paths
-      return visibleNodes.filter((node) => matchedPaths.has(node.path));
+      // Filter visible nodes based on paths to show
+      return visibleNodes.filter((node) => pathsToShow.has(node.path));
     }
-  }, [visibleNodes, debouncedInputValue, searchMode, lastValidEvaluatedPath]); // Depend on debounced value
+  }, [visibleNodes, debouncedInputValue, searchMode, lastValidEvaluatedPath, searchExpansion, rootNodeData]); // Depend on debounced value and search expansion
 
   // --- Effect for Path Evaluation / Filtering ---
   useEffect(() => {
@@ -379,15 +468,16 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       rootNodeData
     ) {
       const searchTerm = debouncedInputValue.trim();
-      const matchedPaths = new Set<string>();
-      findAllMatches(rootNodeData, searchTerm, matchedPaths);
-
-      // Auto-expand all paths that contain matches
-      if (matchedPaths.size > 0) {
-        setExpandedPaths((prev) => new Set([...prev, ...matchedPaths]));
+      
+      // Use the same visible paths logic to determine what should be expanded
+      const pathsToShow = findAllVisiblePaths(rootNodeData, searchTerm, searchExpansion);
+      
+      // Auto-expand all paths that should be visible
+      if (pathsToShow.size > 0) {
+        setExpandedPaths((prev) => new Set([...prev, ...pathsToShow]));
       }
     }
-  }, [debouncedInputValue, searchMode, rootNodeData]);
+  }, [debouncedInputValue, searchMode, searchExpansion, rootNodeData]);
 
   // --- Callbacks ---
 
@@ -562,6 +652,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
         <div
           style={{ ...style, paddingLeft: `${indent}px` }}
           className={`flex items-center py-0.5 px-2 group cursor-pointer ${isSelected ? "bg-blue-900/30" : "hover:bg-gray-800/60"}`}
+          data-testid={`json-node-${node.path}`}
           onClick={() => {
             setSelectedPath(node.path);
             if (onNodeSelect) {
@@ -595,7 +686,8 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
           </div>
           <span
             className="text-blue-400 mr-1 whitespace-nowrap"
-            title={String(displayKey)}
+            title={`${node.path} (key: ${String(displayKey)})`}
+            data-testid={`json-node-key-${node.path}`}
           >
             {typeof displayKey === "string" ? `"${displayKey}"` : displayKey}:
           </span>
@@ -760,6 +852,28 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
             }
           />
         </div>
+
+        {/* Search Expansion Toggle (only show in keyValue mode) */}
+        {searchMode === "keyValue" && (
+          <div className="flex-shrink-0">
+            <select
+              value={searchExpansion}
+              onChange={(e) => setSearchExpansion(e.target.value as SearchExpansion)}
+              className="bg-gray-700/80 border border-gray-600/80 text-gray-200 pl-2 pr-7 py-1 rounded focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50 text-sm appearance-none"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: "right 0.5rem center",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: "1.2em 1.2em",
+              }}
+              aria-label="Search Expansion Mode"
+              title="Choose how to display search results"
+            >
+              <option value="matched">Show Matched</option>
+              <option value="children">Show Contents</option>
+            </select>
+          </div>
+        )}
 
         {/* Expand/Collapse Controls */}
         <div className="flex items-center space-x-1">

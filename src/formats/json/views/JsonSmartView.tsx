@@ -52,10 +52,18 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   // Update undo/redo state when editor changes
   const updateUndoRedoState = useCallback(() => {
     if (editorRef.current) {
-      const model = editorRef.current.getModel();
-      if (model) {
-        setCanUndo(model.canUndo());
-        setCanRedo(model.canRedo());
+      const editor = editorRef.current;
+      try {
+        // Check if undo/redo actions are enabled by attempting to get their status
+        const canUndo = editor.getAction('undo')?.isSupported() ?? false;
+        const canRedo = editor.getAction('redo')?.isSupported() ?? false;
+        
+        setCanUndo(canUndo);
+        setCanRedo(canRedo);
+      } catch {
+        // Fallback - assume undo is available after content changes, redo is not
+        setCanUndo(true);
+        setCanRedo(false);
       }
     }
   }, []);

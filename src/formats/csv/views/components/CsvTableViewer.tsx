@@ -254,7 +254,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         header: "#",
         size: 50,
         cell: ({ row }) => (
-          <div className="text-gray-400 text-center font-mono">
+          <div className="flex h-full items-center justify-center font-mono text-gray-400">
             {row.index + 1}
           </div>
         ),
@@ -481,7 +481,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         header: "",
         size: 60,
         cell: ({ row }) => (
-          <div className="flex items-center justify-center space-x-1">
+          <div className="flex h-full items-center justify-center space-x-1">
             <button onClick={() => addRow(row.index + 1)} title="Add row below">
               <Plus size={14} />
             </button>
@@ -740,7 +740,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
           style={{
             display: "grid",
             gridTemplateColumns,
-            minWidth: "fit-content",
+            width: "fit-content",
           }}
           data-testid="csv-table"
         >
@@ -770,7 +770,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             return (
               <div
                 key={virtualRow.key}
-                className={`absolute inset-x-0 border-b border-gray-700 hover:bg-gray-800/50 ${
+                className={`border-b border-gray-700 hover:bg-gray-800/50 ${
                   isDuplicate ? "bg-yellow-500/10 border-yellow-500/30" : ""
                 }`}
                 style={{
@@ -778,7 +778,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   transform: `translateY(${virtualRow.start}px)`,
                   display: "grid",
                   gridTemplateColumns,
-                  minWidth: "fit-content",
+                  width: "fit-content",
                 }}
                 data-testid={isDuplicate ? "duplicate-row-indicator" : "csv-row"}
               >
