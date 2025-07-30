@@ -127,10 +127,14 @@ export class CsvFormatDetector extends BaseFormatDetector implements FormatModul
 
     // Adjust confidence based on delimiter count and consistency
     const confidence = Math.min(0.9, 0.5 + expectedDelimiterCount * 0.05);
+    
+    // CSV should never be definitive - let higher priority formats win when there are multiple matches
+    const isDefinitive = false;
+    
     return {
       match: true,
       confidence: confidence,
-      matchedDefinitive: expectedDelimiterCount > 5, // Only definitive if many delimiters
+      matchedDefinitive: isDefinitive,
     };
   }
 
