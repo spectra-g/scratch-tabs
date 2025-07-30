@@ -12,6 +12,7 @@ import {
   stringifyJson,
   unstringifyJsonContent,
   extractJsonFromContent,
+  applyEditToEditor,
 } from "../../actions/jsonOperations";
 import {
   transformToCamelCase,
@@ -100,7 +101,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     try {
       const content = editor.getValue();
       const result = transformFn(content);
-      editor.setValue(result);
+      applyEditToEditor(editor, result, "transformation");
     } catch (error) {
       console.error("Transformation failed:", error);
     }

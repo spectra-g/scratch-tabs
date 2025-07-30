@@ -15,19 +15,17 @@ export const applyEditToEditor = (
   const model = editor.getModel();
   if (!model) return;
 
-  const fullRange = model.getFullModelRange();
-
-  editor.executeEdits(
-    source,
-    [
-      {
-        range: fullRange,
-        text: newContent,
-        forceMoveMarkers: true,
-      },
-    ],
-    () => [new monaco.Selection(1, 1, 1, 1)],
-  );
+  // Focus the editor to ensure proper undo context
+  editor.focus();
+  
+  // Select all content using Monaco's built-in action
+  editor.trigger('keyboard', 'editor.action.selectAll', null);
+  
+  // Small delay to ensure the selection is processed before typing
+  setTimeout(() => {
+    // Replace content by simulating typing - this creates proper undo boundaries
+    editor.trigger(source, 'type', { text: newContent });
+  }, 1);
 };
 
 export const formatJson = (content: string): string => {

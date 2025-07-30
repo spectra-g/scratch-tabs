@@ -1,7 +1,7 @@
 import React from "react";
 import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, UnfoldVertical, GitCompare } from "lucide-react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { formatJson, minifyJson } from "../../actions/jsonOperations";
+import { formatJson, minifyJson, applyEditToEditor } from "../../actions/jsonOperations";
 import { useJsonModals } from "../../hooks/useJsonModals";
 
 interface ToolbarProps {
@@ -36,7 +36,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     try {
       const content = editor.getValue();
       const formatted = formatJson(content);
-      editor.setValue(formatted);
+      applyEditToEditor(editor, formatted, "format");
     } catch (error) {
       console.error("Failed to format JSON:", error);
     }
@@ -47,7 +47,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     try {
       const content = editor.getValue();
       const minified = minifyJson(content);
-      editor.setValue(minified);
+      applyEditToEditor(editor, minified, "minify");
     } catch (error) {
       console.error("Failed to minify JSON:", error);
     }
