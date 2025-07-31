@@ -56,12 +56,12 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
     const sampleLines = lines.slice(0, 30);
     const truncated = lines.length > 30;
     
-    markdown += `\`\`\`json\n`;
+    markdown += "```json\n";
     markdown += sampleLines.join('\n');
     if (truncated) {
       markdown += `\n... (${lines.length - 30} more lines)`;
     }
-    markdown += `\n\`\`\`\n\n`;
+    markdown += "\n```\n\n";
     
     // Overall Statistics
     markdown += `## 📊 Overall Statistics\n\n`;
@@ -131,10 +131,10 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
       
       if (stats.stringStats.examples.longest) {
         markdown += `### Longest String Sample\n\n`;
-        markdown += `\`\`\`\n${stats.stringStats.examples.longest.length > 200 
+        markdown += "```\n" + (stats.stringStats.examples.longest.length > 200 
           ? stats.stringStats.examples.longest.substring(0, 200) + '...'
           : stats.stringStats.examples.longest
-        }\n\`\`\`\n\n`;
+        ) + "\n```\n\n";
       }
     }
 
