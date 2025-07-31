@@ -1,6 +1,10 @@
 import { FormatModule } from "../types";
 import { DiffFormatDetector } from "../diff";
 import { formatRegistry } from "../registry";
+import { smartViewRegistry } from "../../views/registry";
+import { SmartView } from "../../views/registry";
+import { GitCompare } from "../../components/Icons";
+import { DiffViewer } from "./views/components/DiffViewer";
 
 // Create the Diff format module that implements the new interface
 export class DiffFormatModule implements FormatModule {
@@ -41,11 +45,31 @@ export class DiffFormatModule implements FormatModule {
   getFileExtension(): string {
     return this.detector.getFileExtension();
   }
+
+  // New generic mechanism for smart views
+  getSmartViews(): SmartView[] {
+    return [
+      {
+        id: "diff-viewer",
+        languageId: "diff",
+        label: "Diff Viewer",
+        icon: GitCompare,
+        component: DiffViewer,
+        mode: "replaces",
+        priority: 1,
+      },
+    ];
+  }
 }
 
 // Create and register the module
 const diffModule = new DiffFormatModule();
 formatRegistry.register(diffModule);
+
+// Register the smart view
+diffModule.getSmartViews()?.forEach(view => {
+  smartViewRegistry.register(view);
+});
 
 // Export for backward compatibility
 export const registerDiffProvider = (monaco: any) => {

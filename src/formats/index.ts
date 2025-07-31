@@ -33,6 +33,7 @@ import "./scala";
 import "./sql";
 import "./stacktrace";
 import "./stacktrace/index";
+import "./diff/index";
 import "./svg";
 import "./vhost";
 import "./xml";
