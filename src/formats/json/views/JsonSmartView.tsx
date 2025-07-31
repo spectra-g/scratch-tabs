@@ -5,6 +5,7 @@ import { SmartViewProps } from "../../../views/registry";
 import { Toolbar } from "./components/Toolbar";
 import { Navigator } from "./components/Navigator";
 import { Toolbox } from "./components/Toolbox";
+import { Insights } from "./components/Insights";
 import { validateJson } from "../validation";
 import { useJsonModals } from "../hooks/useJsonModals";
 import { useRootStore } from "../../../stores";
@@ -41,6 +42,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   const [currentPath, setCurrentPath] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [activeRightTab, setActiveRightTab] = useState<'toolbox' | 'insights'>('toolbox');
   
   // Initialize JSON modals
   const { renderModal } = useJsonModals();
@@ -210,17 +212,45 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           </div>
         </div>
 
-        {/* Toolbox Panel */}
-        <div className="hidden lg:flex w-80 border-l border-gray-700 flex-col">
-          <div className="p-3 border-b border-gray-700">
-            <h3 className="text-sm font-medium text-gray-300">Toolbox</h3>
+        {/* Right Panel - Toolbox & Insights */}
+        <div className="hidden lg:flex w-52 border-l border-gray-700 flex-col">
+          {/* Tab Headers */}
+          <div className="flex border-b border-gray-700">
+            <button
+              onClick={() => setActiveRightTab('toolbox')}
+              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                activeRightTab === 'toolbox'
+                  ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
+              }`}
+            >
+              Toolbox
+            </button>
+            <button
+              onClick={() => setActiveRightTab('insights')}
+              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                activeRightTab === 'insights'
+                  ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
+              }`}
+            >
+              Insights
+            </button>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <Toolbox
-              editor={editor}
-              onContentChange={onContentChange}
-              addTab={addTab}
-            />
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-hidden">
+            {activeRightTab === 'toolbox' ? (
+              <div className="h-full overflow-y-auto custom-scrollbar">
+                <Toolbox
+                  editor={editor}
+                  onContentChange={onContentChange}
+                  addTab={addTab}
+                />
+              </div>
+            ) : (
+              <Insights content={content} addTab={addTab} />
+            )}
           </div>
         </div>
       </div>

@@ -47,7 +47,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
         onClick={onToggle}
         className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"
       >
-        <span className="text-sm font-medium text-gray-300">{title}</span>
+        <span className="text-xs font-medium text-gray-300">{title}</span>
         {isExpanded ? (
           <ChevronDown size={16} className="text-gray-400" />
         ) : (
@@ -77,7 +77,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
       disabled
         ? "text-gray-500 cursor-not-allowed"
         : "text-gray-300 hover:bg-gray-700/50 hover:text-gray-200"
@@ -269,6 +269,44 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     executeTransformation(stringifyJson);
   };
 
+  const handleExtractJson = () => {
+    if (!editor) return;
+    try {
+      const content = editor.getValue();
+      const extractedJsons = extractJsonFromContent(content);
+      
+      if (extractedJsons.length === 0) {
+        // No JSON found - could show a toast/notification
+        console.log("No JSON found in content");
+        return;
+      }
+      
+      if (extractedJsons.length === 1) {
+        // Single JSON found - replace current content
+        applyEditToEditor(editor, extractedJsons[0], "extract-json");
+      } else {
+        // Multiple JSONs found - open in new tabs
+        const now = Date.now();
+        const tabs: Tab[] = extractedJsons.map((jsonContent, index) => ({
+          id: crypto.randomUUID(),
+          title: `Extracted JSON ${index + 1}`,
+          content: jsonContent,
+          language: "json",
+          languageLocked: true,
+          cursorPosition: { lineNumber: 1, column: 1 },
+          dateCreated: now,
+          lastModified: now,
+          workspaceId: "", // Will be set by the tab system
+        }));
+        
+        // Create tabs for each extracted JSON
+        tabs.forEach(tab => addTab(tab));
+      }
+    } catch (error) {
+      console.error("Failed to extract JSON:", error);
+    }
+  };
+
   return (
     <div className="space-y-0">
       {/* Transformations */}
@@ -282,6 +320,9 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         </ActionButton>
         <ActionButton onClick={() => executeTransformation(minifyJson)}>
           Minify
+        </ActionButton>
+        <ActionButton onClick={handleExtractJson}>
+          Extract JSON
         </ActionButton>
         <ActionButton onClick={() => executeTransformation(flattenJson)}>
           Flatten JSON
