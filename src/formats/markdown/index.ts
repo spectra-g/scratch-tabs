@@ -1,10 +1,13 @@
-import { FormatModule } from "../types";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
 import { MarkdownFormatDetector } from "../markdown";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry } from "../../views/registry";
 import { SmartView } from "../../views/registry";
 import { Eye } from "../../components/Icons";
 import MarkdownPreview from "./components/MarkdownPreview";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
 // Create the Markdown format module that implements the new interface
 export class MarkdownFormatModule implements FormatModule {
@@ -57,6 +60,21 @@ export class MarkdownFormatModule implements FormatModule {
         component: MarkdownPreview,
         mode: "side-by-side",
         priority: 1,
+      },
+    ];
+  }
+
+  // New method for status bar items
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'markdown-smart-view-button',
+        component: (props: StatusItemProps) => 
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 10,
       },
     ];
   }

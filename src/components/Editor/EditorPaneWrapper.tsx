@@ -29,7 +29,6 @@ const getContentForPreview = (tab: any): string => {
 export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   side,
 }) => {
-  const [editorInstance, setEditorInstance] = React.useState<any>(null);
 
   // FIX: Use useStoreWithEqualityFn with shallow comparison to prevent unnecessary re-renders
   const activeTabId = useStoreWithEqualityFn(
@@ -92,12 +91,6 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const { containerRef, editorStyle, previewStyle, dividerProps, isDragging } =
     useMarkdownPreviewResizer(!!shouldShowSideBySidePreview);
 
-  // Clear editor instance when switching to extended view or tablet
-  React.useEffect(() => {
-    if (extendedView || activeTab?.isTablet) {
-      setEditorInstance(null);
-    }
-  }, [extendedView, activeTab?.isTablet]);
 
   return (
     // Main container for this pane
@@ -125,6 +118,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 }}
                 tabId={activeTab.id}
                 isActive={true}
+                side={side}
               />
             ) : activeTab.isTablet ? (
               <TabletView tab={activeTab} onChange={handleTabletStateChange} />
@@ -134,7 +128,6 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 key={activeTab.id}
                 side={side}
                 activeTabId={activeTabId}
-                onEditorReady={setEditorInstance}
               />
             )
           ) : (
@@ -148,7 +141,6 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         {activeTab && (
           <div className="flex-shrink-0">
             <StatusBar
-              editor={!shouldShowReplacementView ? editorInstance : null}
               activeTab={activeTab}
               side={side}
             />
@@ -186,6 +178,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 }}
                 tabId={activeTab.id}
                 isActive={true}
+                side={side}
               />
             </Suspense>
           </div>
