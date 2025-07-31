@@ -36,6 +36,7 @@ import "./svg";
 import "./vhost";
 import "./xml";
 import "./yaml";
+import "./ndjson/index";
 
 // Export the registry for use in the application
 export { formatRegistry };
