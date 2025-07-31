@@ -137,6 +137,7 @@ export {
   XCircle,
   
   // Misc
+  Bug,
   Coffee,
   ExternalLink,
   RefreshCw,
