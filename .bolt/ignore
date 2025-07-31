@@ -26,6 +26,8 @@ src/workers/
 
 src/tablets/
 src/formats/__tests__/
+src/formats/json
+src/formats/jsonlog
 
 landing/
 public/

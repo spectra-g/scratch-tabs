@@ -32,6 +32,7 @@ import "./rust";
 import "./scala";
 import "./sql";
 import "./stacktrace";
+import "./stacktrace/index";
 import "./svg";
 import "./vhost";
 import "./xml";
