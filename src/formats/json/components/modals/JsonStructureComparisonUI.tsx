@@ -57,6 +57,7 @@ export const JsonStructureComparisonUI: React.FC<
   onDownloadReport,
 }) => {
   const [showOptions, setShowOptions] = React.useState(false);
+  const [showInfo, setShowInfo] = React.useState(false);
   const [expandedNodes, setExpandedNodes] = React.useState<Set<string>>(
     new Set(["/"]),
   );
@@ -168,6 +169,63 @@ export const JsonStructureComparisonUI: React.FC<
                 <ChevronRight size={14} />
               )}
             </button>
+            
+            <div className="relative">
+              <button
+                onClick={() => setShowInfo(!showInfo)}
+                className={`p-1.5 rounded transition-colors ${
+                  showInfo 
+                    ? "text-blue-400 bg-blue-500/20" 
+                    : "text-gray-400 hover:text-gray-100 hover:bg-gray-700/50"
+                }`}
+                title="About JSON Structure Comparison"
+              >
+                <Info size={16} />
+              </button>
+              
+              {showInfo && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setShowInfo(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 w-80 p-4">
+                    <h4 className="text-sm font-semibold text-gray-200 mb-3">JSON Structure Comparison</h4>
+                    <div className="space-y-3 text-xs text-gray-300">
+                      <div>
+                        <p className="font-medium text-gray-200 mb-1">What it does:</p>
+                        <p>Compares the structure of two JSON documents to identify differences in schema, data types, and hierarchy.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-gray-200 mb-1">Features:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>Deep structure analysis</li>
+                          <li>Type mismatch detection</li>
+                          <li>Missing/extra field identification</li>
+                          <li>Array structure validation</li>
+                          <li>Synchronized scrolling</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-gray-200 mb-1">Options:</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li><strong>Array Sample Count:</strong> How many array elements to analyze</li>
+                          <li><strong>Strict Array Length:</strong> Enforce exact array length matching</li>
+                          <li><strong>Case Sensitive Keys:</strong> Consider key case when comparing</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-gray-200 mb-1">Usage:</p>
+                        <p>Paste your comparison JSON in the right editor. Differences will appear in the tree view below with detailed explanations.</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {comparisonResult && (

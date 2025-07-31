@@ -38,6 +38,7 @@ describe("CsvTableViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />,
     );
 
@@ -58,6 +59,7 @@ describe("CsvTableViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />,
     );
 
@@ -72,6 +74,7 @@ describe("CsvTableViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />,
     );
 
@@ -85,6 +88,7 @@ describe("CsvTableViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />,
     );
 
@@ -99,6 +103,7 @@ describe("CsvTableViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />,
     );
 

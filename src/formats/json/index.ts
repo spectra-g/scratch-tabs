@@ -1,9 +1,13 @@
-import { FormatModule } from "../types";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
 import { JsonFormatDetector } from "../json";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry } from "../../views/registry";
 import { JsonSmartView } from "./views/JsonSmartView";
-import { Braces } from "../../components/Icons";
+import { MoreHorizontal } from "../../components/Icons";
+import { JsonStatusItem } from "./StatusItem";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
 // Create the JSON format module that implements the new interface
 // while preserving the legacy methods for backward compatibility
@@ -53,10 +57,30 @@ export class JsonFormatModule implements FormatModule {
         id: "json-workbench",
         languageId: "json",
         label: "JSON Workbench",
-        icon: Braces,
+        icon: MoreHorizontal,
         component: JsonSmartView,
         mode: "replaces" as const,
         priority: 1,
+      },
+    ];
+  }
+
+  // New method for status bar items
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'json-validity',
+        component: JsonStatusItem,
+        priority: 10,
+      },
+      {
+        id: 'json-smart-view-button',
+        component: (props: StatusItemProps) => 
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 20,
       },
     ];
   }

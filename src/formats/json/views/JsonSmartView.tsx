@@ -5,24 +5,36 @@ import { SmartViewProps } from "../../../views/registry";
 import { Toolbar } from "./components/Toolbar";
 import { Navigator } from "./components/Navigator";
 import { Toolbox } from "./components/Toolbox";
+import { Insights } from "./components/Insights";
 import { validateJson } from "../validation";
 import { useJsonModals } from "../hooks/useJsonModals";
 import { useRootStore } from "../../../stores";
 import { Tab } from "../../../types";
+import { useActiveEditorStore } from "../../../stores/activeEditorStore";
 
 export const JsonSmartView: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
   tabId,
   isActive,
+  side,
 }) => {
+  const { setActiveEditor } = useActiveEditorStore();
   // Add cleanup effect to track unmounting
   useEffect(() => {
     return () => {
+      const editor = editorRef.current;
+      if (editor) {
+        const currentActive = useActiveEditorStore.getState();
+        const activeEditorForSide = side === 'left' ? currentActive.activeLeftEditor : currentActive.activeRightEditor;
+        if (activeEditorForSide === editor) {
+          setActiveEditor(side, null);
+        }
+      }
       setEditor(null);
       editorRef.current = null;
     };
-  }, [tabId]);
+  }, [tabId, side, setActiveEditor]);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [canUndo, setCanUndo] = useState(false);
@@ -30,6 +42,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   const [currentPath, setCurrentPath] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [activeRightTab, setActiveRightTab] = useState<'toolbox' | 'insights'>('toolbox');
   
   // Initialize JSON modals
   const { renderModal } = useJsonModals();
@@ -72,6 +85,11 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
     (editor: monaco.editor.IStandaloneCodeEditor, monaco: typeof import("monaco-editor/esm/vs/editor/editor.api")) => {
       editorRef.current = editor;
       setEditor(editor);
+      setActiveEditor(side, editor);
+
+      editor.onDidFocusEditorWidget(() => {
+        setActiveEditor(side, editor);
+      });
 
       // Set initial content WITHOUT triggering change events
       const model = editor.getModel();
@@ -96,7 +114,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       // Initial undo/redo state
       updateUndoRedoState();
     },
-    [content, onContentChange, updateUndoRedoState],
+    [content, onContentChange, updateUndoRedoState, side, setActiveEditor],
   );
 
   // Update editor content when prop changes (but avoid infinite loops)
@@ -154,7 +172,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0">
         {/* Navigator Panel */}
-        <div className="w-80 border-r border-gray-700 flex flex-col">
+        <div className="hidden lg:flex w-80 border-r border-gray-700 flex-col">
           <div className="p-3 border-b border-gray-700">
             <h3 className="text-sm font-medium text-gray-300">Navigator</h3>
           </div>
@@ -194,17 +212,45 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           </div>
         </div>
 
-        {/* Toolbox Panel */}
-        <div className="w-80 border-l border-gray-700 flex flex-col">
-          <div className="p-3 border-b border-gray-700">
-            <h3 className="text-sm font-medium text-gray-300">Toolbox</h3>
+        {/* Right Panel - Toolbox & Insights */}
+        <div className="hidden lg:flex w-52 border-l border-gray-700 flex-col">
+          {/* Tab Headers */}
+          <div className="flex border-b border-gray-700">
+            <button
+              onClick={() => setActiveRightTab('toolbox')}
+              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                activeRightTab === 'toolbox'
+                  ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
+              }`}
+            >
+              Toolbox
+            </button>
+            <button
+              onClick={() => setActiveRightTab('insights')}
+              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                activeRightTab === 'insights'
+                  ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
+              }`}
+            >
+              Insights
+            </button>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <Toolbox
-              editor={editor}
-              onContentChange={onContentChange}
-              addTab={addTab}
-            />
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-hidden">
+            {activeRightTab === 'toolbox' ? (
+              <div className="h-full overflow-y-auto custom-scrollbar">
+                <Toolbox
+                  editor={editor}
+                  onContentChange={onContentChange}
+                  addTab={addTab}
+                />
+              </div>
+            ) : (
+              <Insights content={content} addTab={addTab} />
+            )}
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ import {
   stringifyJson,
   unstringifyJsonContent,
   extractJsonFromContent,
+  minifyJson,
   applyEditToEditor,
 } from "../../actions/jsonOperations";
 import {
@@ -30,23 +31,23 @@ interface ToolboxProps {
 interface AccordionSectionProps {
   title: string;
   children: React.ReactNode;
-  defaultExpanded?: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
 const AccordionSection: React.FC<AccordionSectionProps> = ({
   title,
   children,
-  defaultExpanded = false,
+  isExpanded,
+  onToggle,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-
   return (
     <div className="border-b border-gray-700/50">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggle}
         className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"
       >
-        <span className="text-sm font-medium text-gray-300">{title}</span>
+        <span className="text-xs font-medium text-gray-300">{title}</span>
         {isExpanded ? (
           <ChevronDown size={16} className="text-gray-400" />
         ) : (
@@ -76,7 +77,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
       disabled
         ? "text-gray-500 cursor-not-allowed"
         : "text-gray-300 hover:bg-gray-700/50 hover:text-gray-200"
@@ -91,6 +92,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   onContentChange,
   addTab,
 }) => {
+  const [expandedSection, setExpandedSection] = useState<string>("Transformations");
   const {
     openCodeGenerationModal,
     openSchemaValidationModal,
@@ -267,12 +269,60 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     executeTransformation(stringifyJson);
   };
 
+  const handleExtractJson = () => {
+    if (!editor) return;
+    try {
+      const content = editor.getValue();
+      const extractedJsons = extractJsonFromContent(content);
+      
+      if (extractedJsons.length === 0) {
+        // No JSON found - could show a toast/notification
+        console.log("No JSON found in content");
+        return;
+      }
+      
+      if (extractedJsons.length === 1) {
+        // Single JSON found - replace current content
+        applyEditToEditor(editor, extractedJsons[0], "extract-json");
+      } else {
+        // Multiple JSONs found - open in new tabs
+        const now = Date.now();
+        const tabs: Tab[] = extractedJsons.map((jsonContent, index) => ({
+          id: crypto.randomUUID(),
+          title: `Extracted JSON ${index + 1}`,
+          content: jsonContent,
+          language: "json",
+          languageLocked: true,
+          cursorPosition: { lineNumber: 1, column: 1 },
+          dateCreated: now,
+          lastModified: now,
+          workspaceId: "", // Will be set by the tab system
+        }));
+        
+        // Create tabs for each extracted JSON
+        tabs.forEach(tab => addTab(tab));
+      }
+    } catch (error) {
+      console.error("Failed to extract JSON:", error);
+    }
+  };
+
   return (
     <div className="space-y-0">
       {/* Transformations */}
-      <AccordionSection title="Transformations" defaultExpanded>
+      <AccordionSection 
+        title="Transformations" 
+        isExpanded={expandedSection === "Transformations"}
+        onToggle={() => setExpandedSection(expandedSection === "Transformations" ? "" : "Transformations")}
+      >
         <ActionButton onClick={() => executeTransformation(sortJsonKeys)}>
           Sort Keys
+        </ActionButton>
+        <ActionButton onClick={() => executeTransformation(minifyJson)}>
+          Minify
+        </ActionButton>
+        <ActionButton onClick={handleExtractJson}>
+          Extract JSON
         </ActionButton>
         <ActionButton onClick={() => executeTransformation(flattenJson)}>
           Flatten JSON
@@ -304,7 +354,11 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       </AccordionSection>
 
       {/* Code Generation */}
-      <AccordionSection title="Code Generation">
+      <AccordionSection 
+        title="Code Generation"
+        isExpanded={expandedSection === "Code Generation"}
+        onToggle={() => setExpandedSection(expandedSection === "Code Generation" ? "" : "Code Generation")}
+      >
         <ActionButton onClick={() => handleCodeGeneration("typescript")}>
           Generate TypeScript
         </ActionButton>
@@ -323,7 +377,11 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       </AccordionSection>
 
       {/* Data Conversion */}
-      <AccordionSection title="Data Conversion">
+      <AccordionSection 
+        title="Data Conversion"
+        isExpanded={expandedSection === "Data Conversion"}
+        onToggle={() => setExpandedSection(expandedSection === "Data Conversion" ? "" : "Data Conversion")}
+      >
         <ActionButton onClick={() => handleDataConversion("csv")}>
           Convert to CSV
         </ActionButton>
@@ -336,7 +394,11 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       </AccordionSection>
 
       {/* Schema & Utilities */}
-      <AccordionSection title="Schema & Utilities">
+      <AccordionSection 
+        title="Schema & Utilities"
+        isExpanded={expandedSection === "Schema & Utilities"}
+        onToggle={() => setExpandedSection(expandedSection === "Schema & Utilities" ? "" : "Schema & Utilities")}
+      >
         <ActionButton onClick={handleGenerateSchema}>
           Generate Schema
         </ActionButton>

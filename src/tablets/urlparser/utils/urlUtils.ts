@@ -2,13 +2,18 @@ import { UrlComponents, UrlWarning } from "../types";
 import punycode from "punycode";
 
 /**
+ * Type for the result of parseUrl function
+ */
+export interface ParsedUrl {
+  components: UrlComponents;
+  warnings: UrlWarning[];
+}
+
+/**
  * Parse a URL string into its components
  * Handles both valid and invalid/partial URLs
  */
-export function parseUrl(urlString: string): {
-  components: UrlComponents;
-  warnings: UrlWarning[];
-} {
+export function parseUrl(urlString: string): ParsedUrl {
   const warnings: UrlWarning[] = [];
   let url: URL;
 

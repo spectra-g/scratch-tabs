@@ -15,6 +15,7 @@ import {
   ChevronsDown,
   Route,
   ExternalLink,
+  Settings,
 } from "lucide-react";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import { useDebounce } from "../../../../hooks/useDebounce";
@@ -323,6 +324,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
   const [searchMode, setSearchMode] = useState<SearchMode>("keyValue");
   const [searchExpansion, setSearchExpansion] = useState<SearchExpansion>("matched");
   const [inputValue, setInputValue] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
   const debouncedInputValue = useDebounce(inputValue, 300); // Debounce input value
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
     new Set([""]),
@@ -651,7 +653,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       return (
         <div
           style={{ ...style, paddingLeft: `${indent}px` }}
-          className={`flex items-center py-0.5 px-2 group cursor-pointer ${isSelected ? "bg-blue-900/30" : "hover:bg-gray-800/60"}`}
+          className={`flex items-center py-0.5 px-2 group cursor-pointer text-xs ${isSelected ? "bg-blue-900/30" : "hover:bg-gray-800/60"}`}
           data-testid={`json-node-${node.path}`}
           onClick={() => {
             setSelectedPath(node.path);
@@ -799,105 +801,154 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       className="flex flex-col h-full bg-gray-900 text-gray-200 overflow-hidden"
     >
       {/* Header */}
-      <div className="flex-none flex items-center p-2 border-b border-gray-700/50 gap-2 flex-wrap">
-        {/* Mode Selector */}
-        <div className="flex-shrink-0">
-          <select
-            value={searchMode}
-            onChange={handleModeChange}
-            className="bg-gray-700/80 border border-gray-600/80 text-gray-200 pl-2 pr-7 py-1 rounded focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50 text-sm appearance-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-              backgroundPosition: "right 0.5rem center",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "1.2em 1.2em",
-            }}
-            aria-label="Search Mode"
-          >
-            <option value="keyValue">Search Key/Value</option>
-            <option value="path">Evaluate Path</option>
-          </select>
-        </div>
-
-        {/* Combined Input */}
-        <div className="flex-1 min-w-[200px] flex items-center relative">
-          {searchMode === "keyValue" ? (
-            <Search
-              className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
-              size={16}
-              pointerEvents="none"
+      <div className="flex-none border-b border-gray-700/50">
+        {/* Search Input Row */}
+        <div className="flex items-center p-2 gap-2">
+          {/* Combined Input */}
+          <div className="flex-1 min-w-[200px] flex items-center relative">
+            {searchMode === "keyValue" ? (
+              <Search
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
+                size={16}
+                pointerEvents="none"
+              />
+            ) : (
+              <Route
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
+                size={16}
+                pointerEvents="none"
+              />
+            )}
+            <input
+              type="text"
+              value={inputValue}
+              onChange={handleInputChange}
+              placeholder={
+                searchMode === "keyValue"
+                  ? "Search keys/values..."
+                  : "Evaluate path (e.g., users[0].name)"
+              }
+              className="bg-gray-800/50 border border-gray-700/50 text-gray-200 pl-8 pr-2 py-1 rounded focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50 w-full text-sm"
+              aria-label={
+                searchMode === "keyValue"
+                  ? "Search JSON Tree"
+                  : "Evaluate JSON Path"
+              }
             />
-          ) : (
-            <Route
-              className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
-              size={16}
-              pointerEvents="none"
-            />
-          )}
-          <input
-            type="text"
-            value={inputValue}
-            onChange={handleInputChange}
-            // onKeyDown removed - using debounce now
-            placeholder={
-              searchMode === "keyValue"
-                ? "Search keys/values..."
-                : "Evaluate path (e.g., users[0].name)"
-            }
-            className="bg-gray-800/50 border border-gray-700/50 text-gray-200 pl-8 pr-2 py-1 rounded focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50 w-full text-sm"
-            aria-label={
-              searchMode === "keyValue"
-                ? "Search JSON Tree"
-                : "Evaluate JSON Path"
-            }
-          />
-        </div>
-
-        {/* Search Expansion Toggle (only show in keyValue mode) */}
-        {searchMode === "keyValue" && (
-          <div className="flex-shrink-0">
-            <select
-              value={searchExpansion}
-              onChange={(e) => setSearchExpansion(e.target.value as SearchExpansion)}
-              className="bg-gray-700/80 border border-gray-600/80 text-gray-200 pl-2 pr-7 py-1 rounded focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50 text-sm appearance-none"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: "right 0.5rem center",
-                backgroundRepeat: "no-repeat",
-                backgroundSize: "1.2em 1.2em",
-              }}
-              aria-label="Search Expansion Mode"
-              title="Choose how to display search results"
-            >
-              <option value="matched">Show Matched</option>
-              <option value="children">Show Contents</option>
-            </select>
           </div>
-        )}
 
-        {/* Expand/Collapse Controls */}
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={() => toggleAllNodes(true)}
-            className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
-            title="Expand All"
-          >
-            <ChevronsDown size={16} />
-          </button>
-          <button
-            onClick={() => toggleAllNodes(false)}
-            className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
-            title="Collapse All"
-          >
-            <ChevronsUp size={16} />
-          </button>
-          <button
-            onClick={copyAllVisiblePaths}
-            className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
-            title="Copy All Visible Paths"
-          >
-            <Copy size={16} />
-          </button>
+          {/* Control Buttons */}
+          <div className="flex items-center space-x-1 relative">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-1.5 rounded transition-colors ${
+                showSettings 
+                  ? "text-blue-400 bg-blue-500/20" 
+                  : "text-gray-400 hover:text-gray-100 hover:bg-gray-700/50"
+              }`}
+              title="Search Settings"
+            >
+              <Settings size={16} />
+            </button>
+            <button
+              onClick={() => toggleAllNodes(true)}
+              className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
+              title="Expand All"
+            >
+              <ChevronsDown size={16} />
+            </button>
+            <button
+              onClick={() => toggleAllNodes(false)}
+              className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
+              title="Collapse All"
+            >
+              <ChevronsUp size={16} />
+            </button>
+            <button
+              onClick={copyAllVisiblePaths}
+              className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
+              title="Copy All Visible Paths"
+            >
+              <Copy size={16} />
+            </button>
+
+            {/* Settings Panel */}
+            {showSettings && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowSettings(false)}
+                />
+                <div className="absolute top-full right-12 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px] p-3">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-300 mb-2">
+                        Search Mode
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setSearchMode("keyValue");
+                            handleModeChange({ target: { value: "keyValue" } } as any);
+                          }}
+                          className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
+                            searchMode === "keyValue"
+                              ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                              : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+                          }`}
+                        >
+                          Key/Value
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSearchMode("path");
+                            handleModeChange({ target: { value: "path" } } as any);
+                          }}
+                          className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
+                            searchMode === "path"
+                              ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                              : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+                          }`}
+                        >
+                          Path
+                        </button>
+                      </div>
+                    </div>
+
+                    {searchMode === "keyValue" && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-2">
+                          Show Results
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setSearchExpansion("matched")}
+                            className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
+                              searchExpansion === "matched"
+                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                                : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+                            }`}
+                          >
+                            Matched
+                          </button>
+                          <button
+                            onClick={() => setSearchExpansion("children")}
+                            className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
+                              searchExpansion === "children"
+                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                                : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+                            }`}
+                          >
+                            Contents
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

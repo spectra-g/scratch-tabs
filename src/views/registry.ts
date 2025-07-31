@@ -16,6 +16,7 @@ export interface SmartViewProps {
   onContentChange: (newContent: string) => void;
   tabId: string;
   isActive: boolean;
+  side: 'left' | 'right';
 }
 
 class SmartViewRegistry {

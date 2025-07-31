@@ -19,9 +19,9 @@ import { SmartViewButtons } from "./SmartViewButtons";
 import { FontSizeControls } from "./FontSizeControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import type { PopupMenuItem } from "./types";
+import { useActiveEditorStore } from "../../stores/activeEditorStore";
 
 interface StatusBarProps {
-  editor: monaco.editor.IStandaloneCodeEditor | null;
   activeTab: Tab;
   side: "left" | "right";
 }
@@ -76,10 +76,14 @@ const useCursorPosition = (
 };
 
 export const StatusBar: React.FC<StatusBarProps> = ({
-  editor,
   activeTab,
   side,
 }) => {
+  // GET EDITOR FROM THE STORE
+  const editor = useActiveEditorStore((state) => 
+    side === 'left' ? state.activeLeftEditor : state.activeRightEditor
+  );
+  
   // Get real-time cursor position from editor
   const realTimeCursorPosition = useCursorPosition(editor);
 
@@ -137,10 +141,26 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     };
   }, [activeTab?.id, activeTab?.content, activeTab?.isTablet]);
 
-  const FormatStatusItem =
-    activeTab && !activeTab.isTablet
-      ? getFormatStatusItem(activeTab.language)
-      : null;
+  // NEW LOGIC TO GET STATUS BAR ITEMS
+  const statusBarItems = useMemo(() => {
+    if (!activeTab || activeTab.isTablet) return [];
+    
+    const module = formatRegistry.getById(activeTab.language);
+    if (!module) return [];
+
+    // New system
+    if (module.getStatusBarItems) {
+      return module.getStatusBarItems().sort((a, b) => a.priority - b.priority);
+    }
+    
+    // Legacy fallback for formats not yet updated
+    const LegacyStatusItem = getFormatStatusItem(activeTab.language);
+    if (LegacyStatusItem) {
+      return [{ id: 'legacy-status', component: LegacyStatusItem, priority: 10 }];
+    }
+    
+    return [];
+  }, [activeTab]);
 
   const FormatOptionsMenu =
     activeTab && !activeTab.isTablet
@@ -343,19 +363,20 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             )}
             <div className="p-0.5 flex items-center space-x-2">
               {renderLanguageSection()}
-              {FormatStatusItem && (
-                <FormatStatusItem 
+
+              {/* REPLACE the old FormatStatusItem and SmartViewButtons with this */}
+              {statusBarItems.map(({ id, component: Component }) => (
+                <Component 
+                  key={id} 
                   content={languageDetectionData.contentSample} 
-                  activeTab={activeTab} 
+                  activeTab={activeTab}
                 />
-              )}
+              ))}
+
+              {/* Keep legacy options menu for now */}
               {FormatOptionsMenu && editor && (
                 <FormatOptionsMenu editor={editor} />
               )}
-              <SmartViewButtons
-                language={activeTab.language}
-                tabId={activeTab.id}
-              />
             </div>
           </>
         )}

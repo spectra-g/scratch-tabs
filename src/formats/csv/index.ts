@@ -1,9 +1,12 @@
-import { FormatModule } from "../types";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
 import { CsvFormatDetector } from "../csv";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry, SmartView } from "../../views/registry";
 import { Table } from "../../components/Icons";
 import { CsvTableViewer } from "./views/components/CsvTableViewer";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
 // Create the CSV format module that implements the new interface
 export class CsvFormatModule implements FormatModule {
@@ -56,6 +59,21 @@ export class CsvFormatModule implements FormatModule {
         component: CsvTableViewer,
         mode: "replaces",
         priority: 1,
+      },
+    ];
+  }
+
+  // New method for status bar items
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'csv-smart-view-button',
+        component: (props: StatusItemProps) => 
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 10,
       },
     ];
   }
