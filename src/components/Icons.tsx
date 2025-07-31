@@ -158,6 +158,7 @@ export {
   User,
   Anchor,
   Braces,
+  FileTerminal,
 } from 'lucide-react';
 
 // Export types separately
