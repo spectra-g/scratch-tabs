@@ -1,10 +1,13 @@
-import { FormatModule } from "../types";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
 import { HtmlFormatDetector } from "../html";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry } from "../../views/registry";
 import { SmartView } from "../../views/registry";
 import { Eye } from "../../components/Icons";
 import HtmlPreview from "./components/HtmlPreview";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
 // Create the HTML format module that implements the new interface
 export class HtmlFormatModule implements FormatModule {
@@ -57,6 +60,21 @@ export class HtmlFormatModule implements FormatModule {
         component: HtmlPreview,
         mode: "side-by-side",
         priority: 1,
+      },
+    ];
+  }
+
+  // New method for status bar items
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'html-smart-view-button',
+        component: (props: StatusItemProps) => 
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 10,
       },
     ];
   }

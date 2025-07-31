@@ -15,11 +15,7 @@ export const FontSizeControls: React.FC<FontSizeControlsProps> = ({
   isTablet,
   activeTabId,
 }) => {
-  // Don't render for tablet tabs - return early before hooks
-  if (isTablet) {
-    return null;
-  }
-
+  // Always call hooks first (Rules of Hooks)
   const { tabs } = useTabsStore();
   const { updateTabState } = useRootStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +28,23 @@ export const FontSizeControls: React.FC<FontSizeControlsProps> = ({
   useEffect(() => {
     if (editor && activeTab) {
       // Apply the tab's font size to the editor
-      editor.updateOptions({ fontSize: currentFontSize });
+      try {
+        // Only update if the font size actually changed to avoid unnecessary updates
+        if (editor.getOptions && editor.updateOptions) {
+          const currentEditorOptions = editor.getOptions();
+          const currentEditorFontSize = currentEditorOptions.get(monaco.editor.EditorOption.fontSize);
+          
+          if (currentEditorFontSize !== currentFontSize) {
+            editor.updateOptions({ fontSize: currentFontSize });
+          }
+        } else {
+          // Fallback for tests or older Monaco versions
+          editor.updateOptions({ fontSize: currentFontSize });
+        }
+      } catch (error) {
+        // Fallback if getOptions fails (e.g., in tests)
+        editor.updateOptions({ fontSize: currentFontSize });
+      }
     }
   }, [editor, currentFontSize, activeTab]);
 
@@ -47,11 +59,27 @@ export const FontSizeControls: React.FC<FontSizeControlsProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Don't render for tablet tabs - return after hooks are called
+  if (isTablet) {
+    return null;
+  }
+
   const handleFontSizeChange = (newSize: number) => {
     if (editor && activeTab) {
       const clampedSize = Math.max(8, Math.min(24, newSize));
-      editor.updateOptions({ fontSize: clampedSize });
+      
+      // First update the tab state so the fontSize is persisted
       updateTabState(activeTab.id, { fontSize: clampedSize });
+      
+      // Then update the editor options
+      if (editor.updateOptions) {
+        editor.updateOptions({ fontSize: clampedSize });
+      }
+      
+      // Force a layout update to ensure the change is applied (if available)
+      if (editor.layout) {
+        editor.layout();
+      }
     }
   };
 

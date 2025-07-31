@@ -3,6 +3,12 @@ import { StatusItemProps } from "../components/StatusBar/types";
 import * as monaco from "monaco-editor";
 import { SmartView } from "../views/registry";
 
+export interface StatusBarItem {
+  id: string; // Unique key for rendering
+  component: React.FC<StatusItemProps>;
+  priority: number; // For ordering, lower numbers appear first
+}
+
 export interface DetectionResult {
   match: boolean;
   confidence: number; // A value between 0.0 (no confidence) and 1.0 (high confidence)
@@ -79,6 +85,12 @@ export interface FormatModule {
    * Get extended views for this format (optional)
    */
   getSmartViews?(): SmartView[];
+
+  /**
+   * Get an array of components to render in the status bar for this format.
+   * This replaces getStatusItem and is the new way to add UI.
+   */
+  getStatusBarItems?(): StatusBarItem[];
 
   // --- LEGACY: For backward compatibility (Phase 1) ---
   /**

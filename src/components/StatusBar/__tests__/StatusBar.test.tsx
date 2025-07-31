@@ -6,12 +6,15 @@ import { useTabsStore } from '../../../stores/tabsStore';
 import { useRootStore } from '../../../stores/rootStore';
 import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { useSearchStore } from '../../../stores/searchStore';
+import { useActiveEditorStore } from '../../../stores/activeEditorStore';
+import { getPotentialFormatMatches } from '../../../formats';
 
 // Mock the stores
 jest.mock('../../../stores/tabsStore');
 jest.mock('../../../stores/rootStore');
 jest.mock('../../../stores/splitViewStore');
 jest.mock('../../../stores/searchStore');
+jest.mock('../../../stores/activeEditorStore');
 
 // Mock the FontSizeControls component
 jest.mock('../FontSizeControls', () => ({
@@ -52,7 +55,7 @@ jest.mock('../../../formats', () => ({
   formatRegistry: {
     getById: jest.fn(() => null),
   },
-  getPotentialFormatMatches: jest.fn(() => []),
+  getPotentialFormatMatches: jest.fn(),
 }));
 
 jest.mock('../../../tablets', () => ({
@@ -63,6 +66,12 @@ jest.mock('../../../tablets', () => ({
 
 describe('StatusBar - Font Size Controls Integration', () => {
   const mockToggleSearch = jest.fn();
+  const mockEditor = {
+    updateOptions: jest.fn(),
+    getOption: jest.fn(),
+    getPosition: jest.fn(() => ({ lineNumber: 1, column: 1 })),
+    onDidChangeCursorPosition: jest.fn(() => ({ dispose: jest.fn() })),
+  } as any;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -117,20 +126,24 @@ describe('StatusBar - Font Size Controls Integration', () => {
     (useSearchStore as any).mockReturnValue({
       toggleSearch: mockToggleSearch,
     });
+
+    // Mock useActiveEditorStore
+    (useActiveEditorStore as any).mockImplementation((selector: any) => {
+      const state = {
+        activeLeftEditor: mockEditor,
+        activeRightEditor: mockEditor,
+      };
+      return selector(state);
+    });
+
+    // Mock getPotentialFormatMatches
+    (getPotentialFormatMatches as jest.Mock).mockReturnValue([]);
   });
 
   describe('FontSizeControls rendering', () => {
     it('should render FontSizeControls for editor tabs', () => {
-      const mockEditor = {
-        updateOptions: jest.fn(),
-        getOption: jest.fn(),
-        getPosition: jest.fn(() => ({ lineNumber: 1, column: 1 })),
-        onDidChangeCursorPosition: jest.fn(() => ({ dispose: jest.fn() })),
-      } as any;
-
       render(
         <StatusBar
-          editor={mockEditor}
           activeTab={{
             id: 'tab-1',
             title: 'Editor Tab',
@@ -156,16 +169,8 @@ describe('StatusBar - Font Size Controls Integration', () => {
     });
 
     it('should render FontSizeControls for tablet tabs but with tablet flag', () => {
-      const mockEditor = {
-        updateOptions: jest.fn(),
-        getOption: jest.fn(),
-        getPosition: jest.fn(() => ({ lineNumber: 1, column: 1 })),
-        onDidChangeCursorPosition: jest.fn(() => ({ dispose: jest.fn() })),
-      } as any;
-
       render(
         <StatusBar
-          editor={mockEditor}
           activeTab={{
             id: 'tab-2',
             title: 'Tablet Tab',
@@ -191,9 +196,57 @@ describe('StatusBar - Font Size Controls Integration', () => {
     });
 
     it('should handle null editor gracefully', () => {
+      // Create a separate beforeEach-like setup for this specific test
+      jest.clearAllMocks();
+      
+      // Mock all the stores with null editor
+      (useTabsStore as any).mockReturnValue({
+        tabs: [
+          {
+            id: 'tab-1',
+            title: 'Editor Tab',
+            content: 'editor content',
+            language: 'javascript',
+            languageLocked: false,
+            isTablet: false,
+            fontSize: 16,
+            workspaceId: 'workspace-1',
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+          },
+        ],
+      });
+
+      (useSplitViewStore as any).mockReturnValue({
+        splitView: {
+          isSplit: false,
+          activeLeftTabId: 'tab-1',
+          activeRightTabId: null,
+        },
+      });
+
+      (useRootStore as any).mockReturnValue({
+        updateTabLanguage: jest.fn(),
+      });
+
+      (useSearchStore as any).mockReturnValue({
+        toggleSearch: mockToggleSearch,
+      });
+
+      // Mock null editor for this specific test
+      (useActiveEditorStore as any).mockImplementation((selector: any) => {
+        const state = {
+          activeLeftEditor: null,
+          activeRightEditor: null,
+        };
+        return selector(state);
+      });
+
+      (getPotentialFormatMatches as jest.Mock).mockReturnValue([]);
+      
       render(
         <StatusBar
-          editor={null}
           activeTab={{
             id: 'tab-1',
             title: 'Editor Tab',
@@ -217,16 +270,8 @@ describe('StatusBar - Font Size Controls Integration', () => {
     });
 
     it('should handle missing active tab gracefully', () => {
-      const mockEditor = {
-        updateOptions: jest.fn(),
-        getOption: jest.fn(),
-        getPosition: jest.fn(() => ({ lineNumber: 1, column: 1 })),
-        onDidChangeCursorPosition: jest.fn(() => ({ dispose: jest.fn() })),
-      } as any;
-
       render(
         <StatusBar
-          editor={mockEditor}
           activeTab={{
             id: 'missing-tab',
             title: 'Missing Tab',
@@ -251,16 +296,8 @@ describe('StatusBar - Font Size Controls Integration', () => {
 
   describe('Status bar layout', () => {
     it('should maintain proper layout with FontSizeControls', () => {
-      const mockEditor = {
-        updateOptions: jest.fn(),
-        getOption: jest.fn(),
-        getPosition: jest.fn(() => ({ lineNumber: 1, column: 1 })),
-        onDidChangeCursorPosition: jest.fn(() => ({ dispose: jest.fn() })),
-      } as any;
-
       render(
         <StatusBar
-          editor={mockEditor}
           activeTab={{
             id: 'tab-1',
             title: 'Editor Tab',
@@ -288,16 +325,8 @@ describe('StatusBar - Font Size Controls Integration', () => {
 
   describe('Side-specific behavior', () => {
     it('should work for left side', () => {
-      const mockEditor = {
-        updateOptions: jest.fn(),
-        getOption: jest.fn(),
-        getPosition: jest.fn(() => ({ lineNumber: 1, column: 1 })),
-        onDidChangeCursorPosition: jest.fn(() => ({ dispose: jest.fn() })),
-      } as any;
-
       render(
         <StatusBar
-          editor={mockEditor}
           activeTab={{
             id: 'tab-1',
             title: 'Editor Tab',
@@ -319,16 +348,8 @@ describe('StatusBar - Font Size Controls Integration', () => {
     });
 
     it('should work for right side', () => {
-      const mockEditor = {
-        updateOptions: jest.fn(),
-        getOption: jest.fn(),
-        getPosition: jest.fn(() => ({ lineNumber: 1, column: 1 })),
-        onDidChangeCursorPosition: jest.fn(() => ({ dispose: jest.fn() })),
-      } as any;
-
       render(
         <StatusBar
-          editor={mockEditor}
           activeTab={{
             id: 'tab-1',
             title: 'Editor Tab',

@@ -15,6 +15,7 @@ import { BatchToolsModal } from "../BatchTools/BatchToolsModal";
 import { modelManager } from "../../services/modelManager";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
+import { useActiveEditorStore } from "../../stores/activeEditorStore";
 
 interface EditorInstanceProps {
   side: "left" | "right";
@@ -33,6 +34,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const currentTabIdRef = useRef<string>(activeTabId);
+  const { setActiveEditor } = useActiveEditorStore();
 
   // Get active tab using standard Zustand approach (simplified since cursor position is no longer in state)
   const activeTab = useTabsStore((state) => {
@@ -207,9 +209,15 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         if (currentModel && !currentModel.isDisposed()) {
           editor.setModel(null);
         }
+        // Clear from active editor store if this was the active editor for this side
+        const currentActive = useActiveEditorStore.getState();
+        const activeEditorForSide = side === 'left' ? currentActive.activeLeftEditor : currentActive.activeRightEditor;
+        if (activeEditorForSide === editor) {
+          setActiveEditor(side, null);
+        }
       }
     };
-  }, []);
+  }, []); // Empty dependency array since this should only run on mount/unmount
 
   // Focus effect - only focus if this editor instance's side matches the globally active editor side
   useEffect(() => {
@@ -246,6 +254,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       editorRef.current = editor;
       monacoRef.current = monaco;
       onEditorReady?.(editor);
+      setActiveEditor(side, editor);
+
+      // Add focus listener to update active editor
+      editor.onDidFocusEditorWidget(() => {
+        setActiveEditor(side, editor);
+      });
 
       // Initialize the ModelManager with Monaco
       modelManager.initialize(monaco);

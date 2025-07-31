@@ -20,14 +20,26 @@ import { Tablet, TabletState } from "../types";
 import { emojiData, categories, skinTones, CompactEmoji } from "./emojiData";
 
 // Types
+interface FavoriteItem {
+  id: string;
+  sequence: string;
+  label: string; // Display name for the sequence
+  timestamp: number;
+}
+
+interface RecentItem {
+  sequence: string;
+  timestamp: number;
+}
+
 interface EmojiTabletState extends TabletState {
   type: "emoji";
   data: {
     searchQuery: string;
     sequence: string;
     selectedFormat: "char" | "shortcode" | "html" | "css" | "js" | "datauri";
-    favorites: string[];
-    recents: string[];
+    favorites: FavoriteItem[];
+    recents: RecentItem[];
     selectedCategory: string;
     sequenceMode: boolean; // true = append mode, false = replace mode
   };
@@ -133,6 +145,47 @@ const getUnicodeInfo = (char: string) => {
   };
 };
 
+// Utility functions
+const generateId = (): string => {
+  // Fallback for browsers that don't support crypto.randomUUID
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Simple fallback ID generator
+  return 'fav_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};
+
+const generateSequenceLabel = (sequence: string): string => {
+  if (!sequence) return "Empty";
+  
+  // If single emoji, find its name
+  if (sequence.length <= 2) { // Account for multi-byte emojis
+    const emoji = emojiData.find(e => e.c === sequence);
+    return emoji ? emoji.n : sequence;
+  }
+  
+  // For sequences, create a descriptive label
+  const firstEmoji = emojiData.find(e => e.c === sequence[0]);
+  const emojiCount = [...sequence].length;
+  
+  if (emojiCount === 2) {
+    const secondEmoji = emojiData.find(e => e.c === sequence[sequence.length - 1]);
+    return `${firstEmoji?.n || sequence[0]} + ${secondEmoji?.n || sequence[sequence.length - 1]}`;
+  }
+  
+  return `${firstEmoji?.n || sequence[0]} + ${emojiCount - 1} more`;
+};
+
+const copyToClipboard = async (text: string): Promise<boolean> => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    console.error("Failed to copy to clipboard:", error);
+    return false;
+  }
+};
+
 // Component: Search Bar
 const SearchBar: React.FC<{
   searchQuery: string;
@@ -183,25 +236,34 @@ const SearchBar: React.FC<{
   );
 };
 
+
 // Component: Sequence Builder
 const SequenceBuilder: React.FC<{
   sequence: string;
   sequenceMode: boolean;
   selectedFormat: EmojiTabletState["data"]["selectedFormat"];
+  favorites: FavoriteItem[];
+  recents: RecentItem[];
   onCopy: () => void;
   onClear: () => void;
   onToggleSequenceMode: () => void;
   onFormatSelect: (format: EmojiTabletState["data"]["selectedFormat"]) => void;
+  onAddToFavorites: () => void;
+  onQuickSelect: (sequence: string) => void;
   showFormatPopover: boolean;
   onToggleFormatPopover: () => void;
 }> = ({
   sequence,
   sequenceMode,
   selectedFormat,
+  favorites,
+  recents,
   onCopy,
   onClear,
   onToggleSequenceMode,
   onFormatSelect,
+  onAddToFavorites,
+  onQuickSelect,
   showFormatPopover,
   onToggleFormatPopover,
 }) => {
@@ -233,7 +295,7 @@ const SequenceBuilder: React.FC<{
   }, [showFormatPopover, onToggleFormatPopover]);
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 mb-4">
+    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-gray-300">Sequence Builder</h3>
         <div className="flex items-center space-x-2">
@@ -291,42 +353,108 @@ const SequenceBuilder: React.FC<{
 
           <AnimatePresence>
             {showFormatPopover && (
-              <motion.div
-                ref={popoverRef}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 min-w-[280px]"
-              >
-                <div className="p-2">
-                  {formatOptions.map((option) => (
-                    <button
-                      key={option.key}
-                      onClick={() => {
-                        onFormatSelect(option.key);
-                        onToggleFormatPopover();
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                        selectedFormat === option.key
-                          ? "bg-blue-500/20 text-blue-400"
-                          : "text-gray-300 hover:bg-gray-700/50"
-                      }`}
-                    >
-                      <div className="font-medium">{option.label}</div>
-                      <div className="text-xs text-gray-400">{option.desc}</div>
-                    </button>
-                  ))}
-                </div>
+            <motion.div
+              ref={popoverRef}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 min-w-[280px]"
+            >
+              <div className="p-2">
+                {formatOptions.map((option) => (
+                  <button
+                    key={option.key}
+                    onClick={() => {
+                      onFormatSelect(option.key);
+                      onToggleFormatPopover();
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
+                      selectedFormat === option.key
+                        ? "bg-blue-500/20 text-blue-400"
+                        : "text-gray-300 hover:bg-gray-700/50"
+                    }`}
+                  >
+                    <div className="font-medium">{option.label}</div>
+                    <div className="text-xs text-gray-400">{option.desc}</div>
+                  </button>
+                ))}
+              </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {sequence && (
-          <div className="text-xs text-gray-400">
-            {sequence.length} character{sequence.length !== 1 ? "s" : ""}
-          </div>
-        )}
+        {/* Add to Favourites Button */}
+        <button
+          onClick={onAddToFavorites}
+          disabled={!sequence}
+          className="px-4 py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          title="Add current sequence to favorites"
+        >
+          <Star size={16} />
+          <span>Add to Favorites</span>
+        </button>
+
+        {/* Character count and Quick Access items */}
+        <div className="flex items-center space-x-4 text-xs text-gray-400">
+          {sequence && (
+            <span>
+              {sequence.length} character{sequence.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          
+          {/* Recent Favorites inline */}
+          {((favorites || []).slice(-5).reverse()).length > 0 && (
+            <div className="flex items-center space-x-1">
+              <Star size={10} className="text-yellow-400" />
+              <span>Recent Favourites:</span>
+              <div className="flex space-x-1">
+                {(favorites || []).slice(-5).reverse().map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={async () => {
+                      const formatted = formatEmoji(item.sequence, selectedFormat);
+                      const success = await copyToClipboard(formatted);
+                      if (success) {
+                        onQuickSelect(item.sequence);
+                      }
+                    }}
+                    className="hover:bg-yellow-500/20 rounded px-1 transition-colors"
+                    title={`${item.label} - Click to copy and update sequence`}
+                  >
+                    <span>{item.sequence}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Items inline */}
+          {((recents || []).slice(0, 5)).length > 0 && (
+            <div className="flex items-center space-x-1">
+              <Clock size={10} className="text-blue-400" />
+              <span>Recent:</span>
+              <div className="flex space-x-1">
+                {(recents || []).slice(0, 5).map((item, index) => (
+                  <button
+                    key={`${item.sequence}-${item.timestamp}-${index}`}
+                    onClick={async () => {
+                      const formatted = formatEmoji(item.sequence, selectedFormat);
+                      const success = await copyToClipboard(formatted);
+                      if (success) {
+                        onQuickSelect(item.sequence);
+                      }
+                    }}
+                    className="hover:bg-blue-500/20 rounded px-1 transition-colors"
+                    title={`${generateSequenceLabel(item.sequence)} - Click to copy and update sequence`}
+                  >
+                    <span>{item.sequence}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -388,7 +516,8 @@ const InspectorPanel: React.FC<{
   hoveredEmoji: CompactEmoji | null;
   isSelected: boolean;
   onClearSelection: () => void;
-}> = ({ hoveredEmoji, isSelected, onClearSelection }) => {
+  onShowCopyToast: () => void;
+}> = ({ hoveredEmoji, isSelected, onClearSelection, onShowCopyToast }) => {
   if (!hoveredEmoji) {
     return (
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[200px]">
@@ -436,15 +565,42 @@ const InspectorPanel: React.FC<{
         <div className="space-y-2 text-xs">
           <div className="flex justify-between">
             <span className="text-gray-400">Unicode:</span>
-            <span className="font-mono text-gray-200 min-w-[80px] text-right">{unicodeInfo.codepoint}</span>
+            <button
+              onClick={async () => {
+                const success = await copyToClipboard(unicodeInfo.codepoint);
+                if (success) onShowCopyToast();
+              }}
+              className="font-mono text-gray-200 min-w-[80px] text-right hover:text-blue-400 hover:bg-gray-700/50 px-1 py-0.5 rounded transition-colors"
+              title="Click to copy Unicode value"
+            >
+              {unicodeInfo.codepoint}
+            </button>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">UTF-8:</span>
-            <span className="font-mono text-gray-200 min-w-[80px] text-right">{unicodeInfo.utf8}</span>
+            <button
+              onClick={async () => {
+                const success = await copyToClipboard(unicodeInfo.utf8);
+                if (success) onShowCopyToast();
+              }}
+              className="font-mono text-gray-200 min-w-[80px] text-right hover:text-blue-400 hover:bg-gray-700/50 px-1 py-0.5 rounded transition-colors"
+              title="Click to copy UTF-8 value"
+            >
+              {unicodeInfo.utf8}
+            </button>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">JS Escape:</span>
-            <span className="font-mono text-gray-200 min-w-[80px] text-right">{unicodeInfo.jsEscape}</span>
+            <button
+              onClick={async () => {
+                const success = await copyToClipboard(unicodeInfo.jsEscape);
+                if (success) onShowCopyToast();
+              }}
+              className="font-mono text-gray-200 min-w-[80px] text-right hover:text-blue-400 hover:bg-gray-700/50 px-1 py-0.5 rounded transition-colors"
+              title="Click to copy JS Escape value"
+            >
+              {unicodeInfo.jsEscape}
+            </button>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Category:</span>
@@ -576,73 +732,98 @@ const EmojiGrid: React.FC<{
   );
 };
 
-// Component: Favorites/Recents Bar
-const FavoritesRecentsBar: React.FC<{
-  favorites: string[];
-  recents: string[];
-  onEmojiClick: (emoji: string) => void;
-  onRemoveFavorite: (emoji: string) => void;
-}> = ({ favorites, recents, onEmojiClick, onRemoveFavorite }) => {
-  const [activeTab, setActiveTab] = useState<"favorites" | "recents">("favorites");
-
-  const currentList = activeTab === "favorites" ? favorites : recents;
-
+// Component: Favorites Panel
+const FavoritesPanel: React.FC<{
+  favorites: FavoriteItem[];
+  onEmojiClick: (sequence: string) => void;
+  onRemoveFavorite: (id: string) => void;
+}> = ({ favorites = [], onEmojiClick, onRemoveFavorite }) => {
   return (
     <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[120px]">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex space-x-1">
-          <button
-            onClick={() => setActiveTab("favorites")}
-            className={`px-3 py-1 text-xs rounded transition-colors ${
-              activeTab === "favorites"
-                ? "bg-blue-500/20 text-blue-400"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            <Star size={12} className="inline mr-1" />
-            <span className="min-w-[60px] inline-block">Favorites ({favorites.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("recents")}
-            className={`px-3 py-1 text-xs rounded transition-colors ${
-              activeTab === "recents"
-                ? "bg-blue-500/20 text-blue-400"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            <Clock size={12} className="inline mr-1" />
-            <span className="min-w-[60px] inline-block">Recent ({recents.length})</span>
-          </button>
+        <div className="flex items-center space-x-2">
+          <Star size={16} className="text-yellow-400" />
+          <h3 className="text-sm font-medium text-gray-300">Favorites</h3>
+          <span className="text-xs text-gray-500">({favorites?.length || 0})</span>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1 min-h-[2.5rem] max-h-[60px] overflow-y-auto">
-        {currentList.length === 0 ? (
+      <div className="flex flex-wrap gap-2 min-h-[2.5rem] max-h-[80px] overflow-y-auto custom-scrollbar">
+        {!favorites || favorites.length === 0 ? (
           <div className="flex items-center justify-center w-full text-gray-500 text-sm min-h-[2.5rem]">
-            {activeTab === "favorites" ? "No favorites yet" : "No recent emojis"}
+            No favorites yet
           </div>
         ) : (
-          currentList.map((emoji, index) => (
-            <div key={`${emoji}-${index}`} className="relative group">
+          favorites.map((item) => (
+            <div key={item.id} className="relative group">
               <button
-                onClick={() => onEmojiClick(emoji)}
-                className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-700/50 rounded transition-colors"
-                title={`Click to add ${emoji} to sequence`}
+                onClick={() => onEmojiClick(item.sequence)}
+                className="flex flex-col items-center p-2 hover:bg-gray-700/50 rounded transition-colors min-w-[60px]"
+                title={`${item.label} - Click to add to sequence`}
               >
-                {emoji}
+                <span className="text-lg mb-1">{item.sequence}</span>
+                <span className="text-xs text-gray-400 text-center leading-tight">
+                  {item.label && item.label.length > 10 ? item.label.substring(0, 10) + "..." : item.label}
+                </span>
               </button>
-              {activeTab === "favorites" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemoveFavorite(emoji);
-                  }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                  title="Remove from favorites"
-                >
-                  <X size={8} />
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveFavorite(item.id);
+                }}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                title="Remove from favorites"
+              >
+                <X size={10} />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Component: Recents Panel
+const RecentsPanel: React.FC<{
+  recents: RecentItem[];
+  onEmojiClick: (sequence: string) => void;
+  onClearRecents: () => void;
+}> = ({ recents = [], onEmojiClick, onClearRecents }) => {
+  return (
+    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[120px]">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          <Clock size={16} className="text-blue-400" />
+          <h3 className="text-sm font-medium text-gray-300">Recent</h3>
+          <span className="text-xs text-gray-500">({recents?.length || 0})</span>
+        </div>
+        {recents && recents.length > 0 && (
+          <button
+            onClick={onClearRecents}
+            className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
+            title="Clear all recent items"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2 min-h-[2.5rem] max-h-[80px] overflow-y-auto custom-scrollbar">
+        {!recents || recents.length === 0 ? (
+          <div className="flex items-center justify-center w-full text-gray-500 text-sm min-h-[2.5rem]">
+            No recent emojis
+          </div>
+        ) : (
+          recents.map((item, index) => (
+            <div key={`${item.sequence}-${item.timestamp}-${index}`} className="group">
+              <button
+                onClick={() => onEmojiClick(item.sequence)}
+                className="flex flex-col items-center p-2 hover:bg-gray-700/50 rounded transition-colors min-w-[50px]"
+                title={`${generateSequenceLabel(item.sequence)} - Click to add to sequence`}
+              >
+                <span className="text-lg">{item.sequence}</span>
+              </button>
             </div>
           ))
         )}
@@ -666,18 +847,61 @@ const EmojiUI: React.FC<{
   } | null>(null);
   const [copiedFeedback, setCopiedFeedback] = useState(false);
 
-  // Load favorites and recents from localStorage on mount
+  // Load favorites and recents from localStorage on mount with migration
   useEffect(() => {
     const savedFavorites = localStorage.getItem(STORAGE_KEYS.favorites);
     const savedRecents = localStorage.getItem(STORAGE_KEYS.recents);
 
     if (savedFavorites || savedRecents) {
+      let migratedFavorites: FavoriteItem[] = [];
+      let migratedRecents: RecentItem[] = [];
+
+      try {
+        // Migrate old string array favorites to new format
+        if (savedFavorites) {
+          const parsed = JSON.parse(savedFavorites);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            if (typeof parsed[0] === 'string') {
+              // Old format - migrate
+              migratedFavorites = parsed.map((emoji: string) => ({
+                id: generateId(),
+                sequence: emoji,
+                label: generateSequenceLabel(emoji),
+                timestamp: Date.now(),
+              }));
+            } else {
+              // New format
+              migratedFavorites = parsed;
+            }
+          }
+        }
+
+        // Migrate old string array recents to new format
+        if (savedRecents) {
+          const parsed = JSON.parse(savedRecents);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            if (typeof parsed[0] === 'string') {
+              // Old format - migrate
+              migratedRecents = parsed.map((emoji: string) => ({
+                sequence: emoji,
+                timestamp: Date.now(),
+              }));
+            } else {
+              // New format
+              migratedRecents = parsed;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error migrating localStorage data:', error);
+      }
+
       onChange({
         ...state,
         data: {
           ...data,
-          favorites: savedFavorites ? JSON.parse(savedFavorites) : [],
-          recents: savedRecents ? JSON.parse(savedRecents) : [],
+          favorites: migratedFavorites,
+          recents: migratedRecents,
         },
       });
     }
@@ -729,7 +953,15 @@ const EmojiUI: React.FC<{
       const newSequence = data.sequenceMode ? data.sequence + emoji : emoji;
       
       // Add to recents (avoid duplicates, limit to 20)
-      const newRecents = [emoji, ...data.recents.filter((r) => r !== emoji)].slice(0, 20);
+      const newRecentItem: RecentItem = {
+        sequence: emoji,
+        timestamp: Date.now(),
+      };
+      const recents = data.recents || [];
+      const newRecents = [
+        newRecentItem,
+        ...recents.filter((r) => r.sequence !== emoji)
+      ].slice(0, 20);
       
       // Find and set the selected emoji for the inspector panel
       const matchedEmoji = emojiData.find((e) => e.c === emoji);
@@ -746,14 +978,45 @@ const EmojiUI: React.FC<{
     [data.sequence, data.sequenceMode, data.recents, updateData]
   );
 
-  const toggleFavorite = useCallback(
-    (emoji: string) => {
-      const newFavorites = data.favorites.includes(emoji)
-        ? data.favorites.filter((f) => f !== emoji)
-        : [...data.favorites, emoji];
+  const addToFavorites = useCallback(() => {
+    if (!data.sequence) return;
+
+    const favorites = data.favorites || [];
+    const existingFavorite = favorites.find(f => f.sequence === data.sequence);
+    if (existingFavorite) return; // Already in favorites
+
+    const newFavorite: FavoriteItem = {
+      id: generateId(),
+      sequence: data.sequence,
+      label: generateSequenceLabel(data.sequence),
+      timestamp: Date.now(),
+    };
+
+    const newFavorites = [...favorites, newFavorite];
+    updateData({ favorites: newFavorites });
+  }, [data.sequence, data.favorites, updateData]);
+
+  const removeFavorite = useCallback(
+    (id: string) => {
+      const favorites = data.favorites || [];
+      const newFavorites = favorites.filter(f => f.id !== id);
       updateData({ favorites: newFavorites });
     },
     [data.favorites, updateData],
+  );
+
+  const clearRecents = useCallback(() => {
+    updateData({ recents: [] });
+  }, [updateData]);
+
+  const handleQuickSelect = useCallback(
+    (sequence: string) => {
+      // Update sequence builder and show toast (copy handled in QuickAccessPanel)
+      updateData({ sequence });
+      setCopiedFeedback(true);
+      setTimeout(() => setCopiedFeedback(false), 1500);
+    },
+    [updateData],
   );
 
   const copySequence = useCallback(async () => {
@@ -762,12 +1025,25 @@ const EmojiUI: React.FC<{
     try {
       const formatted = formatEmoji(data.sequence, data.selectedFormat);
       await navigator.clipboard.writeText(formatted);
+      
+      // Add current sequence to recents
+      const newRecentItem: RecentItem = {
+        sequence: data.sequence,
+        timestamp: Date.now(),
+      };
+      const recents = data.recents || [];
+      const newRecents = [
+        newRecentItem,
+        ...recents.filter((r) => r.sequence !== data.sequence)
+      ].slice(0, 20);
+      
+      updateData({ recents: newRecents });
       setCopiedFeedback(true);
       setTimeout(() => setCopiedFeedback(false), 1500);
     } catch (error) {
       console.error("Failed to copy:", error);
     }
-  }, [data.sequence, data.selectedFormat]);
+  }, [data.sequence, data.selectedFormat, data.recents, updateData]);
 
   const handleFormatSelect = useCallback(
     async (format: EmojiTabletState["data"]["selectedFormat"]) => {
@@ -821,10 +1097,14 @@ const EmojiUI: React.FC<{
               sequence={data.sequence}
               sequenceMode={data.sequenceMode}
               selectedFormat={data.selectedFormat}
+              favorites={data.favorites}
+              recents={data.recents}
               onCopy={copySequence}
               onClear={() => updateData({ sequence: "" })}
               onToggleSequenceMode={() => updateData({ sequenceMode: !data.sequenceMode })}
               onFormatSelect={handleFormatSelect}
+              onAddToFavorites={addToFavorites}
+              onQuickSelect={handleQuickSelect}
               showFormatPopover={showFormatPopover}
               onToggleFormatPopover={() => setShowFormatPopover(!showFormatPopover)}
             />
@@ -845,45 +1125,23 @@ const EmojiUI: React.FC<{
               hoveredEmoji={inspectorEmoji} 
               isSelected={!!selectedEmoji}
               onClearSelection={() => setSelectedEmoji(null)}
+              onShowCopyToast={() => {
+                setCopiedFeedback(true);
+                setTimeout(() => setCopiedFeedback(false), 1500);
+              }}
             />
 
-            <FavoritesRecentsBar
+            <FavoritesPanel
               favorites={data.favorites}
+              onEmojiClick={addToSequence}
+              onRemoveFavorite={removeFavorite}
+            />
+
+            <RecentsPanel
               recents={data.recents}
               onEmojiClick={addToSequence}
-              onRemoveFavorite={(emoji) =>
-                updateData({ favorites: data.favorites.filter((f) => f !== emoji) })
-              }
+              onClearRecents={clearRecents}
             />
-
-            {/* Quick Actions */}
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[80px]">
-              <h3 className="text-sm font-medium text-gray-300 mb-3">Quick Actions</h3>
-              <div className="space-y-2">
-                {inspectorEmoji && (
-                  <button
-                    onClick={() => toggleFavorite(inspectorEmoji.c)}
-                    className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
-                      data.favorites.includes(inspectorEmoji.c)
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
-                    }`}
-                  >
-                    <Star size={14} />
-                    <span>
-                      {data.favorites.includes(inspectorEmoji.c)
-                        ? "Remove from Favorites"
-                        : "Add to Favorites"}
-                    </span>
-                  </button>
-                )}
-                {!inspectorEmoji && (
-                  <div className="flex items-center justify-center text-gray-500 text-sm py-4">
-                    Click or hover over an emoji for actions
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -935,7 +1193,7 @@ export const EmojiTablet: Tablet = {
         selectedFormat: "char",
         favorites: [],
         recents: [],
-        selectedCategory: "All",
+        selectedCategory: "Smileys & Emotion",
         sequenceMode: false,
       },
     };
@@ -967,7 +1225,7 @@ export const EmojiTablet: Tablet = {
             // Ensure category is valid
             selectedCategory: categories.includes(parsed.data.selectedCategory)
               ? parsed.data.selectedCategory
-              : "All",
+              : "Smileys & Emotion",
             // Ensure sequenceMode is valid
             sequenceMode: typeof parsed.data.sequenceMode === "boolean" 
               ? parsed.data.sequenceMode 
