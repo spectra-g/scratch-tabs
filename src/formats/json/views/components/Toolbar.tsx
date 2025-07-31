@@ -1,7 +1,7 @@
 import React from "react";
-import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, UnfoldVertical, GitCompare } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, GitCompare } from "lucide-react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { formatJson, minifyJson, applyEditToEditor } from "../../actions/jsonOperations";
+import { formatJson, applyEditToEditor } from "../../actions/jsonOperations";
 import { useJsonModals } from "../../hooks/useJsonModals";
 
 interface ToolbarProps {
@@ -42,16 +42,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     }
   };
 
-  const handleMinify = () => {
-    if (!editor) return;
-    try {
-      const content = editor.getValue();
-      const minified = minifyJson(content);
-      applyEditToEditor(editor, minified, "minify");
-    } catch (error) {
-      console.error("Failed to minify JSON:", error);
-    }
-  };
 
   const handleCompareStructures = () => {
     if (!editor) return;
@@ -134,20 +124,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <span className="text-sm">Format</span>
         </button>
         <button
-          onClick={handleMinify}
-          className="flex items-center space-x-1 px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors"
-          title="Minify JSON"
-        >
-          <UnfoldVertical size={14} />
-          <span className="text-sm">Minify</span>
-        </button>
-        <button
           onClick={handleCompareStructures}
           className="flex items-center space-x-1 px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors"
           title="Compare Structures"
         >
           <GitCompare size={14} />
-          <span className="text-sm">Compare</span>
+          <span className="text-sm">Compare Structures</span>
         </button>
       </div>
     </div>

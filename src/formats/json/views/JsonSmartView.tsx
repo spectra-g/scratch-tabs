@@ -170,7 +170,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0">
         {/* Navigator Panel */}
-        <div className="w-80 border-r border-gray-700 flex flex-col">
+        <div className="hidden lg:flex w-80 border-r border-gray-700 flex-col">
           <div className="p-3 border-b border-gray-700">
             <h3 className="text-sm font-medium text-gray-300">Navigator</h3>
           </div>
@@ -211,7 +211,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         </div>
 
         {/* Toolbox Panel */}
-        <div className="w-80 border-l border-gray-700 flex flex-col">
+        <div className="hidden lg:flex w-80 border-l border-gray-700 flex-col">
           <div className="p-3 border-b border-gray-700">
             <h3 className="text-sm font-medium text-gray-300">Toolbox</h3>
           </div>

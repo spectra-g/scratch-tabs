@@ -12,6 +12,7 @@ import {
   stringifyJson,
   unstringifyJsonContent,
   extractJsonFromContent,
+  minifyJson,
   applyEditToEditor,
 } from "../../actions/jsonOperations";
 import {
@@ -30,20 +31,20 @@ interface ToolboxProps {
 interface AccordionSectionProps {
   title: string;
   children: React.ReactNode;
-  defaultExpanded?: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
 const AccordionSection: React.FC<AccordionSectionProps> = ({
   title,
   children,
-  defaultExpanded = false,
+  isExpanded,
+  onToggle,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-
   return (
     <div className="border-b border-gray-700/50">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggle}
         className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"
       >
         <span className="text-sm font-medium text-gray-300">{title}</span>
@@ -91,6 +92,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   onContentChange,
   addTab,
 }) => {
+  const [expandedSection, setExpandedSection] = useState<string>("Transformations");
   const {
     openCodeGenerationModal,
     openSchemaValidationModal,
@@ -270,9 +272,16 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   return (
     <div className="space-y-0">
       {/* Transformations */}
-      <AccordionSection title="Transformations" defaultExpanded>
+      <AccordionSection 
+        title="Transformations" 
+        isExpanded={expandedSection === "Transformations"}
+        onToggle={() => setExpandedSection(expandedSection === "Transformations" ? "" : "Transformations")}
+      >
         <ActionButton onClick={() => executeTransformation(sortJsonKeys)}>
           Sort Keys
+        </ActionButton>
+        <ActionButton onClick={() => executeTransformation(minifyJson)}>
+          Minify
         </ActionButton>
         <ActionButton onClick={() => executeTransformation(flattenJson)}>
           Flatten JSON
@@ -304,7 +313,11 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       </AccordionSection>
 
       {/* Code Generation */}
-      <AccordionSection title="Code Generation">
+      <AccordionSection 
+        title="Code Generation"
+        isExpanded={expandedSection === "Code Generation"}
+        onToggle={() => setExpandedSection(expandedSection === "Code Generation" ? "" : "Code Generation")}
+      >
         <ActionButton onClick={() => handleCodeGeneration("typescript")}>
           Generate TypeScript
         </ActionButton>
@@ -323,7 +336,11 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       </AccordionSection>
 
       {/* Data Conversion */}
-      <AccordionSection title="Data Conversion">
+      <AccordionSection 
+        title="Data Conversion"
+        isExpanded={expandedSection === "Data Conversion"}
+        onToggle={() => setExpandedSection(expandedSection === "Data Conversion" ? "" : "Data Conversion")}
+      >
         <ActionButton onClick={() => handleDataConversion("csv")}>
           Convert to CSV
         </ActionButton>
@@ -336,7 +353,11 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       </AccordionSection>
 
       {/* Schema & Utilities */}
-      <AccordionSection title="Schema & Utilities">
+      <AccordionSection 
+        title="Schema & Utilities"
+        isExpanded={expandedSection === "Schema & Utilities"}
+        onToggle={() => setExpandedSection(expandedSection === "Schema & Utilities" ? "" : "Schema & Utilities")}
+      >
         <ActionButton onClick={handleGenerateSchema}>
           Generate Schema
         </ActionButton>

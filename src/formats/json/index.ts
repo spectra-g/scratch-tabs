@@ -4,7 +4,7 @@ import { JsonFormatDetector } from "../json";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry } from "../../views/registry";
 import { JsonSmartView } from "./views/JsonSmartView";
-import { Braces } from "../../components/Icons";
+import { MoreHorizontal } from "../../components/Icons";
 import { JsonStatusItem } from "./StatusItem";
 import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
 import { StatusItemProps } from "../../components/StatusBar/types";
@@ -57,7 +57,7 @@ export class JsonFormatModule implements FormatModule {
         id: "json-workbench",
         languageId: "json",
         label: "JSON Workbench",
-        icon: Braces,
+        icon: MoreHorizontal,
         component: JsonSmartView,
         mode: "replaces" as const,
         priority: 1,
