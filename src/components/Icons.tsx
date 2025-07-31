@@ -159,6 +159,7 @@ export {
   Anchor,
   Braces,
   FileTerminal,
+  GitCompare,
 } from 'lucide-react';
 
 // Export types separately
