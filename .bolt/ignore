@@ -19,7 +19,7 @@ src/hooks/
 src/constants/
 src/db/
 src/features/
-src/services/
+#src/services/
 src/stores/
 src/views/
 src/workers/
