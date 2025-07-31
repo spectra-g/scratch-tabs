@@ -25,7 +25,7 @@ export class ContentProcessingService {
   private initializeDefaultComponents(): void {
     // Register language detector
     this.engine.registerDetector(new LanguageDetectorAdapter());
-    this.registerProcessor(new JsonLogContentProcessor());
+    this.engine.registerProcessor(new JsonLogContentProcessor());
     
     // Register content processors
     this.engine.registerProcessor(new JsonContentProcessor());
