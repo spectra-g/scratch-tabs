@@ -37,12 +37,15 @@ export const FrameList: React.FC<FrameListProps> = ({
     });
   }, [frames, hideLibraryFrames, searchFilter]);
 
-  // Set up virtualization
+  // Set up virtualization for large lists (>100 items)
+  const shouldVirtualize = filteredFrames.length > 100;
+  
   const rowVirtualizer = useVirtualizer({
     count: filteredFrames.length,
     getScrollElement: () => containerRef.current,
     estimateSize: () => 40, // Estimated row height
     overscan: 10,
+    enabled: shouldVirtualize,
   });
 
   if (filteredFrames.length === 0) {
@@ -60,41 +63,63 @@ export const FrameList: React.FC<FrameListProps> = ({
     );
   }
 
+  if (shouldVirtualize) {
+    // Use virtualization for large lists
+    return (
+      <div
+        ref={containerRef}
+        className="h-full overflow-auto custom-scrollbar"
+        style={{ contain: 'strict' }}
+        data-testid="frame-list"
+      >
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            position: 'relative',
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+            const frame = filteredFrames[virtualItem.index];
+            
+            return (
+              <div
+                key={virtualItem.key}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${virtualItem.size}px`,
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <StackFrameComponent
+                  frame={frame}
+                  index={virtualItem.index}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Use simple rendering for smaller lists
   return (
     <div
       ref={containerRef}
       className="h-full overflow-auto custom-scrollbar"
-      style={{ contain: 'strict' }}
       data-testid="frame-list"
     >
-      <div
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-          position: 'relative',
-        }}
-      >
-        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-          const frame = filteredFrames[virtualItem.index];
-          
-          return (
-            <div
-              key={virtualItem.key}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: `${virtualItem.size}px`,
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-            >
-              <StackFrameComponent
-                frame={frame}
-                index={virtualItem.index}
-              />
-            </div>
-          );
-        })}
+      <div className="space-y-1">
+        {filteredFrames.map((frame, index) => (
+          <StackFrameComponent
+            key={frame.id}
+            frame={frame}
+            index={index}
+          />
+        ))}
       </div>
     </div>
   );

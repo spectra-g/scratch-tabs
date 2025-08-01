@@ -82,7 +82,6 @@ function isLibraryFrame(filePath?: string, methodName?: string, className?: stri
   // JavaScript/Node.js library patterns
   if (path.includes('node_modules') || 
       path.includes('/internal/') ||
-      path.includes('webpack://') ||
       method.includes('Module.') ||
       method.includes('require(')) {
     return true;
@@ -91,6 +90,8 @@ function isLibraryFrame(filePath?: string, methodName?: string, className?: stri
   // Java library patterns
   if (method.startsWith('java.') ||
       method.startsWith('javax.') ||
+      method.startsWith('jakarta.') ||
+      method.startsWith('jdk.') ||
       method.startsWith('sun.') ||
       method.startsWith('com.sun.') ||
       method.startsWith('org.springframework.') ||
@@ -99,7 +100,9 @@ function isLibraryFrame(filePath?: string, methodName?: string, className?: stri
       method.startsWith('org.eclipse.') ||
       method.includes('java.base/') ||
       cls.startsWith('java.') ||
-      cls.startsWith('javax.')) {
+      cls.startsWith('javax.') ||
+      cls.startsWith('jakarta.') ||
+      cls.startsWith('jdk.')) {
     return true;
   }
   
@@ -298,11 +301,20 @@ function parseGoFrame(line: string, index: number, nextLine?: string): StackFram
   const trimmed = line.trim();
   
   // Go function format: main.main() or package.function()
+  // Be more specific - Go frames typically have package paths or are followed by file info
   const goFuncRegex = /^\s*([\w./-]+(?:\.[\w./-]+)*)\(.*?\)$/;
   const funcMatch = trimmed.match(goFuncRegex);
   
   if (funcMatch) {
+    // Only treat as Go if it looks like a Go package path, or if the next line is a Go file
     const [, methodName] = funcMatch;
+    const hasGoPackagePath = methodName.includes('/') || methodName.includes('.');
+    const nextLineIsGoFile = nextLine && nextLine.trim().match(/^\s*([\w./-]+\.go):(\d+)(?:\s+\+0x[0-9a-fA-F]+)?$/);
+    
+    if (!hasGoPackagePath && !nextLineIsGoFile) {
+      return null; // Not a Go frame, let other parsers handle it
+    }
+    
     const frame: StackFrame = {
       id: `frame-${index}`,
       raw: line,
@@ -480,46 +492,32 @@ export function parseStackTrace(text: string): StackTrace {
       continue;
     }
     
-    // Try to parse as a frame based on detected language
     let frame: StackFrame | null = null;
     let skipNext = false;
-    
-    switch (language) {
-      case 'java':
-        frame = parseJavaFrame(line, i);
-        break;
-      case 'javascript':
-        frame = parseJavaScriptFrame(line, i);
-        break;
-      case 'python':
-        frame = parsePythonFrame(line, i);
-        break;
-      case 'go':
-        const nextLine = i + 1 < lines.length ? lines[i + 1] : undefined;
-        frame = parseGoFrame(line, i, nextLine);
-        // If we merged the next line, skip it in the next iteration
-        if (frame && nextLine && nextLine.trim().match(/^\s*\/.*\.go:\d+\s+\+0x[0-9a-fA-F]+$/)) {
-          skipNext = true;
-        }
-        break;
-      default:
-        // Try all parsers for unknown language
-        const nextLineDefault = i + 1 < lines.length ? lines[i + 1] : undefined;
-        frame = parseJavaFrame(line, i) ||
-                parseJavaScriptFrame(line, i) ||
-                parsePythonFrame(line, i) ||
-                parseGoFrame(line, i, nextLineDefault);
-        if (frame && frame.language === 'go' && nextLineDefault && nextLineDefault.trim().match(/^\s*\/.*\.go:\d+\s+\+0x[0-9a-fA-F]+$/)) {
-          skipNext = true;
-        }
-        break;
-    }
-    
+    const nextLine = i + 1 < lines.length ? lines[i + 1] : undefined;
+
+    // Attempt to parse the line with all supported language parsers in order.
+    // This correctly handles traces with mixed languages.
+    // Order matters: more specific parsers first
+    frame = parseJavaFrame(line, i) ||
+            parsePythonFrame(line, i) ||
+            parseJavaScriptFrame(line, i) ||
+            parseGoFrame(line, i, nextLine);
+
     if (frame) {
+      // If the Go parser was successful and it consumed the next line (by parsing file info),
+      // we need to flag the next line to be skipped.
+      if (frame.language === 'go' && nextLine && frame.filePath) {
+        const goFuncRegex = /^\s*([\w./-]+(?:\.[\w./-]+)*)\(.*?\)$/;
+        const goFileRegex = /^\s*([\w./-]+\.go):(\d+)(?:\s+\+0x[0-9a-fA-F]+)?$/;
+        if (line.trim().match(goFuncRegex) && nextLine.trim().match(goFileRegex)) {
+          skipNext = true;
+        }
+      }
+      
       frames.push(frame);
-      // Skip the next line if we merged it
       if (skipNext) {
-        i++; // Skip the next iteration
+        i++;
       }
     } else if (trimmed.length > 0 && isLikelyStackFrame(trimmed)) {
       // Add unparseable lines as generic frames only if they look like stack frames
