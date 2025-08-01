@@ -417,31 +417,49 @@ export const useJsonLogData = (
     };
   }, [entries, columns]);
 
-  // Export filtered data
+  // Export filtered data - only visible columns (WYSIWYG export)  
   const exportFiltered = useCallback((format: "json" | "csv" | "ndjson"): string => {
-    const dataToExport = filteredEntries.map(entry => entry.parsedData);
+    // Get the columns that are currently visible in the UI
+    const visibleColumns = columns.filter(col => col.isVisible);
     
     switch (format) {
-      case "json":
-        return JSON.stringify(dataToExport, null, 2);
-      case "ndjson":
-        return dataToExport.map(obj => JSON.stringify(obj)).join("\n");
-      case "csv":
-        if (dataToExport.length === 0) return "";
-        
-        const allKeys = new Set<string>();
-        dataToExport.forEach(obj => {
-          Object.keys(obj).forEach(key => allKeys.add(key));
+      case "json": {
+        // Create new objects with only the visible column data
+        const dataToExport = filteredEntries.map(entry => {
+          const newObj: Record<string, any> = {};
+          visibleColumns.forEach(col => {
+            newObj[col.key] = entry.parsedData[col.key];
+          });
+          return newObj;
         });
+        return JSON.stringify(dataToExport, null, 2);
+      }
         
-        const headers = Array.from(allKeys);
+      case "ndjson": {
+        // Create and stringify new objects line by line
+        return filteredEntries.map(entry => {
+          const newObj: Record<string, any> = {};
+          visibleColumns.forEach(col => {
+            newObj[col.key] = entry.parsedData[col.key];
+          });
+          return JSON.stringify(newObj);
+        }).join("\n");
+      }
+
+      case "csv": {
+        if (filteredEntries.length === 0) return "";
+        
+        // Create headers from the names of visible columns
+        const headers = visibleColumns.map(col => col.name);
         const csvLines = [headers.join(",")];
         
-        dataToExport.forEach(obj => {
-          const row = headers.map(header => {
-            const value = obj[header];
+        // Create rows by picking data from visible columns in order
+        filteredEntries.forEach(entry => {
+          const row = visibleColumns.map(col => {
+            const value = entry.parsedData[col.key];
             if (value === null || value === undefined) return "";
             if (typeof value === "object") return JSON.stringify(value);
+            
             const stringValue = String(value);
             // Escape CSV values that contain commas, quotes, or newlines
             if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
@@ -453,10 +471,12 @@ export const useJsonLogData = (
         });
         
         return csvLines.join("\n");
+      }
+        
       default:
         return "";
     }
-  }, [filteredEntries]);
+  }, [filteredEntries, columns]);
 
   return {
     entries,
