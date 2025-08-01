@@ -20,7 +20,6 @@ import "./html/index";
 import "./java";
 import "./javascript";
 import "./json/index";
-import "./jsonlog";
 import "./kotlin";
 import "./markdown/index";
 import "./php";

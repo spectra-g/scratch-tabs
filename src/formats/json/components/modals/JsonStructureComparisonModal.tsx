@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { Editor } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { BaseModal } from "./BaseModal";
 import { JsonStructureComparisonUI } from "./JsonStructureComparisonUI";

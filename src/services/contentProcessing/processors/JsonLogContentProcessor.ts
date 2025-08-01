@@ -63,7 +63,6 @@ export class JsonLogContentProcessor implements ContentProcessor {
 
       totalNonEmptyLines++;
       let processedLine = line;
-      let wasProcessed = false;
 
       // Attempt 1: Try to unstringify (handle double-escaped JSON)
       try {
@@ -73,13 +72,11 @@ export class JsonLogContentProcessor implements ContentProcessor {
           const innerParsed = JSON.parse(parsed);
           if (typeof innerParsed === "object" && innerParsed !== null) {
             processedLine = JSON.stringify(innerParsed);
-            wasProcessed = true;
             successfullyProcessedCount++;
           }
         } else if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
           // It's already a valid JSON object, just ensure it's compact
           processedLine = JSON.stringify(parsed);
-          wasProcessed = true;
           successfullyProcessedCount++;
         }
       } catch (e) {
@@ -91,7 +88,6 @@ export class JsonLogContentProcessor implements ContentProcessor {
             const parsed = JSON.parse(jsonPart);
             if (typeof parsed === "object" && parsed !== null) {
               processedLine = JSON.stringify(parsed);
-              wasProcessed = true;
               successfullyProcessedCount++;
             }
           } catch (e2) {

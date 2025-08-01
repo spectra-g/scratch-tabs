@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import * as YAML from 'yaml';
 import { SmartViewProps } from '../../../views/registry';
 import { YamlTreeView } from './components/YamlTreeView';
 import { YamlToolbar } from './components/YamlToolbar';

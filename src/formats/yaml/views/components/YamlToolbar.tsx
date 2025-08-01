@@ -2,13 +2,10 @@ import React from 'react';
 import { 
   Search, 
   X, 
-  Eye, 
-  EyeOff, 
   Hash, 
   MessageSquare,
   FileText,
   CheckCircle,
-  AlertTriangle,
   Braces,
   RotateCcw,
   RotateCw

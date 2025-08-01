@@ -1,9 +1,7 @@
 import React, { useState, useCallback } from "react";
 import {
   Search,
-  Filter,
   Eye,
-  EyeOff,
   BarChart3,
   Download,
   ChevronDown,

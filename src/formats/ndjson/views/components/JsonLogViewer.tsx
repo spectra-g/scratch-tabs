@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,7 +9,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { SmartViewProps } from "../../../../views/registry";
 import { useJsonLogData } from "../hooks/useJsonLogData";
 import { LogEntry } from "../types";
