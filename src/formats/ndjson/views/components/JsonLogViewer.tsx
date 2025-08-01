@@ -433,7 +433,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
             return (
               <div
                 key={virtualRow.key}
-                className="absolute border-b border-gray-700 hover:bg-gray-800/50"
+                className="absolute hover:bg-gray-800/50"
                 style={{
                   height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
@@ -445,7 +445,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
                 data-testid="log-row"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <div key={cell.id} className="border-r border-gray-700">
+                  <div key={cell.id} className="border-r border-b border-gray-700">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </div>
                 ))}
