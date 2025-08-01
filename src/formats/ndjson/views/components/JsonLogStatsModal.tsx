@@ -31,7 +31,7 @@ export const JsonLogStatsModal: React.FC<JsonLogStatsModalProps> = ({
     return Number.isInteger(num) ? num.toString() : num.toFixed(decimals);
   };
 
-  const getDataTypeIcon = (dataType: ColumnStats["dataType"]) => {
+  const getDataTypeIcon = (dataType: ColumnStats["dataType"] | LogColumn["type"]) => {
     switch (dataType) {
       case "number":
         return <Calculator size={16} className="text-blue-400" />;
@@ -43,6 +43,8 @@ export const JsonLogStatsModal: React.FC<JsonLogStatsModalProps> = ({
         return <Hash size={16} className="text-orange-400" />;
       case "array":
         return <Hash size={16} className="text-cyan-400" />;
+      case "null":
+        return <Hash size={16} className="text-gray-500" />;
       case "mixed":
         return <Hash size={16} className="text-yellow-400" />;
       default:

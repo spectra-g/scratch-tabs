@@ -370,6 +370,9 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
           ),
           cell: ({ row, getValue }) => {
             const isMasked = isColumnMasked(column.id);
+            
+            // Since we need row and column indices for data attributes,
+            // we'll add them as data attributes in the containing div in the virtualized render
 
             if (isMasked) {
               return (
@@ -782,11 +785,37 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                 }}
                 data-testid={isDuplicate ? "duplicate-row-indicator" : "csv-row"}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <div key={cell.id} className="border-r border-gray-700">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </div>
-                ))}
+                {row.getVisibleCells().map((cell, cellIndex) => {
+                  // Determine the actual column index for data cells (excluding row number and actions columns)
+                  let actualColumnIndex = cellIndex - 1; // Exclude row number column
+                  if (cellIndex >= row.getVisibleCells().length - 1) {
+                    // This is the actions column, skip data attributes
+                    return (
+                      <div key={cell.id} className="border-r border-gray-700">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </div>
+                    );
+                  }
+                  if (cellIndex === 0) {
+                    // This is the row number column, skip data attributes
+                    return (
+                      <div key={cell.id} className="border-r border-gray-700">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div 
+                      key={cell.id} 
+                      className="border-r border-gray-700"
+                      data-testid="csv-cell"
+                      data-row={virtualRow.index.toString()}
+                      data-col={actualColumnIndex.toString()}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}

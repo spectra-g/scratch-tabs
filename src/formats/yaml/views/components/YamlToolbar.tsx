@@ -8,9 +8,10 @@ import {
   MessageSquare,
   FileText,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Braces
 } from '../../../../components/Icons';
-import { YamlDocument } from '../../utils/yamlParser';
+import { YamlDocument, YamlNode } from '../../utils/yamlParser';
 
 interface YamlToolbarProps {
   showComments: boolean;

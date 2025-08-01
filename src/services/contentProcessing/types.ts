@@ -14,13 +14,21 @@ export interface ContentProcessingResult {
   /** Additional metadata about the processing */
   metadata?: {
     /** Type of processing applied (e.g., 'unstringify', 'format', 'clean') */
-    type: string;
+    type?: string;
     /** Original content length */
-    originalLength: number;
+    originalLength?: number;
     /** Processed content length */
-    processedLength: number;
+    processedLength?: number;
     /** Processing time in milliseconds */
     processingTime?: number;
+    /** Original number of lines */
+    originalLines?: number;
+    /** Number of successfully processed lines */
+    processedLines?: number;
+    /** Success ratio as percentage */
+    successRatio?: number;
+    /** Allow additional properties */
+    [key: string]: any;
   };
 }
 
@@ -35,6 +43,8 @@ export interface ContentProcessingContext {
   isFromPaste: boolean;
   /** Previous content for comparison */
   previousContent: string;
+  /** Detected language from content analysis */
+  detectedLanguage?: string;
   /** Additional context flags */
   flags?: {
     /** Whether this is likely from clipboard (e.g., "New tab from Paste") */

@@ -284,7 +284,7 @@ export const useJsonLogData = (
 
     setColumnVisibility(prev => ({
       ...prev,
-      [column.key]: !prev[column.key],
+      [column.key]: prev[column.key] === false ? true : false,
     }));
   }, [columns]);
 

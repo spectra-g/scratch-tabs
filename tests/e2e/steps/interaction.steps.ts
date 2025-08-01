@@ -151,8 +151,8 @@ When('I select "{string}" from the "{string}" submenu', async function(subItem, 
   await this.contextMenu.selectFromSubmenu(parentItem, subItem);
 });
 
-When('I click the three dots menu', async function() {
-  await this.tabBar.clickThreeDotsMenu();
+When('I click the Smart View button', async function() {
+  await this.tabBar.clickSmartViewButton();
 });
 
 When('I click in the editor', async function() {

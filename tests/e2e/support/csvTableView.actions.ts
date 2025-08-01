@@ -75,20 +75,30 @@ export class CsvTableViewActions {
     await cell.click();
   }
 
-  async doubleClickCell(rowIndex: number, columnIndex: number) {
-    const cell = this.getCsvCell(rowIndex, columnIndex);
-    await cell.dblclick();
+  async clickEdit(rowIndex: number, columnIndex: number) {
+    const cell = this.getEditCell();
+    await cell.click();
   }
 
   async editCell(rowIndex: number, columnIndex: number, newValue: string) {
-    await this.doubleClickCell(rowIndex, columnIndex);
+    await this.clickCell(rowIndex, columnIndex);
+    await this.clickEdit(rowIndex, columnIndex);
+    await this.getCsvCell(rowIndex, columnIndex).filter({ has: this.page.locator('input') }).waitFor();
     await this.page.keyboard.press('Control+a');
     await this.page.keyboard.type(newValue);
     await this.page.keyboard.press('Enter');
-    await this.page.waitForTimeout(200);
+    await this.page.waitForSelector(
+      `[data-testid="csv-cell"][data-row="${rowIndex}"][data-col="${columnIndex}"] input`,
+      { state: 'detached' }
+    );
+    await this.page.waitForTimeout(300);
   }
 
   // Toolbar operations
+  getEditCell() {
+    return this.page.locator('[title="Edit cell"]', { hasText: undefined }).filter({ has: null }).first();
+  }
+
   getUndoButton() {
     return this.page.locator('[title="Undo"]');
   }
@@ -118,7 +128,7 @@ export class CsvTableViewActions {
   }
 
   getRemoveDuplicatesButton() {
-    return this.page.locator('[title="Remove duplicate rows"]');
+    return this.page.locator('[title="Remove duplicate rows (keep first occurrence)"]');
   }
 
   getCreateSnapshotButton() {
@@ -126,7 +136,7 @@ export class CsvTableViewActions {
   }
 
   getExportDropdown() {
-    return this.page.locator('[title="Export"]');
+    return this.page.locator('[title="Export data"]');
   }
 
   async clickUndo() {

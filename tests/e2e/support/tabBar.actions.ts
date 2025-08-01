@@ -34,10 +34,9 @@ export class TabBarActions {
     await expect(activeTab).not.toBeVisible();
   }
 
-  async clickThreeDotsMenu() {
-    // Click the three dots menu (JSON Options button)
-    const threeDots = this.page.locator('button[title="JSON Options"]');
-    await threeDots.click();
+  async clickSmartViewButton() {
+    const button = this.page.locator('[data-testid="table-view-button"]');
+    await button.click();
   }
 
   async clickNewTabFromPaste() {

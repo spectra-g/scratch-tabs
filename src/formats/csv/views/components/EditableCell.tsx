@@ -12,6 +12,9 @@ interface EditableCellProps {
   onStartEdit: () => void;
   onChange: (value: string) => void;
   onEditingChange: (isEditing: boolean) => void;
+  'data-testid'?: string;
+  'data-row'?: string;
+  'data-col'?: string;
 }
 
 export const EditableCell: React.FC<EditableCellProps> = React.memo(
@@ -25,6 +28,9 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
     onStartEdit,
     onChange,
     onEditingChange,
+    'data-testid': dataTestId,
+    'data-row': dataRow,
+    'data-col': dataCol,
   }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
@@ -130,6 +136,9 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         title={error || "Click to select. Click pencil or press enter to edit"}
+        data-testid={dataTestId}
+        data-row={dataRow}
+        data-col={dataCol}
       >
         <span className="text-sm truncate flex-1 text-gray-200 mr-2">
           {value || <span className="text-gray-500 italic">Empty</span>}

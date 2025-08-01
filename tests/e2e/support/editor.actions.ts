@@ -65,28 +65,43 @@ export class EditorActions {
   }
 
   // Helper method to get Monaco editor content
-  async getMonacoEditorContent(): Promise<string> {
-    // Wait for editor to be visible first
-    const editorLocator = this.getActiveEditorLocator();
-    await expect(editorLocator).toBeVisible();
-    
-    // Read content directly from Monaco editor's model
-    return await this.page.evaluate(() => {
-      const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
-      if (editor && (window as any).monaco) {
-        const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) => 
-          e.getDomNode() === editor
-        );
-        if (editorInstance) {
-          return editorInstance.getValue();
-        }
-      }
-      // Fallback to textarea if Monaco API not available
-      const textarea = document.querySelector('[data-editor-pane-side="left"] .monaco-editor textarea') as HTMLTextAreaElement;
-      return textarea ? textarea.value : '';
-    });
-  }
+async getMonacoEditorContent(): Promise<string> {
+  const editorLocator = this.getActiveEditorLocator();
+  await expect(editorLocator).toBeVisible();
 
+  // Wait until Monaco editor (or fallback textarea) has non-empty content
+  await this.page.waitForFunction(() => {
+    const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
+    if (editor && (window as any).monaco) {
+      const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) =>
+        e.getDomNode() === editor
+      );
+      if (editorInstance) {
+        const value = editorInstance.getValue();
+        return value && value.trim().length > 0;
+      }
+    }
+
+    const textarea = document.querySelector('[data-editor-pane-side="left"] .monaco-editor textarea') as HTMLTextAreaElement;
+    return textarea && textarea.value.trim().length > 0;
+  });
+
+  // After content is confirmed to exist, return it
+  return await this.page.evaluate(() => {
+    const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
+    if (editor && (window as any).monaco) {
+      const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) =>
+        e.getDomNode() === editor
+      );
+      if (editorInstance) {
+        return editorInstance.getValue();
+      }
+    }
+
+    const textarea = document.querySelector('[data-editor-pane-side="left"] .monaco-editor textarea') as HTMLTextAreaElement;
+    return textarea ? textarea.value : '';
+  });
+}
   async expectEditorContentToEqual(expectedContent: string) {
     const actualContent = await this.getMonacoEditorContent();
     

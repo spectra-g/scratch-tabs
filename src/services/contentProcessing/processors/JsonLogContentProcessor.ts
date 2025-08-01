@@ -10,6 +10,7 @@ import { ContentProcessor, ContentProcessingResult, ContentProcessingContext } f
 export class JsonLogContentProcessor implements ContentProcessor {
   id = "json-log-cleaner";
   name = "JSON Log Cleaner";
+  supportedLanguages = ["text", "log", "ndjson"];
   priority = 95; // High priority, but below main JSON processor
 
   canProcess(content: string, context: ContentProcessingContext): boolean {
@@ -83,7 +84,7 @@ export class JsonLogContentProcessor implements ContentProcessor {
         }
       } catch (e) {
         // Attempt 2: Try to extract JSON from line with prefix
-        const jsonMatch = trimmedLine.match(/[{\[].*/);
+        const jsonMatch = trimmedLine.match(/{.*/);
         if (jsonMatch) {
           const jsonPart = jsonMatch[0];
           try {

@@ -97,6 +97,7 @@ function isLibraryFrame(filePath?: string, methodName?: string, className?: stri
       method.startsWith('org.hibernate.') ||
       method.startsWith('org.apache.') ||
       method.startsWith('org.eclipse.') ||
+      method.includes('java.base/') ||
       cls.startsWith('java.') ||
       cls.startsWith('javax.')) {
     return true;
@@ -117,6 +118,7 @@ function isLibraryFrame(filePath?: string, methodName?: string, className?: stri
       path.includes('/vendor/') ||
       path.includes('/pkg/mod/') ||
       path.startsWith('src/runtime/') ||
+      path.includes('/src/runtime/') ||
       method.startsWith('runtime.')) {
     return true;
   }
@@ -131,12 +133,18 @@ function parseJavaFrame(line: string, index: number): StackFrame | null {
   const trimmed = line.trim();
   
   // Standard Java frame: at com.example.MyClass.method(MyClass.java:123)
-  const javaFrameRegex = /^\s*at\s+([\w$.<>]+)\.([^.]+)\(([^:)]+):(\d+)\)$/;
+  // Also handles module syntax: at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+  const javaFrameRegex = /^\s*at\s+((?:[\w$.]+\/)?[^.\s]+(?:\.[^.\s]+)*)\.([^.]+)\(([^:)]+):(\d+)\)$/;
   const match = trimmed.match(javaFrameRegex);
   
   if (match) {
-    const [, className, methodName, fileName, lineNumber] = match;
-    const fullMethodName = `${className}.${methodName}`;
+    const [, classWithModule, methodName, fileName, lineNumber] = match;
+    const fullMethodName = `${classWithModule}.${methodName}`;
+    
+    // Extract just the class name for the className field
+    const className = classWithModule.includes('/') 
+      ? classWithModule.split('/')[1] 
+      : classWithModule;
     
     return {
       id: `frame-${index}`,
@@ -151,12 +159,17 @@ function parseJavaFrame(line: string, index: number): StackFrame | null {
   }
   
   // Java frame without line number: at com.example.MyClass.method(Unknown Source)
-  const javaNoLineRegex = /^\s*at\s+([\w$.<>]+)\.([^.]+)\(([^)]+)\)$/;
+  const javaNoLineRegex = /^\s*at\s+((?:[\w$.]+\/)?[^.\s]+(?:\.[^.\s]+)*)\.([^.]+)\(([^)]+)\)$/;
   const noLineMatch = trimmed.match(javaNoLineRegex);
   
   if (noLineMatch) {
-    const [, className, methodName, source] = noLineMatch;
-    const fullMethodName = `${className}.${methodName}`;
+    const [, classWithModule, methodName, source] = noLineMatch;
+    const fullMethodName = `${classWithModule}.${methodName}`;
+    
+    // Extract just the class name for the className field
+    const className = classWithModule.includes('/') 
+      ? classWithModule.split('/')[1] 
+      : classWithModule;
     
     return {
       id: `frame-${index}`,
@@ -281,10 +294,41 @@ function parsePythonFrame(line: string, index: number): StackFrame | null {
 /**
  * Parse Go stack trace frames
  */
-function parseGoFrame(line: string, index: number): StackFrame | null {
+function parseGoFrame(line: string, index: number, nextLine?: string): StackFrame | null {
   const trimmed = line.trim();
   
-  // Go format: /path/to/file.go:123 +0xabc
+  // Go function format: main.main() or package.function()
+  const goFuncRegex = /^\s*([\w./-]+(?:\.[\w./-]+)*)\(.*?\)$/;
+  const funcMatch = trimmed.match(goFuncRegex);
+  
+  if (funcMatch) {
+    const [, methodName] = funcMatch;
+    const frame: StackFrame = {
+      id: `frame-${index}`,
+      raw: line,
+      methodName,
+      isLibraryFrame: isLibraryFrame(undefined, methodName),
+      language: 'go',
+    };
+    
+    // Check if the next line has file info and merge it
+    if (nextLine) {
+      const nextTrimmed = nextLine.trim();
+      const goFileRegex = /^\s*([\w./-]+\.go):(\d+)(?:\s+\+0x[0-9a-fA-F]+)?$/;
+      const fileMatch = nextTrimmed.match(goFileRegex);
+      
+      if (fileMatch) {
+        const [, filePath, lineNumber] = fileMatch;
+        frame.filePath = filePath;
+        frame.lineNumber = parseInt(lineNumber, 10);
+        frame.isLibraryFrame = isLibraryFrame(filePath, methodName);
+      }
+    }
+    
+    return frame;
+  }
+  
+  // Go format: /path/to/file.go:123 +0xabc (standalone, shouldn't normally happen in proper traces)
   const goFileRegex = /^\s*([\w./-]+\.go):(\d+)(?:\s+\+0x[0-9a-fA-F]+)?$/;
   const fileMatch = trimmed.match(goFileRegex);
   
@@ -301,23 +345,34 @@ function parseGoFrame(line: string, index: number): StackFrame | null {
     };
   }
   
-  // Go function format: main.main() or package.function()
-  const goFuncRegex = /^\s*([\w./-]+(?:\.[\w./-]+)*)\(.*?\)$/;
-  const funcMatch = trimmed.match(goFuncRegex);
+  return null;
+}
+
+/**
+ * Determine if a line looks like a stack frame (and not just code or other content)
+ */
+function isLikelyStackFrame(line: string): boolean {
+  const trimmed = line.trim();
   
-  if (funcMatch) {
-    const [, methodName] = funcMatch;
-    
-    return {
-      id: `frame-${index}`,
-      raw: line,
-      methodName,
-      isLibraryFrame: isLibraryFrame(undefined, methodName),
-      language: 'go',
-    };
+  // Skip code lines that are clearly not stack frames
+  if (trimmed.match(/^[a-zA-Z_]\w*\(\)$/) || // function calls like "process_data()"
+      trimmed.match(/^return\s+/) || // return statements
+      trimmed.match(/^[a-zA-Z_]\w*\s*=/) || // assignments
+      trimmed.match(/^if\s|^for\s|^while\s|^def\s|^class\s/) || // control structures
+      trimmed.match(/^goroutine\s+\d+\s+\[/) || // Go goroutine lines
+      trimmed.includes('=') && !trimmed.includes('at ') || // assignments without "at"
+      // Skip error lines (they should be parsed as errorInfo, not frames)
+      trimmed.match(/^[A-Za-z_][\w.]*(?:Error|Exception|Panic):\s+/) ||
+      trimmed.match(/^ValueError:\s+/) ||
+      trimmed.match(/^TypeError:\s+/) ||
+      trimmed.match(/^RuntimeError:\s+/) ||
+      // Skip go file location lines that immediately follow function lines
+      trimmed.match(/^\s*\/.*\.go:\d+\s+\+0x[0-9a-fA-F]+$/)
+  ) {
+    return false;
   }
   
-  return null;
+  return true;
 }
 
 /**
@@ -334,7 +389,7 @@ function parseErrorInfo(lines: string[]): { errorInfo: ErrorInfo; startIndex: nu
   const firstLine = lines[0].trim();
   
   // Try to extract error type and message
-  const errorRegex = /^((?:Uncaught\s+)?(?:[A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault)))\s*[:-]?\s*(.*)$/;
+  const errorRegex = /^(?:Exception in thread "[^"]*"\s+)?((?:Uncaught\s+)?(?:[A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault)))\s*[:-]\s*(.*)$/;
   const match = firstLine.match(errorRegex);
   
   if (match) {
@@ -343,6 +398,22 @@ function parseErrorInfo(lines: string[]): { errorInfo: ErrorInfo; startIndex: nu
       errorInfo: {
         errorType: errorType.trim(),
         errorMessage: errorMessage.trim() || undefined,
+        raw: firstLine,
+      },
+      startIndex: 1,
+    };
+  }
+  
+  // If no clear error pattern, but looks like a simple "Type: message" format
+  const simpleErrorRegex = /^(Error|[A-Za-z_][\w.]*(?:Error|Exception|Panic|AssertionError|Failure|Fault)):\s*(.+)$/;
+  const simpleMatch = firstLine.match(simpleErrorRegex);
+  
+  if (simpleMatch) {
+    const [, errorType, errorMessage] = simpleMatch;
+    return {
+      errorInfo: {
+        errorType: errorType.trim(),
+        errorMessage: errorMessage.trim(),
         raw: firstLine,
       },
       startIndex: 1,
@@ -392,7 +463,7 @@ export function parseStackTrace(text: string): StackTrace {
       // Parse the rest as a nested stack trace
       const remainingLines = lines.slice(i);
       const nestedText = remainingLines.join('\n');
-      causedBy = parseStackTrace(nestedText);
+      causedBy = parseStackTrace(nestedText.replace(/^Caused by:\s*/, ''));
       break;
     }
     
@@ -411,6 +482,7 @@ export function parseStackTrace(text: string): StackTrace {
     
     // Try to parse as a frame based on detected language
     let frame: StackFrame | null = null;
+    let skipNext = false;
     
     switch (language) {
       case 'java':
@@ -423,21 +495,34 @@ export function parseStackTrace(text: string): StackTrace {
         frame = parsePythonFrame(line, i);
         break;
       case 'go':
-        frame = parseGoFrame(line, i);
+        const nextLine = i + 1 < lines.length ? lines[i + 1] : undefined;
+        frame = parseGoFrame(line, i, nextLine);
+        // If we merged the next line, skip it in the next iteration
+        if (frame && nextLine && nextLine.trim().match(/^\s*\/.*\.go:\d+\s+\+0x[0-9a-fA-F]+$/)) {
+          skipNext = true;
+        }
         break;
       default:
         // Try all parsers for unknown language
+        const nextLineDefault = i + 1 < lines.length ? lines[i + 1] : undefined;
         frame = parseJavaFrame(line, i) ||
                 parseJavaScriptFrame(line, i) ||
                 parsePythonFrame(line, i) ||
-                parseGoFrame(line, i);
+                parseGoFrame(line, i, nextLineDefault);
+        if (frame && frame.language === 'go' && nextLineDefault && nextLineDefault.trim().match(/^\s*\/.*\.go:\d+\s+\+0x[0-9a-fA-F]+$/)) {
+          skipNext = true;
+        }
         break;
     }
     
     if (frame) {
       frames.push(frame);
-    } else if (trimmed.length > 0) {
-      // Add unparseable lines as generic frames
+      // Skip the next line if we merged it
+      if (skipNext) {
+        i++; // Skip the next iteration
+      }
+    } else if (trimmed.length > 0 && isLikelyStackFrame(trimmed)) {
+      // Add unparseable lines as generic frames only if they look like stack frames
       frames.push({
         id: `frame-${i}`,
         raw: line,

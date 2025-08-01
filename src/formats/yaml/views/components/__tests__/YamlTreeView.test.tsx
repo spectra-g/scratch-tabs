@@ -4,6 +4,19 @@ import '@testing-library/jest-dom';
 import { YamlTreeView } from '../YamlTreeView';
 import { YamlNode } from '../../../utils/yamlParser';
 
+// Mock the useVirtualizer hook to return all items as visible
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: jest.fn().mockImplementation(({ count }) => ({
+    getTotalSize: () => count * 32,
+    getVirtualItems: () => Array.from({ length: count }, (_, i) => ({
+      index: i,
+      key: i,
+      size: 32,
+      start: i * 32
+    }))
+  }))
+}));
+
 // Mock getBoundingClientRect for virtualization
 const mockGetBoundingClientRect = jest.fn(() => ({
   width: 400,
@@ -132,7 +145,15 @@ describe('YamlTreeView', () => {
       />
     );
 
-    expect(screen.getByText('apiVersion')).toBeInTheDocument(); // Path should be shown
+    // Should show path elements (they should be in gray text)
+    const pathElements = screen.getAllByText('apiVersion');
+    expect(pathElements.length).toBeGreaterThan(1); // Key name + path
+    
+    // Check that at least one is in the path styling
+    const pathElement = pathElements.find(el => 
+      el.className.includes('text-xs') && el.className.includes('text-gray-500')
+    );
+    expect(pathElement).toBeInTheDocument();
   });
 
   it('should filter nodes based on search query', () => {

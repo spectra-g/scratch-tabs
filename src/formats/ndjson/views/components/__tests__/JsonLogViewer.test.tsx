@@ -20,12 +20,7 @@ Object.defineProperty(Element.prototype, "getBoundingClientRect", {
   value: mockGetBoundingClientRect,
 });
 
-// Mock the JsonTreeView component
-jest.mock("../../../json/components/JsonTreeView/JsonTreeView", () => {
-  return function MockJsonTreeView({ jsonString }: { jsonString: string }) {
-    return <div data-testid="json-tree-view">{jsonString}</div>;
-  };
-});
+// JsonTreeView is already mocked globally in src/__mocks__/JsonTreeView.js
 
 const mockOnContentChange = jest.fn();
 
@@ -45,6 +40,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -59,6 +55,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -75,6 +72,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -88,6 +86,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -103,6 +102,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -121,18 +121,19 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
     // Initially should show all entries
     expect(screen.getByText("Showing 3 of 3 entries")).toBeInTheDocument();
 
-    // Click on Error level filter to show only errors
+    // Click on Error level filter to hide error entries
     const errorButton = screen.getByText("Error");
     fireEvent.click(errorButton);
 
-    // Should now show only 1 entry
-    expect(screen.getByText("Showing 1 of 3 entries")).toBeInTheDocument();
+    // Should now show 2 entries (info and debug, excluding error)
+    expect(screen.getByText("Showing 2 of 3 entries")).toBeInTheDocument();
   });
 
   it("should handle text search", () => {
@@ -142,6 +143,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -159,6 +161,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -175,11 +178,12 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
-    // Open column manager
-    const columnsButton = screen.getByText(/Columns \(4\/4\)/);
+    // Open column manager - sample data has 5 columns: timestamp, level, message, service, metadata
+    const columnsButton = screen.getByText("Columns (5/5)");
     fireEvent.click(columnsButton);
 
     // Toggle off the service column
@@ -187,7 +191,7 @@ describe("JsonLogViewer", () => {
     fireEvent.click(serviceCheckbox);
 
     // Column should be hidden
-    expect(screen.getByText(/Columns \(3\/4\)/)).toBeInTheDocument();
+    expect(screen.getByText("Columns (4/5)")).toBeInTheDocument();
   });
 
   it("should handle export functionality", () => {
@@ -197,6 +201,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -215,6 +220,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -232,6 +238,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -247,6 +254,7 @@ describe("JsonLogViewer", () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 

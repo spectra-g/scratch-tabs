@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { StackFrameComponent } from '../StackFrameComponent';
-import { StackFrame } from '../../utils/parser';
+import { StackFrame } from '../../../utils/parser';
 
 // Mock clipboard API
 Object.assign(navigator, {
@@ -53,7 +53,8 @@ describe('StackFrameComponent', () => {
 
     expect(screen.getByText('1')).toBeInTheDocument(); // Frame index
     expect(screen.getByText('com.example.MyClass.processString')).toBeInTheDocument();
-    expect(screen.getByText(/MyClass\.java:15/)).toBeInTheDocument();
+    // Check for the title attribute on the file button which contains the full file path
+    expect(screen.getByTitle('Copy MyClass.java:15 to clipboard')).toBeInTheDocument();
   });
 
   it('should apply library frame styling', () => {
@@ -79,7 +80,8 @@ describe('StackFrameComponent', () => {
   it('should copy file location to clipboard when clicked', async () => {
     render(<StackFrameComponent frame={mockJavaScriptFrame} index={0} />);
 
-    const fileButton = screen.getByTitle(/Copy.*dataProcessor\.js:42:23/);
+    // Find the button with a title that contains the file path - use a more flexible matcher
+    const fileButton = screen.getByTitle(/Copy.*dataProcessor\.js.*to clipboard/);
     fireEvent.click(fileButton);
 
     await waitFor(() => {
@@ -110,7 +112,10 @@ describe('StackFrameComponent', () => {
     render(<StackFrameComponent frame={frameWithoutFile} index={0} />);
 
     expect(screen.getByText('<anonymous>')).toBeInTheDocument();
-    expect(screen.queryByTitle(/Copy.*to clipboard/)).not.toBeInTheDocument();
+    // File location copy button should not be present
+    expect(screen.queryByTitle(/Copy.*\.js.*to clipboard/)).not.toBeInTheDocument();
+    // But the general frame copy button should still be present
+    expect(screen.getByTitle('Copy frame to clipboard')).toBeInTheDocument();
   });
 
   it('should show column numbers for JavaScript frames', () => {

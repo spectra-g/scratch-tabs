@@ -11,6 +11,9 @@ describe("JsonLogContentProcessor", () => {
       isFromPaste: true,
       detectedLanguage: "plaintext",
       tabId: "test-tab",
+      currentLanguage: "plaintext",
+      languageLocked: false,
+      previousContent: "",
     };
   });
 
