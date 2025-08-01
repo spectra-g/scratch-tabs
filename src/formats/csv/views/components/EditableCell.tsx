@@ -127,7 +127,7 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
 
     return (
       <div
-        className={`h-full min-h-[35px] flex items-center px-2 cursor-cell transition-colors relative group ${
+        className={`h-full min-h-[35px] flex items-center cursor-cell transition-colors relative group ${
           isSelected
             ? "bg-blue-900/30 ring-1 ring-blue-500"
             : "hover:bg-gray-700/20"
@@ -140,27 +140,27 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
         data-row={dataRow}
         data-col={dataCol}
       >
-        <span className="text-sm truncate flex-1 text-gray-200 mr-2">
+        <span 
+          className={`text-sm truncate w-full text-gray-200 px-2 transition-all duration-150 ${
+            (isHovered || isSelected) ? "pr-16" : "pr-2"
+          }`}
+        >
           {value || <span className="text-gray-500 italic">Empty</span>}
         </span>
-        <div className="flex items-center space-x-1 w-14 justify-end">
+        <div 
+          className={`absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1 transition-opacity duration-150 ${
+            isHovered || isSelected ? "opacity-70" : "opacity-0"
+          }`}
+        >
           <button
-            className={`p-1 rounded hover:bg-gray-600 transition-all ${
-              isHovered || isSelected
-                ? "opacity-70 hover:opacity-100"
-                : "opacity-0"
-            }`}
+            className="p-1 rounded hover:bg-gray-600 hover:opacity-100 transition-all"
             onClick={handleCopyClick}
             title="Copy cell value"
           >
             <Copy size={12} />
           </button>
           <button
-            className={`p-1 rounded hover:bg-gray-600 transition-all ${
-              isHovered || isSelected
-                ? "opacity-70 hover:opacity-100"
-                : "opacity-0"
-            }`}
+            className="p-1 rounded hover:bg-gray-600 hover:opacity-100 transition-all"
             onClick={handleEditClick}
             title="Edit cell"
           >
