@@ -213,54 +213,59 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
     overscan: 10,
   });
 
-  // Calculate column widths
+  // Calculate column widths - only for visible columns
   const columnWidths = useMemo(() => {
-    const headers = table.getHeaderGroups()[0]?.headers || [];
+    // Use the same source of truth as the table renderer: visible columns only
+    const visibleColumns = columns.filter((col) => col.isVisible);
     const rows = table.getRowModel().rows;
     const sampleSize = Math.min(50, rows.length);
-
     const widths: string[] = [];
 
-    headers.forEach((header, colIndex) => {
-      if (header.id === "lineNumber") {
+    // Build list that matches exactly what gets rendered
+    const columnsForWidthCalc = [
+      { id: "lineNumber", key: "lineNumber", name: "#" },
+      ...visibleColumns,
+    ];
+
+    columnsForWidthCalc.forEach((column) => {
+      if (column.id === "lineNumber") {
         widths.push("60px");
-      } else {
-        // Sample content to determine width
-        let maxWidth = header.column.columnDef.header?.toString().length || 0;
-
-        for (let i = 0; i < sampleSize; i++) {
-          const row = rows[i];
-          if (row) {
-            const cell = row.getVisibleCells()[colIndex];
-            if (cell) {
-              const cellValue = cell.getValue();
-              let cellText = "";
-              
-              if (typeof cellValue === "object" && cellValue !== null) {
-                cellText = Array.isArray(cellValue) 
-                  ? `Array(${cellValue.length})` 
-                  : "Object";
-              } else {
-                cellText = String(cellValue || "");
-              }
-              
-              maxWidth = Math.max(maxWidth, cellText.length);
-            }
-          }
-        }
-
-        const minWidth = 100;
-        const maxWidthPx = 300;
-        const calculatedWidth = Math.min(
-          Math.max(minWidth, maxWidth * 8 + 16),
-          maxWidthPx,
-        );
-        widths.push(`${calculatedWidth}px`);
+        return;
       }
+      
+      let maxWidth = column.name.length;
+
+      for (let i = 0; i < sampleSize; i++) {
+        const row = rows[i];
+        if (row) {
+          const cellValue = row.original.parsedData[column.key];
+          let cellText = "";
+
+          if (typeof cellValue === "object" && cellValue !== null) {
+            cellText = Array.isArray(cellValue)
+              ? `Array(${cellValue.length})`
+              : "Object";
+          } else {
+            cellText = String(cellValue || "");
+          }
+          maxWidth = Math.max(maxWidth, cellText.length);
+        }
+      }
+
+      const minWidth = 100;
+      const maxWidthPx = 400;
+      const calculatedWidth = Math.min(
+        Math.max(minWidth, maxWidth * 8 + 24),
+        maxWidthPx,
+      );
+      
+      // Use minmax() to define minimum pixel width but allow proportional growth
+      // The fr unit is proportional to calculated width, so wider columns get more free space
+      widths.push(`minmax(${calculatedWidth}px, ${calculatedWidth}fr)`);
     });
 
     return widths;
-  }, [table, filteredEntries]);
+  }, [columns, filteredEntries, table]);
 
   const gridTemplateColumns = columnWidths.join(" ");
 
@@ -390,7 +395,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
           style={{
             display: "grid",
             gridTemplateColumns,
-            width: "fit-content",
+            minWidth: "100%",
           }}
           data-testid="json-log-table"
         >
@@ -434,7 +439,8 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
                   transform: `translateY(${virtualRow.start}px)`,
                   display: "grid",
                   gridTemplateColumns,
-                  width: "fit-content",
+                  minWidth: "100%",
+                  width: "100%",
                 }}
                 data-testid="log-row"
               >
