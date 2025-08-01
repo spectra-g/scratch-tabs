@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Edit3, Copy } from "../../../../components/Icons";
+import { Edit3, Copy, Check } from "../../../../components/Icons";
 
 interface EditableCellProps {
   value: string;
@@ -34,6 +34,7 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
   }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
+    const [copySuccess, setCopySuccess] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Start editing when triggered
@@ -102,10 +103,16 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
     );
 
     const handleCopyClick = useCallback(
-      (e: React.MouseEvent) => {
+      async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        navigator.clipboard.writeText(value);
+        try {
+          await navigator.clipboard.writeText(value);
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        } catch (err) {
+          console.error('Failed to copy text:', err);
+        }
       },
       [value],
     );
@@ -142,22 +149,24 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
       >
         <span 
           className={`text-sm truncate w-full text-gray-200 px-2 transition-all duration-150 ${
-            (isHovered || isSelected) ? "pr-16" : "pr-2"
+            isHovered ? "pr-16" : "pr-2"
           }`}
         >
           {value || <span className="text-gray-500 italic">Empty</span>}
         </span>
         <div 
           className={`absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1 transition-opacity duration-150 ${
-            isHovered || isSelected ? "opacity-70" : "opacity-0"
+            isHovered ? "opacity-70" : "opacity-0"
           }`}
         >
           <button
-            className="p-1 rounded hover:bg-gray-600 hover:opacity-100 transition-all"
+            className={`p-1 rounded hover:bg-gray-600 hover:opacity-100 transition-all ${
+              copySuccess ? 'text-green-400' : ''
+            }`}
             onClick={handleCopyClick}
             title="Copy cell value"
           >
-            <Copy size={12} />
+            {copySuccess ? <Check size={12} /> : <Copy size={12} />}
           </button>
           <button
             className="p-1 rounded hover:bg-gray-600 hover:opacity-100 transition-all"
