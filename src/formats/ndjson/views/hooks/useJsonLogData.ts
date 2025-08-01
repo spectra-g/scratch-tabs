@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { debounce } from "lodash";
 import {
   LogEntry,
@@ -26,7 +26,8 @@ export const useJsonLogData = (
   // Track the last content we synced to prevent circular updates
   const lastSyncedContentRef = useRef<string>("");
   
-  // Core state
+  // Core state - use useState for entries to manage local state
+  const [entries, setEntries] = useState<LogEntry[]>([]);
   const [filter, setFilterState] = useState<LogFilter>({
     textSearch: "",
     logLevels: new Set(["error", "warn", "info", "debug", "trace"]),
@@ -48,15 +49,16 @@ export const useJsonLogData = (
     [onContentChange, opts.debounceMs],
   );
 
-  // Parse NDJSON content into entries
-  const entries = useMemo<LogEntry[]>(() => {
-    if (!content || !content.trim()) {
-      return [];
+  // Parse NDJSON content into entries - use useEffect to avoid infinite loops
+  useEffect(() => {
+    // Only re-parse if the content change came from an external source
+    if (content === lastSyncedContentRef.current) {
+      return;
     }
 
-    // Skip re-parsing if this content change came from our own sync
-    if (content === lastSyncedContentRef.current) {
-      return [];
+    if (!content || !content.trim()) {
+      setEntries([]);
+      return;
     }
 
     setLoading(true);
@@ -95,8 +97,8 @@ export const useJsonLogData = (
       parsedEntries.push(entry);
     });
 
+    setEntries(parsedEntries);
     setLoading(false);
-    return parsedEntries;
   }, [content]);
 
   // Detect columns from entries
@@ -250,7 +252,7 @@ export const useJsonLogData = (
     setFilterState(prev => ({ ...prev, ...newFilter }));
   }, []);
 
-  // Update entry
+  // Update entry - update local state immediately and sync back
   const updateEntry = useCallback((entryId: string, key: string, value: any) => {
     const entryIndex = entries.findIndex(entry => entry.id === entryId);
     if (entryIndex === -1) return;
@@ -266,10 +268,11 @@ export const useJsonLogData = (
       entry.rawLine = JSON.stringify(entry.parsedData);
       updatedEntries[entryIndex] = entry;
 
-      // Sync back to content
-      const newContent = entries.map((e, i) => 
-        i === entryIndex ? entry.rawLine : e.rawLine
-      ).join("\n");
+      // Update local state immediately for instant UI feedback
+      setEntries(updatedEntries);
+      
+      // Sync back to content using the updated entries
+      const newContent = updatedEntries.map(e => e.rawLine).join("\n");
       
       debouncedSync(newContent);
     } catch (e) {
