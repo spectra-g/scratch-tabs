@@ -9,14 +9,14 @@ const useVirtualizer = ({ count, getScrollElement, estimateSize, overscan }) => 
     virtualItems.push({
       key: i,
       index: i,
-      start: i * (estimateSize ? estimateSize() : 35),
-      size: estimateSize ? estimateSize() : 35,
+      start: i * (estimateSize ? estimateSize(i) : 35),
+      size: estimateSize ? estimateSize(i) : 35,
     });
   }
 
   return {
     getVirtualItems: () => virtualItems,
-    getTotalSize: () => count * (estimateSize ? estimateSize() : 35),
+    getTotalSize: () => virtualItems.reduce((total, item) => total + item.size, 0),
     scrollToIndex: () => {},
   };
 };

@@ -84,6 +84,7 @@ describe('YamlTreeView', () => {
         nodes={sampleNodes}
         selectedPath={null}
         showPaths={false}
+        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -101,6 +102,7 @@ describe('YamlTreeView', () => {
         nodes={sampleNodes}
         selectedPath={null}
         showPaths={false}
+        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -118,6 +120,7 @@ describe('YamlTreeView', () => {
         nodes={sampleNodes}
         selectedPath={null}
         showPaths={false}
+        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -140,6 +143,7 @@ describe('YamlTreeView', () => {
         nodes={sampleNodes}
         selectedPath={null}
         showPaths={true}
+        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -162,6 +166,7 @@ describe('YamlTreeView', () => {
         nodes={sampleNodes}
         selectedPath={null}
         showPaths={false}
+        showComments={false}
         searchQuery="api"
         onNodeSelect={mockOnNodeSelect}
       />
@@ -177,6 +182,7 @@ describe('YamlTreeView', () => {
         nodes={sampleNodes}
         selectedPath="apiVersion"
         showPaths={false}
+        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -192,6 +198,7 @@ describe('YamlTreeView', () => {
         nodes={sampleNodes}
         selectedPath={null}
         showPaths={false}
+        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -208,6 +215,7 @@ describe('YamlTreeView', () => {
         nodes={[]}
         selectedPath={null}
         showPaths={false}
+        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -222,11 +230,66 @@ describe('YamlTreeView', () => {
         nodes={sampleNodes}
         selectedPath={null}
         showPaths={false}
+        showComments={false}
         searchQuery="nonexistent"
         onNodeSelect={mockOnNodeSelect}
       />
     );
 
     expect(screen.getByText('No nodes match "nonexistent"')).toBeInTheDocument();
+  });
+
+  it('should show comments when enabled', () => {
+    const nodesWithComments: YamlNode[] = [
+      {
+        id: 'test-1',
+        path: 'test',
+        key: 'test',
+        value: 'value',
+        type: 'string',
+        line: 1,
+        commentBefore: 'This is a comment',
+      },
+    ];
+
+    render(
+      <YamlTreeView
+        nodes={nodesWithComments}
+        selectedPath={null}
+        showPaths={false}
+        showComments={true}
+        searchQuery=""
+        onNodeSelect={mockOnNodeSelect}
+      />
+    );
+
+    expect(screen.getByText('# This is a comment')).toBeInTheDocument();
+  });
+
+  it('should hide comments when disabled', () => {
+    const nodesWithComments: YamlNode[] = [
+      {
+        id: 'test-1',
+        path: 'test',
+        key: 'test',
+        value: 'value',
+        type: 'string',
+        line: 1,
+        commentBefore: 'This is a comment',
+      },
+    ];
+
+    render(
+      <YamlTreeView
+        nodes={nodesWithComments}
+        selectedPath={null}
+        showPaths={false}
+        showComments={false}
+        searchQuery=""
+        onNodeSelect={mockOnNodeSelect}
+      />
+    );
+
+    expect(screen.queryByText('# This is a comment')).not.toBeInTheDocument();
   });
 });

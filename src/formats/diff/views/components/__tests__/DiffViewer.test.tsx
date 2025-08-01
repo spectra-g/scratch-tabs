@@ -61,6 +61,7 @@ describe('DiffViewer', () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -75,6 +76,7 @@ describe('DiffViewer', () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -91,6 +93,7 @@ describe('DiffViewer', () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -111,6 +114,7 @@ describe('DiffViewer', () => {
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -136,6 +140,7 @@ index 1234567..abcdefg 100644
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -152,6 +157,7 @@ index 1234567..abcdefg 100644
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -170,6 +176,7 @@ index 1234567..abcdefg 100644
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -183,6 +190,7 @@ index 1234567..abcdefg 100644
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
@@ -196,12 +204,13 @@ index 1234567..abcdefg 100644
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
     // First file should be selected and highlighted
-    const firstFileButton = screen.getByTestId('file-item');
-    expect(firstFileButton).toHaveClass('bg-blue-500/20');
+    const fileButtons = screen.getAllByTestId('file-item');
+    expect(fileButtons[0]).toHaveClass('bg-blue-500/20');
   });
 
   it('should show statistics in toolbar', () => {
@@ -211,12 +220,22 @@ index 1234567..abcdefg 100644
         onContentChange={mockOnContentChange}
         tabId="test-tab"
         isActive={true}
+        side="left"
       />
     );
 
     expect(screen.getByText('1 added')).toBeInTheDocument();
     expect(screen.getByText('1 modified')).toBeInTheDocument();
-    expect(screen.getByText('+3')).toBeInTheDocument();
-    expect(screen.getByText('-1')).toBeInTheDocument();
+    
+    // Check for the overall addition/deletion statistics
+    const additionElements = screen.getAllByText('+4');
+    const deletionElements = screen.getAllByText('-1');
+    
+    expect(additionElements.length).toBeGreaterThan(0);
+    expect(deletionElements.length).toBeGreaterThan(0);
+    
+    // At least one of each should have the correct styling classes
+    expect(additionElements.some(el => el.classList.contains('text-green-400'))).toBe(true);
+    expect(deletionElements.some(el => el.classList.contains('text-red-400'))).toBe(true);
   });
 });

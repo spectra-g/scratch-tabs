@@ -1,10 +1,13 @@
-import { FormatModule } from "../types";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
 import { JsonLogFormatDetector } from "../ndjson";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry } from "../../views/registry";
 import { SmartView } from "../../views/registry";
 import { ListFilter } from "../../components/Icons";
 import { JsonLogViewer } from "./views/components/JsonLogViewer";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
 // Create the NDJSON format module that implements the new interface
 export class JsonLogFormatModule implements FormatModule {
@@ -57,6 +60,21 @@ export class JsonLogFormatModule implements FormatModule {
         component: JsonLogViewer,
         mode: "replaces",
         priority: 1,
+      },
+    ];
+  }
+
+  // New method for status bar items
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'ndjson-smart-view-button',
+        component: (props: StatusItemProps) => 
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 10,
       },
     ];
   }

@@ -15,6 +15,8 @@ export interface YamlNode {
   isAlias?: boolean;
   anchorName?: string;
   aliasName?: string;
+  comment?: string;
+  commentBefore?: string;
 }
 
 export interface YamlDocument {
@@ -47,7 +49,13 @@ export interface ParseResult {
  * Parse YAML content with position information and anchor/alias tracking
  */
 export function parseYamlWithPositions(content: string): ParseResult {
-  if (!content.trim()) {
+  if (!content || !content.trim()) {
+    return { documents: [], anchors: new Map() };
+  }
+
+  // Basic validation to catch obviously non-YAML content early
+  const trimmedContent = content.trim();
+  if (trimmedContent.length < 2) {
     return { documents: [], anchors: new Map() };
   }
 
@@ -61,21 +69,41 @@ export function parseYamlWithPositions(content: string): ParseResult {
     });
 
     yamlDocuments.forEach((doc, index) => {
-      if (doc.errors.length > 0) {
+      if (!doc) {
+        throw new Error(`Document ${index + 1}: Document is null or undefined`);
+      }
+      
+      if (doc.errors && doc.errors.length > 0) {
         throw new Error(`Document ${index + 1}: ${doc.errors[0].message}`);
       }
 
-      const data = doc.toJS();
+      let data;
+      try {
+        data = doc.toJS();
+      } catch (error) {
+        throw new Error(`Document ${index + 1}: Failed to convert to JS - ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+      
       const nodes: YamlNode[] = [];
       
       // Extract anchors first by walking the document directly
       if (doc.contents) {
-        extractAnchorsFromDocument(doc, anchors, content);
+        try {
+          extractAnchorsFromDocument(doc, anchors, content);
+        } catch (error) {
+          // Continue without anchors if extraction fails
+          console.warn(`Failed to extract anchors from document ${index + 1}:`, error);
+        }
       }
       
       // Extract position information and build node tree
       if (doc.contents) {
-        buildNodeTreeFromContents(doc.contents, data, '', nodes, anchors, content);
+        try {
+          buildNodeTreeFromContents(doc.contents, data, '', nodes, anchors, content);
+        } catch (error) {
+          // Continue with empty nodes if tree building fails
+          console.warn(`Failed to build node tree for document ${index + 1}:`, error);
+        }
       }
 
       // Calculate document boundaries
@@ -99,20 +127,40 @@ export function parseYamlWithPositions(content: string): ParseResult {
         keepSourceTokens: true,
       });
 
-      if (doc.errors.length > 0) {
+      if (!doc) {
+        throw new Error('Failed to create YAML document');
+      }
+
+      if (doc.errors && doc.errors.length > 0) {
         throw new Error(doc.errors[0].message);
       }
 
-      const data = doc.toJS();
+      let data;
+      try {
+        data = doc.toJS();
+      } catch (jsError) {
+        throw new Error(`Failed to convert document to JS: ${jsError instanceof Error ? jsError.message : 'Unknown error'}`);
+      }
+      
       const nodes: YamlNode[] = [];
       
       // Extract anchors first by walking the document directly
       if (doc.contents) {
-        extractAnchorsFromDocument(doc, anchors, content);
+        try {
+          extractAnchorsFromDocument(doc, anchors, content);
+        } catch (anchorError) {
+          // Continue without anchors if extraction fails
+          console.warn('Failed to extract anchors:', anchorError);
+        }
       }
       
       if (doc.contents) {
-        buildNodeTreeFromContents(doc.contents, data, '', nodes, anchors, content);
+        try {
+          buildNodeTreeFromContents(doc.contents, data, '', nodes, anchors, content);
+        } catch (nodeError) {
+          // Continue with empty nodes if tree building fails
+          console.warn('Failed to build node tree:', nodeError);
+        }
       }
 
       documents.push({
@@ -125,11 +173,14 @@ export function parseYamlWithPositions(content: string): ParseResult {
 
       return { documents, anchors };
     } catch (fallbackError) {
-      throw new Error(
-        fallbackError instanceof Error 
-          ? fallbackError.message 
-          : 'Failed to parse YAML content'
-      );
+      const errorMessage = fallbackError instanceof Error 
+        ? fallbackError.message 
+        : 'Failed to parse YAML content';
+      
+      // Also include the original error for better debugging
+      const originalErrorMessage = error instanceof Error ? error.message : 'Unknown original error';
+      
+      throw new Error(`${errorMessage} (Original error: ${originalErrorMessage})`);
     }
   }
 }
@@ -215,7 +266,14 @@ function buildNodeTreeFromContents(
       const key = item.key.value || item.key.source || `item_${index}`;
       const path = basePath ? `${basePath}.${key}` : key;
       // Extract value directly from the YAML AST instead of relying on doc.toJS()
-      const value = item.value.toJS ? item.value.toJS() : item.value.value;
+      let value;
+      try {
+        value = item.value.toJS ? item.value.toJS() : item.value.value;
+      } catch (error) {
+        // Fallback to getting value from the parsed data
+        const keyName = item.key.value || item.key.source || `item_${index}`;
+        value = data[keyName];
+      }
       
       const line = item.range ? getLineFromPos(content, item.range[0]) : 1;
       const endLine = item.range ? getLineFromPos(content, item.range[1]) : line;
@@ -229,6 +287,14 @@ function buildNodeTreeFromContents(
         line,
         endLine,
       };
+      
+      // Extract comments from the key node
+      if (item.key && item.key.commentBefore) {
+        yamlNode.commentBefore = item.key.commentBefore;
+      }
+      if (item.key && item.key.comment) {
+        yamlNode.comment = item.key.comment;
+      }
       
       // Check for anchor definition - need to check the raw YAML structure
       if (item.value && (item.value as any).anchor) {

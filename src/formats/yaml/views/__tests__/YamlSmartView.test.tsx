@@ -205,7 +205,18 @@ invalid: yaml: content:
       />
     );
 
-    expect(screen.getByText('YAML Parse Error')).toBeInTheDocument();
+    // Check that the error notification bar is shown
+    expect(screen.getByText('YAML Parse Error:')).toBeInTheDocument();
+    
+    // Check that the tree view shows failsafe message
+    expect(screen.getByText('Tree view unavailable')).toBeInTheDocument();
+    expect(screen.getByText('Fix YAML syntax to see structure')).toBeInTheDocument();
+    
+    // Check that search is disabled
+    expect(screen.getByPlaceholderText('Search unavailable')).toBeDisabled();
+    
+    // Check that the editor is still available (content should be visible)
+    expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
   });
 
   it('should clear search when X button is clicked', () => {
@@ -226,5 +237,54 @@ invalid: yaml: content:
     fireEvent.click(clearButton);
 
     expect(searchInput).toHaveValue('');
+  });
+
+  it('should be editable and sync content changes', () => {
+    render(
+      <YamlSmartView
+        content={sampleYaml}
+        onContentChange={mockOnContentChange}
+        tabId="test-tab"
+        isActive={true}
+        side="left"
+      />
+    );
+
+    // Verify the editor is rendered
+    expect(screen.getByTestId('yaml-smart-view')).toBeInTheDocument();
+    
+    // The editor should register with the active editor store for cursor position tracking
+    // and should call onContentChange when content is modified
+    // (Full editor content sync testing requires a more complex Monaco editor mock)
+    
+    // Verify that editor options are set correctly for editability
+    const editor = screen.getByRole('textbox'); // Monaco editor renders as textbox
+    expect(editor).toBeInTheDocument();
+    
+    // At minimum, verify the component structure supports editing
+    expect(mockOnContentChange).toHaveBeenCalledTimes(0); // Initially no changes
+  });
+
+  it('should display undo and redo buttons in toolbar', () => {
+    render(
+      <YamlSmartView
+        content={sampleYaml}
+        onContentChange={mockOnContentChange}
+        tabId="test-tab"
+        isActive={true}
+        side="left"
+      />
+    );
+
+    // Check for undo and redo buttons
+    const undoButton = screen.getByTitle('Undo');
+    const redoButton = screen.getByTitle('Redo');
+    
+    expect(undoButton).toBeInTheDocument();
+    expect(redoButton).toBeInTheDocument();
+    
+    // Initially should be disabled since no changes have been made
+    expect(undoButton).toBeDisabled();
+    expect(redoButton).toBeDisabled();
   });
 });

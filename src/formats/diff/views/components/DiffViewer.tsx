@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { SmartViewProps } from '../../../../views/registry';
-import { parseDiff, FileDiff, ParsedDiff } from '../../utils/parser';
+import { parseDiff, FileDiff, ParsedDiff, reconstructDiff } from '../../utils/parser';
 import { DiffToolbar } from './DiffToolbar';
 import { FileNavigator } from './FileNavigator';
 import { SideBySideDiffView } from './SideBySideDiffView';

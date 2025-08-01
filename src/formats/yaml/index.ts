@@ -1,10 +1,13 @@
-import { FormatModule } from "../types";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
 import { YamlFormatDetector } from "../yaml";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry } from "../../views/registry";
 import { SmartView } from "../../views/registry";
 import { FileText } from "../../components/Icons";
 import { YamlSmartView } from "./views/YamlSmartView";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
 // Create the YAML format module that implements the new interface
 export class YamlFormatModule implements FormatModule {
@@ -57,6 +60,21 @@ export class YamlFormatModule implements FormatModule {
         component: YamlSmartView,
         mode: "replaces",
         priority: 1,
+      },
+    ];
+  }
+
+  // New method for status bar items
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'yaml-smart-view-button',
+        component: (props: StatusItemProps) => 
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 10,
       },
     ];
   }

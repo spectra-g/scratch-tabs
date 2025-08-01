@@ -199,10 +199,8 @@ export function parseDiff(text: string): ParsedDiff {
       }
 
       // Check if this is a whitespace-only change
-      const isWhitespaceOnly = lineType !== 'context' && 
-        content.trim() === currentHunk.lines
-          .filter(l => l.type !== lineType && l.content.trim() === content.trim())
-          .map(l => l.content)[0]?.trim();
+      // We need to defer this check until after processing all lines in the hunk
+      const isWhitespaceOnly = false; // Will be set properly after processing the hunk
 
       currentHunk.lines.push({
         type: lineType,
@@ -217,6 +215,46 @@ export function parseDiff(text: string): ParsedDiff {
       }
     }
   }
+
+  // Post-process to detect whitespace-only changes
+  files.forEach(file => {
+    file.hunks.forEach(hunk => {
+      // Group lines by their trimmed content to find whitespace-only changes
+      const linesByTrimmedContent = new Map<string, DiffLine[]>();
+      
+      hunk.lines.forEach(line => {
+        if (line.type !== 'context') {
+          const trimmed = line.content.trim();
+          if (!linesByTrimmedContent.has(trimmed)) {
+            linesByTrimmedContent.set(trimmed, []);
+          }
+          linesByTrimmedContent.get(trimmed)!.push(line);
+        }
+      });
+      
+      // Mark lines as whitespace-only if they have the same trimmed content
+      // but different types (addition vs deletion)
+      linesByTrimmedContent.forEach((lines, trimmedContent) => {
+        if (lines.length > 1) {
+          const hasAddition = lines.some(l => l.type === 'addition');
+          const hasDeletion = lines.some(l => l.type === 'deletion');
+          
+          if (hasAddition && hasDeletion) {
+            // Check if the actual content differs only in whitespace
+            const additionLine = lines.find(l => l.type === 'addition');
+            const deletionLine = lines.find(l => l.type === 'deletion');
+            
+            if (additionLine && deletionLine && 
+                additionLine.content.trim() === deletionLine.content.trim() &&
+                additionLine.content !== deletionLine.content) {
+              additionLine.isWhitespaceOnly = true;
+              deletionLine.isWhitespaceOnly = true;
+            }
+          }
+        }
+      });
+    });
+  });
 
   // Calculate total stats
   const totalStats = files.reduce(

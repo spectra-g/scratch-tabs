@@ -189,16 +189,15 @@ index 1234567..abcdefg 100644
 --- a/test.txt
 +++ b/test.txt
 @@ -1,2 +1,2 @@
--  spaced  
-+	tabbed	
+-  line with spaces  
++	line with spaces	
  normal`);
 
       const reconstructed = reconstructDiff(diffWithWhitespace, {
         hideWhitespaceChanges: true
       });
       
-      expect(reconstructed).not.toContain('spaced');
-      expect(reconstructed).not.toContain('tabbed');
+      expect(reconstructed).not.toContain('line with spaces');
       expect(reconstructed).toContain('normal');
     });
   });

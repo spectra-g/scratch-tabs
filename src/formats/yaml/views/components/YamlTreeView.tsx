@@ -7,6 +7,7 @@ interface YamlTreeViewProps {
   nodes: YamlNode[];
   selectedPath: string | null;
   showPaths: boolean;
+  showComments: boolean;
   searchQuery: string;
   onNodeSelect: (path: string) => void;
 }
@@ -22,6 +23,7 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
   nodes,
   selectedPath,
   showPaths,
+  showComments,
   searchQuery,
   onNodeSelect,
 }) => {
@@ -219,6 +221,22 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
                     {showPaths && (
                       <div className="text-xs text-gray-500 truncate mt-0.5">
                         {node.path}
+                      </div>
+                    )}
+
+                    {/* Comments (if enabled) */}
+                    {showComments && (node.commentBefore || node.comment) && (
+                      <div className="text-xs text-green-400 mt-0.5">
+                        {node.commentBefore && (
+                          <div className="italic">
+                            # {node.commentBefore}
+                          </div>
+                        )}
+                        {node.comment && (
+                          <div className="italic">
+                            # {node.comment}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

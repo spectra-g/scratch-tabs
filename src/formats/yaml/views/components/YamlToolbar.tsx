@@ -9,7 +9,9 @@ import {
   FileText,
   CheckCircle,
   AlertTriangle,
-  Braces
+  Braces,
+  RotateCcw,
+  RotateCw
 } from '../../../../components/Icons';
 import { YamlDocument, YamlNode } from '../../utils/yamlParser';
 
@@ -22,6 +24,11 @@ interface YamlToolbarProps {
   onSearchChange: (query: string) => void;
   documentCount: number;
   activeDocument: YamlDocument | null;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  hasError?: boolean;
 }
 
 export const YamlToolbar: React.FC<YamlToolbarProps> = ({
@@ -33,6 +40,11 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
   onSearchChange,
   documentCount,
   activeDocument,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+  hasError = false,
 }) => {
   return (
     <div className="flex-none border-b border-gray-700 p-3 bg-gray-800/50">
@@ -46,10 +58,15 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search structure..."
-              className="pl-10 pr-8 py-1.5 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 w-64"
+              placeholder={hasError ? "Search unavailable" : "Search structure..."}
+              disabled={hasError}
+              className={`pl-10 pr-8 py-1.5 border rounded text-sm focus:outline-none w-64 ${
+                hasError 
+                  ? "bg-gray-800 border-gray-600 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                  : "bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400 focus:border-blue-500"
+              }`}
             />
-            {searchQuery && (
+            {searchQuery && !hasError && (
               <button
                 onClick={() => onSearchChange('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
@@ -62,29 +79,63 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
           {/* View toggles */}
           <div className="flex items-center space-x-2">
             <button
-              onClick={onToggleComments}
+              onClick={hasError ? undefined : onToggleComments}
+              disabled={hasError}
               className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                showComments
-                  ? 'bg-blue-500/20 text-blue-400'
-                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                hasError 
+                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                  : showComments
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
               }`}
-              title={showComments ? 'Hide comments' : 'Show comments'}
+              title={hasError ? 'Unavailable due to parse error' : showComments ? 'Hide comments' : 'Show comments'}
             >
               <MessageSquare size={12} />
               <span>Comments</span>
             </button>
 
             <button
-              onClick={onTogglePaths}
+              onClick={hasError ? undefined : onTogglePaths}
+              disabled={hasError}
               className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                showPaths
-                  ? 'bg-blue-500/20 text-blue-400'
-                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                hasError 
+                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                  : showPaths
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
               }`}
-              title={showPaths ? 'Hide paths' : 'Show paths'}
+              title={hasError ? 'Unavailable due to parse error' : showPaths ? 'Hide paths' : 'Show paths'}
             >
               <Hash size={12} />
               <span>Paths</span>
+            </button>
+          </div>
+
+          {/* Undo/Redo buttons */}
+          <div className="flex items-center space-x-1 ml-2">
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className={`p-1.5 rounded transition-colors ${
+                canUndo 
+                  ? "hover:bg-gray-700 text-gray-300" 
+                  : "text-gray-500 cursor-not-allowed"
+              }`}
+              title="Undo"
+            >
+              <RotateCcw size={14} />
+            </button>
+            <button
+              onClick={onRedo}
+              disabled={!canRedo}
+              className={`p-1.5 rounded transition-colors ${
+                canRedo 
+                  ? "hover:bg-gray-700 text-gray-300" 
+                  : "text-gray-500 cursor-not-allowed"
+              }`}
+              title="Redo"
+            >
+              <RotateCw size={14} />
             </button>
           </div>
         </div>
