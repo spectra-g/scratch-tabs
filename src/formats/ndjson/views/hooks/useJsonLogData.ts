@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { debounce } from "lodash";
+import { globalStateStore } from "./globalStateStore";
 import {
   LogEntry,
   LogColumn,
@@ -99,6 +100,25 @@ export const useJsonLogData = (
 
     setEntries(parsedEntries);
     setLoading(false);
+  }, [content, columnVisibility, filter]);
+
+  // Save state to global store when it changes
+  useEffect(() => {
+    if (content && (Object.keys(columnVisibility).length > 0 || filter.textSearch || filter.customFilters.length > 0)) {
+      globalStateStore.saveState(content, columnVisibility, filter);
+    }
+  }, [content, columnVisibility, filter]);
+
+
+  // Restore state from global store when content is available
+  useEffect(() => {
+    if (content && content.trim()) {
+      const saved = globalStateStore.restoreState(content);
+      if (saved) {
+        setColumnVisibility(saved.columnVisibility);
+        setFilterState(saved.filter);
+      }
+    }
   }, [content]);
 
   // Detect columns from entries
