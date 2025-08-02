@@ -104,7 +104,7 @@ And some more text`;
       expect(detector.id).toBe("ndjson");
       expect(detector.name).toBe("JSON Log");
       expect(detector.extensions).toEqual(["jsonl", "ndjson", "log"]);
-      expect(detector.priority).toBe(7);
+      expect(detector.priority).toBe(8);
     });
 
     it("should return correct file extension", () => {
