@@ -10,7 +10,7 @@ export class JsonLogFormatDetector extends BaseFormatDetector implements FormatM
   id = "ndjson";
   name = "JSON Log";
   extensions = ["jsonl", "ndjson", "log"];
-  priority = 7; // Higher than regular JSON to ensure it gets chosen for multi-line JSON
+  priority = 8; // Higher than regular JSON and properties to ensure it gets chosen for multi-line JSON
 
   sampleContent(): string {
     const timestamp = new Date().toISOString();
@@ -131,16 +131,17 @@ export class JsonLogFormatDetector extends BaseFormatDetector implements FormatM
       const trimmedLine = line.trim();
 
       // Check structural match (starts with { and ends with })
-      if (trimmedLine.startsWith("{") && trimmedLine.endsWith("}")) {
+      const jsonStart = trimmedLine.indexOf("{");
+      if (jsonStart !== -1 && trimmedLine.endsWith("}")) {
         structuralMatchCount++;
 
         try {
-          // Safety check: don't parse very large lines
-          if (trimmedLine.length > 100_000) {
+          const jsonPart = trimmedLine.substring(jsonStart);
+          if (jsonPart.length > 100_000) {
             continue;
           }
 
-          const parsed = JSON.parse(trimmedLine);
+          const parsed = JSON.parse(jsonPart);
 
           if (
             typeof parsed === "object" &&

@@ -53,6 +53,11 @@ class GlobalStateStore {
       }
     }
   }
+
+  // Clear all stored states (useful for testing)
+  clear(): void {
+    this.states.clear();
+  }
 }
 
 export const globalStateStore = new GlobalStateStore();

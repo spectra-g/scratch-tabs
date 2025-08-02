@@ -100,15 +100,7 @@ export const useJsonLogData = (
 
     setEntries(parsedEntries);
     setLoading(false);
-  }, [content, columnVisibility, filter]);
-
-  // Save state to global store when it changes
-  useEffect(() => {
-    if (content && (Object.keys(columnVisibility).length > 0 || filter.textSearch || filter.customFilters.length > 0)) {
-      globalStateStore.saveState(content, columnVisibility, filter);
-    }
-  }, [content, columnVisibility, filter]);
-
+  }, [content]);
 
   // Restore state from global store when content is available
   useEffect(() => {
@@ -120,6 +112,18 @@ export const useJsonLogData = (
       }
     }
   }, [content]);
+
+  // Save state to global store when it changes
+  useEffect(() => {
+    if (content && (
+      Object.keys(columnVisibility).length > 0 || 
+      filter.textSearch || 
+      filter.customFilters.length > 0 ||
+      filter.logLevels.size !== 5 // Save if not all log levels are selected (default is 5)
+    )) {
+      globalStateStore.saveState(content, columnVisibility, filter);
+    }
+  }, [content, columnVisibility, filter]);
 
   // Detect columns from entries
   const columns = useMemo<LogColumn[]>(() => {

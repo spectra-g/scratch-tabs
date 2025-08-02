@@ -1,11 +1,13 @@
 import { renderHook, act } from "@testing-library/react";
 import { useJsonLogData } from "../useJsonLogData";
+import { globalStateStore } from "../globalStateStore";
 
 describe("useJsonLogData", () => {
   const mockOnContentChange = jest.fn();
 
   beforeEach(() => {
     mockOnContentChange.mockClear();
+    globalStateStore.clear(); // Clear global state between tests
   });
 
   const sampleNdjson = `{"timestamp": "2024-01-01T10:00:00Z", "level": "info", "message": "Test message 1", "service": "web-server"}
@@ -70,10 +72,19 @@ describe("useJsonLogData", () => {
   });
 
   describe("filtering", () => {
-    it("should filter by text search", () => {
+    it("should filter by text search", async () => {
+      const testContent = `{"timestamp": "2024-01-01T10:00:00Z", "level": "info", "message": "Test message 1", "service": "web-server", "testId": "unique-1"}
+{"timestamp": "2024-01-01T10:00:01Z", "level": "error", "message": "Test message 2", "service": "api-gateway", "testId": "unique-2"}
+{"timestamp": "2024-01-01T10:00:02Z", "level": "debug", "message": "Test message 3", "service": "web-server", "testId": "unique-3"}`;
+
       const { result } = renderHook(() =>
-        useJsonLogData(sampleNdjson, mockOnContentChange)
+        useJsonLogData(testContent, mockOnContentChange)
       );
+
+      // Wait for initial state to settle
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
 
       act(() => {
         result.current.setFilter({ textSearch: "web-server" });
@@ -84,10 +95,19 @@ describe("useJsonLogData", () => {
       expect(result.current.filteredEntries[1].parsedData.service).toBe("web-server");
     });
 
-    it("should filter by log levels", () => {
+    it("should filter by log levels", async () => {
+      const testContent = `{"timestamp": "2024-01-01T10:00:00Z", "level": "info", "message": "Test message 1", "service": "web-server", "testId": "unique-4"}
+{"timestamp": "2024-01-01T10:00:01Z", "level": "error", "message": "Test message 2", "service": "api-gateway", "testId": "unique-5"}
+{"timestamp": "2024-01-01T10:00:02Z", "level": "debug", "message": "Test message 3", "service": "web-server", "testId": "unique-6"}`;
+
       const { result } = renderHook(() =>
-        useJsonLogData(sampleNdjson, mockOnContentChange)
+        useJsonLogData(testContent, mockOnContentChange)
       );
+
+      // Wait for initial state to settle
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
 
       act(() => {
         result.current.setFilter({ logLevels: new Set(["error"]) });
@@ -97,10 +117,19 @@ describe("useJsonLogData", () => {
       expect(result.current.filteredEntries[0].parsedData.level).toBe("error");
     });
 
-    it("should combine multiple filters", () => {
+    it("should combine multiple filters", async () => {
+      const testContent = `{"timestamp": "2024-01-01T10:00:00Z", "level": "info", "message": "Test message 1", "service": "web-server", "testId": "unique-7"}
+{"timestamp": "2024-01-01T10:00:01Z", "level": "error", "message": "Test message 2", "service": "api-gateway", "testId": "unique-8"}
+{"timestamp": "2024-01-01T10:00:02Z", "level": "debug", "message": "Test message 3", "service": "web-server", "testId": "unique-9"}`;
+
       const { result } = renderHook(() =>
-        useJsonLogData(sampleNdjson, mockOnContentChange)
+        useJsonLogData(testContent, mockOnContentChange)
       );
+
+      // Wait for initial state to settle
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
 
       act(() => {
         result.current.setFilter({
@@ -209,10 +238,19 @@ describe("useJsonLogData", () => {
   });
 
   describe("export functionality", () => {
-    it("should export as NDJSON", () => {
+    it("should export as NDJSON", async () => {
+      const testContent = `{"timestamp": "2024-01-01T10:00:00Z", "level": "info", "message": "Test message 1", "service": "web-server", "testId": "export-1"}
+{"timestamp": "2024-01-01T10:00:01Z", "level": "error", "message": "Test message 2", "service": "api-gateway", "testId": "export-2"}
+{"timestamp": "2024-01-01T10:00:02Z", "level": "debug", "message": "Test message 3", "service": "web-server", "testId": "export-3"}`;
+
       const { result } = renderHook(() =>
-        useJsonLogData(sampleNdjson, mockOnContentChange)
+        useJsonLogData(testContent, mockOnContentChange)
       );
+
+      // Wait for initial state to settle
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
 
       const exported = result.current.exportFiltered("ndjson");
       const lines = exported.split("\n").filter(line => line.trim());
@@ -223,10 +261,19 @@ describe("useJsonLogData", () => {
       });
     });
 
-    it("should export as JSON array", () => {
+    it("should export as JSON array", async () => {
+      const testContent = `{"timestamp": "2024-01-01T10:00:00Z", "level": "info", "message": "Test message 1", "service": "web-server", "testId": "export-4"}
+{"timestamp": "2024-01-01T10:00:01Z", "level": "error", "message": "Test message 2", "service": "api-gateway", "testId": "export-5"}
+{"timestamp": "2024-01-01T10:00:02Z", "level": "debug", "message": "Test message 3", "service": "web-server", "testId": "export-6"}`;
+
       const { result } = renderHook(() =>
-        useJsonLogData(sampleNdjson, mockOnContentChange)
+        useJsonLogData(testContent, mockOnContentChange)
       );
+
+      // Wait for initial state to settle
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
 
       const exported = result.current.exportFiltered("json");
       const parsed = JSON.parse(exported);
@@ -236,10 +283,19 @@ describe("useJsonLogData", () => {
       expect(parsed[0].level).toBe("info");
     });
 
-    it("should export as CSV", () => {
+    it("should export as CSV", async () => {
+      const testContent = `{"timestamp": "2024-01-01T10:00:00Z", "level": "info", "message": "Test message 1", "service": "web-server", "testId": "export-7"}
+{"timestamp": "2024-01-01T10:00:01Z", "level": "error", "message": "Test message 2", "service": "api-gateway", "testId": "export-8"}
+{"timestamp": "2024-01-01T10:00:02Z", "level": "debug", "message": "Test message 3", "service": "web-server", "testId": "export-9"}`;
+
       const { result } = renderHook(() =>
-        useJsonLogData(sampleNdjson, mockOnContentChange)
+        useJsonLogData(testContent, mockOnContentChange)
       );
+
+      // Wait for initial state to settle
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
 
       const exported = result.current.exportFiltered("csv");
       const lines = exported.split("\n");
