@@ -236,7 +236,20 @@ export class JsonLogFormatDetector extends BaseFormatDetector implements FormatM
 
     // Determine if it's a match
     const isMatch = confidenceScore > 0.5;
-    const isDefinitive = confidenceScore > 0.9;
+    // Mark as definitive if we have perfect structural match with strong log patterns
+    const isDefinitive = confidenceScore > 0.9 || 
+      (structuralRatio >= 1.0 && validJsonRatio >= 1.0 && logPatternMatches >= 3);
+
+    console.log("[NDJSON] Final results:", {
+      structuralMatchCount,
+      validJsonObjectCount,
+      logPatternMatches,
+      structuralRatio,
+      validJsonRatio,
+      confidenceScore,
+      isMatch,
+      isDefinitive
+    });
 
     return {
       match: isMatch,

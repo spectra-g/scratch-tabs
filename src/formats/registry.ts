@@ -22,24 +22,36 @@ class FormatRegistryImpl implements FormatRegistry {
   }
 
   detectFormat(content: string): string {
+    console.log("[REGISTRY] Detecting format for content:", content.substring(0, 100) + "...");
+    
     if (!content || content.trim().length === 0) {
+      console.log("[REGISTRY] Empty content, returning plaintext");
       return "plaintext";
     }
 
     let bestMatch: FormatModule | null = null;
     let bestConfidence = 0;
     let bestPriority = -1;
+    let bestDefinitiveMatch: FormatModule | null = null;
+    let bestDefinitivePriority = -1;
 
+    // First pass: check all modules and collect results
     for (const module of this.modules) {
       try {
         const result = module.detect(content);
         if (result.match) {
-          // If we have a definitive match, return it immediately
+          console.log(`[REGISTRY] ${module.id} matched with confidence ${result.confidence}, priority ${module.priority}, definitive: ${result.matchedDefinitive}`);
+          
+          // Track definitive matches by priority
           if (result.matchedDefinitive) {
-            return module.id;
+            if (module.priority > bestDefinitivePriority) {
+              bestDefinitiveMatch = module;
+              bestDefinitivePriority = module.priority;
+              console.log(`[REGISTRY] New best definitive match: ${module.id} (priority: ${module.priority})`);
+            }
           }
 
-          // Otherwise, track the best match based on confidence and priority
+          // Track best overall match based on confidence and priority
           if (
             result.confidence > bestConfidence ||
             (result.confidence === bestConfidence &&
@@ -48,6 +60,7 @@ class FormatRegistryImpl implements FormatRegistry {
             bestMatch = module;
             bestConfidence = result.confidence;
             bestPriority = module.priority;
+            console.log(`[REGISTRY] New best match: ${module.id} (confidence: ${result.confidence}, priority: ${module.priority})`);
           }
         }
       } catch (error) {
@@ -58,6 +71,13 @@ class FormatRegistryImpl implements FormatRegistry {
       }
     }
 
+    // If we have definitive matches, use the highest priority one
+    if (bestDefinitiveMatch) {
+      console.log(`[REGISTRY] Final decision (definitive): ${bestDefinitiveMatch.id}`);
+      return bestDefinitiveMatch.id;
+    }
+
+    console.log(`[REGISTRY] Final decision: ${bestMatch ? bestMatch.id : "plaintext"}`);
     return bestMatch ? bestMatch.id : "plaintext";
   }
 

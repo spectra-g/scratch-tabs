@@ -299,7 +299,7 @@ export class CsvTableViewActions {
 
   // Data integrity
   async expectQuotedValuesPreserved() {
-    const quotedValue = this.page.locator('text=High-performance laptop with "quotes"');
+    const quotedValue = this.page.locator('text=HP laptop with "quotes"');
     await expect(quotedValue).toBeVisible();
   }
 
