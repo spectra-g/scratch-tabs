@@ -28,6 +28,8 @@ import { ColumnStatsPopover } from "./ColumnStatsPopover";
 import { CsvToolbar } from "./CsvToolbar";
 import { CsvSnapshotsPanel } from "./CsvSnapshotsPanel";
 import { CsvDiagnosticsFooter } from "./CsvDiagnosticsFooter";
+import { useRootStore } from "../../../../stores/rootStore";
+import { createTab } from "../../../../utils/tabUtils";
 import { EditableCell } from "./EditableCell";
 import { MaskedCell } from "./MaskedCell";
 import { isSensitiveHeader } from "../utils/sensitiveUtils";
@@ -42,6 +44,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
 }) => {
+  const { addBackgroundTab } = useRootStore();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [selectedCell, setSelectedCell] = useState<{
     rowId: string;
@@ -192,42 +195,39 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   }, [duplicateGroups, deleteRows, clearDuplicates]);
 
   // Export functions
-  const downloadFile = useCallback(
-    (content: string, filename: string, mimeType: string) => {
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+  const exportToTab = useCallback(
+    (content: string, filename: string, language: string) => {
+      const tab = createTab({
+        title: filename,
+        content,
+        language,
+      });
+      addBackgroundTab(tab);
     },
-    [],
+    [addBackgroundTab],
   );
 
   const handleExportCsv = useCallback(() => {
     const csvContent = toCsv();
-    downloadFile(csvContent, "export.csv", "text/csv");
-  }, [toCsv, downloadFile]);
+    exportToTab(csvContent, "Export.csv", "csv");
+  }, [toCsv, exportToTab]);
 
   const handleExportJson = useCallback(() => {
     const jsonContent = toJson();
-    downloadFile(jsonContent, "export.json", "application/json");
-  }, [toJson, downloadFile]);
+    exportToTab(jsonContent, "Export.json", "json");
+  }, [toJson, exportToTab]);
 
   const handleExportMarkdown = useCallback(() => {
     const markdownContent = toMarkdown();
-    downloadFile(markdownContent, "export.md", "text/markdown");
-  }, [toMarkdown, downloadFile]);
+    exportToTab(markdownContent, "Export.md", "markdown");
+  }, [toMarkdown, exportToTab]);
 
   const handleExportSql = useCallback(
     (tableName: string) => {
       const sqlContent = toSql(tableName);
-      downloadFile(sqlContent, `${tableName}_inserts.sql`, "text/sql");
+      exportToTab(sqlContent, `${tableName}_inserts.sql`, "sql");
     },
-    [toSql, downloadFile],
+    [toSql, exportToTab],
   );
 
   const columnHelper = createColumnHelper<CsvRow>();

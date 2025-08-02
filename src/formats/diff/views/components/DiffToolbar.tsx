@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GitCompare,
   List,
   EyeOff,
   Eye,
   Copy,
+  Check,
   Search,
   X,
   FileText,
@@ -38,7 +39,22 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
   parsedDiff,
   filteredFiles,
 }) => {
+  const [isCopied, setIsCopied] = useState(false);
   const summary = getDiffSummary(parsedDiff);
+
+  const handleCopyDiff = async () => {
+    await onCopyDiff();
+    setIsCopied(true);
+  };
+
+  useEffect(() => {
+    if (isCopied) {
+      const timer = setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCopied]);
 
   return (
     <div className="flex-none border-b border-gray-700 p-3 bg-gray-800/50">
@@ -112,12 +128,12 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
 
         {/* Copy button */}
         <button
-          onClick={onCopyDiff}
+          onClick={handleCopyDiff}
           className="flex items-center space-x-2 px-3 py-1.5 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded text-sm transition-colors"
           title="Copy filtered diff"
         >
-          <Copy size={14} />
-          <span>Copy Diff</span>
+          {isCopied ? <Check size={14} /> : <Copy size={14} />}
+          <span>{isCopied ? 'Copied!' : 'Copy Diff'}</span>
         </button>
       </div>
 

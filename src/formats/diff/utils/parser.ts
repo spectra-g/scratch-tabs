@@ -141,7 +141,7 @@ export function parseDiff(text: string): ParsedDiff {
     const hunkMatch = line.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$/);
     if (hunkMatch) {
       currentHunkIndex++;
-      const [, origStart, origCount, newStart, newCount, context] = hunkMatch;
+      const [, origStart, origCount, newStart, newCount ] = hunkMatch;
       
       currentFile.hunks.push({
         id: `hunk-${currentFileIndex}-${currentHunkIndex}`,
@@ -180,7 +180,6 @@ export function parseDiff(text: string): ParsedDiff {
       }
 
       // Calculate line numbers
-      const linesBeforeThis = currentHunk.lines.length;
       const contextAndDeletions = currentHunk.lines.filter(l => 
         l.type === 'context' || l.type === 'deletion'
       ).length;

@@ -1,10 +1,13 @@
-import { FormatModule } from "../types";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
 import { DiffFormatDetector } from "../diff";
 import { formatRegistry } from "../registry";
 import { smartViewRegistry } from "../../views/registry";
 import { SmartView } from "../../views/registry";
 import { GitCompare } from "../../components/Icons";
 import { DiffViewer } from "./views/components/DiffViewer";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
 // Create the Diff format module that implements the new interface
 export class DiffFormatModule implements FormatModule {
@@ -57,6 +60,21 @@ export class DiffFormatModule implements FormatModule {
         component: DiffViewer,
         mode: "replaces",
         priority: 1,
+      },
+    ];
+  }
+
+  // New method for status bar items
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'diff-smart-view-button',
+        component: (props: StatusItemProps) => 
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 10,
       },
     ];
   }

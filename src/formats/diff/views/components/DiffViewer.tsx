@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { SmartViewProps } from '../../../../views/registry';
-import { parseDiff, FileDiff, ParsedDiff, reconstructDiff } from '../../utils/parser';
+import { parseDiff, ParsedDiff, reconstructDiff } from '../../utils/parser';
 import { DiffToolbar } from './DiffToolbar';
 import { FileNavigator } from './FileNavigator';
 import { SideBySideDiffView } from './SideBySideDiffView';
@@ -10,9 +10,6 @@ export type ViewMode = 'side-by-side' | 'unified';
 
 export const DiffViewer: React.FC<SmartViewProps> = ({
   content,
-  onContentChange,
-  tabId,
-  isActive,
 }) => {
   // View state
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);

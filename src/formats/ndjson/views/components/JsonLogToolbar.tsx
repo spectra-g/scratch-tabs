@@ -6,8 +6,12 @@ import {
   Download,
   ChevronDown,
   X,
+  FileText,
+  Code,
 } from "lucide-react";
 import { LogFilter, LogColumn, LogStats } from "../types";
+import { useRootStore } from "../../../../stores/rootStore";
+import { createTab } from "../../../../utils/tabUtils";
 
 interface JsonLogToolbarProps {
   filter: LogFilter;
@@ -42,6 +46,7 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
 }) => {
   const [showColumnManager, setShowColumnManager] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const { addBackgroundTab } = useRootStore();
 
   const handleTextSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,20 +79,15 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
   const handleExport = useCallback(
     (format: "json" | "csv" | "ndjson") => {
       const content = onExport(format);
-      const blob = new Blob([content], { 
-        type: format === "json" ? "application/json" : "text/plain" 
+      const tab = createTab({
+        title: `Log Export.${format}`,
+        content,
+        language: format === "json" ? "json" : format === "csv" ? "csv" : "ndjson",
       });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `log-export.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      addBackgroundTab(tab);
       setShowExportMenu(false);
     },
-    [onExport],
+    [onExport, addBackgroundTab],
   );
 
   const visibleColumns = columns.filter(col => col.isVisible);
@@ -242,25 +242,37 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
                   className="fixed inset-0 z-30"
                   onClick={() => setShowExportMenu(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[150px]">
+                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[220px]">
                   <div className="py-1">
                     <button
                       onClick={() => handleExport("ndjson")}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
                     >
-                      NDJSON
+                      <div className="flex items-center space-x-2">
+                        <Code size={16} className="text-yellow-400" />
+                        <span>NDJSON</span>
+                      </div>
+                      <span className="text-xs text-gray-500">log-export.ndjson</span>
                     </button>
                     <button
                       onClick={() => handleExport("json")}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
                     >
-                      JSON Array
+                      <div className="flex items-center space-x-2">
+                        <Code size={16} className="text-blue-400" />
+                        <span>JSON Array</span>
+                      </div>
+                      <span className="text-xs text-gray-500">log-export.json</span>
                     </button>
                     <button
                       onClick={() => handleExport("csv")}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
                     >
-                      CSV
+                      <div className="flex items-center space-x-2">
+                        <FileText size={16} className="text-green-400" />
+                        <span>CSV</span>
+                      </div>
+                      <span className="text-xs text-gray-500">log-export.csv</span>
                     </button>
                   </div>
                 </div>
