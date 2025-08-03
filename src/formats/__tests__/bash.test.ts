@@ -38,6 +38,30 @@ describe("BashFormatDetector", () => {
   });
 
   describe("Detection Logic", () => {
+    test("should detect its own sample content", () => {
+      const sampleContent = detector.sampleContent();
+      const result = detector.detect(sampleContent);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.6);
+    });
+
+    test("should ignore markdown-like content in bash comments", () => {
+      const bashWithMarkdownComments = `#!/bin/bash
+# Header 1: Installation
+# ## Subheader: Prerequisites  
+# - First item
+# - Second item
+# > Note: This is important
+echo "Installing package"
+sudo apt-get install -y package
+# More markdown-like comments
+# 1. Step one
+# 2. Step two
+exit 0`;
+      const result = detector.detect(bashWithMarkdownComments);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThanOrEqual(0.8);
+    });
     test("should detect bash script with shebang", () => {
       const bashScript = `#!/bin/bash
 echo "Hello World"
