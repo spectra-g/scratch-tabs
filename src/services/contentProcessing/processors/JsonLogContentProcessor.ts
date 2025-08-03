@@ -14,12 +14,15 @@ export class JsonLogContentProcessor implements ContentProcessor {
   priority = 95; // High priority, but below main JSON processor
 
   canProcess(content: string, context: ContentProcessingContext): boolean {
-    // Only process pasted content that isn't already detected as ndjson or json
-    if (!context.isFromPaste) {
+    
+    // Only process pasted content or clipboard content (same logic as JsonContentProcessor)
+    const isFromPasteOrClipboard = context.isFromPaste || (context.flags?.isLikelyFromClipboard === true);
+    if (!isFromPasteOrClipboard) {
       return false;
     }
 
-    if (context.detectedLanguage === "ndjson" || context.detectedLanguage === "json") {
+    // Skip if it's already pure JSON (no prefixes to clean)
+    if (context.detectedLanguage === "json") {
       return false;
     }
 
@@ -32,6 +35,7 @@ export class JsonLogContentProcessor implements ContentProcessor {
 
     let linesStartingWithBrace = 0;
     let linesNotStartingWithBrace = 0;
+    let linesWithJsonPrefixes = 0;
 
     for (const line of lines) {
       const trimmed = line.trim();
@@ -39,14 +43,24 @@ export class JsonLogContentProcessor implements ContentProcessor {
         linesStartingWithBrace++;
       } else if (trimmed.length > 0) {
         linesNotStartingWithBrace++;
+        
+        // Check for any prefix before JSON (not just timestamps)
+        if (trimmed.includes("{") && !trimmed.startsWith("{")) {
+          linesWithJsonPrefixes++;
+        }
       }
     }
 
-    // Good heuristic: some lines start with { and some don't (indicating potential prefixes)
-    return linesStartingWithBrace > 0 && linesNotStartingWithBrace > 0;
+    // Process if we have lines with JSON prefixes and it's from clipboard/paste
+    // This handles cases where content has prefixes before JSON objects
+    const shouldProcess = linesWithJsonPrefixes > 0;
+
+    
+    return shouldProcess;
   }
 
   process(content: string, context: ContentProcessingContext): ContentProcessingResult {
+    
     const lines = content.split("\n");
     const processedLines: string[] = [];
     let successfullyProcessedCount = 0;
@@ -101,6 +115,7 @@ export class JsonLogContentProcessor implements ContentProcessor {
 
     // Only return processed content if we successfully processed a significant portion
     const successRatio = successfullyProcessedCount / Math.max(totalNonEmptyLines, 1);
+    
     
     if (successRatio > 0.5 && successfullyProcessedCount > 1) {
       return {
