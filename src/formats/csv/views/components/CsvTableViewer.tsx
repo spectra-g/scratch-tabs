@@ -28,6 +28,8 @@ import { ColumnStatsPopover } from "./ColumnStatsPopover";
 import { CsvToolbar } from "./CsvToolbar";
 import { CsvSnapshotsPanel } from "./CsvSnapshotsPanel";
 import { CsvDiagnosticsFooter } from "./CsvDiagnosticsFooter";
+import { useRootStore } from "../../../../stores/rootStore";
+import { createTab } from "../../../../utils/tabUtils";
 import { EditableCell } from "./EditableCell";
 import { MaskedCell } from "./MaskedCell";
 import { isSensitiveHeader } from "../utils/sensitiveUtils";
@@ -42,6 +44,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
 }) => {
+  const { addBackgroundTab } = useRootStore();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [selectedCell, setSelectedCell] = useState<{
     rowId: string;
@@ -192,42 +195,39 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   }, [duplicateGroups, deleteRows, clearDuplicates]);
 
   // Export functions
-  const downloadFile = useCallback(
-    (content: string, filename: string, mimeType: string) => {
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+  const exportToTab = useCallback(
+    (content: string, filename: string, language: string) => {
+      const tab = createTab({
+        title: filename,
+        content,
+        language,
+      });
+      addBackgroundTab(tab);
     },
-    [],
+    [addBackgroundTab],
   );
 
   const handleExportCsv = useCallback(() => {
     const csvContent = toCsv();
-    downloadFile(csvContent, "export.csv", "text/csv");
-  }, [toCsv, downloadFile]);
+    exportToTab(csvContent, "Export.csv", "csv");
+  }, [toCsv, exportToTab]);
 
   const handleExportJson = useCallback(() => {
     const jsonContent = toJson();
-    downloadFile(jsonContent, "export.json", "application/json");
-  }, [toJson, downloadFile]);
+    exportToTab(jsonContent, "Export.json", "json");
+  }, [toJson, exportToTab]);
 
   const handleExportMarkdown = useCallback(() => {
     const markdownContent = toMarkdown();
-    downloadFile(markdownContent, "export.md", "text/markdown");
-  }, [toMarkdown, downloadFile]);
+    exportToTab(markdownContent, "Export.md", "markdown");
+  }, [toMarkdown, exportToTab]);
 
   const handleExportSql = useCallback(
     (tableName: string) => {
       const sqlContent = toSql(tableName);
-      downloadFile(sqlContent, `${tableName}_inserts.sql`, "text/sql");
+      exportToTab(sqlContent, `${tableName}_inserts.sql`, "sql");
     },
-    [toSql, downloadFile],
+    [toSql, exportToTab],
   );
 
   const columnHelper = createColumnHelper<CsvRow>();
@@ -370,6 +370,9 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
           ),
           cell: ({ row, getValue }) => {
             const isMasked = isColumnMasked(column.id);
+            
+            // Since we need row and column indices for data attributes,
+            // we'll add them as data attributes in the containing div in the virtualized render
 
             if (isMasked) {
               return (
@@ -782,11 +785,37 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                 }}
                 data-testid={isDuplicate ? "duplicate-row-indicator" : "csv-row"}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <div key={cell.id} className="border-r border-gray-700">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </div>
-                ))}
+                {row.getVisibleCells().map((cell, cellIndex) => {
+                  // Determine the actual column index for data cells (excluding row number and actions columns)
+                  let actualColumnIndex = cellIndex - 1; // Exclude row number column
+                  if (cellIndex >= row.getVisibleCells().length - 1) {
+                    // This is the actions column, skip data attributes
+                    return (
+                      <div key={cell.id} className="border-r border-gray-700">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </div>
+                    );
+                  }
+                  if (cellIndex === 0) {
+                    // This is the row number column, skip data attributes
+                    return (
+                      <div key={cell.id} className="border-r border-gray-700">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div 
+                      key={cell.id} 
+                      className="border-r border-gray-700"
+                      data-testid="csv-cell"
+                      data-row={virtualRow.index.toString()}
+                      data-col={actualColumnIndex.toString()}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}

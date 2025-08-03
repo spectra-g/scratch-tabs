@@ -137,6 +137,7 @@ export {
   XCircle,
   
   // Misc
+  Bug,
   Coffee,
   ExternalLink,
   RefreshCw,
@@ -157,6 +158,8 @@ export {
   User,
   Anchor,
   Braces,
+  FileTerminal,
+  GitCompare,
 } from 'lucide-react';
 
 // Export types separately

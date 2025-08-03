@@ -9,7 +9,8 @@ Feature: Welcome Screen Entry Points
     And the "Scratch 1" tab should be active
     And I click the "Welcome to Scratch Tabs" tab
     Then the active editor should contain markdown content
-    And the preview should be visible
+    When I click the Smart View button
+    Then the preview should be visible
     And the URL should contain "welcome"
 
   Scenario: Create new tab from paste icon with clipboard content
@@ -23,7 +24,8 @@ Feature: Welcome Screen Entry Points
       """
     And I click the "Welcome to Scratch Tabs" tab
     Then the active editor should contain markdown content
-    And the preview should be visible
+    When I click the Smart View button
+    Then the preview should be visible
     And the URL should contain "welcome"
 
   Scenario: Create new tablet from tablet icon
@@ -33,7 +35,8 @@ Feature: Welcome Screen Entry Points
     And the "Calculator" tablet should be active
     And I click the "Welcome to Scratch Tabs" tab
     Then the active editor should contain markdown content
-    And the preview should be visible
+    When I click the Smart View button
+    Then the preview should be visible
     And the URL should contain "welcome"
 
   Scenario: Create new tab from double-click on page
@@ -42,7 +45,8 @@ Feature: Welcome Screen Entry Points
     And the "Scratch 1" tab should be active
     And I click the "Welcome to Scratch Tabs" tab
     Then the active editor should contain markdown content
-    And the preview should be visible
+    When I click the Smart View button
+    Then the preview should be visible
     And the URL should contain "welcome"
 
   @wip
@@ -56,7 +60,8 @@ Feature: Welcome Screen Entry Points
       """
     And I click the "Welcome to Scratch Tabs" tab
     Then the active editor should contain markdown content
-    And the preview should be visible
+    When I click the Smart View button
+    Then the preview should be visible
     And the URL should contain "welcome"
 
   Scenario: Create new tablet from "Open specialized tablet" button
@@ -66,7 +71,8 @@ Feature: Welcome Screen Entry Points
     And the "Password Generator" tablet should be active
     And I click the "Welcome to Scratch Tabs" tab
     Then the active editor should contain markdown content
-    And the preview should be visible
+    When I click the Smart View button
+    Then the preview should be visible
     And the URL should contain "welcome"
 
   Scenario: Create new tab from "Import from clipboard" button
@@ -80,7 +86,8 @@ Feature: Welcome Screen Entry Points
       """
     And I click the "Welcome to Scratch Tabs" tab
     Then the active editor should contain markdown content
-    And the preview should be visible
+    When I click the Smart View button
+    Then the preview should be visible
     And the URL should contain "welcome"
 
   @wip
@@ -94,5 +101,6 @@ Feature: Welcome Screen Entry Points
       """
     And I click the "Welcome to Scratch Tabs" tab
     Then the active editor should contain markdown content
-    And the preview should be visible
+    When I click the Smart View button
+    Then the preview should be visible
     And the URL should contain "welcome" 

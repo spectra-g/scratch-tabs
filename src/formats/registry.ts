@@ -29,17 +29,23 @@ class FormatRegistryImpl implements FormatRegistry {
     let bestMatch: FormatModule | null = null;
     let bestConfidence = 0;
     let bestPriority = -1;
+    let bestDefinitiveMatch: FormatModule | null = null;
+    let bestDefinitivePriority = -1;
 
+    // First pass: check all modules and collect results
     for (const module of this.modules) {
       try {
         const result = module.detect(content);
         if (result.match) {
-          // If we have a definitive match, return it immediately
+          // Track definitive matches by priority
           if (result.matchedDefinitive) {
-            return module.id;
+            if (module.priority > bestDefinitivePriority) {
+              bestDefinitiveMatch = module;
+              bestDefinitivePriority = module.priority;
+            }
           }
 
-          // Otherwise, track the best match based on confidence and priority
+          // Track best overall match based on confidence and priority
           if (
             result.confidence > bestConfidence ||
             (result.confidence === bestConfidence &&
@@ -56,6 +62,11 @@ class FormatRegistryImpl implements FormatRegistry {
           error,
         );
       }
+    }
+
+    // If we have definitive matches, use the highest priority one
+    if (bestDefinitiveMatch) {
+      return bestDefinitiveMatch.id;
     }
 
     return bestMatch ? bestMatch.id : "plaintext";

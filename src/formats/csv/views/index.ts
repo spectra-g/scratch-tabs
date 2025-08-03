@@ -1,4 +1,3 @@
-import { Table } from "../../../../components/Icons";
 import { CsvTableViewer } from "./components/CsvTableViewer";
 
 // Note: CSV table viewer is now registered through the CSV format module

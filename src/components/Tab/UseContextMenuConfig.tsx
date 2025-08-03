@@ -392,7 +392,7 @@ Add any other context about the problem here.
     },
     {
       id: "compareFromClipboard",
-      label: "Compare from clipboard",
+      label: "Compare with clipboard",
       icon: ClipboardPaste,
       action: handleCompareFromClipboard,
       condition: canCompareFromClipboard,

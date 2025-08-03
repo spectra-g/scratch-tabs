@@ -1,8 +1,15 @@
-import { FormatModule } from "../types";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
 import { YamlFormatDetector } from "../yaml";
 import { formatRegistry } from "../registry";
+import { smartViewRegistry } from "../../views/registry";
+import { SmartView } from "../../views/registry";
+import { FileText } from "../../components/Icons";
+import { YamlSmartView } from "./views/YamlSmartView";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
-// Create the Yaml format module that implements the new interface
+// Create the YAML format module that implements the new interface
 export class YamlFormatModule implements FormatModule {
   private detector: YamlFormatDetector;
 
@@ -41,11 +48,46 @@ export class YamlFormatModule implements FormatModule {
   getFileExtension(): string {
     return this.detector.getFileExtension();
   }
+
+  // New generic mechanism for smart views
+  getSmartViews(): SmartView[] {
+    return [
+      {
+        id: "yaml-structure-explorer",
+        languageId: "yaml",
+        label: "Structure Explorer",
+        icon: FileText,
+        component: YamlSmartView,
+        mode: "replaces",
+        priority: 1,
+      },
+    ];
+  }
+
+  // New method for status bar items
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'yaml-smart-view-button',
+        component: (props: StatusItemProps) => 
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 10,
+      },
+    ];
+  }
 }
 
 // Create and register the module
 const yamlModule = new YamlFormatModule();
 formatRegistry.register(yamlModule);
+
+// Register the smart view
+yamlModule.getSmartViews()?.forEach(view => {
+  smartViewRegistry.register(view);
+});
 
 // Export for backward compatibility
 export const registerYamlProvider = (monaco: any) => {

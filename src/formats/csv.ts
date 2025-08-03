@@ -90,6 +90,16 @@ export class CsvFormatDetector extends BaseFormatDetector implements FormatModul
 
     // --- 3. Stronger Checks to Prevent False Positives ---
 
+    // Check that not all lines start with the delimiter (prevents markdown tables, etc.)
+    if (chosenDelimiter) {
+      const allLinesStartWithDelimiter = lines.every(line => 
+        line.trim().startsWith(chosenDelimiter)
+      );
+      if (allLinesStartWithDelimiter) {
+        return this.noMatch();
+      }
+    }
+
     // Minimum delimiter requirement: Must have at least 3 delimiters to be considered CSV
     if (!chosenDelimiter || expectedDelimiterCount < 3) {
       return this.noMatch();

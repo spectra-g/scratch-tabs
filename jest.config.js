@@ -39,5 +39,5 @@ export default {
   ],
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
-  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose|react-markdown|remark-gfm)/)"],
+  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose|react-markdown|remark-gfm|yaml)/)"],
 };

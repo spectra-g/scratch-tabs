@@ -34,10 +34,9 @@ export class TabBarActions {
     await expect(activeTab).not.toBeVisible();
   }
 
-  async clickThreeDotsMenu() {
-    // Click the three dots menu (JSON Options button)
-    const threeDots = this.page.locator('button[title="JSON Options"]');
-    await threeDots.click();
+  async clickSmartViewButton() {
+    const button = this.page.locator('[data-testid="table-view-button"]');
+    await button.click();
   }
 
   async clickNewTabFromPaste() {
@@ -84,5 +83,26 @@ export class TabBarActions {
     const button = this.page.locator('button:has-text("Import from clipboard")');
     await expect(button).toBeVisible();
     await button.click();
+  }
+
+  async expectTabRenameInputToAppear() {
+    // Wait for the rename input to appear - it should be an input field that replaces the tab title
+    const renameInput = this.page.locator('input[type="text"]').last();
+    await expect(renameInput).toBeVisible();
+    await expect(renameInput).toBeFocused();
+  }
+
+  async typeInRenameInput(text: string) {
+    // Clear existing content and type new text
+    const renameInput = this.page.locator('input[type="text"]').last();
+    await expect(renameInput).toBeVisible();
+    await renameInput.fill(text);
+  }
+
+  async pressEnterToConfirmRename() {
+    // Press Enter to confirm the rename
+    const renameInput = this.page.locator('input[type="text"]').last();
+    await expect(renameInput).toBeVisible();
+    await renameInput.press('Enter');
   }
 } 

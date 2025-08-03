@@ -20,7 +20,6 @@ import "./html/index";
 import "./java";
 import "./javascript";
 import "./json/index";
-import "./jsonlog";
 import "./kotlin";
 import "./markdown/index";
 import "./php";
@@ -32,10 +31,14 @@ import "./rust";
 import "./scala";
 import "./sql";
 import "./stacktrace";
+import "./stacktrace/index";
+import "./diff/index";
 import "./svg";
 import "./vhost";
 import "./xml";
 import "./yaml";
+import "./yaml/index";
+import "./ndjson/index";
 
 // Export the registry for use in the application
 export { formatRegistry };

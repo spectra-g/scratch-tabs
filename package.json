@@ -62,6 +62,7 @@
     "string-similarity": "^4.0.4",
     "use-undo": "^1.1.1",
     "uuid": "^11.1.0",
+    "yaml": "^2.8.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

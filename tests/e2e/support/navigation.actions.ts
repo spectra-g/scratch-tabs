@@ -89,4 +89,86 @@ export class NavigationActions {
     await this.page.goForward();
     await this.waitForPageStabilization();
   }
+
+  async expectBatchToolsModalToAppear() {
+    // Wait for the batch tools modal to appear by looking for the "Batch Tools" heading
+    await expect(this.page.getByRole('heading', { name: 'Batch Tools' })).toBeVisible();
+  }
+
+  async expectDiffModalToAppear() {
+    // Wait for the diff modal to appear - look for diff view elements
+    await expect(this.page.locator('.monaco-diff-editor')).toBeVisible();
+  }
+
+  async closeDiffModal() {
+    // Close the diff modal by clicking the close button (X)
+    const closeButton = this.page.locator('button[title="Close and Save Changes"]');
+    await expect(closeButton).toBeVisible();
+    await closeButton.click();
+    
+    // Wait for the modal to fully close and split view to stabilize
+    await expect(this.page.locator('.monaco-diff-editor')).toBeHidden();
+    await this.waitForPageStabilization();
+  }
+
+  async expectSplitViewMode() {
+    // Check if we're in split view mode by looking for the right panel
+    await expect(this.page.locator('[data-editor-pane-side="right"]')).toBeVisible();
+    
+    // Debug: List all tabs globally on the page
+    const allTabs = this.page.locator('[data-testid^="tab-"]');
+    const totalTabCount = await allTabs.count();
+    for (let i = 0; i < totalTabCount; i++) {
+      const tabId = await allTabs.nth(i).getAttribute('data-testid');
+      const tabText = await allTabs.nth(i).textContent();
+    }
+  }
+
+  async expectLeftPanelContainsTab(tabTitle: string) {
+    // Check if the left panel contains the specified tab
+    const leftPanel = this.page.locator('[data-editor-pane-side="left"]');
+    await expect(leftPanel).toBeVisible();
+    
+    // Debug: List all tabs in the left panel
+    const allLeftTabs = leftPanel.locator('[data-testid^="tab-"]');
+    const leftTabCount = await allLeftTabs.count();
+    for (let i = 0; i < leftTabCount; i++) {
+      const tabId = await allLeftTabs.nth(i).getAttribute('data-testid');
+    }
+    
+    const tab = leftPanel.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+  }
+
+  async expectRightPanelContainsTab(tabTitle: string) {
+    // Check if the right panel contains the specified tab
+    const rightPanel = this.page.locator('[data-editor-pane-side="right"]');
+    await expect(rightPanel).toBeVisible();
+    
+    // Debug: List all tabs in the right panel
+    const allRightTabs = rightPanel.locator('[data-testid^="tab-"]');
+    const rightTabCount = await allRightTabs.count();
+    for (let i = 0; i < rightTabCount; i++) {
+      const tabId = await allRightTabs.nth(i).getAttribute('data-testid');
+    }
+    
+    const tab = rightPanel.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+  }
+
+  async expectTabContentContains(tabTitle: string, expectedContent: string) {
+    // Click on the tab first to make it active, then check its content
+    await this.page.locator(`[data-testid="tab-${tabTitle}"]`).click();
+    // Wait for editor to be visible and check content
+    const editor = this.page.locator('.monaco-editor');
+    await expect(editor).toBeVisible();
+    const content = await editor.textContent();
+    expect(content).toContain(expectedContent);
+  }
+
+  async expectTabExistsOnPage(tabTitle: string) {
+    // Check if the tab exists anywhere on the page
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+  }
 } 

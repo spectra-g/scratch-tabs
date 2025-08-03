@@ -4,7 +4,6 @@ import React, {
   useMemo,
   useRef,
   useEffect,
-  startTransition,
 } from "react";
 import {
   ChevronRight,

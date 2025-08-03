@@ -5,6 +5,7 @@ import {
   ContentProcessingResult, 
   ContentProcessingContext 
 } from './types';
+import { JsonLogContentProcessor } from "./processors/JsonLogContentProcessor";
 
 /**
  * Main service for content processing that manages the engine and provides
@@ -24,6 +25,7 @@ export class ContentProcessingService {
   private initializeDefaultComponents(): void {
     // Register language detector
     this.engine.registerDetector(new LanguageDetectorAdapter());
+    this.engine.registerProcessor(new JsonLogContentProcessor());
     
     // Register content processors
     this.engine.registerProcessor(new JsonContentProcessor());

@@ -129,8 +129,7 @@ export class BashFormatDetector extends BaseFormatDetector implements FormatModu
 
   sampleContent(): string {
     /* ... same as before ... */
-    return `
-#!/bin/bash
+    return `#!/bin/bash
 # Variable declaration
 greeting="Hello"
 name="User"
@@ -270,13 +269,14 @@ exit 0
       /^(?:--- a\/|\+\+\+ b\/)/m, // Diff
       /^\s*at\s+[\w$./\\()<>-]+:\d+(?::\d+)?/m,
       /(?:Exception|Error|panic|Traceback)(?:[:\s]|$)/i, // Stacktrace
-      /^#{1,6}\s+.+/m,
       /^\s*-\s+\[[ xX]\]\s+.+/m,
       /^\s*>\s*.+/m,
       /!?\[.*?\]\(.*?\)/m, // Markdown structural elements
     ];
+
+    // Check anti-patterns on content WITHOUT comments (more accurate)
     for (const ap of langAntiPatterns) {
-      if (ap.test(content)) {
+      if (ap.test(nonCommentContent)) {
         // console.log(`Shell Detector: Strong anti-pattern matched: ${ap.source}. Not Shell.`);
         return this.noMatch();
       }

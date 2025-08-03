@@ -18,6 +18,10 @@ When('I set clipboard content to "{string}"', async function(content) {
   await this.clipboard.setClipboardContent(content);
 });
 
+When('I set clipboard content to:', async function(content) {
+  await this.clipboard.setClipboardContent(content);
+});
+
 When('I select {string} from the tablet selector', async function(tabletName) {
   await this.tabBar.selectTablet(tabletName);
 });
@@ -151,10 +155,22 @@ When('I select "{string}" from the "{string}" submenu', async function(subItem, 
   await this.contextMenu.selectFromSubmenu(parentItem, subItem);
 });
 
-When('I click the three dots menu', async function() {
-  await this.tabBar.clickThreeDotsMenu();
+When('I click the Smart View button', async function() {
+  await this.tabBar.clickSmartViewButton();
 });
 
 When('I click in the editor', async function() {
   await this.editor.clickInEditor();
+});
+
+When('I type {string} in the rename input', async function(text) {
+  await this.tabBar.typeInRenameInput(text);
+});
+
+When('I press Enter to confirm rename', async function() {
+  await this.tabBar.pressEnterToConfirmRename();
+});
+
+When('I close the diff modal', async function() {
+  await this.navigation.closeDiffModal();
 });

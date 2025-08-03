@@ -393,12 +393,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           />
         </div>
         
-        {/* Divider 1 */}
-        <div className="w-px h-4 bg-gray-600"></div>
+        {/* Divider 1 - only show if Group 2 has content */}
+        {showAIIcon && <div className="w-px h-4 bg-gray-600"></div>}
         
         {/* Group 2: Search and Init AI */}
-        <div className="flex items-center space-x-2">
-          {showAIIcon && (
+        {showAIIcon && (
+          <div className="flex items-center space-x-2">
             <button
               onClick={() => toggleSearch()}
               className="p-0.5 hover:bg-gray-700 rounded transition-colors"
@@ -406,28 +406,26 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             >
               <Search size={14} />
             </button>
-          )}
-          {showAIIcon && <AIStatusIcon />}
-        </div>
+            <AIStatusIcon />
+          </div>
+        )}
         
-        {/* Divider 2 */}
-        <div className="w-px h-4 bg-gray-600"></div>
+        {/* Divider 2 - show if Group 2 OR Group 3 has content */}
+        {(showAIIcon || !isMobile) && <div className="w-px h-4 bg-gray-600"></div>}
         
         {/* Group 3: Macro controls (Record, Stop, Play, Play to End) + Status */}
         {!isMobile && (
-          <>
-            <div className="flex items-center">
-              <Macro editor={editor} />
-            </div>
-            
-            {/* Divider 3 */}
-            <div className="w-px h-4 bg-gray-600"></div>
-          </>
+          <div className="flex items-center">
+            <Macro editor={editor} />
+          </div>
         )}
         
+        {/* Divider 3 - only show if both Macro and Group 4 are visible */}
+        {!isMobile && showAIIcon && <div className="w-px h-4 bg-gray-600"></div>}
+        
         {/* Group 4: Support */}
-        <div className="flex items-center">
-          {showAIIcon && (
+        {showAIIcon && (
+          <div className="flex items-center">
             <button
               onClick={() =>
                 window.open("https://ko-fi.com/scratchtabs", "_blank")
@@ -437,8 +435,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             >
               <Coffee size={14} />
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

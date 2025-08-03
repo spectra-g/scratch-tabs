@@ -14,6 +14,9 @@ interface MaskedCellProps {
   onChange: (value: string) => void;
   onEditingChange: (isEditing: boolean) => void;
   onToggleMask: () => void;
+  'data-testid'?: string;
+  'data-row'?: string;
+  'data-col'?: string;
 }
 
 export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
@@ -29,6 +32,9 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
     onChange,
     onEditingChange,
     onToggleMask,
+    'data-testid': dataTestId,
+    'data-row': dataRow,
+    'data-col': dataCol,
   }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
@@ -160,6 +166,9 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         title={error || "Click to select. Click pencil or press enter to edit"}
+        data-testid={dataTestId}
+        data-row={dataRow}
+        data-col={dataCol}
       >
         <span
           className={`text-sm truncate flex-1 mr-2 select-none transition duration-150 ${shouldShowMasked ? "blur-[3px] hover:blur-none" : "text-gray-200"}`}
