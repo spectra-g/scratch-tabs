@@ -220,6 +220,13 @@ That's all for this sample!`;
         maxMatches: 3,
       },
       {
+        pattern: /^\s*\|\s*[-:]+\s*(\|\s*[-:]+\s*)*\|/gm,
+        weight: 0.4,
+        perMatch: 0.1,
+        specific: true,
+        maxMatches: 1,
+      },
+      {
         pattern: /^\s*>\s+.*/gm,
         weight: 0.2,
         perMatch: 0.03,

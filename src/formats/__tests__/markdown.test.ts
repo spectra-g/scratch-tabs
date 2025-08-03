@@ -110,6 +110,17 @@ console.log('hello');
       expect(result.confidence).toBeGreaterThan(0.6);
     });
 
+    test("should detect standalone markdown table", () => {
+      const markdownTable = `| ID | First Name | Last Name | Email |
+| --- | --- | --- | --- |
+| 1 | John | Doe | john.doe@example.com |
+| 2 | Jane | Smith | jane.smith@example.com |
+| 3 | Michael | Johnson | michael.j@example.com |`;
+      const result = detector.detect(markdownTable);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.5);
+    });
+
     test("should reject empty or very short content", () => {
       expect(detector.detect("").match).toBe(false);
       expect(detector.detect(" \n ").match).toBe(false);

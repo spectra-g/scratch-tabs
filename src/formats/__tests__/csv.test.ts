@@ -138,6 +138,16 @@ This is a summary of the data.`;
       expect(result.match).toBe(false);
     });
 
+    test("should reject markdown table without surrounding text", () => {
+      const markdownTable = `| ID | First Name | Last Name | Email |
+| --- | --- | --- | --- |
+| 1 | John | Doe | john.doe@example.com |
+| 2 | Jane | Smith | jane.smith@example.com |
+| 3 | Michael | Johnson | michael.j@example.com |`;
+      const result = detector.detect(markdownTable);
+      expect(result.match).toBe(false);
+    });
+
     test("should handle empty or very short content", () => {
       expect(detector.detect("").match).toBe(false);
       expect(detector.detect("   ").match).toBe(false);
