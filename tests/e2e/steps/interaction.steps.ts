@@ -162,3 +162,15 @@ When('I click the Smart View button', async function() {
 When('I click in the editor', async function() {
   await this.editor.clickInEditor();
 });
+
+When('I type {string} in the rename input', async function(text) {
+  await this.tabBar.typeInRenameInput(text);
+});
+
+When('I press Enter to confirm rename', async function() {
+  await this.tabBar.pressEnterToConfirmRename();
+});
+
+When('I close the diff modal', async function() {
+  await this.navigation.closeDiffModal();
+});

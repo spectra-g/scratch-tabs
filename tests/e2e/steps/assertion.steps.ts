@@ -86,4 +86,56 @@ Then('the editor content should not be on a single line', async function() {
 
 Then('each line should be valid JSON', async function() {
   await this.editor.expectEachLineIsValidJson();
-}); 
+});
+
+Then('the batch tools modal should appear', async function() {
+  await this.navigation.expectBatchToolsModalToAppear();
+});
+
+Then('the tab rename input should appear', async function() {
+  await this.tabBar.expectTabRenameInputToAppear();
+});
+
+Then('the editor should be empty', async function() {
+  await this.editor.expectEditorToBeEmpty();
+});
+
+Then('the "{string}" submenu should appear', async function(submenuName) {
+  await this.contextMenu.expectSubmenuToAppear(submenuName);
+});
+
+Then('the diff modal should appear', async function() {
+  await this.navigation.expectDiffModalToAppear();
+});
+
+Then('I should be in split view mode', async function() {
+  await this.navigation.expectSplitViewMode();
+});
+
+Then('the left panel should contain the "{string}" tab', async function(tabTitle) {
+  await this.navigation.expectLeftPanelContainsTab(tabTitle);
+});
+Then('the left panel should contain the {string} tab', async function(tabTitle) {
+  await this.navigation.expectLeftPanelContainsTab(tabTitle);
+});
+
+Then('the right panel should contain the "{string}" tab', async function(tabTitle) {
+  await this.navigation.expectRightPanelContainsTab(tabTitle);
+});
+Then('the right panel should contain the {string} tab', async function(tabTitle) {
+  await this.navigation.expectRightPanelContainsTab(tabTitle);
+});
+
+Then('the "{string}" tab content should contain "{string}"', async function(tabTitle, expectedContent) {
+  await this.navigation.expectTabContentContains(tabTitle, expectedContent);
+});
+Then('the {string} tab content should contain {string}', async function(tabTitle, expectedContent) {
+  await this.navigation.expectTabContentContains(tabTitle, expectedContent);
+});
+
+Then('the "{string}" tab should exist on the page', async function(tabTitle) {
+  await this.navigation.expectTabExistsOnPage(tabTitle);
+});
+Then('the {string} tab should exist on the page', async function(tabTitle) {
+  await this.navigation.expectTabExistsOnPage(tabTitle);
+});

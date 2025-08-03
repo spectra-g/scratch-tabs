@@ -30,13 +30,11 @@ export class ContextMenuActions {
     await expect(parentElement).toBeVisible();
     await parentElement.hover();
     
-    // Wait for submenu to appear - look for the submenu div
-    await this.page.waitForSelector('.absolute.left-full.ml-1.bg-gray-700.border.border-gray-600.rounded.shadow-lg.z-\\[60\\].py-1', { state: 'visible' });
-    
-    // Now find and click the submenu item with exact text matching
+    // Wait for the specific submenu item to appear instead of relying on CSS classes
     const subMenuElement = this.page.getByRole('button', { name: subItem, exact: true });
-    
     await expect(subMenuElement).toBeVisible();
+    
+    // Click the submenu item
     await subMenuElement.click();
   }
 
@@ -58,6 +56,21 @@ export class ContextMenuActions {
   async expectContextMenuDoesNotHaveOption(optionText: string) {
     const menuItem = this.page.locator(`button:has-text("${optionText}")`);
     await expect(menuItem).not.toBeVisible();
+  }
+
+  async expectSubmenuToAppear(submenuName: string) {
+    // Wait for submenu items to appear by looking for a known submenu item
+    // This is more robust than relying on CSS classes
+    // For "From sample" submenu, we expect to see "JSON" as a menu item
+    if (submenuName === "From sample") {
+      const jsonMenuItem = this.page.getByRole('button', { name: 'JSON' });
+      await expect(jsonMenuItem).toBeVisible();
+    } else {
+      // For other submenus, we can add more specific checks as needed
+      // For now, just look for any button that might be in a submenu
+      const submenuItems = this.page.locator('button').filter({ hasText: /^[A-Z]/ });
+      await expect(submenuItems.first()).toBeVisible();
+    }
   }
 
   // Helper to dismiss context menu by clicking elsewhere

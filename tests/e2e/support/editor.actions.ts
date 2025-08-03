@@ -249,6 +249,15 @@ async getMonacoEditorContent(): Promise<string> {
     }
   }
 
+  async expectEditorToBeEmpty() {
+    const content = await this.getMonacoEditorContent();
+    const trimmedContent = content.trim();
+    
+    if (trimmedContent !== '') {
+      throw new Error(`Expected editor to be empty, but got: "${trimmedContent}"`);
+    }
+  }
+
   async expectPreviewIsVisible() {
     const previewPane = this.page.locator('[data-testid="preview-pane"]');
     await expect(previewPane).toBeVisible();
