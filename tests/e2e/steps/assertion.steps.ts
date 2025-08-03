@@ -82,4 +82,8 @@ Then('the editor content should be on a single line', async function() {
 
 Then('the editor content should not be on a single line', async function() {
   await this.editor.expectContentIsNotSingleLine();
+});
+
+Then('each line should be valid JSON', async function() {
+  await this.editor.expectEachLineIsValidJson();
 }); 

@@ -161,12 +161,91 @@ async getMonacoEditorContent(): Promise<string> {
     }
   }
 
+  private async waitForMultiLineContent() {
+    await this.page.waitForFunction(() => {
+      const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
+      if (editor && (window as any).monaco) {
+        const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) =>
+          e.getDomNode() === editor
+        );
+        if (editorInstance) {
+          const value = editorInstance.getValue();
+          const lines = value.split('\n').filter((line: string) => line.trim() !== '');
+          return lines.length >= 2;
+        }
+      }
+
+      const textarea = document.querySelector('[data-editor-pane-side="left"] .monaco-editor textarea') as HTMLTextAreaElement;
+      if (textarea) {
+        const lines = textarea.value.split('\n').filter((line: string) => line.trim() !== '');
+        return lines.length >= 2;
+      }
+      return false;
+    });
+  }
+
   async expectContentIsNotSingleLine() {
+    await this.waitForMultiLineContent();
+    
     const content = await this.getMonacoEditorContent();
     const lines = content.split('\n').filter(line => line.trim() !== '');
     
     if (lines.length === 1) {
       throw new Error(`Expected multi-line content, but got only 1 line. Content: "${content}"`);
+    }
+  }
+
+  private async waitForLineToStartWith(lineNumber: number, prefix: string) {
+    await this.page.waitForFunction((args) => {
+      const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
+      if (editor && (window as any).monaco) {
+        const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) =>
+          e.getDomNode() === editor
+        );
+        if (editorInstance) {
+          const value = editorInstance.getValue();
+          const lines = value.split('\n');
+          return lines.length > args.lineNumber - 1 && 
+                 lines[args.lineNumber - 1].trim().startsWith(args.prefix);
+        }
+      }
+
+      const textarea = document.querySelector('[data-editor-pane-side="left"] .monaco-editor textarea') as HTMLTextAreaElement;
+      if (textarea) {
+        const lines = textarea.value.split('\n');
+        return lines.length > args.lineNumber - 1 && 
+               lines[args.lineNumber - 1].trim().startsWith(args.prefix);
+      }
+      return false;
+    }, { lineNumber, prefix });
+  }
+
+  private async getAllLines(): Promise<string[]> {
+    const content = await this.getMonacoEditorContent();
+    return content.split('\n').filter(line => line.trim() !== '');
+  }
+
+  private isValidJson(contentLine: string): boolean {
+    const line = contentLine.trim();
+    if (!line) return true;
+    try {
+      JSON.parse(line);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectEachLineIsValidJson() {
+    await this.waitForLineToStartWith(1, '{');
+    
+    const lines = await this.getAllLines();
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!this.isValidJson(line)) {
+        throw new Error(`Line ${i + 1} is not valid JSON: "${line}"`);
+      }
     }
   }
 

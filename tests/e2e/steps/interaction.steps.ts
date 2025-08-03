@@ -18,6 +18,10 @@ When('I set clipboard content to "{string}"', async function(content) {
   await this.clipboard.setClipboardContent(content);
 });
 
+When('I set clipboard content to:', async function(content) {
+  await this.clipboard.setClipboardContent(content);
+});
+
 When('I select {string} from the tablet selector', async function(tabletName) {
   await this.tabBar.selectTablet(tabletName);
 });
