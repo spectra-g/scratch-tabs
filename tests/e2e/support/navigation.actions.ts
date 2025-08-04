@@ -171,4 +171,82 @@ export class NavigationActions {
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).toBeVisible();
   }
+
+  async expectTabActiveOnLeftSide(tabTitle: string) {
+    // Check if the specified tab is active in the left panel
+    const leftPanel = this.page.locator('[data-editor-pane-side="left"]');
+    await expect(leftPanel).toBeVisible();
+    
+    // First check if the tab exists in the left panel
+    const tab = leftPanel.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+    
+    // Then check if it's active
+    const activeTab = leftPanel.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
+    await expect(activeTab).toBeVisible();
+  }
+
+  async expectTabExistsOnRightSide(tabTitle: string) {
+    // Check if the specified tab exists in the right panel
+    const rightPanel = this.page.locator('[data-editor-pane-side="right"]');
+    await expect(rightPanel).toBeVisible();
+    
+    const tab = rightPanel.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+  }
+
+  async expectDiffModalComparison(tab1: string, tab2: string) {
+    // Verify the diff modal is comparing the correct tabs
+    const diffModal = this.page.locator('[data-testid="diff-modal"]');
+    await expect(diffModal).toBeVisible();
+    
+    // Check for the h2 element with the title attribute that shows which tabs are being compared
+    const comparisonTitle = diffModal.locator(`h2[title="${tab1} ↔ ${tab2}"]`);
+    await expect(comparisonTitle).toBeVisible();
+    
+    // Also verify the Monaco diff editor is present and functional
+    const diffContainer = this.page.locator('.monaco-diff-editor');
+    await expect(diffContainer).toBeVisible();
+  }
+
+  async expectDiffModalLeftSideContains(content: string) {
+    // Check that the left side of the diff modal contains the specified content
+    const diffContainer = this.page.locator('[data-testid="diff-editor-container"]');
+    await expect(diffContainer).toBeVisible();
+    
+    // Monaco diff editor renders the original (left) content first
+    // Use a more reliable selector for the left side
+    const leftSideEditor = diffContainer.locator('.editor.original, .monaco-editor').first();
+    await expect(leftSideEditor).toBeVisible();
+    
+    const leftContent = await leftSideEditor.textContent();
+    expect(leftContent).toContain(content);
+  }
+
+  async expectDiffModalRightSideContains(content: string) {
+    // Check that the right side of the diff modal contains the specified content
+    const diffContainer = this.page.locator('[data-testid="diff-editor-container"]');
+    await expect(diffContainer).toBeVisible();
+    
+    // Monaco diff editor renders the modified (right) content second
+    // Use a more reliable selector for the right side
+    const rightSideEditor = diffContainer.locator('.editor.modified, .monaco-editor').last();
+    await expect(rightSideEditor).toBeVisible();
+    
+    const rightContent = await rightSideEditor.textContent();
+    expect(rightContent).toContain(content);
+  }
+
+  async expectDiffModalContains(content: string) {
+    // Check that the diff modal contains the specified content anywhere
+    const diffContainer = this.page.locator('.monaco-diff-editor');
+    await expect(diffContainer).toBeVisible();
+    
+    const allContent = await diffContainer.textContent();
+    // Remove line numbers and normalize whitespace for comparison
+    const normalizedContent = allContent?.replace(/^\d+/gm, '').replace(/\s+/g, ' ').trim();
+    const normalizedExpected = content.replace(/\s+/g, ' ').trim();
+    
+    expect(normalizedContent).toContain(normalizedExpected);
+  }
 } 

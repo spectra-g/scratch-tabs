@@ -174,3 +174,10 @@ When('I press Enter to confirm rename', async function() {
 When('I close the diff modal', async function() {
   await this.navigation.closeDiffModal();
 });
+
+When('I click the {string} tab on the right side', async function(tabTitle) {
+  await this.tabBar.clickTabOnRightSide(tabTitle);
+});
+When('I click the "{string}" tab on the right side', async function(tabTitle) {
+  await this.tabBar.clickTabOnRightSide(tabTitle);
+});

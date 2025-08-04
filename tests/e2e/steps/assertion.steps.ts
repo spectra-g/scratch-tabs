@@ -139,3 +139,45 @@ Then('the "{string}" tab should exist on the page', async function(tabTitle) {
 Then('the {string} tab should exist on the page', async function(tabTitle) {
   await this.navigation.expectTabExistsOnPage(tabTitle);
 });
+
+Then('the {string} tab should be active on the left side', async function(tabTitle) {
+  await this.navigation.expectTabActiveOnLeftSide(tabTitle);
+});
+Then('the "{string}" tab should be active on the left side', async function(tabTitle) {
+  await this.navigation.expectTabActiveOnLeftSide(tabTitle);
+});
+
+Then('the {string} tab should exist on the right side', async function(tabTitle) {
+  await this.navigation.expectTabExistsOnRightSide(tabTitle);
+});
+Then('the "{string}" tab should exist on the right side', async function(tabTitle) {
+  await this.navigation.expectTabExistsOnRightSide(tabTitle);
+});
+
+Then('the diff modal should show comparison between {string} and {string}', async function(tab1, tab2) {
+  await this.navigation.expectDiffModalComparison(tab1, tab2);
+});
+Then('the diff modal should show comparison between "{string}" and "{string}"', async function(tab1, tab2) {
+  await this.navigation.expectDiffModalComparison(tab1, tab2);
+});
+
+Then('the diff modal left side should contain {string}', async function(content) {
+  await this.navigation.expectDiffModalLeftSideContains(content);
+});
+Then('the diff modal left side should contain "{string}"', async function(content) {
+  await this.navigation.expectDiffModalLeftSideContains(content);
+});
+
+Then('the diff modal right side should contain {string}', async function(content) {
+  await this.navigation.expectDiffModalRightSideContains(content);
+});
+Then('the diff modal right side should contain "{string}"', async function(content) {
+  await this.navigation.expectDiffModalRightSideContains(content);
+});
+
+Then('the diff modal should contain {string}', async function(content) {
+  await this.navigation.expectDiffModalContains(content);
+});
+Then('the diff modal should contain "{string}"', async function(content) {
+  await this.navigation.expectDiffModalContains(content);
+});

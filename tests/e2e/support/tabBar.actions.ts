@@ -105,4 +105,14 @@ export class TabBarActions {
     await expect(renameInput).toBeVisible();
     await renameInput.press('Enter');
   }
+
+  async clickTabOnRightSide(tabTitle: string) {
+    // Click on a tab specifically in the right panel
+    const rightPanel = this.page.locator('[data-editor-pane-side="right"]');
+    await expect(rightPanel).toBeVisible();
+    
+    const tab = rightPanel.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+    await tab.click();
+  }
 } 

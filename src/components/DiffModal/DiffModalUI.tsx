@@ -27,7 +27,10 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
   } = engine;
 
   return (
-    <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden w-full max-w-7xl h-full max-h-[90vh] mx-4">
+    <div 
+      className="bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden w-full max-w-7xl h-full max-h-[90vh] mx-4"
+      data-testid="diff-modal"
+    >
       {/* Header */}
       <div className="flex items-center justify-between bg-gray-700 px-4 py-2 border-b border-gray-600 flex-wrap">
         <h2
@@ -91,7 +94,11 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
       )}
 
       {/* Editor Area */}
-      <div ref={editorContainerRef} className="flex-1 overflow-hidden">
+      <div 
+        ref={editorContainerRef} 
+        className="flex-1 overflow-hidden"
+        data-testid="diff-editor-container"
+      >
         {/* Monaco Editor renders here */}
       </div>
     </div>

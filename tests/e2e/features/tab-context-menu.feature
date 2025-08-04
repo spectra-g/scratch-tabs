@@ -66,3 +66,39 @@ Feature: Tab context menu
     When I close the diff modal
     Then I should be in split view mode
     And the "Clipboard Compare" tab should exist on the page
+
+  Scenario: Split tab using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Content for Scratch 1 tab" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Content for Scratch 2 tab" into the editor
+    When I click the "Scratch 2" tab
+    Then the "Scratch 2" tab should be active
+    When I click the "Scratch 1" tab
+    Then the "Scratch 1" tab should be active
+    When I right-click the "Scratch 1" tab
+    And I select "Split" from the context menu
+    Then I should be in split view mode
+
+  Scenario: Compare with previous tab using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Original content in first tab" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Modified content in second tab" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I type "Different content in third tab" into the editor
+    When I click the "Scratch 1" tab
+    Then the "Scratch 1" tab should be active
+    When I click the "Scratch 2" tab
+    Then the "Scratch 2" tab should be active
+    When I right-click the "Scratch 2" tab
+    And I select "Compare with previous tab" from the context menu
+    Then the diff modal should appear
+    And the diff modal should show comparison between "Scratch 2" and "Scratch 1"
+    And the diff modal should contain "Original content in first tab"
+    And the diff modal should contain "Modified content in second tab"
