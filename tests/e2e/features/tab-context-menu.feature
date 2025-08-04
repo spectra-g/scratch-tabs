@@ -100,5 +100,37 @@ Feature: Tab context menu
     And I select "Compare with previous tab" from the context menu
     Then the diff modal should appear
     And the diff modal should show comparison between "Scratch 2" and "Scratch 1"
-    And the diff modal should contain "Original content in first tab"
-    And the diff modal should contain "Modified content in second tab"
+    And the diff modal left side should contain "Modified content in second tab"
+    And the diff modal right side should contain "Original content in first tab"
+
+  Scenario: Compare with other side in split view
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Left side first tab content" into the left editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Left side second tab content" into the left editor
+    When I right-click the "Scratch 2" tab
+    And I select "Split" from the context menu
+    Then I should be in split view mode
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 3" tab should be active
+    When I type "Right side first tab content" into the right editor
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 4" tab should be active
+    When I type "Right side second tab content" into the right editor
+    When I right-click the "Scratch 1" tab
+    And I select "Compare with other side" from the context menu
+    Then the diff modal should appear
+    And the diff modal should show comparison between "Scratch 1" and "Scratch 4"
+    And the diff modal left side should contain "Left side first tab content"
+    And the diff modal right side should contain "Right side second tab content"
+    When I close the diff modal
+    When I click the "Scratch 3" tab on the right side
+    Then the "Scratch 3" tab should be active
+    When I right-click the "Scratch 3" tab
+    And I select "Compare with other side" from the context menu
+    Then the diff modal should appear
+    And the diff modal should show comparison between "Scratch 1" and "Scratch 3"
+    And the diff modal left side should contain "Left side first tab content"
+    And the diff modal right side should contain "Right side first tab content"

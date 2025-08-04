@@ -162,22 +162,22 @@ Then('the diff modal should show comparison between "{string}" and "{string}"', 
 });
 
 Then('the diff modal left side should contain {string}', async function(content) {
-  await this.navigation.expectDiffModalLeftSideContains(content);
+  await this.navigation.expectDiffModalContains(content, 'left');
 });
 Then('the diff modal left side should contain "{string}"', async function(content) {
-  await this.navigation.expectDiffModalLeftSideContains(content);
+  await this.navigation.expectDiffModalContains(content, 'left');
 });
 
 Then('the diff modal right side should contain {string}', async function(content) {
-  await this.navigation.expectDiffModalRightSideContains(content);
+  await this.navigation.expectDiffModalContains(content, 'right');
 });
 Then('the diff modal right side should contain "{string}"', async function(content) {
-  await this.navigation.expectDiffModalRightSideContains(content);
+  await this.navigation.expectDiffModalContains(content, 'right');
 });
 
 Then('the diff modal should contain {string}', async function(content) {
-  await this.navigation.expectDiffModalContains(content);
+  await this.navigation.expectDiffModalContains(content, 'left');
 });
 Then('the diff modal should contain "{string}"', async function(content) {
-  await this.navigation.expectDiffModalContains(content);
+  await this.navigation.expectDiffModalContains(content, 'left');
 });

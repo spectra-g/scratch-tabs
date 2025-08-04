@@ -20,7 +20,7 @@ export class NavigationActions {
     await this.page.getByRole('link', { name: linkText, exact: true }).click();
   }
 
-  async clickIcon(iconName: string) {
+  async clickIcon(iconName: string, side: 'left' | 'right' = 'left') {
     // Map human-readable names to test IDs
     const iconTestIdMap: { [key: string]: string } = {
       'New tab': 'icon-new-tab',
@@ -29,7 +29,19 @@ export class NavigationActions {
     };
     
     const testId = iconTestIdMap[iconName] || `icon-${iconName.toLowerCase().replace(/\s+/g, '-')}`;
-    const locator = this.page.locator(`[data-testid="${testId}"]`);
+    
+    // Check if we're in split view mode
+    const splitViewExists = await this.page.locator('[data-editor-pane-side="right"]').isVisible();
+    
+    let locator;
+    if (splitViewExists) {
+      // In split view, use the specified side
+      locator = this.page.locator(`[data-testid="${testId}"][data-side="${side}"]`);
+    } else {
+      // Not in split view, use simple selector
+      locator = this.page.locator(`[data-testid="${testId}"]`);
+    }
+    
     await expect(locator).toBeVisible();
     await locator.click();
   }
@@ -237,16 +249,24 @@ export class NavigationActions {
     expect(rightContent).toContain(content);
   }
 
-  async expectDiffModalContains(content: string) {
-    // Check that the diff modal contains the specified content anywhere
-    const diffContainer = this.page.locator('.monaco-diff-editor');
-    await expect(diffContainer).toBeVisible();
+  async expectDiffModalContains(content: string, side: 'left' | 'right') {
+    // Check that the diff modal contains the specified content on the specified side
+    const editorSelector = side === 'left' ? '.editor.original' : '.editor.modified';
+    const editor = this.page.locator(editorSelector);
+    await expect(editor).toBeVisible();
     
-    const allContent = await diffContainer.textContent();
-    // Remove line numbers and normalize whitespace for comparison
-    const normalizedContent = allContent?.replace(/^\d+/gm, '').replace(/\s+/g, ' ').trim();
-    const normalizedExpected = content.replace(/\s+/g, ' ').trim();
+    const actualContent = await editor.innerText();
+    // Remove line numbers (first line starting with digits) and normalize whitespace
+    const contentWithoutLineNumbers = actualContent
+      .replace(/^\d+\n/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
     
-    expect(normalizedContent).toContain(normalizedExpected);
+    const normalizedExpected = content
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    console.log(`Comparing: expected="${normalizedExpected}" actual="${contentWithoutLineNumbers}"`);
+    expect(contentWithoutLineNumbers).toContain(normalizedExpected);
   }
 } 

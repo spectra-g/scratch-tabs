@@ -11,6 +11,13 @@ When('I click the icon for "{string}"', async function(iconTestId) {
   await this.navigation.clickIcon(iconTestId);
 });
 
+When('I click the icon for {string} on the {string} side', async function(iconTestId, side) {
+  await this.navigation.clickIcon(iconTestId, side);
+});
+When('I click the icon for "{string}" on the "{string}" side', async function(iconTestId, side) {
+  await this.navigation.clickIcon(iconTestId, side);
+});
+
 When('I set clipboard content to {string}', async function(content) {
   await this.clipboard.setClipboardContent(content);
 });
@@ -180,4 +187,20 @@ When('I click the {string} tab on the right side', async function(tabTitle) {
 });
 When('I click the "{string}" tab on the right side', async function(tabTitle) {
   await this.tabBar.clickTabOnRightSide(tabTitle);
+});
+
+When('I type {string} into the left editor', async function(text) {
+  await this.editor.typeText(text, 'left');
+});
+
+When('I type "{string}" into the left editor', async function(text) {
+  await this.editor.typeText(text, 'left');
+});
+
+When('I type {string} into the right editor', async function(text) {
+  await this.editor.typeText(text, 'right');
+});
+
+When('I type "{string}" into the right editor', async function(text) {
+  await this.editor.typeText(text, 'right');
 });

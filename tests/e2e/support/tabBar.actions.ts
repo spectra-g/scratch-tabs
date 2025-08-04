@@ -107,11 +107,9 @@ export class TabBarActions {
   }
 
   async clickTabOnRightSide(tabTitle: string) {
-    // Click on a tab specifically in the right panel
-    const rightPanel = this.page.locator('[data-editor-pane-side="right"]');
-    await expect(rightPanel).toBeVisible();
-    
-    const tab = rightPanel.locator(`[data-testid="tab-${tabTitle}"]`);
+    // In split view, tabs are shared across both sides, so we can click any tab by its title
+    // The "right side" aspect refers to which editor pane becomes active, not tab location
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).toBeVisible();
     await tab.click();
   }

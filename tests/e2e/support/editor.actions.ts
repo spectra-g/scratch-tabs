@@ -3,11 +3,17 @@ import { Page, expect } from '@playwright/test';
 export class EditorActions {
   constructor(private page: Page) {}
 
-  private getActiveEditorLocator() {
+  private getActiveEditorLocator(side?: 'left' | 'right') {
+    if (side) {
+      return this.page.locator(`[data-editor-pane-side="${side}"] .monaco-editor textarea`);
+    }
     return this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
   }
 
-  private getEditorContainerLocator() {
+  private getEditorContainerLocator(side?: 'left' | 'right') {
+    if (side) {
+      return this.page.locator(`[data-editor-pane-side="${side}"] .monaco-editor`);
+    }
     return this.page.locator('[data-editor-pane-side="left"] .monaco-editor');
   }
 
@@ -36,8 +42,8 @@ export class EditorActions {
     await editorLocator.focus();
   }
 
-  async typeText(text: string) {
-    const editorLocator = this.getActiveEditorLocator();
+  async typeText(text: string, side?: 'left' | 'right') {
+    const editorLocator = this.getActiveEditorLocator(side);
     await editorLocator.focus();
     await editorLocator.type(text);
   }
@@ -289,5 +295,23 @@ async getMonacoEditorContent(): Promise<string> {
     if (actualLine !== expectedLine) {
       throw new Error(`Expected cursor at line ${expectedLine}, but found at line ${actualLine}`);
     }
+  }
+
+  async waitForEditorFocus(side: 'left' | 'right') {
+    // Wait for the editor on the specified side to be focused and ready for input
+    const editorLocator = this.getActiveEditorLocator(side);
+    await expect(editorLocator).toBeVisible();
+    await editorLocator.focus();
+    
+    // Wait for Monaco editor to show focus by looking for the "view-overlays focused" class
+    await this.page.waitForFunction((sideParam) => {
+      const editorPane = document.querySelector(`[data-editor-pane-side="${sideParam}"]`);
+      if (!editorPane) return false;
+
+      console.log('checking for focus');
+      const focusedOverlay = editorPane.querySelector('.view-overlays.focused');
+      console.log('found focus: ' + focusedOverlay);
+      return focusedOverlay !== null;
+    }, side);
   }
 } 
