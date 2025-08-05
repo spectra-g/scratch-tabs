@@ -134,3 +134,33 @@ Feature: Tab context menu
     And the diff modal should show comparison between "Scratch 1" and "Scratch 3"
     And the diff modal left side should contain "Left side first tab content"
     And the diff modal right side should contain "Right side first tab content"
+
+    @please-fix2
+  Scenario: Group tabs by type using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I right-click the "Scratch 1" tab
+    And I select "From sample" from the context menu
+    When I select "JSON" from the "From sample" submenu
+    Then the status bar language should be "JSON"
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I right-click the "Scratch 2" tab
+    And I select "From sample" from the context menu
+    When I select "CSV / TSV" from the "From sample" submenu
+    Then the status bar language should be "CSV / TSV"
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I right-click the "Scratch 3" tab
+    And I select "From sample" from the context menu
+    When I select "JSON" from the "From sample" submenu
+    Then the status bar language should be "JSON"
+    When I click the icon for "New tab"
+    Then the "Scratch 4" tab should be active
+    When I right-click the "Scratch 4" tab
+    And I select "From sample" from the context menu
+    When I select "CSV / TSV" from the "From sample" submenu
+    Then the status bar language should be "CSV / TSV"
+    When I right-click the "Scratch 1" tab
+    And I select "Group tabs by type" from the context menu
+    Then the tabs should be ordered as "Welcome to Scratch Tabs, Scratch 1, Scratch 3, Scratch 2, Scratch 4"

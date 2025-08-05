@@ -181,3 +181,10 @@ Then('the diff modal should contain {string}', async function(content) {
 Then('the diff modal should contain "{string}"', async function(content) {
   await this.navigation.expectDiffModalContains(content, 'left');
 });
+
+Then('the tabs should be ordered as {string}', async function(expectedOrder) {
+  await this.tabBar.expectTabsInOrder(expectedOrder);
+});
+Then('the tabs should be ordered as "{string}"', async function(expectedOrder) {
+  await this.tabBar.expectTabsInOrder(expectedOrder);
+});

@@ -266,7 +266,6 @@ export class NavigationActions {
       .replace(/\s+/g, ' ')
       .trim();
     
-    console.log(`Comparing: expected="${normalizedExpected}" actual="${contentWithoutLineNumbers}"`);
     expect(contentWithoutLineNumbers).toContain(normalizedExpected);
   }
 } 

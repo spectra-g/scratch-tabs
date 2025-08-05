@@ -113,4 +113,27 @@ export class TabBarActions {
     await expect(tab).toBeVisible();
     await tab.click();
   }
+
+  async expectTabsInOrder(expectedOrder: string) {
+    // Parse the expected order string (e.g., "Welcome to Scratch Tabs, Scratch 1, Scratch 3, Scratch 2, Scratch 4")
+    const expectedTabNames = expectedOrder.split(',').map(name => name.trim());
+    
+    // Get all visible tabs in order
+    const tabs = this.page.locator('[data-testid^="tab-"]');
+    const tabCount = await tabs.count();
+    
+    // Verify we have the expected number of tabs
+    expect(tabCount).toBe(expectedTabNames.length);
+    
+    // For each tab, check its name by getting the tab title
+    for (let i = 0; i < tabCount; i++) {
+      const tab = tabs.nth(i);
+      
+      // Get the tab title from the tab element's text content or title attribute
+      const tabTitle = await tab.textContent();
+      
+      // Compare with expected tab name
+      expect(tabTitle?.trim()).toBe(expectedTabNames[i]);
+    }
+  }
 } 
