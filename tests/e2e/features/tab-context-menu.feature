@@ -163,4 +163,53 @@ Feature: Tab context menu
     Then the status bar language should be "CSV / TSV"
     When I right-click the "Scratch 1" tab
     And I select "Group tabs by type" from the context menu
-    Then the tabs should be ordered as "Welcome to Scratch Tabs, Scratch 1, Scratch 3, Scratch 2, Scratch 4"
+    Then the tabs should be ordered as "Welcome, Scratch 1, Scratch 3, Scratch 2, Scratch 4"
+
+  Scenario: Move tab right using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Left tab 1 content" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Left tab 2 content" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I type "Left tab 3 content" into the editor
+    When I right-click the "Scratch 2" tab
+    And I select "Split" from the context menu
+    Then I should be in split view mode
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 4" tab should be active
+    When I type "Right tab 1 content" into the right editor
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 5" tab should be active
+    When I type "Right tab 2 content" into the right editor
+    When I right-click the "Scratch 1" tab
+    And I select "Move right" from the context menu
+    Then the left panel should contain tabs "Welcome, Scratch 3"
+    And the right panel should contain tabs "Scratch 2, Scratch 4, Scratch 5, Scratch 1"
+
+  @please-fix
+  Scenario: Move tab left using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Left tab 1 content" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Left tab 2 content" into the editor
+    When I right-click the "Scratch 1" tab
+    And I select "Split" from the context menu
+    Then I should be in split view mode
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 3" tab should be active
+    When I type "Right tab 1 content" into the right editor
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 4" tab should be active
+    When I type "Right tab 2 content" into the right editor
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 5" tab should be active
+    When I type "Right tab 3 content" into the right editor
+    When I right-click the "Scratch 4" tab
+    And I select "Move left" from the context menu
+    Then the left panel should contain tabs "Welcome, Scratch 2, Scratch 4"
+    And the right panel should contain tabs "Scratch 1, Scratch 3, Scratch 5"

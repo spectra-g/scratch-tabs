@@ -147,7 +147,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
           // Create a comprehensive Welcome tab for new users
           const welcomeTab: Tab = {
             id: crypto.randomUUID(),
-            title: "Welcome to Scratch Tabs",
+            title: "Welcome",
             content: WELCOME_TAB_CONTENT,
             language: "markdown",
             languageLocked: true,
@@ -499,7 +499,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
         // Create a welcome tab for new workspaces
         const welcomeTab: Tab = {
           id: crypto.randomUUID(),
-          title: "Welcome to Scratch Tabs",
+          title: "Welcome",
           content: WELCOME_TAB_CONTENT,
           language: "markdown",
           languageLocked: true,

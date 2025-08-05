@@ -115,7 +115,7 @@ export class TabBarActions {
   }
 
   async expectTabsInOrder(expectedOrder: string) {
-    // Parse the expected order string (e.g., "Welcome to Scratch Tabs, Scratch 1, Scratch 3, Scratch 2, Scratch 4")
+    // Parse the expected order string (e.g., "Welcome, Scratch 1, Scratch 3, Scratch 2, Scratch 4")
     const expectedTabNames = expectedOrder.split(',').map(name => name.trim());
     
     // Get all visible tabs in order

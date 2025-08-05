@@ -155,7 +155,7 @@ export const useRootStore = create<RootStore>((set, get) => {
         .getState()
         .tabs.filter((t) => t.workspaceId === ensuredWorkspaceId);
       const nonWelcomeTabs = currentTabs.filter(
-        (tab) => tab.title !== "Welcome to Scratch Tabs",
+        (tab) => tab.title !== "Welcome",
       );
       const defaultTitle = `${NEW_TAB_PREFIX} ${nonWelcomeTabs.length + 1}`;
       const newTabObject = _createFinalTabObject({}, ensuredWorkspaceId, {

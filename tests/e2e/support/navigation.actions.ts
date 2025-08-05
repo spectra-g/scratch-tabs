@@ -261,11 +261,73 @@ export class NavigationActions {
       .replace(/^\d+\n/, '')
       .replace(/\s+/g, ' ')
       .trim();
-    
+
     const normalizedExpected = content
       .replace(/\s+/g, ' ')
       .trim();
     
     expect(contentWithoutLineNumbers).toContain(normalizedExpected);
+  }
+
+  async expectLeftPanelContainsTabs(tabList: string) {
+    // Parse the expected tab list (e.g., "Welcome, Scratch 1, Scratch 2")
+    const expectedTabs = tabList.split(',').map(name => name.trim());
+    
+    // Wait for split view to be ready
+    await expect(this.page.locator('[data-editor-pane-side="right"]')).toBeVisible();
+    
+    // Verify that each expected tab has data-side="left" attribute
+    for (const expectedTab of expectedTabs) {
+      const tabElement = this.page.locator(`[data-testid="tab-${expectedTab}"]`);
+      await expect(tabElement).toBeVisible();
+      
+      // This is the key fix - verify the tab belongs to the left side
+      await expect(tabElement).toHaveAttribute('data-side', 'left');
+    }
+    
+    // Also verify that the tabs exist in the expected order among left-side tabs
+    const leftSideTabs = this.page.locator('[data-testid^="tab-"][data-side="left"]');
+    const leftTabCount = await leftSideTabs.count();
+    
+    // Verify we have the expected number of tabs on the left
+    expect(leftTabCount).toBe(expectedTabs.length);
+    
+    // Verify each tab exists in the correct order
+    for (let i = 0; i < leftTabCount; i++) {
+      const tab = leftSideTabs.nth(i);
+      const tabTitle = await tab.textContent();
+      expect(tabTitle?.trim()).toBe(expectedTabs[i]);
+    }
+  }
+
+  async expectRightPanelContainsTabs(tabList: string) {
+    // Parse the expected tab list (e.g., "Scratch 3, Scratch 4, Scratch 5")
+    const expectedTabs = tabList.split(',').map(name => name.trim());
+    
+    // Wait for split view to be ready
+    await expect(this.page.locator('[data-editor-pane-side="right"]')).toBeVisible();
+    
+    // Verify that each expected tab has data-side="right" attribute
+    for (const expectedTab of expectedTabs) {
+      const tabElement = this.page.locator(`[data-testid="tab-${expectedTab}"]`);
+      await expect(tabElement).toBeVisible();
+      
+      // This is the key fix - verify the tab belongs to the right side
+      await expect(tabElement).toHaveAttribute('data-side', 'right');
+    }
+    
+    // Also verify that the tabs exist in the expected order among right-side tabs
+    const rightSideTabs = this.page.locator('[data-testid^="tab-"][data-side="right"]');
+    const rightTabCount = await rightSideTabs.count();
+    
+    // Verify we have the expected number of tabs on the right
+    expect(rightTabCount).toBe(expectedTabs.length);
+    
+    // Verify each tab exists in the correct order
+    for (let i = 0; i < rightTabCount; i++) {
+      const tab = rightSideTabs.nth(i);
+      const tabTitle = await tab.textContent();
+      expect(tabTitle?.trim()).toBe(expectedTabs[i]);
+    }
   }
 } 

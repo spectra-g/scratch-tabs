@@ -13,7 +13,7 @@ Feature: NDJSON content processing
       xcvdsvsdvsdvs {"event":"logout","user_id":123}
       """
     And I click the icon for "New tab with contents from clipboard"
-    Then the "Welcome to Scratch Tabs" tab should exist and not be active
+    Then the "Welcome" tab should exist and not be active
     And the "Scratch 1" tab should be active
     And each line should be valid JSON
     And the active editor content should contain "user_login"

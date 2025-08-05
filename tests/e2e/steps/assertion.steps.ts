@@ -188,3 +188,17 @@ Then('the tabs should be ordered as {string}', async function(expectedOrder) {
 Then('the tabs should be ordered as "{string}"', async function(expectedOrder) {
   await this.tabBar.expectTabsInOrder(expectedOrder);
 });
+
+Then('the left panel should contain tabs {string}', async function(tabList) {
+  await this.navigation.expectLeftPanelContainsTabs(tabList);
+});
+Then('the left panel should contain tabs "{string}"', async function(tabList) {
+  await this.navigation.expectLeftPanelContainsTabs(tabList);
+});
+
+Then('the right panel should contain tabs {string}', async function(tabList) {
+  await this.navigation.expectRightPanelContainsTabs(tabList);
+});
+Then('the right panel should contain tabs "{string}"', async function(tabList) {
+  await this.navigation.expectRightPanelContainsTabs(tabList);
+});
