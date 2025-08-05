@@ -8,6 +8,7 @@ import { ClipboardActions } from './clipboard.actions';
 import { FileActions } from './file.actions';
 import { StatusBarActions } from './statusBar.actions';
 import { CsvTableViewActions } from './csvTableView.actions';
+import { DownloadActions } from './download.actions';
 
 /**
  * E2E World Class - Lightweight Orchestrator & Dependency Injection Container
@@ -31,6 +32,7 @@ export class E2EWorld extends World {
   file!: FileActions;
   statusBar!: StatusBarActions;
   csvTableView!: CsvTableViewActions;
+  download!: DownloadActions;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -51,6 +53,7 @@ export class E2EWorld extends World {
     this.file = new FileActions(this.page);
     this.statusBar = new StatusBarActions(this.page);
     this.csvTableView = new CsvTableViewActions(this.page);
+    this.download = new DownloadActions(this.page);
   }
 }
 

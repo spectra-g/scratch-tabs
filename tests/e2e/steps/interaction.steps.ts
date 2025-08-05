@@ -147,10 +147,18 @@ When('I right-click the "{string}" tab', async function(tabTitle) {
 });
 
 When('I select {string} from the context menu', async function(menuItem) {
+  // Set up download capture for download actions
+  if (menuItem === "Download") {
+    this.download.startDownloadCapture();
+  }
   await this.contextMenu.selectFromContextMenu(menuItem);
 });
 
 When('I select "{string}" from the context menu', async function(menuItem) {
+  // Set up download capture for download actions
+  if (menuItem === "Download") {
+    this.download.startDownloadCapture();
+  }
   await this.contextMenu.selectFromContextMenu(menuItem);
 });
 

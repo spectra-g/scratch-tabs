@@ -11,9 +11,8 @@ export class ContextMenuActions {
     // Wait for context menu to appear - look for the custom context menu div
     await this.page.waitForSelector('.bg-gray-700.border.border-gray-600.rounded.shadow-lg.z-50.py-1', { state: 'visible' });
     
-    // Use a more flexible selector to find the menu item
-    const menuItemSelector = `button:has-text("${menuItem}")`;
-    const menuItemElement = this.page.locator(menuItemSelector);
+    // Use exact text match to avoid confusion between "Download" and "Download all tabs"
+    const menuItemElement = this.page.getByRole('button', { name: menuItem, exact: true });
     
     // Wait for the menu item to be visible
     await expect(menuItemElement).toBeVisible();

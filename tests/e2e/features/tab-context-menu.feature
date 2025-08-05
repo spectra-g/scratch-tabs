@@ -213,3 +213,15 @@ Feature: Tab context menu
     And I select "Move left" from the context menu
     Then the left panel should contain tabs "Welcome, Scratch 2, Scratch 4"
     And the right panel should contain tabs "Scratch 1, Scratch 3, Scratch 5"
+
+  Scenario: Download tab content using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Hello World!\nThis is test content for download." into the editor
+    When I right-click the "Scratch 1" tab
+    And I select "From sample" from the context menu
+    When I select "JSON" from the "From sample" submenu
+    Then the status bar language should be "JSON"
+    When I right-click the "Scratch 1" tab
+    And I select "Download" from the context menu
+    Then a file should be downloaded with the name "Scratch 1.json"

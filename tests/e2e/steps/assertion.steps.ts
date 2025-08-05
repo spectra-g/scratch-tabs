@@ -202,3 +202,10 @@ Then('the right panel should contain tabs {string}', async function(tabList) {
 Then('the right panel should contain tabs "{string}"', async function(tabList) {
   await this.navigation.expectRightPanelContainsTabs(tabList);
 });
+
+Then('a file should be downloaded with the name {string}', async function(expectedFileName) {
+  await this.download.expectFileDownloadedWithName(expectedFileName);
+});
+Then('a file should be downloaded with the name "{string}"', async function(expectedFileName) {
+  await this.download.expectFileDownloadedWithName(expectedFileName);
+});
