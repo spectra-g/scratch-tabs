@@ -135,7 +135,6 @@ Feature: Tab context menu
     And the diff modal left side should contain "Left side first tab content"
     And the diff modal right side should contain "Right side first tab content"
 
-    @please-fix2
   Scenario: Group tabs by type using context menu
     When I click the icon for "New tab"
     Then the "Scratch 1" tab should be active
@@ -189,7 +188,6 @@ Feature: Tab context menu
     Then the left panel should contain tabs "Welcome, Scratch 3"
     And the right panel should contain tabs "Scratch 2, Scratch 4, Scratch 5, Scratch 1"
 
-  @please-fix
   Scenario: Move tab left using context menu
     When I click the icon for "New tab"
     Then the "Scratch 1" tab should be active
