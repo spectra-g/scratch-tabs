@@ -213,3 +213,11 @@ Then('a file should be downloaded with the name "{string}"', async function(expe
 Then('the download modal should appear', async function() {
   await this.download.expectDownloadModalToAppear();
 });
+
+Then('a confirmation dialog should appear with message {string}', async function(expectedMessage) {
+  await this.confirmationDialog.expectConfirmationDialogToAppear(expectedMessage);
+});
+
+Then('a confirmation dialog should appear with message "{string}"', async function(expectedMessage) {
+  await this.confirmationDialog.expectConfirmationDialogToAppear(expectedMessage);
+});

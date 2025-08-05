@@ -186,6 +186,26 @@ When('I click "{string}" in the download modal', async function(buttonText) {
   }
 });
 
+When('I click {string} in the confirmation dialog', async function(buttonText) {
+  await this.confirmationDialog.clickConfirmationButton(buttonText);
+});
+
+When('I click "{string}" in the confirmation dialog', async function(buttonText) {
+  await this.confirmationDialog.clickConfirmationButton(buttonText);
+});
+
+When('I pin the {string} tab', async function(tabTitle) {
+  // Right-click the tab and select "Pin tab"
+  await this.tabBar.rightClickTab(tabTitle);
+  await this.contextMenu.selectFromContextMenu("Pin tab");
+});
+
+When('I pin the "{string}" tab', async function(tabTitle) {
+  // Right-click the tab and select "Pin tab"
+  await this.tabBar.rightClickTab(tabTitle);
+  await this.contextMenu.selectFromContextMenu("Pin tab");
+});
+
 When('I select {string} from the {string} submenu', async function(subItem, parentItem) {
   await this.contextMenu.selectFromSubmenu(parentItem, subItem);
 });

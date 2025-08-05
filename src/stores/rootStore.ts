@@ -306,22 +306,123 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tabsToClose = useSplitViewStore
         .getState()
         .getTabsToLeft(tabId, isRightSide); // Helper needed in splitViewStore
-      useSplitViewStore.getState().closeTabsToLeft(tabId, isRightSide);
-      tabsToClose.forEach((id) => get().removeTab(id)); // Call rootStore removeTab for full cleanup
+      
+      // Filter out pinned tabs - they should not be closed
+      const { tabs } = useTabsStore.getState();
+      const unpinnedTabsToClose = tabsToClose.filter((id) => {
+        const tab = tabs.find((t) => t.id === id);
+        return tab && !tab.isPinned;
+      });
+      
+      // Instead of calling splitViewStore.closeTabsToLeft, manually update the split view
+      const { splitView } = useSplitViewStore.getState();
+      const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
+      const tabIndex = currentTabList.indexOf(tabId);
+      if (tabIndex <= 0) return; // No tabs to the left
+      
+      // Keep pinned tabs to the left, plus all tabs from current position onwards
+      const tabsToTheLeft = currentTabList.slice(0, tabIndex);
+      const pinnedTabsToTheLeft = tabsToTheLeft.filter((id) => {
+        const tab = tabs.find((t) => t.id === id);
+        return tab && tab.isPinned;
+      });
+      const tabsFromCurrentOnwards = currentTabList.slice(tabIndex);
+      const tabsToKeep = [...pinnedTabsToTheLeft, ...tabsFromCurrentOnwards];
+      
+      if (isRightSide) {
+        useSplitViewStore.getState().setSplitView({ 
+          rightTabs: tabsToKeep,
+          rightTabHistory: (splitView.rightTabHistory || []).filter(id => tabsToKeep.includes(id))
+        });
+      } else {
+        useSplitViewStore.getState().setSplitView({ 
+          leftTabs: tabsToKeep,
+          leftTabHistory: (splitView.leftTabHistory || []).filter(id => tabsToKeep.includes(id))
+        });
+      }
+      
+      // Remove the unpinned tabs from the data store
+      unpinnedTabsToClose.forEach((id) => get().removeTab(id));
     },
     closeTabsToRight: (tabId, isRightSide) => {
       const tabsToClose = useSplitViewStore
         .getState()
         .getTabsToRight(tabId, isRightSide); // Helper needed in splitViewStore
-      useSplitViewStore.getState().closeTabsToRight(tabId, isRightSide);
-      tabsToClose.forEach((id) => get().removeTab(id));
+      
+      // Filter out pinned tabs - they should not be closed
+      const { tabs } = useTabsStore.getState();
+      const unpinnedTabsToClose = tabsToClose.filter((id) => {
+        const tab = tabs.find((t) => t.id === id);
+        return tab && !tab.isPinned;
+      });
+      
+      // Instead of calling splitViewStore.closeTabsToRight, manually update the split view
+      const { splitView } = useSplitViewStore.getState();
+      const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
+      const tabIndex = currentTabList.indexOf(tabId);
+      if (tabIndex === -1 || tabIndex >= currentTabList.length - 1) return; // No tabs to the right
+      
+      // Keep all tabs up to and including current tab, plus pinned tabs to the right
+      const tabsUpToCurrent = currentTabList.slice(0, tabIndex + 1);
+      const tabsToTheRight = currentTabList.slice(tabIndex + 1);
+      const pinnedTabsToTheRight = tabsToTheRight.filter((id) => {
+        const tab = tabs.find((t) => t.id === id);
+        return tab && tab.isPinned;
+      });
+      const tabsToKeep = [...tabsUpToCurrent, ...pinnedTabsToTheRight];
+      
+      if (isRightSide) {
+        useSplitViewStore.getState().setSplitView({ 
+          rightTabs: tabsToKeep,
+          rightTabHistory: (splitView.rightTabHistory || []).filter(id => tabsToKeep.includes(id))
+        });
+      } else {
+        useSplitViewStore.getState().setSplitView({ 
+          leftTabs: tabsToKeep,
+          leftTabHistory: (splitView.leftTabHistory || []).filter(id => tabsToKeep.includes(id))
+        });
+      }
+      
+      // Remove the unpinned tabs from the data store
+      unpinnedTabsToClose.forEach((id) => get().removeTab(id));
     },
     closeAllExcept: (tabId, isRightSide) => {
       const tabsToClose = useSplitViewStore
         .getState()
         .getAllExcept(tabId, isRightSide); // Helper needed in splitViewStore
-      useSplitViewStore.getState().closeAllExcept(tabId, isRightSide);
-      tabsToClose.forEach((id) => get().removeTab(id));
+      
+      // Filter out pinned tabs - they should not be closed
+      const { tabs } = useTabsStore.getState();
+      const unpinnedTabsToClose = tabsToClose.filter((id) => {
+        const tab = tabs.find((t) => t.id === id);
+        return tab && !tab.isPinned;
+      });
+      
+      // Instead of calling splitViewStore.closeAllExcept (which removes ALL other tabs),
+      // manually update the split view to keep pinned tabs and the current tab
+      const { splitView } = useSplitViewStore.getState();
+      const currentTabList = isRightSide ? splitView.rightTabs : splitView.leftTabs;
+      const tabsToKeep = currentTabList.filter((id) => {
+        const tab = tabs.find((t) => t.id === id);
+        return id === tabId || (tab && tab.isPinned);
+      });
+      
+      if (isRightSide) {
+        useSplitViewStore.getState().setSplitView({ 
+          rightTabs: tabsToKeep,
+          activeRightTabId: tabId,
+          rightTabHistory: (splitView.rightTabHistory || []).filter(id => tabsToKeep.includes(id))
+        });
+      } else {
+        useSplitViewStore.getState().setSplitView({ 
+          leftTabs: tabsToKeep,
+          activeLeftTabId: tabId,
+          leftTabHistory: (splitView.leftTabHistory || []).filter(id => tabsToKeep.includes(id))
+        });
+      }
+      
+      // Remove the unpinned tabs from the data store
+      unpinnedTabsToClose.forEach((id) => get().removeTab(id));
     },
     duplicateTab: (tabId, isRightSide = false) => {
       // Default to left if side not specified

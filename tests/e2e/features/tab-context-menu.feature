@@ -247,3 +247,71 @@ Feature: Tab context menu
     When I click "Select All" in the download modal
     And I click "Download 3 Files" in the download modal
     Then a file should be downloaded with the name "scratch-tabs-export.zip"
+
+  Scenario: Close tabs to the left using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I right-click the "Scratch 3" tab
+    And I select "Close tabs to the left" from the context menu
+    Then a confirmation dialog should appear with message "This will close all tabs to the left of the current tab. This action cannot be undone."
+    When I click "Close Left Tabs" in the confirmation dialog
+    Then the tabs should be ordered as "Scratch 3"
+    And the "Scratch 3" tab should be active
+
+  Scenario: Close tabs to the right using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I right-click the "Scratch 1" tab
+    And I select "Close tabs to the right" from the context menu
+    Then a confirmation dialog should appear with message "This will close all tabs to the right of the current tab. This action cannot be undone."
+    When I click "Close Right Tabs" in the confirmation dialog
+    Then the tabs should be ordered as "Welcome, Scratch 1"
+    And the "Scratch 1" tab should be active
+
+  Scenario: Close all other tabs using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I right-click the "Scratch 2" tab
+    And I select "Close all other tabs" from the context menu
+    Then a confirmation dialog should appear with message "This will close all tabs except the current one. This action cannot be undone."
+    When I click "Close Others" in the confirmation dialog
+    Then the tabs should be ordered as "Scratch 2"
+    And the "Scratch 2" tab should be active
+
+  Scenario: Close single tab using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I right-click the "Scratch 2" tab
+    And I select "Close" from the context menu
+    Then a confirmation dialog should appear with message "Close tab \"Scratch 2\"? This action cannot be undone."
+    When I click "Close Tab" in the confirmation dialog
+    Then the tabs should be ordered as "Welcome, Scratch 1"
+    And the "Scratch 1" tab should be active
+
+  Scenario: Close all other tabs should preserve pinned tabs
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I pin the "Welcome" tab
+    When I pin the "Scratch 1" tab
+    When I right-click the "Scratch 3" tab
+    And I select "Close all other tabs" from the context menu
+    Then a confirmation dialog should appear with message "This will close all tabs except the current one. This action cannot be undone."
+    When I click "Close Others" in the confirmation dialog
+    Then the tabs should be ordered as "Welcome, Scratch 1, Scratch 3"
+    And the "Scratch 3" tab should be active
