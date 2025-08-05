@@ -145,8 +145,13 @@ describe("RootStore - Pinned Tabs Protection", () => {
         rightTabHistory: [],
       },
       getAllExcept: jest.fn(),
+      getTabsToLeft: jest.fn(),
+      getTabsToRight: jest.fn(),
       setSplitView: jest.fn(),
       removeTabFromSide: jest.fn(),
+      closeAllExceptRespectingPins: jest.fn(),
+      closeTabsToLeftRespectingPins: jest.fn(),
+      closeTabsToRightRespectingPins: jest.fn(),
     };
 
     workspaceStoreMock = {
@@ -175,12 +180,12 @@ describe("RootStore - Pinned Tabs Protection", () => {
     expect(tabsStoreMock.removeTab).not.toHaveBeenCalledWith("welcome");
     expect(tabsStoreMock.removeTab).not.toHaveBeenCalledWith("scratch1");
 
-    // Verify: Split view should be updated to keep pinned tabs and current tab
-    expect(splitViewStoreMock.setSplitView).toHaveBeenCalledWith({
-      leftTabs: ["welcome", "scratch1", "scratch3"],
-      activeLeftTabId: "scratch3",
-      leftTabHistory: [],
-    });
+    // Verify: Pin-aware method was called
+    expect(splitViewStoreMock.closeAllExceptRespectingPins).toHaveBeenCalledWith(
+      "scratch3", 
+      false, 
+      expect.any(Function)
+    );
   });
 
   it("should protect pinned tabs when closing tabs to the left", () => {
@@ -193,11 +198,12 @@ describe("RootStore - Pinned Tabs Protection", () => {
     // Verify: No pinned tabs should be removed from data store
     expect(tabsStoreMock.removeTab).not.toHaveBeenCalled();
 
-    // Verify: Split view should keep pinned tabs and tabs from current position onwards
-    expect(splitViewStoreMock.setSplitView).toHaveBeenCalledWith({
-      leftTabs: ["welcome", "scratch1", "scratch2", "scratch3"],
-      leftTabHistory: [],
-    });
+    // Verify: Pin-aware method was called
+    expect(splitViewStoreMock.closeTabsToLeftRespectingPins).toHaveBeenCalledWith(
+      "scratch2", 
+      false, 
+      expect.any(Function)
+    );
   });
 
   it("should protect pinned tabs when closing tabs to the right", () => {
@@ -212,10 +218,11 @@ describe("RootStore - Pinned Tabs Protection", () => {
     expect(tabsStoreMock.removeTab).toHaveBeenCalledWith("scratch2");
     expect(tabsStoreMock.removeTab).toHaveBeenCalledWith("scratch3");
 
-    // Verify: Split view should keep tabs up to current and pinned tabs to the right
-    expect(splitViewStoreMock.setSplitView).toHaveBeenCalledWith({
-      leftTabs: ["welcome", "scratch1"],
-      leftTabHistory: [],
-    });
+    // Verify: Pin-aware method was called
+    expect(splitViewStoreMock.closeTabsToRightRespectingPins).toHaveBeenCalledWith(
+      "scratch1", 
+      false, 
+      expect.any(Function)
+    );
   });
 });
