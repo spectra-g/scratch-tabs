@@ -155,7 +155,7 @@ export const useRootStore = create<RootStore>((set, get) => {
         .getState()
         .tabs.filter((t) => t.workspaceId === ensuredWorkspaceId);
       const nonWelcomeTabs = currentTabs.filter(
-        (tab) => tab.title !== "Welcome to Scratch Tabs",
+        (tab) => tab.title !== "Welcome",
       );
       const defaultTitle = `${NEW_TAB_PREFIX} ${nonWelcomeTabs.length + 1}`;
       const newTabObject = _createFinalTabObject({}, ensuredWorkspaceId, {
@@ -303,25 +303,37 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     // Bulk tab operations (delegate to splitViewStore)
     closeTabsToLeft: (tabId, isRightSide) => {
-      const tabsToClose = useSplitViewStore
-        .getState()
-        .getTabsToLeft(tabId, isRightSide); // Helper needed in splitViewStore
-      useSplitViewStore.getState().closeTabsToLeft(tabId, isRightSide);
-      tabsToClose.forEach((id) => get().removeTab(id)); // Call rootStore removeTab for full cleanup
+      const tabsToClose = useSplitViewStore.getState().getTabsToLeft(tabId, isRightSide);
+      const { tabs } = useTabsStore.getState();
+      const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
+      
+      // Update UI respecting pinned tabs
+      useSplitViewStore.getState().closeTabsToLeftRespectingPins(tabId, isRightSide, isPinnedTab);
+      
+      // Remove only unpinned tabs from data store
+      tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
     },
     closeTabsToRight: (tabId, isRightSide) => {
-      const tabsToClose = useSplitViewStore
-        .getState()
-        .getTabsToRight(tabId, isRightSide); // Helper needed in splitViewStore
-      useSplitViewStore.getState().closeTabsToRight(tabId, isRightSide);
-      tabsToClose.forEach((id) => get().removeTab(id));
+      const tabsToClose = useSplitViewStore.getState().getTabsToRight(tabId, isRightSide);
+      const { tabs } = useTabsStore.getState();
+      const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
+      
+      // Update UI respecting pinned tabs
+      useSplitViewStore.getState().closeTabsToRightRespectingPins(tabId, isRightSide, isPinnedTab);
+      
+      // Remove only unpinned tabs from data store
+      tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
     },
     closeAllExcept: (tabId, isRightSide) => {
-      const tabsToClose = useSplitViewStore
-        .getState()
-        .getAllExcept(tabId, isRightSide); // Helper needed in splitViewStore
-      useSplitViewStore.getState().closeAllExcept(tabId, isRightSide);
-      tabsToClose.forEach((id) => get().removeTab(id));
+      const tabsToClose = useSplitViewStore.getState().getAllExcept(tabId, isRightSide);
+      const { tabs } = useTabsStore.getState();
+      const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
+      
+      // Update UI respecting pinned tabs
+      useSplitViewStore.getState().closeAllExceptRespectingPins(tabId, isRightSide, isPinnedTab);
+      
+      // Remove only unpinned tabs from data store
+      tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
     },
     duplicateTab: (tabId, isRightSide = false) => {
       // Default to left if side not specified

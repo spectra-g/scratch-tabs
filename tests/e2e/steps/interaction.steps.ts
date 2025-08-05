@@ -11,6 +11,13 @@ When('I click the icon for "{string}"', async function(iconTestId) {
   await this.navigation.clickIcon(iconTestId);
 });
 
+When('I click the icon for {string} on the {string} side', async function(iconTestId, side) {
+  await this.navigation.clickIcon(iconTestId, side);
+});
+When('I click the icon for "{string}" on the "{string}" side', async function(iconTestId, side) {
+  await this.navigation.clickIcon(iconTestId, side);
+});
+
 When('I set clipboard content to {string}', async function(content) {
   await this.clipboard.setClipboardContent(content);
 });
@@ -140,11 +147,63 @@ When('I right-click the "{string}" tab', async function(tabTitle) {
 });
 
 When('I select {string} from the context menu', async function(menuItem) {
+  // Set up download capture for download actions
+  if (menuItem === "Download") {
+    this.download.startDownloadCapture();
+  }
   await this.contextMenu.selectFromContextMenu(menuItem);
 });
 
 When('I select "{string}" from the context menu', async function(menuItem) {
+  // Set up download capture for download actions
+  if (menuItem === "Download") {
+    this.download.startDownloadCapture();
+  }
   await this.contextMenu.selectFromContextMenu(menuItem);
+});
+
+When('I click {string} in the download modal', async function(buttonText) {
+  if (buttonText === "Select All") {
+    await this.download.clickSelectAllInModal();
+  } else if (buttonText.includes("Download")) {
+    await this.download.clickDownloadFilesInModal(buttonText);
+  } else {
+    // Generic button click in modal
+    const button = this.page.getByRole('button', { name: buttonText });
+    await button.click();
+  }
+});
+
+When('I click "{string}" in the download modal', async function(buttonText) {
+  if (buttonText === "Select All") {
+    await this.download.clickSelectAllInModal();
+  } else if (buttonText.includes("Download")) {
+    await this.download.clickDownloadFilesInModal(buttonText);
+  } else {
+    // Generic button click in modal
+    const button = this.page.getByRole('button', { name: buttonText });
+    await button.click();
+  }
+});
+
+When('I click {string} in the confirmation dialog', async function(buttonText) {
+  await this.confirmationDialog.clickConfirmationButton(buttonText);
+});
+
+When('I click "{string}" in the confirmation dialog', async function(buttonText) {
+  await this.confirmationDialog.clickConfirmationButton(buttonText);
+});
+
+When('I pin the {string} tab', async function(tabTitle) {
+  // Right-click the tab and select "Pin tab"
+  await this.tabBar.rightClickTab(tabTitle);
+  await this.contextMenu.selectFromContextMenu("Pin tab");
+});
+
+When('I pin the "{string}" tab', async function(tabTitle) {
+  // Right-click the tab and select "Pin tab"
+  await this.tabBar.rightClickTab(tabTitle);
+  await this.contextMenu.selectFromContextMenu("Pin tab");
 });
 
 When('I select {string} from the {string} submenu', async function(subItem, parentItem) {
@@ -173,4 +232,27 @@ When('I press Enter to confirm rename', async function() {
 
 When('I close the diff modal', async function() {
   await this.navigation.closeDiffModal();
+});
+
+When('I click the {string} tab on the right side', async function(tabTitle) {
+  await this.tabBar.clickTabOnRightSide(tabTitle);
+});
+When('I click the "{string}" tab on the right side', async function(tabTitle) {
+  await this.tabBar.clickTabOnRightSide(tabTitle);
+});
+
+When('I type {string} into the left editor', async function(text) {
+  await this.editor.typeText(text, 'left');
+});
+
+When('I type "{string}" into the left editor', async function(text) {
+  await this.editor.typeText(text, 'left');
+});
+
+When('I type {string} into the right editor', async function(text) {
+  await this.editor.typeText(text, 'right');
+});
+
+When('I type "{string}" into the right editor', async function(text) {
+  await this.editor.typeText(text, 'right');
 });

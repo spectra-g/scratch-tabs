@@ -15,9 +15,7 @@ export class ClipboardActions {
       const clipboardContent = await this.page.evaluate(async () => {
         return await navigator.clipboard.readText();
       });
-      
-      console.log(`Verified clipboard content: "${clipboardContent}"`);
-      
+
       if (clipboardContent !== content) {
         console.warn(`Clipboard content mismatch. Expected: "${content}", Got: "${clipboardContent}"`);
       }

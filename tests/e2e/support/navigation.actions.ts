@@ -20,7 +20,7 @@ export class NavigationActions {
     await this.page.getByRole('link', { name: linkText, exact: true }).click();
   }
 
-  async clickIcon(iconName: string) {
+  async clickIcon(iconName: string, side: 'left' | 'right' = 'left') {
     // Map human-readable names to test IDs
     const iconTestIdMap: { [key: string]: string } = {
       'New tab': 'icon-new-tab',
@@ -29,7 +29,19 @@ export class NavigationActions {
     };
     
     const testId = iconTestIdMap[iconName] || `icon-${iconName.toLowerCase().replace(/\s+/g, '-')}`;
-    const locator = this.page.locator(`[data-testid="${testId}"]`);
+    
+    // Check if we're in split view mode
+    const splitViewExists = await this.page.locator('[data-editor-pane-side="right"]').isVisible();
+    
+    let locator;
+    if (splitViewExists) {
+      // In split view, use the specified side
+      locator = this.page.locator(`[data-testid="${testId}"][data-side="${side}"]`);
+    } else {
+      // Not in split view, use simple selector
+      locator = this.page.locator(`[data-testid="${testId}"]`);
+    }
+    
     await expect(locator).toBeVisible();
     await locator.click();
   }
@@ -170,5 +182,152 @@ export class NavigationActions {
     // Check if the tab exists anywhere on the page
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).toBeVisible();
+  }
+
+  async expectTabActiveOnLeftSide(tabTitle: string) {
+    // Check if the specified tab is active in the left panel
+    const leftPanel = this.page.locator('[data-editor-pane-side="left"]');
+    await expect(leftPanel).toBeVisible();
+    
+    // First check if the tab exists in the left panel
+    const tab = leftPanel.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+    
+    // Then check if it's active
+    const activeTab = leftPanel.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
+    await expect(activeTab).toBeVisible();
+  }
+
+  async expectTabExistsOnRightSide(tabTitle: string) {
+    // Check if the specified tab exists in the right panel
+    const rightPanel = this.page.locator('[data-editor-pane-side="right"]');
+    await expect(rightPanel).toBeVisible();
+    
+    const tab = rightPanel.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+  }
+
+  async expectDiffModalComparison(tab1: string, tab2: string) {
+    // Verify the diff modal is comparing the correct tabs
+    const diffModal = this.page.locator('[data-testid="diff-modal"]');
+    await expect(diffModal).toBeVisible();
+    
+    // Check for the h2 element with the title attribute that shows which tabs are being compared
+    const comparisonTitle = diffModal.locator(`h2[title="${tab1} ↔ ${tab2}"]`);
+    await expect(comparisonTitle).toBeVisible();
+    
+    // Also verify the Monaco diff editor is present and functional
+    const diffContainer = this.page.locator('.monaco-diff-editor');
+    await expect(diffContainer).toBeVisible();
+  }
+
+  async expectDiffModalLeftSideContains(content: string) {
+    // Check that the left side of the diff modal contains the specified content
+    const diffContainer = this.page.locator('[data-testid="diff-editor-container"]');
+    await expect(diffContainer).toBeVisible();
+    
+    // Monaco diff editor renders the original (left) content first
+    // Use a more reliable selector for the left side
+    const leftSideEditor = diffContainer.locator('.editor.original, .monaco-editor').first();
+    await expect(leftSideEditor).toBeVisible();
+    
+    const leftContent = await leftSideEditor.textContent();
+    expect(leftContent).toContain(content);
+  }
+
+  async expectDiffModalRightSideContains(content: string) {
+    // Check that the right side of the diff modal contains the specified content
+    const diffContainer = this.page.locator('[data-testid="diff-editor-container"]');
+    await expect(diffContainer).toBeVisible();
+    
+    // Monaco diff editor renders the modified (right) content second
+    // Use a more reliable selector for the right side
+    const rightSideEditor = diffContainer.locator('.editor.modified, .monaco-editor').last();
+    await expect(rightSideEditor).toBeVisible();
+    
+    const rightContent = await rightSideEditor.textContent();
+    expect(rightContent).toContain(content);
+  }
+
+  async expectDiffModalContains(content: string, side: 'left' | 'right') {
+    // Check that the diff modal contains the specified content on the specified side
+    const editorSelector = side === 'left' ? '.editor.original' : '.editor.modified';
+    const editor = this.page.locator(editorSelector);
+    await expect(editor).toBeVisible();
+    
+    const actualContent = await editor.innerText();
+    // Remove line numbers (first line starting with digits) and normalize whitespace
+    const contentWithoutLineNumbers = actualContent
+      .replace(/^\d+\n/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const normalizedExpected = content
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    expect(contentWithoutLineNumbers).toContain(normalizedExpected);
+  }
+
+  async expectLeftPanelContainsTabs(tabList: string) {
+    // Parse the expected tab list (e.g., "Welcome, Scratch 1, Scratch 2")
+    const expectedTabs = tabList.split(',').map(name => name.trim());
+    
+    // Wait for split view to be ready
+    await expect(this.page.locator('[data-editor-pane-side="right"]')).toBeVisible();
+    
+    // Verify that each expected tab has data-side="left" attribute
+    for (const expectedTab of expectedTabs) {
+      const tabElement = this.page.locator(`[data-testid="tab-${expectedTab}"]`);
+      await expect(tabElement).toBeVisible();
+      
+      // This is the key fix - verify the tab belongs to the left side
+      await expect(tabElement).toHaveAttribute('data-side', 'left');
+    }
+    
+    // Also verify that the tabs exist in the expected order among left-side tabs
+    const leftSideTabs = this.page.locator('[data-testid^="tab-"][data-side="left"]');
+    const leftTabCount = await leftSideTabs.count();
+    
+    // Verify we have the expected number of tabs on the left
+    expect(leftTabCount).toBe(expectedTabs.length);
+    
+    // Verify each tab exists in the correct order
+    for (let i = 0; i < leftTabCount; i++) {
+      const tab = leftSideTabs.nth(i);
+      const tabTitle = await tab.textContent();
+      expect(tabTitle?.trim()).toBe(expectedTabs[i]);
+    }
+  }
+
+  async expectRightPanelContainsTabs(tabList: string) {
+    // Parse the expected tab list (e.g., "Scratch 3, Scratch 4, Scratch 5")
+    const expectedTabs = tabList.split(',').map(name => name.trim());
+    
+    // Wait for split view to be ready
+    await expect(this.page.locator('[data-editor-pane-side="right"]')).toBeVisible();
+    
+    // Verify that each expected tab has data-side="right" attribute
+    for (const expectedTab of expectedTabs) {
+      const tabElement = this.page.locator(`[data-testid="tab-${expectedTab}"]`);
+      await expect(tabElement).toBeVisible();
+      
+      // This is the key fix - verify the tab belongs to the right side
+      await expect(tabElement).toHaveAttribute('data-side', 'right');
+    }
+    
+    // Also verify that the tabs exist in the expected order among right-side tabs
+    const rightSideTabs = this.page.locator('[data-testid^="tab-"][data-side="right"]');
+    const rightTabCount = await rightSideTabs.count();
+    
+    // Verify we have the expected number of tabs on the right
+    expect(rightTabCount).toBe(expectedTabs.length);
+    
+    // Verify each tab exists in the correct order
+    for (let i = 0; i < rightTabCount; i++) {
+      const tab = rightSideTabs.nth(i);
+      const tabTitle = await tab.textContent();
+      expect(tabTitle?.trim()).toBe(expectedTabs[i]);
+    }
   }
 } 

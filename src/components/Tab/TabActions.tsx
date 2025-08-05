@@ -25,6 +25,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
         className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
         title="New tab"
         data-testid="icon-new-tab"
+        data-side={side}
       >
         <Plus size={16} />
       </button>
@@ -33,6 +34,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
         className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
         title="New tab with contents from clipboard"
         data-testid="icon-new-tab-from-clipboard"
+        data-side={side}
       >
         <ClipboardPlus size={16} />
       </button>
@@ -42,6 +44,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
         className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
         title="New tablet"
         data-testid="icon-new-tablet"
+        data-side={side}
       >
         <Tablet size={16} />
       </button>

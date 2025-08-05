@@ -27,6 +27,10 @@ interface SplitViewStore {
   closeTabsToLeft: (tabId: string, isRightSide: boolean) => void;
   closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
   closeAllExcept: (tabId: string, isRightSide: boolean) => void;
+  // Pinned-tab-aware close operations
+  closeAllExceptRespectingPins: (tabId: string, isRightSide: boolean, isPinnedTab: (id: string) => boolean) => void;
+  closeTabsToLeftRespectingPins: (tabId: string, isRightSide: boolean, isPinnedTab: (id: string) => boolean) => void;
+  closeTabsToRightRespectingPins: (tabId: string, isRightSide: boolean, isPinnedTab: (id: string) => boolean) => void;
   groupTabsByType: (isRightSide: boolean) => void;
   updateTabOrder: (newLeftTabs: string[], newRightTabs: string[]) => void;
   reorderTabs: (side: "left" | "right", newOrder: string[]) => void;
@@ -478,6 +482,95 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
         newSplitView.leftTabs = [tabId];
         newSplitView.activeLeftTabId = tabId;
         newSplitView.leftTabHistory = [tabId];
+      }
+      return { splitView: newSplitView };
+    }),
+
+  // Pinned-tab-aware close operations
+  closeAllExceptRespectingPins: (tabId, isRightSide, isPinnedTab) =>
+    set((state) => {
+      const newSplitView = { ...state.splitView };
+      const currentTabList = isRightSide ? state.splitView.rightTabs : state.splitView.leftTabs;
+      
+      // Keep current tab and pinned tabs
+      const tabsToKeep = currentTabList.filter((id) => 
+        id === tabId || isPinnedTab(id)
+      );
+      
+      if (isRightSide) {
+        newSplitView.rightTabs = tabsToKeep;
+        newSplitView.activeRightTabId = tabId;
+        newSplitView.rightTabHistory = (newSplitView.rightTabHistory || []).filter(id => tabsToKeep.includes(id));
+      } else {
+        newSplitView.leftTabs = tabsToKeep;
+        newSplitView.activeLeftTabId = tabId;
+        newSplitView.leftTabHistory = (newSplitView.leftTabHistory || []).filter(id => tabsToKeep.includes(id));
+      }
+      return { splitView: newSplitView };
+    }),
+
+  closeTabsToLeftRespectingPins: (tabId, isRightSide, isPinnedTab) =>
+    set((state) => {
+      const currentTabList = isRightSide ? state.splitView.rightTabs : state.splitView.leftTabs;
+      const currentActiveTabId = isRightSide ? state.splitView.activeRightTabId : state.splitView.activeLeftTabId;
+      
+      const tabIndex = currentTabList.indexOf(tabId);
+      if (tabIndex <= 0) return state;
+      
+      // Keep pinned tabs to the left, plus all tabs from current position onwards
+      const tabsToTheLeft = currentTabList.slice(0, tabIndex);
+      const pinnedTabsToTheLeft = tabsToTheLeft.filter(isPinnedTab);
+      const tabsFromCurrentOnwards = currentTabList.slice(tabIndex);
+      const tabsToKeep = [...pinnedTabsToTheLeft, ...tabsFromCurrentOnwards];
+      
+      const newSplitView = { ...state.splitView };
+      if (isRightSide) {
+        newSplitView.rightTabs = tabsToKeep;
+        newSplitView.rightTabHistory = (newSplitView.rightTabHistory || []).filter(id => tabsToKeep.includes(id));
+        // Check if active tab still exists, if not set to the clicked tab
+        if (!tabsToKeep.includes(currentActiveTabId)) {
+          newSplitView.activeRightTabId = tabId;
+        }
+      } else {
+        newSplitView.leftTabs = tabsToKeep;
+        newSplitView.leftTabHistory = (newSplitView.leftTabHistory || []).filter(id => tabsToKeep.includes(id));
+        // Check if active tab still exists, if not set to the clicked tab
+        if (!tabsToKeep.includes(currentActiveTabId)) {
+          newSplitView.activeLeftTabId = tabId;
+        }
+      }
+      return { splitView: newSplitView };
+    }),
+
+  closeTabsToRightRespectingPins: (tabId, isRightSide, isPinnedTab) =>
+    set((state) => {
+      const currentTabList = isRightSide ? state.splitView.rightTabs : state.splitView.leftTabs;
+      const currentActiveTabId = isRightSide ? state.splitView.activeRightTabId : state.splitView.activeLeftTabId;
+      
+      const tabIndex = currentTabList.indexOf(tabId);
+      if (tabIndex === -1 || tabIndex >= currentTabList.length - 1) return state;
+      
+      // Keep all tabs up to and including current tab, plus pinned tabs to the right
+      const tabsUpToCurrent = currentTabList.slice(0, tabIndex + 1);
+      const tabsToTheRight = currentTabList.slice(tabIndex + 1);
+      const pinnedTabsToTheRight = tabsToTheRight.filter(isPinnedTab);
+      const tabsToKeep = [...tabsUpToCurrent, ...pinnedTabsToTheRight];
+      
+      const newSplitView = { ...state.splitView };
+      if (isRightSide) {
+        newSplitView.rightTabs = tabsToKeep;
+        newSplitView.rightTabHistory = (newSplitView.rightTabHistory || []).filter(id => tabsToKeep.includes(id));
+        // Check if active tab still exists, if not set to the clicked tab
+        if (!tabsToKeep.includes(currentActiveTabId)) {
+          newSplitView.activeRightTabId = tabId;
+        }
+      } else {
+        newSplitView.leftTabs = tabsToKeep;
+        newSplitView.leftTabHistory = (newSplitView.leftTabHistory || []).filter(id => tabsToKeep.includes(id));
+        // Check if active tab still exists, if not set to the clicked tab
+        if (!tabsToKeep.includes(currentActiveTabId)) {
+          newSplitView.activeLeftTabId = tabId;
+        }
       }
       return { splitView: newSplitView };
     }),

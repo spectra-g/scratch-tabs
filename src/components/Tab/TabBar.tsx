@@ -497,7 +497,7 @@ export const TabBar: React.FC<TabBarProps> = ({
     // Count tabs excluding the Welcome tab for proper numbering (same logic as handleNewTab)
     const currentTabs = tabs.filter((t) => t.workspaceId === activeWorkspaceId);
     const nonWelcomeTabs = currentTabs.filter(
-      (tab) => tab.title !== "Welcome to Scratch Tabs",
+      (tab) => tab.title !== "Welcome",
     );
     const defaultTitle = `${NEW_TAB_PREFIX} ${nonWelcomeTabs.length + 1}`;
 
@@ -641,6 +641,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   editingTitle={editingTitle}
                   maxLineCount={maxLineCount}
                   isPinned={true}
+                  side={side}
                   onTabClick={handleTabClick}
                   onTabClose={handleTabClose}
                   onTabDoubleClick={handleDoubleClick}
@@ -663,6 +664,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   editingTabId={editingTabId}
                   editingTitle={editingTitle}
                   maxLineCount={maxLineCount}
+                  side={side}
                   onTabClick={handleTabClick}
                   onTabClose={handleTabClose}
                   onTabDoubleClick={handleDoubleClick}

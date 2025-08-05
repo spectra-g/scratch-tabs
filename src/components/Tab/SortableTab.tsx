@@ -11,6 +11,7 @@ interface SortableTabProps {
   isEditing: boolean;
   editingTitle: string;
   maxLineCount: number;
+  side?: "left" | "right";
   onClick: () => void;
   onClose: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -32,6 +33,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
   isEditing,
   editingTitle,
   maxLineCount,
+  side = "left",
   onClick,
   onClose,
   onDoubleClick,
@@ -272,6 +274,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                     border-r-2 border-r-gray-700/90 backdrop-blur-sm`}
         style={style}
         data-testid={`tab-${tab.title}`}
+        data-side={side}
         aria-selected={isActive}
         onClick={handleTabClick}
         onMouseDown={handleMouseDown}

@@ -139,3 +139,85 @@ Then('the "{string}" tab should exist on the page', async function(tabTitle) {
 Then('the {string} tab should exist on the page', async function(tabTitle) {
   await this.navigation.expectTabExistsOnPage(tabTitle);
 });
+
+Then('the {string} tab should be active on the left side', async function(tabTitle) {
+  await this.navigation.expectTabActiveOnLeftSide(tabTitle);
+});
+Then('the "{string}" tab should be active on the left side', async function(tabTitle) {
+  await this.navigation.expectTabActiveOnLeftSide(tabTitle);
+});
+
+Then('the {string} tab should exist on the right side', async function(tabTitle) {
+  await this.navigation.expectTabExistsOnRightSide(tabTitle);
+});
+Then('the "{string}" tab should exist on the right side', async function(tabTitle) {
+  await this.navigation.expectTabExistsOnRightSide(tabTitle);
+});
+
+Then('the diff modal should show comparison between {string} and {string}', async function(tab1, tab2) {
+  await this.navigation.expectDiffModalComparison(tab1, tab2);
+});
+Then('the diff modal should show comparison between "{string}" and "{string}"', async function(tab1, tab2) {
+  await this.navigation.expectDiffModalComparison(tab1, tab2);
+});
+
+Then('the diff modal left side should contain {string}', async function(content) {
+  await this.navigation.expectDiffModalContains(content, 'left');
+});
+Then('the diff modal left side should contain "{string}"', async function(content) {
+  await this.navigation.expectDiffModalContains(content, 'left');
+});
+
+Then('the diff modal right side should contain {string}', async function(content) {
+  await this.navigation.expectDiffModalContains(content, 'right');
+});
+Then('the diff modal right side should contain "{string}"', async function(content) {
+  await this.navigation.expectDiffModalContains(content, 'right');
+});
+
+Then('the diff modal should contain {string}', async function(content) {
+  await this.navigation.expectDiffModalContains(content, 'left');
+});
+Then('the diff modal should contain "{string}"', async function(content) {
+  await this.navigation.expectDiffModalContains(content, 'left');
+});
+
+Then('the tabs should be ordered as {string}', async function(expectedOrder) {
+  await this.tabBar.expectTabsInOrder(expectedOrder);
+});
+Then('the tabs should be ordered as "{string}"', async function(expectedOrder) {
+  await this.tabBar.expectTabsInOrder(expectedOrder);
+});
+
+Then('the left panel should contain tabs {string}', async function(tabList) {
+  await this.navigation.expectLeftPanelContainsTabs(tabList);
+});
+Then('the left panel should contain tabs "{string}"', async function(tabList) {
+  await this.navigation.expectLeftPanelContainsTabs(tabList);
+});
+
+Then('the right panel should contain tabs {string}', async function(tabList) {
+  await this.navigation.expectRightPanelContainsTabs(tabList);
+});
+Then('the right panel should contain tabs "{string}"', async function(tabList) {
+  await this.navigation.expectRightPanelContainsTabs(tabList);
+});
+
+Then('a file should be downloaded with the name {string}', async function(expectedFileName) {
+  await this.download.expectFileDownloadedWithName(expectedFileName);
+});
+Then('a file should be downloaded with the name "{string}"', async function(expectedFileName) {
+  await this.download.expectFileDownloadedWithName(expectedFileName);
+});
+
+Then('the download modal should appear', async function() {
+  await this.download.expectDownloadModalToAppear();
+});
+
+Then('a confirmation dialog should appear with message {string}', async function(expectedMessage) {
+  await this.confirmationDialog.expectConfirmationDialogToAppear(expectedMessage);
+});
+
+Then('a confirmation dialog should appear with message "{string}"', async function(expectedMessage) {
+  await this.confirmationDialog.expectConfirmationDialogToAppear(expectedMessage);
+});

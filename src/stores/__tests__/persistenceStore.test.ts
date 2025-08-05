@@ -104,6 +104,9 @@ interface SplitViewStore {
   closeTabsToLeft: (tabId: string, isRightSide: boolean) => void;
   closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
   closeAllExcept: (tabId: string, isRightSide: boolean) => void;
+  closeAllExceptRespectingPins: (tabId: string, isRightSide: boolean, isPinnedTab: (id: string) => boolean) => void;
+  closeTabsToLeftRespectingPins: (tabId: string, isRightSide: boolean, isPinnedTab: (id: string) => boolean) => void;
+  closeTabsToRightRespectingPins: (tabId: string, isRightSide: boolean, isPinnedTab: (id: string) => boolean) => void;
   groupTabsByType: (isRightSide: boolean) => void;
   updateTabOrder: (newLeftTabs: string[], newRightTabs: string[]) => void;
   reorderTabs: (side: "left" | "right", newOrder: string[]) => void;
@@ -192,6 +195,9 @@ const mockSplitViewState: SplitViewStore = {
   closeTabsToLeft: jest.fn(),
   closeTabsToRight: jest.fn(),
   closeAllExcept: jest.fn(),
+  closeAllExceptRespectingPins: jest.fn(),
+  closeTabsToLeftRespectingPins: jest.fn(),
+  closeTabsToRightRespectingPins: jest.fn(),
   groupTabsByType: jest.fn(),
   updateTabOrder: jest.fn(),
   reorderTabs: jest.fn(),

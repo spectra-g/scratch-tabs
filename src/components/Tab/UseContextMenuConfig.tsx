@@ -496,7 +496,7 @@ Add any other context about the problem here.
     { id: "sep4", isSeparator: true },
     {
       id: "pin",
-      label: isPinned ? "Unpin Tab" : "Pin Tab",
+      label: isPinned ? "Unpin tab" : "Pin tab",
       icon: Pin,
       action: () => handleSimpleAction(rootStore.toggleTabPin, tabId),
     },

@@ -3,7 +3,12 @@ import { FileText, Shield, Database, Code } from "lucide-react";
 
 export const OGWelcomeScreen: React.FC = () => {
   return (
-    <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-900 to-gray-800">
+    <div 
+      className="h-full w-full flex flex-col bg-gradient-to-br from-gray-900 to-gray-800"
+      style={{
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
+      }}
+    >
       {/* Main Content for OG Image */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-16">
         {/* Header with Logo and Name */}
@@ -11,7 +16,7 @@ export const OGWelcomeScreen: React.FC = () => {
           <img
             src="/favicon-gray.svg"
             alt="Scratch Tabs Logo"
-            className="w-16 h-16 mr-4"
+            className="w-10 h-10 mr-4"
           />
           <h1 className="text-5xl font-bold text-white">Scratch Tabs</h1>
         </div>

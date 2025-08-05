@@ -66,3 +66,250 @@ Feature: Tab context menu
     When I close the diff modal
     Then I should be in split view mode
     And the "Clipboard Compare" tab should exist on the page
+
+  Scenario: Split tab using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Content for Scratch 1 tab" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Content for Scratch 2 tab" into the editor
+    When I click the "Scratch 2" tab
+    Then the "Scratch 2" tab should be active
+    When I click the "Scratch 1" tab
+    Then the "Scratch 1" tab should be active
+    When I right-click the "Scratch 1" tab
+    And I select "Split" from the context menu
+    Then I should be in split view mode
+
+  Scenario: Compare with previous tab using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Original content in first tab" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Modified content in second tab" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I type "Different content in third tab" into the editor
+    When I click the "Scratch 1" tab
+    Then the "Scratch 1" tab should be active
+    When I click the "Scratch 2" tab
+    Then the "Scratch 2" tab should be active
+    When I right-click the "Scratch 2" tab
+    And I select "Compare with previous tab" from the context menu
+    Then the diff modal should appear
+    And the diff modal should show comparison between "Scratch 2" and "Scratch 1"
+    And the diff modal left side should contain "Modified content in second tab"
+    And the diff modal right side should contain "Original content in first tab"
+
+  Scenario: Compare with other side in split view
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Left side first tab content" into the left editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Left side second tab content" into the left editor
+    When I right-click the "Scratch 2" tab
+    And I select "Split" from the context menu
+    Then I should be in split view mode
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 3" tab should be active
+    When I type "Right side first tab content" into the right editor
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 4" tab should be active
+    When I type "Right side second tab content" into the right editor
+    When I right-click the "Scratch 1" tab
+    And I select "Compare with other side" from the context menu
+    Then the diff modal should appear
+    And the diff modal should show comparison between "Scratch 1" and "Scratch 4"
+    And the diff modal left side should contain "Left side first tab content"
+    And the diff modal right side should contain "Right side second tab content"
+    When I close the diff modal
+    When I click the "Scratch 3" tab on the right side
+    Then the "Scratch 3" tab should be active
+    When I right-click the "Scratch 3" tab
+    And I select "Compare with other side" from the context menu
+    Then the diff modal should appear
+    And the diff modal should show comparison between "Scratch 1" and "Scratch 3"
+    And the diff modal left side should contain "Left side first tab content"
+    And the diff modal right side should contain "Right side first tab content"
+
+  Scenario: Group tabs by type using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I right-click the "Scratch 1" tab
+    And I select "From sample" from the context menu
+    When I select "JSON" from the "From sample" submenu
+    Then the status bar language should be "JSON"
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I right-click the "Scratch 2" tab
+    And I select "From sample" from the context menu
+    When I select "CSV / TSV" from the "From sample" submenu
+    Then the status bar language should be "CSV / TSV"
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I right-click the "Scratch 3" tab
+    And I select "From sample" from the context menu
+    When I select "JSON" from the "From sample" submenu
+    Then the status bar language should be "JSON"
+    When I click the icon for "New tab"
+    Then the "Scratch 4" tab should be active
+    When I right-click the "Scratch 4" tab
+    And I select "From sample" from the context menu
+    When I select "CSV / TSV" from the "From sample" submenu
+    Then the status bar language should be "CSV / TSV"
+    When I right-click the "Scratch 1" tab
+    And I select "Group tabs by type" from the context menu
+    Then the tabs should be ordered as "Welcome, Scratch 1, Scratch 3, Scratch 2, Scratch 4"
+
+  Scenario: Move tab right using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Left tab 1 content" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Left tab 2 content" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I type "Left tab 3 content" into the editor
+    When I right-click the "Scratch 2" tab
+    And I select "Split" from the context menu
+    Then I should be in split view mode
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 4" tab should be active
+    When I type "Right tab 1 content" into the right editor
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 5" tab should be active
+    When I type "Right tab 2 content" into the right editor
+    When I right-click the "Scratch 1" tab
+    And I select "Move right" from the context menu
+    Then the left panel should contain tabs "Welcome, Scratch 3"
+    And the right panel should contain tabs "Scratch 2, Scratch 4, Scratch 5, Scratch 1"
+
+  Scenario: Move tab left using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Left tab 1 content" into the editor
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Left tab 2 content" into the editor
+    When I right-click the "Scratch 1" tab
+    And I select "Split" from the context menu
+    Then I should be in split view mode
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 3" tab should be active
+    When I type "Right tab 1 content" into the right editor
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 4" tab should be active
+    When I type "Right tab 2 content" into the right editor
+    When I click the icon for "New tab" on the "right" side
+    Then the "Scratch 5" tab should be active
+    When I type "Right tab 3 content" into the right editor
+    When I right-click the "Scratch 4" tab
+    And I select "Move left" from the context menu
+    Then the left panel should contain tabs "Welcome, Scratch 2, Scratch 4"
+    And the right panel should contain tabs "Scratch 1, Scratch 3, Scratch 5"
+
+  Scenario: Download tab content using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Hello World!\nThis is test content for download." into the editor
+    When I right-click the "Scratch 1" tab
+    And I select "From sample" from the context menu
+    When I select "JSON" from the "From sample" submenu
+    Then the status bar language should be "JSON"
+    When I right-click the "Scratch 1" tab
+    And I select "Download" from the context menu
+    Then a file should be downloaded with the name "Scratch 1.json"
+
+  Scenario: Download all tabs using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "First tab content" into the editor
+    When I right-click the "Scratch 1" tab
+    And I select "From sample" from the context menu
+    When I select "JSON" from the "From sample" submenu
+    Then the status bar language should be "JSON"
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Second tab content" into the editor
+    When I right-click the "Scratch 2" tab
+    And I select "From sample" from the context menu
+    When I select "CSV / TSV" from the "From sample" submenu
+    Then the status bar language should be "CSV / TSV"
+    When I right-click the "Scratch 1" tab
+    And I select "Download all tabs" from the context menu
+    Then the download modal should appear
+    When I click "Select All" in the download modal
+    And I click "Download 3 Files" in the download modal
+    Then a file should be downloaded with the name "scratch-tabs-export.zip"
+
+  Scenario: Close tabs to the left using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I right-click the "Scratch 3" tab
+    And I select "Close tabs to the left" from the context menu
+    Then a confirmation dialog should appear with message "This will close all tabs to the left of the current tab. This action cannot be undone."
+    When I click "Close Left Tabs" in the confirmation dialog
+    Then the tabs should be ordered as "Scratch 3"
+    And the "Scratch 3" tab should be active
+
+  Scenario: Close tabs to the right using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I right-click the "Scratch 1" tab
+    And I select "Close tabs to the right" from the context menu
+    Then a confirmation dialog should appear with message "This will close all tabs to the right of the current tab. This action cannot be undone."
+    When I click "Close Right Tabs" in the confirmation dialog
+    Then the tabs should be ordered as "Welcome, Scratch 1"
+    And the "Scratch 1" tab should be active
+
+  Scenario: Close all other tabs using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I right-click the "Scratch 2" tab
+    And I select "Close all other tabs" from the context menu
+    Then a confirmation dialog should appear with message "This will close all tabs except the current one. This action cannot be undone."
+    When I click "Close Others" in the confirmation dialog
+    Then the tabs should be ordered as "Scratch 2"
+    And the "Scratch 2" tab should be active
+
+  Scenario: Close single tab using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I right-click the "Scratch 2" tab
+    And I select "Close" from the context menu
+    Then a confirmation dialog should appear with message "Close tab \"Scratch 2\"? This action cannot be undone."
+    When I click "Close Tab" in the confirmation dialog
+    Then the tabs should be ordered as "Welcome, Scratch 1"
+    And the "Scratch 1" tab should be active
+
+  Scenario: Close all other tabs should preserve pinned tabs
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I click the icon for "New tab"
+    Then the "Scratch 3" tab should be active
+    When I pin the "Welcome" tab
+    When I pin the "Scratch 1" tab
+    When I right-click the "Scratch 3" tab
+    And I select "Close all other tabs" from the context menu
+    Then a confirmation dialog should appear with message "This will close all tabs except the current one. This action cannot be undone."
+    When I click "Close Others" in the confirmation dialog
+    Then the tabs should be ordered as "Welcome, Scratch 1, Scratch 3"
+    And the "Scratch 3" tab should be active

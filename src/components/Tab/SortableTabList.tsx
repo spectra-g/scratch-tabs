@@ -14,6 +14,7 @@ interface SortableTabListProps {
   editingTitle: string;
   maxLineCount: number;
   isPinned?: boolean;
+  side?: "left" | "right";
   onTabClick: (tabId: string) => void;
   onTabClose: (tabId: string) => void;
   onTabDoubleClick: (tab: Tab, e: React.MouseEvent<HTMLDivElement>) => void;
@@ -37,6 +38,7 @@ export const SortableTabList: React.FC<SortableTabListProps> = ({
   editingTitle,
   maxLineCount,
   isPinned = false,
+  side = "left",
   onTabClick,
   onTabClose,
   onTabDoubleClick,
@@ -69,6 +71,7 @@ export const SortableTabList: React.FC<SortableTabListProps> = ({
             isEditing={editingTabId === tab.id}
             editingTitle={editingTitle}
             maxLineCount={maxLineCount}
+            side={side}
             onClick={() => onTabClick(tab.id)}
             onClose={(e) => {
               if (tab.id) {
