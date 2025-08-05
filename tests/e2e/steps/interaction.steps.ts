@@ -162,6 +162,30 @@ When('I select "{string}" from the context menu', async function(menuItem) {
   await this.contextMenu.selectFromContextMenu(menuItem);
 });
 
+When('I click {string} in the download modal', async function(buttonText) {
+  if (buttonText === "Select All") {
+    await this.download.clickSelectAllInModal();
+  } else if (buttonText.includes("Download")) {
+    await this.download.clickDownloadFilesInModal(buttonText);
+  } else {
+    // Generic button click in modal
+    const button = this.page.getByRole('button', { name: buttonText });
+    await button.click();
+  }
+});
+
+When('I click "{string}" in the download modal', async function(buttonText) {
+  if (buttonText === "Select All") {
+    await this.download.clickSelectAllInModal();
+  } else if (buttonText.includes("Download")) {
+    await this.download.clickDownloadFilesInModal(buttonText);
+  } else {
+    // Generic button click in modal
+    const button = this.page.getByRole('button', { name: buttonText });
+    await button.click();
+  }
+});
+
 When('I select {string} from the {string} submenu', async function(subItem, parentItem) {
   await this.contextMenu.selectFromSubmenu(parentItem, subItem);
 });

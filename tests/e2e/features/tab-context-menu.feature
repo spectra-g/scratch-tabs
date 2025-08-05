@@ -225,3 +225,25 @@ Feature: Tab context menu
     When I right-click the "Scratch 1" tab
     And I select "Download" from the context menu
     Then a file should be downloaded with the name "Scratch 1.json"
+
+  Scenario: Download all tabs using context menu
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "First tab content" into the editor
+    When I right-click the "Scratch 1" tab
+    And I select "From sample" from the context menu
+    When I select "JSON" from the "From sample" submenu
+    Then the status bar language should be "JSON"
+    When I click the icon for "New tab"
+    Then the "Scratch 2" tab should be active
+    When I type "Second tab content" into the editor
+    When I right-click the "Scratch 2" tab
+    And I select "From sample" from the context menu
+    When I select "CSV / TSV" from the "From sample" submenu
+    Then the status bar language should be "CSV / TSV"
+    When I right-click the "Scratch 1" tab
+    And I select "Download all tabs" from the context menu
+    Then the download modal should appear
+    When I click "Select All" in the download modal
+    And I click "Download 3 Files" in the download modal
+    Then a file should be downloaded with the name "scratch-tabs-export.zip"

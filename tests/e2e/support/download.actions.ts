@@ -32,4 +32,26 @@ export class DownloadActions {
       throw error;
     }
   }
+
+  async expectDownloadModalToAppear() {
+    // Wait for the download modal to appear by looking for the "Download Tabs" title
+    await expect(this.page.getByText('Download Tabs')).toBeVisible();
+  }
+
+  async clickSelectAllInModal() {
+    // Click the "Select All" button in the download modal
+    const selectAllButton = this.page.getByRole('button', { name: 'Select All' });
+    await expect(selectAllButton).toBeVisible();
+    await selectAllButton.click();
+  }
+
+  async clickDownloadFilesInModal(buttonText: string) {
+    // Set up download capture before clicking the download button
+    this.startDownloadCapture();
+    
+    // Click the download button (e.g., "Download 3 Files")
+    const downloadButton = this.page.getByRole('button', { name: buttonText });
+    await expect(downloadButton).toBeVisible();
+    await downloadButton.click();
+  }
 }

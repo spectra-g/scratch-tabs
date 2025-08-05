@@ -209,3 +209,7 @@ Then('a file should be downloaded with the name {string}', async function(expect
 Then('a file should be downloaded with the name "{string}"', async function(expectedFileName) {
   await this.download.expectFileDownloadedWithName(expectedFileName);
 });
+
+Then('the download modal should appear', async function() {
+  await this.download.expectDownloadModalToAppear();
+});
