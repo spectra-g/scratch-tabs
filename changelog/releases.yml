@@ -5,15 +5,16 @@ config:
 releases:
   - version: "1.0.0"
     type: "latest"  # latest, beta, alpha
-    date: "2024-12-15"
+    date: "2025-08-06"
     headline: "🎉 Initial Public Release"
     description: "The first stable release of Scratch Tabs, bringing a comprehensive suite of developer tools directly to your browser."
     categories:
       - name: "✨ New Features"
         changes:
-          - "**50+ Developer Tools:** JSON editor, REST client, JWT decoder, regex tester, base64 converter, and more"
+          - "**50+ Developer Tools:** JSON editor, JWT decoder, Regex tester, Word count, and more"
           - "**Multi-tab Workspace:** Organize your work with persistent tabs and split-view support"
-          - "**Smart Format Detection:** Automatic recognition and formatting of JSON, XML, CSV, and other common formats"
+          - "**Smart Format Detection:** Automatic recognition and formatting of JSON, YAML, Markdown, CSV, and other common formats"
+          - "**Smart Views:** Take your editing to the next level with Smart Views, support for JSON, YAML, Markdown, HTML and CSV"
           - "**Offline AI Summarization:** Client-side text summarization using WebAssembly (experimental)"
           - "**Advanced Diff Tool:** Side-by-side comparison with syntax highlighting"
           - "**Workspace Management:** Save, export, and import entire workspaces"
@@ -23,12 +24,11 @@ releases:
           - "Built with React 18 and TypeScript for reliability and performance"
           - "Monaco Editor integration for advanced code editing capabilities"
           - "IndexedDB for persistent local storage"
-          - "Service Worker support for offline functionality"
-          - "Responsive design optimized for desktop and mobile"
+          - "Service Worker support for process intensive tasks"
 
   - version: "0.9.0-beta"
     type: "beta"
-    date: "2024-11-28"
+    date: "2025-07-20"
     headline: "🧪 Beta Release"
     description: "Feature-complete beta release with extensive testing and polish."
     categories:
@@ -37,8 +37,8 @@ releases:
           - "REST client with environment variables and request history"
           - "JWT token decoder, verifier, and signer with multiple algorithms"
           - "Advanced JSON transformation tools with jq-like syntax"
-          - "Batch text processing with regex find-and-replace"
-          - "CSV viewer with sorting and filtering capabilities"
+          - "Batch text processing"
+          - "CSV Smart View providing extended capabilities"
           - "Password and UUID generators with customizable options"
       - name: "🔄 Improved"
         changes:
@@ -55,7 +55,7 @@ releases:
 
   - version: "0.8.0-alpha"
     type: "alpha"
-    date: "2024-10-12"
+    date: "2025-05-05"
     headline: "🚀 Alpha Release"
     description: "Initial alpha release with core functionality and architecture foundation."
     categories:
@@ -65,7 +65,6 @@ releases:
           - "Basic JSON formatter and validator"
           - "Text editor with syntax highlighting for 20+ languages"
           - "Local storage persistence for tabs and settings"
-          - "Dark theme with customizable accent colors"
           - "Import/export functionality for individual tabs"
       - name: "🏗️ Architecture"
         changes:
