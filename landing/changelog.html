@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en" style="scroll-behavior: smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Changelog - Scratch Tabs</title>
+    <meta
+      name="description"
+      content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog."
+    />
+    <meta
+      name="keywords"
+      content="changelog, updates, release notes, new features, improvements, scratch tabs"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://scratchtabs.com/changelog.html" />
+    <meta
+      property="og:title"
+      content="Changelog - Scratch Tabs"
+    />
+    <meta
+      property="og:description"
+      content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog."
+    />
+    <meta
+      property="og:image"
+      content="https://scratchtabs.b-cdn.net/og-image.png"
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://scratchtabs.com/changelog.html" />
+    <meta
+      property="twitter:title"
+      content="Changelog - Scratch Tabs"
+    />
+    <meta
+      property="twitter:description"
+      content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog."
+    />
+    <meta
+      property="twitter:image"
+      content="https://scratchtabs.b-cdn.net/og-image.png"
+    />
+
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+
+    <style>
+      html {
+        scroll-padding-top: 5rem;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+          "Segoe UI Symbol";
+        background-color: #111827;
+        color: #d1d5db;
+      }
+
+      .section-title {
+        color: #f3f4f6;
+      }
+
+      .primary-button {
+        background-color: #2563eb;
+        color: white;
+      }
+
+      .primary-button:hover {
+        background-color: #1d4ed8;
+      }
+
+      .logo-size {
+        width: 22px;
+        height: 22px;
+      }
+
+      /* GitHub-style changelog */
+      .changelog-entry {
+        border-left: 4px solid transparent;
+        padding-left: 1.5rem;
+        margin-bottom: 3rem;
+      }
+
+      .changelog-entry.latest {
+        border-left-color: #3b82f6;
+      }
+
+      .changelog-entry.beta {
+        border-left-color: #6b7280;
+      }
+
+      .changelog-entry.alpha {
+        border-left-color: #4b5563;
+      }
+
+      .changelog-content {
+        line-height: 1.7;
+      }
+
+      .changelog-content h4 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+      }
+
+      .changelog-content ul {
+        margin: 0.75rem 0;
+        padding-left: 1.25rem;
+      }
+
+      .changelog-content li {
+        margin-bottom: 0.5rem;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .badge.latest {
+        background-color: #3b82f6;
+        color: white;
+      }
+
+      .badge.beta {
+        background-color: #6b7280;
+        color: white;
+      }
+
+      .badge.alpha {
+        background-color: #4b5563;
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body class="antialiased">
+    <!-- SVG Sprite Sheet -->
+    <svg style="display: none;">
+      <defs>
+        <symbol id="icon-menu" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </symbol>
+        <symbol id="icon-github" viewBox="0 0 24 24">
+          <path
+            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.237 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+        </symbol>
+        <symbol id="icon-discord" viewBox="0 0 24 24">
+          <path
+            d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <header class="py-4 px-6 sticky top-0 z-50 bg-gray-900 border-b border-gray-700/50">
+      <div class="container mx-auto flex justify-between items-center">
+        <a href="index.html" class="flex items-center space-x-2">
+          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
+          <span class="text-xl sm:text-2xl font-semibold text-white">Scratch Tabs</span>
+        </a>
+        <!-- Desktop Nav -->
+        <nav class="hidden md:flex items-center space-x-6">
+          <a href="features.html" class="text-sm text-gray-300 hover:text-white transition-colors">Features</a>
+          <a href="tablets.html" class="text-sm text-gray-300 hover:text-white transition-colors">Tablets</a>
+          <a href="changelog.html" class="text-sm text-blue-400 font-medium">Changelog</a>
+          <a href="index.html#privacy" class="text-sm text-gray-300 hover:text-white transition-colors">Privacy</a>
+          <a href="faq.html" class="text-sm text-gray-300 hover:text-white transition-colors">FAQ</a>
+        </nav>
+        <div class="flex items-center space-x-2">
+          <a href="https://app.scratchtabs.com" target="_blank"
+            class="primary-button text-sm font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out">
+            Launch App
+          </a>
+          <button id="mobile-menu-button" class="md:hidden p-2 text-gray-300 hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <use href="#icon-menu"></use>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="mobile-menu" class="hidden md:hidden mt-4">
+        <a href="features.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Features</a>
+        <a href="tablets.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Tablets</a>
+        <a href="changelog.html" class="block py-2 px-4 text-sm text-blue-400 font-medium bg-gray-700 rounded">Changelog</a>
+        <a href="index.html#privacy" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Privacy</a>
+        <a href="faq.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">FAQ</a>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="py-16 md:py-24 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div class="container mx-auto px-6 text-center">
+        <h1 class="section-title text-4xl md:text-6xl font-bold mb-6">
+          Changelog
+        </h1>
+        <p class="text-gray-300 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+          All notable changes to Scratch Tabs are documented here. We follow semantic versioning and keep this changelog updated with every release.
+        </p>
+        <a href="https://app.scratchtabs.com" target="_blank"
+          class="primary-button text-lg font-bold py-3 px-8 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105">
+          Try the Latest Version
+        </a>
+      </div>
+    </section>
+
+    <!-- Changelog Content -->
+    <section class="py-16">
+      <div class="container mx-auto px-6">
+        <div class="max-w-4xl mx-auto">
+          
+          
+          <!-- Version 1.0.0 -->
+          <div class="changelog-entry latest">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div class="flex items-center gap-3 mb-2 sm:mb-0">
+                <h2 class="text-2xl font-bold text-white">v1.0.0</h2>
+                <span class="badge latest">Latest</span>
+              </div>
+              <span class="text-gray-400 text-sm">August 6, 2025</span>
+            </div>
+            <h3 class="text-lg font-semibold text-blue-400 mb-4">🎉 Initial Public Release</h3>
+            <div class="changelog-content text-gray-300">
+              <p class="mb-4">The first stable release of Scratch Tabs, bringing a comprehensive suite of developer tools directly to your browser.</p>
+              
+              <h4 class="text-white">✨ New Features</h4>
+              <ul class="list-disc">
+                <li><strong>50+ Developer Tools:</strong> JSON editor, JWT decoder, regex tester, Word count, and more</li>
+                <li><strong>Multi-tab Workspace:</strong> Organize your work with persistent tabs and split-view support</li>
+                <li><strong>Smart Format Detection:</strong> Automatic recognition and formatting of JSON, YAML, Markdown, CSV, and other common formats</li>
+                <li><strong>Smart Views:</strong> Take your editing to the next level with Samrt Views, support for JSON, YAML, Markdown, HTML and CSV</li>
+                <li><strong>Offline AI Summarization:</strong> Client-side text summarization using WebAssembly (experimental)</li>
+                <li><strong>Advanced Diff Tool:</strong> Side-by-side comparison with syntax highlighting</li>
+                <li><strong>Workspace Management:</strong> Save, export, and import entire workspaces</li>
+                <li><strong>Privacy-First Design:</strong> 100% client-side processing, zero data collection</li>
+              </ul>
+              
+              <h4 class="text-white">🔧 Technical Highlights</h4>
+              <ul class="list-disc">
+                <li>Built with React 18 and TypeScript for reliability and performance</li>
+                <li>Monaco Editor integration for advanced code editing capabilities</li>
+                <li>IndexedDB for persistent local storage</li>
+                <li>Service Worker support for process intensive tasks</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Version 0.9.0-beta -->
+          <div class="changelog-entry beta">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div class="flex items-center gap-3 mb-2 sm:mb-0">
+                <h2 class="text-xl font-bold text-white">v0.9.0-beta</h2>
+                <span class="badge beta">Beta</span>
+              </div>
+              <span class="text-gray-400 text-sm">July 20, 2025</span>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-300 mb-4">🧪 Beta Release</h3>
+            <div class="changelog-content text-gray-300">
+              <p class="mb-4">Feature-complete beta release with extensive testing and polish.</p>
+              
+              <h4 class="text-white">🆕 Added</h4>
+              <ul class="list-disc">
+                <li>REST client with environment variables and request history</li>
+                <li>JWT token decoder, verifier, and signer with multiple algorithms</li>
+                <li>Advanced JSON transformation tools with jq-like syntax</li>
+                <li>Batch text processing</li>
+                <li>CSV Smart View providing extended capabilities</li>
+                <li>Password and UUID generators with customizable options</li>
+              </ul>
+              
+              <h4 class="text-white">🔄 Improved</h4>
+              <ul class="list-disc">
+                <li>Enhanced tab management with drag-and-drop reordering</li>
+                <li>Better error handling and user feedback</li>
+                <li>Improved keyboard shortcuts and accessibility</li>
+                <li>Performance optimizations for large files</li>
+              </ul>
+              
+              <h4 class="text-white">🐛 Fixed</h4>
+              <ul class="list-disc">
+                <li>Memory leaks when switching between multiple tabs</li>
+                <li>Incorrect syntax highlighting for certain file types</li>
+                <li>Issues with workspace export containing special characters</li>
+                <li>Mobile layout problems on smaller screens</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Version 0.8.0-alpha -->
+          <div class="changelog-entry alpha">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div class="flex items-center gap-3 mb-2 sm:mb-0">
+                <h2 class="text-xl font-bold text-white">v0.8.0-alpha</h2>
+                <span class="badge alpha">Alpha</span>
+              </div>
+              <span class="text-gray-400 text-sm">May 5, 2025</span>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-400 mb-4">🚀 Alpha Release</h3>
+            <div class="changelog-content text-gray-300">
+              <p class="mb-4">Initial alpha release with core functionality and architecture foundation.</p>
+              
+              <h4 class="text-white">🆕 Added</h4>
+              <ul class="list-disc">
+                <li>Core tab-based interface with workspace support</li>
+                <li>Basic JSON formatter and validator</li>
+                <li>Text editor with syntax highlighting for 20+ languages</li>
+                <li>Local storage persistence for tabs and settings</li>
+                <li>Import/export functionality for individual tabs</li>
+              </ul>
+              
+              <h4 class="text-white">🏗️ Architecture</h4>
+              <ul class="list-disc">
+                <li>Established plugin-based tablet system for extensibility</li>
+                <li>Implemented privacy-first design principles</li>
+                <li>Set up development toolchain with TypeScript and Vite</li>
+                <li>Created comprehensive testing framework</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="text-center pt-8 border-t border-gray-700">
+            <p class="text-gray-400 text-sm mb-4">
+              Want to suggest a feature or report a bug?
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
+                class="inline-flex items-center justify-center px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <use href="#icon-github"></use>
+                </svg>
+                Open GitHub Issue
+              </a>
+              <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
+                class="inline-flex items-center justify-center px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <use href="#icon-discord"></use>
+                </svg>
+                Join Discord
+              </a>
+            </div>
+          </div>
+          </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20">
+      <div class="container mx-auto px-6 text-center">
+        <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">
+          Experience the Latest Features
+        </h2>
+        <p class="text-gray-300 text-lg mb-8 max-w-xl mx-auto">
+          Try all the new features and improvements in the latest version of Scratch Tabs.
+        </p>
+        <a href="https://app.scratchtabs.com" target="_blank"
+          class="primary-button text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105">
+          Launch App
+        </a>
+        <p class="text-sm text-gray-500 mt-4">
+          ✓ Always free ✓ No registration required ✓ Works offline
+        </p>
+      </div>
+    </section>
+
+    <footer class="py-8 text-center border-t border-gray-700/50">
+      <div class="container mx-auto px-6">
+        <p class="text-sm text-gray-500 mb-4">
+          © <span id="currentYear"></span> Scratch Tabs. Your Local Data Companion.
+        </p>
+        <div class="flex justify-center items-center space-x-6 mb-4">
+          <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank" rel="noopener noreferrer"
+            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
+            title="GitHub Issues">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <use href="#icon-github"></use>
+            </svg>
+            <span class="text-sm">GitHub Issues</span>
+          </a>
+          <a href="https://discord.gg/HwsfpTzMVS" target="_blank" rel="noopener noreferrer"
+            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
+            title="Join Discord">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <use href="#icon-discord"></use>
+            </svg>
+            <span class="text-sm">Join Discord</span>
+          </a>
+        </div>
+        <p class="text-xs text-gray-600">
+          Connect with us for feedback, support, and community discussions.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("currentYear").textContent = new Date().getFullYear();
+      const mobileMenuButton = document.getElementById("mobile-menu-button");
+      const mobileMenu = document.getElementById("mobile-menu");
+      const mobileMenuLinks = mobileMenu.querySelectorAll("a");
+      mobileMenuButton.addEventListener("click", () => { mobileMenu.classList.toggle("hidden"); });
+      mobileMenuLinks.forEach((link) => { link.addEventListener("click", () => { mobileMenu.classList.add("hidden"); }); });
+    </script>
+  </body>
+</html>

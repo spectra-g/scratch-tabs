@@ -283,7 +283,7 @@ export const WelcomeScreen: React.FC = () => {
             />
             <h1 className="text-3xl font-light text-gray-100">Scratch Tabs</h1>
           </div>
-          <p className="text-gray-400 text-sm mt-2">Version 1.0</p>
+          <p className="text-gray-400 text-sm mt-2">Version 1.0.0</p>
         </div>
 
         {/* Actions Grid */}
@@ -295,7 +295,7 @@ export const WelcomeScreen: React.FC = () => {
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg border border-transparent text-left w-full opacity-75"
+                    className="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg border border-transparent text-left w-full"
                   >
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-gray-700/50 rounded-md">
