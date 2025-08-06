@@ -1,6 +1,6 @@
 import React from "react";
 import { formatRegistry } from "../../formats";
-import { FormatDetector } from "../../formats/types";
+import { FormatModule } from "../../formats/types";
 
 interface LanguageSelectorProps {
   onSelect: (languageId: string) => void;
@@ -14,7 +14,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   // Custom sorting logic
   const sortedLanguages = allLanguages.sort(
-    (a: FormatDetector, b: FormatDetector) => {
+    (a: FormatModule, b: FormatModule) => {
       const aIsPriority = a.id === "json" || a.id === "markdown";
       const bIsPriority = b.id === "json" || b.id === "markdown";
 

@@ -36,9 +36,6 @@ export interface Tablet extends TabletMetadata {
 
   // Render the tablet's UI
   render(state: TabletState, onChange: (state: TabletState) => void): ReactNode;
-
-  // NEW: Optional method to provide actions for specific contexts
-  getActionsForContext?(context: TabletActionContext): TabletAction[];
 }
 
 // Registry interface for managing tablets

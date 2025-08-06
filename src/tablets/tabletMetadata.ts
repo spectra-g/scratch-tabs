@@ -185,7 +185,7 @@ export const tabletMetadata: TabletMetadata[] = [
   // This function is lightweight and has no heavy dependencies.
   getActionsForContext: (context) => {
     const actions: TabletAction[] = [];
-    if (context.source === 'editor-tab' && context.content && context.content.length > 50) {
+    if (context.source === 'editor-tab' && context.tab && context.content && context.content.length > 50) {
       actions.push({
         id: 'wordcount.new-tab-from-content',
         label: 'Open in Word Count',
