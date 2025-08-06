@@ -1,7 +1,13 @@
+import { TabletActionContext, TabletAction } from "./types";
+import { FileText } from "../components/Icons";
+import { tabletActionService } from "../services/tabletActionService";
+
 export interface TabletMetadata {
   id: string;
   label: string;
   keywords: string[];
+  // NEW: Add the optional action discovery function to the metadata.
+  getActionsForContext?(context: TabletActionContext): TabletAction[];
 }
 
 export const tabletMetadata: TabletMetadata[] = [
@@ -175,6 +181,34 @@ export const tabletMetadata: TabletMetadata[] = [
     "paragraphs",
     "characters",
   ],
+  // NEW: Implement the action discovery logic for Word Count here.
+  // This function is lightweight and has no heavy dependencies.
+  getActionsForContext: (context) => {
+    const actions: TabletAction[] = [];
+    if (context.source === 'editor-tab' && context.content && context.content.length > 50) {
+      actions.push({
+        id: 'wordcount.new-tab-from-content',
+        label: 'Open in Word Count',
+        icon: FileText,
+        action: () => {
+          if (!context.tab) return;
+          tabletActionService.handleAction({
+            targetTablet: 'wordcount',
+            action: 'new-tab',
+            payload: {
+              content: context.content || '',
+              title: context.tab.title,
+            },
+            source: {
+              tabId: context.tab.id,
+              titleHint: `${context.tab.title} (Analysis)`,
+            }
+          });
+        }
+      });
+    }
+    return actions;
+  },
 },
 {
   id: "emoji",

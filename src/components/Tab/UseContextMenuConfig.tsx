@@ -24,9 +24,11 @@ import {
 import { LanguageSelector } from "./LanguageSelector";
 import { formatRegistry } from "../../formats";
 import { MenuItem } from "./types";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ContextMenuAction, TabSide } from "../../constants";
 import { modelManager } from "../../services/modelManager";
+import { tabletMetadata } from "../../tablets/tabletMetadata";
+import { TabletActionContext } from "../../tablets/types";
 
 // Helper function to get the confirmation button text based on action type
 const getConfirmButtonText = (type: string | null): string => {
@@ -70,6 +72,8 @@ export const useContextMenuConfig = (
     message: string;
     targetTabId: string;
   } | null>(null);
+
+  const [dynamicMenuItems, setDynamicMenuItems] = useState<MenuItem[]>([]);
 
   const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
 
@@ -137,6 +141,36 @@ export const useContextMenuConfig = (
       !otherSideTab.isTablet
     );
   })();
+
+  // Generate dynamic menu items from tablet metadata
+  useEffect(() => {
+    const tab = tabsStore.tabs.find((t) => t.id === tabId);
+    if (tab && !tab.isTablet) {
+      const context: TabletActionContext = {
+        source: 'editor-tab',
+        tab: tab,
+        content: tab.content,
+      };
+
+      const allActions = tabletMetadata.flatMap(
+        (meta) => meta.getActionsForContext?.(context) || []
+      );
+      
+      const menuItems = allActions.map(action => ({
+        id: action.id,
+        label: action.label,
+        icon: action.icon,
+        action: () => {
+          action.action();
+          closeContextMenu();
+        }
+      }));
+      
+      setDynamicMenuItems(menuItems);
+    } else {
+      setDynamicMenuItems([]);
+    }
+  }, [tabId, tabsStore.tabs]); // Removed closeContextMenu from dependencies
 
   // --- Confirmation Dialog Logic ---
   const handleRequestConfirmation = useCallback(
@@ -520,6 +554,14 @@ Add any other context about the problem here.
       action: handleReportIssue,
     },
   ];
+
+  // Add the dynamic items, with a separator if they exist and there are other items.
+  if (dynamicMenuItems.length > 0 && menuItems.length > 0) {
+    menuItems.push({ id: "sep-tablet-actions", isSeparator: true });
+    menuItems.push(...dynamicMenuItems);
+  } else if (dynamicMenuItems.length > 0) {
+    menuItems.push(...dynamicMenuItems);
+  }
 
   const visibleItems: MenuItem[] = [];
   menuItems.forEach((item, index) => {

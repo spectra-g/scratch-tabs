@@ -1,15 +1,32 @@
 import { ReactNode } from "react";
 import { TabletMetadata } from "./tabletMetadata";
+import { Tab } from "../types";
+import { LucideIcon } from 'lucide-react';
 
 export interface TabletState {
   type: string;
   data: any;
 }
 
+// NEW: Describes the context in which an action is being requested.
+export interface TabletActionContext {
+  source: 'editor-tab' | 'editor-selection';
+  tab?: Tab;
+  content?: string;
+}
+
+// NEW: Describes an action that a tablet can offer.
+export interface TabletAction {
+  id: string; // e.g., 'wordcount.new-tab-from-content'
+  label: string;
+  icon?: LucideIcon;
+  action: () => void; // This will dispatch the message to the service.
+}
+
 // Base interface that all tablets must implement
 export interface Tablet extends TabletMetadata {
   // Create initial state for the tablet
-  createInitialState(): TabletState;
+  createInitialState(payload?: any): TabletState;
 
   // Serialize tablet state to JSON
   serializeState(state: TabletState): string;
@@ -19,6 +36,9 @@ export interface Tablet extends TabletMetadata {
 
   // Render the tablet's UI
   render(state: TabletState, onChange: (state: TabletState) => void): ReactNode;
+
+  // NEW: Optional method to provide actions for specific contexts
+  getActionsForContext?(context: TabletActionContext): TabletAction[];
 }
 
 // Registry interface for managing tablets

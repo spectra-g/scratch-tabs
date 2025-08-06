@@ -124,12 +124,12 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
         onClose();
       } else {
         console.error(
-          `❌ TabletSelector: Failed to load tablet: ${tabletMetadata.id}`,
+          `Failed to load tablet: ${tabletMetadata.id}`,
         );
       }
     } catch (error) {
       console.error(
-        `❌ TabletSelector: Error loading tablet ${tabletMetadata.id}:`,
+        `Error loading tablet ${tabletMetadata.id}:`,
         error,
       );
     }

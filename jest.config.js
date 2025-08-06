@@ -10,7 +10,8 @@ export default {
     "^monaco-editor(.*)$": "<rootDir>/src/__mocks__/monaco-editor.js",
     "^@monaco-editor/react$": "<rootDir>/src/__mocks__/@monaco-editor/react.js",
     "^react-markdown$": "<rootDir>/src/__mocks__/react-markdown.js",
-    "^remark-gfm$": "<rootDir>/src/__mocks__/remark-gfm.js"
+    "^remark-gfm$": "<rootDir>/src/__mocks__/remark-gfm.js",
+    "^.*tablets/dynamicRegistry$": "<rootDir>/src/tablets/__mocks__/dynamicRegistry.ts"
   },
   transform: {
     "^.+\\.(ts|tsx)$": [

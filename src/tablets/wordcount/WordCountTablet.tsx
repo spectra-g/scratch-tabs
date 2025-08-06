@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { Tablet, TabletState } from '../types';
+import { Tablet, TabletState, TabletActionContext, TabletAction } from '../types';
 import { FileText } from '../../components/Icons';
+import { tabletActionService } from '../../services/tabletActionService';
 import { 
   analyzeText, 
   WordCountStats, 
@@ -210,17 +211,44 @@ export const WordCountTablet: Tablet = {
     'characters',
   ],
 
-  createInitialState(): WordCountTabletState {
+  createInitialState(payload?: { content?: string; title?: string }): WordCountTabletState {
     return {
       type: 'wordcount',
       data: {
-        text: '',
-        title: '',
+        text: payload?.content || '',
+        title: payload?.title || '',
         deviceType: 'standard',
         writingGoal: 'general',
         targetKeyword: '',
       },
     };
+  },
+  
+  getActionsForContext(context: TabletActionContext): TabletAction[] {
+    const actions: TabletAction[] = [];
+    if (context.source === 'editor-tab' && context.content && context.content.length > 50) {
+      actions.push({
+        id: 'wordcount.new-tab-from-content',
+        label: 'Open in Word Count',
+        icon: FileText,
+        action: () => {
+          if (!context.tab) return;
+          tabletActionService.handleAction({
+            targetTablet: 'wordcount',
+            action: 'new-tab',
+            payload: {
+              content: context.content || '',
+              title: context.tab.title,
+            },
+            source: {
+              tabId: context.tab.id,
+              titleHint: `${context.tab.title} (Analysis)`,
+            }
+          });
+        }
+      });
+    }
+    return actions;
   },
 
   serializeState(state: TabletState): string {
