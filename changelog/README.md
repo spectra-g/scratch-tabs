@@ -32,6 +32,7 @@ The `releases.yml` file contains:
 - version: "1.0.0"           # Version number (string)
   type: "latest"             # Release type: latest, beta, alpha
   date: "2024-12-15"         # Release date (YYYY-MM-DD)
+  draft: false               # Optional: if true, exclude from published changelog
   headline: "🎉 Initial Public Release"  # Headline with emoji
   description: "Description of the release..."
   categories:                # Array of change categories
@@ -47,6 +48,7 @@ The `releases.yml` file contains:
 - ✅ Updates version number in Welcome screen component
 - ✅ Configurable number of versions to display
 - ✅ Support for different release types (latest, beta, alpha)
+- ✅ Draft releases (excluded from published changelog)
 - ✅ Markdown-to-HTML conversion (supports **bold** text)
 - ✅ Professional GitHub-style layout
 - ✅ Mobile-responsive design
@@ -76,3 +78,4 @@ changelog/
 - Version numbers should follow semantic versioning
 - Use emojis in headlines and category names for visual appeal
 - Support for **bold** text in change descriptions (automatically converts `**text**` to HTML)
+- Use `draft: true` to exclude releases from the published changelog (useful for preparing upcoming releases)

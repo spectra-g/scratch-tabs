@@ -215,14 +215,22 @@ function main() {
       throw new Error('Invalid YAML structure. Expected releases array.');
     }
     
-    const { releases } = data;
+    // Filter out draft releases (where draft: true)
+    const allReleases = data.releases;
+    const releases = allReleases.filter(release => !release.draft);
+    const draftCount = allReleases.length - releases.length;
+    
     const maxVersions = data.config?.max_versions || 10;
     
     if (releases.length === 0) {
       throw new Error('No releases found in YAML file');
     }
     
-    console.log(`📋 Found ${releases.length} releases, showing latest ${Math.min(releases.length, maxVersions)}`);
+    if (draftCount > 0) {
+      console.log(`📋 Found ${allReleases.length} total releases (${draftCount} drafts excluded), showing latest ${Math.min(releases.length, maxVersions)}`);
+    } else {
+      console.log(`📋 Found ${releases.length} releases, showing latest ${Math.min(releases.length, maxVersions)}`);
+    }
     
     // Generate changelog HTML
     const changelogHTML = generateChangelogHTML(releases, maxVersions);
