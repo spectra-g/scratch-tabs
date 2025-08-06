@@ -1,0 +1,75 @@
+# Scratch Tabs Changelog Configuration
+config:
+  max_versions: 10  # Maximum number of versions to display
+
+releases:
+  - version: "1.0.0"
+    type: "latest"  # latest, beta, alpha
+    date: "2024-12-15"
+    headline: "🎉 Initial Public Release"
+    description: "The first stable release of Scratch Tabs, bringing a comprehensive suite of developer tools directly to your browser."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**50+ Developer Tools:** JSON editor, REST client, JWT decoder, regex tester, base64 converter, and more"
+          - "**Multi-tab Workspace:** Organize your work with persistent tabs and split-view support"
+          - "**Smart Format Detection:** Automatic recognition and formatting of JSON, XML, CSV, and other common formats"
+          - "**Offline AI Summarization:** Client-side text summarization using WebAssembly (experimental)"
+          - "**Advanced Diff Tool:** Side-by-side comparison with syntax highlighting"
+          - "**Workspace Management:** Save, export, and import entire workspaces"
+          - "**Privacy-First Design:** 100% client-side processing, zero data collection"
+      - name: "🔧 Technical Highlights"
+        changes:
+          - "Built with React 18 and TypeScript for reliability and performance"
+          - "Monaco Editor integration for advanced code editing capabilities"
+          - "IndexedDB for persistent local storage"
+          - "Service Worker support for offline functionality"
+          - "Responsive design optimized for desktop and mobile"
+
+  - version: "0.9.0-beta"
+    type: "beta"
+    date: "2024-11-28"
+    headline: "🧪 Beta Release"
+    description: "Feature-complete beta release with extensive testing and polish."
+    categories:
+      - name: "🆕 Added"
+        changes:
+          - "REST client with environment variables and request history"
+          - "JWT token decoder, verifier, and signer with multiple algorithms"
+          - "Advanced JSON transformation tools with jq-like syntax"
+          - "Batch text processing with regex find-and-replace"
+          - "CSV viewer with sorting and filtering capabilities"
+          - "Password and UUID generators with customizable options"
+      - name: "🔄 Improved"
+        changes:
+          - "Enhanced tab management with drag-and-drop reordering"
+          - "Better error handling and user feedback"
+          - "Improved keyboard shortcuts and accessibility"
+          - "Performance optimizations for large files"
+      - name: "🐛 Fixed"
+        changes:
+          - "Memory leaks when switching between multiple tabs"
+          - "Incorrect syntax highlighting for certain file types"
+          - "Issues with workspace export containing special characters"
+          - "Mobile layout problems on smaller screens"
+
+  - version: "0.8.0-alpha"
+    type: "alpha"
+    date: "2024-10-12"
+    headline: "🚀 Alpha Release"
+    description: "Initial alpha release with core functionality and architecture foundation."
+    categories:
+      - name: "🆕 Added"
+        changes:
+          - "Core tab-based interface with workspace support"
+          - "Basic JSON formatter and validator"
+          - "Text editor with syntax highlighting for 20+ languages"
+          - "Local storage persistence for tabs and settings"
+          - "Dark theme with customizable accent colors"
+          - "Import/export functionality for individual tabs"
+      - name: "🏗️ Architecture"
+        changes:
+          - "Established plugin-based tablet system for extensibility"
+          - "Implemented privacy-first design principles"
+          - "Set up development toolchain with TypeScript and Vite"
+          - "Created comprehensive testing framework"

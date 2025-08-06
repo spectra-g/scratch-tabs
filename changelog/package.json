@@ -1,0 +1,21 @@
+{
+  "name": "scratch-tabs-changelog",
+  "version": "1.0.0",
+  "description": "Changelog generator for Scratch Tabs",
+  "main": "generate.js",
+  "scripts": {
+    "generate": "node generate.js",
+    "build": "node generate.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "keywords": [
+    "changelog",
+    "generator",
+    "yaml",
+    "html"
+  ],
+  "author": "Scratch Tabs Team",
+  "license": "MIT"
+}
