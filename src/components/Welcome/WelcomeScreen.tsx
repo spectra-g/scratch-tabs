@@ -295,7 +295,7 @@ export const WelcomeScreen: React.FC = () => {
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg border border-transparent text-left w-full opacity-75"
+                    className="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg border border-transparent text-left w-full"
                   >
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-gray-700/50 rounded-md">
