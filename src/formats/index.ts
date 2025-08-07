@@ -10,6 +10,7 @@ import "./csharp";
 import "./css";
 import "./csv/index";
 import "./curl";
+import "./curl/index";
 import "./diff";
 import "./dockerfile";
 import "./go";
