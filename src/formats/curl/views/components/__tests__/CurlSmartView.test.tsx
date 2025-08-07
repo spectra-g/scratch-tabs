@@ -23,7 +23,7 @@ jest.mock('@monaco-editor/react', () => ({
 }));
 
 // Mock tablet action service
-jest.mock('../../../../services/tabletActionService', () => ({
+jest.mock('../../../../../services/tabletActionService', () => ({
   tabletActionService: {
     handleAction: jest.fn(),
   },
@@ -159,7 +159,8 @@ describe('CurlSmartView', () => {
       />
     );
 
-    const optionsButton = screen.getByText('Options');
+    // Find the Options button by its title attribute to distinguish from other "Options" text
+    const optionsButton = screen.getByTitle('Toggle options palette');
     fireEvent.click(optionsButton);
 
     expect(screen.getByText('cURL Options')).toBeInTheDocument();
