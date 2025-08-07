@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, ExternalLink, Globe, Clock } from '../../../../components/Icons';
 import { CurlRequest } from '../../utils/parser';
 import { CurlRequestBuilder } from './CurlRequestBuilder';
@@ -53,13 +53,13 @@ export const CurlCard: React.FC<CurlCardProps> = ({
       {/* Card header - always visible */}
       <div
         className={`p-4 cursor-pointer ${isExpanded ? '' : 'hover:bg-gray-700/30'}`}
-        onClick={!isExpanded ? onClick : undefined}
+        onClick={onClick}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             {/* Expand/collapse icon */}
             <button
-              onClick={isExpanded ? onClick : undefined}
+              onClick={onClick}
               className="p-1 hover:bg-gray-700 rounded transition-colors"
             >
               {isExpanded ? (
@@ -116,10 +116,12 @@ export const CurlCard: React.FC<CurlCardProps> = ({
             <div className="p-4">
               {/* Action buttons */}
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Clock size={14} className="text-gray-500" />
-                  <span className="text-xs text-gray-500">Ready to execute</span>
-                </div>
+                {request.url && request.url.trim() && (
+                  <div className="flex items-center space-x-2">
+                    <Clock size={14} className="text-gray-500" />
+                    <span className="text-xs text-gray-500">Ready to execute</span>
+                  </div>
+                )}
                 <button
                   onClick={onOpenInRestClient}
                   className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
