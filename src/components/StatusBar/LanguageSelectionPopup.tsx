@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import type { PopupMenuItem } from "./types";
 
 interface LanguageSelectionPopupProps {
@@ -15,6 +15,25 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
   title,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter languages based on search term
+  const filteredLanguages = useMemo(() => {
+    if (!searchTerm.trim()) return languages;
+    
+    const term = searchTerm.toLowerCase();
+    return languages.filter(item => 
+      !item.isSeparator && item.name.toLowerCase().includes(term)
+    );
+  }, [languages, searchTerm]);
+
+  // Focus input when popup opens
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   // Handle click outside to close - using a more direct approach that works better with Monaco editor
   useEffect(() => {
@@ -48,13 +67,18 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
         overflowY: "auto",
       }}
     >
-      {title && (
-        <div className="px-3 py-2 text-xs text-gray-400 border-b border-gray-700">
-          {title}
-        </div>
-      )}
+      <div className="px-3 py-2 border-b border-gray-700">
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="Search formats..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full bg-transparent text-xs text-gray-400 placeholder-gray-500 border-none outline-none"
+        />
+      </div>
       <div className="py-1">
-        {languages.map((item) => {
+        {filteredLanguages.map((item) => {
           if (item.isSeparator) {
             return (
               <div
@@ -75,8 +99,14 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
           );
         })}
 
+        {filteredLanguages.length === 0 && searchTerm.trim() && (
+          <div className="px-3 py-2 text-xs text-gray-400 italic">
+            No formats found
+          </div>
+        )}
+
         {languages.length === 0 && (
-          <div className="px-3 py-2 text-sm text-gray-400 italic">
+          <div className="px-3 py-2 text-xs text-gray-400 italic">
             No languages available
           </div>
         )}

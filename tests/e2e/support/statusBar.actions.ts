@@ -159,4 +159,98 @@ export class StatusBarActions {
     const extendedViewButtons = this.page.locator('[data-testid="extended-view-buttons"]');
     await expect(extendedViewButtons).not.toBeVisible();
   }
+
+  // Language popup search functionality
+  getLanguageSelectionPopup() {
+    return this.page.locator('.absolute.z-50.bg-gray-800');
+  }
+
+  getLanguageSearchInput() {
+    return this.page.locator('input[placeholder="Search formats..."]');
+  }
+
+  async expectLanguagePopupVisible() {
+    const popup = this.getLanguageSelectionPopup();
+    await expect(popup).toBeVisible();
+  }
+
+  async expectLanguagePopupNotVisible() {
+    const popup = this.getLanguageSelectionPopup();
+    await expect(popup).not.toBeVisible();
+  }
+
+  async expectLanguageSearchInputVisible() {
+    const searchInput = this.getLanguageSearchInput();
+    await expect(searchInput).toBeVisible();
+  }
+
+  async expectLanguageSearchInputFocused() {
+    const searchInput = this.getLanguageSearchInput();
+    await expect(searchInput).toBeFocused();
+  }
+
+  async typeInLanguageSearch(text: string) {
+    const searchInput = this.getLanguageSearchInput();
+    await searchInput.fill(text);
+  }
+
+  async clearLanguageSearch() {
+    const searchInput = this.getLanguageSearchInput();
+    await searchInput.clear();
+  }
+
+  async expectLanguageOptionVisible(languageName: string) {
+    const popup = this.getLanguageSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${languageName}$`) });
+    await expect(option).toBeVisible();
+  }
+
+  async expectLanguageOptionNotVisible(languageName: string) {
+    const popup = this.getLanguageSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${languageName}$`) });
+    await expect(option).not.toBeVisible();
+  }
+
+  async clickLanguageOption(languageName: string) {
+    const popup = this.getLanguageSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${languageName}$`) });
+    await option.click();
+  }
+
+  async expectNoFormatsFoundMessage() {
+    const popup = this.getLanguageSelectionPopup();
+    const message = popup.locator('text=No formats found');
+    await expect(message).toBeVisible();
+  }
+
+  async expectLanguagePopupContainsFormatsWithText(text: string) {
+    const popup = this.getLanguageSelectionPopup();
+    const options = popup.locator('button');
+    const count = await options.count();
+    
+    for (let i = 0; i < count; i++) {
+      const option = options.nth(i);
+      const optionText = await option.textContent();
+      if (optionText && !optionText.toLowerCase().includes(text.toLowerCase())) {
+        throw new Error(`Found format "${optionText}" that doesn't contain "${text}"`);
+      }
+    }
+  }
+
+  async getAllVisibleLanguageOptions(): Promise<string[]> {
+    const popup = this.getLanguageSelectionPopup();
+    const options = popup.locator('button');
+    const count = await options.count();
+    const optionTexts: string[] = [];
+    
+    for (let i = 0; i < count; i++) {
+      const option = options.nth(i);
+      const text = await option.textContent();
+      if (text) {
+        optionTexts.push(text.trim());
+      }
+    }
+    
+    return optionTexts;
+  }
 } 

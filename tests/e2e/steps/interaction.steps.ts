@@ -256,3 +256,28 @@ When('I type {string} into the right editor', async function(text) {
 When('I type "{string}" into the right editor', async function(text) {
   await this.editor.typeText(text, 'right');
 });
+
+// Language popup search functionality
+When('I click on the language selector in the status bar', async function() {
+  await this.statusBar.clickStatusBarLanguage();
+});
+
+When('I type {string} in the language search input', async function(searchText) {
+  await this.statusBar.typeInLanguageSearch(searchText);
+});
+
+When('I type "{string}" in the language search input', async function(searchText) {
+  await this.statusBar.typeInLanguageSearch(searchText);
+});
+
+When('I clear the language search input', async function() {
+  await this.statusBar.clearLanguageSearch();
+});
+
+When('I click on {string} in the search results', async function(languageName) {
+  await this.statusBar.clickLanguageOption(languageName);
+});
+
+When('I click on "{string}" in the search results', async function(languageName) {
+  await this.statusBar.clickLanguageOption(languageName);
+});
