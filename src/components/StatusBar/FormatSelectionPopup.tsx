@@ -1,16 +1,16 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
 import type { PopupMenuItem } from "./types";
 
-interface LanguageSelectionPopupProps {
-  languages: PopupMenuItem[];
-  onSelectLanguage: (languageId: string) => void;
+interface FormatSelectionPopupProps {
+  formats: PopupMenuItem[];
+  onSelectFormat: (formatId: string) => void;
   onClose: () => void;
   title?: string;
 }
 
-export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
-  languages,
-  onSelectLanguage,
+export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
+  formats,
+  onSelectFormat,
   onClose,
   title,
 }) => {
@@ -18,15 +18,15 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter languages based on search term
-  const filteredLanguages = useMemo(() => {
-    if (!searchTerm.trim()) return languages;
+  // Filter formats based on search term
+  const filteredFormats = useMemo(() => {
+    if (!searchTerm.trim()) return formats;
     
     const term = searchTerm.toLowerCase();
-    return languages.filter(item => 
+    return formats.filter(item => 
       !item.isSeparator && item.name.toLowerCase().includes(term)
     );
-  }, [languages, searchTerm]);
+  }, [formats, searchTerm]);
 
   // Focus input when popup opens
   useEffect(() => {
@@ -50,8 +50,8 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
-  const handleSelectLanguage = (languageId: string) => {
-    onSelectLanguage(languageId);
+  const handleSelectFormat = (formatId: string) => {
+    onSelectFormat(formatId);
     onClose();
   };
 
@@ -78,7 +78,7 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
         />
       </div>
       <div className="py-1">
-        {filteredLanguages.map((item) => {
+        {filteredFormats.map((item) => {
           if (item.isSeparator) {
             return (
               <div
@@ -91,7 +91,7 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
             <button
               key={item.id}
               className="w-full text-left px-3 py-1.5 hover:bg-gray-700/50 text-xs text-gray-200 transition-colors block"
-              onClick={() => handleSelectLanguage(item.id)}
+              onClick={() => handleSelectFormat(item.id)}
               title={`Select ${item.name}`}
             >
               <span>{item.name}</span>
@@ -99,15 +99,15 @@ export const LanguageSelectionPopup: React.FC<LanguageSelectionPopupProps> = ({
           );
         })}
 
-        {filteredLanguages.length === 0 && searchTerm.trim() && (
+        {filteredFormats.length === 0 && searchTerm.trim() && (
           <div className="px-3 py-2 text-xs text-gray-400 italic">
             No formats found
           </div>
         )}
 
-        {languages.length === 0 && (
+        {formats.length === 0 && (
           <div className="px-3 py-2 text-xs text-gray-400 italic">
-            No languages available
+            No formats available
           </div>
         )}
       </div>

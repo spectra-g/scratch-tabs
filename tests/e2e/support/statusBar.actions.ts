@@ -160,71 +160,71 @@ export class StatusBarActions {
     await expect(extendedViewButtons).not.toBeVisible();
   }
 
-  // Language popup search functionality
-  getLanguageSelectionPopup() {
+  // Format popup search functionality
+  getFormatSelectionPopup() {
     return this.page.locator('.absolute.z-50.bg-gray-800');
   }
 
-  getLanguageSearchInput() {
+  getFormatSearchInput() {
     return this.page.locator('input[placeholder="Search formats..."]');
   }
 
-  async expectLanguagePopupVisible() {
-    const popup = this.getLanguageSelectionPopup();
+  async expectFormatPopupVisible() {
+    const popup = this.getFormatSelectionPopup();
     await expect(popup).toBeVisible();
   }
 
-  async expectLanguagePopupNotVisible() {
-    const popup = this.getLanguageSelectionPopup();
+  async expectFormatPopupNotVisible() {
+    const popup = this.getFormatSelectionPopup();
     await expect(popup).not.toBeVisible();
   }
 
-  async expectLanguageSearchInputVisible() {
-    const searchInput = this.getLanguageSearchInput();
+  async expectFormatSearchInputVisible() {
+    const searchInput = this.getFormatSearchInput();
     await expect(searchInput).toBeVisible();
   }
 
-  async expectLanguageSearchInputFocused() {
-    const searchInput = this.getLanguageSearchInput();
+  async expectFormatSearchInputFocused() {
+    const searchInput = this.getFormatSearchInput();
     await expect(searchInput).toBeFocused();
   }
 
-  async typeInLanguageSearch(text: string) {
-    const searchInput = this.getLanguageSearchInput();
+  async typeInFormatSearch(text: string) {
+    const searchInput = this.getFormatSearchInput();
     await searchInput.fill(text);
   }
 
-  async clearLanguageSearch() {
-    const searchInput = this.getLanguageSearchInput();
+  async clearFormatSearch() {
+    const searchInput = this.getFormatSearchInput();
     await searchInput.clear();
   }
 
-  async expectLanguageOptionVisible(languageName: string) {
-    const popup = this.getLanguageSelectionPopup();
-    const option = popup.locator('button').filter({ hasText: new RegExp(`^${languageName}$`) });
+  async expectFormatOptionVisible(formatName: string) {
+    const popup = this.getFormatSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${formatName}$`) });
     await expect(option).toBeVisible();
   }
 
-  async expectLanguageOptionNotVisible(languageName: string) {
-    const popup = this.getLanguageSelectionPopup();
-    const option = popup.locator('button').filter({ hasText: new RegExp(`^${languageName}$`) });
+  async expectFormatOptionNotVisible(formatName: string) {
+    const popup = this.getFormatSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${formatName}$`) });
     await expect(option).not.toBeVisible();
   }
 
-  async clickLanguageOption(languageName: string) {
-    const popup = this.getLanguageSelectionPopup();
-    const option = popup.locator('button').filter({ hasText: new RegExp(`^${languageName}$`) });
+  async clickFormatOption(formatName: string) {
+    const popup = this.getFormatSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${formatName}$`) });
     await option.click();
   }
 
   async expectNoFormatsFoundMessage() {
-    const popup = this.getLanguageSelectionPopup();
+    const popup = this.getFormatSelectionPopup();
     const message = popup.locator('text=No formats found');
     await expect(message).toBeVisible();
   }
 
-  async expectLanguagePopupContainsFormatsWithText(text: string) {
-    const popup = this.getLanguageSelectionPopup();
+  async expectFormatPopupContainsFormatsWithText(text: string) {
+    const popup = this.getFormatSelectionPopup();
     const options = popup.locator('button');
     const count = await options.count();
     
@@ -237,8 +237,8 @@ export class StatusBarActions {
     }
   }
 
-  async getAllVisibleLanguageOptions(): Promise<string[]> {
-    const popup = this.getLanguageSelectionPopup();
+  async getAllVisibleFormatOptions(): Promise<string[]> {
+    const popup = this.getFormatSelectionPopup();
     const options = popup.locator('button');
     const count = await options.count();
     const optionTexts: string[] = [];

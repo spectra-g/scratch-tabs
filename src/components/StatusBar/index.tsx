@@ -14,7 +14,7 @@ import { Search, Coffee } from "../Icons";
 import { useSearchStore } from "../../stores/searchStore";
 import { formatRegistry } from "../../formats";
 import { getPotentialFormatMatches } from "../../formats";
-import { LanguageSelectionPopup } from "./LanguageSelectionPopup";
+import { FormatSelectionPopup } from "./FormatSelectionPopup";
 import { SmartViewButtons } from "./SmartViewButtons";
 import { FontSizeControls } from "./FontSizeControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
@@ -329,16 +329,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           )}
         </div>
 
-        {/* Language Selection Popup */}
+        {/* Format Selection Popup */}
         {showLanguagePopup && (
-          <LanguageSelectionPopup
-            languages={getPopupLanguages()}
-            onSelectLanguage={handleSelectLanguage}
+          <FormatSelectionPopup
+            formats={getPopupLanguages()}
+            onSelectFormat={handleSelectLanguage}
             onClose={() => setShowLanguagePopup(false)}
             title={
               activeTab?.languageLocked
-                ? "Other Language Options"
-                : "Select Language"
+                ? "Other Format Options"
+                : "Select Format"
             }
           />
         )}

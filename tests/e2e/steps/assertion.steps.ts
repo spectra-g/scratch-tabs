@@ -222,31 +222,31 @@ Then('a confirmation dialog should appear with message "{string}"', async functi
   await this.confirmationDialog.expectConfirmationDialogToAppear(expectedMessage);
 });
 
-// Language popup search functionality assertions
-Then('I should see the language selection popup', async function() {
-  await this.statusBar.expectLanguagePopupVisible();
+// Format popup search functionality assertions
+Then('I should see the format selection popup', async function() {
+  await this.statusBar.expectFormatPopupVisible();
 });
 
 Then('I should see a search input with placeholder {string}', async function(placeholderText) {
-  await this.statusBar.expectLanguageSearchInputVisible();
+  await this.statusBar.expectFormatSearchInputVisible();
   // Note: placeholder text is verified in the locator selector
 });
 
 Then('I should see a search input with placeholder "{string}"', async function(placeholderText) {
-  await this.statusBar.expectLanguageSearchInputVisible();
+  await this.statusBar.expectFormatSearchInputVisible();
   // Note: placeholder text is verified in the locator selector
 });
 
 Then('the search input should be focused', async function() {
-  await this.statusBar.expectLanguageSearchInputFocused();
+  await this.statusBar.expectFormatSearchInputFocused();
 });
 
 Then('I should see only formats containing {string} in the results', async function(searchTerm) {
-  await this.statusBar.expectLanguagePopupContainsFormatsWithText(searchTerm);
+  await this.statusBar.expectFormatPopupContainsFormatsWithText(searchTerm);
 });
 
 Then('I should see only formats containing "{string}" in the results', async function(searchTerm) {
-  await this.statusBar.expectLanguagePopupContainsFormatsWithText(searchTerm);
+  await this.statusBar.expectFormatPopupContainsFormatsWithText(searchTerm);
 });
 
 Then('I should not see formats that don\'t contain {string}', async function(searchTerm) {
@@ -278,14 +278,14 @@ Then('I should see all available formats', async function() {
   // Implementation could count visible options and compare to expected total
 });
 
-Then('the language popup should close', async function() {
-  await this.statusBar.expectLanguagePopupNotVisible();
+Then('the format popup should close', async function() {
+  await this.statusBar.expectFormatPopupNotVisible();
 });
 
-Then('the tab language should be set to {string}', async function(language) {
-  await this.statusBar.expectStatusBarLanguage(language);
+Then('the tab format should be set to {string}', async function(format) {
+  await this.statusBar.expectStatusBarLanguage(format);
 });
 
-Then('the tab language should be set to "{string}"', async function(language) {
-  await this.statusBar.expectStatusBarLanguage(language);
+Then('the tab format should be set to "{string}"', async function(format) {
+  await this.statusBar.expectStatusBarLanguage(format);
 });

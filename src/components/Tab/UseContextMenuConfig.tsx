@@ -21,7 +21,7 @@ import {
   History,
   ExternalLink,
 } from "lucide-react";
-import { LanguageSelector } from "./LanguageSelector";
+import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
 import { MenuItem } from "./types";
 import { useState, useCallback, useEffect } from "react";
@@ -394,7 +394,7 @@ Add any other context about the problem here.
       label: "From sample",
       icon: FileCode,
       condition: canShowFromSample,
-      submenu: <LanguageSelector onSelect={handleLanguageSelect} />,
+      submenu: <FormatSelector onSelect={handleLanguageSelect} />,
     },
     {
       id: "duplicate",
