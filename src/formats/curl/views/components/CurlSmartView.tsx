@@ -18,42 +18,25 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
   const [parsedDoc, setParsedDoc] = useState<ParsedDocument>([]);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   
-  // Debug activeCardId changes
-  useEffect(() => {
-    console.log('🎯 activeCardId changed:', activeCardId);
-  }, [activeCardId]);
   const [showOptionsPalette, setShowOptionsPalette] = useState(false);
   const isInternalUpdateRef = useRef(false);
 
   // Parse document when content changes (but not during internal updates)
   useEffect(() => {
-    const timestamp = Date.now();
-    console.log(`⏰ [${timestamp}] useEffect triggered`, { 
-      content: content.slice(0, 50) + '...', 
-      contentLength: content.length,
-      isInternalUpdate: isInternalUpdateRef.current,
-      activeCardId,
-      stackTrace: new Error().stack?.split('\n').slice(1, 4).join('\n')
-    });
-    
     // Skip parsing if this is an internal update to avoid regenerating IDs
     if (isInternalUpdateRef.current) {
-      console.log(`⏭️ [${timestamp}] Skipping parse - internal update`);
       isInternalUpdateRef.current = false;
       return;
     }
     
-    console.log(`🔄 [${timestamp}] Content changed, reparsing document`, { content });
     try {
       const parsed = parseCurlDocument(content);
-      console.log(`🎆 [${timestamp}] Parsed document`, { parsed, currentActiveCardId: activeCardId });
       setParsedDoc(parsed);
       
       // Auto-select first curl command if none selected
       if (!activeCardId) {
         const firstCurlBlock = parsed.find(block => block.type === 'curl');
         if (firstCurlBlock) {
-          console.log(`🎯 [${timestamp}] Setting activeCardId to first curl block`, firstCurlBlock.id);
           setActiveCardId(firstCurlBlock.id);
         }
       }
@@ -78,14 +61,11 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
 
   // Handle request changes from the builder
   const handleRequestChange = useCallback((newRequest: any) => {
-    console.log('🔄 handleRequestChange called', { activeCardId, newRequest });
     if (!activeCardId) {
-      console.log('❌ No activeCardId, returning early');
       return;
     }
     
     const updatedDoc = updateCurlBlockInDocument(parsedDoc, activeCardId, newRequest);
-    console.log('📄 Updated document', { updatedDoc, oldDoc: parsedDoc });
     setParsedDoc(updatedDoc);
     
     // Mark this as an internal update to prevent reparsing
@@ -93,7 +73,6 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
     
     // Sync back to content
     const newContent = compileCurlDocument(updatedDoc);
-    console.log('📝 New content generated', { newContent });
     onContentChange(newContent);
   }, [parsedDoc, activeCardId, onContentChange]);
 
@@ -196,10 +175,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
                 <CurlCard
                   request={block.request}
                   isExpanded={activeCardId === block.id}
-                  onClick={() => {
-                    console.log('📍 Card clicked', { blockId: block.id, currentActiveCardId: activeCardId });
-                    setActiveCardId(block.id);
-                  }}
+                  onClick={() => setActiveCardId(block.id)}
                   onRequestChange={handleRequestChange}
                   onOpenInRestClient={handleOpenInRestClient}
                 />

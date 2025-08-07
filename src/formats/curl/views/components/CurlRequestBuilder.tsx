@@ -19,13 +19,11 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
 
   // Handle method change
   const handleMethodChange = useCallback((method: string) => {
-    console.log('🛠️ Method changed', { method, request });
     onRequestChange({ ...request, method });
   }, [request, onRequestChange]);
 
   // Handle URL change
   const handleUrlChange = useCallback((url: string) => {
-    console.log('🌐 URL changed', { url, request });
     onRequestChange({ ...request, url });
   }, [request, onRequestChange]);
 
@@ -37,7 +35,6 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
   }, [request, onRequestChange]);
 
   const handleAddHeader = useCallback(() => {
-    console.log('➕ Adding header', { currentHeaders: request.headers });
     const newHeaders = [...request.headers, { key: '', value: '' }];
     onRequestChange({ ...request, headers: newHeaders });
   }, [request, onRequestChange]);
@@ -49,7 +46,6 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
 
   // Handle body change
   const handleBodyChange = useCallback((body: string) => {
-    console.log('📋 Body changed', { body, request });
     onRequestChange({ ...request, body: body || undefined });
   }, [request, onRequestChange]);
 
@@ -61,7 +57,6 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
   }, [request, onRequestChange]);
 
   const handleAddOption = useCallback(() => {
-    console.log('➕ Adding option', { currentOptions: request.otherOptions });
     const newOptions = [...request.otherOptions, { flag: '', value: '' }];
     onRequestChange({ ...request, otherOptions: newOptions });
   }, [request, onRequestChange]);
