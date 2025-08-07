@@ -313,3 +313,36 @@ Feature: Tab context menu
     When I click "Close Others" in the confirmation dialog
     Then the tabs should be ordered as "Welcome, Scratch 1, Scratch 3"
     And the "Scratch 3" tab should be active
+
+  Scenario: Close tab with content normally shows confirmation
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Some important content that should trigger confirmation" into the editor
+    When I click the close button on the "Scratch 1" tab
+    Then a confirmation dialog should appear with message "Tab content cannot be recovered once closed. Are you sure you want to close this tab?"
+    When I click "Cancel" in the confirmation dialog
+    Then the "Scratch 1" tab should be active
+    And the active editor content should contain "Some important content that should trigger confirmation"
+
+  Scenario: CTRL+click close button bypasses confirmation dialog
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Content that would normally trigger confirmation" into the editor
+    When I CTRL+click the close button on the "Scratch 1" tab
+    Then the "Scratch 1" tab should not exist on the page
+    And the "Welcome" tab should be active
+
+  Scenario: CMD+click close button bypasses confirmation dialog on Mac
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I type "Content that would normally trigger confirmation" into the editor
+    When I CMD+click the close button on the "Scratch 1" tab
+    Then the "Scratch 1" tab should not exist on the page
+    And the "Welcome" tab should be active
+
+  Scenario: Regular click on empty tab closes without confirmation
+    When I click the icon for "New tab"
+    Then the "Scratch 1" tab should be active
+    When I click the close button on the "Scratch 1" tab
+    Then the "Scratch 1" tab should not exist on the page
+    And the "Welcome" tab should be active

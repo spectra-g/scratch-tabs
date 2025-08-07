@@ -289,3 +289,12 @@ Then('the tab format should be set to {string}', async function(format) {
 Then('the tab format should be set to "{string}"', async function(format) {
   await this.statusBar.expectStatusBarLanguage(format);
 });
+
+// Tab existence assertions
+Then('the {string} tab should not exist on the page', async function(tabTitle) {
+  await this.tabBar.expectTabDoesNotExist(tabTitle);
+});
+
+Then('the "{string}" tab should not exist on the page', async function(tabTitle) {
+  await this.tabBar.expectTabDoesNotExist(tabTitle);
+});

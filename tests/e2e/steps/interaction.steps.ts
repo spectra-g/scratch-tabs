@@ -281,3 +281,28 @@ When('I click on {string} in the search results', async function(formatName) {
 When('I click on "{string}" in the search results', async function(formatName) {
   await this.statusBar.clickFormatOption(formatName);
 });
+
+// Tab close button interactions
+When('I click the close button on the {string} tab', async function(tabTitle) {
+  await this.tabBar.clickCloseButton(tabTitle);
+});
+
+When('I click the close button on the "{string}" tab', async function(tabTitle) {
+  await this.tabBar.clickCloseButton(tabTitle);
+});
+
+When('I CTRL+click the close button on the {string} tab', async function(tabTitle) {
+  await this.tabBar.ctrlClickCloseButton(tabTitle);
+});
+
+When('I CTRL+click the close button on the "{string}" tab', async function(tabTitle) {
+  await this.tabBar.ctrlClickCloseButton(tabTitle);
+});
+
+When('I CMD+click the close button on the {string} tab', async function(tabTitle) {
+  await this.tabBar.cmdClickCloseButton(tabTitle);
+});
+
+When('I CMD+click the close button on the "{string}" tab', async function(tabTitle) {
+  await this.tabBar.cmdClickCloseButton(tabTitle);
+});

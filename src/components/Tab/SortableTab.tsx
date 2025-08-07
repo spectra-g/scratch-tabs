@@ -148,9 +148,13 @@ export const SortableTab: React.FC<SortableTabProps> = ({
       onMouseLeaveTab(tab.id);
     }
 
+    // Check if CTRL key is pressed - if so, bypass confirmation
+    const shouldBypassConfirmation = e.ctrlKey || e.metaKey; // Include metaKey for Mac Cmd+click
+
     // Show confirmation for any tab that has content or is a tablet
     // (tablets might not have traditional content but should still be confirmed)
-    if ((tab.content && tab.content.trim() !== "") || tab.isTablet) {
+    // BUT bypass confirmation if CTRL/Cmd+clicking
+    if (!shouldBypassConfirmation && ((tab.content && tab.content.trim() !== "") || tab.isTablet)) {
       // Get the position of the close button for positioning the confirmation dialog
       const rect = e.currentTarget.getBoundingClientRect();
 
@@ -340,6 +344,20 @@ export const SortableTab: React.FC<SortableTabProps> = ({
           <button
             className="flex-shrink-0 hover:bg-gray-600/80 rounded-sm transition-all duration-150 hover:text-red-300"
             onClick={handleCloseClick}
+            onMouseDown={(e) => {
+              // Handle CTRL+click immediately on mousedown to prevent context menu
+              if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                // Trigger close immediately for CTRL+click
+                handleCloseClick(e as any);
+              }
+            }}
+            onContextMenu={(e) => {
+              // Prevent context menu from showing on the close button
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             aria-label={`Close tab ${tab.title}`}
             title={`Close tab ${tab.title}`}
           >
