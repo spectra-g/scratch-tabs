@@ -8,7 +8,7 @@ import { DetectionResult, FormatModule  } from "./types";
 export class CurlFormatDetector extends BaseFormatDetector implements FormatModule
 {
   id = "curl"; // Keep 'curl' as the Monaco language ID, or use 'shell' if you want shell highlighting
-  name = "cURL Command";
+  name = "Curl";
   extensions = ["curl", "sh", "bash"]; // cURL commands are often in shell scripts
   priority = 4; // Mid-range priority
 

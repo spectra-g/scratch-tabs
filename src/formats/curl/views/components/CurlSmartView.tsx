@@ -68,7 +68,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
     const activeBlock = parsedDoc.find(block => block.id === activeCardId);
     if (activeBlock?.type === 'curl') {
       tabletActionService.handleAction({
-        targetTablet: 'rest-client',
+        targetTablet: 'restclient',
         action: 'new-tab',
         payload: activeBlock.request,
         source: { 

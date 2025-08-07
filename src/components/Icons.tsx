@@ -127,6 +127,7 @@ export {
   // Tools
   Wand as MagicWand,
   Sliders,
+  Settings,
   Filter,
   Clipboard,
   ClipboardCheck,
