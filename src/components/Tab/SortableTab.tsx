@@ -245,6 +245,17 @@ export const SortableTab: React.FC<SortableTabProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Handle middle mouse button click for closing tab
+    if (e.button === 1) {
+      e.preventDefault();
+      e.stopPropagation();
+      const syntheticEvent = new MouseEvent(
+        "click",
+      ) as unknown as React.MouseEvent<HTMLButtonElement>;
+      onClose(syntheticEvent);
+      return;
+    }
+
     // If we're editing or it's a right-click, don't activate
     if (isEditing || e.button !== 0) return;
 
