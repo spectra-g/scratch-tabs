@@ -310,7 +310,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         )}
 
         <div
-          className={`flex-1 min-w-0 flex items-center ${showCloseButton ? "mr-1" : ""}`}
+          className={`flex-1 min-w-0 flex items-center ${showCloseButton ? "" : ""}`}
         >
           {!isEditing && (
             <div className="truncate" aria-label={`Tab title: ${tab.title}`}>
@@ -342,7 +342,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
 
         {!isEditing && showCloseButton && (
           <button
-            className="flex-shrink-0 hover:bg-gray-600/80 rounded-sm transition-all duration-150 hover:text-red-300"
+            className="flex-shrink-0 hover:bg-gray-600/80 rounded-sm transition-all duration-150 hover:text-red-300 ml-1 -mr-2 px-1 py-1"
             onClick={handleCloseClick}
             onMouseDown={(e) => {
               // Handle CTRL+click immediately on mousedown to prevent context menu
