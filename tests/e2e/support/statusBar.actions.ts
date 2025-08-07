@@ -159,4 +159,98 @@ export class StatusBarActions {
     const extendedViewButtons = this.page.locator('[data-testid="extended-view-buttons"]');
     await expect(extendedViewButtons).not.toBeVisible();
   }
+
+  // Format popup search functionality
+  getFormatSelectionPopup() {
+    return this.page.locator('.absolute.z-50.bg-gray-800');
+  }
+
+  getFormatSearchInput() {
+    return this.page.locator('input[placeholder="Search formats..."]');
+  }
+
+  async expectFormatPopupVisible() {
+    const popup = this.getFormatSelectionPopup();
+    await expect(popup).toBeVisible();
+  }
+
+  async expectFormatPopupNotVisible() {
+    const popup = this.getFormatSelectionPopup();
+    await expect(popup).not.toBeVisible();
+  }
+
+  async expectFormatSearchInputVisible() {
+    const searchInput = this.getFormatSearchInput();
+    await expect(searchInput).toBeVisible();
+  }
+
+  async expectFormatSearchInputFocused() {
+    const searchInput = this.getFormatSearchInput();
+    await expect(searchInput).toBeFocused();
+  }
+
+  async typeInFormatSearch(text: string) {
+    const searchInput = this.getFormatSearchInput();
+    await searchInput.fill(text);
+  }
+
+  async clearFormatSearch() {
+    const searchInput = this.getFormatSearchInput();
+    await searchInput.clear();
+  }
+
+  async expectFormatOptionVisible(formatName: string) {
+    const popup = this.getFormatSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${formatName}$`) });
+    await expect(option).toBeVisible();
+  }
+
+  async expectFormatOptionNotVisible(formatName: string) {
+    const popup = this.getFormatSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${formatName}$`) });
+    await expect(option).not.toBeVisible();
+  }
+
+  async clickFormatOption(formatName: string) {
+    const popup = this.getFormatSelectionPopup();
+    const option = popup.locator('button').filter({ hasText: new RegExp(`^${formatName}$`) });
+    await option.click();
+  }
+
+  async expectNoFormatsFoundMessage() {
+    const popup = this.getFormatSelectionPopup();
+    const message = popup.locator('text=No formats found');
+    await expect(message).toBeVisible();
+  }
+
+  async expectFormatPopupContainsFormatsWithText(text: string) {
+    const popup = this.getFormatSelectionPopup();
+    const options = popup.locator('button');
+    const count = await options.count();
+    
+    for (let i = 0; i < count; i++) {
+      const option = options.nth(i);
+      const optionText = await option.textContent();
+      if (optionText && !optionText.toLowerCase().includes(text.toLowerCase())) {
+        throw new Error(`Found format "${optionText}" that doesn't contain "${text}"`);
+      }
+    }
+  }
+
+  async getAllVisibleFormatOptions(): Promise<string[]> {
+    const popup = this.getFormatSelectionPopup();
+    const options = popup.locator('button');
+    const count = await options.count();
+    const optionTexts: string[] = [];
+    
+    for (let i = 0; i < count; i++) {
+      const option = options.nth(i);
+      const text = await option.textContent();
+      if (text) {
+        optionTexts.push(text.trim());
+      }
+    }
+    
+    return optionTexts;
+  }
 } 

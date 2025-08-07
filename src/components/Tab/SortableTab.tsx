@@ -148,9 +148,13 @@ export const SortableTab: React.FC<SortableTabProps> = ({
       onMouseLeaveTab(tab.id);
     }
 
+    // Check if CTRL key is pressed - if so, bypass confirmation
+    const shouldBypassConfirmation = e.ctrlKey || e.metaKey; // Include metaKey for Mac Cmd+click
+
     // Show confirmation for any tab that has content or is a tablet
     // (tablets might not have traditional content but should still be confirmed)
-    if ((tab.content && tab.content.trim() !== "") || tab.isTablet) {
+    // BUT bypass confirmation if CTRL/Cmd+clicking
+    if (!shouldBypassConfirmation && ((tab.content && tab.content.trim() !== "") || tab.isTablet)) {
       // Get the position of the close button for positioning the confirmation dialog
       const rect = e.currentTarget.getBoundingClientRect();
 
@@ -241,6 +245,17 @@ export const SortableTab: React.FC<SortableTabProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Handle middle mouse button click for closing tab
+    if (e.button === 1) {
+      e.preventDefault();
+      e.stopPropagation();
+      const syntheticEvent = new MouseEvent(
+        "click",
+      ) as unknown as React.MouseEvent<HTMLButtonElement>;
+      onClose(syntheticEvent);
+      return;
+    }
+
     // If we're editing or it's a right-click, don't activate
     if (isEditing || e.button !== 0) return;
 
@@ -306,7 +321,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         )}
 
         <div
-          className={`flex-1 min-w-0 flex items-center ${showCloseButton ? "mr-1" : ""}`}
+          className={`flex-1 min-w-0 flex items-center ${showCloseButton ? "" : ""}`}
         >
           {!isEditing && (
             <div className="truncate" aria-label={`Tab title: ${tab.title}`}>
@@ -338,8 +353,22 @@ export const SortableTab: React.FC<SortableTabProps> = ({
 
         {!isEditing && showCloseButton && (
           <button
-            className="flex-shrink-0 hover:bg-gray-600/80 rounded-sm transition-all duration-150 hover:text-red-300"
+            className="flex-shrink-0 hover:bg-gray-600/80 rounded-sm transition-all duration-150 hover:text-red-300 ml-1 -mr-2 px-1 py-1"
             onClick={handleCloseClick}
+            onMouseDown={(e) => {
+              // Handle CTRL+click immediately on mousedown to prevent context menu
+              if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                // Trigger close immediately for CTRL+click
+                handleCloseClick(e as any);
+              }
+            }}
+            onContextMenu={(e) => {
+              // Prevent context menu from showing on the close button
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             aria-label={`Close tab ${tab.title}`}
             title={`Close tab ${tab.title}`}
           >

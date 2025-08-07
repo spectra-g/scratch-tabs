@@ -10,7 +10,7 @@ describe("CurlFormatDetector", () => {
   describe("Basic Properties", () => {
     test("should have correct basic properties", () => {
       expect(detector.id).toBe("curl");
-      expect(detector.name).toBe("cURL Command");
+      expect(detector.name).toBe("Curl");
       expect(detector.extensions).toEqual(["curl", "sh", "bash"]);
       expect(detector.priority).toBe(4);
     });

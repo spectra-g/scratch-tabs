@@ -31,8 +31,8 @@ jest.mock('../FormatStatusItems', () => ({
   getFormatOptionsMenu: jest.fn(() => null),
 }));
 
-jest.mock('../LanguageSelectionPopup', () => ({
-  LanguageSelectionPopup: () => <div data-testid="language-popup">Language Popup</div>,
+jest.mock('../FormatSelectionPopup', () => ({
+  FormatSelectionPopup: () => <div data-testid="format-popup">Format Popup</div>,
 }));
 
 jest.mock('../SmartViewButtons', () => ({

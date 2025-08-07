@@ -5,6 +5,15 @@ import { EditorInstance } from '../EditorInstance';
 import { useTabsStore } from '../../../stores/tabsStore';
 import { useRootStore } from '../../../stores/rootStore';
 
+// Mock the dynamic registry to prevent import.meta.glob issues
+jest.mock('../../../tablets/dynamicRegistry');
+
+// Mock the tablets index which includes TabletSelector
+jest.mock('../../../tablets', () => ({
+  TabletSelector: jest.fn(() => <div data-testid="tablet-selector" />),
+  Tablet: jest.fn(() => <div data-testid="tablet" />),
+}));
+
 // Mock the stores
 jest.mock('../../../stores/tabsStore');
 jest.mock('../../../stores/rootStore', () => {

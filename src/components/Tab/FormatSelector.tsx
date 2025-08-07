@@ -1,20 +1,20 @@
 import React from "react";
 import { formatRegistry } from "../../formats";
-import { FormatDetector } from "../../formats/types";
+import { FormatModule } from "../../formats/types";
 
-interface LanguageSelectorProps {
-  onSelect: (languageId: string) => void;
+interface FormatSelectorProps {
+  onSelect: (formatId: string) => void;
 }
 
-export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+export const FormatSelector: React.FC<FormatSelectorProps> = ({
   onSelect,
 }) => {
-  // Get all registered languages
-  const allLanguages = formatRegistry.getAll();
+  // Get all registered formats
+  const allFormats = formatRegistry.getAll();
 
   // Custom sorting logic
-  const sortedLanguages = allLanguages.sort(
-    (a: FormatDetector, b: FormatDetector) => {
+  const sortedFormats = allFormats.sort(
+    (a: FormatModule, b: FormatModule) => {
       const aIsPriority = a.id === "json" || a.id === "markdown";
       const bIsPriority = b.id === "json" || b.id === "markdown";
 
@@ -40,30 +40,30 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   // Specific ordering for JSON and Markdown at the top
   // Find them first
-  const jsonLang = sortedLanguages.find((lang) => lang.id === "json");
-  const mdLang = sortedLanguages.find((lang) => lang.id === "markdown");
+  const jsonFormat = sortedFormats.find((format) => format.id === "json");
+  const mdFormat = sortedFormats.find((format) => format.id === "markdown");
   // Filter out JSON and Markdown from the alphabetically sorted list
-  const otherLangs = sortedLanguages.filter(
-    (lang) => lang.id !== "json" && lang.id !== "markdown",
+  const otherFormats = sortedFormats.filter(
+    (format) => format.id !== "json" && format.id !== "markdown",
   );
 
   // Construct the final ordered list
   const finalOrderedList = [
-    ...(jsonLang ? [jsonLang] : []), // Add JSON if found
-    ...(mdLang ? [mdLang] : []), // Add Markdown if found
-    ...otherLangs, // Add the rest
+    ...(jsonFormat ? [jsonFormat] : []), // Add JSON if found
+    ...(mdFormat ? [mdFormat] : []), // Add Markdown if found
+    ...otherFormats, // Add the rest
   ];
 
   return (
     // Map over the specifically ordered list
-    finalOrderedList.map((lang) => (
+    finalOrderedList.map((format) => (
       <button
-        key={lang.id}
+        key={format.id}
         className="w-full text-left px-3 py-1.5 hover:bg-gray-600 text-xs text-gray-200 block" // Added 'block' for potential layout consistency
-        onClick={() => onSelect(lang.id)}
-        title={`Select ${lang.name}`} // Add a title for usability
+        onClick={() => onSelect(format.id)}
+        title={`Select ${format.name}`} // Add a title for usability
       >
-        {lang.name}
+        {format.name}
       </button>
     ))
   );

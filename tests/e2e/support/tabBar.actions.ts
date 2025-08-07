@@ -136,4 +136,39 @@ export class TabBarActions {
       expect(tabTitle?.trim()).toBe(expectedTabNames[i]);
     }
   }
+
+  async clickCloseButton(tabTitle: string) {
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+    
+    // Find the close button within the tab - it has an aria-label that starts with "Close tab"
+    const closeButton = tab.locator('button[aria-label*="Close tab"]');
+    await expect(closeButton).toBeVisible();
+    await closeButton.click();
+  }
+
+  async ctrlClickCloseButton(tabTitle: string) {
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+    
+    // Find the close button within the tab - it has an aria-label that starts with "Close tab"
+    const closeButton = tab.locator('button[aria-label*="Close tab"]');
+    await expect(closeButton).toBeVisible();
+    await closeButton.click({ modifiers: ['Control'] });
+  }
+
+  async cmdClickCloseButton(tabTitle: string) {
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).toBeVisible();
+    
+    // Find the close button within the tab - it has an aria-label that starts with "Close tab"
+    const closeButton = tab.locator('button[aria-label*="Close tab"]');
+    await expect(closeButton).toBeVisible();
+    await closeButton.click({ modifiers: ['Meta'] });
+  }
+
+  async expectTabDoesNotExist(tabTitle: string) {
+    const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
+    await expect(tab).not.toBeVisible();
+  }
 } 

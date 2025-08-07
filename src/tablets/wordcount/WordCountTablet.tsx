@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { Tablet, TabletState } from '../types';
+import { Tablet, TabletState, TabletActionContext, TabletAction } from '../types';
 import { FileText } from '../../components/Icons';
+import { tabletActionService } from '../../services/tabletActionService';
 import { 
   analyzeText, 
   WordCountStats, 
@@ -210,12 +211,12 @@ export const WordCountTablet: Tablet = {
     'characters',
   ],
 
-  createInitialState(): WordCountTabletState {
+  createInitialState(payload?: { content?: string; title?: string }): WordCountTabletState {
     return {
       type: 'wordcount',
       data: {
-        text: '',
-        title: '',
+        text: payload?.content || '',
+        title: payload?.title || '',
         deviceType: 'standard',
         writingGoal: 'general',
         targetKeyword: '',

@@ -122,6 +122,15 @@ export interface ResponseComparison {
   sizeDiff: ComparisonDiff | null;
 }
 
+// Interface for cURL request data that can be imported
+export interface CurlRequestImport {
+  method: string;
+  url: string;
+  headers: { key: string; value: string }[];
+  body?: string;
+  otherOptions?: { flag: string; value?: string }[];
+}
+
 export interface RestClientState {
   request: HttpRequest;
   response: HttpResponse | null;

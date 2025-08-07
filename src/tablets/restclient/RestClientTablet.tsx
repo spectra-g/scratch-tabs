@@ -16,6 +16,7 @@ import {
   ExplanationLevel,
   ComparisonItem,
   ResponseComparison,
+  CurlRequestImport,
 } from "./types";
 import { executeRequest } from "./utils/requestUtils";
 import { SensitiveDataManager } from "../../utils/sensitiveDataManager";
@@ -32,7 +33,65 @@ export const RestClientTablet: Tablet = {
   label: "REST Client",
   keywords: ["api", "http", "rest", "client", "curl", "request", "postman"],
 
-  createInitialState(): RestClientTabletState {
+  createInitialState(payload?: any): RestClientTabletState {
+    // Handle cURL request import from Smart View
+    if (payload && typeof payload === 'object' && 'method' in payload && 'url' in payload) {
+      const curlRequest = payload as CurlRequestImport;
+      
+      return {
+        type: "restclient",
+        data: {
+          request: {
+            method: (curlRequest.method?.toUpperCase() as any) || "GET",
+            url: curlRequest.url || "",
+            headers: curlRequest.headers || [],
+            auth: {
+              type: "none",
+              params: {},
+            },
+            params: [],
+            body: {
+              type: "none",
+              content: curlRequest.body || "",
+              params: [],
+            },
+            variables: [
+              {
+                key: "host",
+                value: "jsonplaceholder.typicode.com",
+                enabled: true,
+              },
+              {
+                key: "token",
+                value: SensitiveDataManager.mask("your-token-here"),
+                enabled: true,
+              },
+              { key: "user", value: "testuser", enabled: true },
+              {
+                key: "password",
+                value: SensitiveDataManager.mask("password123"),
+                enabled: true,
+              },
+            ],
+            curlFlags: [],
+          },
+          response: null,
+          responseHistory: [],
+          requestHistory: [],
+          conversionFormat: "curl",
+          explanationLevel: "medium",
+          isExecuting: false,
+          error: null,
+          comparison: {
+            isComparing: false,
+            selectedItems: [],
+            activeComparison: null,
+          },
+        },
+      };
+    }
+    
+    // Default empty state
     return {
       type: "restclient",
       data: {
