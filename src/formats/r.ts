@@ -105,6 +105,10 @@ message("Analysis complete.")
     let patternsMatched = 0;
     let strongSignalFound = false;
 
+    // Remove quoted strings to avoid false positives with JSON property names
+    // This helps prevent matching "service.id" as if it were service$id
+    const contentWithoutQuotes = content.replace(/"[^"\\]*(?:\\.[^"\\]*)*"/g, '""').replace(/'[^'\\]*(?:\\.[^'\\]*)*'/g, "''");
+
     // 1. Core R Syntax (Definitive)
     const definitivePatterns = [
       { pattern: /<-\s*/g, weight: 0.4, perMatch: 0.05 }, // Assignment operator `<-`
@@ -125,7 +129,7 @@ message("Analysis complete.")
         weight: 0.15,
         perMatch: 0.02,
       }, // R-specific logical/null constants
-      { pattern: /%%|%in%|%o%|%*%|%x%/g, weight: 0.2, perMatch: 0.05 }, // Special operators
+      { pattern: /%%|%in%|%o%|%\*%|%x%|%\/%/g, weight: 0.2, perMatch: 0.05 }, // Special operators (R's binary operators)
       {
         pattern: /\b(c|list|data\.frame|matrix|array|factor|vector)\s*\(/g,
         weight: 0.15,
@@ -135,7 +139,9 @@ message("Analysis complete.")
     ];
 
     for (const dp of definitivePatterns) {
-      const matches = content.match(dp.pattern);
+      // Use content without quotes for $ patterns and % patterns to avoid JSON false positives
+      const searchContent = (dp.pattern.source.includes('\\$') || dp.pattern.source.includes('%')) ? contentWithoutQuotes : content;
+      const matches = searchContent.match(dp.pattern);
       if (matches) {
         confidenceScore += dp.weight;
         if (dp.perMatch) {

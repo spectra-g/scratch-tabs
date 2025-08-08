@@ -154,26 +154,34 @@ This is a summary of the data.`;
       expect(detector.detect("single line").match).toBe(false);
     });
 
-    test("should handle CSV with inconsistent column counts", () => {
+    test("should reject CSV with inconsistent column counts", () => {
       const inconsistentCSV = `Name,Age,City
 John,30,NYC,Extra
 Jane,25
 Bob,35,Chicago`;
       const result = detector.detect(inconsistentCSV);
-      // Should still detect as CSV but with lower confidence
-      if (result.match) {
-        expect(result.confidence).toBeLessThan(0.8);
-      }
+      // Should reject due to inconsistent delimiter counts
+      expect(result.match).toBe(false);
     });
 
-    test("should detect CSV with header only", () => {
+    test("should reject single line content", () => {
+      const singleLine = `Name,Age,City,Email`;
+      const result = detector.detect(singleLine);
+      expect(result.match).toBe(false);
+    });
+
+    test("should reject two line content", () => {
+      const twoLines = `Name,Age,City
+John,30,NYC`;
+      const result = detector.detect(twoLines);
+      expect(result.match).toBe(false);
+    });
+
+    test("should reject CSV with header only (single line)", () => {
       const headerOnly = `ID,Name,Email,Phone,Address`;
       const result = detector.detect(headerOnly);
-      // Single line CSV detection varies by implementation
-      // Some detectors may detect it, others may not
-      if (result.match) {
-        expect(result.confidence).toBeLessThan(0.9);
-      }
+      // Single line content should be rejected
+      expect(result.match).toBe(false);
     });
 
     test("should handle CSV with empty fields", () => {

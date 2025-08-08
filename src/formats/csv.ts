@@ -34,10 +34,17 @@ export class CsvFormatDetector extends BaseFormatDetector implements FormatModul
 
     const lines = content
       .split("\n")
-      .map((line) => line.trimEnd()) // Keep leading spaces for tab detection, remove trailing
-      .filter((line) => line.trim().length > 0); // Filter out fully empty/whitespace lines
+      .map((line) => line.trimEnd())
+      .filter((line) => line.trim().length > 0);
 
-    if (lines.length === 0) {
+    // Requirement 1: Must have at least 3 lines
+    if (lines.length < 3) {
+      return this.noMatch();
+    }
+
+    // Reject markdown tables (which have | separators and --- patterns)
+    if (lines.some(line => /^\s*\|.*\|\s*$/.test(line)) && 
+        lines.some(line => /^\s*\|[\s-|:]*\|\s*$/.test(line))) {
       return this.noMatch();
     }
 
@@ -62,89 +69,57 @@ export class CsvFormatDetector extends BaseFormatDetector implements FormatModul
     if (chosenDelimiter) {
       expectedDelimiterCount = maxDelimiterFrequency;
     } else {
-      // No common delimiters found in the first line, treat as single-column case
-      expectedDelimiterCount = 0;
+      return this.noMatch();
     }
 
-    // --- 2. Check All Non-Empty Lines for Consistency ---
-    for (const line of lines) {
-      let currentLineDelimiterCount: number;
+    // Must have at least 2 delimiters (3 columns minimum)
+    if (expectedDelimiterCount < 2) {
+      return this.noMatch();
+    }
 
-      if (chosenDelimiter) {
-        currentLineDelimiterCount = (
-          line.match(new RegExp(escapeRegExp(chosenDelimiter), "g")) || []
-        ).length;
-      } else {
-        // Single-column case: check if *any* candidate delimiter appears
-        const hasAnyCandidateDelimiter = candidateDelimiters.some((d) =>
-          line.includes(d),
-        );
-        currentLineDelimiterCount = hasAnyCandidateDelimiter ? -999 : 0; // -999 to fail the check
-      }
+    // --- 2. Check All Lines for Consistent Delimiter Count ---
+    for (const line of lines) {
+      const currentLineDelimiterCount = (
+        line.match(new RegExp(escapeRegExp(chosenDelimiter), "g")) || []
+      ).length;
 
       if (currentLineDelimiterCount !== expectedDelimiterCount) {
-        // Any inconsistency means it's not CSV by this strict definition
         return this.noMatch();
       }
     }
 
-    // --- 3. Stronger Checks to Prevent False Positives ---
-
-    // Check that not all lines start with the delimiter (prevents markdown tables, etc.)
-    if (chosenDelimiter) {
-      const allLinesStartWithDelimiter = lines.every(line => 
-        line.trim().startsWith(chosenDelimiter)
-      );
-      if (allLinesStartWithDelimiter) {
-        return this.noMatch();
+    // --- 3. Quote Validation ---
+    // If quotes are present, validate they properly wrap entire fields
+    for (const line of lines) {
+      const fields = line.split(chosenDelimiter);
+      
+      for (const field of fields) {
+        const trimmedField = field.trim();
+        
+        // If field contains quotes, it must be properly quoted
+        if (trimmedField.includes('"')) {
+          // Field must start and end with quotes to be valid
+          if (!trimmedField.startsWith('"') || !trimmedField.endsWith('"')) {
+            return this.noMatch();
+          }
+          
+          // Check for unescaped internal quotes (simplified check)
+          const innerContent = trimmedField.slice(1, -1);
+          const unescapedQuotes = innerContent.match(/(?<!\\)"/g);
+          if (unescapedQuotes && unescapedQuotes.length > 0) {
+            return this.noMatch();
+          }
+        }
       }
     }
 
-    // Minimum delimiter requirement: Must have at least 3 delimiters to be considered CSV
-    if (!chosenDelimiter || expectedDelimiterCount < 3) {
-      return this.noMatch();
-    }
-
-    // Reject content that looks like JSON, XML, or other structured data
-    const fullText = lines.join("\n");
-
-    // Check for JSON-like patterns (braces, brackets)
-    if (/^\s*[{[]/.test(fullText) && /[}\]]\s*$/.test(fullText)) {
-      return this.noMatch();
-    }
-
-    // Check if most of the content consists of braces, brackets
-    const braceContent = fullText.replace(/[^{}[\]]/g, "").length;
-    const totalContent = fullText.length;
-    if (braceContent > 0 && braceContent / totalContent > 0.1) {
-      // If more than 10% of content is braces/brackets, likely not CSV
-      return this.noMatch();
-    }
-
-    // A small check: if it's single-column and only one line, and very long, it's likely prose.
-    if (
-      lines.length === 1 &&
-      firstLine.length > 80 &&
-      firstLine.includes(" ")
-    ) {
-      // Check if it resembles typical prose rather than a single data value
-      const wordCount = firstLine.trim().split(/\s+/).length;
-      if (wordCount > 5) {
-        // Arbitrary threshold: if more than 5 words, likely prose
-        return this.noMatch();
-      }
-    }
-
-    // Adjust confidence based on delimiter count and consistency
-    const confidence = Math.min(0.9, 0.5 + expectedDelimiterCount * 0.05);
-    
-    // CSV should never be definitive - let higher priority formats win when there are multiple matches
-    const isDefinitive = false;
+    // Simple confidence based on delimiter consistency
+    const confidence = Math.min(0.85, 0.6 + expectedDelimiterCount * 0.05);
     
     return {
       match: true,
       confidence: confidence,
-      matchedDefinitive: isDefinitive,
+      matchedDefinitive: false,
     };
   }
 
