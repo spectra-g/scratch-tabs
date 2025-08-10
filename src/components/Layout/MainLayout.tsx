@@ -19,6 +19,7 @@ import { DiffModal } from "../DiffModal";
 import { SummarizeModal } from "../AI/SummarizeModal";
 import { SearchModal } from "../Search/SearchModal";
 import { AIModelManagementModal } from "../AI/AIModelManagementModal";
+import { ConfirmationDialog } from "../Tab/ConfirmationDialog";
 import { TestFields } from "../TestFields/TestFields";
 import { updateSaveIndicator } from "../../utils/testIndicators";
 import { useAIStore } from "../../stores/aiStore";
@@ -45,11 +46,12 @@ const MainLayout: React.FC = () => {
     );
 
   // FIX: Use useStoreWithEqualityFn for root store actions
-  const { saveTabDataById, setSplitRatio } = useStoreWithEqualityFn(
+  const { saveTabDataById, setSplitRatio, removeTab } = useStoreWithEqualityFn(
     useRootStore,
     (state) => ({
       saveTabDataById: state.saveTabDataById,
       setSplitRatio: state.setSplitRatio,
+      removeTab: state.removeTab,
     }),
     shallow,
   );
@@ -72,6 +74,13 @@ const MainLayout: React.FC = () => {
   );
 
   const [isAppInitialized, setIsAppInitialized] = useState(false);
+  
+  // State for keyboard shortcut confirmation dialog
+  const [keyboardCloseConfirmation, setKeyboardCloseConfirmation] = useState<{
+    isOpen: boolean;
+    tabId: string;
+    tabTitle: string;
+  } | null>(null);
 
   // FIX: Use useStoreWithEqualityFn for AI store
   const { setSummaryModalCallback } = useStoreWithEqualityFn(
@@ -250,6 +259,22 @@ const MainLayout: React.FC = () => {
     setSummarizeModal(null);
   };
 
+  // Tab close handlers for keyboard shortcut
+  const handleTabClose = (tabId: string) => {
+    removeTab(tabId);
+  };
+
+  const handleKeyboardCloseConfirm = () => {
+    if (keyboardCloseConfirmation) {
+      handleTabClose(keyboardCloseConfirmation.tabId);
+      setKeyboardCloseConfirmation(null);
+    }
+  };
+
+  const handleKeyboardCloseCancel = () => {
+    setKeyboardCloseConfirmation(null);
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // --- Search Shortcut ---
@@ -261,6 +286,38 @@ const MainLayout: React.FC = () => {
         event.preventDefault();
         const selectedText = window.getSelection()?.toString() || "";
         toggleSearch(selectedText); // Pass selected text to pre-populate
+      }
+
+      // --- Tab Close Shortcut (CTRL+W) ---
+      if (event.ctrlKey && !event.metaKey && event.key === 'w') {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Determine which tab should be closed based on active side
+        const targetTabId = splitView?.activeSide === 'left' 
+          ? splitView?.activeLeftTabId 
+          : splitView?.activeRightTabId;
+          
+        if (targetTabId) {
+          // Get tabs data only when needed, without subscribing
+          const tabs = useTabsStore.getState().tabs;
+          const activeTab = tabs.find(tab => tab.id === targetTabId);
+          
+          if (activeTab) {
+            // Check if confirmation is needed (same logic as SortableTab)
+            const needsConfirmation = (activeTab.content && activeTab.content.trim() !== "") || activeTab.isTablet;
+            
+            if (needsConfirmation) {
+              setKeyboardCloseConfirmation({
+                isOpen: true,
+                tabId: targetTabId,
+                tabTitle: activeTab.title,
+              });
+            } else {
+              handleTabClose(targetTabId);
+            }
+          }
+        }
       }
 
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
@@ -315,6 +372,10 @@ const MainLayout: React.FC = () => {
     activeLeftTabId,
     activeRightTabId,
     saveTabDataById,
+    splitView?.activeSide,
+    splitView?.activeLeftTabId,
+    splitView?.activeRightTabId,
+    handleTabClose,
   ]);
 
   useUrlTabHandler();
@@ -400,6 +461,17 @@ const MainLayout: React.FC = () => {
       )}
       {isSearchOpen && <SearchModal />}
       <AIModelManagementModal />
+      
+      {keyboardCloseConfirmation && (
+        <ConfirmationDialog
+          isOpen={keyboardCloseConfirmation.isOpen}
+          onConfirm={handleKeyboardCloseConfirm}
+          onCancel={handleKeyboardCloseCancel}
+          message={`Tab "${keyboardCloseConfirmation.tabTitle}" contains content that cannot be recovered once closed. Are you sure you want to close this tab?`}
+          position={{ x: window.innerWidth / 2, y: window.innerHeight / 2 }}
+          positionType="above"
+        />
+      )}
       
       <TestFields />
     </div>

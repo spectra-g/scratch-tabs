@@ -12,7 +12,6 @@ import { TabletSelector } from "../../tablets";
 import { TabContextMenu } from "./TabContextMenu";
 import { TabActions } from "./TabActions";
 import { TabTooltip } from "./TabTooltip";
-import { ConfirmationDialog } from "./ConfirmationDialog";
 import { Tab } from "../../types";
 import { formatRegistry } from "../../formats";
 import { WorkspaceSwitcher } from "../Workspace/WorkspaceSwitcher";
@@ -602,18 +601,8 @@ export const TabBar: React.FC<TabBarProps> = ({
   const pinnedTabs = visibleTabs.filter((tab) => tab.isPinned);
   const unpinnedTabs = visibleTabs.filter((tab) => !tab.isPinned);
 
-  // State for keyboard shortcut confirmation dialog
-  const [keyboardCloseConfirmation, setKeyboardCloseConfirmation] = useState<{
-    isOpen: boolean;
-    tabId: string;
-    tabTitle: string;
-  } | null>(null);
-
   const handleTabClose = (tabId: string) => {
-    console.log('handleTabClose called with:', tabId);
-    console.log('About to call removeTab from rootStore');
     removeTab(tabId);
-    console.log('removeTab called successfully');
     
     if (hoveredTabId === tabId) {
       setTooltipVisible(false);
@@ -622,50 +611,6 @@ export const TabBar: React.FC<TabBarProps> = ({
     }
   };
 
-  const handleKeyboardCloseConfirm = () => {
-    if (keyboardCloseConfirmation) {
-      handleTabClose(keyboardCloseConfirmation.tabId);
-      setKeyboardCloseConfirmation(null);
-    }
-  };
-
-  const handleKeyboardCloseCancel = () => {
-    setKeyboardCloseConfirmation(null);
-  };
-
-  // Handle Ctrl+W to close current tab (Windows/Linux only)
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle Ctrl+W (not Cmd+W on Mac)
-      if (event.ctrlKey && !event.metaKey && event.key === 'w') {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        // Only handle if there's an active tab to close
-        if (activeSideTabId) {
-          const activeTab = tabs.find(tab => tab.id === activeSideTabId);
-          
-          if (activeTab) {
-            // Check if confirmation is needed (same logic as SortableTab)
-            const needsConfirmation = (activeTab.content && activeTab.content.trim() !== "") || activeTab.isTablet;
-            
-            if (needsConfirmation) {
-              setKeyboardCloseConfirmation({
-                isOpen: true,
-                tabId: activeSideTabId,
-                tabTitle: activeTab.title,
-              });
-            } else {
-              handleTabClose(activeSideTabId);
-            }
-          }
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [activeSideTabId, handleTabClose, tabs]);
 
   return (
     <>
@@ -823,16 +768,6 @@ export const TabBar: React.FC<TabBarProps> = ({
         position={tooltipPosition}
       />
 
-      {keyboardCloseConfirmation && (
-        <ConfirmationDialog
-          isOpen={keyboardCloseConfirmation.isOpen}
-          onConfirm={handleKeyboardCloseConfirm}
-          onCancel={handleKeyboardCloseCancel}
-          message={`Tab "${keyboardCloseConfirmation.tabTitle}" contains content that cannot be recovered once closed. Are you sure you want to close this tab?`}
-          position={{ x: window.innerWidth / 2, y: window.innerHeight / 2 }}
-          positionType="above"
-        />
-      )}
     </>
   );
 };
