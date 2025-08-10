@@ -42,22 +42,24 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
         </h2>
         <div className="flex items-center flex-shrink-0">
           {/* Toggle Hide Matching Lines Button */}
-          <button
-            onClick={toggleHideMatching}
-            title={
-              hideMatchingLines
-                ? "Show Matching Lines"
-                : "Hide Matching Lines (Contextual Diff)"
-            }
-            className="mr-4 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white flex items-center"
-          >
-            {hideMatchingLines ? (
-              <Eye size={14} className="mr-1" />
-            ) : (
-              <EyeOff size={14} className="mr-1" />
-            )}
-            {hideMatchingLines ? "Show All" : "Hide Matching"}
-          </button>
+          {!areContentsIdentical && (
+            <button
+              onClick={toggleHideMatching}
+              title={
+                hideMatchingLines
+                  ? "Show Matching Lines"
+                  : "Hide Matching Lines (Contextual Diff)"
+              }
+              className="mr-4 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white flex items-center"
+            >
+              {hideMatchingLines ? (
+                <Eye size={14} className="mr-1" />
+              ) : (
+                <EyeOff size={14} className="mr-1" />
+              )}
+              {hideMatchingLines ? "Show All" : "Hide Matching"}
+            </button>
+          )}
           {/* Undo/Redo Buttons */}
           <button
             onClick={handleUndo}

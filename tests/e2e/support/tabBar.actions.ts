@@ -171,4 +171,11 @@ export class TabBarActions {
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).not.toBeVisible();
   }
+
+  async doubleClickActiveTab() {
+    // Find the currently active tab (has aria-selected="true")
+    const activeTab = this.page.locator('[data-testid^="tab-"][aria-selected="true"]');
+    await expect(activeTab).toBeVisible();
+    await activeTab.dblclick();
+  }
 } 
