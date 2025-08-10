@@ -55,6 +55,10 @@ export const WorkspaceSwitcher: React.FC = () => {
     deleteWorkspace,
   } = useWorkspaceStore();
 
+  // Get the current workspace name for accessibility
+  const currentWorkspace = workspaces.find(ws => ws.id === activeWorkspaceId);
+  const currentWorkspaceName = currentWorkspace?.name || "Default Workspace";
+
   // Fetch tab counts when dropdown opens
   useEffect(() => {
     if (isOpen) {
@@ -155,6 +159,8 @@ export const WorkspaceSwitcher: React.FC = () => {
         onClick={toggleDropdown}
         className="h-full px-2 hover:bg-gray-700/50 rounded-md transition-colors flex items-center space-x-2"
         title="Switch Workspace"
+        data-testid="workspace-switcher"
+        aria-label={currentWorkspaceName}
       >
         <Folders size={16} className="text-gray-400" />
       </button>
@@ -244,7 +250,7 @@ export const WorkspaceSwitcher: React.FC = () => {
             {/* Create New Workspace */}
             <div className="px-3 py-2 border-t border-gray-700/50">
               {isCreating ? (
-                <div className="flex items-center space-x-2">
+                <div className="space-y-2">
                   <input
                     type="text"
                     value={newWorkspaceName}
@@ -256,10 +262,28 @@ export const WorkspaceSwitcher: React.FC = () => {
                         setNewWorkspaceName("");
                       }
                     }}
-                    placeholder="Workspace name..."
-                    className="flex-1 bg-gray-900/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200"
+                    placeholder="Workspace name"
+                    className="w-full bg-gray-900/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200"
                     autoFocus
                   />
+                  <div className="flex items-center justify-end space-x-2">
+                    <button
+                      onClick={() => {
+                        setIsCreating(false);
+                        setNewWorkspaceName("");
+                      }}
+                      className="px-3 py-1 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreateWorkspace}
+                      disabled={!newWorkspaceName.trim()}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Create
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
@@ -270,7 +294,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                   className="w-full text-left text-sm text-gray-400 hover:text-gray-200 flex items-center space-x-2"
                 >
                   <Plus size={14} />
-                  <span>New Workspace</span>
+                  <span>New workspace</span>
                 </button>
               )}
             </div>

@@ -3,6 +3,9 @@ const mockStorageProvider = {
   saveTabsInterval: jest.fn() as jest.MockedFunction<
     (tabs: import("../../types").Tab[]) => Promise<void>
   >,
+  saveTabsNow: jest.fn() as jest.MockedFunction<
+    (tabs: import("../../types").Tab[]) => Promise<void>
+  >,
   saveSplitViewNow: jest.fn() as jest.MockedFunction<
     (splitView: any) => Promise<void>
   >,
@@ -226,6 +229,7 @@ describe("PersistenceStore", () => {
 
     // Reset mocks
     mockStorageProvider.saveTabsInterval.mockResolvedValue(undefined);
+    mockStorageProvider.saveTabsNow.mockResolvedValue(undefined);
     mockStorageProvider.saveSplitViewNow.mockResolvedValue(undefined);
 
     mockWorkspaceStore.getState.mockReturnValue(mockWorkspaceState);
@@ -251,7 +255,7 @@ describe("PersistenceStore", () => {
 
       await usePersistenceStore.getState().saveState();
 
-      expect(mockStorageProvider.saveTabsInterval).not.toHaveBeenCalled();
+      expect(mockStorageProvider.saveTabsNow).not.toHaveBeenCalled();
       expect(mockStorageProvider.saveSplitViewNow).not.toHaveBeenCalled();
     });
   });
@@ -315,7 +319,7 @@ describe("PersistenceStore", () => {
       await usePersistenceStore.getState().saveState();
 
       // Should save tabs from the active workspace
-      expect(mockStorageProvider.saveTabsInterval).toHaveBeenCalledWith([
+      expect(mockStorageProvider.saveTabsNow).toHaveBeenCalledWith([
         mockTabs[0], // tab1
         mockTabs[1], // tab2
         // tab3 should be excluded (different workspace)
@@ -336,7 +340,7 @@ describe("PersistenceStore", () => {
 
       await usePersistenceStore.getState().saveState();
 
-      expect(mockStorageProvider.saveTabsInterval).not.toHaveBeenCalled();
+      expect(mockStorageProvider.saveTabsNow).not.toHaveBeenCalled();
       expect(mockStorageProvider.saveSplitViewNow).toHaveBeenCalled();
     });
 
@@ -386,7 +390,7 @@ describe("PersistenceStore", () => {
 
       await usePersistenceStore.getState().saveState();
 
-      expect(mockStorageProvider.saveTabsInterval).toHaveBeenCalledWith([
+      expect(mockStorageProvider.saveTabsNow).toHaveBeenCalledWith([
         {
           ...mockTabs[0],
           content: "live content from editor", // Should use live content
@@ -424,7 +428,7 @@ describe("PersistenceStore", () => {
 
       await usePersistenceStore.getState().saveState();
 
-      expect(mockStorageProvider.saveTabsInterval).toHaveBeenCalledWith([
+      expect(mockStorageProvider.saveTabsNow).toHaveBeenCalledWith([
         {
           ...mockTabs[0],
           content: "original content", // Should use original content
@@ -439,7 +443,7 @@ describe("PersistenceStore", () => {
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
-      mockStorageProvider.saveTabsInterval.mockRejectedValueOnce(
+      mockStorageProvider.saveTabsNow.mockRejectedValueOnce(
         new Error("Storage error"),
       );
 

@@ -230,6 +230,10 @@ When('I press Enter to confirm rename', async function() {
   await this.tabBar.pressEnterToConfirmRename();
 });
 
+When('I double-click on the active tab', async function() {
+  await this.tabBar.doubleClickActiveTab();
+});
+
 When('I close the diff modal', async function() {
   await this.navigation.closeDiffModal();
 });

@@ -10,6 +10,7 @@ import { StatusBarActions } from './statusBar.actions';
 import { CsvTableViewActions } from './csvTableView.actions';
 import { DownloadActions } from './download.actions';
 import { ConfirmationDialogActions } from './confirmationDialog.actions';
+import { WorkspaceActions } from './workspace.actions';
 
 /**
  * E2E World Class - Lightweight Orchestrator & Dependency Injection Container
@@ -35,6 +36,7 @@ export class E2EWorld extends World {
   csvTableView!: CsvTableViewActions;
   download!: DownloadActions;
   confirmationDialog!: ConfirmationDialogActions;
+  workspace!: WorkspaceActions;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -57,6 +59,7 @@ export class E2EWorld extends World {
     this.csvTableView = new CsvTableViewActions(this.page);
     this.download = new DownloadActions(this.page);
     this.confirmationDialog = new ConfirmationDialogActions(this.page);
+    this.workspace = new WorkspaceActions(this.page);
   }
 }
 

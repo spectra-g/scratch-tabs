@@ -42,7 +42,7 @@ export const usePersistenceStore = create<PersistenceStore>((set, get) => {
         });
 
         if (tabsToSave.length > 0) {
-          await storage.saveTabsInterval(tabsToSave);
+          await storage.saveTabsNow(tabsToSave);
         }
 
         if (splitView && splitView.workspaceId === activeWorkspaceId) {
