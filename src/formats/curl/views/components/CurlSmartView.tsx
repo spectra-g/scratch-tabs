@@ -118,19 +118,34 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
     onContentChange(newContent);
   }, [parsedDoc, onContentChange]);
 
+  // Handle deleting a curl command
+  const handleDeleteCommand = useCallback((blockId: string) => {
+    const updatedDoc = parsedDoc.filter(block => block.id !== blockId);
+    setParsedDoc(updatedDoc);
+    
+    // If we deleted the active block, clear the active card
+    if (activeCardId === blockId) {
+      setActiveCardId(null);
+    }
+    
+    // Sync back to content
+    const newContent = compileCurlDocument(updatedDoc);
+    onContentChange(newContent);
+  }, [parsedDoc, activeCardId, onContentChange]);
+
   if (!content.trim()) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-900 text-gray-400">
         <div className="text-center">
           <Terminal size={48} className="mx-auto mb-4 text-gray-600" />
-          <p className="text-lg mb-2">No cURL commands found</p>
-          <p className="text-sm mb-4">Add a cURL command to get started</p>
+          <p className="text-lg mb-2">No Curl commands found</p>
+          <p className="text-sm mb-4">Add a Curl command to get started</p>
           <button
             onClick={handleAddNewCommand}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
           >
             <Plus size={16} />
-            <span>Add cURL Command</span>
+            <span>Add Curl Command</span>
           </button>
         </div>
       </div>
@@ -142,8 +157,8 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
       <div className="flex items-center justify-center h-full bg-gray-900 text-gray-400">
         <div className="text-center">
           <FileText size={48} className="mx-auto mb-4 text-gray-600" />
-          <p className="text-lg mb-2">No valid cURL commands detected</p>
-          <p className="text-sm">This document contains text but no parseable cURL commands</p>
+          <p className="text-lg mb-2">No valid Curl commands detected</p>
+          <p className="text-sm">This document contains text but no parseable Curl commands</p>
         </div>
       </div>
     );
@@ -178,6 +193,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
                   onClick={() => setActiveCardId(block.id)}
                   onRequestChange={handleRequestChange}
                   onOpenInRestClient={handleOpenInRestClient}
+                  onDelete={() => handleDeleteCommand(block.id)}
                 />
               </motion.div>
             ))}

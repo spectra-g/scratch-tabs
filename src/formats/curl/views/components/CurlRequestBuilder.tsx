@@ -242,7 +242,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
         {activeTab === 'options' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-300">cURL Options</h3>
+              <h3 className="text-sm font-medium text-gray-300">Curl Options</h3>
               <button
                 onClick={handleAddOption}
                 className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors"
@@ -282,7 +282,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                 <div className="text-center py-8 text-gray-500">
                   <Settings size={24} className="mx-auto mb-2 opacity-50" />
                   <p>No additional options configured</p>
-                  <p className="text-xs">Click "Add Option" to add cURL flags</p>
+                  <p className="text-xs">Click "Add Option" to add Curl flags</p>
                 </div>
               )}
             </div>

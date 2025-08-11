@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, ExternalLink, Globe, Clock } from '../../../../components/Icons';
+import { ChevronDown, ChevronRight, ExternalLink, Globe, Clock, Code, Copy, Trash2, Check, X } from '../../../../components/Icons';
 import { CurlRequest } from '../../utils/parser';
 import { CurlRequestBuilder } from './CurlRequestBuilder';
+import { compileCurlCommand } from '../../utils/compiler';
 
 interface CurlCardProps {
   request: CurlRequest;
@@ -10,6 +11,7 @@ interface CurlCardProps {
   onClick: () => void;
   onRequestChange: (newRequest: CurlRequest) => void;
   onOpenInRestClient: () => void;
+  onDelete?: () => void;
 }
 
 export const CurlCard: React.FC<CurlCardProps> = ({
@@ -18,7 +20,46 @@ export const CurlCard: React.FC<CurlCardProps> = ({
   onClick,
   onRequestChange,
   onOpenInRestClient,
+  onDelete,
 }) => {
+  // Generate live curl command
+  const generatedCurlCommand = useMemo(() => {
+    return compileCurlCommand(request);
+  }, [request]);
+
+  // State for feedback animations
+  const [copyFeedback, setCopyFeedback] = useState<'idle' | 'success'>('idle');
+  const [deleteFeedback, setDeleteFeedback] = useState<'idle' | 'confirm' | 'success' | 'error'>('idle');
+  
+  // Copy curl command to clipboard
+  const handleCopyCommand = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedCurlCommand);
+      setCopyFeedback('success');
+      setTimeout(() => setCopyFeedback('idle'), 2000);
+    } catch (error) {
+      console.error('Failed to copy curl command:', error);
+    }
+  };
+  
+  // Handle delete with confirmation
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (deleteFeedback === 'idle') {
+      setDeleteFeedback('confirm');
+      setTimeout(() => {
+        setDeleteFeedback(current => current === 'confirm' ? 'idle' : current);
+      }, 3000); // Reset after 3 seconds if not confirmed
+    } else if (deleteFeedback === 'confirm') {
+      if (onDelete) {
+        onDelete();
+        setDeleteFeedback('success');
+      } else {
+        setDeleteFeedback('error');
+      }
+      setTimeout(() => setDeleteFeedback('idle'), 2000);
+    }
+  };
   // Get method color
   const getMethodColor = (method: string) => {
     switch (method.toUpperCase()) {
@@ -88,16 +129,46 @@ export const CurlCard: React.FC<CurlCardProps> = ({
             </div>
           </div>
 
-          {/* Quick stats */}
-          <div className="flex items-center space-x-4 text-xs text-gray-500">
-            {request.headers.length > 0 && (
-              <span>{request.headers.length} headers</span>
-            )}
-            {request.body && (
-              <span>body</span>
-            )}
-            {request.otherOptions.length > 0 && (
-              <span>{request.otherOptions.length} options</span>
+          {/* Quick stats and actions */}
+          <div className="flex items-center space-x-4">
+            {/* Quick stats */}
+            <div className="flex items-center space-x-4 text-xs text-gray-500">
+              {request.headers.length > 0 && (
+                <span>{request.headers.length} headers</span>
+              )}
+              {request.body && (
+                <span>body</span>
+              )}
+              {request.otherOptions.length > 0 && (
+                <span>{request.otherOptions.length} options</span>
+              )}
+            </div>
+            
+            {/* Delete button */}
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                className={`p-1 rounded transition-colors ${
+                  deleteFeedback === 'confirm'
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    : deleteFeedback === 'success'
+                    ? 'bg-green-500/20 text-green-400'
+                    : deleteFeedback === 'error'
+                    ? 'bg-red-500/20 text-red-400'
+                    : 'text-gray-500 hover:text-red-400 hover:bg-red-500/20'
+                }`}
+                title={deleteFeedback === 'confirm' ? 'Click again to confirm delete' : 'Delete this request'}
+              >
+                {deleteFeedback === 'confirm' ? (
+                  <X size={14} />
+                ) : deleteFeedback === 'success' ? (
+                  <Check size={14} />
+                ) : deleteFeedback === 'error' ? (
+                  <X size={14} />
+                ) : (
+                  <Trash2 size={14} />
+                )}
+              </button>
             )}
           </div>
         </div>
@@ -129,6 +200,37 @@ export const CurlCard: React.FC<CurlCardProps> = ({
                   <ExternalLink size={16} />
                   <span>Open in Rest Client</span>
                 </button>
+              </div>
+
+              {/* Live curl command preview */}
+              <div className="mb-6 p-4 bg-gray-900 border border-gray-700 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Code size={16} className="text-blue-400" />
+                    <h4 className="text-sm font-medium text-gray-200">Generated Curl Command</h4>
+                  </div>
+                  <button
+                    onClick={handleCopyCommand}
+                    className={`flex items-center space-x-1 px-3 py-1 rounded border transition-colors ${
+                      copyFeedback === 'success'
+                        ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-600'
+                    }`}
+                    title="Copy to clipboard"
+                  >
+                    {copyFeedback === 'success' ? (
+                      <Check size={14} />
+                    ) : (
+                      <Copy size={14} />
+                    )}
+                    <span className="text-xs">
+                      {copyFeedback === 'success' ? 'Copied!' : 'Copy'}
+                    </span>
+                  </button>
+                </div>
+                <pre className="text-xs text-gray-300 font-mono overflow-x-auto custom-scrollbar p-3 bg-gray-950 rounded border border-gray-800">
+                  {generatedCurlCommand}
+                </pre>
               </div>
 
               {/* Request builder */}

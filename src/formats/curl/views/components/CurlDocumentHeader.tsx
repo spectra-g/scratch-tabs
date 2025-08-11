@@ -38,7 +38,7 @@ export const CurlDocumentHeader: React.FC<CurlDocumentHeaderProps> = ({
           <div className="flex items-center space-x-2">
             <Terminal size={20} className="text-blue-400" />
             <h2 className="text-lg font-semibold text-gray-200">
-              cURL Request Workbench
+              Curl Request Workbench
             </h2>
           </div>
 

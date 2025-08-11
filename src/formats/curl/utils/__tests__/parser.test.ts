@@ -1,7 +1,7 @@
 import { parseCurlDocument, getCurlDocumentSummary } from '../parser';
 import { compileCurlDocument, updateCurlBlockInDocument } from '../compiler';
 
-describe('cURL Parser', () => {
+describe('Curl Parser', () => {
   describe('parseCurlDocument', () => {
     it('should parse a simple curl command', () => {
       const content = `curl -X POST https://api.example.com/users \\

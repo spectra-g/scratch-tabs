@@ -55,7 +55,7 @@ export class CurlFormatModule implements FormatModule {
       {
         id: "curl-request-builder",
         languageId: "curl",
-        label: "cURL Builder",
+        label: "Curl Builder",
         icon: Terminal,
         component: CurlSmartView,
         mode: "replaces",
