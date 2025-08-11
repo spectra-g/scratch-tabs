@@ -28,7 +28,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onUndo,
   onRedo,
   editor,
-  onContentChange,
+  onContentChange: _onContentChange, // Passed to maintain interface compatibility, handled by Monaco events
 }) => {
   const { openStructureComparisonModal } = useJsonModals();
 
