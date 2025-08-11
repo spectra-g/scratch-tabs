@@ -8,6 +8,7 @@ import { ClipboardActions } from './clipboard.actions';
 import { FileActions } from './file.actions';
 import { StatusBarActions } from './statusBar.actions';
 import { CsvTableViewActions } from './csvTableView.actions';
+import { JsonSmartViewActions } from './jsonSmartView.actions';
 import { DownloadActions } from './download.actions';
 import { ConfirmationDialogActions } from './confirmationDialog.actions';
 import { WorkspaceActions } from './workspace.actions';
@@ -34,6 +35,7 @@ export class E2EWorld extends World {
   file!: FileActions;
   statusBar!: StatusBarActions;
   csvTableView!: CsvTableViewActions;
+  jsonSmartView!: JsonSmartViewActions;
   download!: DownloadActions;
   confirmationDialog!: ConfirmationDialogActions;
   workspace!: WorkspaceActions;
@@ -57,6 +59,7 @@ export class E2EWorld extends World {
     this.file = new FileActions(this.page);
     this.statusBar = new StatusBarActions(this.page);
     this.csvTableView = new CsvTableViewActions(this.page);
+    this.jsonSmartView = new JsonSmartViewActions(this.page);
     this.download = new DownloadActions(this.page);
     this.confirmationDialog = new ConfirmationDialogActions(this.page);
     this.workspace = new WorkspaceActions(this.page);
