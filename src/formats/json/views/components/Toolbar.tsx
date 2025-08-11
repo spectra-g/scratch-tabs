@@ -73,13 +73,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </div>
       </div>
 
-      {/* Center Section: Path Navigator */}
+      {/* Center Section: Search */}
       <div className="flex-1 max-w-md mx-4">
         <input
           type="text"
           value={currentPath}
           onChange={(e) => onPathChange(e.target.value)}
-          placeholder="JSON path (e.g., users[0].name)"
+          placeholder="Search in JSON (e.g., users[0].name)"
           className="w-full px-3 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
         />
       </div>

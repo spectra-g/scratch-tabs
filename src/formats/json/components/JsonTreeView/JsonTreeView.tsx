@@ -192,6 +192,11 @@ const findDirectMatches = (
   searchTerm: string,
   matchedPaths: Set<string>,
 ): void => {
+  // Early exit for empty search terms to avoid matching everything
+  if (!searchTerm.trim()) {
+    return;
+  }
+  
   const lowerSearchTerm = searchTerm.toLowerCase();
   const keyMatch = String(nodeData.key).toLowerCase().includes(lowerSearchTerm);
   const valueMatch =
@@ -473,9 +478,10 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       // Use the same visible paths logic to determine what should be expanded
       const pathsToShow = findAllVisiblePaths(rootNodeData, searchTerm, searchExpansion);
       
-      // Auto-expand all paths that should be visible
+      // Auto-expand ONLY the paths that should be visible (reset expansion for search)
       if (pathsToShow.size > 0) {
-        setExpandedPaths((prev) => new Set([...prev, ...pathsToShow]));
+        // Include root in the base expansion, then add search-specific paths
+        setExpandedPaths(new Set(['', ...pathsToShow]));
       }
     }
   }, [debouncedInputValue, searchMode, searchExpansion, rootNodeData]);
