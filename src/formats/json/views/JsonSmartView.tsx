@@ -20,21 +20,6 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   side,
 }) => {
   const { setActiveEditor } = useActiveEditorStore();
-  // Add cleanup effect to track unmounting
-  useEffect(() => {
-    return () => {
-      const editor = editorRef.current;
-      if (editor) {
-        const currentActive = useActiveEditorStore.getState();
-        const activeEditorForSide = side === 'left' ? currentActive.activeLeftEditor : currentActive.activeRightEditor;
-        if (activeEditorForSide === editor) {
-          setActiveEditor(side, null);
-        }
-      }
-      setEditor(null);
-      editorRef.current = null;
-    };
-  }, [tabId, side, setActiveEditor]);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [canUndo, setCanUndo] = useState(false);
@@ -85,7 +70,10 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
     (editor: monaco.editor.IStandaloneCodeEditor, monaco: typeof import("monaco-editor/esm/vs/editor/editor.api")) => {
       editorRef.current = editor;
       setEditor(editor);
-      setActiveEditor(side, editor);
+      
+      if (isActive) {
+        setActiveEditor(side, editor);
+      }
 
       editor.onDidFocusEditorWidget(() => {
         setActiveEditor(side, editor);
@@ -114,7 +102,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       // Initial undo/redo state
       updateUndoRedoState();
     },
-    [content, onContentChange, updateUndoRedoState, side, setActiveEditor],
+    [content, onContentChange, updateUndoRedoState, side, setActiveEditor, isActive],
   );
 
   // Update editor content when prop changes (but avoid infinite loops)
@@ -130,6 +118,13 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       }
     }
   }, [content, editor]);
+
+  // Handle tab activation/deactivation
+  useEffect(() => {
+    if (editor && isActive) {
+      setActiveEditor(side, editor);
+    }
+  }, [isActive, editor, side, setActiveEditor]);
 
   const handleUndo = useCallback(() => {
     if (editor && canUndo) {
@@ -371,6 +366,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           </div>
           <div className="flex-1">
             <Editor
+              key={`json-editor-${tabId}-${side}`}
               height="100%"
               language="json"
               theme="vs-dark"
