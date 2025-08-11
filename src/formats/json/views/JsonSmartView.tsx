@@ -20,21 +20,6 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   side,
 }) => {
   const { setActiveEditor } = useActiveEditorStore();
-  // Add cleanup effect to track unmounting
-  useEffect(() => {
-    return () => {
-      const editor = editorRef.current;
-      if (editor) {
-        const currentActive = useActiveEditorStore.getState();
-        const activeEditorForSide = side === 'left' ? currentActive.activeLeftEditor : currentActive.activeRightEditor;
-        if (activeEditorForSide === editor) {
-          setActiveEditor(side, null);
-        }
-      }
-      setEditor(null);
-      editorRef.current = null;
-    };
-  }, [tabId, side, setActiveEditor]);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [canUndo, setCanUndo] = useState(false);
@@ -85,7 +70,10 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
     (editor: monaco.editor.IStandaloneCodeEditor, monaco: typeof import("monaco-editor/esm/vs/editor/editor.api")) => {
       editorRef.current = editor;
       setEditor(editor);
-      setActiveEditor(side, editor);
+      
+      if (isActive) {
+        setActiveEditor(side, editor);
+      }
 
       editor.onDidFocusEditorWidget(() => {
         setActiveEditor(side, editor);
@@ -114,7 +102,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       // Initial undo/redo state
       updateUndoRedoState();
     },
-    [content, onContentChange, updateUndoRedoState, side, setActiveEditor],
+    [content, onContentChange, updateUndoRedoState, side, setActiveEditor, isActive],
   );
 
   // Update editor content when prop changes (but avoid infinite loops)
@@ -131,6 +119,13 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
     }
   }, [content, editor]);
 
+  // Handle tab activation/deactivation
+  useEffect(() => {
+    if (editor && isActive) {
+      setActiveEditor(side, editor);
+    }
+  }, [isActive, editor, side, setActiveEditor]);
+
   const handleUndo = useCallback(() => {
     if (editor && canUndo) {
       editor.trigger("keyboard", "undo", null);
@@ -145,13 +140,193 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
 
   const handlePathChange = useCallback((path: string) => {
     setCurrentPath(path);
-    // TODO: Implement scrolling to path in editor
-  }, []);
+    
+    // Implement smart search functionality in Monaco editor
+    if (editor && path.trim()) {
+      const model = editor.getModel();
+      if (!model) return;
+      
+      let matches: monaco.editor.FindMatch[] | null = null;
+      
+      // First, try to find as JSON path - convert path like "pageTitle.display" to search for the key
+      if (path.includes('.') || path.includes('[')) {
+        // Extract the final key from the path (e.g., "display" from "pageTitle.display")
+        const pathParts = path.split(/[.\[\]]+/).filter(Boolean);
+        const finalKey = pathParts[pathParts.length - 1];
+        
+        if (finalKey && !finalKey.match(/^\d+$/)) { // Don't search for array indices
+          // Try to find the key with quotes (as it appears in JSON)
+          const quotedKey = `"${finalKey}"`;
+          matches = model.findMatches(
+            quotedKey,
+            false, // searchOnlyEditableRange
+            false, // isRegex
+            false, // matchCase
+            null,  // wordSeparators
+            false  // captureMatches
+          );
+          
+          // If we have multiple matches, try to find the one in the right context
+          if (matches && matches.length > 1 && pathParts.length > 1) {
+            // Find the nearest non-numeric parent (skip array indices for better context)
+            let parentKey = null;
+            for (let i = pathParts.length - 2; i >= 0; i--) {
+              const candidate = pathParts[i];
+              if (!candidate.match(/^\d+$/)) { // Skip pure numbers (array indices)
+                parentKey = candidate;
+                break;
+              }
+            }
+            
+            if (parentKey) {
+              const quotedParentKey = `"${parentKey}"`;
+              
+              // Find matches of the parent key
+              const parentMatches = model.findMatches(
+                quotedParentKey,
+                false, false, false, null, false
+              );
+              
+              if (parentMatches && parentMatches.length > 0) {
+                // Find the child key that comes after a parent key
+                const bestMatch = matches.find(match => {
+                  return parentMatches.some(parentMatch => {
+                    return match.range.startLineNumber >= parentMatch.range.startLineNumber &&
+                           match.range.startLineNumber <= parentMatch.range.startLineNumber + 20; // Increased range for nested structures
+                  });
+                });
+                
+                if (bestMatch) {
+                  matches = [bestMatch];
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Fallback: try exact text search
+      if (!matches || matches.length === 0) {
+        matches = model.findMatches(
+          path,
+          false, // searchOnlyEditableRange
+          false, // isRegex
+          false, // matchCase
+          null,  // wordSeparators
+          false  // captureMatches
+        );
+      }
+      
+      // Navigate to the first match
+      if (matches && matches.length > 0) {
+        editor.setPosition({
+          lineNumber: matches[0].range.startLineNumber,
+          column: matches[0].range.startColumn
+        });
+        
+        // Reveal the line in the center
+        editor.revealLineInCenter(matches[0].range.startLineNumber);
+        
+        // Set selection to highlight the found text
+        editor.setSelection(matches[0].range);
+      }
+    }
+  }, [editor]);
 
   const handleNodeSelect = useCallback((path: string) => {
     setCurrentPath(path);
-    // TODO: Implement highlighting and scrolling to the selected node in the editor
-  }, []);
+    
+    // Use the same smart search functionality as handlePathChange
+    if (editor && path.trim()) {
+      const model = editor.getModel();
+      if (!model) return;
+      
+      let matches: monaco.editor.FindMatch[] | null = null;
+      
+      // First, try to find as JSON path - convert path like "pageTitle.display" to search for the key
+      if (path.includes('.') || path.includes('[')) {
+        // Extract the final key from the path (e.g., "display" from "pageTitle.display")
+        const pathParts = path.split(/[.\[\]]+/).filter(Boolean);
+        const finalKey = pathParts[pathParts.length - 1];
+        
+        if (finalKey && !finalKey.match(/^\d+$/)) { // Don't search for array indices
+          // Try to find the key with quotes (as it appears in JSON)
+          const quotedKey = `"${finalKey}"`;
+          matches = model.findMatches(
+            quotedKey,
+            false, // searchOnlyEditableRange
+            false, // isRegex
+            false, // matchCase
+            null,  // wordSeparators
+            false  // captureMatches
+          );
+          
+          // If we have multiple matches, try to find the one in the right context
+          if (matches && matches.length > 1 && pathParts.length > 1) {
+            // Find the nearest non-numeric parent (skip array indices for better context)
+            let parentKey = null;
+            for (let i = pathParts.length - 2; i >= 0; i--) {
+              const candidate = pathParts[i];
+              if (!candidate.match(/^\d+$/)) { // Skip pure numbers (array indices)
+                parentKey = candidate;
+                break;
+              }
+            }
+            
+            if (parentKey) {
+              const quotedParentKey = `"${parentKey}"`;
+              
+              // Find matches of the parent key
+              const parentMatches = model.findMatches(
+                quotedParentKey,
+                false, false, false, null, false
+              );
+              
+              if (parentMatches && parentMatches.length > 0) {
+                // Find the child key that comes after a parent key
+                const bestMatch = matches.find(match => {
+                  return parentMatches.some(parentMatch => {
+                    return match.range.startLineNumber >= parentMatch.range.startLineNumber &&
+                           match.range.startLineNumber <= parentMatch.range.startLineNumber + 20; // Increased range for nested structures
+                  });
+                });
+                
+                if (bestMatch) {
+                  matches = [bestMatch];
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Fallback: try exact text search
+      if (!matches || matches.length === 0) {
+        matches = model.findMatches(
+          path,
+          false, // searchOnlyEditableRange
+          false, // isRegex
+          false, // matchCase
+          null,  // wordSeparators
+          false  // captureMatches
+        );
+      }
+      
+      // Navigate to the first match
+      if (matches && matches.length > 0) {
+        editor.setPosition({
+          lineNumber: matches[0].range.startLineNumber,
+          column: matches[0].range.startColumn
+        });
+        
+        // Reveal the line in the center
+        editor.revealLineInCenter(matches[0].range.startLineNumber);
+        
+        // Set selection to highlight the found text
+        editor.setSelection(matches[0].range);
+      }
+    }
+  }, [editor]);
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-gray-200">
@@ -191,6 +366,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           </div>
           <div className="flex-1">
             <Editor
+              key={`json-editor-${tabId}-${side}`}
               height="100%"
               language="json"
               theme="vs-dark"

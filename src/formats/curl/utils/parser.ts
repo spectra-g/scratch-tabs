@@ -1,5 +1,5 @@
 /**
- * Multi-command cURL parser for handling documents with multiple curl commands
+ * Multi-command Curl parser for handling documents with multiple curl commands
  * and preserving non-curl content
  */
 

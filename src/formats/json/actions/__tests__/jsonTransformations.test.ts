@@ -91,6 +91,70 @@ describe('String transformations', () => {
     it('should handle empty strings', () => {
       expect(toKebabCase('')).toBe('');
     });
+
+    // Edge cases that might be problematic
+    it('should handle properties already containing dashes', () => {
+      expect(toKebabCase('already-has-dashes')).toBe('already-has-dashes');
+      expect(toKebabCase('api-key')).toBe('api-key');
+      expect(toKebabCase('user-id')).toBe('user-id');
+    });
+
+    it('should handle mixed case with existing dashes', () => {
+      expect(toKebabCase('API-Key')).toBe('api-key');
+      expect(toKebabCase('User-ID')).toBe('user-id');
+      expect(toKebabCase('myAPI-Key')).toBe('my-api-key');
+    });
+
+    it('should handle consecutive capital letters', () => {
+      expect(toKebabCase('XMLHttpRequest')).toBe('xml-http-request');
+      expect(toKebabCase('HTMLParser')).toBe('html-parser');
+      expect(toKebabCase('JSONData')).toBe('json-data');
+    });
+  });
+
+  describe('toSnakeCase edge cases', () => {
+    it('should handle properties already containing underscores', () => {
+      expect(toSnakeCase('already_has_underscores')).toBe('already_has_underscores');
+      expect(toSnakeCase('api_key')).toBe('api_key');
+      expect(toSnakeCase('user_id')).toBe('user_id');
+    });
+
+    it('should handle mixed case with existing underscores', () => {
+      expect(toSnakeCase('API_Key')).toBe('api_key');
+      expect(toSnakeCase('User_ID')).toBe('user_id');
+      expect(toSnakeCase('myAPI_Key')).toBe('my_api_key');
+    });
+
+    it('should handle consecutive capital letters', () => {
+      expect(toSnakeCase('XMLHttpRequest')).toBe('xml_http_request');
+      expect(toSnakeCase('HTMLParser')).toBe('html_parser');
+      expect(toSnakeCase('JSONData')).toBe('json_data');
+    });
+
+    it('should handle kebab-case conversion', () => {
+      expect(toSnakeCase('kebab-case')).toBe('kebab_case');
+      expect(toSnakeCase('api-key')).toBe('api_key');
+    });
+  });
+
+  describe('toCamelCase edge cases', () => {
+    it('should handle multiple consecutive separators', () => {
+      expect(toCamelCase('multiple--dashes')).toBe('multipleDashes');
+      expect(toCamelCase('multiple__underscores')).toBe('multipleUnderscores');
+      expect(toCamelCase('mixed_-separators')).toBe('mixedSeparators');
+    });
+
+    it('should handle leading and trailing separators', () => {
+      expect(toCamelCase('-leading-dash')).toBe('leadingDash');
+      expect(toCamelCase('_leading_underscore')).toBe('leadingUnderscore');
+      expect(toCamelCase('trailing-dash-')).toBe('trailingDash');
+      expect(toCamelCase('trailing_underscore_')).toBe('trailingUnderscore');
+    });
+
+    it('should preserve already camelCase properties', () => {
+      expect(toCamelCase('alreadyCamelCase')).toBe('alreadyCamelCase');
+      expect(toCamelCase('somePropertyName')).toBe('somePropertyName');
+    });
   });
 });
 

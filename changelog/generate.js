@@ -29,7 +29,8 @@ function generateBadge(type) {
   const badges = {
     latest: '<span class="badge latest">Latest</span>',
     beta: '<span class="badge beta">Beta</span>',
-    alpha: '<span class="badge alpha">Alpha</span>'
+    alpha: '<span class="badge alpha">Alpha</span>',
+    release: '<span class="badge release">Release</span>'
   };
   return badges[type] || '';
 }
@@ -52,7 +53,7 @@ function generateChangelogEntry(release, index) {
               </div>
               <span class="text-gray-400 text-sm">${formatDate(release.date)}</span>
             </div>
-            <h3 class="text-lg font-semibold ${release.type === 'latest' ? 'text-blue-400' : release.type === 'beta' ? 'text-gray-300' : 'text-gray-400'} mb-4">${release.headline}</h3>
+            <h3 class="text-lg font-semibold ${release.type === 'latest' ? 'text-blue-400' : (release.type === 'beta' || release.type === 'release') ? 'text-gray-300' : 'text-gray-400'} mb-4">${release.headline}</h3>
             <div class="changelog-content text-gray-300">
               <p class="mb-4">${release.description}</p>`;
 

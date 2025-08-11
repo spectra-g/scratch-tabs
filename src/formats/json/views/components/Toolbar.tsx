@@ -1,8 +1,9 @@
 import React from "react";
-import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, GitCompare } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, GitCompare, Wand2 } from "lucide-react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { formatJson, applyEditToEditor } from "../../actions/jsonOperations";
 import { useJsonModals } from "../../hooks/useJsonModals";
+import { autoFixJson, formatFixedJson } from "../../actions/jsonAutoFix";
 
 interface ToolbarProps {
   isValid: boolean;
@@ -27,7 +28,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onUndo,
   onRedo,
   editor,
-  onContentChange,
+  onContentChange: _onContentChange, // Passed to maintain interface compatibility, handled by Monaco events
 }) => {
   const { openStructureComparisonModal } = useJsonModals();
 
@@ -42,6 +43,26 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     }
   };
 
+  const handleAutoFix = () => {
+    if (!editor) return;
+    
+    const content = editor.getValue();
+    const result = autoFixJson(content);
+    
+    if (result.success && result.fixedContent) {
+      try {
+        const formatted = formatFixedJson(result.fixedContent);
+        applyEditToEditor(editor, formatted, "auto-fix");
+      } catch (error) {
+        console.error("Failed to format fixed JSON:", error);
+        // Still apply the fix even if formatting fails
+        applyEditToEditor(editor, result.fixedContent, "auto-fix");
+      }
+    } else {
+      console.warn("Auto-fix failed:", result.error);
+      // Could show a toast/notification here in the future
+    }
+  };
 
   const handleCompareStructures = () => {
     if (!editor) return;
@@ -63,23 +84,32 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             {isValid ? "Valid JSON" : "Invalid JSON"}
           </span>
           {validationError && (
-            <span className="text-xs text-red-400 ml-2" title={validationError}>
-              {validationError.length > 50 
-                ? `${validationError.substring(0, 50)}...` 
-                : validationError
-              }
-            </span>
+            <>
+              <span className="text-xs text-red-400 ml-2" title={validationError}>
+                {validationError.length > 50 
+                  ? `${validationError.substring(0, 50)}...` 
+                  : validationError
+                }
+              </span>
+              <button
+                onClick={handleAutoFix}
+                className="p-1 rounded hover:bg-gray-700 text-purple-400 hover:text-purple-300 transition-colors"
+                title="Auto-fix JSON"
+              >
+                <Wand2 size={14} />
+              </button>
+            </>
           )}
         </div>
       </div>
 
-      {/* Center Section: Path Navigator */}
+      {/* Center Section: Search */}
       <div className="flex-1 max-w-md mx-4">
         <input
           type="text"
           value={currentPath}
           onChange={(e) => onPathChange(e.target.value)}
-          placeholder="JSON path (e.g., users[0].name)"
+          placeholder="Search in JSON (e.g., users[0].name)"
           className="w-full px-3 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
         />
       </div>

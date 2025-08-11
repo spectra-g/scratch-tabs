@@ -17,7 +17,7 @@ interface CurlOptionsPaletteProps {
   onClose: () => void;
 }
 
-// Comprehensive cURL options database
+// Comprehensive Curl options database
 const CURL_OPTIONS: CurlOption[] = [
   // Request options
   { flag: '-X', longFlag: '--request', description: 'HTTP method to use', category: 'request', actionType: 'value', defaultValue: 'GET', example: 'GET, POST, PUT, DELETE' },
@@ -116,6 +116,29 @@ export const CurlOptionsPalette: React.FC<CurlOptionsPaletteProps> = ({
     return groups;
   }, [filteredOptions]);
 
+  // Calculate category counts from search-filtered options (not category-filtered)
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    
+    // Filter only by search, not by category
+    let searchFilteredOptions = CURL_OPTIONS;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      searchFilteredOptions = searchFilteredOptions.filter(option => 
+        option.flag.toLowerCase().includes(query) ||
+        option.longFlag?.toLowerCase().includes(query) ||
+        option.description.toLowerCase().includes(query)
+      );
+    }
+    
+    // Count options per category
+    searchFilteredOptions.forEach(option => {
+      counts[option.category] = (counts[option.category] || 0) + 1;
+    });
+    
+    return counts;
+  }, [searchQuery]);
+
   const categories = Object.keys(CATEGORY_CONFIG);
 
   return (
@@ -123,7 +146,7 @@ export const CurlOptionsPalette: React.FC<CurlOptionsPaletteProps> = ({
       {/* Header */}
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-200">cURL Options</h3>
+          <h3 className="text-lg font-semibold text-gray-200">Curl Options</h3>
           <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded transition-colors"
@@ -160,7 +183,7 @@ export const CurlOptionsPalette: React.FC<CurlOptionsPaletteProps> = ({
           </button>
           {categories.map((category) => {
             const config = CATEGORY_CONFIG[category as keyof typeof CATEGORY_CONFIG];
-            const count = groupedOptions[category]?.length || 0;
+            const count = categoryCounts[category] || 0;
             
             return (
               <button

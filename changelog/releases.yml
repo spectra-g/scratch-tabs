@@ -3,8 +3,31 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.0.0"
+  - version: "1.1.0"
     type: "latest"  # latest, beta, alpha
+    date: "2025-08-11"
+    headline: "🎉 Curl command builder"
+    description: "Smart View for Curl commands and various other bug fixes"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Smart View for Curl:** A feature rich Curl command builder"
+      - name: "🔧 Technical Highlights"
+        changes:
+          - "Improved JSON, Csv and R auto detection algorithms"
+          - "Search JSON by path OR content"
+          - "Fix broken JSON option"
+          - "Search formats (Github request #2)"
+          - "CTRL+Click for tab close without confirmation (Github request #2)"
+          - "Middle mouse click for tab close without confirmation (Github request #2)"
+          - "Larger clickable area for close button (Github request #2)"
+      - name: "🐛 Fixed"
+        changes:
+          - "JSON Smart View replicating content across multiple tabs"
+          - "Do not kebab-case already kebab-cased JSON property"
+
+  - version: "1.0.0"
+    type: "release"  # latest, beta, alpha
     date: "2025-08-06"
     headline: "🎉 Initial Public Release"
     description: "The first stable release of Scratch Tabs, bringing a comprehensive suite of developer tools directly to your browser."

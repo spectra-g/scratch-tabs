@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { BarChart3, Hash, Type, Layers, ArrowUpDown, TrendingUp, FileText } from "lucide-react";
-import { analyzeJson, JsonStats } from "../../utils/jsonAnalyzer";
+import { analyzeJson } from "../../utils/jsonAnalyzer";
 import { Tab } from "../../../../types";
 
 interface InsightsProps {
@@ -39,6 +39,21 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
   const formatBytes = (kb: number): string => {
     if (kb >= 1024) return `${(kb / 1024).toFixed(1)} MB`;
     return `${kb.toFixed(1)} KB`;
+  };
+
+  const formatNumberValue = (num: number): { display: string; full: string } => {
+    const fullValue = num.toString();
+    // If the number is too long, truncate it
+    if (fullValue.length > 12) {
+      return {
+        display: fullValue.substring(0, 12) + '...',
+        full: fullValue
+      };
+    }
+    return {
+      display: fullValue,
+      full: fullValue
+    };
   };
 
   const generateMarkdownReport = () => {
@@ -351,19 +366,39 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="bg-gray-800/50 p-2 rounded">
               <div className="text-gray-400">Integers</div>
-              <div className="text-gray-200 font-mono">{formatNumber(stats.numberStats.integers)}</div>
+              <div 
+                className="text-gray-200 font-mono truncate cursor-help" 
+                title={stats.numberStats.integers.toString()}
+              >
+                {formatNumber(stats.numberStats.integers)}
+              </div>
             </div>
             <div className="bg-gray-800/50 p-2 rounded">
               <div className="text-gray-400">Floats</div>
-              <div className="text-gray-200 font-mono">{formatNumber(stats.numberStats.floats)}</div>
+              <div 
+                className="text-gray-200 font-mono truncate cursor-help" 
+                title={stats.numberStats.floats.toString()}
+              >
+                {formatNumber(stats.numberStats.floats)}
+              </div>
             </div>
             <div className="bg-gray-800/50 p-2 rounded">
               <div className="text-gray-400">Min Value</div>
-              <div className="text-gray-200 font-mono">{stats.numberStats.range.min}</div>
+              <div 
+                className="text-gray-200 font-mono truncate cursor-help" 
+                title={formatNumberValue(stats.numberStats.range.min).full}
+              >
+                {formatNumberValue(stats.numberStats.range.min).display}
+              </div>
             </div>
             <div className="bg-gray-800/50 p-2 rounded">
               <div className="text-gray-400">Max Value</div>
-              <div className="text-gray-200 font-mono">{stats.numberStats.range.max}</div>
+              <div 
+                className="text-gray-200 font-mono truncate cursor-help" 
+                title={formatNumberValue(stats.numberStats.range.max).full}
+              >
+                {formatNumberValue(stats.numberStats.range.max).display}
+              </div>
             </div>
           </div>
         </div>

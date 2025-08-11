@@ -57,7 +57,7 @@ describe('CurlSmartView', () => {
     );
 
     expect(screen.getByTestId('curl-smart-view')).toBeInTheDocument();
-    expect(screen.getByText('cURL Request Workbench')).toBeInTheDocument();
+    expect(screen.getByText('Curl Request Workbench')).toBeInTheDocument();
     expect(screen.getByText('2 commands')).toBeInTheDocument();
   });
 
@@ -109,8 +109,8 @@ describe('CurlSmartView', () => {
       />
     );
 
-    expect(screen.getByText('No cURL commands found')).toBeInTheDocument();
-    expect(screen.getByText('Add cURL Command')).toBeInTheDocument();
+    expect(screen.getByText('No Curl commands found')).toBeInTheDocument();
+    expect(screen.getByText('Add Curl Command')).toBeInTheDocument();
   });
 
   it('should handle text-only content', () => {
@@ -124,7 +124,7 @@ describe('CurlSmartView', () => {
       />
     );
 
-    expect(screen.getByText('No valid cURL commands detected')).toBeInTheDocument();
+    expect(screen.getByText('No valid Curl commands detected')).toBeInTheDocument();
   });
 
   it('should add new command when button is clicked', async () => {
@@ -138,7 +138,7 @@ describe('CurlSmartView', () => {
       />
     );
 
-    const addButton = screen.getByText('Add cURL Command');
+    const addButton = screen.getByText('Add Curl Command');
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -163,6 +163,6 @@ describe('CurlSmartView', () => {
     const optionsButton = screen.getByTitle('Toggle options palette');
     fireEvent.click(optionsButton);
 
-    expect(screen.getByText('cURL Options')).toBeInTheDocument();
+    expect(screen.getByText('Curl Options')).toBeInTheDocument();
   });
 });
