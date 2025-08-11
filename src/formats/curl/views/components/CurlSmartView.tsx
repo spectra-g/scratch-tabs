@@ -13,7 +13,6 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
   tabId,
-  isActive,
 }) => {
   const [parsedDoc, setParsedDoc] = useState<ParsedDocument>([]);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
