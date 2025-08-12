@@ -85,7 +85,7 @@ const DragDropOverlay: React.FC = () => {
   const [isProcessingDrop, setIsProcessingDrop] = useState(false); // Renamed from isUploading for clarity
   const { handleNewPopulatedTab } = useRootStore();
   const { splitView } = useSplitViewStore();
-  const { isImportModalActive } = useModalStore();
+  const { isImportModalActive, isGlobalDragDropSuppressed } = useModalStore();
 
   const readAllDirectoryEntries = async (
     directoryEntry: FileSystemDirectoryEntry,
@@ -158,7 +158,7 @@ const DragDropOverlay: React.FC = () => {
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (!isImportModalActive && e.dataTransfer) {
+      if (!isImportModalActive && !isGlobalDragDropSuppressed && e.dataTransfer) {
         // Check if any item is a file or directory
         let containsFilesOrFolders = false;
         if (e.dataTransfer.items) {
@@ -195,7 +195,7 @@ const DragDropOverlay: React.FC = () => {
       e.stopPropagation();
       setIsDragging(false);
 
-      if (isImportModalActive || !e.dataTransfer?.items) {
+      if (isImportModalActive || isGlobalDragDropSuppressed || !e.dataTransfer?.items) {
         return;
       }
 
@@ -278,12 +278,13 @@ const DragDropOverlay: React.FC = () => {
     };
   }, [
     isImportModalActive,
+    isGlobalDragDropSuppressed,
     handleNewPopulatedTab,
     splitView?.activeSide,
     processDroppedItem,
   ]);
 
-  if (isImportModalActive || (!isDragging && !isProcessingDrop)) {
+  if (isImportModalActive || isGlobalDragDropSuppressed || (!isDragging && !isProcessingDrop)) {
     return null;
   }
 

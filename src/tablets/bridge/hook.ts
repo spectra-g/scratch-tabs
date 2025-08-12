@@ -7,6 +7,7 @@ import { useCallback, useEffect } from 'react';
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useSplitViewStore } from '../../stores/splitViewStore';
+import { useModalStore } from '../../stores/modalStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { tabletBridge } from './implementation';
 import type { TabletBridge } from './types';
@@ -19,6 +20,7 @@ export function useTabletBridge(): TabletBridge {
   const rootStore = useRootStore();
   const workspaceStore = useWorkspaceStore();
   const splitViewStore = useSplitViewStore();
+  const modalStore = useModalStore();
   const isMobile = useIsMobile();
 
   // Initialize the bridge with current store instances
@@ -27,9 +29,10 @@ export function useTabletBridge(): TabletBridge {
       rootStore as any, 
       workspaceStore as any, 
       splitViewStore as any, 
+      modalStore as any,
       isMobile
     );
-  }, [rootStore, workspaceStore, splitViewStore, isMobile]);
+  }, [rootStore, workspaceStore, splitViewStore, modalStore, isMobile]);
 
   return tabletBridge;
 }

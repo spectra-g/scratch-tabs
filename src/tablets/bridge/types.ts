@@ -41,6 +41,14 @@ export interface SplitViewOperations {
 }
 
 /**
+ * Modal operations for managing global interactions
+ */
+export interface ModalOperations {
+  suppressGlobalDragDrop: (suppress: boolean) => void;
+  isGlobalDragDropSuppressed: () => boolean;
+}
+
+/**
  * Main bridge interface that tablets should use
  * This is the single point of contact for all external dependencies
  */
@@ -56,6 +64,9 @@ export interface TabletBridge {
   
   // Split view operations
   splitView: SplitViewOperations;
+  
+  // Modal operations
+  modals: ModalOperations;
   
   // Workspace management
   getCurrentWorkspaceId: () => string | null;

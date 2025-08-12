@@ -34,6 +34,7 @@ interface MappingEditorProps {
   onCancel: () => void;
   onTest: (mapping: MappingConfig) => void;
   onGenerateCode: (mapping: MappingConfig) => void;
+  onBatchTransform: (mapping: MappingConfig) => void;
 }
 
 export const MappingEditor: React.FC<MappingEditorProps> = ({
@@ -43,6 +44,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   onCancel,
   onTest,
   onGenerateCode,
+  onBatchTransform,
 }) => {
   const [name, setName] = useState(mapping.name);
   const [description, setDescription] = useState(mapping.description);
@@ -568,6 +570,25 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     onGenerateCode(updatedMapping);
   };
 
+  const handleBatchTransform = () => {
+    if (!name.trim() || !sourceJson || sourceJsonError) {
+      alert("Please enter a name and valid source JSON");
+      return;
+    }
+
+    const updatedMapping: MappingConfig = {
+      ...mapping,
+      name: name.trim(),
+      description: description.trim(),
+      sourceJson,
+      targetJson,
+      rules,
+      updatedAt: Date.now(),
+    };
+
+    onBatchTransform(updatedMapping);
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -595,21 +616,20 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               <span>Test</span>
             </button>
             <button
+              onClick={handleBatchTransform}
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 rounded-md hover:bg-orange-500/30 transition-colors"
+              disabled={!sourceJson || !!sourceJsonError}
+            >
+              <Upload size={14} />
+              <span>Batch Transform</span>
+            </button>
+            <button
               onClick={handleGenerateCode}
               className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-md hover:bg-purple-500/30 transition-colors"
               disabled={!sourceJson || !!sourceJsonError}
             >
               <FileCode size={14} />
               <span>Generate Code</span>
-            </button>
-            <button
-              onClick={handleExportRulesToCsv}
-              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-teal-500/20 text-teal-400 rounded-md hover:bg-teal-500/30 transition-colors"
-              title="Export rules to CSV"
-              disabled={rules.length === 0}
-            >
-              <DownloadCloud size={14} />
-              <span>Export CSV</span>
             </button>
             <button
               onClick={handleSave}
@@ -802,6 +822,15 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                 >
                   <Wand2 size={14} />
                   <span>Re-evaluate All</span>
+                </button>
+                <button
+                  onClick={handleExportRulesToCsv}
+                  className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                  disabled={rules.length === 0}
+                  title="Export rules to CSV"
+                >
+                  <DownloadCloud size={14} />
+                  <span>Export</span>
                 </button>
                 <button
                   onClick={handleClearAllRules}

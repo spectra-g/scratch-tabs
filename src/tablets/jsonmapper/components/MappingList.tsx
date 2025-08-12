@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Edit, Trash2, Copy, Play, FileCode, Plus } from "lucide-react";
+import { Edit, Trash2, Copy, Play, Plus } from "lucide-react";
 import { MappingConfig } from "../types";
 import { formatRelativeTime } from "../utils/dateUtils";
 import { HelpGuide } from "./HelpGuide";
@@ -11,8 +11,7 @@ interface MappingListProps {
   onEditMapping: (id: string) => void;
   onDeleteMapping: (id: string) => void;
   onDuplicateMapping: (id: string) => void;
-  onTestMapping: (id: string) => void;
-  onGenerateCode: (id: string) => void;
+  onBatchTransform: (id: string) => void;
 }
 
 export const MappingList: React.FC<MappingListProps> = ({
@@ -22,8 +21,7 @@ export const MappingList: React.FC<MappingListProps> = ({
   onEditMapping,
   onDeleteMapping,
   onDuplicateMapping,
-  onTestMapping,
-  onGenerateCode,
+  onBatchTransform,
 }) => {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
@@ -139,25 +137,18 @@ export const MappingList: React.FC<MappingListProps> = ({
                     ) : (
                       <>
                         <button
+                          onClick={() => onBatchTransform(mapping.id)}
+                          className="p-1.5 text-gray-400 hover:text-green-400 hover:bg-gray-700/50 rounded transition-colors"
+                          title="Batch transform files"
+                        >
+                          <Play size={16} />
+                        </button>
+                        <button
                           onClick={() => onEditMapping(mapping.id)}
                           className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
                           title="Edit mapping"
                         >
                           <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => onTestMapping(mapping.id)}
-                          className="p-1.5 text-gray-400 hover:text-green-400 hover:bg-gray-700/50 rounded transition-colors"
-                          title="Test mapping"
-                        >
-                          <Play size={16} />
-                        </button>
-                        <button
-                          onClick={() => onGenerateCode(mapping.id)}
-                          className="p-1.5 text-gray-400 hover:text-purple-400 hover:bg-gray-700/50 rounded transition-colors"
-                          title="Generate code"
-                        >
-                          <FileCode size={16} />
                         </button>
                         <button
                           onClick={() => onDuplicateMapping(mapping.id)}

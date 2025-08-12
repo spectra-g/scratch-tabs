@@ -6,6 +6,7 @@
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useSplitViewStore } from '../../stores/splitViewStore';
+import { useModalStore } from '../../stores/modalStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { detectFormat } from '../../formats';
 import type { Tab } from '../../types';
@@ -14,7 +15,8 @@ import type {
   TabCreationOptions, 
   DeviceInfo, 
   LanguageDetectionResult,
-  SplitViewOperations 
+  SplitViewOperations,
+  ModalOperations 
 } from './types';
 
 // Define store interfaces to avoid unknown types
@@ -33,6 +35,12 @@ interface SplitViewStoreInterface {
   [key: string]: any;
 }
 
+interface ModalStoreInterface {
+  isGlobalDragDropSuppressed: boolean;
+  setGlobalDragDropSuppressed: (suppressed: boolean) => void;
+  [key: string]: any;
+}
+
 /**
  * Implementation of the tablet bridge
  * This class encapsulates all external dependencies and provides a clean interface
@@ -41,6 +49,7 @@ class TabletBridgeImpl implements TabletBridge {
   private rootStore: RootStoreInterface | null = null;
   private workspaceStore: WorkspaceStoreInterface | null = null;
   private splitViewStore: SplitViewStoreInterface | null = null;
+  private modalStore: ModalStoreInterface | null = null;
   private deviceInfo: DeviceInfo | null = null;
 
   /**
@@ -51,11 +60,13 @@ class TabletBridgeImpl implements TabletBridge {
     rootStore: RootStoreInterface,
     workspaceStore: WorkspaceStoreInterface,
     splitViewStore: SplitViewStoreInterface,
+    modalStore: ModalStoreInterface,
     isMobile: boolean
   ) {
     this.rootStore = rootStore;
     this.workspaceStore = workspaceStore;
     this.splitViewStore = splitViewStore;
+    this.modalStore = modalStore;
     this.deviceInfo = { isMobile };
   }
 
@@ -136,6 +147,27 @@ class TabletBridgeImpl implements TabletBridge {
         }
         // Implementation placeholder - would check split view state
         return false;
+      }
+    };
+  }
+
+  /**
+   * Modal operations for managing global interactions
+   */
+  get modals(): ModalOperations {
+    return {
+      suppressGlobalDragDrop: (suppress: boolean) => {
+        if (!this.modalStore) {
+          throw new Error('Bridge not initialized. Call initialize() first.');
+        }
+        this.modalStore.setGlobalDragDropSuppressed(suppress);
+      },
+      
+      isGlobalDragDropSuppressed: () => {
+        if (!this.modalStore) {
+          throw new Error('Bridge not initialized. Call initialize() first.');
+        }
+        return this.modalStore.isGlobalDragDropSuppressed;
       }
     };
   }

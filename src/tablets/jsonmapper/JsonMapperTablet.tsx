@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tablet, TabletState } from "../types";
-import { Search, FileJson, Upload, Info } from "lucide-react";
+import { Search, FileJson, Info } from "lucide-react";
 import { MappingList } from "./components/MappingList";
 import { MappingEditor } from "./components/MappingEditor";
 import { TestMappingModal } from "./components/TestMappingModal";
@@ -53,6 +53,7 @@ export const JsonMapperTablet: Tablet = {
 
   render(state: JsonMapperState, onChange) {
     const [showBatchTransform, setShowBatchTransform] = useState(false);
+    const [currentBatchMapping, setCurrentBatchMapping] = useState<MappingConfig | null>(null);
     const [showHelp, setShowHelp] = useState(false);
 
     const handleSearchChange = (query: string) => {
@@ -130,33 +131,12 @@ export const JsonMapperTablet: Tablet = {
       });
     };
 
-    const handleTestMappingFromList = (id: string) => {
-      const mappingToListTest = state.data.mappings.find((m) => m.id === id);
-      if (!mappingToListTest) return;
+    const handleBatchTransformFromList = (id: string) => {
+      const mappingToBatch = state.data.mappings.find((m) => m.id === id);
+      if (!mappingToBatch) return;
 
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          activeMappingId: id,
-          isTestingMapping: true,
-          testInput: mappingToListTest.sourceJson,
-        },
-      });
-    };
-
-    const handleGenerateCodeFromList = (id: string) => {
-      const mappingToGenCode = state.data.mappings.find((m) => m.id === id);
-      if (!mappingToGenCode) return;
-
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          activeMappingId: id,
-          isGeneratingCode: true,
-        },
-      });
+      setCurrentBatchMapping(mappingToBatch);
+      setShowBatchTransform(true);
     };
 
     const handleSaveMapping = (updatedMapping: MappingConfig) => {
@@ -203,25 +183,12 @@ export const JsonMapperTablet: Tablet = {
 
     const handleCloseBatchModal = () => {
       setShowBatchTransform(false);
+      setCurrentBatchMapping(null);
     };
 
     const activeSavedMapping = state.data.activeMappingId
       ? state.data.mappings.find((m) => m.id === state.data.activeMappingId)
       : null;
-
-    let mappingForTestModal: MappingConfig | null = null;
-    if (state.data.isTestingMapping && state.data.activeMappingId) {
-      mappingForTestModal =
-        state.data.mappings.find((m) => m.id === state.data.activeMappingId) ||
-        null;
-    }
-
-    let mappingForCodeModal: MappingConfig | null = null;
-    if (state.data.isGeneratingCode && state.data.activeMappingId) {
-      mappingForCodeModal =
-        state.data.mappings.find((m) => m.id === state.data.activeMappingId) ||
-        null;
-    }
 
     return (
       <div className="h-full bg-gray-900 flex flex-col">
@@ -257,16 +224,6 @@ export const JsonMapperTablet: Tablet = {
                     className="bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors w-64"
                   />
                 </div>
-
-                {state.data.mappings.length > 0 && (
-                  <button
-                    onClick={() => setShowBatchTransform(true)}
-                    className="flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
-                  >
-                    <Upload size={16} />
-                    <span>Batch Transform</span>
-                  </button>
-                )}
               </div>
             )}
           </div>
@@ -314,6 +271,10 @@ export const JsonMapperTablet: Tablet = {
                     },
                   });
                 }}
+                onBatchTransform={(mappingInProgress) => {
+                  setCurrentBatchMapping(mappingInProgress);
+                  setShowBatchTransform(true);
+                }}
               />
             )
           ) : (
@@ -324,8 +285,7 @@ export const JsonMapperTablet: Tablet = {
               onEditMapping={handleEditMapping}
               onDeleteMapping={handleDeleteMapping}
               onDuplicateMapping={handleDuplicateMapping}
-              onTestMapping={handleTestMappingFromList}
-              onGenerateCode={handleGenerateCodeFromList}
+              onBatchTransform={handleBatchTransformFromList}
             />
           )}
         </div>
@@ -375,9 +335,9 @@ export const JsonMapperTablet: Tablet = {
             />
           )}
 
-        {showBatchTransform && state.data.mappings.length > 0 && (
+        {showBatchTransform && currentBatchMapping && (
           <BatchTransformModal
-            mapping={state.data.mappings[0]} // Default to first mapping, could add a selector
+            mapping={currentBatchMapping}
             onClose={handleCloseBatchModal}
             initialDirection={state.data.selectedDirection}
           />
