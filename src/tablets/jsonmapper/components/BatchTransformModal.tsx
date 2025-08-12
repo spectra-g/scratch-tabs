@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   X,
   Upload,
@@ -14,6 +14,7 @@ import {
   downloadStringAsFile,
   downloadZip,
 } from "../utils/fileUtils";
+import { useTabletBridge } from "../../bridge";
 import JSZip from "jszip";
 
 interface BatchTransformModalProps {
@@ -38,6 +39,16 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
     error?: string;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bridge = useTabletBridge();
+
+  // Suppress global drag & drop while this modal is open
+  useEffect(() => {
+    bridge.modals.suppressGlobalDragDrop(true);
+    
+    return () => {
+      bridge.modals.suppressGlobalDragDrop(false);
+    };
+  }, [bridge]);
 
   const handleDirectionChange = (newDirection: MappingDirection) => {
     setDirection(newDirection);

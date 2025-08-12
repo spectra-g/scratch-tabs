@@ -12,6 +12,8 @@ interface ModalState {
   isAIModelManagementModalOpen: boolean;
   openAIModelManagementModal: () => void;
   closeAIModelManagementModal: () => void;
+  isGlobalDragDropSuppressed: boolean;
+  setGlobalDragDropSuppressed: (suppressed: boolean) => void;
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -29,4 +31,7 @@ export const useModalStore = create<ModalState>((set) => ({
   openAIModelManagementModal: () => set({ isAIModelManagementModalOpen: true }),
   closeAIModelManagementModal: () =>
     set({ isAIModelManagementModalOpen: false }),
+  isGlobalDragDropSuppressed: false,
+  setGlobalDragDropSuppressed: (suppressed: boolean) =>
+    set({ isGlobalDragDropSuppressed: suppressed }),
 }));

@@ -59,6 +59,11 @@ export const HelpGuide: React.FC<HelpGuideProps> = ({
       step: 7,
       title: "Save the mapping",
       description: "Save your mapping configuration if you wish to re-use it later."
+    },
+    {
+      step: 8,
+      title: "Run batch transformation",
+      description: "Use the Batch Transform button to process multiple JSON files or ZIP archives containing JSON files with your saved mapping."
     }
   ];
 

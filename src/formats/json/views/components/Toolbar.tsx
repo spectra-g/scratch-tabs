@@ -1,5 +1,5 @@
-import React from "react";
-import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, GitCompare, Wand2 } from "lucide-react";
+import React, { useState, useCallback } from "react";
+import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, GitCompare, Wand2, Copy, Check } from "lucide-react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { formatJson, applyEditToEditor } from "../../actions/jsonOperations";
 import { useJsonModals } from "../../hooks/useJsonModals";
@@ -31,6 +31,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onContentChange: _onContentChange, // Passed to maintain interface compatibility, handled by Monaco events
 }) => {
   const { openStructureComparisonModal } = useJsonModals();
+  const [isCopied, setIsCopied] = useState(false);
 
   const handleFormat = () => {
     if (!editor) return;
@@ -69,6 +70,23 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     const content = editor.getValue();
     openStructureComparisonModal(content);
   };
+
+  const handleCopy = useCallback(async () => {
+    if (!editor) return;
+    
+    try {
+      const content = editor.getValue();
+      await navigator.clipboard.writeText(content);
+      setIsCopied(true);
+      
+      // Reset the icon after 2 seconds
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+    }
+  }, [editor]);
 
   return (
     <div className="flex items-center justify-between p-3 border-b border-gray-700 bg-gray-800/50">
@@ -145,6 +163,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         <div className="w-px h-6 bg-gray-600 mx-2" />
 
         {/* Primary Actions */}
+        <button
+          onClick={handleCopy}
+          className={`p-2 rounded transition-colors ${
+            isCopied 
+              ? "bg-green-500/20 text-green-400" 
+              : "hover:bg-gray-700 text-gray-300"
+          }`}
+          title={isCopied ? "Copied!" : "Copy JSON"}
+        >
+          {isCopied ? <Check size={16} /> : <Copy size={16} />}
+        </button>
         <button
           onClick={handleFormat}
           className="flex items-center space-x-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"

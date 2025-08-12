@@ -409,8 +409,13 @@ export function transformJson(
             }
           } else {
             // If no field path, we're replacing the entire item
-            // But we should preserve existing fields
-            targetItem = { ...targetItem, ...transformedValue };
+            // For primitive values, directly assign instead of spreading
+            if (transformedValue === null || typeof transformedValue !== "object" || Array.isArray(transformedValue)) {
+              targetItem = transformedValue;
+            } else {
+              // For objects, preserve existing fields and merge
+              targetItem = { ...targetItem, ...transformedValue };
+            }
           }
 
           // Update the target array item
