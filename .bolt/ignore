@@ -33,6 +33,7 @@ src/formats/diff
 src/formats/markdown
 src/formats/curl
 src/formats/stacktrace
+src/formats/properties
 
 landing/
 public/
