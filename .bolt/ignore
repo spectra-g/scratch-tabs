@@ -21,11 +21,11 @@ src/db/
 src/features/
 #src/services/
 src/stores/
-src/views/
+#src/views/
 src/workers/
 
 src/tablets/
-src/formats/__tests__/
+#src/formats/__tests__/
 src/formats/json
 src/formats/jsonlog
 src/formats/yaml
