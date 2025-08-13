@@ -19,7 +19,7 @@ src/hooks/
 src/constants/
 src/db/
 src/features/
-#src/services/
+src/services/
 src/stores/
 #src/views/
 src/workers/
@@ -29,6 +29,10 @@ src/tablets/
 src/formats/json
 src/formats/jsonlog
 src/formats/yaml
+src/formats/diff
+src/formats/markdown
+src/formats/curl
+src/formats/stacktrace
 
 landing/
 public/
