@@ -7,7 +7,6 @@ import {
   Scissors,
   FileText,
   Code,
-  Download,
   ChevronDown,
   AlertTriangle,
   CheckCircle,

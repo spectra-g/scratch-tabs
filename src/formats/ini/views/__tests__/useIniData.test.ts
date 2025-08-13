@@ -57,8 +57,10 @@ key1 = value1`;
         useIniData(sampleIni, mockOnContentChange),
       );
 
-      const databaseSection = result.current.sections[0];
-      expect(databaseSection.comment).toBe("Database configuration");
+      // Comments are now parsed as separate nodes, not attached to sections
+      const state = result.current.state;
+      const commentNode = state.find(node => node.type === 'COMMENT');
+      expect(commentNode?.value).toBe("Database configuration");
     });
 
     it("should handle empty INI", () => {
@@ -350,21 +352,27 @@ key2 = value2`;
 
   describe("Content Synchronization", () => {
     it("should call onContentChange when data is modified", async () => {
+      // Use fresh mock for this test
+      const freshMock = jest.fn();
       const { result } = renderHook(() =>
-        useIniData(sampleIni, mockOnContentChange),
+        useIniData(sampleIni, freshMock),
       );
 
-      const databaseSection = result.current.sections[0];
+      // Get the first section (database)
+      const sections = result.current.sections;
+      const databaseSection = sections.find(s => s.name === "database");
+      expect(databaseSection).toBeDefined();
 
+      // Add a key-value pair to the database section
       act(() => {
-        result.current.addKeyValue(databaseSection.id, "timeout", "30");
+        result.current.addKeyValue(databaseSection!.id, "timeout", "30");
       });
 
       // Wait for debounced call
       await new Promise((resolve) => setTimeout(resolve, 350));
 
-      expect(mockOnContentChange).toHaveBeenCalled();
-      const calledWith = mockOnContentChange.mock.calls[0][0];
+      expect(freshMock).toHaveBeenCalled();
+      const calledWith = freshMock.mock.calls[freshMock.mock.calls.length - 1][0];
       expect(calledWith).toContain("timeout = 30");
     });
   });

@@ -12,7 +12,7 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
   tabId,
-  isActive,
+  isActive: _isActive,
   side,
 }) => {
   const { addBackgroundTab } = useRootStore();

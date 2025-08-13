@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { debounce } from "lodash";
 import {
   PropertiesState,
-  PropertyLine,
   PropertyPair,
   PropertyComment,
   PropertyBlank,
@@ -375,7 +374,6 @@ export const usePropertiesData = (
 
   const groupByPrefix = useCallback(() => {
     const pairs = state.filter(line => line.type === 'PAIR') as PropertyPair[];
-    const comments = state.filter(line => line.type === 'COMMENT') as PropertyComment[];
     
     // Group pairs by their first prefix
     const groups = new Map<string, PropertyPair[]>();

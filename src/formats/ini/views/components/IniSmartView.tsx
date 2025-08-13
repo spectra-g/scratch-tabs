@@ -11,7 +11,7 @@ import { createTab } from "../../../../utils/tabUtils";
 export const IniSmartView: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
-  tabId,
+  tabId: _tabId,
 }) => {
   const { addBackgroundTab } = useRootStore();
   const [showValidationPanel, setShowValidationPanel] = useState(false);

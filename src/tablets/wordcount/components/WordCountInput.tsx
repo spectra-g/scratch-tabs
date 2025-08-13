@@ -167,7 +167,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
         tableHtml += '<tr class="hover:bg-gray-800/30">';
         row.forEach(cell => {
           // Process cell content for icons and formatting
-          let processedCell = cell
+          const processedCell = cell
             .replace(/✅/g, '<span class="text-green-400">✅</span>')
             .replace(/⚠️/g, '<span class="text-yellow-400">⚠️</span>')
             .replace(/❌/g, '<span class="text-red-400">❌</span>')

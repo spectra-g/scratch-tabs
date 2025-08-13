@@ -23,8 +23,9 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
     
     try {
       await navigator.clipboard.writeText(issueText);
-    } catch (error) {
-      console.error('Failed to copy issue:', error);
+    } catch {
+      // Silently fail if clipboard access is not available
+      // This is common in some browser environments
     }
   };
 

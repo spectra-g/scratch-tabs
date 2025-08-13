@@ -40,7 +40,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
   onUpdatePair,
   onAddPair,
   onDeletePair,
-  onAddComment,
+  onAddComment: _onAddComment,
 }) => {
   const [editingState, setEditingState] = useState<EditingState | null>(null);
   const [editValue, setEditValue] = useState("");

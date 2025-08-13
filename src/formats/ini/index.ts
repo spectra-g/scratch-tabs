@@ -37,7 +37,7 @@ export class IniFormatModule implements FormatModule {
     return this.detector.detect(content);
   }
 
-  registerProvider(monaco: any): void {
+  registerProvider(monaco: unknown): void {
     this.detector.registerProvider(monaco);
   }
 
@@ -90,6 +90,6 @@ iniModule.getSmartViews()?.forEach(view => {
 });
 
 // Export for backward compatibility
-export const registerIniProvider = (monaco: any) => {
+export const registerIniProvider = (monaco: unknown) => {
   iniModule.registerProvider(monaco);
 };

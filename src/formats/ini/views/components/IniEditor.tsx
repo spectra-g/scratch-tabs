@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from "react";
 import {
   Plus,
-  Edit3,
   Trash2,
   Eye,
   EyeOff,
   Copy,
   AlertTriangle,
   MessageSquare,
+  Settings,
 } from "../../../../components/Icons";
 import { IniSection, IniLine, IniValidationIssue } from "../types";
 import { isSensitiveKey } from "../hooks/useIniData";
@@ -58,19 +58,36 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   }, []);
 
   const saveEdit = useCallback(() => {
-    if (!editingState || !selectedSectionId) return;
+    if (!editingState) return;
 
-    const line = selectedSection?.lines.find(l => l.id === editingState.lineId);
-    if (line && line.type === 'PAIR') {
+    // Find the line across all sections if no specific section is selected
+    let targetSectionId = selectedSectionId;
+    let line: IniLine | null = null;
+
+    if (selectedSectionId && selectedSection) {
+      // Look in the specific selected section
+      line = selectedSection.lines.find(l => l.id === editingState.lineId);
+    } else {
+      // Look across all sections to find the line
+      for (const section of sections) {
+        line = section.lines.find(l => l.id === editingState.lineId);
+        if (line) {
+          targetSectionId = section.id;
+          break;
+        }
+      }
+    }
+
+    if (line && line.type === 'PAIR' && targetSectionId) {
       const updatedKey = editingState.field === 'key' ? editingState.value : line.key || '';
       const updatedValue = editingState.field === 'value' ? editingState.value : line.value || '';
       const updatedComment = editingState.field === 'comment' ? editingState.value : line.comment;
 
-      onUpdateKeyValue(selectedSectionId, editingState.lineId, updatedKey, updatedValue, updatedComment);
+      onUpdateKeyValue(targetSectionId, editingState.lineId, updatedKey, updatedValue, updatedComment);
     }
     
     setEditingState(null);
-  }, [editingState, selectedSection, selectedSectionId, onUpdateKeyValue]);
+  }, [editingState, selectedSection, selectedSectionId, sections, onUpdateKeyValue]);
 
   const cancelEdit = useCallback(() => {
     setEditingState(null);
@@ -85,14 +102,29 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   }, [saveEdit, cancelEdit]);
 
   const handleAddKeyValue = useCallback(() => {
-    if (!selectedSectionId || !newKey.trim()) return;
+    if (!newKey.trim()) return;
 
-    onAddKeyValue(selectedSectionId, newKey.trim(), newValue.trim(), newComment.trim() || undefined);
+    // If no section is selected, we need to choose a section or create one
+    let targetSectionId = selectedSectionId;
+    
+    if (!targetSectionId) {
+      // If no section is selected and we're in "All Sections" view,
+      // try to add to the first available section or create a global section
+      if (sections.length > 0) {
+        targetSectionId = sections[0].id;
+      } else {
+        // No sections exist, we might need to create one
+        // For now, just return silently as this is a valid state
+        return;
+      }
+    }
+
+    onAddKeyValue(targetSectionId, newKey.trim(), newValue.trim(), newComment.trim() || undefined);
     setNewKey("");
     setNewValue("");
     setNewComment("");
     setShowAddForm(false);
-  }, [selectedSectionId, newKey, newValue, newComment, onAddKeyValue]);
+  }, [selectedSectionId, sections, newKey, newValue, newComment, onAddKeyValue]);
 
   const toggleMask = useCallback((key: string) => {
     setMaskedKeys(prev => {
@@ -109,8 +141,9 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   const copyValue = useCallback(async (value: string) => {
     try {
       await navigator.clipboard.writeText(value);
-    } catch (error) {
-      console.error('Failed to copy value:', error);
+    } catch {
+      // Silently fail if clipboard access is not available
+      // This is common in some browser environments
     }
   }, []);
 
@@ -191,8 +224,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
             {sections.map(section => (
               <div
                 key={section.id}
-                className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 hover:border-gray-600/50 transition-colors cursor-pointer"
-                onClick={() => onSelectSection(section.id)}
+                className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium text-gray-200">
@@ -323,11 +355,11 @@ export const IniEditor: React.FC<IniEditorProps> = ({
           </div>
         ) : (
           <div className="p-4 space-y-2">
-            {displayLines.map((line: any) => {
+            {displayLines.map((line: IniLine) => {
               const lineIssues = getLineIssues(line.id);
               const hasError = lineIssues.some(issue => issue.type === 'error');
               const hasWarning = lineIssues.some(issue => issue.type === 'warning');
-              const isSensitive = line.key && isSensitiveKey(line.key);
+              // const isSensitive = line.key && isSensitiveKey(line.key);
 
               return (
                 <div
@@ -362,11 +394,6 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                           }`}
                         >
                           {line.key}
-                          {line.sectionName && (
-                            <span className="text-xs text-gray-500 ml-2">
-                              in [{line.sectionName}]
-                            </span>
-                          )}
                         </div>
                       )}
                     </div>
@@ -440,9 +467,4 @@ export const IniEditor: React.FC<IniEditorProps> = ({
       </div>
     </div>
   );
-
-  function onSelectSection(sectionId: string): void {
-    // This function is passed down from parent component
-    // Implementation will be provided by the parent
-  }
 };

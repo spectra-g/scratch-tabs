@@ -142,7 +142,7 @@ export const useLineResizeHandler = ({
       const snappedY = gridSnappingEnabled ? snapToGridValue(mousePoint.y, 20) : mousePoint.y;
 
       // Create updated shape for immediate visual feedback, preserving all properties
-      let updatedShape = { ...shape };
+      const updatedShape = { ...shape };
 
       if (shape.type === 'line' || shape.type === 'orthogonal-arrow') {
         // Handle point-based shapes (line, orthogonal-arrow)

@@ -1140,7 +1140,7 @@ export const renderShapeOverlay = (
   const arrowTipsElement =
     (shape.type === "line" || shape.type === "straight-arrow" || shape.type === "curved-arrow" || shape.type === "orthogonal-arrow")
       ? (() => {
-        let arrowTips: React.ReactNode[] = [];
+        const arrowTips: React.ReactNode[] = [];
 
         if (shape.type === "line" || shape.type === "orthogonal-arrow") {
           const lineShape = shape as Shape & {

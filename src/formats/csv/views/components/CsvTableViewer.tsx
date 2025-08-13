@@ -787,7 +787,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
               >
                 {row.getVisibleCells().map((cell, cellIndex) => {
                   // Determine the actual column index for data cells (excluding row number and actions columns)
-                  let actualColumnIndex = cellIndex - 1; // Exclude row number column
+                  const actualColumnIndex = cellIndex - 1; // Exclude row number column
                   if (cellIndex >= row.getVisibleCells().length - 1) {
                     // This is the actions column, skip data attributes
                     return (

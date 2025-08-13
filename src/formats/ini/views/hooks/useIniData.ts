@@ -47,6 +47,7 @@ export const useIniData = (
   // Core state
   const [state, setState] = useState<IniState>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [userExplicitlySelectedAll, setUserExplicitlySelectedAll] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,7 +70,6 @@ export const useIniData = (
     const lines = iniContent.split('\n');
     const result: IniState = [];
     let currentSection: IniSection | null = null;
-    let pendingComment: string | null = null;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -86,13 +86,14 @@ export const useIniData = (
 
       if (trimmedLine.startsWith('#') || trimmedLine.startsWith(';')) {
         // Comment line
+        const commentStyle = trimmedLine.startsWith('#') ? '#' as const : ';' as const;
         const commentValue = trimmedLine.substring(1).trim();
-        pendingComment = commentValue;
         
         result.push({
           type: 'COMMENT',
           id: `comment_${i}_${Date.now()}_${Math.random()}`,
           value: commentValue,
+          originalCommentStyle: commentStyle,
         });
         continue;
       }
@@ -106,11 +107,9 @@ export const useIniData = (
           id: `section_${sectionName}_${Date.now()}_${Math.random()}`,
           name: sectionName,
           lines: [],
-          comment: pendingComment || undefined,
         };
         
         result.push(currentSection);
-        pendingComment = null;
         continue;
       }
 
@@ -123,11 +122,13 @@ export const useIniData = (
         // Check for inline comment
         let value = valueAndComment;
         let inlineComment: string | undefined;
+        let commentStyle: '#' | ';' | undefined;
         
-        const commentMatch = valueAndComment.match(/^(.*?)\s*[#;]\s*(.*)$/);
+        const commentMatch = valueAndComment.match(/^(.*?)\s*([#;])\s*(.*)$/);
         if (commentMatch) {
           value = commentMatch[1].trim();
-          inlineComment = commentMatch[2].trim();
+          commentStyle = commentMatch[2] as '#' | ';';
+          inlineComment = commentMatch[3].trim();
         }
 
         const keyValueLine: IniLine = {
@@ -136,6 +137,7 @@ export const useIniData = (
           key,
           value: value.trim(),
           comment: inlineComment,
+          originalCommentStyle: commentStyle,
         };
 
         currentSection.lines.push(keyValueLine);
@@ -159,11 +161,13 @@ export const useIniData = (
         
         let value = valueAndComment;
         let inlineComment: string | undefined;
+        let commentStyle: '#' | ';' | undefined;
         
-        const commentMatch = valueAndComment.match(/^(.*?)\s*[#;]\s*(.*)$/);
+        const commentMatch = valueAndComment.match(/^(.*?)\s*([#;])\s*(.*)$/);
         if (commentMatch) {
           value = commentMatch[1].trim();
-          inlineComment = commentMatch[2].trim();
+          commentStyle = commentMatch[2] as '#' | ';';
+          inlineComment = commentMatch[3].trim();
         }
 
         const keyValueLine: IniLine = {
@@ -172,6 +176,7 @@ export const useIniData = (
           key,
           value: value.trim(),
           comment: inlineComment,
+          originalCommentStyle: commentStyle,
         };
 
         currentSection.lines.push(keyValueLine);
@@ -185,18 +190,17 @@ export const useIniData = (
   const serializeToIni = useCallback((iniState: IniState): string => {
     const lines: string[] = [];
 
-    for (const node of iniState) {
+    for (let i = 0; i < iniState.length; i++) {
+      const node = iniState[i];
+      const nextNode = iniState[i + 1];
+      
       if (node.type === 'BLANK') {
         lines.push('');
       } else if (node.type === 'COMMENT') {
-        lines.push(`# ${node.value}`);
+        const commentStyle = node.originalCommentStyle || '#';
+        lines.push(`${commentStyle} ${node.value}`);
       } else if (node.type === 'SECTION') {
         const section = node as IniSection;
-        
-        // Add section comment if it exists
-        if (section.comment) {
-          lines.push(`# ${section.comment}`);
-        }
         
         // Add section header
         if (section.name) {
@@ -206,19 +210,21 @@ export const useIniData = (
         // Add section lines
         for (const line of section.lines) {
           if (line.type === 'COMMENT') {
-            lines.push(`# ${line.value}`);
+            const commentStyle = line.originalCommentStyle || '#';
+            lines.push(`${commentStyle} ${line.value}`);
           } else if (line.type === 'PAIR') {
             let lineStr = `${line.key} = ${line.value}`;
             if (line.comment) {
-              lineStr += ` # ${line.comment}`;
+              const commentStyle = line.originalCommentStyle || '#';
+              lineStr += ` ${commentStyle} ${line.comment}`;
             }
             lines.push(lineStr);
           }
         }
         
-        // Add blank line after section (except for last section)
-        const isLastSection = iniState.indexOf(node) === iniState.length - 1;
-        if (!isLastSection) {
+        // Only add blank line after section if the next node is another section
+        // and if there isn't already a blank line between them
+        if (nextNode && nextNode.type === 'SECTION') {
           lines.push('');
         }
       }
@@ -240,20 +246,12 @@ export const useIniData = (
     try {
       const parsedState = parseIniContent(content);
       setState(parsedState);
-      
-      // Auto-select first section if none selected
-      if (!selectedSectionId && parsedState.length > 0) {
-        const firstSection = parsedState.find(node => node.type === 'SECTION') as IniSection;
-        if (firstSection) {
-          setSelectedSectionId(firstSection.id);
-        }
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse INI content');
     } finally {
       setLoading(false);
     }
-  }, [content, parseIniContent, selectedSectionId]);
+  }, [content, parseIniContent]);
 
   // Sync changes back to content
   const syncToContent = useCallback((newState: IniState) => {
@@ -266,40 +264,21 @@ export const useIniData = (
     return state.filter(node => node.type === 'SECTION') as IniSection[];
   }, [state]);
 
-  // Generate tree nodes for navigation
-  const treeNodes = useMemo((): IniTreeNode[] => {
-    const nodes: IniTreeNode[] = [];
-    
-    // Add root node for all sections
-    const totalKeys = sections.reduce((sum, section) => 
-      sum + section.lines.filter(line => line.type === 'PAIR').length, 0
-    );
-    
-    nodes.push({
-      id: 'root',
-      name: 'All Sections',
-      type: 'root',
-      keyCount: totalKeys,
-      hasIssues: false,
-    });
+  // Auto-select first section if none selected - separate effect
+  useEffect(() => {
+    if (!selectedSectionId && !userExplicitlySelectedAll && sections.length > 0) {
+      const firstSection = sections[0]; // sections are already filtered to be SECTION type
+      if (firstSection) {
+        setSelectedSectionId(firstSection.id);
+      }
+    }
+  }, [selectedSectionId, userExplicitlySelectedAll, sections]); // Include sections dependency
 
-    // Add section nodes
-    sections.forEach(section => {
-      const keyCount = section.lines.filter(line => line.type === 'PAIR').length;
-      const hasIssues = validationIssues.some(issue => issue.sectionId === section.id);
-      
-      nodes.push({
-        id: section.id,
-        name: section.name || '(Global)',
-        type: 'section',
-        sectionId: section.id,
-        keyCount,
-        hasIssues,
-      });
-    });
-
-    return nodes;
-  }, [sections, validationIssues]);
+  // Custom setter for selectedSectionId that tracks explicit "All Sections" selection
+  const handleSetSelectedSectionId = useCallback((sectionId: string | null) => {
+    setSelectedSectionId(sectionId);
+    setUserExplicitlySelectedAll(sectionId === null);
+  }, []);
 
   // Validation
   const validationIssues = useMemo((): IniValidationIssue[] => {
@@ -350,6 +329,56 @@ export const useIniData = (
     return issues;
   }, [sections]);
 
+  // Generate tree nodes for navigation
+  const treeNodes = useMemo((): IniTreeNode[] => {
+    const nodes: IniTreeNode[] = [];
+    
+    // Add root node for all sections
+    const totalKeys = sections.reduce((sum, section) => 
+      sum + section.lines.filter(line => line.type === 'PAIR').length, 0
+    );
+    
+    nodes.push({
+      id: 'root',
+      name: 'All Sections',
+      type: 'root',
+      keyCount: totalKeys,
+      hasIssues: false,
+      children: [],
+    });
+
+    // Add section nodes with their key-value pairs as children
+    sections.forEach(section => {
+      const keyValuePairs = section.lines.filter(line => line.type === 'PAIR');
+      const keyCount = keyValuePairs.length;
+      const hasIssues = validationIssues.some(issue => issue.sectionId === section.id);
+      
+      const children: IniTreeNode[] = keyValuePairs.map((pair) => ({
+        id: pair.id,
+        name: pair.key || '(empty key)', // Just show the key, not the full key=value
+        type: 'key' as const,
+        sectionId: section.id,
+        keyCount: 0,
+        hasIssues: validationIssues.some(issue => issue.lineId === pair.id),
+        children: [],
+        lineId: pair.id,
+      }));
+      
+      nodes.push({
+        id: section.id,
+        name: section.name || '(Global)',
+        type: 'section',
+        sectionId: section.id,
+        keyCount,
+        hasIssues,
+        children,
+      });
+    });
+
+    return nodes;
+  }, [sections, validationIssues]);
+
+
   // Section management functions
   const addSection = useCallback((name: string, afterSectionId?: string) => {
     const newSection: IniSection = {
@@ -378,6 +407,7 @@ export const useIniData = (
     });
     
     setSelectedSectionId(newSection.id);
+    setUserExplicitlySelectedAll(false); // Reset flag when adding sections
   }, [syncToContent]);
 
   const deleteSection = useCallback((sectionId: string) => {
@@ -391,6 +421,7 @@ export const useIniData = (
     if (selectedSectionId === sectionId) {
       const remainingSections = sections.filter(s => s.id !== sectionId);
       setSelectedSectionId(remainingSections.length > 0 ? remainingSections[0].id : null);
+      setUserExplicitlySelectedAll(false); // Reset flag when deleting sections
     }
   }, [syncToContent, selectedSectionId, sections]);
 
@@ -564,11 +595,22 @@ export const useIniData = (
   const sortAllSections = useCallback(() => {
     setState(prevState => {
       const sections = prevState.filter(node => node.type === 'SECTION') as IniSection[];
-      const nonSections = prevState.filter(node => node.type !== 'SECTION');
+      const leadingComments: IniFileNode[] = [];
+      
+      // Only include meaningful leading comments (before first section), not random blank lines
+      for (const node of prevState) {
+        if (node.type === 'SECTION') {
+          break;
+        }
+        // Only include actual comments, not blank lines
+        if (node.type === 'COMMENT') {
+          leadingComments.push(node);
+        }
+      }
       
       sections.sort((a, b) => a.name.localeCompare(b.name));
       
-      const newState: IniState = [...nonSections, ...sections];
+      const newState: IniState = [...leadingComments, ...sections];
       syncToContent(newState);
       return newState;
     });
@@ -670,7 +712,7 @@ export const useIniData = (
 
   // Converter functions
   const convertToJson = useCallback((): string => {
-    const jsonObj: Record<string, any> = {};
+    const jsonObj: Record<string, string | Record<string, string>> = {};
     
     sections.forEach(section => {
       const sectionObj: Record<string, string> = {};
@@ -754,7 +796,7 @@ export const useIniData = (
 
     // Navigation
     selectedSectionId,
-    setSelectedSectionId,
+    setSelectedSectionId: handleSetSelectedSectionId,
     treeNodes,
 
     // Section management

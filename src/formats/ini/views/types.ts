@@ -4,6 +4,7 @@ export interface IniLine {
   key?: string;
   value?: string;
   comment?: string;
+  originalCommentStyle?: '#' | ';'; // Track original comment style
 }
 
 export interface IniSection {
@@ -21,6 +22,7 @@ export interface IniFileNode {
   value?: string;
   lines?: IniLine[];
   comment?: string;
+  originalCommentStyle?: '#' | ';'; // Track original comment style
 }
 
 export type IniState = IniFileNode[];
@@ -36,10 +38,12 @@ export interface IniValidationIssue {
 export interface IniTreeNode {
   id: string;
   name: string;
-  type: 'section' | 'root';
+  type: 'section' | 'root' | 'key';
   sectionId?: string;
   keyCount: number;
   hasIssues: boolean;
+  children: IniTreeNode[];
+  lineId?: string; // For key nodes, reference to the actual line
 }
 
 export interface UseIniDataOptions {

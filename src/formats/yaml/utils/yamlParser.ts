@@ -514,7 +514,7 @@ function createNodeFromValue(
 
   // Determine value type and content
   let nodeType: YamlNode['type'] = 'string';
-  let nodeValue = value.toJS();
+  const nodeValue = value.toJS();
 
   if (value.type === 'MAP') {
     nodeType = 'object';

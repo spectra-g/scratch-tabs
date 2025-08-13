@@ -33,7 +33,6 @@ export const IniTreeView: React.FC<IniTreeViewProps> = ({
   onDeleteSection,
   onDuplicateSection,
   onRenameSection,
-  onReorderSections,
   validationIssues,
 }) => {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['root']));
@@ -62,8 +61,11 @@ export const IniTreeView: React.FC<IniTreeViewProps> = ({
   const handleNodeClick = useCallback((node: IniTreeNode) => {
     if (node.type === 'root') {
       onSelectSection(null);
-    } else {
+    } else if (node.type === 'section') {
       onSelectSection(node.sectionId || null);
+    } else if (node.type === 'key') {
+      // For key nodes, don't change section selection - just highlight or edit
+      // The key belongs to the section but we don't need to change the view
     }
   }, [onSelectSection]);
 
@@ -139,14 +141,106 @@ export const IniTreeView: React.FC<IniTreeViewProps> = ({
   const getNodeIcon = (node: IniTreeNode) => {
     if (node.type === 'root') {
       return expandedNodes.has(node.id) ? <FolderOpen size={16} /> : <Folder size={16} />;
+    } else if (node.type === 'section') {
+      return <Settings size={16} />;
+    } else {
+      return <Edit3 size={14} />;
     }
-    return <Settings size={16} />;
   };
 
   const getNodeIssues = (nodeId: string) => {
     return validationIssues.filter(issue => 
       issue.sectionId === nodeId || 
       (nodeId === 'root' && !issue.sectionId)
+    );
+  };
+
+  const renderTreeNode = (node: IniTreeNode, depth: number = 0): React.ReactNode => {
+    const isSelected = node.type === 'root' 
+      ? selectedSectionId === null 
+      : node.type === 'section' 
+        ? selectedSectionId === node.sectionId
+        : false; // Key nodes are never "selected" in the navigation sense
+    const isExpanded = expandedNodes.has(node.id);
+    const nodeIssues = getNodeIssues(node.sectionId || 'root');
+    const hasErrors = nodeIssues.some(issue => issue.type === 'error');
+    const hasWarnings = nodeIssues.some(issue => issue.type === 'warning');
+    const hasChildren = node.children && node.children.length > 0;
+
+    return (
+      <div key={node.id} className="mb-1">
+        <div
+          className={`flex items-center p-2 rounded cursor-pointer transition-colors ${
+            isSelected
+              ? "bg-blue-500/20 text-blue-400"
+              : "hover:bg-gray-700/50 text-gray-300"
+          }`}
+          style={{ paddingLeft: `${(depth * 16) + 8}px` }}
+          onClick={() => handleNodeClick(node)}
+          onContextMenu={(e) => node.type !== 'root' && handleContextMenu(e, node.id)}
+        >
+          {/* Expand/Collapse Icon - only show if has children */}
+          {hasChildren ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpanded(node.id);
+              }}
+              className="mr-2 text-gray-400 hover:text-gray-200"
+            >
+              {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+          ) : (
+            <div className="w-[18px] mr-2" /> // Spacer for alignment
+          )}
+
+          {/* Node Icon */}
+          <div className="mr-2 text-gray-400">
+            {getNodeIcon(node)}
+          </div>
+
+          {/* Node Name */}
+          <div className="flex-1 min-w-0">
+            {editingNodeId === node.id ? (
+              <input
+                type="text"
+                value={editingValue}
+                onChange={(e) => setEditingValue(e.target.value)}
+                onBlur={saveEdit}
+                onKeyDown={handleKeyDown}
+                className="w-full bg-gray-800 border border-blue-500 rounded px-1 py-0.5 text-sm text-gray-200 focus:outline-none"
+                autoFocus
+              />
+            ) : (
+              <span className="text-sm font-medium truncate">
+                {node.name}
+              </span>
+            )}
+          </div>
+
+          {/* Key Count Badge - only for sections and root */}
+          {(node.type === 'section' || node.type === 'root') && (
+            <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-0.5 rounded ml-2">
+              {node.keyCount}
+            </span>
+          )}
+
+          {/* Status Icons */}
+          {hasErrors && (
+            <AlertTriangle size={14} className="text-red-400 ml-2" />
+          )}
+          {hasWarnings && !hasErrors && (
+            <AlertTriangle size={14} className="text-yellow-400 ml-2" />
+          )}
+        </div>
+
+        {/* Render children when expanded */}
+        {hasChildren && isExpanded && (
+          <div className="ml-4">
+            {node.children.map(child => renderTreeNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -208,79 +302,7 @@ export const IniTreeView: React.FC<IniTreeViewProps> = ({
 
       {/* Tree Navigation */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-        {treeNodes.map((node) => {
-          const isSelected = node.type === 'root' 
-            ? selectedSectionId === null 
-            : selectedSectionId === node.sectionId;
-          const isExpanded = expandedNodes.has(node.id);
-          const nodeIssues = getNodeIssues(node.sectionId || 'root');
-          const hasErrors = nodeIssues.some(issue => issue.type === 'error');
-          const hasWarnings = nodeIssues.some(issue => issue.type === 'warning');
-
-          return (
-            <div key={node.id} className="mb-1">
-              <div
-                className={`flex items-center p-2 rounded cursor-pointer transition-colors ${
-                  isSelected
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "hover:bg-gray-700/50 text-gray-300"
-                }`}
-                onClick={() => handleNodeClick(node)}
-                onContextMenu={(e) => node.type !== 'root' && handleContextMenu(e, node.id)}
-              >
-                {/* Expand/Collapse Icon */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleExpanded(node.id);
-                  }}
-                  className="mr-2 text-gray-400 hover:text-gray-200"
-                >
-                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                </button>
-
-                {/* Node Icon */}
-                <div className="mr-2 text-gray-400">
-                  {getNodeIcon(node)}
-                </div>
-
-                {/* Node Name */}
-                <div className="flex-1 min-w-0">
-                  {editingNodeId === node.id ? (
-                    <input
-                      type="text"
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onBlur={saveEdit}
-                      onKeyDown={handleKeyDown}
-                      className="w-full bg-gray-800 border border-blue-500 rounded px-1 py-0.5 text-sm text-gray-200 focus:outline-none"
-                      autoFocus
-                    />
-                  ) : (
-                    <span className="text-sm font-medium truncate">
-                      {node.name}
-                    </span>
-                  )}
-                </div>
-
-                {/* Key Count Badge */}
-                <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-0.5 rounded ml-2">
-                  {node.keyCount}
-                </span>
-
-                {/* Validation Issues */}
-                {(hasErrors || hasWarnings) && (
-                  <div className="ml-2">
-                    <AlertTriangle 
-                      size={14} 
-                      className={hasErrors ? "text-red-400" : "text-yellow-400"} 
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {treeNodes.map((node) => renderTreeNode(node))}
       </div>
 
       {/* Context Menu */}
@@ -328,14 +350,6 @@ export const IniTreeView: React.FC<IniTreeViewProps> = ({
         </>
       )}
 
-      {/* Validation Panel */}
-      {showValidationPanel && (
-        <IniValidationPanel
-          issues={validationIssues}
-          onClose={() => setShowValidationPanel(false)}
-          onSelectSection={setSelectedSectionId}
-        />
-      )}
     </div>
   );
 };
