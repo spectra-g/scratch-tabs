@@ -12,13 +12,14 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
   tabId,
+  isActive,
+  side,
 }) => {
   const { addBackgroundTab } = useRootStore();
   const [showValidation, setShowValidation] = useState(false);
 
   const propertiesData = usePropertiesData(content, onContentChange);
   const {
-    state,
     treeData,
     validation,
     loading,
@@ -30,7 +31,6 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
     addPair,
     deletePair,
     addComment,
-    deleteComment,
     sortKeysAlphabetically,
     groupByPrefix,
     stripAllComments,
@@ -84,7 +84,11 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
     validation.invalidKeys.length > 0;
 
   return (
-    <div className="flex h-full bg-gray-900 text-gray-200" data-testid="properties-smart-view">
+    <div 
+      className="flex h-full bg-gray-900 text-gray-200" 
+      data-testid="properties-smart-view"
+      key={`properties-view-${tabId}-${side}`}
+    >
       {/* Left Panel: Tree Navigation */}
       <div className="w-80 border-r border-gray-700 flex flex-col">
         <div className="flex-none p-3 border-b border-gray-700">
