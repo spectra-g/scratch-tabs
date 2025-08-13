@@ -18,6 +18,7 @@ import "./graphql";
 import "./groovy";
 import "./hcl";
 import "./html/index";
+import "./ini";
 import "./java";
 import "./javascript";
 import "./json/index";

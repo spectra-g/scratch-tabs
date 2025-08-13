@@ -21,6 +21,7 @@ import { MarkdownFormatDetector } from "../markdown";
 import { JsonLogFormatDetector } from "../ndjson";
 import { PhpFormatDetector } from "../php";
 import { PropertiesFormatDetector } from "../properties";
+import { IniFormatDetector } from "../ini";
 import { PythonFormatDetector } from "../python";
 import { RFormatDetector } from "../r";
 import { RubyFormatDetector } from "../ruby";
@@ -197,6 +198,13 @@ describe("Registry Format Detection", () => {
     },
     {
       id: "ini",
+      name: "INI", 
+      detectorClass: IniFormatDetector,
+      expectedMinConfidence: 0.6,
+      expectedDefinitive: undefined,
+    },
+    {
+      id: "properties",
       name: "Properties",
       detectorClass: PropertiesFormatDetector,
       expectedMinConfidence: 0.6,
