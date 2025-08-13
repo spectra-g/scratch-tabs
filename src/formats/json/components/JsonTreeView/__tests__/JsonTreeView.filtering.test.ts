@@ -491,7 +491,7 @@ describe('JsonTreeView Filtering Logic', () => {
     });
 
     it('should handle deeply nested structures', () => {
-      let deepData: any = { value: 'root' };
+      const deepData: any = { value: 'root' };
       let current = deepData;
       
       // Create 50 levels deep

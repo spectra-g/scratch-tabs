@@ -15,21 +15,29 @@ src/components/Tablet/
 src/components/TestFields/
 src/components/Welcome/
 src/components/Workspace/
+src/components/Tab/Management/
+src/components/Tab/__tests__/
 src/hooks/
 src/constants/
 src/db/
 src/features/
-#src/services/
+src/services/
 src/stores/
-src/views/
+#src/views/
 src/workers/
 
 src/tablets/
-src/formats/__tests__/
+#src/formats/__tests__/
 src/formats/json
 src/formats/jsonlog
 src/formats/yaml
+src/formats/diff
+src/formats/markdown
+src/formats/curl
+src/formats/stacktrace
+src/formats/properties
 
+changelog/
 landing/
 public/
 src/__mocks__/

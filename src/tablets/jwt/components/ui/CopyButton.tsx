@@ -33,7 +33,7 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
     <Button
       onClick={handleCopy}
       size={size}
-      variant={variant}
+      variant={copied ? "success" : variant}
       icon={copied ? Check : Copy}
       className={className}
       title={copied ? "Copied!" : "Copy to clipboard"}

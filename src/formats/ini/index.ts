@@ -1,20 +1,20 @@
-import { FormatModule } from "../types";
-import { PropertiesFormatDetector } from "../properties";
-import { formatRegistry } from "../registry";
 import React from "react";
-import { StatusBarItem } from "../types";
-import { smartViewRegistry, SmartView } from "../../views/registry";
+import { FormatModule, StatusBarItem } from "../types";
+import { IniFormatDetector } from "../ini";
+import { formatRegistry } from "../registry";
+import { smartViewRegistry } from "../../views/registry";
+import { SmartView } from "../../views/registry";
 import { Settings } from "../../components/Icons";
-import { PropertiesSmartView } from "./views/components/PropertiesSmartView";
+import { IniSmartView } from "./views/components/IniSmartView";
 import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
 import { StatusItemProps } from "../../components/StatusBar/types";
 
-// Create the Properties format module that implements the new interface
-export class PropertiesFormatModule implements FormatModule {
-  private detector: PropertiesFormatDetector;
+// Create the INI format module that implements the new interface
+export class IniFormatModule implements FormatModule {
+  private detector: IniFormatDetector;
 
   constructor() {
-    this.detector = new PropertiesFormatDetector();
+    this.detector = new IniFormatDetector();
   }
 
   get id(): string {
@@ -37,7 +37,7 @@ export class PropertiesFormatModule implements FormatModule {
     return this.detector.detect(content);
   }
 
-  registerProvider(monaco: any): void {
+  registerProvider(monaco: unknown): void {
     this.detector.registerProvider(monaco);
   }
 
@@ -53,11 +53,11 @@ export class PropertiesFormatModule implements FormatModule {
   getSmartViews(): SmartView[] {
     return [
       {
-        id: "properties-editor",
-        languageId: "properties",
-        label: "Properties Editor",
+        id: "ini-editor",
+        languageId: "ini",
+        label: "Section Editor",
         icon: Settings,
-        component: PropertiesSmartView,
+        component: IniSmartView,
         mode: "replaces",
         priority: 1,
       },
@@ -68,7 +68,7 @@ export class PropertiesFormatModule implements FormatModule {
   getStatusBarItems(): StatusBarItem[] {
     return [
       {
-        id: 'properties-smart-view-button',
+        id: 'ini-smart-view-button',
         component: (props: StatusItemProps) => 
           React.createElement(SmartViewButtons, {
             language: this.id,
@@ -81,15 +81,15 @@ export class PropertiesFormatModule implements FormatModule {
 }
 
 // Create and register the module
-const propertiesModule = new PropertiesFormatModule();
-formatRegistry.register(propertiesModule);
+const iniModule = new IniFormatModule();
+formatRegistry.register(iniModule);
 
 // Register the smart view
-propertiesModule.getSmartViews()?.forEach(view => {
+iniModule.getSmartViews()?.forEach(view => {
   smartViewRegistry.register(view);
 });
 
 // Export for backward compatibility
-export const registerPropertiesProvider = (monaco: any) => {
-  propertiesModule.registerProvider(monaco);
+export const registerIniProvider = (monaco: unknown) => {
+  iniModule.registerProvider(monaco);
 };

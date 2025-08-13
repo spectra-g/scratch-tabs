@@ -133,6 +133,9 @@ export {
   ClipboardCheck,
   ClipboardPaste,
   ClipboardPlus,
+  AlignLeft,
+  Eraser,
+  Scissors,
   
   // Feedback
   XCircle,

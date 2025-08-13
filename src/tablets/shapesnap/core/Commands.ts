@@ -244,7 +244,7 @@ export class DeleteSelectedShapesCommand extends BaseCommand {
     if (this.deletedShapes.length === 0) return;
 
     const currentState = this.state;
-    let newShapes = [...currentState.shapes];
+    const newShapes = [...currentState.shapes];
 
     // Restore deleted shapes at their original indices
     // Sort by index in descending order to avoid index shifting issues

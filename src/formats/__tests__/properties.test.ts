@@ -9,16 +9,10 @@ describe("PropertiesFormatDetector", () => {
 
   describe("Basic Properties", () => {
     test("should have correct basic properties", () => {
-      expect(detector.id).toBe("ini");
-      expect(detector.name).toBe("Properties / INI");
-      expect(detector.extensions).toEqual([
-        "properties",
-        "ini",
-        "cfg",
-        "conf",
-        "config",
-      ]);
-      expect(detector.priority).toBe(3);
+      expect(detector.id).toBe("properties");
+      expect(detector.name).toBe("Properties");
+      expect(detector.extensions).toEqual(["properties"]);
+      expect(detector.priority).toBe(4);
     });
 
     test("should return correct file extension", () => {
@@ -30,8 +24,9 @@ describe("PropertiesFormatDetector", () => {
     test("should provide valid sample content", () => {
       const sample = detector.sampleContent();
       expect(sample).toContain("app.name = My Application");
-      expect(sample).toContain("[database]");
-      expect(sample).toContain("# This is a global comment");
+      expect(sample).toContain("database.host = localhost");
+      expect(sample).toContain("# Java-style Properties Configuration");
+      expect(sample).not.toContain("[database]"); // Should not have sections
     });
   });
 
@@ -43,19 +38,20 @@ describe("PropertiesFormatDetector", () => {
       expect(result.confidence).toBe(0);
     });
 
-    test("should detect valid properties file with key-value pairs", () => {
+    test("should detect valid properties file with dot notation", () => {
       const validProperties = `# Configuration file
 app.name = My Application
 app.version = 1.0.3
-debug_mode = true
-server.port = 8080`;
+database.host = localhost
+database.port = 5432
+server.timeout = 30000`;
 
       const result = detector.detect(validProperties);
       expect(result.match).toBe(true);
-      expect(result.confidence).toBeGreaterThan(0.4);
+      expect(result.confidence).toBeGreaterThan(0.3);
     });
 
-    test("should detect INI file with sections", () => {
+    test("should REJECT INI file with sections", () => {
       const validIni = `# Configuration
 [database]
 host = localhost
@@ -67,8 +63,8 @@ name = MyApp
 version = 1.0`;
 
       const result = detector.detect(validIni);
-      expect(result.match).toBe(true);
-      expect(result.confidence).toBeGreaterThan(0.4);
+      expect(result.match).toBe(false);
+      expect(result.confidence).toBe(0);
     });
 
     test("should reject content with only URLs", () => {
@@ -138,41 +134,40 @@ INSERT INTO logs VALUES ('test')`;
       expect(result.match).toBe(false);
     });
 
-    test("should handle comments correctly", () => {
+    test("should handle # and ! comments correctly", () => {
       const commentedProperties = `# Main configuration
-; Alternative comment style
+! Alternative comment style
 app.name = MyApp
 # Database settings
-db.host = localhost
-; Port configuration
-db.port = 5432`;
+database.host = localhost
+! Port configuration
+database.port = 5432`;
 
       const result = detector.detect(commentedProperties);
       expect(result.match).toBe(true);
       expect(result.confidence).toBeGreaterThan(0.3);
     });
 
-    test("should detect high confidence for well-structured files", () => {
+    test("should detect high confidence for well-structured properties files", () => {
       const wellStructured = `# Application Configuration
-[application]
-name = MyApplication
-version = 2.1.0
-debug = false
+application.name = MyApplication
+application.version = 2.1.0
+application.debug = false
 
-[database]
-host = localhost
-port = 5432
-username = admin
-password = secret
+database.host = localhost
+database.port = 5432
+database.username = admin
+database.password = secret
 
-[logging]
-level = INFO
-file = /var/log/app.log`;
+logging.level = INFO
+logging.file = /var/log/app.log
+logging.max.size = 10MB`;
 
       const result = detector.detect(wellStructured);
 
       expect(result.match).toBe(true);
       expect(result.confidence).toBeGreaterThan(0.4);
+      expect(result.matchedDefinitive).toBe(true);
     });
 
     test("should handle edge cases with special characters", () => {
@@ -197,6 +192,51 @@ version = 1.0`;
       const result = detector.detect(propertiesWithUrl);
       expect(result.match).toBe(false); // URLs should cause rejection
     });
+
+    test("should reject JSON format", () => {
+      const jsonContent = `{
+  "app": {
+    "name": "MyApplication",
+    "version": "1.0.0"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432
+  }
+}`;
+
+      const result = detector.detect(jsonContent);
+      expect(result.match).toBe(false);
+    });
+
+    test("should reject XML format", () => {
+      const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <app name="MyApp" version="1.0" />
+  <database host="localhost" port="5432" />
+</configuration>`;
+
+      const result = detector.detect(xmlContent);
+      expect(result.match).toBe(false);
+    });
+
+    test("should reject JavaScript format", () => {
+      const jsContent = `const config = {
+  app: {
+    name: 'MyApp',
+    version: '1.0.0'
+  },
+  database: {
+    host: 'localhost',
+    port: 5432
+  }
+};
+
+module.exports = config;`;
+
+      const result = detector.detect(jsContent);
+      expect(result.match).toBe(false);
+    });
   });
 
   describe("Monaco Provider Registration", () => {
@@ -217,7 +257,7 @@ version = 1.0`;
         detector.registerProvider(mockMonaco);
       }).not.toThrow();
 
-      expect(mockMonaco.languages.register).toHaveBeenCalledWith({ id: "ini" });
+      expect(mockMonaco.languages.register).toHaveBeenCalledWith({ id: "properties" });
       expect(mockMonaco.languages.setMonarchTokensProvider).toHaveBeenCalled();
       expect(mockMonaco.editor.defineTheme).toHaveBeenCalled();
       expect(

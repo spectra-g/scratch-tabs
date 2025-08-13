@@ -225,7 +225,7 @@ export function countSentences(text: string): number {
   const abbreviations = /\b(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|Inc|Ltd|Corp|Co|St|Ave|Blvd|Rd|Apt|No|Vol|Ch|Fig|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Mon|Tue|Wed|Thu|Fri|Sat|Sun|AM|PM|a\.m|p\.m|i\.e|e\.g|cf|viz|al|et)\./gi;
   
   // Replace abbreviations with placeholders to avoid false sentence breaks
-  let processedText = text.replace(abbreviations, (match) => 
+  const processedText = text.replace(abbreviations, (match) => 
     match.replace('.', '___DOT___')
   );
   
@@ -265,7 +265,7 @@ export function getSentences(text: string): string[] {
   // Handle abbreviations
   const abbreviations = /\b(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|Inc|Ltd|Corp|Co|St|Ave|Blvd|Rd|Apt|No|Vol|Ch|Fig|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Mon|Tue|Wed|Thu|Fri|Sat|Sun|AM|PM|a\.m|p\.m|i\.e|e\.g|cf|viz|al|et)\./gi;
   
-  let processedText = text.replace(abbreviations, (match) => 
+  const processedText = text.replace(abbreviations, (match) => 
     match.replace('.', '___DOT___')
   );
   
