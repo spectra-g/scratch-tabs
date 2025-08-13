@@ -35,6 +35,7 @@ src/formats/curl
 src/formats/stacktrace
 src/formats/properties
 
+changelog/
 landing/
 public/
 src/__mocks__/
