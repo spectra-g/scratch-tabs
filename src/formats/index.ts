@@ -25,7 +25,7 @@ import "./json/index";
 import "./kotlin";
 import "./markdown/index";
 import "./php";
-import "./properties";
+import "./properties/index";
 import "./python";
 import "./r";
 import "./ruby";

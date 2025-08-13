@@ -21,6 +21,7 @@ import { MarkdownFormatDetector } from "../markdown";
 import { JsonLogFormatDetector } from "../ndjson";
 import { PhpFormatDetector } from "../php";
 import { PropertiesFormatDetector } from "../properties";
+import { PropertiesFormatModule } from "../properties/index";
 import { IniFormatDetector } from "../ini";
 import { PythonFormatDetector } from "../python";
 import { RFormatDetector } from "../r";
@@ -206,7 +207,7 @@ describe("Registry Format Detection", () => {
     {
       id: "properties",
       name: "Properties",
-      detectorClass: PropertiesFormatDetector,
+      detectorClass: PropertiesFormatModule,
       expectedMinConfidence: 0.6,
       expectedDefinitive: undefined,
     },
@@ -423,15 +424,14 @@ describe("Registry Format Detection", () => {
       expect(csvResult!.match).toBe(false);
       expect(csvResult!.confidence).toBe(0);
       
-      // Note: In this test environment, the JSON detector isn't loaded due to circular dependencies,
-      // so the registry will return "plaintext". In the real application, the JSON detector would
-      // correctly identify this as JSON with high confidence (as verified in json.test.ts).
+      // The JSON detector should correctly identify this as JSON with high confidence
       const detectedFormat = formatRegistry.detectFormat(jsonContent);
-      expect(detectedFormat).toBe('plaintext'); // Due to missing JSON detector in test environment
+      expect(detectedFormat).toBe('json');
       
-      // Verify no other format falsely matches
+      // Verify no other format falsely matches (only JSON should match)
       const matchingFormats = results.filter(r => r.match);
-      expect(matchingFormats.length).toBe(0);
+      expect(matchingFormats.length).toBe(1);
+      expect(matchingFormats[0].id).toBe('json');
     });
   });
 });

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Eye,
   EyeOff,
   Copy,
+  Check,
   Search,
   X,
   Filter,
@@ -34,6 +35,13 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
   summary,
   language,
 }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopyClick = async () => {
+    await onCopyCleanedTrace();
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
   return (
     <div className="flex-none border-b border-gray-700 p-3 bg-gray-800/50">
       {/* Top row: Main controls */}
@@ -84,12 +92,16 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
 
         {/* Copy button */}
         <button
-          onClick={onCopyCleanedTrace}
-          className="flex items-center space-x-2 px-3 py-1.5 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded text-sm transition-colors"
-          title="Copy cleaned stack trace"
+          onClick={handleCopyClick}
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm transition-colors ${
+            isCopied
+              ? "bg-green-500/20 text-green-400"
+              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+          }`}
+          title={isCopied ? "Copied!" : "Copy cleaned stack trace"}
         >
-          <Copy size={14} />
-          <span>Copy Cleaned Trace</span>
+          {isCopied ? <Check size={14} /> : <Copy size={14} />}
+          <span>{isCopied ? "Copied!" : "Copy Cleaned Trace"}</span>
         </button>
       </div>
 

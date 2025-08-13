@@ -2,8 +2,7 @@ import React from "react";
 import {
   ArrowUpDown,
   Layers,
-  MessageSquareX,
-  AlignLeft,
+  MessageSquare,
   FileDown,
   FileUp,
   Code,
@@ -80,7 +79,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
             className="flex items-center space-x-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
             title="Remove all comments"
           >
-            <MessageSquareX size={12} />
+            <MessageSquare size={12} />
             <span>Strip Comments</span>
           </button>
           
@@ -89,7 +88,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
             className="flex items-center space-x-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
             title="Normalize spacing around equals signs"
           >
-            <AlignLeft size={12} />
+            <FileText size={12} />
             <span>Normalize</span>
           </button>
         </div>

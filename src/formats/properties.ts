@@ -295,11 +295,5 @@ temp.directory = /tmp/myapp/
   }
 }
 
-// Create and register the detector
-const propertiesDetector = new PropertiesFormatDetector();
-formatRegistry.register(propertiesDetector);
-
-// Export for backward compatibility (optional)
-export const registerPropertiesProvider = (monaco: any) => {
-  propertiesDetector.registerProvider(monaco);
-};
+// Export for use by the Properties module
+// Note: Registration is handled by src/formats/properties/index.ts

@@ -1,5 +1,5 @@
 import React from "react";
-import { X, AlertTriangle, Copy, Key } from "../../../../components/Icons";
+import { X, AlertTriangle, Copy, Key, CheckCircle } from "../../../../components/Icons";
 import { PropertiesValidation } from "../types";
 
 interface PropertiesValidationPanelProps {

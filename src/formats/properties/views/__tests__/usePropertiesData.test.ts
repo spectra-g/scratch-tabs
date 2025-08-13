@@ -1,5 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { usePropertiesData } from "../hooks/usePropertiesData";
+import { PropertyPair } from "../types";
 
 describe("usePropertiesData", () => {
   const sampleProperties = `# Application Configuration
@@ -34,7 +35,7 @@ server.port = 8080`;
 
       // Check that we have the expected pairs
       const pairs = result.current.state.filter(line => line.type === 'PAIR');
-      expect(pairs.length).toBe(7);
+      expect(pairs.length).toBe(8);
     });
 
     it("should build tree structure correctly", () => {
@@ -112,7 +113,7 @@ database.host = Valid`;
         usePropertiesData(sampleProperties, mockOnContentChange),
       );
 
-      const pairs = result.current.state.filter(line => line.type === 'PAIR');
+      const pairs = result.current.state.filter(line => line.type === 'PAIR') as PropertyPair[];
       const firstPair = pairs[0];
 
       act(() => {

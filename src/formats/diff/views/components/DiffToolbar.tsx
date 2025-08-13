@@ -129,8 +129,12 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
         {/* Copy button */}
         <button
           onClick={handleCopyDiff}
-          className="flex items-center space-x-2 px-3 py-1.5 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded text-sm transition-colors"
-          title="Copy filtered diff"
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm transition-colors ${
+            isCopied
+              ? "bg-green-500/20 text-green-400"
+              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+          }`}
+          title={isCopied ? "Copied!" : "Copy filtered diff"}
         >
           {isCopied ? <Check size={14} /> : <Copy size={14} />}
           <span>{isCopied ? 'Copied!' : 'Copy Diff'}</span>

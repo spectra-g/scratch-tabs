@@ -51,7 +51,7 @@ describe("PropertiesSmartView", () => {
 
     expect(screen.getByTestId("properties-smart-view")).toBeInTheDocument();
     expect(screen.getByText("Property Hierarchy")).toBeInTheDocument();
-    expect(screen.getByText("All Properties")).toBeInTheDocument();
+    expect(screen.getAllByText("All Properties")).toHaveLength(2); // Appears in tree and header
   });
 
   it("should display tree structure", () => {
@@ -126,7 +126,7 @@ invalid key = value`;
     );
 
     // Should show validation issues button
-    expect(screen.getByText(/Issues/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Issues/)).toHaveLength(2); // Appears in button and status area
   });
 
   it("should handle add property form", async () => {

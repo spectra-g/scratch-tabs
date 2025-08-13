@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Plus, Trash2, MessageSquare, Eye, EyeOff, Copy, AlertTriangle } from "../../../../components/Icons";
+import { Plus, Trash2, MessageSquare, Eye, EyeOff, Copy, AlertTriangle, Key, Check } from "../../../../components/Icons";
 import { PropertyPair, PropertiesValidation } from "../types";
 
 interface PropertiesEditorProps {
@@ -49,6 +49,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
   const [newComment, setNewComment] = useState("");
+  const [copiedValueId, setCopiedValueId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto-detect and mask sensitive keys
@@ -128,9 +129,11 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
     setShowAddForm(false);
   }, [newKey, newValue, newComment, selectedNodeId, onAddPair]);
 
-  const copyValue = useCallback(async (value: string) => {
+  const copyValue = useCallback(async (value: string, pairId: string) => {
     try {
       await navigator.clipboard.writeText(value);
+      setCopiedValueId(pairId);
+      setTimeout(() => setCopiedValueId(null), 2000);
     } catch (err) {
       console.error('Failed to copy value:', err);
     }
@@ -322,11 +325,15 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                       )}
                       
                       <button
-                        onClick={() => copyValue(pair.value)}
-                        className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded transition-colors"
-                        title="Copy value"
+                        onClick={() => copyValue(pair.value, pair.id)}
+                        className={`p-1 rounded transition-colors ${
+                          copiedValueId === pair.id
+                            ? "text-green-400 bg-green-500/20"
+                            : "text-gray-400 hover:text-gray-300 hover:bg-gray-700/50"
+                        }`}
+                        title={copiedValueId === pair.id ? "Copied!" : "Copy value"}
                       >
-                        <Copy size={12} />
+                        {copiedValueId === pair.id ? <Check size={12} /> : <Copy size={12} />}
                       </button>
                     </div>
                   </div>

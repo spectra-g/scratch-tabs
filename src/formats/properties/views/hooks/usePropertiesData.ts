@@ -114,7 +114,15 @@ export const usePropertiesData = (
         case 'PAIR': {
           const pair = line as PropertyPair;
           const baseString = `${pair.key} = ${pair.value}`;
-          return pair.comment ? `${baseString} ${pair.comment}` : baseString;
+          if (pair.comment) {
+            // Ensure comment has proper prefix (# or !) if it doesn't already
+            const comment = pair.comment.trim();
+            const formattedComment = comment.startsWith('#') || comment.startsWith('!') 
+              ? comment 
+              : `# ${comment}`;
+            return `${baseString} ${formattedComment}`;
+          }
+          return baseString;
         }
         default:
           return '';
@@ -367,7 +375,7 @@ export const usePropertiesData = (
 
   const groupByPrefix = useCallback(() => {
     const pairs = state.filter(line => line.type === 'PAIR') as PropertyPair[];
-    const nonPairs = state.filter(line => line.type !== 'PAIR');
+    const comments = state.filter(line => line.type === 'COMMENT') as PropertyComment[];
     
     // Group pairs by their first prefix
     const groups = new Map<string, PropertyPair[]>();
@@ -380,31 +388,104 @@ export const usePropertiesData = (
       groups.get(prefix)!.push(pair);
     });
 
+    // Find comments that belong to each group by analyzing the structure
+    const groupComments = new Map<string, PropertyComment[]>();
+    
+    // Initialize empty comment arrays for each group
+    Array.from(groups.keys()).forEach(prefix => {
+      groupComments.set(prefix, []);
+    });
+    
+    // Find the index of the first property to identify global header comments
+    let firstPropertyIndex = -1;
+    for (let i = 0; i < state.length; i++) {
+      if (state[i].type === 'PAIR') {
+        firstPropertyIndex = i;
+        break;
+      }
+    }
+    
+    // Collect comments that appear between property groups
+    let i = firstPropertyIndex;
+    while (i < state.length) {
+      const line = state[i];
+      
+      if (line.type === 'PAIR') {
+        const pair = line as PropertyPair;
+        const currentPrefix = pair.key.split('.')[0];
+        
+        // Look backward to collect comments that precede this group
+        const precedingComments: PropertyComment[] = [];
+        let j = i - 1;
+        
+        // Collect comments and blanks preceding this property
+        while (j >= firstPropertyIndex && (state[j].type === 'COMMENT' || state[j].type === 'BLANK')) {
+          if (state[j].type === 'COMMENT') {
+            precedingComments.unshift(state[j] as PropertyComment);
+          }
+          j--;
+        }
+        
+        // If we found comments and this is the first property of this prefix we've seen
+        if (precedingComments.length > 0 && !groupComments.get(currentPrefix)?.length) {
+          groupComments.set(currentPrefix, precedingComments);
+        }
+        
+        // Skip ahead to the next different prefix
+        while (i < state.length && state[i].type === 'PAIR') {
+          const nextPair = state[i] as PropertyPair;
+          if (nextPair.key.split('.')[0] !== currentPrefix) {
+            break;
+          }
+          i++;
+        }
+      } else {
+        i++;
+      }
+    }
+
     // Sort groups by prefix name and pairs within each group
     const sortedGroups = Array.from(groups.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([prefix, groupPairs]) => [prefix, groupPairs.sort((a, b) => a.key.localeCompare(b.key))] as const);
 
-    // Rebuild state with grouped pairs
-    const newState: PropertiesState = [
-      ...nonPairs.filter(line => line.type === 'COMMENT'),
-    ];
+    // Start with only global/header comments (comments before any properties)
+    const newState: PropertiesState = [];
+    
+    // Find global comments that appear at the beginning before any properties
+    for (let i = 0; i < state.length; i++) {
+      const line = state[i];
+      if (line.type === 'PAIR') {
+        break; // Stop at first property
+      }
+      if (line.type === 'COMMENT' || line.type === 'BLANK') {
+        newState.push(line);
+      }
+    }
 
+    // Add grouped pairs with preserved or generated comments
     sortedGroups.forEach(([prefix, groupPairs], index) => {
-      if (index > 0) {
-        // Add blank line between groups
+      // Add blank line between groups (except before first group if we already have content)
+      if (index > 0 || newState.length > 0) {
         newState.push({
           type: 'BLANK',
-          id: `blank_group_${index}_${Date.now()}`,
+          id: `blank_group_${prefix}_${Date.now()}`,
         } as PropertyBlank);
       }
       
-      // Add comment for the group
-      newState.push({
-        type: 'COMMENT',
-        id: `comment_group_${prefix}_${Date.now()}`,
-        value: `# ${prefix} configuration`,
-      } as PropertyComment);
+      // Add comments for this group
+      const prefixComments = groupComments.get(prefix) || [];
+      if (prefixComments.length > 0) {
+        // Use the preserved comments
+        newState.push(...prefixComments);
+      } else {
+        // Generate default comment only if no existing comments
+        newState.push({
+          type: 'COMMENT',
+          id: `comment_group_${prefix}_${Date.now()}`,
+          value: `# ${prefix} configuration`,
+        } as PropertyComment);
+      }
       
       newState.push(...groupPairs);
     });
