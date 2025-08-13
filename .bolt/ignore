@@ -15,6 +15,8 @@ src/components/Tablet/
 src/components/TestFields/
 src/components/Welcome/
 src/components/Workspace/
+src/components/Tab/Management/
+src/components/Tab/__tests__/
 src/hooks/
 src/constants/
 src/db/
