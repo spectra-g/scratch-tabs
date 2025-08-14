@@ -312,8 +312,6 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
             onConvertToYaml={handleConvertToYaml}
             sectionCount={sections.length}
             totalKeyCount={totalKeyCount}
-            showValidation={showValidation}
-            onToggleValidation={() => setShowValidation(!showValidation)}
           />
         </div>
 
