@@ -20,6 +20,7 @@ interface IniEditorProps {
   onUpdateKeyValue: (sectionId: string, lineId: string, key: string, value: string, comment?: string) => void;
   onDeleteKeyValue: (sectionId: string, lineId: string) => void;
   validationIssues: IniValidationIssue[];
+  onAddSection?: (name: string) => void;
 }
 
 interface EditingState {
@@ -36,6 +37,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   onUpdateKeyValue,
   onDeleteKeyValue,
   validationIssues,
+  onAddSection,
 }) => {
   const [editingState, setEditingState] = useState<EditingState | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -43,6 +45,10 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   const [newValue, setNewValue] = useState("");
   const [newComment, setNewComment] = useState("");
   const [maskedKeys, setMaskedKeys] = useState<Set<string>>(new Set());
+  
+  // Add Section form state
+  const [showAddSectionForm, setShowAddSectionForm] = useState(false);
+  const [newSectionName, setNewSectionName] = useState("");
 
   // Get all key-value pairs from all sections if no section is selected
   const displayLines = selectedSection 
@@ -125,6 +131,14 @@ export const IniEditor: React.FC<IniEditorProps> = ({
     setNewComment("");
     setShowAddForm(false);
   }, [selectedSectionId, sections, newKey, newValue, newComment, onAddKeyValue]);
+
+  const handleAddSection = useCallback(() => {
+    if (!newSectionName.trim() || !onAddSection) return;
+
+    onAddSection(newSectionName.trim());
+    setNewSectionName("");
+    setShowAddSectionForm(false);
+  }, [newSectionName, onAddSection]);
 
   const toggleMask = useCallback((key: string) => {
     setMaskedKeys(prev => {
@@ -213,10 +227,68 @@ export const IniEditor: React.FC<IniEditorProps> = ({
     return (
       <div className="flex flex-col h-full">
         <div className="p-4 border-b border-gray-700">
-          <h3 className="text-lg font-medium text-gray-200">All Sections Overview</h3>
-          <p className="text-sm text-gray-400 mt-1">
-            Select a section from the left panel to edit its contents
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-200">All Sections Overview</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                Select a section from the left panel to edit its contents
+              </p>
+            </div>
+            {/* Add Section button in All Sections Overview */}
+            {onAddSection && (
+              <button
+                onClick={() => setShowAddSectionForm(!showAddSectionForm)}
+                className="flex items-center space-x-2 px-3 py-2 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
+                title="Add new section"
+              >
+                <Plus size={14} />
+                <span>Add Section</span>
+              </button>
+            )}
+          </div>
+
+          {/* Add Section Form in All Sections Overview */}
+          {showAddSectionForm && onAddSection && (
+            <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Section Name</label>
+                <input
+                  type="text"
+                  value={newSectionName}
+                  onChange={(e) => setNewSectionName(e.target.value)}
+                  placeholder="section_name"
+                  className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-green-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAddSection();
+                    } else if (e.key === 'Escape') {
+                      setShowAddSectionForm(false);
+                      setNewSectionName("");
+                    }
+                  }}
+                  autoFocus
+                />
+              </div>
+              <div className="flex space-x-2 mt-3">
+                <button
+                  onClick={handleAddSection}
+                  disabled={!newSectionName.trim()}
+                  className="px-3 py-1 bg-green-500/20 text-green-400 rounded text-sm hover:bg-green-500/30 disabled:opacity-50"
+                >
+                  Add Section
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddSectionForm(false);
+                    setNewSectionName("");
+                  }}
+                  className="px-3 py-1 bg-gray-700 text-gray-300 rounded text-sm hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
@@ -343,6 +415,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
             </div>
           </div>
         )}
+
       </div>
 
       {/* Key-Value List */}

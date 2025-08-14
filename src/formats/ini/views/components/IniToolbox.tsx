@@ -30,6 +30,8 @@ interface IniToolboxProps {
   onConvertToYaml: () => void;
   sectionCount: number;
   totalKeyCount: number;
+  showValidation?: boolean;
+  onToggleValidation?: () => void;
 }
 
 export const IniToolbox: React.FC<IniToolboxProps> = ({
@@ -48,6 +50,8 @@ export const IniToolbox: React.FC<IniToolboxProps> = ({
   onConvertToYaml,
   sectionCount,
   totalKeyCount,
+  showValidation,
+  onToggleValidation,
 }) => {
   const [showSortingMenu, setShowSortingMenu] = useState(false);
   const [showCleaningMenu, setShowCleaningMenu] = useState(false);
