@@ -33,6 +33,8 @@ import { createTab } from "../../../../utils/tabUtils";
 import { EditableCell } from "./EditableCell";
 import { MaskedCell } from "./MaskedCell";
 import { isSensitiveHeader } from "../utils/sensitiveUtils";
+import { createCellKey, parseCellKey } from "../utils/cellUtils";
+import { canPerformShiftRight, getShiftRightCellIdentifiers } from "../utils/shiftRightUtils";
 
 interface DuplicateGroup {
   rowString: string;
@@ -170,6 +172,45 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     return activeMatch && activeMatch.rowId === rowId && activeMatch.columnId === columnId;
   }, [searchMatches, searchActiveIndex]);
 
+  // Check if a cell is multi-selected
+  const isCellMultiSelected = useCallback((rowId: string, columnId: string) => {
+    const cellKey = createCellKey(rowId, columnId);
+    return selectedCells.has(cellKey) && selectedCells.size > 1;
+  }, [selectedCells]);
+
+  // Cell selection functions
+  const handleCellSelect = useCallback((e: React.MouseEvent, rowId: string, columnId: string) => {
+    const cellKey = createCellKey(rowId, columnId);
+    
+    if (e.ctrlKey || e.metaKey) {
+      // CTRL+Click: Toggle multi-selection
+      setSelectedCells(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(cellKey)) {
+          newSet.delete(cellKey);
+        } else {
+          newSet.add(cellKey);
+        }
+        return newSet;
+      });
+      
+      // Keep the single selectedCell for editing purposes
+      setSelectedCell({
+        rowId,
+        columnId,
+      });
+    } else {
+      // Regular click: Set single selection and clear multi-selection
+      setSelectedCell({
+        rowId,
+        columnId,
+      });
+      setSelectedCells(new Set([cellKey]));
+    }
+    
+    setEditingCellTrigger(null);
+  }, []);
+
   // Context menu functions
   const handleCellRightClick = useCallback((e: React.MouseEvent, rowId: string, columnId: string) => {
     e.preventDefault();
@@ -180,10 +221,15 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       columnId,
     });
     
-    // Set selected cells to only the current cell (clear any previous selections)
-    const cellKey = `${rowId}-${columnId}`;
-    setSelectedCells(new Set([cellKey]));
-  }, []);
+    const cellKey = createCellKey(rowId, columnId);
+    
+    // If the right-clicked cell is not part of the current selection, 
+    // make it the only selected cell
+    if (!selectedCells.has(cellKey)) {
+      setSelectedCells(new Set([cellKey]));
+    }
+    // If it is part of the selection, keep the current multi-selection
+  }, [selectedCells]);
 
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
@@ -191,37 +237,14 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
   // Check if shift right action is safe for selected cells
   const canShiftRight = useCallback(() => {
-    if (selectedCells.size === 0) return false;
-    
-    // Get all selected cells and group by column
-    const cellsByColumn = new Map<string, string[]>();
-    selectedCells.forEach(cellKey => {
-      const [rowId, columnId] = cellKey.split('-');
-      if (!cellsByColumn.has(columnId)) {
-        cellsByColumn.set(columnId, []);
-      }
-      cellsByColumn.get(columnId)!.push(rowId);
-    });
-    
-    // Check if all selected cells are in the same column
-    if (cellsByColumn.size !== 1) return false;
-    
-    // Check if each selected row has fewer columns than the header
-    const selectedRowIds = Array.from(cellsByColumn.values())[0];
-    return selectedRowIds.every(rowId => {
-      const row = data.find(r => r.id === rowId);
-      return row && row.cells.length < columns.length;
-    });
+    return canPerformShiftRight(selectedCells, data, columns);
   }, [selectedCells, data, columns]);
 
   // Handle shift right action
   const handleShiftRight = useCallback(() => {
     if (!canShiftRight()) return;
     
-    const cellIdentifiers = Array.from(selectedCells).map(cellKey => {
-      const [rowId, columnId] = cellKey.split('-');
-      return { rowId, columnId };
-    });
+    const cellIdentifiers = getShiftRightCellIdentifiers(selectedCells);
     
     // Execute the shift right operation
     insertAndShift(cellIdentifiers);
@@ -489,6 +512,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                     selectedCell?.rowId === row.original.id &&
                     selectedCell?.columnId === column.id
                   }
+                  isMultiSelected={isCellMultiSelected(row.original.id, column.id)}
                   isValid={row.original.cells[columnIndex]?.isValid ?? true}
                   error={row.original.cells[columnIndex]?.error}
                   startEditing={
@@ -500,12 +524,8 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   isActiveSearchMatch={isCellActiveSearchMatch(row.original.id, column.id)}
                   searchQuery={searchQuery}
                   onRightClick={(e) => handleCellRightClick(e, row.original.id, column.id)}
-                  onSelect={() => {
-                    setSelectedCell({
-                      rowId: row.original.id,
-                      columnId: column.id,
-                    });
-                    setEditingCellTrigger(null);
+                  onSelect={(e) => {
+                    handleCellSelect(e, row.original.id, column.id);
                   }}
                   onStartEdit={() => {
                     setSelectedCell({
@@ -545,6 +565,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   selectedCell?.rowId === row.original.id &&
                   selectedCell?.columnId === column.id
                 }
+                isMultiSelected={isCellMultiSelected(row.original.id, column.id)}
                 isValid={row.original.cells[columnIndex]?.isValid ?? true}
                 error={row.original.cells[columnIndex]?.error}
                 startEditing={
@@ -555,12 +576,8 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                 isActiveSearchMatch={isCellActiveSearchMatch(row.original.id, column.id)}
                 searchQuery={searchQuery}
                 onRightClick={(e) => handleCellRightClick(e, row.original.id, column.id)}
-                onSelect={() => {
-                  setSelectedCell({
-                    rowId: row.original.id,
-                    columnId: column.id,
-                  });
-                  setEditingCellTrigger(null);
+                onSelect={(e) => {
+                  handleCellSelect(e, row.original.id, column.id);
                 }}
                 onStartEdit={() => {
                   setSelectedCell({
@@ -639,6 +656,9 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     searchQuery,
     isCellSearchMatch,
     isCellActiveSearchMatch,
+    isCellMultiSelected,
+    handleCellSelect,
+    handleCellRightClick,
   ]);
 
   const table = useReactTable({

@@ -2,15 +2,17 @@ import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Edit3, Copy, Eye, EyeOff } from "../../../../components/Icons";
 import { highlightSearchTerm } from "../utils/searchHighlight";
+import { getCellClasses } from "../constants/cellStyles";
 
 interface MaskedCellProps {
   value: string;
   isSelected: boolean;
+  isMultiSelected?: boolean;
   isValid: boolean;
   error?: string;
   startEditing: boolean;
   isMasked: boolean;
-  onSelect: () => void;
+  onSelect: (e: React.MouseEvent) => void;
   onStartEdit: () => void;
   onChange: (value: string) => void;
   onEditingChange: (isEditing: boolean) => void;
@@ -27,6 +29,7 @@ interface MaskedCellProps {
 export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
   value,
   isSelected,
+  isMultiSelected = false,
   isValid,
   error,
   startEditing,
@@ -99,7 +102,7 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
-        onSelect();
+        onSelect(e);
       },
       [onSelect],
     );
@@ -165,17 +168,13 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
 
     return (
       <div
-        className={`h-full min-h-[35px] flex items-center px-2 cursor-cell transition-colors relative group ${
-          isSelected && isActiveSearchMatch
-            ? "bg-orange-500/50 ring-2 ring-orange-400 shadow-lg"
-            : isSelected
-            ? "bg-blue-900/30 ring-1 ring-blue-500"
-            : isActiveSearchMatch
-            ? "bg-orange-500/40 ring-2 ring-orange-400"
-            : isSearchMatch
-            ? "bg-yellow-500/20 ring-1 ring-yellow-400"
-            : "hover:bg-gray-700/20"
-        } ${!isValid ? "bg-red-900/20" : ""}`}
+        className={`${getCellClasses({
+          isSelected,
+          isMultiSelected,
+          isActiveSearchMatch,
+          isSearchMatch,
+          isValid,
+        })} px-2`}
         onClick={handleClick}
         onContextMenu={onRightClick}
         onMouseEnter={handleMouseEnter}

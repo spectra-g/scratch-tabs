@@ -14,6 +14,8 @@ releases:
         changes:
           - "**Smart View for Properties:** Validate, edit, convert Properties with a dedicated builder"
           - "**Smart View for INI:** Validate, edit, convert INI with a dedicated builder"
+          - "**CSV Smart View:** Search capabilities"
+          - "**CSV Smart View:** Shift cells to the right where columns are missing"
       - name: "🔧 Technical Highlights"
         changes:
           - "Improved JSON, Csv and R auto detection algorithms"

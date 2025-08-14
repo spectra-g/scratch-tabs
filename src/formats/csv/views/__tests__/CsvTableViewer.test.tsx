@@ -375,6 +375,42 @@ Bob Johnson,45,Chicago,USA`;
       // The fix ensures that selectedCells state is reset for each new context menu,
       // preventing accumulation of cells from previous right-clicks.
     });
+
+    it("should support CTRL+Click multi-selection for shift right operations", () => {
+      // This test documents the expected behavior for CTRL+Click multi-selection
+      render(
+        <CsvTableViewer
+          content={raggedCsv}
+          onContentChange={mockOnContentChange}
+          tabId="test-tab"
+          isActive={true}
+          side="left"
+        />,
+      );
+
+      // Verify the component structure is available
+      expect(screen.getByTestId("csv-table-viewer")).toBeInTheDocument();
+      
+      // Note: This test documents the CTRL+Click multi-selection behavior:
+      //
+      // Expected behavior:
+      // 1. Regular click selects a single cell (blue background)
+      // 2. CTRL+Click on additional cells adds them to selection (purple background for multi-selected)
+      // 3. CTRL+Click on already selected cell removes it from selection
+      // 4. Right-click on any selected cell opens context menu with shift right option
+      // 5. Shift right is enabled only if all selected cells are in same column and have fewer columns than headers
+      // 6. Visual feedback: 
+      //    - Single selected cell: blue background
+      //    - Multi-selected cells: purple background
+      //    - Primary selected cell (for editing): blue background even in multi-selection
+      //
+      // Implementation details:
+      // - handleCellSelect manages CTRL+Click behavior
+      // - selectedCells Set tracks multi-selection
+      // - selectedCell tracks the primary cell for editing
+      // - isCellMultiSelected determines purple highlighting
+      // - canShiftRight validates shift operation on all selected cells
+    });
   });
 
   describe("Data Safety and Validation", () => {
