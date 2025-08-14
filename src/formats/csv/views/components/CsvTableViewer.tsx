@@ -180,9 +180,9 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       columnId,
     });
     
-    // Add to selected cells
+    // Set selected cells to only the current cell (clear any previous selections)
     const cellKey = `${rowId}-${columnId}`;
-    setSelectedCells(prev => new Set([...Array.from(prev), cellKey]));
+    setSelectedCells(new Set([cellKey]));
   }, []);
 
   const closeContextMenu = useCallback(() => {
