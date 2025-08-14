@@ -40,6 +40,12 @@ interface DuplicateGroup {
   count: number;
 }
 
+interface SearchMatch {
+  rowId: string;
+  columnId: string;
+  rowIndex: number;
+}
+
 export const CsvTableViewer: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
@@ -64,7 +70,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchMatches, setSearchMatches] = useState<Array<{rowId: string, columnId: string, rowIndex: number}>>([]);
+  const [searchMatches, setSearchMatches] = useState<SearchMatch[]>([]);
   const [searchActiveIndex, setSearchActiveIndex] = useState(0);
 
   // Context menu state
@@ -630,6 +636,9 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     setStatsPopover,
     isColumnMasked,
     toggleColumnMask,
+    searchQuery,
+    isCellSearchMatch,
+    isCellActiveSearchMatch,
   ]);
 
   const table = useReactTable({
@@ -659,7 +668,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       return;
     }
 
-    const matches: Array<{rowId: string, columnId: string, rowIndex: number}> = [];
+    const matches: SearchMatch[] = [];
     const lowerQuery = query.toLowerCase();
 
     filteredData.forEach((row, rowIndex) => {
@@ -679,12 +688,36 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
     setSearchMatches(matches);
     setSearchActiveIndex(matches.length > 0 ? 0 : 0);
+    
+    // Auto-select the first match when search results change
+    if (matches.length > 0) {
+      const firstMatch = matches[0];
+      setSelectedCell({
+        rowId: firstMatch.rowId,
+        columnId: firstMatch.columnId,
+      });
+    }
   }, [filteredData, columns]);
 
-  // Update search when query or data changes
+  // Scroll to search match (separate effect to avoid dependency loop)
   useEffect(() => {
-    performSearch(searchQuery);
-  }, [searchQuery, performSearch]);
+    if (searchMatches.length > 0 && searchActiveIndex >= 0) {
+      const activeMatch = searchMatches[searchActiveIndex];
+      if (activeMatch) {
+        rowVirtualizer.scrollToIndex(activeMatch.rowIndex, {
+          align: "center",
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [searchActiveIndex, searchMatches, rowVirtualizer]);
+
+  // Handler for search input changes, replacing the useEffect
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    // Pass the new query directly, as the state update is async
+    performSearch(query);
+  }, [performSearch]);
 
   // Search navigation functions
   const handleSearchNext = useCallback(() => {
@@ -692,8 +725,14 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       const nextIndex = (searchActiveIndex + 1) % searchMatches.length;
       setSearchActiveIndex(nextIndex);
       
-      // Scroll to the active match
+      // Select the active match cell for better visibility
       const match = searchMatches[nextIndex];
+      setSelectedCell({
+        rowId: match.rowId,
+        columnId: match.columnId,
+      });
+      
+      // Scroll to the active match
       rowVirtualizer.scrollToIndex(match.rowIndex, {
         align: "center",
         behavior: "smooth",
@@ -706,8 +745,14 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       const prevIndex = searchActiveIndex === 0 ? searchMatches.length - 1 : searchActiveIndex - 1;
       setSearchActiveIndex(prevIndex);
       
-      // Scroll to the active match
+      // Select the active match cell for better visibility
       const match = searchMatches[prevIndex];
+      setSelectedCell({
+        rowId: match.rowId,
+        columnId: match.columnId,
+      });
+      
+      // Scroll to the active match
       rowVirtualizer.scrollToIndex(match.rowIndex, {
         align: "center",
         behavior: "smooth",
@@ -877,7 +922,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         onUndo={undo}
         onRedo={redo}
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        onSearchChange={handleSearchChange}
         searchMatchCount={searchMatches.length}
         searchActiveIndex={searchActiveIndex}
         onSearchNext={handleSearchNext}

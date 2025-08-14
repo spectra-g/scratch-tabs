@@ -162,6 +162,14 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                // Prevent Enter and other keys from bubbling to table container
+                e.stopPropagation();
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  // Optional: could trigger "go to first match" behavior here
+                }
+              }}
               className="pl-10 pr-8 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 w-48"
               data-testid="search-input"
             />

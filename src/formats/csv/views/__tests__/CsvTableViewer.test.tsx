@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { CsvTableViewer } from "../components/CsvTableViewer";
 
@@ -198,6 +198,107 @@ Alice Johnson,25,New York,Canada`;
       // Clear button should be visible (X button in search input)
       const clearButton = searchInput.parentElement?.querySelector('button[title="Clear search"]');
       expect(clearButton).toBeInTheDocument();
+    });
+
+    it("should not select table cell when pressing Enter in search input", () => {
+      render(
+        <CsvTableViewer
+          content={searchableCsv}
+          onContentChange={mockOnContentChange}
+          tabId="test-tab"
+          isActive={true}
+          side="left"
+        />,
+      );
+
+      const searchInput = screen.getByTestId("search-input");
+      
+      // Focus search input and press Enter
+      searchInput.focus();
+      fireEvent.keyDown(searchInput, { key: "Enter", code: "Enter" });
+      
+      // Should not trigger cell selection or any table navigation
+      // The search input should handle Enter without bubbling to table
+      expect(searchInput).toHaveFocus();
+    });
+
+    it("should navigate through search matches with visual feedback", async () => {
+      render(
+        <CsvTableViewer
+          content={searchableCsv}
+          onContentChange={mockOnContentChange}
+          tabId="test-tab"
+          isActive={true}
+          side="left"
+        />,
+      );
+
+      const searchInput = screen.getByTestId("search-input");
+      
+      // Search for "Johnson" which appears in 2 cells
+      fireEvent.change(searchInput, { target: { value: "Johnson" } });
+      
+      // Wait for search to process
+      const nextButton = screen.getByTestId("search-next");
+      const prevButton = screen.getByTestId("search-previous");
+      
+      // Should show "1 of 2"
+      expect(screen.getByTestId("search-match-count")).toHaveTextContent("1 of 2");
+      
+      // Click next - should go to "2 of 2"
+      fireEvent.click(nextButton);
+      expect(screen.getByTestId("search-match-count")).toHaveTextContent("2 of 2");
+      
+      // Click next again - should cycle back to "1 of 2"
+      fireEvent.click(nextButton);
+      expect(screen.getByTestId("search-match-count")).toHaveTextContent("1 of 2");
+      
+      // Click previous - should go to "2 of 2"
+      fireEvent.click(prevButton);
+      expect(screen.getByTestId("search-match-count")).toHaveTextContent("2 of 2");
+    });
+
+    it("should clear search highlights when search input is cleared", async () => {
+      render(
+        <CsvTableViewer
+          content={searchableCsv}
+          onContentChange={mockOnContentChange}
+          tabId="test-tab"
+          isActive={true}
+          side="left"
+        />,
+      );
+
+      const searchInput = screen.getByTestId("search-input");
+      
+      // Search for "Johnson" to create highlights
+      fireEvent.change(searchInput, { target: { value: "Johnson" } });
+      
+      // Should show search results
+      expect(screen.getByTestId("search-match-count")).toHaveTextContent("1 of 2");
+      
+      // Verify that highlighted text exists in the DOM (there are 2 "Johnson" instances)
+      expect(screen.getAllByText("Johnson", { selector: "mark" })).toHaveLength(2);
+      
+      // Now clear by typing empty string (this should work like normal typing)
+      fireEvent.change(searchInput, { target: { value: "" } });
+      
+      // Search query should be cleared
+      expect(searchInput).toHaveValue("");
+      
+      // Wait for the state updates to complete
+      await waitFor(() => {
+        // Search navigation should be hidden
+        expect(screen.queryByTestId("search-match-count")).not.toBeInTheDocument();
+        
+        // Most importantly: highlighted text should no longer exist in the DOM
+        expect(screen.queryAllByText("Johnson", { selector: "mark" })).toHaveLength(0);
+      });
+      
+      // But the regular text should still be present (might need to wait for virtualization)
+      await waitFor(() => {
+        expect(screen.getAllByText(/Johnson/)).toHaveLength(2);
+      });
     });
   });
 

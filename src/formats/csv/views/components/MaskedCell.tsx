@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Edit3, Copy, Eye, EyeOff } from "../../../../components/Icons";
+import { highlightSearchTerm } from "../utils/searchHighlight";
 
 interface MaskedCellProps {
   value: string;
@@ -23,50 +24,31 @@ interface MaskedCellProps {
   'data-col'?: string;
 }
 
-export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
-  ({
-    value,
-    isSelected,
-    isValid,
-    error,
-    startEditing,
-    isMasked,
-    onSelect,
-    onStartEdit,
-    onChange,
-    onEditingChange,
-    onToggleMask,
-    isSearchMatch = false,
-    isActiveSearchMatch = false,
-    searchQuery = "",
-    onRightClick,
-    'data-testid': dataTestId,
-    'data-row': dataRow,
-    'data-col': dataCol,
-  }) => {
+export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
+  value,
+  isSelected,
+  isValid,
+  error,
+  startEditing,
+  isMasked,
+  onSelect,
+  onStartEdit,
+  onChange,
+  onEditingChange,
+  onToggleMask,
+  isSearchMatch = false,
+  isActiveSearchMatch = false,
+  searchQuery = "",
+  onRightClick,
+  'data-testid': dataTestId,
+  'data-row': dataRow,
+  'data-col': dataCol,
+}) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
     const [isHovered, setIsHovered] = useState(false);
     const [isTemporarilyUnmasked, setIsTemporarilyUnmasked] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
-
-    // Highlight search terms in text
-    const highlightSearchTerm = useCallback((text: string, query: string) => {
-      if (!query || !text) return text;
-      
-      const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
-      
-      return parts.map((part, index) => {
-        if (part.toLowerCase() === query.toLowerCase()) {
-          return (
-            <mark key={index} className="bg-yellow-400 text-black px-0.5 rounded">
-              {part}
-            </mark>
-          );
-        }
-        return part;
-      });
-    }, []);
 
     // Start editing when triggered
     useEffect(() => {
@@ -184,7 +166,9 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
     return (
       <div
         className={`h-full min-h-[35px] flex items-center px-2 cursor-cell transition-colors relative group ${
-          isSelected
+          isSelected && isActiveSearchMatch
+            ? "bg-orange-500/50 ring-2 ring-orange-400 shadow-lg"
+            : isSelected
             ? "bg-blue-900/30 ring-1 ring-blue-500"
             : isActiveSearchMatch
             ? "bg-orange-500/40 ring-2 ring-orange-400"
@@ -206,7 +190,7 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
           title={shouldShowMasked ? "Hover to reveal" : undefined}
         >
           {value ? (
-            isSearchMatch && !shouldShowMasked ? (
+            isSearchMatch && searchQuery && searchQuery.trim() && !shouldShowMasked ? (
               highlightSearchTerm(value, searchQuery)
             ) : (
               value

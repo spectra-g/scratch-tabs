@@ -171,17 +171,36 @@ describe("EditableCell", () => {
       expect(cell).toHaveClass("bg-blue-900/30", "ring-1", "ring-blue-500");
     });
 
-    it("should prioritize selected styling over search match styling", () => {
+    it("should show combined active search match and selected styling", () => {
       render(
         <EditableCell
           {...defaultProps}
           isSelected={true}
+          isActiveSearchMatch={true}
           isSearchMatch={true}
           searchQuery="Test"
         />
       );
 
-      // Should show selected styling, not search styling
+      // Should show combined orange active search + selected styling
+      const cell = screen.getByTitle(/click to select/i).closest('div');
+      expect(cell).toHaveClass("bg-orange-500/50", "ring-2", "ring-orange-400", "shadow-lg");
+      expect(cell).not.toHaveClass("bg-blue-900/30");
+      expect(cell).not.toHaveClass("bg-yellow-500/20");
+    });
+
+    it("should prioritize selected styling over regular search match styling", () => {
+      render(
+        <EditableCell
+          {...defaultProps}
+          isSelected={true}
+          isSearchMatch={true}
+          isActiveSearchMatch={false}
+          searchQuery="Test"
+        />
+      );
+
+      // Should show selected styling over regular search match
       const cell = screen.getByTitle(/click to select/i).closest('div');
       expect(cell).toHaveClass("bg-blue-900/30", "ring-1", "ring-blue-500");
       expect(cell).not.toHaveClass("bg-yellow-500/20");
