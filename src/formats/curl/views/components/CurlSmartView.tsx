@@ -132,6 +132,37 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
     onContentChange(newContent);
   }, [parsedDoc, activeCardId, onContentChange]);
 
+  // Handle duplicating a curl command
+  const handleDuplicateCommand = useCallback((blockId: string) => {
+    const blockToDuplicate = parsedDoc.find(block => block.id === blockId);
+    if (!blockToDuplicate || blockToDuplicate.type !== 'curl') {
+      return;
+    }
+    
+    // Create a new block with duplicated request
+    const duplicatedBlock: ParsedBlock = {
+      type: 'curl',
+      request: { ...blockToDuplicate.request },
+      raw: blockToDuplicate.raw,
+      id: `curl-duplicate-${Date.now()}`,
+    };
+    
+    // Insert the duplicated block right after the original
+    const originalIndex = parsedDoc.findIndex(block => block.id === blockId);
+    const updatedDoc = [
+      ...parsedDoc.slice(0, originalIndex + 1),
+      duplicatedBlock,
+      ...parsedDoc.slice(originalIndex + 1)
+    ];
+    
+    setParsedDoc(updatedDoc);
+    setActiveCardId(duplicatedBlock.id);
+    
+    // Sync back to content
+    const newContent = compileCurlDocument(updatedDoc);
+    onContentChange(newContent);
+  }, [parsedDoc, onContentChange]);
+
   if (!content.trim()) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-900 text-gray-400">
@@ -189,10 +220,11 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
                 <CurlCard
                   request={block.request}
                   isExpanded={activeCardId === block.id}
-                  onClick={() => setActiveCardId(block.id)}
+                  onClick={() => setActiveCardId(activeCardId === block.id ? null : block.id)}
                   onRequestChange={handleRequestChange}
                   onOpenInRestClient={handleOpenInRestClient}
                   onDelete={() => handleDeleteCommand(block.id)}
+                  onDuplicate={() => handleDuplicateCommand(block.id)}
                 />
               </motion.div>
             ))}
