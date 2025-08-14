@@ -14,6 +14,10 @@ interface MaskedCellProps {
   onChange: (value: string) => void;
   onEditingChange: (isEditing: boolean) => void;
   onToggleMask: () => void;
+  isSearchMatch?: boolean;
+  isActiveSearchMatch?: boolean;
+  searchQuery?: string;
+  onRightClick?: (e: React.MouseEvent) => void;
   'data-testid'?: string;
   'data-row'?: string;
   'data-col'?: string;
@@ -32,6 +36,10 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
     onChange,
     onEditingChange,
     onToggleMask,
+    isSearchMatch = false,
+    isActiveSearchMatch = false,
+    searchQuery = "",
+    onRightClick,
     'data-testid': dataTestId,
     'data-row': dataRow,
     'data-col': dataCol,
@@ -41,6 +49,24 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
     const [isHovered, setIsHovered] = useState(false);
     const [isTemporarilyUnmasked, setIsTemporarilyUnmasked] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Highlight search terms in text
+    const highlightSearchTerm = useCallback((text: string, query: string) => {
+      if (!query || !text) return text;
+      
+      const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+      
+      return parts.map((part, index) => {
+        if (part.toLowerCase() === query.toLowerCase()) {
+          return (
+            <mark key={index} className="bg-yellow-400 text-black px-0.5 rounded">
+              {part}
+            </mark>
+          );
+        }
+        return part;
+      });
+    }, []);
 
     // Start editing when triggered
     useEffect(() => {
@@ -160,9 +186,14 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
         className={`h-full min-h-[35px] flex items-center px-2 cursor-cell transition-colors relative group ${
           isSelected
             ? "bg-blue-900/30 ring-1 ring-blue-500"
+            : isActiveSearchMatch
+            ? "bg-orange-500/40 ring-2 ring-orange-400"
+            : isSearchMatch
+            ? "bg-yellow-500/20 ring-1 ring-yellow-400"
             : "hover:bg-gray-700/20"
         } ${!isValid ? "bg-red-900/20" : ""}`}
         onClick={handleClick}
+        onContextMenu={onRightClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         title={error || "Click to select. Click pencil or press enter to edit"}
@@ -174,7 +205,15 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
           className={`text-sm truncate flex-1 mr-2 select-none transition duration-150 ${shouldShowMasked ? "blur-[3px] hover:blur-none" : "text-gray-200"}`}
           title={shouldShowMasked ? "Hover to reveal" : undefined}
         >
-          {value || <span className="text-gray-500 italic">Empty</span>}
+          {value ? (
+            isSearchMatch && !shouldShowMasked ? (
+              highlightSearchTerm(value, searchQuery)
+            ) : (
+              value
+            )
+          ) : (
+            <span className="text-gray-500 italic">Empty</span>
+          )}
         </span>
         <div className="flex items-center space-x-1 w-16 justify-end">
           <button

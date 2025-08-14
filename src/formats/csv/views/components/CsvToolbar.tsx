@@ -13,6 +13,9 @@ import {
   Database,
   Code,
   ChevronDown,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { CsvDiagnostic, CsvSnapshot } from "../types";
 
@@ -28,6 +31,15 @@ interface CsvToolbarProps {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
+
+  // Search
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  searchMatchCount: number;
+  searchActiveIndex: number;
+  onSearchNext: () => void;
+  onSearchPrevious: () => void;
+  onClearSearch: () => void;
 
   // Snapshots
   snapshots: CsvSnapshot[];
@@ -64,6 +76,13 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   canRedo,
   onUndo,
   onRedo,
+  searchQuery,
+  onSearchChange,
+  searchMatchCount,
+  searchActiveIndex,
+  onSearchNext,
+  onSearchPrevious,
+  onClearSearch,
   snapshots,
   showSnapshotsPanel,
   onToggleSnapshotsPanel,
@@ -129,6 +148,66 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
         >
           <RotateCcw size={16} />
         </button>
+
+        <div className="w-px h-6 bg-gray-700 mx-2" />
+
+        {/* Search */}
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={16} className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-10 pr-8 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 w-48"
+              data-testid="search-input"
+            />
+            {searchQuery && (
+              <button
+                onClick={onClearSearch}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                title="Clear search"
+              >
+                <X size={14} className="text-gray-400 hover:text-gray-300" />
+              </button>
+            )}
+          </div>
+          
+          {searchQuery && (
+            <>
+              <span className="text-sm text-gray-400" data-testid="search-match-count">
+                {searchMatchCount > 0 
+                  ? `${searchActiveIndex + 1} of ${searchMatchCount}`
+                  : "0 matches"
+                }
+              </span>
+              
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={onSearchPrevious}
+                  disabled={searchMatchCount === 0}
+                  title="Previous match"
+                  className="p-1 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="search-previous"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={onSearchNext}
+                  disabled={searchMatchCount === 0}
+                  title="Next match"
+                  className="p-1 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="search-next"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="w-px h-6 bg-gray-700 mx-2" />
 

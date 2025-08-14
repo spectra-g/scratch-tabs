@@ -62,6 +62,20 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   const [showSnapshotsPanel, setShowSnapshotsPanel] = useState(false);
   const [duplicateSearchPerformed, setDuplicateSearchPerformed] = useState(false);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchMatches, setSearchMatches] = useState<Array<{rowId: string, columnId: string, rowIndex: number}>>([]);
+  const [searchActiveIndex, setSearchActiveIndex] = useState(0);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    rowId: string;
+    columnId: string;
+  } | null>(null);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+
   // Stats popover state
   const [statsPopover, setStatsPopover] = useState<{
     columnId: string;
@@ -97,6 +111,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     restoreSnapshot,
     deleteSnapshot,
     getColumnStats,
+    insertAndShift,
     toCsv,
     toJson,
     toMarkdown,
@@ -135,6 +150,92 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     },
     [maskedColumns],
   );
+
+
+  // Check if a cell is highlighted by search
+  const isCellSearchMatch = useCallback((rowId: string, columnId: string) => {
+    return searchMatches.some(match => match.rowId === rowId && match.columnId === columnId);
+  }, [searchMatches]);
+
+  // Check if a cell is the active search match
+  const isCellActiveSearchMatch = useCallback((rowId: string, columnId: string) => {
+    if (searchMatches.length === 0) return false;
+    const activeMatch = searchMatches[searchActiveIndex];
+    return activeMatch && activeMatch.rowId === rowId && activeMatch.columnId === columnId;
+  }, [searchMatches, searchActiveIndex]);
+
+  // Context menu functions
+  const handleCellRightClick = useCallback((e: React.MouseEvent, rowId: string, columnId: string) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      rowId,
+      columnId,
+    });
+    
+    // Add to selected cells
+    const cellKey = `${rowId}-${columnId}`;
+    setSelectedCells(prev => new Set([...Array.from(prev), cellKey]));
+  }, []);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  // Check if shift right action is safe for selected cells
+  const canShiftRight = useCallback(() => {
+    if (selectedCells.size === 0) return false;
+    
+    // Get all selected cells and group by column
+    const cellsByColumn = new Map<string, string[]>();
+    selectedCells.forEach(cellKey => {
+      const [rowId, columnId] = cellKey.split('-');
+      if (!cellsByColumn.has(columnId)) {
+        cellsByColumn.set(columnId, []);
+      }
+      cellsByColumn.get(columnId)!.push(rowId);
+    });
+    
+    // Check if all selected cells are in the same column
+    if (cellsByColumn.size !== 1) return false;
+    
+    // Check if each selected row has fewer columns than the header
+    const selectedRowIds = Array.from(cellsByColumn.values())[0];
+    return selectedRowIds.every(rowId => {
+      const row = data.find(r => r.id === rowId);
+      return row && row.cells.length < columns.length;
+    });
+  }, [selectedCells, data, columns]);
+
+  // Handle shift right action
+  const handleShiftRight = useCallback(() => {
+    if (!canShiftRight()) return;
+    
+    const cellIdentifiers = Array.from(selectedCells).map(cellKey => {
+      const [rowId, columnId] = cellKey.split('-');
+      return { rowId, columnId };
+    });
+    
+    // Execute the shift right operation
+    insertAndShift(cellIdentifiers);
+    
+    // Close context menu and clear selection
+    setContextMenu(null);
+    setSelectedCells(new Set());
+  }, [canShiftRight, selectedCells, insertAndShift]);
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu) {
+        closeContextMenu();
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [contextMenu, closeContextMenu]);
 
   // Efficient duplicate detection using hash map - O(n) complexity
   const findDuplicates = useCallback(() => {
@@ -389,6 +490,10 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                     editingCellTrigger?.columnId === column.id
                   }
                   isMasked={isMasked}
+                  isSearchMatch={isCellSearchMatch(row.original.id, column.id)}
+                  isActiveSearchMatch={isCellActiveSearchMatch(row.original.id, column.id)}
+                  searchQuery={searchQuery}
+                  onRightClick={(e) => handleCellRightClick(e, row.original.id, column.id)}
                   onSelect={() => {
                     setSelectedCell({
                       rowId: row.original.id,
@@ -440,6 +545,10 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   editingCellTrigger?.rowId === row.original.id &&
                   editingCellTrigger?.columnId === column.id
                 }
+                isSearchMatch={isCellSearchMatch(row.original.id, column.id)}
+                isActiveSearchMatch={isCellActiveSearchMatch(row.original.id, column.id)}
+                searchQuery={searchQuery}
+                onRightClick={(e) => handleCellRightClick(e, row.original.id, column.id)}
                 onSelect={() => {
                   setSelectedCell({
                     rowId: row.original.id,
@@ -541,6 +650,76 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     estimateSize: () => 35, // Estimated row height in pixels
     overscan: 10, // Render extra rows outside viewport for smooth scrolling
   });
+
+  // Search functionality (moved here to access filteredData and rowVirtualizer)
+  const performSearch = useCallback((query: string) => {
+    if (!query.trim()) {
+      setSearchMatches([]);
+      setSearchActiveIndex(0);
+      return;
+    }
+
+    const matches: Array<{rowId: string, columnId: string, rowIndex: number}> = [];
+    const lowerQuery = query.toLowerCase();
+
+    filteredData.forEach((row, rowIndex) => {
+      row.cells.forEach((cell, cellIndex) => {
+        if (cell.value && cell.value.toLowerCase().includes(lowerQuery)) {
+          const column = columns[cellIndex];
+          if (column) {
+            matches.push({
+              rowId: row.id,
+              columnId: column.id,
+              rowIndex,
+            });
+          }
+        }
+      });
+    });
+
+    setSearchMatches(matches);
+    setSearchActiveIndex(matches.length > 0 ? 0 : 0);
+  }, [filteredData, columns]);
+
+  // Update search when query or data changes
+  useEffect(() => {
+    performSearch(searchQuery);
+  }, [searchQuery, performSearch]);
+
+  // Search navigation functions
+  const handleSearchNext = useCallback(() => {
+    if (searchMatches.length > 0) {
+      const nextIndex = (searchActiveIndex + 1) % searchMatches.length;
+      setSearchActiveIndex(nextIndex);
+      
+      // Scroll to the active match
+      const match = searchMatches[nextIndex];
+      rowVirtualizer.scrollToIndex(match.rowIndex, {
+        align: "center",
+        behavior: "smooth",
+      });
+    }
+  }, [searchMatches, searchActiveIndex, rowVirtualizer]);
+
+  const handleSearchPrevious = useCallback(() => {
+    if (searchMatches.length > 0) {
+      const prevIndex = searchActiveIndex === 0 ? searchMatches.length - 1 : searchActiveIndex - 1;
+      setSearchActiveIndex(prevIndex);
+      
+      // Scroll to the active match
+      const match = searchMatches[prevIndex];
+      rowVirtualizer.scrollToIndex(match.rowIndex, {
+        align: "center",
+        behavior: "smooth",
+      });
+    }
+  }, [searchMatches, searchActiveIndex, rowVirtualizer]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setSearchMatches([]);
+    setSearchActiveIndex(0);
+  }, []);
 
   // Calculate column widths based on content sampling
   const columnWidths = useMemo(() => {
@@ -697,6 +876,13 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         canRedo={canRedo}
         onUndo={undo}
         onRedo={redo}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchMatchCount={searchMatches.length}
+        searchActiveIndex={searchActiveIndex}
+        onSearchNext={handleSearchNext}
+        onSearchPrevious={handleSearchPrevious}
+        onClearSearch={handleClearSearch}
         snapshots={snapshots}
         showSnapshotsPanel={showSnapshotsPanel}
         onToggleSnapshotsPanel={setShowSnapshotsPanel}
@@ -841,6 +1027,43 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             onClose={() => setStatsPopover(null)}
             position={statsPopover.position}
           />
+        </>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <>
+          {/* Click-outside overlay */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={closeContextMenu}
+          />
+          <div
+            className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50 min-w-[200px]"
+            style={{
+              left: contextMenu.x,
+              top: contextMenu.y,
+            }}
+          >
+            <div className="py-1">
+              <button
+                onClick={handleShiftRight}
+                disabled={!canShiftRight()}
+                className={`flex items-center w-full px-3 py-2 text-sm text-left transition-colors ${
+                  canShiftRight()
+                    ? 'text-gray-200 hover:bg-gray-700'
+                    : 'text-gray-500 cursor-not-allowed'
+                }`}
+                title={
+                  canShiftRight()
+                    ? 'Insert empty cell and shift remaining cells right'
+                    : 'Only available for cells in same column where row has fewer columns than headers'
+                }
+              >
+                <span>Insert Empty Cell & Shift Right</span>
+              </button>
+            </div>
+          </div>
         </>
       )}
     </div>
