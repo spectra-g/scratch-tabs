@@ -431,16 +431,18 @@ port = 5432`;
       />
     );
 
-    // Click the add section button in editor
-    const addButton = screen.getByText("Add Section");
-    fireEvent.click(addButton);
+    // Click the add section button in tree header (Plus icon)
+    const addButtons = screen.getAllByTitle("Add new section");
+    const treeHeaderButton = addButtons.find(btn => btn.className.includes("text-gray-400"));
+    expect(treeHeaderButton).toBeInTheDocument();
+    fireEvent.click(treeHeaderButton!);;
 
     // Cancel the form
     const cancelButton = screen.getAllByText("Cancel")[0]; // Get first Cancel button
     fireEvent.click(cancelButton);
 
     // Form should close
-    expect(screen.queryByPlaceholderText("section_name")).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Section name")).not.toBeInTheDocument();
   });
 
   it("should disable Add button when section name is empty", () => {
@@ -454,16 +456,18 @@ port = 5432`;
       />
     );
 
-    // Click the add section button in editor
-    const addButton = screen.getByText("Add Section");
-    fireEvent.click(addButton);
+    // Click the add section button in tree header (Plus icon)
+    const addButtons = screen.getAllByTitle("Add new section");
+    const treeHeaderButton = addButtons.find(btn => btn.className.includes("text-gray-400"));
+    expect(treeHeaderButton).toBeInTheDocument();
+    fireEvent.click(treeHeaderButton!);;
 
     // Add button should be disabled when input is empty
-    const addSectionButton = screen.getByText("Add Section", { selector: "button" });
+    const addSectionButton = screen.getByText("Add", { selector: "button" });
     expect(addSectionButton).toBeDisabled();
 
     // Type something and it should become enabled
-    const input = screen.getByPlaceholderText("section_name");
+    const input = screen.getByPlaceholderText("Section name");
     fireEvent.change(input, { target: { value: "test" } });
     
     expect(addSectionButton).not.toBeDisabled();
