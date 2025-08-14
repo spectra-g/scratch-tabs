@@ -45,78 +45,52 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
     convertToYaml,
   } = iniData;
 
-  // Track selected node (can be root, section, or individual key)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>('root');
-  
-  // Add section form state
   const [showAddSectionForm, setShowAddSectionForm] = useState(false);
   const [newSectionName, setNewSectionName] = useState("");
 
-  // Handle node selection and update the underlying section selection
+  const findNodeInTree = useCallback((nodes: IniTreeNode[], nodeId: string): IniTreeNode | null => {
+    for (const node of nodes) {
+      if (node.id === nodeId) return node;
+      if (node.children?.length) {
+        const found = findNodeInTree(node.children, nodeId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }, []);
+
   const handleSetSelectedNode = useCallback((nodeId: string | null) => {
-    // Always ensure we set to 'root' for consistency when viewing all sections
     const normalizedNodeId = (!nodeId || nodeId === 'root') ? 'root' : nodeId;
     setSelectedNodeId(normalizedNodeId);
     
     if (normalizedNodeId === 'root') {
-      // Root node selected - show all sections
       setSelectedSectionId(null);
     } else {
-      // Find the node in the tree
-      const findNode = (nodes: IniTreeNode[]): IniTreeNode | null => {
-        for (const node of nodes) {
-          if (node.id === nodeId) return node;
-          if (node.children && node.children.length > 0) {
-            const found = findNode(node.children);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      
-      const selectedNode = findNode(treeNodes);
+      const selectedNode = findNodeInTree(treeNodes, normalizedNodeId);
       if (selectedNode) {
         if (selectedNode.type === 'section') {
-          // Section node selected
           setSelectedSectionId(selectedNode.id);
         } else if (selectedNode.type === 'key') {
-          // Key node selected - select its parent section
           setSelectedSectionId(selectedNode.sectionId);
         }
       }
     }
-  }, [treeNodes, setSelectedSectionId]);
+  }, [treeNodes, setSelectedSectionId, findNodeInTree]);
 
-  // Get filtered data based on selection
   const getFilteredData = useCallback(() => {
     if (!selectedNodeId || selectedNodeId === 'root') {
-      // Show all sections
       return sections;
     }
     
-    // Find the selected node
-    const findNode = (nodes: IniTreeNode[]): IniTreeNode | null => {
-      for (const node of nodes) {
-        if (node.id === selectedNodeId) return node;
-        if (node.children && node.children.length > 0) {
-          const found = findNode(node.children);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    
-    const selectedNode = findNode(treeNodes);
+    const selectedNode = findNodeInTree(treeNodes, selectedNodeId);
     if (!selectedNode) return sections;
     
     if (selectedNode.type === 'section') {
-      // Show only this section
       return sections.filter(s => s.id === selectedNode.id);
     } else if (selectedNode.type === 'key') {
-      // Show only the section containing this key, but filter the lines to show only this specific key
       const parentSection = sections.find(s => s.id === selectedNode.sectionId);
       if (parentSection) {
-        // Create a filtered version of the section with only the selected key
         const filteredSection = {
           ...parentSection,
           lines: parentSection.lines.filter(line => line.id === selectedNode.id || line.type === 'COMMENT')
@@ -127,11 +101,10 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
     }
     
     return sections;
-  }, [selectedNodeId, sections, treeNodes]);
+  }, [selectedNodeId, sections, treeNodes, findNodeInTree]);
 
   const filteredSections = getFilteredData();
 
-  // Handle add section
   const handleAddSection = useCallback(() => {
     if (newSectionName.trim()) {
       addSection(newSectionName.trim());
@@ -140,7 +113,6 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
     }
   }, [newSectionName, addSection]);
 
-  // Handle converter actions
   const handleConvertToJson = useCallback(() => {
     const jsonContent = convertToJson();
     const tab = createTab({
@@ -192,7 +164,6 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
         <div className="flex-none p-3 border-b border-gray-700">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-300">INI Structure</h3>
-            {/* Show Add Section button when viewing All Sections or when no specific node is selected */}
             {(!selectedNodeId || selectedNodeId === 'root') && (
               <button
                 onClick={() => setShowAddSectionForm(!showAddSectionForm)}
@@ -208,17 +179,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
             {selectedNodeId && selectedNodeId !== 'root' && (
               <span className="ml-2 text-blue-400">
                 (filtered by {(() => {
-                  const findNode = (nodes: IniTreeNode[]): IniTreeNode | null => {
-                    for (const node of nodes) {
-                      if (node.id === selectedNodeId) return node;
-                      if (node.children && node.children.length > 0) {
-                        const found = findNode(node.children);
-                        if (found) return found;
-                      }
-                    }
-                    return null;
-                  };
-                  const node = findNode(treeNodes);
+                  const node = findNodeInTree(treeNodes, selectedNodeId);
                   return node ? node.name : selectedNodeId;
                 })()})
               </span>

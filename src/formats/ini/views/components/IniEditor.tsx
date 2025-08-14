@@ -45,12 +45,9 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   const [newValue, setNewValue] = useState("");
   const [newComment, setNewComment] = useState("");
   const [maskedKeys, setMaskedKeys] = useState<Set<string>>(new Set());
-  
-  // Add Section form state
   const [showAddSectionForm, setShowAddSectionForm] = useState(false);
   const [newSectionName, setNewSectionName] = useState("");
 
-  // Get all key-value pairs from all sections if no section is selected
   const displayLines = selectedSection 
     ? selectedSection.lines.filter(line => line.type === 'PAIR')
     : sections.flatMap(section => 
@@ -110,17 +107,12 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   const handleAddKeyValue = useCallback(() => {
     if (!newKey.trim()) return;
 
-    // If no section is selected, we need to choose a section or create one
     let targetSectionId = selectedSectionId;
     
     if (!targetSectionId) {
-      // If no section is selected and we're in "All Sections" view,
-      // try to add to the first available section or create a global section
       if (sections.length > 0) {
         targetSectionId = sections[0].id;
       } else {
-        // No sections exist, we might need to create one
-        // For now, just return silently as this is a valid state
         return;
       }
     }
@@ -157,7 +149,6 @@ export const IniEditor: React.FC<IniEditorProps> = ({
       await navigator.clipboard.writeText(value);
     } catch {
       // Silently fail if clipboard access is not available
-      // This is common in some browser environments
     }
   }, []);
 
@@ -432,7 +423,6 @@ export const IniEditor: React.FC<IniEditorProps> = ({
               const lineIssues = getLineIssues(line.id);
               const hasError = lineIssues.some(issue => issue.type === 'error');
               const hasWarning = lineIssues.some(issue => issue.type === 'warning');
-              // const isSensitive = line.key && isSensitiveKey(line.key);
 
               return (
                 <div
