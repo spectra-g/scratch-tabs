@@ -1122,7 +1122,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                 title={
                   canShiftRight()
                     ? 'Insert empty cell and shift remaining cells right'
-                    : 'Only available for cells in same column where row has fewer columns than headers'
+                    : 'Not available when multiple cells are selected in the same row, or when selected rows already have maximum columns'
                 }
               >
                 <span>Insert Empty Cell & Shift Right</span>

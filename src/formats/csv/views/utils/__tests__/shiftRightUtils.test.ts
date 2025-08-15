@@ -68,7 +68,13 @@ describe('shiftRightUtils', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false for cells in different columns', () => {
+    it('should return true for cells in different columns (different rows)', () => {
+      const selectedCells = new Set(['row1-col1', 'row2-col2']);
+      const result = canPerformShiftRight(selectedCells, mockData, mockColumns);
+      expect(result).toBe(true);
+    });
+
+    it('should return false for multiple cells in same row', () => {
       const selectedCells = new Set(['row1-col1', 'row1-col2']);
       const result = canPerformShiftRight(selectedCells, mockData, mockColumns);
       expect(result).toBe(false);
@@ -84,6 +90,36 @@ describe('shiftRightUtils', () => {
       const selectedCells = new Set(['nonexistent-col1']);
       const result = canPerformShiftRight(selectedCells, mockData, mockColumns);
       expect(result).toBe(false);
+    });
+
+    it('should return true for multiple cells across different columns and rows', () => {
+      const selectedCells = new Set(['row1-col1', 'row2-col2', 'row1-col3']);
+      const result = canPerformShiftRight(selectedCells, mockData, mockColumns);
+      expect(result).toBe(false); // row1 has cells in col1 and col3 (same row, different columns)
+    });
+
+    it('should return true for cells spread across different rows and columns', () => {
+      const selectedCells = new Set(['row1-col2', 'row2-col1']);
+      const result = canPerformShiftRight(selectedCells, mockData, mockColumns);
+      expect(result).toBe(true); // Different rows, different columns - valid
+    });
+
+    it('should return false for complex selection with same-row conflict', () => {
+      const selectedCells = new Set(['row1-col1', 'row2-col2', 'row2-col3']);
+      const result = canPerformShiftRight(selectedCells, mockData, mockColumns);
+      expect(result).toBe(false); // row2 has cells in col2 and col3 (same row conflict)
+    });
+
+    it('should return true for user scenario - many cells spanning different columns and rows', () => {
+      const selectedCells = new Set(['row1-col1', 'row2-col2', 'row1-col3', 'row2-col1']);
+      const result = canPerformShiftRight(selectedCells, mockData, mockColumns);
+      expect(result).toBe(false); // This should be false because row1 has col1 and col3 (same row conflict)
+    });
+
+    it('should return true for valid multi-column selection across different rows', () => {
+      const selectedCells = new Set(['row1-col1', 'row2-col2']);
+      const result = canPerformShiftRight(selectedCells, mockData, mockColumns);
+      expect(result).toBe(true); // Different rows, different columns - should be valid
     });
   });
 

@@ -579,5 +579,39 @@ Bob Johnson,45,Chicago,USA`;
       expect(result.current.data[0].cells[1].value).toBe(originalValue);
       expect(result.current.data[0].cells).toHaveLength(3); // Back to original length
     });
+
+    it("should support multi-column selections across different rows", () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      const firstRowId = result.current.data[0].id;  // Has 3 cells (John Doe, 28, New York)
+      const secondRowId = result.current.data[1].id; // Has 2 cells (Jane Smith, 32)
+      const nameColumnId = result.current.columns[0].id; // Name column
+      const ageColumnId = result.current.columns[1].id;  // Age column
+
+      // Store original lengths
+      const originalFirstRowLength = result.current.data[0].cells.length;
+      const originalSecondRowLength = result.current.data[1].cells.length;
+
+      // Insert cells across different columns and rows (valid scenario)
+      act(() => {
+        result.current.insertAndShift([
+          { rowId: firstRowId, columnId: nameColumnId }, // Insert in row 1, name column
+          { rowId: secondRowId, columnId: ageColumnId }  // Insert in row 2, age column
+        ]);
+      });
+
+      // Verify both rows were modified
+      expect(result.current.data[0].cells).toHaveLength(originalFirstRowLength + 1);
+      expect(result.current.data[1].cells).toHaveLength(originalSecondRowLength + 1);
+
+      // Verify the empty cells were inserted at the correct positions
+      expect(result.current.data[0].cells[0].value).toBe(""); // Empty cell at name column
+      expect(result.current.data[0].cells[1].value).toBe("John Doe"); // Original name shifted right
+      
+      expect(result.current.data[1].cells[1].value).toBe(""); // Empty cell at age column
+      expect(result.current.data[1].cells[2].value).toBe("32"); // Original age shifted right
+    });
   });
 });

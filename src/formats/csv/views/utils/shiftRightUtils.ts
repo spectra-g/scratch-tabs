@@ -15,22 +15,28 @@ export const canPerformShiftRight = (
 ): boolean => {
   if (selectedCells.size === 0) return false;
   
-  // Get all selected cells and group by column
-  const cellsByColumn = new Map<string, string[]>();
+  // Get all selected cells and group by row to check for same-row conflicts
+  const cellsByRow = new Map<string, string[]>();
+  const selectedRowIds = new Set<string>();
+  
   selectedCells.forEach(cellKey => {
     const { rowId, columnId } = parseCellKey(cellKey);
-    if (!cellsByColumn.has(columnId)) {
-      cellsByColumn.set(columnId, []);
+    if (!cellsByRow.has(rowId)) {
+      cellsByRow.set(rowId, []);
     }
-    cellsByColumn.get(columnId)!.push(rowId);
+    cellsByRow.get(rowId)!.push(columnId);
+    selectedRowIds.add(rowId);
   });
   
-  // Check if all selected cells are in the same column
-  if (cellsByColumn.size !== 1) return false;
+  // Check if any row has multiple selected cells (not allowed)
+  for (const [rowId, columnIds] of cellsByRow) {
+    if (columnIds.length > 1) {
+      return false; // Multiple cells in same row
+    }
+  }
   
   // Check if each selected row has fewer columns than the header
-  const selectedRowIds = Array.from(cellsByColumn.values())[0];
-  return selectedRowIds.every(rowId => {
+  return Array.from(selectedRowIds).every(rowId => {
     const row = data.find(r => r.id === rowId);
     return row && row.cells.length < columns.length;
   });
