@@ -10,21 +10,21 @@ src/components/BatchTools/
 src/components/DiffModal/
 src/components/Macro/
 src/components/Search/
-src/components/SplitView/
+#src/components/SplitView/
 src/components/Tablet/
 src/components/TestFields/
 src/components/Welcome/
 src/components/Workspace/
 src/components/Tab/Management/
 src/components/Tab/__tests__/
-src/hooks/
+#src/hooks/
 src/constants/
-src/db/
+#src/db/
 src/features/
-src/services/
-src/stores/
+#src/services/
+#src/stores/
 #src/views/
-src/workers/
+#src/workers/
 
 src/tablets/
 #src/formats/__tests__/
@@ -36,6 +36,7 @@ src/formats/markdown
 src/formats/curl
 src/formats/stacktrace
 src/formats/properties
+src/formats/
 
 changelog/
 landing/
