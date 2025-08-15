@@ -353,20 +353,90 @@ export const usePropertiesData = (
 
   // Transformation functions
   const sortKeysAlphabetically = useCallback(() => {
-    const pairs = state.filter(line => line.type === 'PAIR') as PropertyPair[];
-    const nonPairs = state.filter(line => line.type !== 'PAIR');
+    // Build sections: comments followed by properties they describe
+    const sections: (PropertyComment | PropertyPair | PropertyBlank)[][] = [];
+    let currentSection: (PropertyComment | PropertyPair | PropertyBlank)[] = [];
+    let consecutiveBlankCount = 0;
     
-    const sortedPairs = [...pairs].sort((a, b) => a.key.localeCompare(b.key));
+    // Process lines and group them into sections
+    for (let i = 0; i < state.length; i++) {
+      const line = state[i];
+      
+      if (line.type === 'BLANK') {
+        consecutiveBlankCount++;
+        
+        // Only add one blank line per consecutive group
+        if (consecutiveBlankCount === 1) {
+          // Check if this blank line indicates a section boundary
+          if (currentSection.length > 0) {
+            const nextNonBlank = state.slice(i + 1).find(l => l.type !== 'BLANK');
+            if (nextNonBlank?.type === 'COMMENT') {
+              // End current section and add the blank line to separate sections
+              sections.push(currentSection);
+              currentSection = [line as PropertyBlank];
+            } else {
+              // Just add the blank line to current section
+              currentSection.push(line as PropertyBlank);
+            }
+          }
+        }
+        // Skip additional consecutive blank lines (consecutiveBlankCount > 1)
+        continue;
+      }
+      
+      // Reset blank line counter when we hit non-blank content
+      consecutiveBlankCount = 0;
+      
+      if (line.type === 'COMMENT') {
+        // If we already have properties in current section, start a new section
+        if (currentSection.some(l => l.type === 'PAIR')) {
+          sections.push(currentSection);
+          currentSection = [];
+        }
+        currentSection.push(line as PropertyComment);
+      } else if (line.type === 'PAIR') {
+        currentSection.push(line as PropertyPair);
+      }
+    }
     
-    // Rebuild state with sorted pairs and preserve non-pair lines at the beginning
-    const comments = nonPairs.filter(line => line.type === 'COMMENT');
-    const blanks = nonPairs.filter(line => line.type === 'BLANK');
+    // Add the final section
+    if (currentSection.length > 0) {
+      sections.push(currentSection);
+    }
     
-    const newState: PropertiesState = [
-      ...comments,
-      ...blanks,
-      ...sortedPairs,
-    ];
+    // Sort properties within each section while preserving comments and single blank lines
+    const sortedSections = sections.map(section => {
+      const comments = section.filter(line => line.type === 'COMMENT');
+      const properties = section.filter(line => line.type === 'PAIR') as PropertyPair[];
+      const blanks = section.filter(line => line.type === 'BLANK');
+      const sortedProperties = [...properties].sort((a, b) => a.key.localeCompare(b.key));
+      
+      // Only keep one blank line per section (if any)
+      const singleBlank = blanks.length > 0 ? [blanks[0]] : [];
+      
+      // Reconstruct section: single blank first (if any), then comments, then sorted properties
+      return [...singleBlank, ...comments, ...sortedProperties];
+    });
+    
+    // Flatten all sections into final state and remove consecutive blank lines
+    const flatState = sortedSections.flat();
+    
+    // Post-process to ensure no consecutive blank lines
+    const newState: PropertiesState = [];
+    let lastWasBlank = false;
+    
+    for (const line of flatState) {
+      if (line.type === 'BLANK') {
+        if (!lastWasBlank) {
+          newState.push(line);
+          lastWasBlank = true;
+        }
+        // Skip consecutive blank lines
+      } else {
+        newState.push(line);
+        lastWasBlank = false;
+      }
+    }
 
     setState(newState);
     syncToContent(newState);

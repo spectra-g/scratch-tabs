@@ -189,6 +189,219 @@ beta = value`;
       expect(lines[2]).toContain("zebra");
     });
 
+    it("should preserve comment sections with their related properties, sort within sections, and preserve single blank lines", async () => {
+      const contentWithBlankLines = `# Java-style Properties Configuration
+# Application settings
+app.name = My Application
+app.version = 1.0.3
+app.environment = production
+
+# Database configuration using dot notation
+database.host = localhost
+database.port = 5432
+database.username = admin
+database.password = secret
+database.pool.min = 5
+database.pool.max = 20
+
+# Server settings
+server.port = 8080
+server.timeout = 30000
+server.ssl.enabled = false
+
+# Features and toggles
+feature.authentication = true
+feature.logging = enabled
+feature.debug.mode = false
+
+# File paths and resources
+log.file.path = /var/log/application.log
+config.dir = /etc/myapp/
+temp.directory = /tmp/myapp/
+
+
+`;
+
+      const { result } = renderHook(() =>
+        usePropertiesData(contentWithBlankLines, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.sortKeysAlphabetically();
+      });
+
+      // Wait for debounced call
+      await new Promise(resolve => setTimeout(resolve, 350));
+
+      expect(mockOnContentChange).toHaveBeenCalled();
+      const sortedContent = mockOnContentChange.mock.calls[0][0];
+      
+      // Should preserve ALL comments
+      expect(sortedContent).toContain("# Java-style Properties Configuration");
+      expect(sortedContent).toContain("# Application settings");
+      expect(sortedContent).toContain("# Database configuration using dot notation");
+      expect(sortedContent).toContain("# Server settings");
+      expect(sortedContent).toContain("# Features and toggles");
+      expect(sortedContent).toContain("# File paths and resources");
+      
+      const lines = sortedContent.split('\n');
+      
+      // Should preserve single blank lines (one per section separator)
+      const blankLineCount = lines.filter(line => line.trim() === '').length;
+      expect(blankLineCount).toBeGreaterThan(0); // Should have some blank lines for separation
+      expect(blankLineCount).toBeLessThan(7); // Original had ~6+ blank lines, should be reduced
+      
+      // Should not have consecutive blank lines
+      let consecutiveBlankCount = 0;
+      let maxConsecutiveBlanks = 0;
+      
+      for (const line of lines) {
+        if (line.trim() === '') {
+          consecutiveBlankCount++;
+          maxConsecutiveBlanks = Math.max(maxConsecutiveBlanks, consecutiveBlankCount);
+        } else {
+          consecutiveBlankCount = 0;
+        }
+      }
+      
+      expect(maxConsecutiveBlanks).toBeLessThanOrEqual(1); // No more than 1 consecutive blank line
+      
+      // Comments should be kept with their related properties in sections
+      // Check that database comments come before database properties
+      const dbCommentIndex = lines.findIndex(line => line.includes("# Database configuration"));
+      const dbHostIndex = lines.findIndex(line => line.includes("database.host"));
+      expect(dbCommentIndex).toBeLessThan(dbHostIndex);
+      
+      // Check that properties within each section are sorted
+      const appLines = lines.slice(
+        lines.findIndex(line => line.includes("# Application settings")),
+        lines.findIndex(line => line.includes("# Database configuration"))
+      ).filter(line => line.includes('=') && !line.startsWith('#'));
+      
+      if (appLines.length > 1) {
+        expect(appLines[0]).toContain("app.environment");
+        expect(appLines[1]).toContain("app.name");
+        expect(appLines[2]).toContain("app.version");
+      }
+    });
+
+    it("should preserve comments and sort properties when comments exist in middle", async () => {
+      const contentWithMiddleComments = `database.host = localhost
+app.name = My Application
+
+# Some comment in middle
+app.version = 1.0.3
+
+server.port = 8080`;
+
+      const { result } = renderHook(() =>
+        usePropertiesData(contentWithMiddleComments, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.sortKeysAlphabetically();
+      });
+
+      // Wait for debounced call
+      await new Promise(resolve => setTimeout(resolve, 350));
+
+      expect(mockOnContentChange).toHaveBeenCalled();
+      const sortedContent = mockOnContentChange.mock.calls[0][0];
+      
+      // Should preserve the comment
+      expect(sortedContent).toContain("# Some comment in middle");
+      
+      // Should preserve single blank lines for section separation
+      const lines = sortedContent.split('\n');
+      const blankLineCount = lines.filter(line => line.trim() === '').length;
+      expect(blankLineCount).toBeGreaterThanOrEqual(1); // Should have at least one blank line
+      
+      // The sorting creates sections: properties before comment, then comment with following properties
+      // So the structure should be: first section properties (sorted), then comment + related properties
+      const commentIndex = lines.findIndex(line => line.includes("# Some comment in middle"));
+      const appVersionIndex = lines.findIndex(line => line.includes("app.version"));
+      expect(commentIndex).toBeLessThan(appVersionIndex); // Comment should come before its related property
+    });
+
+    it("should collapse multiple consecutive blank lines to single blank lines", async () => {
+      const contentWithMultipleBlankLines = `# Header comment
+app.name = My App
+
+
+# Another section with multiple blanks
+database.host = localhost
+
+
+
+# Final section
+server.port = 8080`;
+
+      const { result } = renderHook(() =>
+        usePropertiesData(contentWithMultipleBlankLines, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.sortKeysAlphabetically();
+      });
+
+      // Wait for debounced call
+      await new Promise(resolve => setTimeout(resolve, 350));
+
+      expect(mockOnContentChange).toHaveBeenCalled();
+      const sortedContent = mockOnContentChange.mock.calls[0][0];
+      
+      const lines = sortedContent.split('\n');
+      
+      // Should collapse multiple blank lines to single ones
+      const blankLineCount = lines.filter(line => line.trim() === '').length;
+      expect(blankLineCount).toBeLessThanOrEqual(2); // Should have reduced from 6 original blank lines
+      
+      // Should not have consecutive blank lines
+      let consecutiveBlankCount = 0;
+      let maxConsecutiveBlanks = 0;
+      
+      for (const line of lines) {
+        if (line.trim() === '') {
+          consecutiveBlankCount++;
+          maxConsecutiveBlanks = Math.max(maxConsecutiveBlanks, consecutiveBlankCount);
+        } else {
+          consecutiveBlankCount = 0;
+        }
+      }
+      
+      expect(maxConsecutiveBlanks).toBeLessThanOrEqual(1); // No more than 1 consecutive blank line
+    });
+
+    it("should handle sorting when file starts with properties (no header comments)", async () => {
+      const contentNoHeader = `zebra.config = value
+alpha.setting = value
+beta.option = value`;
+
+      const { result } = renderHook(() =>
+        usePropertiesData(contentNoHeader, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.sortKeysAlphabetically();
+      });
+
+      // Wait for debounced call
+      await new Promise(resolve => setTimeout(resolve, 350));
+
+      expect(mockOnContentChange).toHaveBeenCalled();
+      const sortedContent = mockOnContentChange.mock.calls[0][0];
+      
+      // Should not have any blank lines
+      const lines = sortedContent.split('\n');
+      const blankLineCount = lines.filter(line => line.trim() === '').length;
+      expect(blankLineCount).toBe(0);
+      
+      // Properties should be sorted alphabetically
+      expect(lines[0]).toContain("alpha.setting");
+      expect(lines[1]).toContain("beta.option");
+      expect(lines[2]).toContain("zebra.config");
+    });
+
     it("should group by prefix", async () => {
       const ungroupedContent = `app.name = App
 database.host = localhost
