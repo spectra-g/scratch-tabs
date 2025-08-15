@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useCsvData } from "../hooks/useCsvData";
 
 describe("useCsvData", () => {
@@ -387,6 +387,231 @@ Bob Johnson,32,Chicago`;
       expect(mockOnContentChange).toHaveBeenCalled();
       const calledWith = mockOnContentChange.mock.calls[0][0];
       expect(calledWith).toContain("Updated");
+    });
+  });
+
+  describe("insertAndShift", () => {
+    const raggedCsv = `Name,Age,City,Country
+John Doe,28,New York
+Jane Smith,32
+Bob Johnson,45,Chicago,USA`;
+
+    it("should insert empty cell and shift right for valid ragged rows", async () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      // Get the first row (John Doe,28,New York - missing Country)
+      const firstRowId = result.current.data[0].id;
+      const cityColumnId = result.current.columns[2].id; // City column
+      
+      // Verify initial state
+      expect(result.current.data[0].cells).toHaveLength(3);
+      expect(result.current.data[0].cells[2].value).toBe("New York");
+
+      // Clear previous calls
+      mockOnContentChange.mockClear();
+
+      // Insert empty cell and shift right
+      act(() => {
+        result.current.insertAndShift([
+          { rowId: firstRowId, columnId: cityColumnId }
+        ]);
+      });
+
+      // Verify the cell was inserted and content shifted
+      expect(result.current.data[0].cells).toHaveLength(4);
+      expect(result.current.data[0].cells[2].value).toBe(""); // New empty cell
+      expect(result.current.data[0].cells[3].value).toBe("New York"); // Shifted content
+      
+      // Wait for debounced onContentChange call (300ms delay)
+      await waitFor(() => {
+        expect(mockOnContentChange).toHaveBeenCalled();
+      }, { timeout: 1000 });
+      
+      const lastCall = mockOnContentChange.mock.calls[mockOnContentChange.mock.calls.length - 1];
+      expect(lastCall[0]).toContain("John Doe,28,,New York");
+    });
+
+    it("should handle multiple cells in same column", () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      const firstRowId = result.current.data[0].id;
+      const secondRowId = result.current.data[1].id;
+      const ageColumnId = result.current.columns[1].id; // Age column
+
+      // Insert empty cell for multiple rows
+      act(() => {
+        result.current.insertAndShift([
+          { rowId: firstRowId, columnId: ageColumnId },
+          { rowId: secondRowId, columnId: ageColumnId }
+        ]);
+      });
+
+      // Verify both rows were modified
+      expect(result.current.data[0].cells[1].value).toBe(""); // New empty cell
+      expect(result.current.data[0].cells[2].value).toBe("28"); // Shifted content
+      expect(result.current.data[1].cells[1].value).toBe(""); // New empty cell
+      expect(result.current.data[1].cells[2].value).toBe("32"); // Shifted content
+    });
+
+    it("should not modify rows that already have maximum columns", () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      const fullRowId = result.current.data[2].id; // Bob Johnson row has all 4 columns
+      const nameColumnId = result.current.columns[0].id;
+
+      // Store original state
+      const originalLength = result.current.data[2].cells.length;
+      const originalName = result.current.data[2].cells[0].value;
+
+      // Try to insert (should fail safety check)
+      act(() => {
+        result.current.insertAndShift([
+          { rowId: fullRowId, columnId: nameColumnId }
+        ]);
+      });
+
+      // Verify row was not modified
+      expect(result.current.data[2].cells).toHaveLength(originalLength);
+      expect(result.current.data[2].cells[0].value).toBe(originalName);
+    });
+
+    it("should not allow insertion across multiple columns", () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      const firstRowId = result.current.data[0].id;
+      const nameColumnId = result.current.columns[0].id;
+      const ageColumnId = result.current.columns[1].id;
+
+      // Store original state
+      const originalData = result.current.data[0].cells.map(cell => ({ ...cell }));
+
+      // Try to insert across different columns (should fail)
+      act(() => {
+        result.current.insertAndShift([
+          { rowId: firstRowId, columnId: nameColumnId },
+          { rowId: firstRowId, columnId: ageColumnId }
+        ]);
+      });
+
+      // Verify no changes were made
+      expect(result.current.data[0].cells).toHaveLength(originalData.length);
+      result.current.data[0].cells.forEach((cell, index) => {
+        expect(cell.value).toBe(originalData[index].value);
+      });
+    });
+
+    it("should handle empty cell identifiers gracefully", () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      const originalData = [...result.current.data];
+
+      // Call with empty array
+      act(() => {
+        result.current.insertAndShift([]);
+      });
+
+      // Verify no changes were made
+      expect(result.current.data).toHaveLength(originalData.length);
+      result.current.data.forEach((row, index) => {
+        expect(row.cells).toHaveLength(originalData[index].cells.length);
+      });
+    });
+
+    it("should handle non-existent row or column IDs gracefully", () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      const originalData = [...result.current.data];
+
+      // Call with invalid IDs
+      act(() => {
+        result.current.insertAndShift([
+          { rowId: "invalid-row-id", columnId: "invalid-column-id" }
+        ]);
+      });
+
+      // Verify no changes were made
+      expect(result.current.data).toHaveLength(originalData.length);
+      result.current.data.forEach((row, index) => {
+        expect(row.cells).toHaveLength(originalData[index].cells.length);
+      });
+    });
+
+    it("should integrate with undo/redo system", () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      const firstRowId = result.current.data[0].id;
+      const ageColumnId = result.current.columns[1].id;
+
+      // Store original state
+      const originalValue = result.current.data[0].cells[1].value;
+
+      // Perform insert and shift
+      act(() => {
+        result.current.insertAndShift([
+          { rowId: firstRowId, columnId: ageColumnId }
+        ]);
+      });
+
+      // Verify change was made
+      expect(result.current.data[0].cells[1].value).toBe("");
+      expect(result.current.data[0].cells[2].value).toBe(originalValue);
+
+      // Undo the change
+      act(() => {
+        result.current.undo();
+      });
+
+      // Verify state was restored
+      expect(result.current.data[0].cells[1].value).toBe(originalValue);
+      expect(result.current.data[0].cells).toHaveLength(3); // Back to original length
+    });
+
+    it("should support multi-column selections across different rows", () => {
+      const { result } = renderHook(() =>
+        useCsvData(raggedCsv, mockOnContentChange),
+      );
+
+      const firstRowId = result.current.data[0].id;  // Has 3 cells (John Doe, 28, New York)
+      const secondRowId = result.current.data[1].id; // Has 2 cells (Jane Smith, 32)
+      const nameColumnId = result.current.columns[0].id; // Name column
+      const ageColumnId = result.current.columns[1].id;  // Age column
+
+      // Store original lengths
+      const originalFirstRowLength = result.current.data[0].cells.length;
+      const originalSecondRowLength = result.current.data[1].cells.length;
+
+      // Insert cells across different columns and rows (valid scenario)
+      act(() => {
+        result.current.insertAndShift([
+          { rowId: firstRowId, columnId: nameColumnId }, // Insert in row 1, name column
+          { rowId: secondRowId, columnId: ageColumnId }  // Insert in row 2, age column
+        ]);
+      });
+
+      // Verify both rows were modified
+      expect(result.current.data[0].cells).toHaveLength(originalFirstRowLength + 1);
+      expect(result.current.data[1].cells).toHaveLength(originalSecondRowLength + 1);
+
+      // Verify the empty cells were inserted at the correct positions
+      expect(result.current.data[0].cells[0].value).toBe(""); // Empty cell at name column
+      expect(result.current.data[0].cells[1].value).toBe("John Doe"); // Original name shifted right
+      
+      expect(result.current.data[1].cells[1].value).toBe(""); // Empty cell at age column
+      expect(result.current.data[1].cells[2].value).toBe("32"); // Original age shifted right
     });
   });
 });

@@ -12,6 +12,7 @@ interface CurlCardProps {
   onRequestChange: (newRequest: CurlRequest) => void;
   onOpenInRestClient: () => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
 }
 
 export const CurlCard: React.FC<CurlCardProps> = ({
@@ -21,6 +22,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
   onRequestChange,
   onOpenInRestClient,
   onDelete,
+  onDuplicate,
 }) => {
   // Generate live curl command
   const generatedCurlCommand = useMemo(() => {
@@ -30,6 +32,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
   // State for feedback animations
   const [copyFeedback, setCopyFeedback] = useState<'idle' | 'success'>('idle');
   const [deleteFeedback, setDeleteFeedback] = useState<'idle' | 'confirm' | 'success' | 'error'>('idle');
+  const [duplicateFeedback, setDuplicateFeedback] = useState<'idle' | 'success' | 'error'>('idle');
   
   // Copy curl command to clipboard
   const handleCopyCommand = async () => {
@@ -58,6 +61,19 @@ export const CurlCard: React.FC<CurlCardProps> = ({
         setDeleteFeedback('error');
       }
       setTimeout(() => setDeleteFeedback('idle'), 2000);
+    }
+  };
+
+  // Handle duplicate
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDuplicate) {
+      onDuplicate();
+      setDuplicateFeedback('success');
+      setTimeout(() => setDuplicateFeedback('idle'), 2000);
+    } else {
+      setDuplicateFeedback('error');
+      setTimeout(() => setDuplicateFeedback('idle'), 2000);
     }
   };
   // Get method color
@@ -144,32 +160,58 @@ export const CurlCard: React.FC<CurlCardProps> = ({
               )}
             </div>
             
-            {/* Delete button */}
-            {onDelete && (
-              <button
-                onClick={handleDelete}
-                className={`p-1 rounded transition-colors ${
-                  deleteFeedback === 'confirm'
-                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                    : deleteFeedback === 'success'
-                    ? 'bg-green-500/20 text-green-400'
-                    : deleteFeedback === 'error'
-                    ? 'bg-red-500/20 text-red-400'
-                    : 'text-gray-500 hover:text-red-400 hover:bg-red-500/20'
-                }`}
-                title={deleteFeedback === 'confirm' ? 'Click again to confirm delete' : 'Delete this request'}
-              >
-                {deleteFeedback === 'confirm' ? (
-                  <X size={14} />
-                ) : deleteFeedback === 'success' ? (
-                  <Check size={14} />
-                ) : deleteFeedback === 'error' ? (
-                  <X size={14} />
-                ) : (
-                  <Trash2 size={14} />
-                )}
-              </button>
-            )}
+            {/* Action buttons */}
+            <div className="flex items-center space-x-1">
+              {/* Duplicate button */}
+              {onDuplicate && (
+                <button
+                  onClick={handleDuplicate}
+                  className={`p-1 rounded transition-colors ${
+                    duplicateFeedback === 'success'
+                      ? 'bg-green-500/20 text-green-400'
+                      : duplicateFeedback === 'error'
+                      ? 'bg-red-500/20 text-red-400'
+                      : 'text-gray-500 hover:text-blue-400 hover:bg-blue-500/20'
+                  }`}
+                  title="Duplicate this request"
+                >
+                  {duplicateFeedback === 'success' ? (
+                    <Check size={14} />
+                  ) : duplicateFeedback === 'error' ? (
+                    <X size={14} />
+                  ) : (
+                    <Copy size={14} />
+                  )}
+                </button>
+              )}
+              
+              {/* Delete button */}
+              {onDelete && (
+                <button
+                  onClick={handleDelete}
+                  className={`p-1 rounded transition-colors ${
+                    deleteFeedback === 'confirm'
+                      ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                      : deleteFeedback === 'success'
+                      ? 'bg-green-500/20 text-green-400'
+                      : deleteFeedback === 'error'
+                      ? 'bg-red-500/20 text-red-400'
+                      : 'text-gray-500 hover:text-red-400 hover:bg-red-500/20'
+                  }`}
+                  title={deleteFeedback === 'confirm' ? 'Click again to confirm delete' : 'Delete this request'}
+                >
+                  {deleteFeedback === 'confirm' ? (
+                    <X size={14} />
+                  ) : deleteFeedback === 'success' ? (
+                    <Check size={14} />
+                  ) : deleteFeedback === 'error' ? (
+                    <X size={14} />
+                  ) : (
+                    <Trash2 size={14} />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

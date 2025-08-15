@@ -75,6 +75,35 @@ That's all for now.`;
       // Should still parse as curl but with minimal data
       expect(result[0].type).toBe('curl');
     });
+
+    it('should parse complex multi-line curl with URL at the end', () => {
+      const content = `curl -X POST -H "x-skyott-provider: NOWTV" -H "x-skyott-proposition: NOWTV" \\
+  -H "x-skyott-territory: GB" -H \\
+  "content-type: application/x-www-form-urlencoded" -d \\
+  'userIdentifier=girish@test.com' -v \\
+  https://skyidappintl.sky.com/signin/otp`;
+
+      const result = parseCurlDocument(content);
+      
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('curl');
+      
+      if (result[0].type === 'curl') {
+        expect(result[0].request.method).toBe('POST');
+        expect(result[0].request.url).toBe('https://skyidappintl.sky.com/signin/otp');
+        expect(result[0].request.headers).toHaveLength(4);
+        expect(result[0].request.headers[0].key).toBe('x-skyott-provider');
+        expect(result[0].request.headers[0].value).toBe('NOWTV');
+        expect(result[0].request.headers[1].key).toBe('x-skyott-proposition');
+        expect(result[0].request.headers[1].value).toBe('NOWTV');
+        expect(result[0].request.headers[2].key).toBe('x-skyott-territory');
+        expect(result[0].request.headers[2].value).toBe('GB');
+        expect(result[0].request.headers[3].key).toBe('content-type');
+        expect(result[0].request.headers[3].value).toBe('application/x-www-form-urlencoded');
+        expect(result[0].request.body).toBe('userIdentifier=girish@test.com');
+        expect(result[0].request.otherOptions).toContainEqual({ flag: '-v' });
+      }
+    });
   });
 
   describe('getCurlDocumentSummary', () => {

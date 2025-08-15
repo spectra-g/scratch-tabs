@@ -202,6 +202,7 @@ export const tabletMetadata: TabletMetadata[] = [
             source: {
               tabId: context.tab.id,
               titleHint: `${context.tab.title} (Analysis)`,
+              side: context.side,
             }
           });
         }

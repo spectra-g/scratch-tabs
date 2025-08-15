@@ -154,13 +154,21 @@ function parseSingleCurlCommand(curlText: string): CurlRequest {
         i++;
       }
     } else if (token.startsWith('-')) {
-      // Other options
-      if (i + 1 < tokens.length && !tokens[i + 1].startsWith('-')) {
-        request.otherOptions.push({ flag: token, value: tokens[i + 1] });
-        i += 2;
-      } else {
+      // Handle known boolean flags that don't take values
+      const booleanFlags = ['-v', '--verbose', '-s', '--silent', '-i', '--include', '-I', '--head', '-L', '--location', '--compressed'];
+      
+      if (booleanFlags.includes(token)) {
         request.otherOptions.push({ flag: token });
         i++;
+      } else {
+        // Other options that might have values
+        if (i + 1 < tokens.length && !tokens[i + 1].startsWith('-')) {
+          request.otherOptions.push({ flag: token, value: tokens[i + 1] });
+          i += 2;
+        } else {
+          request.otherOptions.push({ flag: token });
+          i++;
+        }
       }
     } else if (!request.url && !token.startsWith('-')) {
       // First non-flag token is likely the URL

@@ -1,37 +1,48 @@
 import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Edit3, Copy, Check } from "../../../../components/Icons";
+import { highlightSearchTerm } from "../utils/searchHighlight";
+import { getCellClasses } from "../constants/cellStyles";
 
 interface EditableCellProps {
   value: string;
   isSelected: boolean;
+  isMultiSelected?: boolean;
   isValid: boolean;
   error?: string;
   startEditing: boolean;
-  onSelect: () => void;
+  onSelect: (e: React.MouseEvent) => void;
   onStartEdit: () => void;
   onChange: (value: string) => void;
   onEditingChange: (isEditing: boolean) => void;
+  isSearchMatch?: boolean;
+  isActiveSearchMatch?: boolean;
+  searchQuery?: string;
+  onRightClick?: (e: React.MouseEvent) => void;
   'data-testid'?: string;
   'data-row'?: string;
   'data-col'?: string;
 }
 
-export const EditableCell: React.FC<EditableCellProps> = React.memo(
-  ({
-    value,
-    isSelected,
-    isValid,
-    error,
-    startEditing,
-    onSelect,
-    onStartEdit,
-    onChange,
-    onEditingChange,
-    'data-testid': dataTestId,
-    'data-row': dataRow,
-    'data-col': dataCol,
-  }) => {
+export const EditableCell: React.FC<EditableCellProps> = React.memo(({
+  value,
+  isSelected,
+  isMultiSelected = false,
+  isValid,
+  error,
+  startEditing,
+  onSelect,
+  onStartEdit,
+  onChange,
+  onEditingChange,
+  isSearchMatch = false,
+  isActiveSearchMatch = false,
+  searchQuery = "",
+  onRightClick,
+  'data-testid': dataTestId,
+  'data-row': dataRow,
+  'data-col': dataCol,
+}) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
     const [copySuccess, setCopySuccess] = useState(false);
@@ -86,7 +97,7 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
-        onSelect();
+        onSelect(e);
       },
       [onSelect],
     );
@@ -134,12 +145,15 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
 
     return (
       <div
-        className={`h-full min-h-[35px] flex items-center cursor-cell transition-colors relative group ${
-          isSelected
-            ? "bg-blue-900/30 ring-1 ring-blue-500"
-            : "hover:bg-gray-700/20"
-        } ${!isValid ? "bg-red-900/20" : ""}`}
+        className={getCellClasses({
+          isSelected,
+          isMultiSelected,
+          isActiveSearchMatch,
+          isSearchMatch,
+          isValid,
+        })}
         onClick={handleClick}
+        onContextMenu={onRightClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         title={error || "Click to select. Click pencil or press enter to edit"}
@@ -152,7 +166,15 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(
             isHovered ? "pr-16" : "pr-2"
           }`}
         >
-          {value || <span className="text-gray-500 italic">Empty</span>}
+          {value ? (
+            isSearchMatch && searchQuery && searchQuery.trim() ? (
+              highlightSearchTerm(value, searchQuery)
+            ) : (
+              value
+            )
+          ) : (
+            <span className="text-gray-500 italic">Empty</span>
+          )}
         </span>
         <div 
           className={`absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1 transition-opacity duration-150 ${

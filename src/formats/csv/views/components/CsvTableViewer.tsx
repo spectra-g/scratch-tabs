@@ -33,11 +33,19 @@ import { createTab } from "../../../../utils/tabUtils";
 import { EditableCell } from "./EditableCell";
 import { MaskedCell } from "./MaskedCell";
 import { isSensitiveHeader } from "../utils/sensitiveUtils";
+import { createCellKey, parseCellKey } from "../utils/cellUtils";
+import { canPerformShiftRight, getShiftRightCellIdentifiers } from "../utils/shiftRightUtils";
 
 interface DuplicateGroup {
   rowString: string;
   rowIds: string[];
   count: number;
+}
+
+interface SearchMatch {
+  rowId: string;
+  columnId: string;
+  rowIndex: number;
 }
 
 export const CsvTableViewer: React.FC<SmartViewProps> = ({
@@ -61,6 +69,20 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [showSnapshotsPanel, setShowSnapshotsPanel] = useState(false);
   const [duplicateSearchPerformed, setDuplicateSearchPerformed] = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchMatches, setSearchMatches] = useState<SearchMatch[]>([]);
+  const [searchActiveIndex, setSearchActiveIndex] = useState(0);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    rowId: string;
+    columnId: string;
+  } | null>(null);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
 
   // Stats popover state
   const [statsPopover, setStatsPopover] = useState<{
@@ -97,6 +119,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     restoreSnapshot,
     deleteSnapshot,
     getColumnStats,
+    insertAndShift,
     toCsv,
     toJson,
     toMarkdown,
@@ -135,6 +158,136 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     },
     [maskedColumns],
   );
+
+
+  // Check if a cell is highlighted by search
+  const isCellSearchMatch = useCallback((rowId: string, columnId: string) => {
+    return searchMatches.some(match => match.rowId === rowId && match.columnId === columnId);
+  }, [searchMatches]);
+
+  // Check if a cell is the active search match
+  const isCellActiveSearchMatch = useCallback((rowId: string, columnId: string) => {
+    if (searchMatches.length === 0) return false;
+    const activeMatch = searchMatches[searchActiveIndex];
+    return activeMatch && activeMatch.rowId === rowId && activeMatch.columnId === columnId;
+  }, [searchMatches, searchActiveIndex]);
+
+  // Check if a cell is multi-selected
+  const isCellMultiSelected = useCallback((rowId: string, columnId: string) => {
+    const cellKey = createCellKey(rowId, columnId);
+    return selectedCells.has(cellKey) && selectedCells.size > 1;
+  }, [selectedCells]);
+
+  // Helper function to update selectedCell when removing a cell from multi-selection
+  const updateSelectedCellAfterRemoval = useCallback((removedCellKey: string) => {
+    const remainingCells = Array.from(selectedCells).filter(key => key !== removedCellKey);
+    
+    if (remainingCells.length > 0) {
+      const firstRemaining = remainingCells[0];
+      const { rowId: remainingRowId, columnId: remainingColumnId } = parseCellKey(firstRemaining);
+      setSelectedCell({ rowId: remainingRowId, columnId: remainingColumnId });
+    } else {
+      setSelectedCell(null);
+    }
+  }, [selectedCells]);
+
+  // Handle CTRL/CMD+Click multi-selection toggle
+  const handleMultiSelectToggle = useCallback((cellKey: string, rowId: string, columnId: string) => {
+    const wasSelected = selectedCells.has(cellKey);
+    
+    setSelectedCells(prev => {
+      const newSet = new Set(prev);
+      if (wasSelected) {
+        newSet.delete(cellKey);
+      } else {
+        newSet.add(cellKey);
+      }
+      return newSet;
+    });
+    
+    // Update selectedCell based on the action
+    if (!wasSelected) {
+      // Adding a cell: set it as the primary selected cell
+      setSelectedCell({ rowId, columnId });
+    } else {
+      // Removing a cell: set selectedCell to one of the remaining cells
+      updateSelectedCellAfterRemoval(cellKey);
+    }
+  }, [selectedCells, updateSelectedCellAfterRemoval]);
+
+  // Handle regular click single selection
+  const handleSingleSelect = useCallback((cellKey: string, rowId: string, columnId: string) => {
+    setSelectedCell({ rowId, columnId });
+    setSelectedCells(new Set([cellKey]));
+  }, []);
+
+  // Cell selection functions
+  const handleCellSelect = useCallback((e: React.MouseEvent, rowId: string, columnId: string) => {
+    const cellKey = createCellKey(rowId, columnId);
+    
+    if (e.ctrlKey || e.metaKey) {
+      handleMultiSelectToggle(cellKey, rowId, columnId);
+    } else {
+      handleSingleSelect(cellKey, rowId, columnId);
+    }
+    
+    setEditingCellTrigger(null);
+  }, [handleMultiSelectToggle, handleSingleSelect]);
+
+  // Context menu functions
+  const handleCellRightClick = useCallback((e: React.MouseEvent, rowId: string, columnId: string) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      rowId,
+      columnId,
+    });
+    
+    const cellKey = createCellKey(rowId, columnId);
+    
+    // If the right-clicked cell is not part of the current selection, 
+    // make it the only selected cell
+    if (!selectedCells.has(cellKey)) {
+      setSelectedCells(new Set([cellKey]));
+    }
+    // If it is part of the selection, keep the current multi-selection
+  }, [selectedCells]);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  // Check if shift right action is safe for selected cells
+  const canShiftRight = useCallback(() => {
+    return canPerformShiftRight(selectedCells, data, columns);
+  }, [selectedCells, data, columns]);
+
+  // Handle shift right action
+  const handleShiftRight = useCallback(() => {
+    if (!canShiftRight()) return;
+    
+    const cellIdentifiers = getShiftRightCellIdentifiers(selectedCells);
+    
+    // Execute the shift right operation
+    insertAndShift(cellIdentifiers);
+    
+    // Close context menu and clear selection
+    setContextMenu(null);
+    setSelectedCells(new Set());
+  }, [canShiftRight, selectedCells, insertAndShift]);
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu) {
+        closeContextMenu();
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [contextMenu, closeContextMenu]);
 
   // Efficient duplicate detection using hash map - O(n) complexity
   const findDuplicates = useCallback(() => {
@@ -382,6 +535,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                     selectedCell?.rowId === row.original.id &&
                     selectedCell?.columnId === column.id
                   }
+                  isMultiSelected={isCellMultiSelected(row.original.id, column.id)}
                   isValid={row.original.cells[columnIndex]?.isValid ?? true}
                   error={row.original.cells[columnIndex]?.error}
                   startEditing={
@@ -389,12 +543,12 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                     editingCellTrigger?.columnId === column.id
                   }
                   isMasked={isMasked}
-                  onSelect={() => {
-                    setSelectedCell({
-                      rowId: row.original.id,
-                      columnId: column.id,
-                    });
-                    setEditingCellTrigger(null);
+                  isSearchMatch={isCellSearchMatch(row.original.id, column.id)}
+                  isActiveSearchMatch={isCellActiveSearchMatch(row.original.id, column.id)}
+                  searchQuery={searchQuery}
+                  onRightClick={(e) => handleCellRightClick(e, row.original.id, column.id)}
+                  onSelect={(e) => {
+                    handleCellSelect(e, row.original.id, column.id);
                   }}
                   onStartEdit={() => {
                     setSelectedCell({
@@ -434,18 +588,19 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   selectedCell?.rowId === row.original.id &&
                   selectedCell?.columnId === column.id
                 }
+                isMultiSelected={isCellMultiSelected(row.original.id, column.id)}
                 isValid={row.original.cells[columnIndex]?.isValid ?? true}
                 error={row.original.cells[columnIndex]?.error}
                 startEditing={
                   editingCellTrigger?.rowId === row.original.id &&
                   editingCellTrigger?.columnId === column.id
                 }
-                onSelect={() => {
-                  setSelectedCell({
-                    rowId: row.original.id,
-                    columnId: column.id,
-                  });
-                  setEditingCellTrigger(null);
+                isSearchMatch={isCellSearchMatch(row.original.id, column.id)}
+                isActiveSearchMatch={isCellActiveSearchMatch(row.original.id, column.id)}
+                searchQuery={searchQuery}
+                onRightClick={(e) => handleCellRightClick(e, row.original.id, column.id)}
+                onSelect={(e) => {
+                  handleCellSelect(e, row.original.id, column.id);
                 }}
                 onStartEdit={() => {
                   setSelectedCell({
@@ -521,6 +676,12 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     setStatsPopover,
     isColumnMasked,
     toggleColumnMask,
+    searchQuery,
+    isCellSearchMatch,
+    isCellActiveSearchMatch,
+    isCellMultiSelected,
+    handleCellSelect,
+    handleCellRightClick,
   ]);
 
   const table = useReactTable({
@@ -541,6 +702,112 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     estimateSize: () => 35, // Estimated row height in pixels
     overscan: 10, // Render extra rows outside viewport for smooth scrolling
   });
+
+  // Search functionality (moved here to access filteredData and rowVirtualizer)
+  const performSearch = useCallback((query: string) => {
+    if (!query.trim()) {
+      setSearchMatches([]);
+      setSearchActiveIndex(0);
+      return;
+    }
+
+    const matches: SearchMatch[] = [];
+    const lowerQuery = query.toLowerCase();
+
+    filteredData.forEach((row, rowIndex) => {
+      row.cells.forEach((cell, cellIndex) => {
+        if (cell.value && cell.value.toLowerCase().includes(lowerQuery)) {
+          const column = columns[cellIndex];
+          if (column) {
+            matches.push({
+              rowId: row.id,
+              columnId: column.id,
+              rowIndex,
+            });
+          }
+        }
+      });
+    });
+
+    setSearchMatches(matches);
+    setSearchActiveIndex(matches.length > 0 ? 0 : 0);
+    
+    // Auto-select the first match when search results change
+    if (matches.length > 0) {
+      const firstMatch = matches[0];
+      setSelectedCell({
+        rowId: firstMatch.rowId,
+        columnId: firstMatch.columnId,
+      });
+    }
+  }, [filteredData, columns]);
+
+  // Scroll to search match (separate effect to avoid dependency loop)
+  useEffect(() => {
+    if (searchMatches.length > 0 && searchActiveIndex >= 0) {
+      const activeMatch = searchMatches[searchActiveIndex];
+      if (activeMatch) {
+        rowVirtualizer.scrollToIndex(activeMatch.rowIndex, {
+          align: "center",
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [searchActiveIndex, searchMatches, rowVirtualizer]);
+
+  // Handler for search input changes, replacing the useEffect
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    // Pass the new query directly, as the state update is async
+    performSearch(query);
+  }, [performSearch]);
+
+  // Search navigation functions
+  const handleSearchNext = useCallback(() => {
+    if (searchMatches.length > 0) {
+      const nextIndex = (searchActiveIndex + 1) % searchMatches.length;
+      setSearchActiveIndex(nextIndex);
+      
+      // Select the active match cell for better visibility
+      const match = searchMatches[nextIndex];
+      setSelectedCell({
+        rowId: match.rowId,
+        columnId: match.columnId,
+      });
+      
+      // Scroll to the active match
+      rowVirtualizer.scrollToIndex(match.rowIndex, {
+        align: "center",
+        behavior: "smooth",
+      });
+    }
+  }, [searchMatches, searchActiveIndex, rowVirtualizer]);
+
+  const handleSearchPrevious = useCallback(() => {
+    if (searchMatches.length > 0) {
+      const prevIndex = searchActiveIndex === 0 ? searchMatches.length - 1 : searchActiveIndex - 1;
+      setSearchActiveIndex(prevIndex);
+      
+      // Select the active match cell for better visibility
+      const match = searchMatches[prevIndex];
+      setSelectedCell({
+        rowId: match.rowId,
+        columnId: match.columnId,
+      });
+      
+      // Scroll to the active match
+      rowVirtualizer.scrollToIndex(match.rowIndex, {
+        align: "center",
+        behavior: "smooth",
+      });
+    }
+  }, [searchMatches, searchActiveIndex, rowVirtualizer]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setSearchMatches([]);
+    setSearchActiveIndex(0);
+  }, []);
 
   // Calculate column widths based on content sampling
   const columnWidths = useMemo(() => {
@@ -697,6 +964,13 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         canRedo={canRedo}
         onUndo={undo}
         onRedo={redo}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        searchMatchCount={searchMatches.length}
+        searchActiveIndex={searchActiveIndex}
+        onSearchNext={handleSearchNext}
+        onSearchPrevious={handleSearchPrevious}
+        onClearSearch={handleClearSearch}
         snapshots={snapshots}
         showSnapshotsPanel={showSnapshotsPanel}
         onToggleSnapshotsPanel={setShowSnapshotsPanel}
@@ -841,6 +1115,43 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             onClose={() => setStatsPopover(null)}
             position={statsPopover.position}
           />
+        </>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <>
+          {/* Click-outside overlay */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={closeContextMenu}
+          />
+          <div
+            className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50 min-w-[200px]"
+            style={{
+              left: contextMenu.x,
+              top: contextMenu.y,
+            }}
+          >
+            <div className="py-1">
+              <button
+                onClick={handleShiftRight}
+                disabled={!canShiftRight()}
+                className={`flex items-center w-full px-3 py-2 text-sm text-left transition-colors ${
+                  canShiftRight()
+                    ? 'text-gray-200 hover:bg-gray-700'
+                    : 'text-gray-500 cursor-not-allowed'
+                }`}
+                title={
+                  canShiftRight()
+                    ? 'Insert empty cell and shift remaining cells right'
+                    : 'Not available when multiple cells are selected in the same row, or when selected rows already have maximum columns'
+                }
+              >
+                <span>Insert Empty Cell & Shift Right</span>
+              </button>
+            </div>
+          </div>
         </>
       )}
     </div>

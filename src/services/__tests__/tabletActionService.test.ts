@@ -257,5 +257,70 @@ describe('TabletActionService', () => {
         numericField: 42,
       });
     });
+
+    it('should respect side parameter when opening tabs', async () => {
+      const message: TabletActionMessage = {
+        targetTablet: 'test-tablet',
+        action: 'new-tab',
+        payload: { content: 'test content' },
+        source: { 
+          tabId: 'source-tab',
+          side: 'right'
+        },
+      };
+
+      await tabletActionService.handleAction(message);
+
+      expect(mockHandleNewPopulatedTab).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: expect.any(String),
+          title: 'Test Tablet',
+        }),
+        true // toRightSide should be true when source.side is 'right'
+      );
+    });
+
+    it('should default to left side when side parameter is not provided', async () => {
+      const message: TabletActionMessage = {
+        targetTablet: 'test-tablet',
+        action: 'new-tab',
+        payload: { content: 'test content' },
+        source: { 
+          tabId: 'source-tab'
+        },
+      };
+
+      await tabletActionService.handleAction(message);
+
+      expect(mockHandleNewPopulatedTab).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: expect.any(String),
+          title: 'Test Tablet',
+        }),
+        false // toRightSide should be false when source.side is not provided
+      );
+    });
+
+    it('should open to left side when side parameter is explicitly left', async () => {
+      const message: TabletActionMessage = {
+        targetTablet: 'test-tablet',
+        action: 'new-tab',
+        payload: { content: 'test content' },
+        source: { 
+          tabId: 'source-tab',
+          side: 'left'
+        },
+      };
+
+      await tabletActionService.handleAction(message);
+
+      expect(mockHandleNewPopulatedTab).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: expect.any(String),
+          title: 'Test Tablet',
+        }),
+        false // toRightSide should be false when source.side is 'left'
+      );
+    });
   });
 });

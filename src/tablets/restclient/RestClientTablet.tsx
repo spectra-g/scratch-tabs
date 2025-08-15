@@ -23,6 +23,35 @@ import { SensitiveDataManager } from "../../utils/sensitiveDataManager";
 import { ParameterSyncManager } from "./utils/paramSync";
 import { compareResponses, createComparisonItem, createCurrentComparisonItem } from "./utils/comparisonUtils";
 
+// Helper function to parse URL-encoded body into key-value pairs
+function parseUrlEncodedBody(body: string): { key: string; value: string; enabled: boolean }[] {
+  if (!body || body.trim() === '') {
+    return [];
+  }
+  
+  try {
+    const pairs: { key: string; value: string; enabled: boolean }[] = [];
+    const urlParams = new URLSearchParams(body);
+    
+    for (const [key, value] of urlParams.entries()) {
+      pairs.push({
+        key: decodeURIComponent(key),
+        value: decodeURIComponent(value),
+        enabled: true,
+      });
+    }
+    
+    return pairs;
+  } catch (error) {
+    // If parsing fails, return a single pair with the raw body
+    return [{
+      key: 'data',
+      value: body,
+      enabled: true,
+    }];
+  }
+}
+
 interface RestClientTabletState extends TabletState {
   type: "restclient";
   data: RestClientState;
@@ -38,22 +67,90 @@ export const RestClientTablet: Tablet = {
     if (payload && typeof payload === 'object' && 'method' in payload && 'url' in payload) {
       const curlRequest = payload as CurlRequestImport;
       
+      // Convert headers to KeyValuePair format
+      const headers = (curlRequest.headers || []).map(header => ({
+        key: header.key,
+        value: header.value,
+        enabled: true,
+      }));
+      
+      // Determine body type based on content-type header and presence of body
+      let bodyType: "none" | "form-data" | "x-www-form-urlencoded" | "raw" | "binary" = "none";
+      let bodyFormat: "json" | "xml" | "html" | "text" | "javascript" | undefined = undefined;
+      let bodyContent = "";
+      let bodyParams: { key: string; value: string; enabled: boolean }[] = [];
+      
+      if (curlRequest.body) {
+        const contentTypeHeader = headers.find(h => 
+          h.key.toLowerCase() === 'content-type'
+        );
+        
+        if (contentTypeHeader) {
+          const contentType = contentTypeHeader.value.toLowerCase();
+          if (contentType.includes('application/x-www-form-urlencoded')) {
+            bodyType = "x-www-form-urlencoded";
+            // Parse URL-encoded body into key-value pairs
+            bodyParams = parseUrlEncodedBody(curlRequest.body);
+          } else if (contentType.includes('multipart/form-data')) {
+            bodyType = "form-data";
+            bodyContent = curlRequest.body;
+          } else if (contentType.includes('application/json')) {
+            bodyType = "raw";
+            bodyFormat = "json";
+            bodyContent = curlRequest.body;
+          } else if (contentType.includes('application/xml') || contentType.includes('text/xml')) {
+            bodyType = "raw";
+            bodyFormat = "xml";
+            bodyContent = curlRequest.body;
+          } else if (contentType.includes('text/html')) {
+            bodyType = "raw";
+            bodyFormat = "html";
+            bodyContent = curlRequest.body;
+          } else if (contentType.includes('application/javascript') || contentType.includes('text/javascript')) {
+            bodyType = "raw";
+            bodyFormat = "javascript";
+            bodyContent = curlRequest.body;
+          } else {
+            bodyType = "raw";
+            bodyFormat = "text";
+            bodyContent = curlRequest.body;
+          }
+        } else {
+          // No content-type header, try to guess from body content
+          const body = curlRequest.body.trim();
+          if (body.startsWith('{') || body.startsWith('[')) {
+            bodyType = "raw";
+            bodyFormat = "json";
+            bodyContent = curlRequest.body;
+          } else if (body.startsWith('<')) {
+            bodyType = "raw";
+            bodyFormat = "xml";
+            bodyContent = curlRequest.body;
+          } else {
+            bodyType = "raw";
+            bodyFormat = "text";
+            bodyContent = curlRequest.body;
+          }
+        }
+      }
+      
       return {
         type: "restclient",
         data: {
           request: {
             method: (curlRequest.method?.toUpperCase() as any) || "GET",
             url: curlRequest.url || "",
-            headers: curlRequest.headers || [],
+            headers,
             auth: {
               type: "none",
               params: {},
             },
             params: [],
             body: {
-              type: "none",
-              content: curlRequest.body || "",
-              params: [],
+              type: bodyType,
+              content: bodyContent,
+              format: bodyFormat,
+              params: bodyParams,
             },
             variables: [
               {

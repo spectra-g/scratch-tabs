@@ -1,41 +1,52 @@
 import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Edit3, Copy, Eye, EyeOff } from "../../../../components/Icons";
+import { highlightSearchTerm } from "../utils/searchHighlight";
+import { getCellClasses } from "../constants/cellStyles";
 
 interface MaskedCellProps {
   value: string;
   isSelected: boolean;
+  isMultiSelected?: boolean;
   isValid: boolean;
   error?: string;
   startEditing: boolean;
   isMasked: boolean;
-  onSelect: () => void;
+  onSelect: (e: React.MouseEvent) => void;
   onStartEdit: () => void;
   onChange: (value: string) => void;
   onEditingChange: (isEditing: boolean) => void;
   onToggleMask: () => void;
+  isSearchMatch?: boolean;
+  isActiveSearchMatch?: boolean;
+  searchQuery?: string;
+  onRightClick?: (e: React.MouseEvent) => void;
   'data-testid'?: string;
   'data-row'?: string;
   'data-col'?: string;
 }
 
-export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
-  ({
-    value,
-    isSelected,
-    isValid,
-    error,
-    startEditing,
-    isMasked,
-    onSelect,
-    onStartEdit,
-    onChange,
-    onEditingChange,
-    onToggleMask,
-    'data-testid': dataTestId,
-    'data-row': dataRow,
-    'data-col': dataCol,
-  }) => {
+export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
+  value,
+  isSelected,
+  isMultiSelected = false,
+  isValid,
+  error,
+  startEditing,
+  isMasked,
+  onSelect,
+  onStartEdit,
+  onChange,
+  onEditingChange,
+  onToggleMask,
+  isSearchMatch = false,
+  isActiveSearchMatch = false,
+  searchQuery = "",
+  onRightClick,
+  'data-testid': dataTestId,
+  'data-row': dataRow,
+  'data-col': dataCol,
+}) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
     const [isHovered, setIsHovered] = useState(false);
@@ -91,7 +102,7 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
-        onSelect();
+        onSelect(e);
       },
       [onSelect],
     );
@@ -157,12 +168,15 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
 
     return (
       <div
-        className={`h-full min-h-[35px] flex items-center px-2 cursor-cell transition-colors relative group ${
-          isSelected
-            ? "bg-blue-900/30 ring-1 ring-blue-500"
-            : "hover:bg-gray-700/20"
-        } ${!isValid ? "bg-red-900/20" : ""}`}
+        className={`${getCellClasses({
+          isSelected,
+          isMultiSelected,
+          isActiveSearchMatch,
+          isSearchMatch,
+          isValid,
+        })} px-2`}
         onClick={handleClick}
+        onContextMenu={onRightClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         title={error || "Click to select. Click pencil or press enter to edit"}
@@ -174,7 +188,15 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(
           className={`text-sm truncate flex-1 mr-2 select-none transition duration-150 ${shouldShowMasked ? "blur-[3px] hover:blur-none" : "text-gray-200"}`}
           title={shouldShowMasked ? "Hover to reveal" : undefined}
         >
-          {value || <span className="text-gray-500 italic">Empty</span>}
+          {value ? (
+            isSearchMatch && searchQuery && searchQuery.trim() && !shouldShowMasked ? (
+              highlightSearchTerm(value, searchQuery)
+            ) : (
+              value
+            )
+          ) : (
+            <span className="text-gray-500 italic">Empty</span>
+          )}
         </span>
         <div className="flex items-center space-x-1 w-16 justify-end">
           <button

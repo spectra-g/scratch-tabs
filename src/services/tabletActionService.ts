@@ -10,6 +10,7 @@ export interface TabletActionMessage<T = unknown> {
   source: {
     tabId?: string;
     titleHint?: string;
+    side?: 'left' | 'right';
   };
 }
 
@@ -44,7 +45,11 @@ class TabletActionService {
         cursorPosition: { lineNumber: 1, column: 1 },
       };
 
-      handleNewPopulatedTab(newTab, false);
+      // Determine which side to open the tab on
+      // If source.side is 'right', pass true; otherwise default to false (left side)
+      const toRightSide = source.side === 'right';
+      
+      handleNewPopulatedTab(newTab, toRightSide);
     }
   }
 }

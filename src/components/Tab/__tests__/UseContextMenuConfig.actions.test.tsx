@@ -229,6 +229,7 @@ describe('UseContextMenuConfig - Dynamic Actions', () => {
       source: 'editor-tab',
       tab: mockTab,
       content: mockTab.content,
+      side: 'left',
     });
   });
 

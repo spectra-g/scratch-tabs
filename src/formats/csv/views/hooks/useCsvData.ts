@@ -31,6 +31,7 @@ export interface UseCsvDataReturn {
   deleteColumn: (columnId: string) => void;
   duplicateColumn: (columnId: string) => void;
   renameColumn: (columnId: string, newName: string) => void;
+  insertAndShift: (cellIdentifiers: Array<{rowId: string, columnId: string}>) => void;
 
   // Undo/Redo (simplified)
   canUndo: boolean;
@@ -447,6 +448,77 @@ export const useCsvData = (
     [csvState, saveToHistory, syncToContent],
   );
 
+  const insertAndShift = useCallback(
+    (cellIdentifiers: Array<{rowId: string, columnId: string}>) => {
+      if (cellIdentifiers.length === 0) return;
+      
+      // Check if any row has multiple selected cells (not allowed)
+      const cellsByRow = new Map<string, string[]>();
+      cellIdentifiers.forEach(({ rowId, columnId }) => {
+        if (!cellsByRow.has(rowId)) {
+          cellsByRow.set(rowId, []);
+        }
+        cellsByRow.get(rowId)!.push(columnId);
+      });
+      
+      // Validate that no row has multiple cells selected
+      for (const [, columnIds] of cellsByRow) {
+        if (columnIds.length > 1) {
+          console.warn('Insert and shift cannot be applied to multiple cells in the same row');
+          return;
+        }
+      }
+      
+      // Group cells by column and row to process each column separately
+      const cellsByColumn = new Map<string, string[]>();
+      cellIdentifiers.forEach(({ rowId, columnId }) => {
+        if (!cellsByColumn.has(columnId)) {
+          cellsByColumn.set(columnId, []);
+        }
+        cellsByColumn.get(columnId)!.push(rowId);
+      });
+      
+      // Process each column separately to support multi-column selections
+      let newData = [...csvState.data];
+      
+      for (const [columnId, rowIds] of cellsByColumn) {
+        const columnIndex = csvState.columns.findIndex(col => col.id === columnId);
+        
+        if (columnIndex === -1) {
+          console.warn('Column not found');
+          continue;
+        }
+        
+        // Update rows for this column
+        newData = newData.map(row => {
+          if (rowIds.includes(row.id)) {
+            // Safety check: row must have fewer cells than total columns
+            if (row.cells.length >= csvState.columns.length) {
+              console.warn(`Row ${row.id} already has maximum columns, cannot shift`);
+              return row;
+            }
+            
+            // Insert empty cell at the column index and shift right
+            const newCells = [...row.cells];
+            newCells.splice(columnIndex, 0, { value: "", isValid: true });
+            
+            return {
+              ...row,
+              cells: newCells,
+            };
+          }
+          return row;
+        });
+      }
+      
+      const newState = { ...csvState, data: newData };
+      setCsvState(newState);
+      saveToHistory(newState);
+      syncToContent(newState);
+    },
+    [csvState, saveToHistory, syncToContent],
+  );
+
   // Undo/Redo
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -695,6 +767,7 @@ export const useCsvData = (
     deleteColumn,
     duplicateColumn,
     renameColumn,
+    insertAndShift,
 
     // Undo/Redo
     canUndo: historyIndex > 0,
