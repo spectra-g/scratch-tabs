@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ArrowUpDown,
   Layers,
@@ -9,6 +9,9 @@ import {
   FileText,
   AlertTriangle,
   CheckCircle,
+  ChevronDown,
+  Eraser,
+  AlignLeft,
 } from "../../../../components/Icons";
 import { PropertiesValidation } from "../types";
 
@@ -39,135 +42,211 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
   onToggleValidation,
   showValidation,
 }) => {
+  const [showSortingMenu, setShowSortingMenu] = useState(false);
+  const [showCleaningMenu, setShowCleaningMenu] = useState(false);
+  const [showConvertersMenu, setShowConvertersMenu] = useState(false);
+
   const hasValidationIssues = 
     validation.duplicateKeys.length > 0 ||
     validation.emptyValues.length > 0 ||
     validation.invalidKeys.length > 0;
 
+  const totalIssues = validation.duplicateKeys.length + validation.emptyValues.length + validation.invalidKeys.length;
+
   return (
-    <div className="p-3 bg-gray-800/50">
-      <div className="flex flex-wrap gap-2">
-        {/* Sorting & Organization */}
+    <div className="flex-none border-b border-gray-700 p-3 bg-gray-800/30">
+      <div className="flex items-center justify-between">
+        {/* Left side - Actions */}
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-gray-400 font-medium">ORGANIZE:</span>
-          <button
-            onClick={onSortKeys}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
-            title="Sort all keys alphabetically"
-          >
-            <ArrowUpDown size={12} />
-            <span>Sort Keys</span>
-          </button>
-          
-          <button
-            onClick={onGroupByPrefix}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
-            title="Group properties by common prefixes"
-          >
-            <Layers size={12} />
-            <span>Group by Prefix</span>
-          </button>
-        </div>
+          {/* Sorting Actions */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSortingMenu(!showSortingMenu)}
+              className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+            >
+              <ArrowUpDown size={14} />
+              <span>Sort</span>
+              <ChevronDown size={12} />
+            </button>
 
-        <div className="w-px h-6 bg-gray-600" />
+            {showSortingMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowSortingMenu(false)}
+                />
+                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px]">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        onSortKeys();
+                        setShowSortingMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <ArrowUpDown size={14} />
+                      <span>Sort Keys Alphabetically</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onGroupByPrefix();
+                        setShowSortingMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <Layers size={14} />
+                      <span>Group by Prefix</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
-        {/* Cleaning & Formatting */}
-        <div className="flex items-center space-x-2">
-          <span className="text-xs text-gray-400 font-medium">CLEAN:</span>
-          <button
-            onClick={onStripComments}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
-            title="Remove all comments"
-          >
-            <MessageSquare size={12} />
-            <span>Strip Comments</span>
-          </button>
-          
-          <button
-            onClick={onNormalizeSpacing}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
-            title="Normalize spacing around equals signs"
-          >
-            <FileText size={12} />
-            <span>Normalize</span>
-          </button>
-        </div>
+          {/* Cleaning Actions */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCleaningMenu(!showCleaningMenu)}
+              className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+            >
+              <Eraser size={14} />
+              <span>Clean</span>
+              <ChevronDown size={12} />
+            </button>
 
-        <div className="w-px h-6 bg-gray-600" />
+            {showCleaningMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowCleaningMenu(false)}
+                />
+                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px]">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        onStripComments();
+                        setShowCleaningMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <MessageSquare size={14} />
+                      <span>Strip All Comments</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onNormalizeSpacing();
+                        setShowCleaningMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <AlignLeft size={14} />
+                      <span>Normalize Spacing</span>
+                    </button>
+                    <div className="border-t border-gray-700 my-1" />
+                    <button
+                      onClick={() => {
+                        onEnsureFinalNewline();
+                        setShowCleaningMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <FileDown size={14} />
+                      <span>Ensure Final Newline</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onRemoveFinalNewline();
+                        setShowCleaningMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <FileUp size={14} />
+                      <span>Remove Final Newline</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
-        {/* File Operations */}
-        <div className="flex items-center space-x-2">
-          <span className="text-xs text-gray-400 font-medium">FILE:</span>
-          <button
-            onClick={onEnsureFinalNewline}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
-            title="Ensure file ends with newline"
-          >
-            <FileDown size={12} />
-            <span>Add Newline</span>
-          </button>
-          
-          <button
-            onClick={onRemoveFinalNewline}
-            className="flex items-center space-x-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
-            title="Remove final newline"
-          >
-            <FileUp size={12} />
-            <span>Remove Newline</span>
-          </button>
-        </div>
+          {/* Converters */}
+          <div className="relative">
+            <button
+              onClick={() => setShowConvertersMenu(!showConvertersMenu)}
+              className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+            >
+              <Code size={14} />
+              <span>Convert</span>
+              <ChevronDown size={12} />
+            </button>
 
-        <div className="w-px h-6 bg-gray-600" />
+            {showConvertersMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowConvertersMenu(false)}
+                />
+                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px]">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        onConvertToJson();
+                        setShowConvertersMenu(false);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Code size={14} className="text-blue-400" />
+                        <span>Convert to JSON</span>
+                      </div>
+                      <span className="text-xs text-gray-500">nested</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onConvertToYaml();
+                        setShowConvertersMenu(false);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <FileText size={14} className="text-purple-400" />
+                        <span>Convert to YAML</span>
+                      </div>
+                      <span className="text-xs text-gray-500">config.yaml</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
-        {/* Converters */}
-        <div className="flex items-center space-x-2">
-          <span className="text-xs text-gray-400 font-medium">CONVERT:</span>
-          <button
-            onClick={onConvertToJson}
-            className="flex items-center space-x-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
-            title="Convert to nested JSON and open in new tab"
-          >
-            <Code size={12} />
-            <span>To JSON</span>
-          </button>
-          
-          <button
-            onClick={onConvertToYaml}
-            className="flex items-center space-x-1 px-2 py-1 bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
-            title="Convert to YAML and open in new tab"
-          >
-            <FileText size={12} />
-            <span>To YAML</span>
-          </button>
-        </div>
-
-        <div className="w-px h-6 bg-gray-600" />
-
-        {/* Validation */}
-        <div className="flex items-center space-x-2">
+          {/* Validation Button */}
           <button
             onClick={onToggleValidation}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-              showValidation
-                ? "bg-yellow-500/20 text-yellow-400"
-                : hasValidationIssues
-                ? "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
-                : "bg-green-500/10 text-green-400 hover:bg-green-500/20"
+            className={`flex items-center space-x-2 px-3 py-2 rounded text-sm transition-colors ${
+              hasValidationIssues
+                ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
+                : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
             }`}
-            title={hasValidationIssues ? "Show validation issues" : "No validation issues"}
           >
             {hasValidationIssues ? (
-              <AlertTriangle size={12} />
+              <AlertTriangle size={14} />
             ) : (
-              <CheckCircle size={12} />
+              <CheckCircle size={14} />
             )}
             <span>
-              {hasValidationIssues 
-                ? `${validation.duplicateKeys.length + validation.emptyValues.length + validation.invalidKeys.length} Issues`
-                : "Valid"
-              }
+              {hasValidationIssues
+                ? `${totalIssues} issues`
+                : "Valid"}
             </span>
           </button>
+        </div>
+
+        {/* Right side - Stats (similar to INI view) */}
+        <div className="flex items-center space-x-4 text-sm text-gray-400">
+          <div className="flex items-center space-x-2">
+            <span>{validation.duplicateKeys.length + validation.emptyValues.length + validation.invalidKeys.length > 0 ? totalIssues + ' issues' : 'No issues'}</span>
+          </div>
         </div>
       </div>
     </div>

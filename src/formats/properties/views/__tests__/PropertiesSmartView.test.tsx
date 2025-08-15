@@ -81,11 +81,11 @@ describe("PropertiesSmartView", () => {
       />
     );
 
-    expect(screen.getByText("Sort Keys")).toBeInTheDocument();
-    expect(screen.getByText("Group by Prefix")).toBeInTheDocument();
-    expect(screen.getByText("Strip Comments")).toBeInTheDocument();
-    expect(screen.getByText("To JSON")).toBeInTheDocument();
-    expect(screen.getByText("To YAML")).toBeInTheDocument();
+    // Check for dropdown buttons
+    expect(screen.getByText("Sort")).toBeInTheDocument();
+    expect(screen.getByText("Clean")).toBeInTheDocument();
+    expect(screen.getByText("Convert")).toBeInTheDocument();
+    expect(screen.getByText("Valid")).toBeInTheDocument();
   });
 
   it("should handle tree node selection", async () => {
@@ -125,8 +125,8 @@ invalid key = value`;
       />
     );
 
-    // Should show validation issues button
-    expect(screen.getAllByText(/Issues/)).toHaveLength(2); // Appears in button and status area
+    // Should show validation issues in both button and status area
+    expect(screen.getAllByText(/\d+ issues/)).toHaveLength(2);
   });
 
   it("should handle add property form", async () => {
@@ -192,9 +192,13 @@ invalid key = value`;
       />
     );
 
-    // Click sort keys
-    const sortButton = screen.getByText("Sort Keys");
-    fireEvent.click(sortButton);
+    // Click the Sort dropdown button to open the menu
+    const sortDropdownButton = screen.getByText("Sort");
+    fireEvent.click(sortDropdownButton);
+
+    // Now click on the "Sort Keys Alphabetically" option in the dropdown
+    const sortKeysOption = screen.getByText("Sort Keys Alphabetically");
+    fireEvent.click(sortKeysOption);
 
     // Wait for debounced call
     await new Promise(resolve => setTimeout(resolve, 350));
