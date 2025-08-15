@@ -5,8 +5,8 @@ config:
 releases:
   - version: "1.2.0"
     type: "latest"  # latest, beta, alpha
-    draft: true
-    date: "2025-08-XX"
+    draft: false
+    date: "2025-08-15"
     headline: "🎉 Properties and INI Smart View"
     description: "Smart View for Properties and INI formats"
     categories:
@@ -18,7 +18,7 @@ releases:
           - "**CSV Smart View:** Shift cells to the right where columns are missing"
       - name: "🔧 Technical Highlights"
         changes:
-          - "Improved JSON, Csv and R auto detection algorithms"
+          - "Improved JSON, CSV and R auto detection algorithms"
       - name: "🐛 Fixed"
         changes:
           - "JSON Smart View replicating content across multiple tabs"
