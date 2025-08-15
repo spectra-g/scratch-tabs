@@ -150,6 +150,7 @@ export const useContextMenuConfig = (
         source: 'editor-tab',
         tab: tab,
         content: tab.content,
+        side: isRightSide ? 'right' : 'left',
       };
 
       const allActions = tabletMetadata.flatMap(

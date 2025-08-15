@@ -13,6 +13,7 @@ export interface TabletActionContext {
   source: 'editor-tab' | 'editor-selection';
   tab?: Tab;
   content?: string;
+  side?: 'left' | 'right';
 }
 
 // NEW: Describes an action that a tablet can offer.
