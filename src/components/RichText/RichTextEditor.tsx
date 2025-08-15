@@ -90,55 +90,57 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   return (
-    <div 
-      ref={editorContainerRef}
-      className={`rich-text-editor h-full w-full flex flex-col ${className}`}
-    >
-      {/* Search Bar */}
-      {showSearchBar && (
-        <div className="flex-shrink-0 p-4 border-b border-gray-700">
-          <EditorSearchBar
-            editor={editor}
-            isVisible={showSearchBar}
-            onClose={() => setShowSearchBar(false)}
+    <>
+      <div 
+        ref={editorContainerRef}
+        className={`rich-text-editor h-full w-full flex flex-col ${className}`}
+      >
+        {/* Search Bar */}
+        {showSearchBar && (
+          <div className="flex-shrink-0 p-4 border-b border-gray-700">
+            <EditorSearchBar
+              editor={editor}
+              isVisible={showSearchBar}
+              onClose={() => setShowSearchBar(false)}
+            />
+          </div>
+        )}
+
+        {/* Search Toggle Button */}
+        {!showSearchBar && (
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={() => setShowSearchBar(true)}
+              className="p-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-md transition-colors"
+              title="Search (Ctrl+F)"
+            >
+              <Search size={16} className="text-gray-400" />
+            </button>
+          </div>
+        )}
+
+        {/* Editor Container */}
+        <div 
+          className={`flex-1 overflow-y-auto ${getBackgroundTextureClass()}`}
+          style={{ minHeight: '100%' }}
+        >
+          <EditorContent 
+            editor={editor} 
+            className="h-full"
           />
         </div>
-      )}
 
-      {/* Search Toggle Button */}
-      {!showSearchBar && (
-        <div className="absolute top-4 right-4 z-10">
-          <button
-            onClick={() => setShowSearchBar(true)}
-            className="p-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-md transition-colors"
-            title="Search (Ctrl+F)"
-          >
-            <Search size={16} className="text-gray-400" />
-          </button>
-        </div>
-      )}
+        {/* Floating Toolbar */}
+        <RichTextToolbar editor={editor} />
 
-      {/* Editor Container */}
-      <div 
-        className={`flex-1 overflow-y-auto ${getBackgroundTextureClass()}`}
-        style={{ minHeight: '100%' }}
-      >
-        <EditorContent 
-          editor={editor} 
-          className="h-full"
+        {/* Upgrade Confirmation Modal */}
+        <UpgradeConfirmationModal
+          isOpen={showUpgradeModal}
+          onConfirm={handleUpgradeConfirm}
+          onCancel={handleUpgradeCancel}
         />
       </div>
 
-      {/* Floating Toolbar */}
-      <RichTextToolbar editor={editor} />
-
-      {/* Upgrade Confirmation Modal */}
-      <UpgradeConfirmationModal
-        isOpen={showUpgradeModal}
-        onConfirm={handleUpgradeConfirm}
-        onCancel={handleUpgradeCancel}
-      />
-    </div>
       {/* Import Code Modal */}
       <ImportCodeModal
         isOpen={showImportModal}
@@ -146,5 +148,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         targetTabId={tab.id}
         editor={editor}
       />
+    </>
   );
 };
