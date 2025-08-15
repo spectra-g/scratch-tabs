@@ -2,10 +2,13 @@ export interface Tab {
   id: string;
   title: string;
   content?: string;
+  richContent?: any; // TipTap JSON structure
   language: string;
   languageLocked: boolean;
   isTablet?: boolean;
   tabletState?: string;
+  isRich: boolean; // New property for rich text mode
+  backgroundTexture?: 'paper' | 'grid' | null; // Background texture option
   cursorPosition: EditorPosition;
   isPinned?: boolean;
   dateCreated: number;

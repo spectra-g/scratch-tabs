@@ -5,10 +5,13 @@ interface TabRecord {
   id: string;
   title: string;
   content: string;
+  richContent?: string; // JSON string for TipTap content
   language: string;
   languageLocked: boolean;
   isTablet?: boolean;
   tabletState?: string;
+  isRich?: boolean;
+  backgroundTexture?: string;
   lastModified: number;
   dateCreated: number;
   workspaceId: string;
@@ -115,6 +118,8 @@ export const db = new ScratchTabsDB();
 const toTabRecord = (tab: Tab): TabRecord => ({
   ...tab,
   content: tab.content || "",
+  richContent: tab.richContent ? JSON.stringify(tab.richContent) : undefined,
+  backgroundTexture: tab.backgroundTexture || undefined,
   lastModified: tab.lastModified,
   dateCreated: tab.dateCreated,
   workspaceId: tab.workspaceId,
@@ -123,8 +128,21 @@ const toTabRecord = (tab: Tab): TabRecord => ({
 const toTab = (record: TabRecord): Tab => {
   const now = Date.now();
   const cursor = record.cursorPosition || { lineNumber: 1, column: 1 };
+  
+  let richContent = null;
+  if (record.richContent) {
+    try {
+      richContent = JSON.parse(record.richContent);
+    } catch (error) {
+      console.warn('Failed to parse rich content:', error);
+    }
+  }
+  
   return {
     ...record,
+    richContent,
+    isRich: record.isRich || false,
+    backgroundTexture: (record.backgroundTexture as 'paper' | 'grid' | null) || null,
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: cursor,
@@ -135,9 +153,22 @@ const toTab = (record: TabRecord): Tab => {
 // NEW: Convert record to tab metadata (without content)
 const toTabMetadata = (record: TabRecord): Omit<Tab, "content"> => {
   const now = Date.now();
-  const { content, ...metadata } = record;
+  const { content, richContent, ...metadata } = record;
+  
+  let parsedRichContent = null;
+  if (richContent) {
+    try {
+      parsedRichContent = JSON.parse(richContent);
+    } catch (error) {
+      console.warn('Failed to parse rich content in metadata:', error);
+    }
+  }
+  
   return {
     ...metadata,
+    richContent: parsedRichContent,
+    isRich: metadata.isRich || false,
+    backgroundTexture: (metadata.backgroundTexture as 'paper' | 'grid' | null) || null,
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },

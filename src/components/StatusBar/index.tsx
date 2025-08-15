@@ -17,6 +17,7 @@ import { getPotentialFormatMatches } from "../../formats";
 import { FormatSelectionPopup } from "./FormatSelectionPopup";
 import { SmartViewButtons } from "./SmartViewButtons";
 import { FontSizeControls } from "./FontSizeControls";
+import { RichTextControls } from "./RichTextControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import type { PopupMenuItem } from "./types";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
@@ -125,7 +126,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   // Memoize language detection to avoid expensive operations on every render
   const languageDetectionData = useMemo(() => {
-    if (!activeTab || activeTab.isTablet) {
+    if (!activeTab || activeTab.isTablet || activeTab.isRich) {
       return {
         potentialMatches: [],
         contentSample: "",
@@ -139,11 +140,11 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       potentialMatches,
       contentSample,
     };
-  }, [activeTab?.id, activeTab?.content, activeTab?.isTablet]);
+  }, [activeTab?.id, activeTab?.content, activeTab?.isTablet, activeTab?.isRich]);
 
   // NEW LOGIC TO GET STATUS BAR ITEMS
   const statusBarItems = useMemo(() => {
-    if (!activeTab || activeTab.isTablet) return [];
+    if (!activeTab || activeTab.isTablet || activeTab.isRich) return [];
     
     const module = formatRegistry.getById(activeTab.language);
     if (!module) return [];
@@ -163,13 +164,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   }, [activeTab]);
 
   const FormatOptionsMenu =
-    activeTab && !activeTab.isTablet
+    activeTab && !activeTab.isTablet && !activeTab.isRich
       ? getFormatOptionsMenu(activeTab.language, editor)
       : null;
 
   // Get languages to display in the popup with the new ordering rules
   const getPopupLanguages = (): PopupMenuItem[] => {
-    if (!activeTab || activeTab.isTablet) return [];
+    if (!activeTab || activeTab.isTablet || activeTab.isRich) return [];
 
     const allLangs = formatRegistry
       .getAll()
@@ -253,7 +254,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   // Handle opening the language popup
   const handleOpenLanguagePopup = () => {
-    if (!activeTab.isTablet) {
+    if (!activeTab.isTablet && !activeTab.isRich) {
       // Always ensure we close any existing popup before opening a new one
       setShowLanguagePopup(false);
 
@@ -266,7 +267,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   // Handle selecting a language from the popup
   const handleSelectLanguage = (languageId: string) => {
-    if (activeTab && !activeTab.isTablet) {
+    if (activeTab && !activeTab.isTablet && !activeTab.isRich) {
       updateTabLanguage(activeTab.id, languageId, true); // Lock the language
     }
     setShowLanguagePopup(false);
@@ -280,6 +281,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       return <span className="capitalize">{tabletLabel}</span>;
     }
 
+    if (activeTab.isRich) {
+      return <span className="capitalize">Rich Text</span>;
+    }
     // Language Info
     const currentLanguageId = activeTab.language;
     const currentLanguageObject = formatRegistry.getById(currentLanguageId);
@@ -352,13 +356,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       <div className="flex items-center space-x-4">
         {activeTab && (
           <>
-            {!activeTab.isTablet && (
+            {!activeTab.isTablet && !activeTab.isRich && (
               <span>
                 Ln {realTimeCursorPosition.lineNumber}, Col{" "}
                 {realTimeCursorPosition.column}
               </span>
             )}
-            {!activeTab.isTablet && (
+            {!activeTab.isTablet && !activeTab.isRich && (
               <div className="w-px h-4 bg-gray-600"></div>
             )}
             <div className="p-0.5 flex items-center space-x-2">
@@ -386,11 +390,17 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       <div className="flex items-center space-x-3">
         {/* Group 1: Font Size */}
         <div className="flex items-center">
-          <FontSizeControls 
-            editor={editor} 
-            isTablet={activeTab?.isTablet || false} 
-            activeTabId={activeTab?.id || null}
-          />
+          {!activeTab?.isRich && (
+            <FontSizeControls 
+              editor={editor} 
+              isTablet={activeTab?.isTablet || false} 
+              activeTabId={activeTab?.id || null}
+            />
+          )}
+          
+          {!activeTab?.isTablet && (
+            <RichTextControls activeTab={activeTab} />
+          )}
         </div>
         
         {/* Divider 1 - only show if Group 2 has content */}

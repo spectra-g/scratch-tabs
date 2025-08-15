@@ -30,3 +30,191 @@
 .global-cursor-progress * {
   cursor: progress !important;
 }
+
+/* Rich Text Editor Styles */
+.rich-text-editor .ProseMirror {
+  outline: none;
+  color: #d1d5db; /* text-gray-300 */
+  line-height: 1.6;
+}
+
+.rich-text-editor .ProseMirror h1,
+.rich-text-editor .ProseMirror h2,
+.rich-text-editor .ProseMirror h3,
+.rich-text-editor .ProseMirror h4,
+.rich-text-editor .ProseMirror h5,
+.rich-text-editor .ProseMirror h6 {
+  color: #f9fafb; /* text-gray-50 */
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-text-editor .ProseMirror h1 { font-size: 2rem; }
+.rich-text-editor .ProseMirror h2 { font-size: 1.5rem; }
+.rich-text-editor .ProseMirror h3 { font-size: 1.25rem; }
+.rich-text-editor .ProseMirror h4 { font-size: 1.125rem; }
+.rich-text-editor .ProseMirror h5 { font-size: 1rem; }
+.rich-text-editor .ProseMirror h6 { font-size: 0.875rem; }
+
+.rich-text-editor .ProseMirror p {
+  margin-bottom: 1rem;
+}
+
+.rich-text-editor .ProseMirror strong {
+  color: #f9fafb; /* text-gray-50 */
+  font-weight: 600;
+}
+
+.rich-text-editor .ProseMirror em {
+  font-style: italic;
+}
+
+.rich-text-editor .ProseMirror code {
+  background-color: #374151; /* bg-gray-700 */
+  color: #fbbf24; /* text-yellow-400 */
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.rich-text-editor .ProseMirror pre {
+  background-color: #1f2937; /* bg-gray-800 */
+  border: 1px solid #374151; /* border-gray-700 */
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.rich-text-editor .ProseMirror pre code {
+  background: none;
+  color: #d1d5db; /* text-gray-300 */
+  padding: 0;
+}
+
+.rich-text-editor .ProseMirror ul,
+.rich-text-editor .ProseMirror ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.rich-text-editor .ProseMirror li {
+  margin-bottom: 0.25rem;
+}
+
+.rich-text-editor .ProseMirror blockquote {
+  border-left: 4px solid #6b7280; /* border-gray-500 */
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #9ca3af; /* text-gray-400 */
+}
+
+.rich-text-editor .ProseMirror a {
+  color: #60a5fa; /* text-blue-400 */
+  text-decoration: underline;
+}
+
+.rich-text-editor .ProseMirror a:hover {
+  color: #93c5fd; /* text-blue-300 */
+}
+
+.rich-text-editor .ProseMirror table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.rich-text-editor .ProseMirror th,
+.rich-text-editor .ProseMirror td {
+  border: 1px solid #4b5563; /* border-gray-600 */
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.rich-text-editor .ProseMirror th {
+  background-color: #374151; /* bg-gray-700 */
+  font-weight: 600;
+  color: #f9fafb; /* text-gray-50 */
+}
+
+.rich-text-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* Background Textures */
+.texture-paper {
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+  background-size: 20px 20px;
+  background-color: #111827; /* bg-gray-900 */
+}
+
+.texture-grid {
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-color: #111827; /* bg-gray-900 */
+}
+
+/* Blurred Content Effect */
+.blurred-content {
+  filter: blur(5px);
+  transition: filter 0.3s ease-in-out;
+}
+
+.blurred-content:hover {
+  filter: blur(2px);
+}
+
+/* Block Wrapper Styles */
+.block-wrapper {
+  position: relative;
+}
+
+.block-wrapper:hover .block-context-menu {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Date Created Node Styles */
+.date-created-node {
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Search Highlight Styles for TipTap */
+.rich-text-editor .ProseMirror mark {
+  background-color: rgba(251, 191, 36, 0.4); /* yellow-400 with opacity */
+  color: #fbbf24; /* text-yellow-400 */
+  border-radius: 0.125rem;
+  padding: 0.125rem 0.25rem;
+}
+
+/* TipTap Table Styles */
+.rich-text-editor .ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.rich-text-editor .ProseMirror .resize-cursor {
+  cursor: col-resize;
+}
+
+/* Selection Styles */
+.rich-text-editor .ProseMirror .selectedCell:after {
+  background: rgba(59, 130, 246, 0.3); /* blue-500 with opacity */
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}

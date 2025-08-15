@@ -4,6 +4,7 @@ import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { EditorInstance } from "./EditorInstance";
 import { TabletView } from "../Tab/TabletView";
+import { RichTextEditor } from "../RichText/RichTextEditor";
 import { smartViewRegistry } from "../../views/registry";
 import { StatusBar } from "../StatusBar";
 import { useMarkdownPreviewResizer } from "../../hooks/useMarkdownPreviewResizer";
@@ -11,6 +12,7 @@ import { PreviewDivider } from "../Preview/PreviewDivider";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { modelManager } from "../../services/modelManager";
+import { migrateTextToRich } from "../RichText/utils/contentMigration";
 
 interface EditorPaneWrapperProps {
   side: "left" | "right";
@@ -57,6 +59,9 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
       return (
         prev.id === next.id &&
         prev.content === next.content &&
+        prev.richContent === next.richContent &&
+        prev.isRich === next.isRich &&
+        prev.backgroundTexture === next.backgroundTexture &&
         prev.language === next.language &&
         prev.title === next.title &&
         prev.isTablet === next.isTablet &&
@@ -76,6 +81,29 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     updateTabState(activeTabId, { tabletState: newState });
   };
 
+  const handleRichContentChange = (richContent: any) => {
+    if (!activeTabId) return;
+    updateTabState(activeTabId, { 
+      richContent,
+      lastModified: Date.now(),
+    });
+  };
+
+  const handleUpgradeToRich = () => {
+    if (!activeTab || !activeTabId) return;
+    
+    // Migrate existing plain text content to rich format
+    const richContent = migrateTextToRich(
+      activeTab.content || '',
+      activeTab.dateCreated
+    );
+    
+    updateTabState(activeTabId, {
+      isRich: true,
+      richContent,
+      lastModified: Date.now(),
+    });
+  };
   // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
   const extendedView =
@@ -120,6 +148,14 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 isActive={true}
                 side={side}
               />
+            ) : activeTab.isRich ? (
+              // Render rich text editor
+              <RichTextEditor
+                tab={activeTab}
+                onContentChange={handleRichContentChange}
+                onUpgradeToRich={handleUpgradeToRich}
+                className="h-full"
+              />
             ) : activeTab.isTablet ? (
               <TabletView tab={activeTab} onChange={handleTabletStateChange} />
             ) : (
@@ -128,6 +164,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 key={activeTab.id}
                 side={side}
                 activeTabId={activeTabId}
+                onUpgradeToRich={handleUpgradeToRich}
               />
             )
           ) : (

@@ -21,6 +21,7 @@ interface EditorInstanceProps {
   side: "left" | "right";
   activeTabId: string;
   onEditorReady?: (editor: Monaco.editor.IStandaloneCodeEditor | null) => void;
+  onUpgradeToRich?: () => void;
 }
 
 // Global storage for view states (scroll position, etc.)
@@ -30,6 +31,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   side,
   activeTabId,
   onEditorReady,
+  onUpgradeToRich,
 }) => {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
@@ -138,6 +140,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     return null;
   }
 
+  // Don't render Monaco editor for rich text tabs
+  if (activeTabWithoutCursor.isRich) {
+    return null;
+  }
   // SIMPLIFIED: This effect manages model switching with the corrected ModelManager
   useEffect(() => {
     if (!editorRef.current || !monacoRef.current || !activeTabWithoutCursor) {
@@ -245,6 +251,34 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }
   }, [side, activeTabId, activeEditorSide]);
 
+  // Image paste detection for upgrade prompt
+  useEffect(() => {
+    if (!editorRef.current || activeTabWithoutCursor.isRich) return;
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          if (onUpgradeToRich) {
+            onUpgradeToRich();
+          }
+          break;
+        }
+      }
+    };
+
+    const editorDom = editorRef.current.getDomNode();
+    if (editorDom) {
+      editorDom.addEventListener('paste', handlePaste);
+      return () => {
+        editorDom.removeEventListener('paste', handlePaste);
+      };
+    }
+  }, [activeTabWithoutCursor.isRich, onUpgradeToRich]);
   // --- SIMPLIFIED: Editor Event Handlers ---
   const handleEditorDidMount = (
     editor: Monaco.editor.IStandaloneCodeEditor,
