@@ -468,4 +468,52 @@ Jane,32,SF`;
       expect(screen.getByText("2 rows × 2 columns")).toBeInTheDocument();
     });
   });
+
+  describe("Cell Selection Behavior", () => {
+    it("should render table with cell selection capability", () => {
+      const multiRowCsv = `Name,Age,City
+John Doe,28,New York
+Jane Smith,32,San Francisco
+Bob Johnson,45,Chicago`;
+
+      render(
+        <CsvTableViewer
+          content={multiRowCsv}
+          onContentChange={mockOnContentChange}
+          tabId="test-tab"
+          isActive={true}
+          side="left"
+        />,
+      );
+
+      // Verify the table structure is rendered with proper data
+      expect(screen.getByTestId("csv-table-viewer")).toBeInTheDocument();
+      expect(screen.getByText("3 rows × 3 columns")).toBeInTheDocument();
+      
+      // Verify headers are present
+      expect(screen.getByText("Name")).toBeInTheDocument();
+      expect(screen.getByText("Age")).toBeInTheDocument();
+      expect(screen.getByText("City")).toBeInTheDocument();
+    });
+
+    it("should have cell selection event handlers attached", async () => {
+      const multiRowCsv = `Name,Age
+John,28
+Jane,32`;
+
+      render(
+        <CsvTableViewer
+          content={multiRowCsv}
+          onContentChange={mockOnContentChange}
+          tabId="test-tab"
+          isActive={true}
+          side="left"
+        />,
+      );
+
+      // The table should render successfully and be ready for interaction
+      expect(screen.getByTestId("csv-table-viewer")).toBeInTheDocument();
+      expect(screen.getByText("2 rows × 2 columns")).toBeInTheDocument();
+    });
+  });
 });

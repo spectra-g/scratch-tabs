@@ -178,38 +178,61 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     return selectedCells.has(cellKey) && selectedCells.size > 1;
   }, [selectedCells]);
 
+  // Helper function to update selectedCell when removing a cell from multi-selection
+  const updateSelectedCellAfterRemoval = useCallback((removedCellKey: string) => {
+    const remainingCells = Array.from(selectedCells).filter(key => key !== removedCellKey);
+    
+    if (remainingCells.length > 0) {
+      const firstRemaining = remainingCells[0];
+      const { rowId: remainingRowId, columnId: remainingColumnId } = parseCellKey(firstRemaining);
+      setSelectedCell({ rowId: remainingRowId, columnId: remainingColumnId });
+    } else {
+      setSelectedCell(null);
+    }
+  }, [selectedCells]);
+
+  // Handle CTRL/CMD+Click multi-selection toggle
+  const handleMultiSelectToggle = useCallback((cellKey: string, rowId: string, columnId: string) => {
+    const wasSelected = selectedCells.has(cellKey);
+    
+    setSelectedCells(prev => {
+      const newSet = new Set(prev);
+      if (wasSelected) {
+        newSet.delete(cellKey);
+      } else {
+        newSet.add(cellKey);
+      }
+      return newSet;
+    });
+    
+    // Update selectedCell based on the action
+    if (!wasSelected) {
+      // Adding a cell: set it as the primary selected cell
+      setSelectedCell({ rowId, columnId });
+    } else {
+      // Removing a cell: set selectedCell to one of the remaining cells
+      updateSelectedCellAfterRemoval(cellKey);
+    }
+  }, [selectedCells, updateSelectedCellAfterRemoval]);
+
+  // Handle regular click single selection
+  const handleSingleSelect = useCallback((cellKey: string, rowId: string, columnId: string) => {
+    setSelectedCell({ rowId, columnId });
+    setSelectedCells(new Set([cellKey]));
+  }, []);
+
   // Cell selection functions
   const handleCellSelect = useCallback((e: React.MouseEvent, rowId: string, columnId: string) => {
     const cellKey = createCellKey(rowId, columnId);
     
     if (e.ctrlKey || e.metaKey) {
-      // CTRL+Click: Toggle multi-selection
-      setSelectedCells(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(cellKey)) {
-          newSet.delete(cellKey);
-        } else {
-          newSet.add(cellKey);
-        }
-        return newSet;
-      });
-      
-      // Keep the single selectedCell for editing purposes
-      setSelectedCell({
-        rowId,
-        columnId,
-      });
+      handleMultiSelectToggle(cellKey, rowId, columnId);
     } else {
-      // Regular click: Set single selection and clear multi-selection
-      setSelectedCell({
-        rowId,
-        columnId,
-      });
-      setSelectedCells(new Set([cellKey]));
+      handleSingleSelect(cellKey, rowId, columnId);
     }
     
     setEditingCellTrigger(null);
-  }, []);
+  }, [handleMultiSelectToggle, handleSingleSelect]);
 
   // Context menu functions
   const handleCellRightClick = useCallback((e: React.MouseEvent, rowId: string, columnId: string) => {

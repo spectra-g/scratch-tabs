@@ -462,7 +462,7 @@ export const useCsvData = (
       });
       
       // Validate that no row has multiple cells selected
-      for (const [rowId, columnIds] of cellsByRow) {
+      for (const [, columnIds] of cellsByRow) {
         if (columnIds.length > 1) {
           console.warn('Insert and shift cannot be applied to multiple cells in the same row');
           return;

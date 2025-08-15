@@ -29,7 +29,7 @@ export const canPerformShiftRight = (
   });
   
   // Check if any row has multiple selected cells (not allowed)
-  for (const [rowId, columnIds] of cellsByRow) {
+  for (const [, columnIds] of cellsByRow) {
     if (columnIds.length > 1) {
       return false; // Multiple cells in same row
     }
