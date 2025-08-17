@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import { PromptEditor } from "../../components/PromptEditor";
@@ -112,7 +112,9 @@ describe("PromptEditor", () => {
       
       // Click edit button to enter edit mode
       const editButton = screen.getByTitle("Edit prompt");
-      await userEvent.click(editButton);
+      await act(async () => {
+        await userEvent.click(editButton);
+      });
       
       // Should now show input fields
       expect(screen.getByDisplayValue("Test Prompt")).toBeInTheDocument();
@@ -124,7 +126,9 @@ describe("PromptEditor", () => {
       
       // Click edit button to enter edit mode
       const editButton = screen.getByTitle("Edit prompt");
-      await userEvent.click(editButton);
+      await act(async () => {
+        await userEvent.click(editButton);
+      });
       
       // Should have save and cancel buttons
       expect(screen.getByTitle("Save changes")).toBeInTheDocument();
@@ -136,7 +140,9 @@ describe("PromptEditor", () => {
       
       // Click edit button to enter edit mode
       const editButton = screen.getByTitle("Edit prompt");
-      await userEvent.click(editButton);
+      await act(async () => {
+        await userEvent.click(editButton);
+      });
       
       const titleInput = screen.getByDisplayValue("Test Prompt");
       await userEvent.clear(titleInput);
@@ -150,7 +156,9 @@ describe("PromptEditor", () => {
       
       // Click edit button to enter edit mode
       const editButton = screen.getByTitle("Edit prompt");
-      await userEvent.click(editButton);
+      await act(async () => {
+        await userEvent.click(editButton);
+      });
       
       const contentInput = screen.getByDisplayValue("This is test content with **bold** and *italic* text.");
       await userEvent.clear(contentInput);
@@ -166,7 +174,9 @@ describe("PromptEditor", () => {
       
       // Click edit button to enter edit mode
       const editButton = screen.getByTitle("Edit prompt");
-      await userEvent.click(editButton);
+      await act(async () => {
+        await userEvent.click(editButton);
+      });
       
       const titleInput = screen.getByDisplayValue("Test Prompt");
       const contentInput = screen.getByDisplayValue("This is test content with **bold** and *italic* text.");
@@ -190,7 +200,9 @@ describe("PromptEditor", () => {
       
       // Click edit button to enter edit mode
       const editButton = screen.getByTitle("Edit prompt");
-      await userEvent.click(editButton);
+      await act(async () => {
+        await userEvent.click(editButton);
+      });
       
       const titleInput = screen.getByDisplayValue("Test Prompt");
       await userEvent.clear(titleInput);

@@ -7,7 +7,7 @@ export interface Tab {
   languageLocked: boolean;
   isTablet?: boolean;
   tabletState?: string;
-  isRich: boolean; // New property for rich text mode
+  isRich?: boolean; // New property for rich text mode
   backgroundTexture?: 'paper' | 'grid' | null; // Background texture option
   cursorPosition: EditorPosition;
   isPinned?: boolean;

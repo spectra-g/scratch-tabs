@@ -1,5 +1,4 @@
 import React from 'react';
-import { BubbleMenu } from '@tiptap/react';
 import { 
   Bold, 
   Italic, 
@@ -38,15 +37,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
   );
 
   return (
-    <BubbleMenu
-      editor={editor}
-      tippyOptions={{ 
-        duration: 100,
-        placement: 'top',
-        theme: 'dark',
-      }}
-      className="flex items-center space-x-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg p-1"
-    >
+    <div className="flex items-center space-x-1 bg-gray-800 p-2">
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
         isActive={editor.isActive('bold')}
@@ -119,6 +110,6 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
       >
         <Link size={16} />
       </ToolbarButton>
-    </BubbleMenu>
+    </div>
   );
 };

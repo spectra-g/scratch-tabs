@@ -30,7 +30,7 @@ export const migrateTextToRich = (
   // Split content into paragraphs
   const paragraphs = plainTextContent.split('\n\n').filter(p => p.trim());
   
-  const content = [
+  const content: any[] = [
     {
       type: 'dateCreated',
       attrs: {

@@ -168,10 +168,42 @@ export const useRootStore = create<RootStore>((set, get) => {
       addTab(newTabObject, isRightSide);
     },
 
-    handleNewTabFromPaste: (isRightSide) => {
-      navigator.clipboard
-        .readText()
-        .then((content) => get().handleNewTab(isRightSide, content));
+    handleNewTabFromPaste: async (isRightSide) => {
+      try {
+        // First, check if there are images in the clipboard
+        const clipboardItems = await navigator.clipboard.read();
+        
+        for (const clipboardItem of clipboardItems) {
+          for (const type of clipboardItem.types) {
+            if (type.startsWith('image/')) {
+              // Found an image, create a rich text tab
+              const { createTab } = await import('../utils/tabUtils');
+              const newTabObject = createTab({
+                isRich: true,
+                title: 'Rich Text Document',
+                content: '', // Rich text tabs use richContent, not content
+                richContent: null, // Will be initialized by the editor
+              });
+              get().addTab(newTabObject, isRightSide);
+              return;
+            }
+          }
+        }
+        
+        // No images found, fall back to text content
+        const content = await navigator.clipboard.readText();
+        get().handleNewTab(isRightSide, content);
+      } catch (error) {
+        // Fallback to text-only if clipboard API fails
+        console.warn('Clipboard API failed, falling back to text:', error);
+        navigator.clipboard
+          .readText()
+          .then((content) => get().handleNewTab(isRightSide, content))
+          .catch(() => {
+            // If even text reading fails, create an empty tab
+            get().handleNewTab(isRightSide, '');
+          });
+      }
     },
 
     removeTab: (id) => {

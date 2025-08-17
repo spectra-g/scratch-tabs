@@ -119,6 +119,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </div>
         )}
 
+        {/* Toolbar */}
+        <div className="flex-shrink-0 border-b border-gray-700">
+          <RichTextToolbar editor={editor} />
+        </div>
+
         {/* Editor Container */}
         <div 
           className={`flex-1 overflow-y-auto ${getBackgroundTextureClass()}`}
@@ -129,9 +134,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             className="h-full"
           />
         </div>
-
-        {/* Floating Toolbar */}
-        <RichTextToolbar editor={editor} />
 
         {/* Upgrade Confirmation Modal */}
         <UpgradeConfirmationModal

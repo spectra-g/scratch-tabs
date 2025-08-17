@@ -9,9 +9,11 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { Image } from '@tiptap/extension-image';
 import { Dropcursor } from '@tiptap/extension-dropcursor';
 import { Link } from '@tiptap/extension-link';
-import { lowlight } from 'lowlight';
+import { createLowlight } from 'lowlight';
 import { DateCreatedNode } from '../extensions/DateCreatedNode';
 import { SearchExtension } from '../extensions/SearchExtension';
+
+const lowlight = createLowlight();
 
 interface UseRichTextEditorProps {
   initialContent?: any;
@@ -28,6 +30,8 @@ export const useRichTextEditor = ({
     extensions: [
       StarterKit.configure({
         codeBlock: false, // We'll use CodeBlockLowlight instead
+        dropcursor: false, // We'll use Dropcursor extension explicitly
+        link: false, // We'll use Link extension explicitly
       }),
       CodeBlockLowlight.configure({
         lowlight,

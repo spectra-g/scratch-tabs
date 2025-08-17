@@ -271,7 +271,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       }
     };
 
-    const editorDom = editorRef.current.getDomNode();
+    const editorDom = editorRef.current?.getDomNode?.();
     if (editorDom) {
       editorDom.addEventListener('paste', handlePaste);
       return () => {

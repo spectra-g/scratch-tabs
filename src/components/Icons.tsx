@@ -31,6 +31,11 @@ export {
   Undo2,
   Redo2,
   
+  // Text Formatting
+  Bold,
+  Italic,
+  Quote,
+  
   // Navigation
   ChevronDown,
   ChevronRight,
@@ -80,6 +85,7 @@ export {
   // UI Elements
   Grid,
   List,
+  ListOrdered,
   Menu,
   MoreHorizontal,
   Star,
