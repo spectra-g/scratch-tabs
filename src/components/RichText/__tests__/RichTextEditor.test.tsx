@@ -24,6 +24,8 @@ jest.mock('@tiptap/react', () => ({
         results: [],
       },
     },
+    on: jest.fn(),
+    off: jest.fn(),
   })),
   EditorContent: ({ editor, className }: any) => (
     <div data-testid="editor-content" className={className}>
@@ -52,6 +54,8 @@ jest.mock('../hooks/useRichTextEditor', () => ({
         results: [],
       },
     },
+    on: jest.fn(),
+    off: jest.fn(),
   })),
 }));
 
@@ -92,6 +96,10 @@ jest.mock('../components/ImportCodeModal', () => ({
         <button onClick={onClose} data-testid="close-import">Close</button>
       </div>
     ) : null,
+}));
+
+jest.mock('../components/LinkBubbleMenu', () => ({
+  LinkBubbleMenu: () => <div data-testid="link-bubble-menu">Link Bubble Menu</div>,
 }));
 
 describe('RichTextEditor', () => {

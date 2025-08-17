@@ -93,26 +93,45 @@ export const SearchExtension = Extension.create<SearchOptions>({
   addProseMirrorPlugins() {
     const extension = this;
     
-    // Helper function to find matches
+    // Helper function to find matches in ProseMirror document
     const findMatches = (doc: any, searchTerm: string, options: SearchOptions) => {
       const results: Array<{ from: number; to: number }> = [];
       
       if (!searchTerm) return results;
 
-      const text = doc.textContent;
       const searchText = options.caseSensitive ? searchTerm : searchTerm.toLowerCase();
-      const documentText = options.caseSensitive ? text : text.toLowerCase();
-
+      
+      // Build a map of text content with proper positions
+      const textContent: { char: string; pos: number }[] = [];
+      
+      doc.descendants((node: any, pos: number) => {
+        if (node.isText) {
+          const text = node.text;
+          for (let i = 0; i < text.length; i++) {
+            textContent.push({
+              char: text[i],
+              pos: pos + i, // Remove the +1, it might be causing the offset
+            });
+          }
+        }
+      });
+      
+      // Convert to searchable text
+      const searchableText = textContent.map(item => 
+        options.caseSensitive ? item.char : item.char.toLowerCase()
+      ).join('');
+      
+      // Find matches in the searchable text
       let index = 0;
-      while (index < documentText.length) {
-        const found = documentText.indexOf(searchText, index);
+      while (index < searchableText.length) {
+        const found = searchableText.indexOf(searchText, index);
         if (found === -1) break;
 
         // Check for whole word match if required
         if (options.wholeWord) {
-          const before = found > 0 ? documentText[found - 1] : ' ';
-          const after = found + searchText.length < documentText.length 
-            ? documentText[found + searchText.length] 
+          const before = found > 0 ? searchableText[found - 1] : ' ';
+          const after = found + searchText.length < searchableText.length 
+            ? searchableText[found + searchText.length] 
             : ' ';
           
           if (!/\W/.test(before) || !/\W/.test(after)) {
@@ -121,11 +140,14 @@ export const SearchExtension = Extension.create<SearchOptions>({
           }
         }
 
-        results.push({
-          from: found,
-          to: found + searchTerm.length,
-        });
-
+        // Get actual document positions
+        if (textContent[found] && textContent[found + searchTerm.length - 1]) {
+          const from = textContent[found].pos;
+          const to = from + searchTerm.length;
+          
+          results.push({ from, to });
+        }
+        
         index = found + 1;
       }
 
