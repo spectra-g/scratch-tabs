@@ -49,6 +49,7 @@ export const useRichTextEditor = ({
       Image.configure({
         inline: false,
         allowBase64: true,
+        resizable: true,
       }),
       Dropcursor,
       Link.configure({

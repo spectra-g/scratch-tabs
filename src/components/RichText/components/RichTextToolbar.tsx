@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bold, 
   Italic, 
@@ -6,16 +6,66 @@ import {
   ListOrdered, 
   Table,
   Code,
+  FileCode,
   Link,
-  Quote
+  Quote,
+  Plus,
+  Minus,
+  Trash2
 } from '../../Icons';
+import { LinkModal } from './LinkModal';
 
 interface RichTextToolbarProps {
   editor: any; // TipTap editor instance
 }
 
 export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [currentLinkUrl, setCurrentLinkUrl] = useState('');
+  const [, forceUpdate] = useState({});
+
+  // Force re-render when editor selection changes to update table controls
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleUpdate = () => {
+      forceUpdate({});
+    };
+
+    editor.on('selectionUpdate', handleUpdate);
+    editor.on('update', handleUpdate);
+
+    return () => {
+      editor.off('selectionUpdate', handleUpdate);
+      editor.off('update', handleUpdate);
+    };
+  }, [editor]);
+
   if (!editor) return null;
+
+  const handleLinkClick = () => {
+    // Check if we're inside a link
+    const currentLink = editor.getAttributes('link');
+    if (currentLink.href) {
+      setCurrentLinkUrl(currentLink.href);
+    } else {
+      setCurrentLinkUrl('');
+    }
+    setShowLinkModal(true);
+  };
+
+  const handleLinkSave = (url: string) => {
+    if (url) {
+      editor.chain().focus().setLink({ href: url }).run();
+    }
+    setShowLinkModal(false);
+    setCurrentLinkUrl('');
+  };
+
+  const handleLinkCancel = () => {
+    setShowLinkModal(false);
+    setCurrentLinkUrl('');
+  };
 
   const ToolbarButton: React.FC<{
     onClick: () => void;
@@ -62,6 +112,14 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
         <Code size={16} />
       </ToolbarButton>
 
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        isActive={editor.isActive('codeBlock')}
+        title="Code Block"
+      >
+        <FileCode size={16} />
+      </ToolbarButton>
+
       <div className="w-px h-6 bg-gray-600 mx-1" />
 
       <ToolbarButton
@@ -99,17 +157,83 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
       </ToolbarButton>
 
       <ToolbarButton
-        onClick={() => {
-          const url = window.prompt('Enter URL:');
-          if (url) {
-            editor.chain().focus().setLink({ href: url }).run();
-          }
-        }}
+        onClick={handleLinkClick}
         isActive={editor.isActive('link')}
         title="Add Link"
       >
         <Link size={16} />
       </ToolbarButton>
+
+      {/* Table Controls - Only show when inside a table */}
+      {editor.isActive('table') && (
+        <>
+          <div className="w-px h-6 bg-gray-600 mx-1" />
+          
+          <ToolbarButton
+            onClick={() => editor.chain().focus().addColumnBefore().run()}
+            isActive={false}
+            title="Add Column Before"
+          >
+            <Plus size={16} />
+          </ToolbarButton>
+          
+          <ToolbarButton
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            isActive={false}
+            title="Add Column After"
+          >
+            <Plus size={16} />
+          </ToolbarButton>
+          
+          <ToolbarButton
+            onClick={() => editor.chain().focus().addRowBefore().run()}
+            isActive={false}
+            title="Add Row Before"
+          >
+            <Plus size={16} />
+          </ToolbarButton>
+          
+          <ToolbarButton
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            isActive={false}
+            title="Add Row After"
+          >
+            <Plus size={16} />
+          </ToolbarButton>
+          
+          <ToolbarButton
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+            isActive={false}
+            title="Delete Column"
+          >
+            <Minus size={16} />
+          </ToolbarButton>
+          
+          <ToolbarButton
+            onClick={() => editor.chain().focus().deleteRow().run()}
+            isActive={false}
+            title="Delete Row"
+          >
+            <Minus size={16} />
+          </ToolbarButton>
+          
+          <ToolbarButton
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            isActive={false}
+            title="Delete Table"
+          >
+            <Trash2 size={16} />
+          </ToolbarButton>
+        </>
+      )}
+
+      {/* Link Modal */}
+      <LinkModal
+        isOpen={showLinkModal}
+        onSave={handleLinkSave}
+        onCancel={handleLinkCancel}
+        initialUrl={currentLinkUrl}
+      />
     </div>
   );
 };
