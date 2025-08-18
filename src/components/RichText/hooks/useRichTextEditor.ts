@@ -1,12 +1,14 @@
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { Code } from '@tiptap/extension-code';
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { Highlight } from '@tiptap/extension-highlight';
-import { Image } from '@tiptap/extension-image';
+import { ResizableImage } from 'tiptap-extension-resizable-image';
+import 'tiptap-extension-resizable-image/styles.css';
 import { Dropcursor } from '@tiptap/extension-dropcursor';
 import { Link } from '@tiptap/extension-link';
 import { createLowlight } from 'lowlight';
@@ -32,6 +34,12 @@ export const useRichTextEditor = ({
         codeBlock: false, // We'll use CodeBlockLowlight instead
         dropcursor: false, // We'll use Dropcursor extension explicitly
         link: false, // We'll use Link extension explicitly
+        code: false, // We'll use Code extension explicitly
+      }),
+      Code.configure({
+        HTMLAttributes: {
+          class: 'inline-code',
+        },
       }),
       CodeBlockLowlight.configure({
         lowlight,
@@ -46,10 +54,9 @@ export const useRichTextEditor = ({
       Highlight.configure({
         multicolor: false,
       }),
-      Image.configure({
+      ResizableImage.configure({
         inline: false,
         allowBase64: true,
-        resizable: true,
       }),
       Dropcursor,
       Link.configure({
@@ -95,7 +102,7 @@ export const useRichTextEditor = ({
                 const reader = new FileReader();
                 reader.onload = (e) => {
                   const src = e.target?.result as string;
-                  editor?.chain().focus().setImage({ src }).run();
+                  editor?.chain().focus().setResizableImage({ src }).run();
                 };
                 reader.readAsDataURL(file);
                 return true; // Prevent default paste behavior

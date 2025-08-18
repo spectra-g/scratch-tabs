@@ -99,12 +99,22 @@
   font-style: italic;
 }
 
-.rich-text-editor .ProseMirror code {
+.rich-text-editor .ProseMirror code,
+.rich-text-editor .ProseMirror .inline-code {
   background-color: #374151; /* bg-gray-700 */
   color: #fbbf24; /* text-yellow-400 */
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+}
+
+/* Remove prose plugin backticks for inline code */
+.rich-text-editor .ProseMirror code::before,
+.rich-text-editor .ProseMirror code::after,
+.rich-text-editor .ProseMirror .inline-code::before,
+.rich-text-editor .ProseMirror .inline-code::after {
+  content: none !important;
 }
 
 /* Code block styles */

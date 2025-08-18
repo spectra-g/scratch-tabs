@@ -105,7 +105,21 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
       </ToolbarButton>
 
       <ToolbarButton
-        onClick={() => editor.chain().focus().toggleCode().run()}
+        onClick={() => {
+          console.log('Before toggle:');
+          console.log('- isActive:', editor.isActive('code'));
+          console.log('- Selection:', editor.state.selection);
+          console.log('- Selected text:', editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to));
+          console.log('- Full document HTML:', editor.getHTML());
+          console.log('- Full document JSON:', editor.getJSON());
+          
+          editor.chain().focus().toggleCode().run();
+          
+          console.log('After toggle:');
+          console.log('- isActive:', editor.isActive('code'));
+          console.log('- Full document HTML:', editor.getHTML());
+          console.log('- Full document JSON:', editor.getJSON());
+        }}
         isActive={editor.isActive('code')}
         title="Inline Code"
       >
