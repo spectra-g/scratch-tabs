@@ -17,16 +17,18 @@ import { SearchExtension } from '../extensions/SearchExtension';
 
 const lowlight = createLowlight();
 
-interface UseRichTextEditorProps {
+export interface UseRichTextEditorProps {
   initialContent?: any;
   onUpdate: (content: any) => void;
   dateCreated: number;
+  onTableContextMenu?: (event: MouseEvent) => void;
 }
 
 export const useRichTextEditor = ({
   initialContent,
   onUpdate,
   dateCreated,
+  onTableContextMenu,
 }: UseRichTextEditorProps) => {
   const editor = useEditor({
     extensions: [
@@ -111,6 +113,26 @@ export const useRichTextEditor = ({
           }
         }
         return false; // Allow default paste behavior for other content
+      },
+      handleDOMEvents: {
+        contextmenu: (view, event) => {
+          // Check if we're inside a table cell
+          const { state } = view;
+          const { $from } = state.selection;
+          
+          // Walk up the node hierarchy to see if we're in a table
+          for (let depth = $from.depth; depth > 0; depth--) {
+            const node = $from.node(depth);
+            if (node.type.name === 'table') {
+              if (onTableContextMenu) {
+                event.preventDefault();
+                onTableContextMenu(event);
+                return true;
+              }
+            }
+          }
+          return false;
+        },
       },
     },
   });

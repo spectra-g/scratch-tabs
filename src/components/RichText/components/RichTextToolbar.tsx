@@ -8,10 +8,7 @@ import {
   Code,
   FileCode,
   Link,
-  Quote,
-  Plus,
-  Minus,
-  Trash2
+  Quote
 } from '../../Icons';
 import { LinkModal } from './LinkModal';
 
@@ -178,68 +175,6 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
         <Link size={16} />
       </ToolbarButton>
 
-      {/* Table Controls - Only show when inside a table */}
-      {editor.isActive('table') && (
-        <>
-          <div className="w-px h-6 bg-gray-600 mx-1" />
-          
-          <ToolbarButton
-            onClick={() => editor.chain().focus().addColumnBefore().run()}
-            isActive={false}
-            title="Add Column Before"
-          >
-            <Plus size={16} />
-          </ToolbarButton>
-          
-          <ToolbarButton
-            onClick={() => editor.chain().focus().addColumnAfter().run()}
-            isActive={false}
-            title="Add Column After"
-          >
-            <Plus size={16} />
-          </ToolbarButton>
-          
-          <ToolbarButton
-            onClick={() => editor.chain().focus().addRowBefore().run()}
-            isActive={false}
-            title="Add Row Before"
-          >
-            <Plus size={16} />
-          </ToolbarButton>
-          
-          <ToolbarButton
-            onClick={() => editor.chain().focus().addRowAfter().run()}
-            isActive={false}
-            title="Add Row After"
-          >
-            <Plus size={16} />
-          </ToolbarButton>
-          
-          <ToolbarButton
-            onClick={() => editor.chain().focus().deleteColumn().run()}
-            isActive={false}
-            title="Delete Column"
-          >
-            <Minus size={16} />
-          </ToolbarButton>
-          
-          <ToolbarButton
-            onClick={() => editor.chain().focus().deleteRow().run()}
-            isActive={false}
-            title="Delete Row"
-          >
-            <Minus size={16} />
-          </ToolbarButton>
-          
-          <ToolbarButton
-            onClick={() => editor.chain().focus().deleteTable().run()}
-            isActive={false}
-            title="Delete Table"
-          >
-            <Trash2 size={16} />
-          </ToolbarButton>
-        </>
-      )}
 
       {/* Link Modal */}
       <LinkModal

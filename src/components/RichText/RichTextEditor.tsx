@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { useRichTextEditor } from './hooks/useRichTextEditor';
 import { useImagePasteDetection } from './hooks/useImagePasteDetection';
+import { useTableKeyboardShortcuts } from './hooks/useTableKeyboardShortcuts';
 import { RichTextToolbar } from './components/RichTextToolbar';
 import { EditorSearchBar } from './components/EditorSearchBar';
 import { LinkBubbleMenu } from './components/LinkBubbleMenu';
+import { TableContextMenu, Position } from './components/TableContextMenu';
 import { UpgradeConfirmationModal } from './components/UpgradeConfirmationModal';
 import { ImportCodeModal } from './components/ImportCodeModal';
 import { Tab } from '../../types';
@@ -26,12 +28,20 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showTableContextMenu, setShowTableContextMenu] = useState(false);
+  const [tableContextMenuPosition, setTableContextMenuPosition] = useState<Position>({ x: 0, y: 0 });
   const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleTableContextMenu = (event: MouseEvent) => {
+    setTableContextMenuPosition({ x: event.clientX, y: event.clientY });
+    setShowTableContextMenu(true);
+  };
 
   const editor = useRichTextEditor({
     initialContent: tab.richContent,
     onUpdate: onContentChange,
     dateCreated: tab.dateCreated,
+    onTableContextMenu: handleTableContextMenu,
   });
 
   const { handlePaste } = useImagePasteDetection({
@@ -55,18 +65,22 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [handlePaste, tab.isRich]);
 
-  // Set up keyboard shortcuts
+  // Set up global keyboard shortcuts (search)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
         setShowSearchBar(true);
+        return;
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Set up table-specific keyboard shortcuts
+  useTableKeyboardShortcuts({ editor });
 
   const handleUpgradeConfirm = () => {
     setShowUpgradeModal(false);
@@ -138,6 +152,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           {/* Link Bubble Menu */}
           <LinkBubbleMenu editor={editor} />
         </div>
+
+        {/* Table Context Menu */}
+        {showTableContextMenu && (
+          <TableContextMenu
+            editor={editor}
+            position={tableContextMenuPosition}
+            onClose={() => setShowTableContextMenu(false)}
+          />
+        )}
 
         {/* Upgrade Confirmation Modal */}
         <UpgradeConfirmationModal
