@@ -14,6 +14,7 @@ import { Link } from '@tiptap/extension-link';
 import { createLowlight } from 'lowlight';
 import { DateCreatedNode } from '../extensions/DateCreatedNode';
 import { SearchExtension } from '../extensions/SearchExtension';
+import 'prosemirror-view/style/prosemirror.css';
 
 const lowlight = createLowlight();
 

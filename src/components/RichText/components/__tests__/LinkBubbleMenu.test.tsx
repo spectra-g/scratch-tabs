@@ -143,8 +143,8 @@ describe('LinkBubbleMenu', () => {
       await waitFor(() => {
         const menu = screen.getByTitle('Edit Link').closest('div');
         expect(menu).toHaveClass('absolute'); // Tailwind class for position: absolute
-        expect(menu).toHaveStyle('top: 150px'); // 200 - 50 (offset)
-        expect(menu).toHaveStyle('left: 25px'); // center position minus menu width offset
+        expect(menu).toHaveStyle('top: 200px'); // 200 - 0 (offset)
+        expect(menu).toHaveStyle('left: 45px'); // center position minus menu width offset + 20px right
       });
     });
 

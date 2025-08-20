@@ -28,8 +28,8 @@ export const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
         // Position the menu above the link
         const rect = editor.view.dom.getBoundingClientRect();
         setPosition({
-          top: start.top - rect.top - 50, // 50px above the link
-          left: (start.left + end.left) / 2 - rect.left - 75, // Center horizontally, accounting for menu width
+          top: start.top - rect.top, // 0px above the link (directly above)
+          left: (start.left + end.left) / 2 - rect.left - 55, // Center horizontally + 20px to the right
         });
         setShowMenu(true);
       } else {
