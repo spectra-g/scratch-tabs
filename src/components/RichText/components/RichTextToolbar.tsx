@@ -11,6 +11,7 @@ import {
   Quote
 } from '../../Icons';
 import { LinkModal } from './LinkModal';
+import { extractLinkTextForEditing } from '../utils/linkTextExtraction';
 
 interface RichTextToolbarProps {
   editor: any; // TipTap editor instance
@@ -19,6 +20,8 @@ interface RichTextToolbarProps {
 export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [currentLinkUrl, setCurrentLinkUrl] = useState('');
+  const [currentLinkText, setCurrentLinkText] = useState('');
+  const [lastSelection, setLastSelection] = useState<{from: number, to: number} | null>(null);
   const [, forceUpdate] = useState({});
 
   // Force re-render when editor selection changes to update table controls
@@ -26,6 +29,12 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
     if (!editor) return;
 
     const handleUpdate = () => {
+      // Store the current selection if it's not empty
+      const { from, to } = editor.state.selection;
+      if (from !== to) {
+        setLastSelection({ from, to });
+      }
+      
       forceUpdate({});
     };
 
@@ -45,23 +54,109 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
     const currentLink = editor.getAttributes('link');
     if (currentLink.href) {
       setCurrentLinkUrl(currentLink.href);
+      
+      const result = extractLinkTextForEditing(editor, currentLink.href);
+      setCurrentLinkText(result.text);
+      setShowLinkModal(true);
+      return;
     } else {
       setCurrentLinkUrl('');
     }
+    
+    // Get the current selected text for the link text field
+    const { from, to } = editor.state.selection;
+    let selectedText = editor.state.doc.textBetween(from, to);
+    
+    // If no text is selected, try to select the word at cursor position
+    if (!selectedText) {
+      // Try to use the last stored selection first
+      if (lastSelection) {
+        selectedText = editor.state.doc.textBetween(lastSelection.from, lastSelection.to);
+      } else {
+        // If no stored selection, try to expand selection around the cursor to get the word
+        try {
+          const { state } = editor;
+          const { $from } = state.selection;
+          
+          // Find word boundaries around the cursor
+          const textNode = $from.parent;
+          const offset = $from.parentOffset;
+          const text = textNode.textContent || '';
+          
+          if (text) {
+            // Find the start and end of the word at cursor position
+            let start = offset;
+            let end = offset;
+            
+            // Move start backward to find word start
+            while (start > 0 && /\w/.test(text[start - 1])) {
+              start--;
+            }
+            
+            // Move end forward to find word end  
+            while (end < text.length && /\w/.test(text[end])) {
+              end++;
+            }
+            
+            if (start < end) {
+              // We found a word, get the text
+              selectedText = text.substring(start, end);
+              
+              // Store this as our selection for later use
+              const wordStart = $from.pos - offset + start;
+              const wordEnd = $from.pos - offset + end;
+              setLastSelection({ from: wordStart, to: wordEnd });
+            }
+          }
+        } catch (error) {
+          console.error('Error expanding selection to word:', error);
+        }
+      }
+    }
+    
+    setCurrentLinkText(selectedText || '');
     setShowLinkModal(true);
   };
 
-  const handleLinkSave = (url: string) => {
+  const handleLinkSave = (url: string, text?: string) => {
     if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
+      if (text) {
+        // If text is provided, we need to handle different scenarios
+        const { from, to } = editor.state.selection;
+        
+        if (lastSelection) {
+          // We have a stored selection from when the user clicked on a word - use it
+          editor.chain()
+            .focus()
+            .setTextSelection({ from: lastSelection.from, to: lastSelection.to })
+            .deleteSelection()
+            .insertContent(text)
+            .setTextSelection({ from: lastSelection.from, to: lastSelection.from + text.length })
+            .setLink({ href: url })
+            .run();
+        } else if (from !== to) {
+          // There's an active selection - use it
+          editor.chain().focus().deleteSelection().insertContent(text).setLink({ href: url }).run();
+        } else {
+          // No selection and no stored selection - just insert at cursor
+          editor.chain().focus().insertContent(text).setTextSelection({ from: from, to: from + text.length }).setLink({ href: url }).run();
+        }
+      } else {
+        // If no text provided, just update the URL (for existing links)
+        editor.chain().focus().setLink({ href: url }).run();
+      }
     }
     setShowLinkModal(false);
     setCurrentLinkUrl('');
+    setCurrentLinkText('');
+    setLastSelection(null); // Clear stored selection after use
   };
 
   const handleLinkCancel = () => {
     setShowLinkModal(false);
     setCurrentLinkUrl('');
+    setCurrentLinkText('');
+    setLastSelection(null); // Clear stored selection on cancel
   };
 
   const ToolbarButton: React.FC<{
@@ -102,21 +197,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
       </ToolbarButton>
 
       <ToolbarButton
-        onClick={() => {
-          console.log('Before toggle:');
-          console.log('- isActive:', editor.isActive('code'));
-          console.log('- Selection:', editor.state.selection);
-          console.log('- Selected text:', editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to));
-          console.log('- Full document HTML:', editor.getHTML());
-          console.log('- Full document JSON:', editor.getJSON());
-          
-          editor.chain().focus().toggleCode().run();
-          
-          console.log('After toggle:');
-          console.log('- isActive:', editor.isActive('code'));
-          console.log('- Full document HTML:', editor.getHTML());
-          console.log('- Full document JSON:', editor.getJSON());
-        }}
+        onClick={() => editor.chain().focus().toggleCode().run()}
         isActive={editor.isActive('code')}
         title="Inline Code"
       >
@@ -182,6 +263,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
         onSave={handleLinkSave}
         onCancel={handleLinkCancel}
         initialUrl={currentLinkUrl}
+        initialText={currentLinkText}
       />
     </div>
   );

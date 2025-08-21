@@ -3,9 +3,10 @@ import { X, Link } from '../../Icons';
 
 interface LinkModalProps {
   isOpen: boolean;
-  onSave: (url: string) => void;
+  onSave: (url: string, text?: string) => void;
   onCancel: () => void;
   initialUrl?: string;
+  initialText?: string;
 }
 
 export const LinkModal: React.FC<LinkModalProps> = ({
@@ -13,8 +14,10 @@ export const LinkModal: React.FC<LinkModalProps> = ({
   onSave,
   onCancel,
   initialUrl = '',
+  initialText = '',
 }) => {
   const [url, setUrl] = useState(initialUrl);
+  const [text, setText] = useState(initialText);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -26,11 +29,12 @@ export const LinkModal: React.FC<LinkModalProps> = ({
 
   useEffect(() => {
     setUrl(initialUrl);
-  }, [initialUrl]);
+    setText(initialText);
+  }, [initialUrl, initialText]);
 
   const handleSave = () => {
     if (url.trim()) {
-      onSave(url.trim());
+      onSave(url.trim(), text.trim() || undefined);
     }
   };
 
@@ -65,11 +69,26 @@ export const LinkModal: React.FC<LinkModalProps> = ({
         </div>
 
         <div className="mb-4">
+          <label htmlFor="text-input" className="block text-sm font-medium text-gray-300 mb-2">
+            Link Text
+          </label>
+          <input
+            ref={inputRef}
+            id="text-input"
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Link text (leave empty to use URL)"
+            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div className="mb-4">
           <label htmlFor="url-input" className="block text-sm font-medium text-gray-300 mb-2">
             URL
           </label>
           <input
-            ref={inputRef}
             id="url-input"
             type="url"
             value={url}
