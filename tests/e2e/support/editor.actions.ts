@@ -181,37 +181,8 @@ async getMonacoEditorContent(): Promise<string> {
     // Click at the end of the editor to position cursor after date
     await tipTapEditor.click({ position: { x: 100, y: 120 } });
     
-    // Use fill method which should work better for contenteditable
-    await tipTapEditor.fill(text);
-    
-    // Check if fill worked, if not use direct DOM manipulation
-    const currentContent = await tipTapEditor.textContent();
-    if (!currentContent?.includes(text)) {
-      await this.page.evaluate(({textToInsert, editorSide}) => {
-        const editor = document.querySelector(`[data-editor-pane-side="${editorSide}"] .ProseMirror`) as HTMLDivElement;
-        if (editor) {
-          // Clear any existing content except date
-          const dateNode = editor.querySelector('[data-testid="rich-text-date-created"]')?.parentElement;
-          if (dateNode) {
-            // Keep only the date node, remove other content
-            Array.from(editor.children).forEach(child => {
-              if (child !== dateNode) {
-                child.remove();
-              }
-            });
-          }
-          
-          // Create a new paragraph with the text
-          const paragraph = document.createElement('p');
-          paragraph.textContent = textToInsert;
-          editor.appendChild(paragraph);
-          
-          // Trigger input event to notify TipTap
-          const event = new Event('input', { bubbles: true });
-          editor.dispatchEvent(event);
-        }
-      }, {textToInsert: text, editorSide: side});
-    }
+    // Use character-by-character typing to expose any focus loss issues
+    await tipTapEditor.type(text);
   }
 
   async expectRichTextEditorContainsText(text: string, side: 'left' | 'right' = 'left') {

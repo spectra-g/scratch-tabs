@@ -83,7 +83,7 @@ export const useRichTextEditor = ({
         },
       },
     },
-  }, [initialContent, dateCreated]);
+  }, [dateCreated]);
 
   // Cleanup effect to prevent memory leaks
   useEffect(() => {
