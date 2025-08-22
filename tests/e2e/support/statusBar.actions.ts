@@ -253,4 +253,35 @@ export class StatusBarActions {
     
     return optionTexts;
   }
+
+  // Rich Text functionality
+  getRichTextToggle() {
+    return this.page.locator('[data-testid="rich-text-toggle"]');
+  }
+
+  async expectRichTextToggleVisible() {
+    const richTextToggle = this.getRichTextToggle();
+    await expect(richTextToggle).toBeVisible();
+  }
+
+  async expectRichTextToggleNotVisible() {
+    const richTextToggle = this.getRichTextToggle();
+    await expect(richTextToggle).not.toBeVisible();
+  }
+
+  async clickRichTextToggle() {
+    const richTextToggle = this.getRichTextToggle();
+    await expect(richTextToggle).toBeVisible();
+    await richTextToggle.click();
+  }
+
+  async expectRichTextToggleText(text: 'Rich' | 'Text') {
+    const richTextToggle = this.getRichTextToggle();
+    await expect(richTextToggle).toContainText(text);
+  }
+
+  async expectRichTextToggleTitle(title: string) {
+    const richTextToggle = this.getRichTextToggle();
+    await expect(richTextToggle).toHaveAttribute('title', title);
+  }
 } 

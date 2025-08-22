@@ -24,6 +24,7 @@ export const RichTextControls: React.FC<RichTextControlsProps> = ({
       onClick={handleToggleRichMode}
       className="flex items-center space-x-1 px-2 py-1 hover:bg-gray-700/50 rounded transition-colors group"
       title={activeTab.isRich ? 'Switch to Plain Text' : 'Switch to Rich Text'}
+      data-testid="rich-text-toggle"
     >
       <FileText size={12} />
       <span className="text-xs text-gray-300">

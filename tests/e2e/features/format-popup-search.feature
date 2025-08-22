@@ -1,4 +1,3 @@
-@new-feature
 Feature: Format Popup Search Functionality
   As a user
   I want to search and filter formats in the format selection popup

@@ -26,7 +26,10 @@ const DateCreatedComponent: React.FC<DateCreatedNodeProps> = ({ node }) => {
 
   return (
     <NodeViewWrapper className="date-created-node">
-      <div className="text-xs text-gray-500 mb-4 font-medium tracking-wide text-center">
+      <div 
+        className="text-xs text-gray-500 mb-4 font-medium tracking-wide text-center"
+        data-testid="rich-text-date-created"
+      >
         Created {formatDate(node.attrs.dateCreated)}
       </div>
     </NodeViewWrapper>

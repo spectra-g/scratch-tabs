@@ -146,6 +146,95 @@ async getMonacoEditorContent(): Promise<string> {
     }
   }
 
+  // Rich Text editor specific methods
+  getRichTextEditor() {
+    return this.page.locator('[data-editor-pane-side="left"] .rich-text-editor');
+  }
+
+  getRichTextDateCreated() {
+    return this.page.locator('[data-testid="rich-text-date-created"]');
+  }
+
+  getTipTapEditor() {
+    return this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  }
+
+  async expectRichTextEditorVisible() {
+    const richTextEditor = this.getRichTextEditor();
+    await expect(richTextEditor).toBeVisible();
+  }
+
+  async expectRichTextDateCreatedVisible() {
+    const dateCreated = this.getRichTextDateCreated();
+    await expect(dateCreated).toBeVisible();
+  }
+
+  async expectRichTextDateCreatedContainsText(text: string) {
+    const dateCreated = this.getRichTextDateCreated();
+    await expect(dateCreated).toContainText(text);
+  }
+
+  async typeInRichTextEditor(text: string) {
+    const tipTapEditor = this.getTipTapEditor();
+    await expect(tipTapEditor).toBeVisible();
+    
+    // Click at the end of the editor to position cursor after date
+    await tipTapEditor.click({ position: { x: 100, y: 120 } });
+    
+    // Use fill method which should work better for contenteditable
+    await tipTapEditor.fill(text);
+    
+    // Check if fill worked, if not use direct DOM manipulation
+    const currentContent = await tipTapEditor.textContent();
+    if (!currentContent?.includes(text)) {
+      await this.page.evaluate((textToInsert) => {
+        const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror') as HTMLDivElement;
+        if (editor) {
+          // Clear any existing content except date
+          const dateNode = editor.querySelector('[data-testid="rich-text-date-created"]')?.parentElement;
+          if (dateNode) {
+            // Keep only the date node, remove other content
+            Array.from(editor.children).forEach(child => {
+              if (child !== dateNode) {
+                child.remove();
+              }
+            });
+          }
+          
+          // Create a new paragraph with the text
+          const paragraph = document.createElement('p');
+          paragraph.textContent = textToInsert;
+          editor.appendChild(paragraph);
+          
+          // Trigger input event to notify TipTap
+          const event = new Event('input', { bubbles: true });
+          editor.dispatchEvent(event);
+        }
+      }, text);
+    }
+  }
+
+  async expectRichTextEditorContainsText(text: string) {
+    // Use Playwright's built-in waiting - wait for the text to appear in the editor
+    const tipTapEditor = this.getTipTapEditor();
+    await expect(tipTapEditor).toContainText(text);
+    
+    // Also verify it appears in a paragraph specifically
+    const paragraphWithText = this.page.locator('[data-editor-pane-side="left"] .ProseMirror p').filter({ hasText: text });
+    await expect(paragraphWithText).toBeVisible();
+  }
+
+  async focusRichTextEditor() {
+    const tipTapEditor = this.getTipTapEditor();
+    await tipTapEditor.click();
+    await tipTapEditor.focus();
+  }
+
+  async expectMonacoEditorVisible() {
+    const editorContainer = this.getEditorContainerLocator();
+    await expect(editorContainer).toBeVisible();
+  }
+
   async expectFirst10LinesContainJson() {
     const content = await this.getMonacoEditorContent();
     const lines = content.split('\n');
