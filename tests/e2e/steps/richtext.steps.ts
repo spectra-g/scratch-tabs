@@ -19,6 +19,25 @@ When('I type {string} in the Rich Text editor', async function(text: string) {
   await this.editor.typeInRichTextEditor(text);
 });
 
+When('I split the tab to create a side-by-side view', async function() {
+  // Right-click on the "Scratch 2" tab (which should be active after creating a new tab) to open context menu
+  await this.tabBar.rightClickTab('Scratch 2');
+  // Select "Split" from the context menu  
+  await this.contextMenu.selectFromContextMenu('Split');
+});
+
+When('I click the Rich Text toggle in the right side status bar', async function() {
+  await this.statusBar.clickRichTextToggle('right');
+});
+
+When('I type {string} in the right side Rich Text editor', async function(text: string) {
+  await this.editor.typeInRichTextEditor(text, 'right');
+});
+
+When('I type {string} in the Monaco editor', async function(text: string) {
+  await this.editor.typeInEditor(text);
+});
+
 // Then steps
 Then('I should see the Rich Text editor is displayed', async function() {
   await this.editor.expectRichTextEditorVisible();
@@ -54,4 +73,28 @@ Then('I should see at least one paragraph in the Rich Text editor', async functi
 
 Then('the Rich Text toggle should show {string} text', async function(toggleText: string) {
   await this.statusBar.expectRichTextToggleText(toggleText as 'Rich' | 'Text');
+});
+
+Then('the left side Rich Text editor should contain {string}', async function(text: string) {
+  await this.editor.expectRichTextEditorContainsText(text, 'left');
+});
+
+Then('the right side Rich Text editor should contain {string}', async function(text: string) {
+  await this.editor.expectRichTextEditorContainsText(text, 'right');
+});
+
+Then('the left side Rich Text editor should not contain {string}', async function(text: string) {
+  await this.editor.expectRichTextEditorDoesNotContainText(text, 'left');
+});
+
+Then('the right side Rich Text editor should not contain {string}', async function(text: string) {
+  await this.editor.expectRichTextEditorDoesNotContainText(text, 'right');
+});
+
+Then('I should see the Monaco editor is displayed', async function() {
+  await this.editor.expectMonacoEditorVisible();
+});
+
+Then('the Monaco editor should contain {string}', async function(expectedText: string) {
+  await this.editor.expectEditorContentToContain(expectedText);
 });

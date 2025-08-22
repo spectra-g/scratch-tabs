@@ -147,35 +147,35 @@ async getMonacoEditorContent(): Promise<string> {
   }
 
   // Rich Text editor specific methods
-  getRichTextEditor() {
-    return this.page.locator('[data-editor-pane-side="left"] .rich-text-editor');
+  getRichTextEditor(side: 'left' | 'right' = 'left') {
+    return this.page.locator(`[data-editor-pane-side="${side}"] .rich-text-editor`);
   }
 
-  getRichTextDateCreated() {
-    return this.page.locator('[data-testid="rich-text-date-created"]');
+  getRichTextDateCreated(side: 'left' | 'right' = 'left') {
+    return this.page.locator(`[data-editor-pane-side="${side}"] [data-testid="rich-text-date-created"]`);
   }
 
-  getTipTapEditor() {
-    return this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  getTipTapEditor(side: 'left' | 'right' = 'left') {
+    return this.page.locator(`[data-editor-pane-side="${side}"] .ProseMirror`);
   }
 
-  async expectRichTextEditorVisible() {
-    const richTextEditor = this.getRichTextEditor();
+  async expectRichTextEditorVisible(side: 'left' | 'right' = 'left') {
+    const richTextEditor = this.getRichTextEditor(side);
     await expect(richTextEditor).toBeVisible();
   }
 
-  async expectRichTextDateCreatedVisible() {
-    const dateCreated = this.getRichTextDateCreated();
+  async expectRichTextDateCreatedVisible(side: 'left' | 'right' = 'left') {
+    const dateCreated = this.getRichTextDateCreated(side);
     await expect(dateCreated).toBeVisible();
   }
 
-  async expectRichTextDateCreatedContainsText(text: string) {
-    const dateCreated = this.getRichTextDateCreated();
+  async expectRichTextDateCreatedContainsText(text: string, side: 'left' | 'right' = 'left') {
+    const dateCreated = this.getRichTextDateCreated(side);
     await expect(dateCreated).toContainText(text);
   }
 
-  async typeInRichTextEditor(text: string) {
-    const tipTapEditor = this.getTipTapEditor();
+  async typeInRichTextEditor(text: string, side: 'left' | 'right' = 'left') {
+    const tipTapEditor = this.getTipTapEditor(side);
     await expect(tipTapEditor).toBeVisible();
     
     // Click at the end of the editor to position cursor after date
@@ -187,8 +187,8 @@ async getMonacoEditorContent(): Promise<string> {
     // Check if fill worked, if not use direct DOM manipulation
     const currentContent = await tipTapEditor.textContent();
     if (!currentContent?.includes(text)) {
-      await this.page.evaluate((textToInsert) => {
-        const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror') as HTMLDivElement;
+      await this.page.evaluate(({textToInsert, editorSide}) => {
+        const editor = document.querySelector(`[data-editor-pane-side="${editorSide}"] .ProseMirror`) as HTMLDivElement;
         if (editor) {
           // Clear any existing content except date
           const dateNode = editor.querySelector('[data-testid="rich-text-date-created"]')?.parentElement;
@@ -210,22 +210,28 @@ async getMonacoEditorContent(): Promise<string> {
           const event = new Event('input', { bubbles: true });
           editor.dispatchEvent(event);
         }
-      }, text);
+      }, {textToInsert: text, editorSide: side});
     }
   }
 
-  async expectRichTextEditorContainsText(text: string) {
+  async expectRichTextEditorContainsText(text: string, side: 'left' | 'right' = 'left') {
     // Use Playwright's built-in waiting - wait for the text to appear in the editor
-    const tipTapEditor = this.getTipTapEditor();
+    const tipTapEditor = this.getTipTapEditor(side);
     await expect(tipTapEditor).toContainText(text);
     
     // Also verify it appears in a paragraph specifically
-    const paragraphWithText = this.page.locator('[data-editor-pane-side="left"] .ProseMirror p').filter({ hasText: text });
+    const paragraphWithText = this.page.locator(`[data-editor-pane-side="${side}"] .ProseMirror p`).filter({ hasText: text });
     await expect(paragraphWithText).toBeVisible();
   }
 
-  async focusRichTextEditor() {
-    const tipTapEditor = this.getTipTapEditor();
+  async expectRichTextEditorDoesNotContainText(text: string, side: 'left' | 'right' = 'left') {
+    // Verify the text does NOT appear in the specified side
+    const tipTapEditor = this.getTipTapEditor(side);
+    await expect(tipTapEditor).not.toContainText(text);
+  }
+
+  async focusRichTextEditor(side: 'left' | 'right' = 'left') {
+    const tipTapEditor = this.getTipTapEditor(side);
     await tipTapEditor.click();
     await tipTapEditor.focus();
   }
