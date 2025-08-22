@@ -13,7 +13,6 @@ export const useTableKeyboardShortcuts = ({ editor }: UseTableKeyboardShortcutsP
     const handleKeyDown = (e: KeyboardEvent) => {
       // Table shortcuts - only work when inside a table
       // Mac: Ctrl+Option+Arrow, Windows: Ctrl+Alt+Arrow
-      const isMac = detectOS() === 'mac';
       const modifierPressed = e.ctrlKey && e.altKey;
       
       if (!editor.isActive('table') || !modifierPressed) return;

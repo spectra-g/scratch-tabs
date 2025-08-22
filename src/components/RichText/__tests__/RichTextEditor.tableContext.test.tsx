@@ -51,8 +51,21 @@ jest.mock('../components/RichTextToolbar', () => ({
   RichTextToolbar: () => <div data-testid="toolbar">Toolbar</div>,
 }));
 
-jest.mock('../components/EditorSearchBar', () => ({
-  EditorSearchBar: () => <div data-testid="search-bar">Search Bar</div>,
+jest.mock('../components/InlineSearchBar', () => ({
+  InlineSearchBar: ({ isVisible, onClose, onOpen }: any) => (
+    <div>
+      {!isVisible && (
+        <button title="Search (Ctrl+F)" onClick={onOpen} data-testid="search-button">
+          Search
+        </button>
+      )}
+      {isVisible && (
+        <div data-testid="inline-search-bar">
+          <button onClick={onClose} data-testid="close-search">Close</button>
+        </div>
+      )}
+    </div>
+  ),
 }));
 
 jest.mock('../components/LinkBubbleMenu', () => ({
@@ -202,7 +215,7 @@ describe('RichTextEditor - Table Context Menu Integration', () => {
     render(<RichTextEditor {...defaultProps} />);
     
     // Initially search bar should not be visible
-    expect(screen.queryByTestId('search-bar')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('inline-search-bar')).not.toBeInTheDocument();
     
     // Simulate Ctrl+F
     fireEvent.keyDown(document, {
@@ -210,7 +223,7 @@ describe('RichTextEditor - Table Context Menu Integration', () => {
       ctrlKey: true,
     });
     
-    expect(screen.getByTestId('search-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('inline-search-bar')).toBeInTheDocument();
   });
 
   it('should handle search keyboard shortcut with metaKey (Mac)', () => {
@@ -222,6 +235,6 @@ describe('RichTextEditor - Table Context Menu Integration', () => {
       metaKey: true,
     });
     
-    expect(screen.getByTestId('search-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('inline-search-bar')).toBeInTheDocument();
   });
 });

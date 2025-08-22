@@ -70,13 +70,21 @@ jest.mock('../components/RichTextToolbar', () => ({
   RichTextToolbar: () => <div data-testid="rich-text-toolbar">Toolbar</div>,
 }));
 
-jest.mock('../components/EditorSearchBar', () => ({
-  EditorSearchBar: ({ isVisible, onClose }: any) => 
-    isVisible ? (
-      <div data-testid="editor-search-bar">
-        <button onClick={onClose} data-testid="close-search">Close</button>
-      </div>
-    ) : null,
+jest.mock('../components/InlineSearchBar', () => ({
+  InlineSearchBar: ({ isVisible, onClose, onOpen }: any) => (
+    <div>
+      {!isVisible && (
+        <button title="Search (Ctrl+F)" onClick={onOpen} data-testid="search-button">
+          Search
+        </button>
+      )}
+      {isVisible && (
+        <div data-testid="inline-search-bar">
+          <button onClick={onClose} data-testid="close-search">Close</button>
+        </div>
+      )}
+    </div>
+  ),
 }));
 
 jest.mock('../components/UpgradeConfirmationModal', () => ({
@@ -189,7 +197,7 @@ describe('RichTextEditor', () => {
       const searchButton = screen.getByTitle('Search (Ctrl+F)');
       fireEvent.click(searchButton);
 
-      expect(screen.getByTestId('editor-search-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('inline-search-bar')).toBeInTheDocument();
     });
 
     it('should hide search toggle button when search bar is visible', () => {
@@ -226,7 +234,7 @@ describe('RichTextEditor', () => {
       const closeButton = screen.getByTestId('close-search');
       fireEvent.click(closeButton);
 
-      expect(screen.queryByTestId('editor-search-bar')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('inline-search-bar')).not.toBeInTheDocument();
     });
   });
 
@@ -329,7 +337,7 @@ describe('RichTextEditor', () => {
 
       fireEvent.keyDown(document, { key: 'f', ctrlKey: true });
 
-      expect(screen.getByTestId('editor-search-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('inline-search-bar')).toBeInTheDocument();
     });
 
     it('should open search bar on Cmd+F (Mac)', () => {
@@ -344,7 +352,7 @@ describe('RichTextEditor', () => {
 
       fireEvent.keyDown(document, { key: 'f', metaKey: true });
 
-      expect(screen.getByTestId('editor-search-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('inline-search-bar')).toBeInTheDocument();
     });
   });
 

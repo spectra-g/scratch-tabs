@@ -35,9 +35,8 @@ export const SearchExtension = Extension.create<SearchOptions>({
 
   addCommands() {
     return {
-      setSearchTerm: (searchTerm: string) => ({ tr, state, dispatch }) => {
+      setSearchTerm: (searchTerm: string) => ({ tr, dispatch }) => {
         if (dispatch) {
-          const plugin = this.options;
           const newTr = tr.setMeta('search', { searchTerm });
           dispatch(newTr);
         }

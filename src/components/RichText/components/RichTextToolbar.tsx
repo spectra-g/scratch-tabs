@@ -12,17 +12,22 @@ import {
 } from '../../Icons';
 import { LinkModal } from './LinkModal';
 import { extractLinkTextForEditing } from '../utils/linkTextExtraction';
+import { getNextBackgroundTexture, getBackgroundConfig } from '../utils/backgroundTextureUtils';
+import { useRootStore } from '../../../stores/rootStore';
+import { Tab } from '../../../types';
 
 interface RichTextToolbarProps {
   editor: any; // TipTap editor instance
+  activeTab: Tab;
 }
 
-export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
+export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, activeTab }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [currentLinkUrl, setCurrentLinkUrl] = useState('');
   const [currentLinkText, setCurrentLinkText] = useState('');
   const [lastSelection, setLastSelection] = useState<{from: number, to: number} | null>(null);
   const [, forceUpdate] = useState({});
+  const { updateTabState } = useRootStore();
 
   // Force re-render when editor selection changes to update table controls
   useEffect(() => {
@@ -159,6 +164,15 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
     setLastSelection(null); // Clear stored selection on cancel
   };
 
+  const handleBackgroundChange = (texture: 'paper' | 'grid' | null) => {
+    updateTabState(activeTab.id, { backgroundTexture: texture });
+  };
+
+  const handleBackgroundCycle = () => {
+    const nextTexture = getNextBackgroundTexture(activeTab.backgroundTexture);
+    handleBackgroundChange(nextTexture);
+  };
+
   const ToolbarButton: React.FC<{
     onClick: () => void;
     isActive?: boolean;
@@ -256,6 +270,15 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
         <Link size={16} />
       </ToolbarButton>
 
+      <div className="w-px h-6 bg-gray-600 mx-1" />
+
+      <ToolbarButton
+        onClick={handleBackgroundCycle}
+        isActive={false}
+        title={getBackgroundConfig(activeTab.backgroundTexture).title}
+      >
+        {getBackgroundConfig(activeTab.backgroundTexture).icon}
+      </ToolbarButton>
 
       {/* Link Modal */}
       <LinkModal

@@ -12,8 +12,6 @@ interface BlockWrapperProps {
 export const BlockWrapper: React.FC<BlockWrapperProps> = ({
   node,
   updateAttributes,
-  deleteNode,
-  editor,
 }) => {
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });

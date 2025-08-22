@@ -93,7 +93,7 @@ export const useRichTextEditor = ({
       attributes: {
         class: 'prose prose-invert max-w-none focus:outline-none min-h-full p-6',
       },
-      handlePaste: (view, event) => {
+      handlePaste: (_, event) => {
         // Handle image paste
         const items = event.clipboardData?.items;
         if (items) {

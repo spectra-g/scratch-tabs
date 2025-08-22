@@ -4,13 +4,12 @@ import { useRichTextEditor } from './hooks/useRichTextEditor';
 import { useImagePasteDetection } from './hooks/useImagePasteDetection';
 import { useTableKeyboardShortcuts } from './hooks/useTableKeyboardShortcuts';
 import { RichTextToolbar } from './components/RichTextToolbar';
-import { EditorSearchBar } from './components/EditorSearchBar';
+import { InlineSearchBar } from './components/InlineSearchBar';
 import { LinkBubbleMenu } from './components/LinkBubbleMenu';
 import { TableContextMenu, Position } from './components/TableContextMenu';
 import { UpgradeConfirmationModal } from './components/UpgradeConfirmationModal';
 import { ImportCodeModal } from './components/ImportCodeModal';
 import { Tab } from '../../types';
-import { Search } from '../Icons';
 
 interface RichTextEditorProps {
   tab: Tab;
@@ -110,33 +109,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         ref={editorContainerRef}
         className={`rich-text-editor h-full w-full flex flex-col relative ${className}`}
       >
-        {/* Search Bar */}
-        {showSearchBar && (
-          <div className="flex-shrink-0 p-4 border-b border-gray-700">
-            <EditorSearchBar
-              editor={editor}
-              isVisible={showSearchBar}
-              onClose={() => setShowSearchBar(false)}
-            />
-          </div>
-        )}
-
-        {/* Search Toggle Button */}
-        {!showSearchBar && (
-          <div className="absolute top-4 right-4 z-20">
-            <button
-              onClick={() => setShowSearchBar(true)}
-              className="p-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-md shadow-lg transition-colors"
-              title="Search (Ctrl+F)"
-            >
-              <Search size={16} className="text-gray-400" />
-            </button>
-          </div>
-        )}
+        {/* Inline Search Bar */}
+        <InlineSearchBar
+          editor={editor}
+          isVisible={showSearchBar}
+          onClose={() => setShowSearchBar(false)}
+          onOpen={() => setShowSearchBar(true)}
+        />
 
         {/* Toolbar */}
         <div className="flex-shrink-0 border-b border-gray-700">
-          <RichTextToolbar editor={editor} />
+          <RichTextToolbar editor={editor} activeTab={tab} />
         </div>
 
         {/* Editor Container */}

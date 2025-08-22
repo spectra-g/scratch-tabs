@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Eye, EyeOff, Code } from '../../Icons';
+import { EyeOff, Code } from '../../Icons';
 
 interface BlockContextMenuProps {
   onBlurContent: () => void;
