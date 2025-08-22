@@ -1,4 +1,5 @@
 import { useEditor } from '@tiptap/react';
+import { useEffect } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import { Code } from '@tiptap/extension-code';
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
@@ -136,7 +137,16 @@ export const useRichTextEditor = ({
         },
       },
     },
-  });
+  }, [initialContent, dateCreated]);
+
+  // Cleanup effect to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (editor) {
+        editor.destroy();
+      }
+    };
+  }, [editor]);
 
   return editor;
 };

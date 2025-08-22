@@ -10,7 +10,6 @@ export class RichTextService {
    * Import content from another tab as a code block
    */
   static async importContentAsCodeBlock(
-    targetTabId: string,
     sourceTabId: string,
     editor: any
   ): Promise<void> {

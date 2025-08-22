@@ -151,6 +151,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
             ) : activeTab.isRich ? (
               // Render rich text editor
               <RichTextEditor
+                key={activeTab.id}
                 tab={activeTab}
                 onContentChange={handleRichContentChange}
                 onUpgradeToRich={handleUpgradeToRich}
