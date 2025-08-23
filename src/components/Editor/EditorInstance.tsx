@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import { Editor } from "@monaco-editor/react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useRootStore } from "../../stores";
@@ -16,6 +16,7 @@ import { modelManager } from "../../services/modelManager";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
+import { UpgradeConfirmationModal } from "../RichText";
 
 interface EditorInstanceProps {
   side: "left" | "right";
@@ -36,6 +37,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const currentTabIdRef = useRef<string>(activeTabId);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { setActiveEditor } = useActiveEditorStore();
 
   // Get active tab using standard Zustand approach (simplified since cursor position is no longer in state)
@@ -46,6 +49,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
   // This can now be simplified since cursor position is no longer in React state
   const activeTabWithoutCursor = activeTab;
+
+  // Image paste detection is handled directly in useEffect below
 
   // Get actions from rootStore
   const {
@@ -87,8 +92,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }),
     shallow,
   );
-
-  const editorContainerRef = useRef<HTMLDivElement>(null);
 
   // --- Ref to hold the latest activeTab data ---
   const latestActiveTabRef = useRef(activeTab);
@@ -465,6 +468,66 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }
   };
 
+  // Set up paste event listener for image detection in plain text mode
+  useEffect(() => {
+    if (activeTab && !activeTab.isRich && editorContainerRef.current) {
+      console.log('📌 Setting up image paste detection for Monaco editor');
+      const container = editorContainerRef.current;
+      
+      // Create a stable handler that doesn't change
+      const stableHandlePaste = (event: ClipboardEvent) => {
+        console.log('🔍 Image paste detection triggered in Monaco, isRichMode:', activeTab?.isRich);
+        // Only detect image pastes in plain text mode
+        if (activeTab?.isRich) {
+          console.log('📝 In rich mode, skipping image detection');
+          return;
+        }
+
+        const items = event.clipboardData?.items;
+        if (!items) {
+          console.log('📋 No clipboard items found');
+          return;
+        }
+
+        console.log('📋 Checking clipboard items:', items.length);
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          console.log('📋 Item', i, ':', item.type);
+          if (item.type.startsWith('image/')) {
+            console.log('🖼️ Image detected in plain text mode! Triggering upgrade modal');
+            event.preventDefault();
+            if (onUpgradeToRich) {
+              console.log('✨ Showing upgrade modal from Monaco editor');
+              setShowUpgradeModal(true);
+            }
+            break;
+          }
+        }
+      };
+      
+      container.addEventListener('paste', stableHandlePaste);
+      
+      return () => {
+        console.log('🧹 Cleaning up image paste detection for Monaco editor');
+        container.removeEventListener('paste', stableHandlePaste);
+      };
+    }
+  }, [activeTab?.isRich, onUpgradeToRich]); // Remove handlePaste from dependencies
+
+  // Upgrade modal handlers
+  const handleUpgradeConfirm = () => {
+    setShowUpgradeModal(false);
+    if (onUpgradeToRich) {
+      console.log('✅ User confirmed upgrade to Rich Text');
+      onUpgradeToRich();
+    }
+  };
+
+  const handleUpgradeCancel = () => {
+    console.log('❌ User cancelled upgrade to Rich Text');
+    setShowUpgradeModal(false);
+  };
+
   const handleBatchToolsApply = useCallback((content: string) => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -553,6 +616,11 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         </div>
       </div>
       <BatchToolsModal onApply={handleBatchToolsApply} />
+      <UpgradeConfirmationModal
+        isOpen={showUpgradeModal}
+        onConfirm={handleUpgradeConfirm}
+        onCancel={handleUpgradeCancel}
+      />
     </div>
   );
 };

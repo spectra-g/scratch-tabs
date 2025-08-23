@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { useRichTextEditor } from './hooks/useRichTextEditor';
-import { useImagePasteDetection } from './hooks/useImagePasteDetection';
 import { useTableKeyboardShortcuts } from './hooks/useTableKeyboardShortcuts';
 import { RichTextToolbar } from './components/RichTextToolbar';
 import { InlineSearchBar } from './components/InlineSearchBar';
@@ -43,26 +42,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onTableContextMenu: handleTableContextMenu,
   });
 
-  const { handlePaste } = useImagePasteDetection({
-    onImagePasted: () => {
-      if (!tab.isRich && onUpgradeToRich) {
-        setShowUpgradeModal(true);
-      }
-    },
-    isRichMode: tab.isRich,
-  });
-
-  // Set up paste event listener for image detection in plain text mode
-  useEffect(() => {
-    if (!tab.isRich && editorContainerRef.current) {
-      const container = editorContainerRef.current;
-      container.addEventListener('paste', handlePaste);
-      
-      return () => {
-        container.removeEventListener('paste', handlePaste);
-      };
-    }
-  }, [handlePaste, tab.isRich]);
+  // Image paste detection is now handled in EditorInstance for plain text mode
 
   // Set up global keyboard shortcuts (search)
   useEffect(() => {
