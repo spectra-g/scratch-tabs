@@ -46,7 +46,19 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   useEffect(() => {
     if (pendingImageData && editor) {
-      editor.chain().focus().setImage({ src: pendingImageData }).run();
+      const { state, dispatch } = editor.view;
+      const { selection } = state;
+      const imageAttrs = { src: pendingImageData, alt: '', title: '' };
+      let imageNode;
+      if (state.schema.nodes.resizableImage) {
+        imageNode = state.schema.nodes.resizableImage.create(imageAttrs);
+      } else if (state.schema.nodes.image) {
+        imageNode = state.schema.nodes.image.create(imageAttrs);
+      } else {
+        return;
+      }
+      const tr = state.tr.replaceSelectionWith(imageNode);
+      dispatch(tr);
       setPendingImageData(null);
     }
   }, [pendingImageData, editor, setPendingImageData]);
