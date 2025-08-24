@@ -9,6 +9,7 @@ import { TableContextMenu, Position } from './components/TableContextMenu';
 import { UpgradeConfirmationModal } from './components/UpgradeConfirmationModal';
 import { ImportCodeModal } from './components/ImportCodeModal';
 import { Tab } from '../../types';
+import { useClipboardStore } from '../../stores/clipboardStore';
 
 interface RichTextEditorProps {
   tab: Tab;
@@ -29,6 +30,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [showTableContextMenu, setShowTableContextMenu] = useState(false);
   const [tableContextMenuPosition, setTableContextMenuPosition] = useState<Position>({ x: 0, y: 0 });
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const { pendingImageData, setPendingImageData } = useClipboardStore();
 
   const handleTableContextMenu = (event: MouseEvent) => {
     setTableContextMenuPosition({ x: event.clientX, y: event.clientY });
@@ -41,6 +43,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     dateCreated: tab.dateCreated,
     onTableContextMenu: handleTableContextMenu,
   });
+
+  useEffect(() => {
+    if (pendingImageData && editor) {
+      editor.chain().focus().setImage({ src: pendingImageData }).run();
+      setPendingImageData(null);
+    }
+  }, [pendingImageData, editor, setPendingImageData]);
 
   // Image paste detection is now handled in EditorInstance for plain text mode
 

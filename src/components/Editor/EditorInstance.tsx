@@ -17,6 +17,7 @@ import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
 import { UpgradeConfirmationModal } from "../RichText";
+import { useClipboardStore } from "../../stores/clipboardStore";
 
 interface EditorInstanceProps {
   side: "left" | "right";
@@ -40,6 +41,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { setActiveEditor } = useActiveEditorStore();
+  const { setPendingImageData } = useClipboardStore();
 
   // Get active tab using standard Zustand approach (simplified since cursor position is no longer in state)
   const activeTab = useTabsStore((state) => {
@@ -254,35 +256,47 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }
   }, [side, activeTabId, activeEditorSide]);
 
-  // Image paste detection for upgrade prompt
+  
   useEffect(() => {
-    if (!editorRef.current || activeTabWithoutCursor.isRich) return;
+    const container = editorContainerRef.current;
+    if (!container || !activeTab || activeTab.isRich) return;
 
-    const handlePaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
+    const handlePaste = (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      if (!items) {
+        return;
+      }
 
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.type.startsWith('image/')) {
-          e.preventDefault();
-          if (onUpgradeToRich) {
-            onUpgradeToRich();
+          event.preventDefault();
+          event.stopPropagation();
+
+          const file = item.getAsFile();
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const dataUrl = e.target?.result as string;
+              setPendingImageData(dataUrl);
+              if (onUpgradeToRich) {
+                setShowUpgradeModal(true);
+              }
+            };
+            reader.readAsDataURL(file);
           }
-          break;
+
+          return;
         }
       }
     };
 
-    const editorDom = editorRef.current?.getDomNode?.();
-    if (editorDom) {
-      editorDom.addEventListener('paste', handlePaste);
-      return () => {
-        editorDom.removeEventListener('paste', handlePaste);
-      };
-    }
-  }, [activeTabWithoutCursor.isRich, onUpgradeToRich]);
-  // --- SIMPLIFIED: Editor Event Handlers ---
+    container.addEventListener('paste', handlePaste, true);
+
+    return () => {
+      container.removeEventListener('paste', handlePaste, true);
+    };
+  }, [activeTab, onUpgradeToRich, setPendingImageData]);
   const handleEditorDidMount = (
     editor: Monaco.editor.IStandaloneCodeEditor,
     monaco: typeof Monaco,
@@ -408,11 +422,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       });
 
       // Keep the original onDidPaste as backup (though it fires too late)
-      editor.onDidPaste(() => {
+      editor.onDidPaste((e) => {
         try {
           const currentTab = latestActiveTabRef.current;
           if (currentTab) {
-            // This is likely too late, but keep as fallback
             modelManager.markNextChangeAsPaste(currentTab.id);
           }
         } catch (error) {
@@ -468,51 +481,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }
   };
 
-  // Set up paste event listener for image detection in plain text mode
-  useEffect(() => {
-    if (activeTab && !activeTab.isRich && editorContainerRef.current) {
-      console.log('📌 Setting up image paste detection for Monaco editor');
-      const container = editorContainerRef.current;
-      
-      // Create a stable handler that doesn't change
-      const stableHandlePaste = (event: ClipboardEvent) => {
-        console.log('🔍 Image paste detection triggered in Monaco, isRichMode:', activeTab?.isRich);
-        // Only detect image pastes in plain text mode
-        if (activeTab?.isRich) {
-          console.log('📝 In rich mode, skipping image detection');
-          return;
-        }
-
-        const items = event.clipboardData?.items;
-        if (!items) {
-          console.log('📋 No clipboard items found');
-          return;
-        }
-
-        console.log('📋 Checking clipboard items:', items.length);
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          console.log('📋 Item', i, ':', item.type);
-          if (item.type.startsWith('image/')) {
-            console.log('🖼️ Image detected in plain text mode! Triggering upgrade modal');
-            event.preventDefault();
-            if (onUpgradeToRich) {
-              console.log('✨ Showing upgrade modal from Monaco editor');
-              setShowUpgradeModal(true);
-            }
-            break;
-          }
-        }
-      };
-      
-      container.addEventListener('paste', stableHandlePaste);
-      
-      return () => {
-        console.log('🧹 Cleaning up image paste detection for Monaco editor');
-        container.removeEventListener('paste', stableHandlePaste);
-      };
-    }
-  }, [activeTab?.isRich, onUpgradeToRich]); // Remove handlePaste from dependencies
+  
 
   // Upgrade modal handlers
   const handleUpgradeConfirm = () => {

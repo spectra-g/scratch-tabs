@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useMemo } from "react";
+import React, { Suspense, lazy, useMemo, useCallback } from "react";
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
@@ -89,7 +89,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     });
   };
 
-  const handleUpgradeToRich = () => {
+  const handleUpgradeToRich = useCallback(() => {
     if (!activeTab || !activeTabId) return;
     
     // Migrate existing plain text content to rich format
@@ -103,7 +103,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
       richContent,
       lastModified: Date.now(),
     });
-  };
+  }, [activeTab, activeTabId, updateTabState]);
   // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
   const extendedView =
