@@ -44,9 +44,7 @@ export const tiptapExtensions = [
   Highlight.configure({
     multicolor: false,
   }),
-  Image,
   ResizableImage.configure({
-    inline: false,
     allowBase64: true,
   }),
   Dropcursor,

@@ -487,13 +487,11 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   const handleUpgradeConfirm = () => {
     setShowUpgradeModal(false);
     if (onUpgradeToRich) {
-      console.log('✅ User confirmed upgrade to Rich Text');
       onUpgradeToRich();
     }
   };
 
   const handleUpgradeCancel = () => {
-    console.log('❌ User cancelled upgrade to Rich Text');
     setShowUpgradeModal(false);
   };
 

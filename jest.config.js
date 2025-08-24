@@ -12,6 +12,7 @@ export default {
     "^react-markdown$": "<rootDir>/src/__mocks__/react-markdown.js",
     "^remark-gfm$": "<rootDir>/src/__mocks__/remark-gfm.js",
     "^jsonpath-plus$": "<rootDir>/src/__mocks__/jsonpath-plus.js",
+    "^lowlight$": "<rootDir>/src/__mocks__/lowlight.ts",
     "^.*tablets/dynamicRegistry$": "<rootDir>/src/tablets/__mocks__/dynamicRegistry.ts"
   },
   transform: {
