@@ -1,6 +1,7 @@
 import { useEditor } from '@tiptap/react';
 import { useEffect } from 'react';
 import { tiptapExtensions } from '../extensions';
+import { useClipboardStore } from '../../../stores/clipboardStore';
 
 export interface UseRichTextEditorProps {
   initialContent?: any;
@@ -32,6 +33,25 @@ export const useRichTextEditor = ({
           content: [],
         },
       ],
+    },
+    onCreate: ({ editor }) => {
+      const { pendingImageData, setPendingImageData } = useClipboardStore.getState();
+      if (pendingImageData) {
+        const { state, dispatch } = editor.view;
+        const { selection } = state;
+        const imageAttrs = { src: pendingImageData, alt: '', title: '' };
+        let imageNode;
+        if (state.schema.nodes.resizableImage) {
+          imageNode = state.schema.nodes.resizableImage.create(imageAttrs);
+        } else if (state.schema.nodes.image) {
+          imageNode = state.schema.nodes.image.create(imageAttrs);
+        } else {
+          return;
+        }
+        const tr = state.tr.replaceSelectionWith(imageNode);
+        dispatch(tr);
+        setPendingImageData(null);
+      }
     },
     onUpdate: ({ editor }) => {
       onUpdate(editor.getJSON());

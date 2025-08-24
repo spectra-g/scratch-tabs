@@ -44,24 +44,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onTableContextMenu: handleTableContextMenu,
   });
 
-  useEffect(() => {
-    if (pendingImageData && editor) {
-      const { state, dispatch } = editor.view;
-      const { selection } = state;
-      const imageAttrs = { src: pendingImageData, alt: '', title: '' };
-      let imageNode;
-      if (state.schema.nodes.resizableImage) {
-        imageNode = state.schema.nodes.resizableImage.create(imageAttrs);
-      } else if (state.schema.nodes.image) {
-        imageNode = state.schema.nodes.image.create(imageAttrs);
-      } else {
-        return;
-      }
-      const tr = state.tr.replaceSelectionWith(imageNode);
-      dispatch(tr);
-      setPendingImageData(null);
-    }
-  }, [pendingImageData, editor, setPendingImageData]);
+  
 
   // Image paste detection is now handled in EditorInstance for plain text mode
 
