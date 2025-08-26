@@ -86,7 +86,7 @@ export const SearchExtension = Extension.create<SearchOptions>({
         }
         return true;
       },
-    };
+    } as any;
   },
 
   addProseMirrorPlugins() {

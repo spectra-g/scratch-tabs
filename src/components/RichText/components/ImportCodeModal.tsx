@@ -27,7 +27,6 @@ export const ImportCodeModal: React.FC<ImportCodeModalProps> = ({
     setIsImporting(true);
     try {
       await RichTextService.importContentAsCodeBlock(
-        targetTabId,
         selectedTabId,
         editor
       );
