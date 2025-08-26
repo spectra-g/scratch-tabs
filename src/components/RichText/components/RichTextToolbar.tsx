@@ -8,7 +8,8 @@ import {
   Code,
   FileCode,
   Link,
-  Quote
+  Quote,
+  Download
 } from '../../Icons';
 import { LinkModal } from './LinkModal';
 import { extractLinkTextForEditing } from '../utils/linkTextExtraction';
@@ -19,9 +20,10 @@ import { Tab } from '../../../types';
 interface RichTextToolbarProps {
   editor: any; // TipTap editor instance
   activeTab: Tab;
+  onImportCode?: () => void;
 }
 
-export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, activeTab }) => {
+export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, activeTab, onImportCode }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [currentLinkUrl, setCurrentLinkUrl] = useState('');
   const [currentLinkText, setCurrentLinkText] = useState('');
@@ -271,6 +273,16 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       </ToolbarButton>
 
       <div className="w-px h-6 bg-gray-600 mx-1" />
+
+      {onImportCode && (
+        <ToolbarButton
+          onClick={onImportCode}
+          isActive={false}
+          title="Import Code from Tab"
+        >
+          <Download size={16} />
+        </ToolbarButton>
+      )}
 
       <ToolbarButton
         onClick={handleBackgroundCycle}

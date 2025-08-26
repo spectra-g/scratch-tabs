@@ -103,7 +103,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
         {/* Toolbar */}
         <div className="flex-shrink-0 border-b border-gray-700">
-          <RichTextToolbar editor={editor} activeTab={tab} />
+          <RichTextToolbar 
+            editor={editor} 
+            activeTab={tab} 
+            onImportCode={() => setShowImportModal(true)}
+          />
         </div>
 
         {/* Editor Container */}
