@@ -278,8 +278,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
             const reader = new FileReader();
             reader.onload = (e) => {
               const dataUrl = e.target?.result as string;
+              console.log('🖼️ [EditorInstance] Image data loaded, storing in clipboard store:', dataUrl ? 'Data URL present' : 'No data URL');
               setPendingImageData(dataUrl);
               if (onUpgradeToRich) {
+                console.log('🔄 [EditorInstance] Showing upgrade modal with pending image data');
                 setShowUpgradeModal(true);
               }
             };
@@ -485,13 +487,16 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
   // Upgrade modal handlers
   const handleUpgradeConfirm = () => {
+    console.log('✅ [EditorInstance] User confirmed upgrade to rich text');
     setShowUpgradeModal(false);
     if (onUpgradeToRich) {
+      console.log('🔄 [EditorInstance] Calling onUpgradeToRich callback');
       onUpgradeToRich();
     }
   };
 
   const handleUpgradeCancel = () => {
+    console.log('❌ [EditorInstance] User cancelled upgrade to rich text');
     setShowUpgradeModal(false);
   };
 

@@ -16,6 +16,7 @@ export const useRichTextEditor = ({
   dateCreated,
   onTableContextMenu,
 }: UseRichTextEditorProps) => {
+  console.log('🔄 [useRichTextEditor] Hook called with initialContent:', initialContent ? 'Content provided' : 'No content', 'dateCreated:', dateCreated);
   const editor = useEditor({
     // MODIFIED: Use the centralized extensions array
     extensions: tiptapExtensions,
@@ -34,25 +35,7 @@ export const useRichTextEditor = ({
         },
       ],
     },
-    onCreate: ({ editor }) => {
-      const { pendingImageData, setPendingImageData } = useClipboardStore.getState();
-      if (pendingImageData) {
-        const { state, dispatch } = editor.view;
-        const { selection } = state;
-        const imageAttrs = { src: pendingImageData, alt: '', title: '' };
-        let imageNode;
-        if (state.schema.nodes.resizableImage) {
-          imageNode = state.schema.nodes.resizableImage.create(imageAttrs);
-        } else if (state.schema.nodes.image) {
-          imageNode = state.schema.nodes.image.create(imageAttrs);
-        } else {
-          return;
-        }
-        const tr = state.tr.replaceSelectionWith(imageNode);
-        dispatch(tr);
-        setPendingImageData(null);
-      }
-    },
+    // onCreate removed - now handled in useEffect to avoid double execution
     onUpdate: ({ editor }) => {
       onUpdate(editor.getJSON());
     },
@@ -127,7 +110,50 @@ export const useRichTextEditor = ({
         },
       },
     },
-  }, [dateCreated]);
+  }, [initialContent, dateCreated]);
+  
+  console.log('📋 [useRichTextEditor] Editor instance created/updated:', editor ? 'Editor exists' : 'No editor');
+
+  // Handle pending image data after editor is stable
+  useEffect(() => {
+    if (!editor) return;
+    
+    const { pendingImageData, setPendingImageData } = useClipboardStore.getState();
+    console.log('🔍 [useRichTextEditor] Checking for pending image data in useEffect:', pendingImageData ? 'Found pending image' : 'No pending image');
+    
+    if (pendingImageData) {
+      console.log('🖼️ [useRichTextEditor] Inserting pending image via useEffect');
+      
+      // Use setTimeout to ensure editor is fully ready
+      setTimeout(() => {
+        const { state, dispatch } = editor.view;
+        const imageAttrs = { src: pendingImageData, alt: '', title: '' };
+        let imageNode;
+        
+        if (state.schema.nodes.resizableImage) {
+          console.log('🖼️ [useRichTextEditor] Using resizableImage node in useEffect');
+          imageNode = state.schema.nodes.resizableImage.create(imageAttrs);
+        } else if (state.schema.nodes.image) {
+          console.log('🖼️ [useRichTextEditor] Using standard image node in useEffect');
+          imageNode = state.schema.nodes.image.create(imageAttrs);
+        } else {
+          console.log('❌ [useRichTextEditor] No image node type available in useEffect');
+          return;
+        }
+        
+        try {
+          console.log('🔄 [useRichTextEditor] Inserting image node via useEffect');
+          const tr = state.tr.replaceSelectionWith(imageNode);
+          dispatch(tr);
+          console.log('🧩 [useRichTextEditor] Clearing pending image data via useEffect');
+          setPendingImageData(null);
+          console.log('✅ [useRichTextEditor] Image successfully inserted via useEffect!');
+        } catch (error) {
+          console.error('❌ [useRichTextEditor] Error inserting image via useEffect:', error);
+        }
+      }, 100);
+    }
+  }, [editor]);
 
   // Cleanup effect to prevent memory leaks
   useEffect(() => {

@@ -7,5 +7,8 @@ interface ClipboardState {
 
 export const useClipboardStore = create<ClipboardState>((set) => ({
   pendingImageData: null,
-  setPendingImageData: (data) => set({ pendingImageData: data }),
+  setPendingImageData: (data) => {
+    console.log('📋 [ClipboardStore] setPendingImageData called with:', data ? 'Image data' : 'null/cleared');
+    set({ pendingImageData: data });
+  },
 }));
