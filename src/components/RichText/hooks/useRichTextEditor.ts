@@ -109,7 +109,7 @@ export const useRichTextEditor = ({
         },
       },
     },
-  }, [initialContent, dateCreated]);
+  }, [dateCreated]);
 
   // Handle pending image data after editor is stable
   useEffect(() => {
@@ -165,7 +165,7 @@ export const useRichTextEditor = ({
         editor.destroy();
       }
     };
-  }, [editor]);
+  }, []);
 
   return editor;
 };
