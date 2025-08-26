@@ -144,7 +144,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         className={`overflow-hidden relative ${shouldShowSideBySidePreview ? "" : "flex-1 w-full"} flex flex-col`}
       >
         {/* Main Content Area */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {activeTab && activeTabId ? (
             shouldShowReplacementView ? (
               // Render replacement view (like CSV table editor)

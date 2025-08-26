@@ -32,12 +32,22 @@
 }
 
 /* Rich Text Editor Styles */
+.rich-text-editor {
+  position: relative;
+}
+
 .rich-text-editor .ProseMirror {
   outline: none;
   color: #d1d5db; /* text-gray-300 */
   line-height: 1.4 !important;
-  min-height: calc(100vh - 200px);
+  min-height: 100%;
+  padding: 1rem;
   padding-bottom: 200px; /* Ensure scrollability past tables */
+}
+
+/* Ensure proper scroll behavior with sticky toolbar */
+.rich-text-editor .overflow-y-auto {
+  scroll-padding-top: 60px;
 }
 
 /* Override prose plugin spacing */
