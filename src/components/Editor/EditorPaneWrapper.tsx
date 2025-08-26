@@ -93,27 +93,20 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const handleUpgradeToRich = useCallback(() => {
     if (!activeTab || !activeTabId) return;
     
-    console.log('🔄 [EditorPaneWrapper] handleUpgradeToRich called for tab:', activeTabId);
-    console.log('📄 [EditorPaneWrapper] Current tab content:', activeTab.content ? 'Text content present' : 'No text content');
+    // Check if there's pending image data and cursor position
+    const { pendingImageData, pendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
     
-    // Check if there's pending image data
-    const { pendingImageData } = useClipboardStore.getState();
-    console.log('🖼️ [EditorPaneWrapper] Checking pending image data:', pendingImageData ? 'Image data found in clipboard store' : 'No pending image data');
-    
-    // Migrate existing plain text content to rich format
-    const richContent = migrateTextToRich(
+    // Migrate existing plain text content to rich format, including cursor position mapping
+    const migration = migrateTextToRich(
       activeTab.content || '',
-      activeTab.dateCreated
+      activeTab.dateCreated,
+      pendingImageCursorPosition || undefined
     );
+    const { richContent, cursorOffset } = migration;
     
-    console.log('⚙️ [EditorPaneWrapper] Generated rich content from migration:', richContent);
-    
-    if (pendingImageData) {
-      console.log('🖼️ [EditorPaneWrapper] FIXED: Pending image data will be handled by rich text editor onCreate');
-      // The rich text editor's useRichTextEditor.onCreate will handle the pending image data
-      // We just need to ensure the conversion happens and the rich text editor gets created
-    } else {
-      console.log('📝 [EditorPaneWrapper] No pending image data to handle');
+    // Store the calculated cursor offset for the rich text editor
+    if (cursorOffset !== undefined) {
+      setPendingImageCursorOffset(cursorOffset);
     }
     
     updateTabState(activeTabId, {
@@ -121,8 +114,6 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
       richContent,
       lastModified: Date.now(),
     });
-    
-    console.log('✅ [EditorPaneWrapper] Tab state updated to rich mode - rich text editor will handle pending image');
   }, [activeTab, activeTabId, updateTabState]);
   // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;

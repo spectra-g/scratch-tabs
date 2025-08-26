@@ -11,7 +11,7 @@ describe('Content Migration Utils', () => {
     it('should create empty rich content for empty text', () => {
       const result = migrateTextToRich('', mockDateCreated);
       
-      expect(result).toEqual({
+      expect(result.richContent).toEqual({
         type: 'doc',
         content: [
           {
@@ -26,13 +26,14 @@ describe('Content Migration Utils', () => {
           },
         ],
       });
+      expect(result.cursorOffset).toBeUndefined();
     });
 
     it('should convert single line text to paragraph', () => {
       const result = migrateTextToRich('Hello world', mockDateCreated);
       
-      expect(result.content).toHaveLength(2);
-      expect(result.content[1]).toEqual({
+      expect(result.richContent.content).toHaveLength(2);
+      expect(result.richContent.content[1]).toEqual({
         type: 'paragraph',
         content: [
           {
@@ -41,24 +42,25 @@ describe('Content Migration Utils', () => {
           },
         ],
       });
+      expect(result.cursorOffset).toBeUndefined();
     });
 
     it('should convert multiple paragraphs', () => {
       const text = 'First paragraph\n\nSecond paragraph\n\nThird paragraph';
       const result = migrateTextToRich(text, mockDateCreated);
       
-      expect(result.content).toHaveLength(4); // dateCreated + 3 paragraphs
-      expect(result.content[1].content[0].text).toBe('First paragraph');
-      expect(result.content[2].content[0].text).toBe('Second paragraph');
-      expect(result.content[3].content[0].text).toBe('Third paragraph');
+      expect(result.richContent.content).toHaveLength(4); // dateCreated + 3 paragraphs
+      expect(result.richContent.content[1].content[0].text).toBe('First paragraph');
+      expect(result.richContent.content[2].content[0].text).toBe('Second paragraph');
+      expect(result.richContent.content[3].content[0].text).toBe('Third paragraph');
     });
 
     it('should handle line breaks within paragraphs', () => {
       const text = 'Line 1\nLine 2\nLine 3';
       const result = migrateTextToRich(text, mockDateCreated);
       
-      expect(result.content).toHaveLength(2); // dateCreated + 1 paragraph
-      const paragraphContent = result.content[1].content;
+      expect(result.richContent.content).toHaveLength(2); // dateCreated + 1 paragraph
+      const paragraphContent = result.richContent.content[1].content;
       
       expect(paragraphContent).toHaveLength(5); // text, hardBreak, text, hardBreak, text
       expect(paragraphContent[0].text).toBe('Line 1');
@@ -169,6 +171,63 @@ describe('Content Migration Utils', () => {
       
       const result = migrateRichToText(richContent);
       expect(result).toBe('Line 1\nLine 2');
+    });
+
+    describe('cursor position mapping', () => {
+      it('should calculate cursor offset for single line text', () => {
+        const text = 'Hello world';
+        const cursorPosition = { lineNumber: 1, column: 7 }; // After 'Hello '
+        const result = migrateTextToRich(text, mockDateCreated, cursorPosition);
+        
+        expect(result.cursorOffset).toBe(6); // 'Hello ' is 6 characters
+      });
+
+      it('should calculate cursor offset for multi-line text', () => {
+        const text = 'First line\nSecond line\nThird line';
+        const cursorPosition = { lineNumber: 2, column: 8 }; // Middle of second line
+        const result = migrateTextToRich(text, mockDateCreated, cursorPosition);
+        
+        // 'First line\n' = 11 characters + 'Second ' = 7 characters = 18 total
+        expect(result.cursorOffset).toBe(18);
+      });
+
+      it('should handle cursor position at start of text', () => {
+        const text = 'Hello world';
+        const cursorPosition = { lineNumber: 1, column: 1 };
+        const result = migrateTextToRich(text, mockDateCreated, cursorPosition);
+        
+        expect(result.cursorOffset).toBe(0);
+      });
+
+      it('should handle cursor position at end of text', () => {
+        const text = 'Hello world';
+        const cursorPosition = { lineNumber: 1, column: 12 }; // After last character
+        const result = migrateTextToRich(text, mockDateCreated, cursorPosition);
+        
+        expect(result.cursorOffset).toBe(11); // Length of text
+      });
+
+      it('should handle cursor position beyond line length', () => {
+        const text = 'Short';
+        const cursorPosition = { lineNumber: 1, column: 100 }; // Way beyond end
+        const result = migrateTextToRich(text, mockDateCreated, cursorPosition);
+        
+        expect(result.cursorOffset).toBe(5); // Length of text, clamped
+      });
+
+      it('should handle cursor position on non-existent line', () => {
+        const text = 'Single line';
+        const cursorPosition = { lineNumber: 5, column: 1 }; // Line doesn't exist
+        const result = migrateTextToRich(text, mockDateCreated, cursorPosition);
+        
+        expect(result.cursorOffset).toBe(12); // End of available text (including newline calculation)
+      });
+
+      it('should not calculate cursor offset when no position provided', () => {
+        const result = migrateTextToRich('Hello world', mockDateCreated);
+        
+        expect(result.cursorOffset).toBeUndefined();
+      });
     });
   });
 

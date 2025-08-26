@@ -41,7 +41,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { setActiveEditor } = useActiveEditorStore();
-  const { setPendingImageData } = useClipboardStore();
+  const { setPendingImageData, setPendingImageCursorPosition } = useClipboardStore();
 
   // Get active tab using standard Zustand approach (simplified since cursor position is no longer in state)
   const activeTab = useTabsStore((state) => {
@@ -273,15 +273,25 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
           event.preventDefault();
           event.stopPropagation();
 
+          // Capture cursor position at the time of paste
+          let cursorPosition = null;
+          if (editorRef.current) {
+            cursorPosition = editorRef.current.getPosition();
+          }
+
           const file = item.getAsFile();
           if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
               const dataUrl = e.target?.result as string;
-              console.log('🖼️ [EditorInstance] Image data loaded, storing in clipboard store:', dataUrl ? 'Data URL present' : 'No data URL');
               setPendingImageData(dataUrl);
+              
+              // Store cursor position along with image data
+              if (cursorPosition) {
+                setPendingImageCursorPosition(cursorPosition);
+              }
+              
               if (onUpgradeToRich) {
-                console.log('🔄 [EditorInstance] Showing upgrade modal with pending image data');
                 setShowUpgradeModal(true);
               }
             };
@@ -487,16 +497,17 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
   // Upgrade modal handlers
   const handleUpgradeConfirm = () => {
-    console.log('✅ [EditorInstance] User confirmed upgrade to rich text');
     setShowUpgradeModal(false);
     if (onUpgradeToRich) {
-      console.log('🔄 [EditorInstance] Calling onUpgradeToRich callback');
       onUpgradeToRich();
     }
   };
 
   const handleUpgradeCancel = () => {
-    console.log('❌ [EditorInstance] User cancelled upgrade to rich text');
+    const { setPendingImageData, setPendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
+    setPendingImageData(null);
+    setPendingImageCursorPosition(null);
+    setPendingImageCursorOffset(null);
     setShowUpgradeModal(false);
   };
 
