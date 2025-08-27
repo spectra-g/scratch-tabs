@@ -51,7 +51,7 @@ export const ImportCodeModal: React.FC<ImportCodeModalProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <Code size={24} className="text-blue-400 mr-3" />
-            <h3 className="text-lg font-semibold text-white">Import Code</h3>
+            <h3 className="text-lg font-semibold text-white">Import content from tab</h3>
           </div>
           <button
             onClick={handleClose}
@@ -72,7 +72,7 @@ export const ImportCodeModal: React.FC<ImportCodeModalProps> = ({
           </div>
         ) : (
           <>
-            <div className="max-h-60 overflow-y-auto mb-4 space-y-2">
+            <div className="max-h-60 overflow-y-auto custom-scrollbar mb-4 space-y-2">
               {availableTabs.map((tab) => (
                 <button
                   key={tab.id}

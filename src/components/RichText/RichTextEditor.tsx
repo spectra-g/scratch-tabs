@@ -101,8 +101,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           onOpen={() => setShowSearchBar(true)}
         />
 
-        {/* Toolbar - Sticky at top */}
-        <div className="sticky top-0 z-20 flex-shrink-0 border-b border-gray-700 bg-gray-900">
+        {/* Toolbar - Conditional rendering */}
+        <div className="flex-shrink-0 border-b border-gray-700 bg-gray-900 z-20">
           <RichTextToolbar 
             editor={editor} 
             activeTab={tab} 
@@ -112,8 +112,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
         {/* Editor Container - Content below toolbar (parent handles scrolling) */}
         <div 
-          className={`flex-1 ${getBackgroundTextureClass()}`}
-          style={{ minHeight: '100%' }}
+          className={`flex-1 overflow-y-auto custom-scrollbar ${getBackgroundTextureClass()}`}
+          style={{ minHeight: '0' }}
         >
           <EditorContent 
             editor={editor} 

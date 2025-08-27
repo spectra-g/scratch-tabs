@@ -144,7 +144,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         className={`overflow-hidden relative ${shouldShowSideBySidePreview ? "" : "flex-1 w-full"} flex flex-col`}
       >
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 min-h-0">
           {activeTab && activeTabId ? (
             shouldShowReplacementView ? (
               // Render replacement view (like CSV table editor)
@@ -166,7 +166,6 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 tab={activeTab}
                 onContentChange={handleRichContentChange}
                 onUpgradeToRich={handleUpgradeToRich}
-                className="h-full"
               />
             ) : activeTab.isTablet ? (
               <TabletView tab={activeTab} onChange={handleTabletStateChange} />

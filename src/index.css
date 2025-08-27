@@ -32,10 +32,6 @@
 }
 
 /* Rich Text Editor Styles */
-.rich-text-editor {
-  position: relative;
-}
-
 .rich-text-editor .ProseMirror {
   outline: none;
   color: #d1d5db; /* text-gray-300 */
@@ -45,10 +41,6 @@
   padding-bottom: 200px; /* Ensure scrollability past tables */
 }
 
-/* Ensure proper scroll behavior with sticky toolbar */
-.rich-text-editor .overflow-y-auto {
-  scroll-padding-top: 60px;
-}
 
 /* Override prose plugin spacing */
 .rich-text-editor .ProseMirror.prose {
