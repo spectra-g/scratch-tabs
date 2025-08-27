@@ -142,7 +142,13 @@ const toTab = (record: TabRecord): Tab => {
     ...record,
     richContent,
     isRich: record.isRich || false,
-    backgroundTexture: (record.backgroundTexture as 'paper' | 'grid' | null) || null,
+    backgroundTexture: (() => {
+      const texture = record.backgroundTexture as string | null;
+      // Migrate 'paper' to 'dots' for backward compatibility
+      if (texture === 'paper') return 'dots';
+      if (['grid', 'lined', 'texture', 'dots'].includes(texture || '')) return texture as 'grid' | 'lined' | 'texture' | 'dots';
+      return null;
+    })(),
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: cursor,
@@ -168,7 +174,13 @@ const toTabMetadata = (record: TabRecord): Omit<Tab, "content"> => {
     ...metadata,
     richContent: parsedRichContent,
     isRich: metadata.isRich || false,
-    backgroundTexture: (metadata.backgroundTexture as 'paper' | 'grid' | null) || null,
+    backgroundTexture: (() => {
+      const texture = metadata.backgroundTexture as string | null;
+      // Migrate 'paper' to 'dots' for backward compatibility
+      if (texture === 'paper') return 'dots';
+      if (['grid', 'lined', 'texture', 'dots'].includes(texture || '')) return texture as 'grid' | 'lined' | 'texture' | 'dots';
+      return null;
+    })(),
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },

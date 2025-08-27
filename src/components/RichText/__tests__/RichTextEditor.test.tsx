@@ -168,7 +168,7 @@ describe('RichTextEditor', () => {
     it('should apply background texture classes', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: 'paper' 
+        backgroundTexture: 'dots' 
       });
       
       render(
@@ -179,7 +179,7 @@ describe('RichTextEditor', () => {
       );
 
       const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).toHaveClass('texture-paper');
+      expect(editorContainer).toHaveClass('texture-dots');
     });
   });
 
@@ -274,7 +274,7 @@ describe('RichTextEditor', () => {
     it('should apply paper texture class', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: 'paper' 
+        backgroundTexture: 'dots' 
       });
       
       render(
@@ -285,7 +285,7 @@ describe('RichTextEditor', () => {
       );
 
       const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).toHaveClass('texture-paper');
+      expect(editorContainer).toHaveClass('texture-dots');
     });
 
     it('should apply grid texture class', () => {
@@ -319,7 +319,7 @@ describe('RichTextEditor', () => {
       );
 
       const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).not.toHaveClass('texture-paper');
+      expect(editorContainer).not.toHaveClass('texture-dots');
       expect(editorContainer).not.toHaveClass('texture-grid');
     });
   });

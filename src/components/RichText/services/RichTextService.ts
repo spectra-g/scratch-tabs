@@ -98,7 +98,7 @@ export class RichTextService {
    */
   static setBackgroundTexture(
     tabId: string, 
-    texture: 'paper' | 'grid' | null
+    texture: 'grid' | 'lined' | 'texture' | 'dots' | null
   ): void {
     const { updateTabState } = useTabsStore.getState();
     

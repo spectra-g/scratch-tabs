@@ -38,7 +38,7 @@ describe('RichTextService', () => {
       language: 'plaintext',
       languageLocked: false,
       isRich: true,
-      backgroundTexture: 'paper',
+      backgroundTexture: 'dots',
       isTablet: false,
       tabletState: '',
       cursorPosition: { lineNumber: 1, column: 1 },
@@ -165,7 +165,7 @@ describe('RichTextService', () => {
       RichTextService.setBackgroundTexture('tab-1', 'paper');
       
       expect(mockUpdateTabState).toHaveBeenCalledWith('tab-1', {
-        backgroundTexture: 'paper',
+        backgroundTexture: 'dots',
         lastModified: expect.any(Number),
       });
     });
