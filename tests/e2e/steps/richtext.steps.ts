@@ -1,6 +1,35 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 
+// Shared mapping for toolbar button names to test IDs
+const TOOLBAR_BUTTON_TEST_IDS: { [key: string]: string } = {
+  'Bold': 'rich-text-bold',
+  'Italic': 'rich-text-italic',
+  'Inline Code': 'rich-text-code',
+  'Code Block': 'rich-text-code-block',
+  'Bullet List': 'rich-text-bullet-list',
+  'Numbered List': 'rich-text-ordered-list',
+  'Quote': 'rich-text-blockquote',
+  'Insert Table': 'rich-text-table',
+  'Add Link': 'rich-text-link',
+  'Import Code': 'rich-text-import-code',
+  'Background': 'rich-text-background'
+};
+
+/**
+ * Helper function to click a toolbar button by name
+ */
+async function clickToolbarButton(page: any, buttonName: string) {
+  const testId = TOOLBAR_BUTTON_TEST_IDS[buttonName];
+  if (!testId) {
+    throw new Error(`Unknown toolbar button: ${buttonName}`);
+  }
+  
+  const button = page.locator(`[data-testid="${testId}"]`);
+  await expect(button).toBeVisible();
+  await button.click();
+}
+
 // Given steps
 Given('I am on a plain text editor tab', async function() {
   // Wait for the editor to be ready
@@ -209,4 +238,164 @@ Then('the Rich Text editor should contain an image', async function() {
   const src = await image.getAttribute('src');
   expect(src).toBeTruthy();
   expect(src?.length).toBeGreaterThan(0);
+});
+
+// Rich text toolbar step definitions
+When('I select the text {string}', async function(text: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  
+  // Use JavaScript to select text in the editor
+  await this.page.evaluate((textToSelect) => {
+    const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror');
+    if (!editor) return;
+    
+    // Find all text nodes and their ranges
+    const walker = document.createTreeWalker(
+      editor,
+      NodeFilter.SHOW_TEXT
+    );
+    
+    const textNodes = [];
+    let node;
+    while (node = walker.nextNode()) {
+      textNodes.push(node);
+    }
+    
+    // Find the text we want to select
+    for (const textNode of textNodes) {
+      const nodeText = textNode.textContent || '';
+      const index = nodeText.indexOf(textToSelect);
+      if (index !== -1) {
+        const range = document.createRange();
+        range.setStart(textNode, index);
+        range.setEnd(textNode, index + textToSelect.length);
+        
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+          break;
+        }
+      }
+    }
+  }, text);
+});
+
+When('I click the {string} button in the Rich Text toolbar', async function(buttonName: string) {
+  await clickToolbarButton(this.page, buttonName);
+});
+
+Then('the selected text should be bold in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const boldText = tipTapEditor.locator('strong');
+  await expect(boldText).toBeVisible();
+});
+
+Then('the selected text should be italic in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const italicText = tipTapEditor.locator('em');
+  await expect(italicText).toBeVisible();
+});
+
+Then('the selected text should be inline code in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const codeText = tipTapEditor.locator('code');
+  await expect(codeText).toBeVisible();
+});
+
+Then('I should see a bullet list in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const bulletList = tipTapEditor.locator('ul');
+  await expect(bulletList).toBeVisible();
+});
+
+When('I press Enter and type {string}', async function(text: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.press('Enter');
+  await tipTapEditor.type(text);
+});
+
+When('I press Enter twice', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.press('Enter');
+  await tipTapEditor.press('Enter');
+});
+
+When('I press Enter and click the {string} button in the Rich Text toolbar', async function(buttonName: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.press('Enter');
+  
+  // Then click the toolbar button using the helper function
+  await clickToolbarButton(this.page, buttonName);
+});
+
+When('I type {string}', async function(text: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.type(text);
+});
+
+Then('I should see {string} as the next bullet point', async function(text: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const listItems = tipTapEditor.locator('ul li');
+  await expect(listItems.nth(1)).toContainText(text);
+});
+
+Then('I should see a numbered list in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const numberedList = tipTapEditor.locator('ol');
+  await expect(numberedList).toBeVisible();
+});
+
+Then('I should see a blockquote in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const blockquote = tipTapEditor.locator('blockquote');
+  await expect(blockquote).toBeVisible();
+});
+
+When('I type {string} in the code block', async function(code: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const codeBlock = tipTapEditor.locator('pre code');
+  await codeBlock.type(code);
+});
+
+Then('I should see a code block in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const codeBlock = tipTapEditor.locator('pre');
+  await expect(codeBlock).toBeVisible();
+});
+
+When('I click after the code block', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const codeBlock = tipTapEditor.locator('pre');
+  
+  // Click at the end of the editor
+  await tipTapEditor.press('End');
+  await tipTapEditor.press('Enter');
+});
+
+Then('I should see a table with 3 rows and 3 columns in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const table = tipTapEditor.locator('table');
+  await expect(table).toBeVisible();
+  
+  // Check for 3 rows
+  const rows = tipTapEditor.locator('table tr');
+  await expect(rows).toHaveCount(3);
+  
+  // Check for 3 columns in the first row
+  const firstRowCells = tipTapEditor.locator('table tr:first-child th, table tr:first-child td');
+  await expect(firstRowCells).toHaveCount(3);
+});
+
+Then('the background texture should change', async function() {
+  // Check that the rich text editor container has a background style
+  const richTextEditor = this.page.locator('[data-editor-pane-side="left"] .rich-text-editor');
+  
+  // The background texture is applied via CSS, so we check for style changes
+  const hasBackgroundStyle = await richTextEditor.evaluate((element) => {
+    const computedStyle = window.getComputedStyle(element);
+    return computedStyle.backgroundImage && computedStyle.backgroundImage !== 'none';
+  });
+  
+  expect(hasBackgroundStyle).toBe(true);
 });

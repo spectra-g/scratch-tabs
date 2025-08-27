@@ -65,3 +65,51 @@ Feature: Rich Text Editor
     And the Rich Text editor should contain an image
     And the Rich Text editor should contain the text "This is plain text content"
     And I should see the date created text with "now" time
+
+  Scenario: Rich text toolbar formatting controls
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "This text will be formatted" in the Rich Text editor
+    And I select the text "text will be"
+    And I click the "Bold" button in the Rich Text toolbar
+    Then the selected text should be bold in the Rich Text editor
+    When I select the text "will be"
+    And I click the "Italic" button in the Rich Text toolbar
+    Then the selected text should be italic in the Rich Text editor
+    When I select the text "be"
+    And I click the "Inline Code" button in the Rich Text toolbar
+    Then the selected text should be inline code in the Rich Text editor
+
+  Scenario: Rich text toolbar list and quote controls
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "First item" in the Rich Text editor
+    And I click the "Bullet List" button in the Rich Text toolbar
+    Then I should see a bullet list in the Rich Text editor
+    When I press Enter and type "Second item"
+    Then I should see "Second item" as the next bullet point
+    When I press Enter and click the "Numbered List" button in the Rich Text toolbar
+    And I type "Numbered item"
+    Then I should see a numbered list in the Rich Text editor
+    When I press Enter twice
+    And I click the "Quote" button in the Rich Text toolbar
+    And I type "This is a quote"
+    Then I should see a blockquote in the Rich Text editor
+
+    @wip
+  Scenario: Rich text toolbar advanced controls
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "Code example:" in the Rich Text editor
+    And I click the "Code Block" button in the Rich Text toolbar
+    And I type "console.log('Hello World');" in the code block
+    Then I should see a code block in the Rich Text editor
+    When I click after the code block
+    And I click the "Insert Table" button in the Rich Text toolbar
+    Then I should see a table with 3 rows and 3 columns in the Rich Text editor
+    When I type "Background test" in the Rich Text editor
+    And I click the "Background" button in the Rich Text toolbar
+    Then the background texture should change

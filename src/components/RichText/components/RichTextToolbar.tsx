@@ -190,10 +190,12 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
     isActive?: boolean;
     title: string;
     children: React.ReactNode;
-  }> = ({ onClick, isActive = false, title, children }) => (
+    testId?: string;
+  }> = ({ onClick, isActive = false, title, children, testId }) => (
     <button
       onClick={onClick}
       title={title}
+      data-testid={testId}
       className={`p-2 rounded transition-colors ${
         isActive
           ? 'bg-blue-600 text-white'
@@ -210,6 +212,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={() => editor.chain().focus().toggleBold().run()}
         isActive={editor.isActive('bold')}
         title="Bold"
+        testId="rich-text-bold"
       >
         <Bold size={16} />
       </ToolbarButton>
@@ -218,6 +221,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={() => editor.chain().focus().toggleItalic().run()}
         isActive={editor.isActive('italic')}
         title="Italic"
+        testId="rich-text-italic"
       >
         <Italic size={16} />
       </ToolbarButton>
@@ -226,6 +230,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={() => editor.chain().focus().toggleCode().run()}
         isActive={editor.isActive('code')}
         title="Inline Code"
+        testId="rich-text-code"
       >
         <Code size={16} />
       </ToolbarButton>
@@ -234,6 +239,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         isActive={editor.isActive('codeBlock')}
         title="Code Block"
+        testId="rich-text-code-block"
       >
         <FileCode size={16} />
       </ToolbarButton>
@@ -244,6 +250,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         isActive={editor.isActive('bulletList')}
         title="Bullet List"
+        testId="rich-text-bullet-list"
       >
         <List size={16} />
       </ToolbarButton>
@@ -252,6 +259,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         isActive={editor.isActive('orderedList')}
         title="Numbered List"
+        testId="rich-text-ordered-list"
       >
         <ListOrdered size={16} />
       </ToolbarButton>
@@ -260,6 +268,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         isActive={editor.isActive('blockquote')}
         title="Quote"
+        testId="rich-text-blockquote"
       >
         <Quote size={16} />
       </ToolbarButton>
@@ -270,6 +279,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
         isActive={false}
         title="Insert Table"
+        testId="rich-text-table"
       >
         <Table size={16} />
       </ToolbarButton>
@@ -278,6 +288,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={handleLinkClick}
         isActive={editor.isActive('link')}
         title="Add Link"
+        testId="rich-text-link"
       >
         <Link size={16} />
       </ToolbarButton>
@@ -289,6 +300,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
           onClick={onImportCode}
           isActive={false}
           title="Import Code from Tab"
+          testId="rich-text-import-code"
         >
           <Download size={16} />
         </ToolbarButton>
@@ -298,6 +310,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         onClick={handleBackgroundCycle}
         isActive={false}
         title={getBackgroundConfig(activeTab.richContent?.attrs?.backgroundTexture).title}
+        testId="rich-text-background"
       >
         {getBackgroundConfig(activeTab.richContent?.attrs?.backgroundTexture).icon}
       </ToolbarButton>
