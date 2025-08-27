@@ -166,7 +166,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
     setLastSelection(null); // Clear stored selection on cancel
   };
 
-  const handleBackgroundChange = (texture: 'paper' | 'grid' | null) => {
+  const handleBackgroundChange = (texture: 'grid' | 'lined' | 'texture' | 'dots' | null) => {
     updateTabState(activeTab.id, { backgroundTexture: texture });
   };
 

@@ -8,7 +8,7 @@ export interface Tab {
   isTablet?: boolean;
   tabletState?: string;
   isRich?: boolean; // New property for rich text mode
-  backgroundTexture?: 'paper' | 'grid' | null; // Background texture option
+  backgroundTexture?: 'grid' | 'lined' | 'texture' | 'dots' | null; // Background texture option
   cursorPosition: EditorPosition;
   isPinned?: boolean;
   dateCreated: number;

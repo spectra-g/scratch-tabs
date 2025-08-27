@@ -1,7 +1,7 @@
 import React from 'react';
-import { FileText, Grid, Palette } from '../../Icons';
+import { Palette } from '../../Icons';
 
-export type BackgroundTexture = 'paper' | 'grid' | null;
+export type BackgroundTexture = 'grid' | 'lined' | 'texture' | 'dots' | null;
 
 export interface BackgroundConfig {
   icon: React.ReactElement;
@@ -9,13 +9,17 @@ export interface BackgroundConfig {
 }
 
 /**
- * Gets the next background texture in the cycle: null → paper → grid → null
+ * Gets the next background texture in the cycle: null → lined → texture → dots → grid → null
  */
 export function getNextBackgroundTexture(current: BackgroundTexture): BackgroundTexture {
   switch (current) {
     case null:
-      return 'paper';
-    case 'paper':
+      return 'lined';
+    case 'lined':
+      return 'texture';
+    case 'texture':
+      return 'dots';
+    case 'dots':
       return 'grid';
     case 'grid':
       return null;
@@ -26,23 +30,19 @@ export function getNextBackgroundTexture(current: BackgroundTexture): Background
 
 /**
  * Gets the icon and title configuration for a background texture
+ * Always uses the same icon regardless of current texture
  */
 export function getBackgroundConfig(texture: BackgroundTexture): BackgroundConfig {
-  switch (texture) {
-    case 'paper':
-      return {
-        icon: <FileText size={16} />,
-        title: 'Background: Paper'
-      };
-    case 'grid':
-      return {
-        icon: <Grid size={16} />,
-        title: 'Background: Grid'
-      };
-    default:
-      return {
-        icon: <Palette size={16} />,
-        title: 'Background: None'
-      };
-  }
+  const titles = {
+    'lined': 'Background: Lined Paper',
+    'texture': 'Background: Texture',
+    'dots': 'Background: Dotted Paper',
+    'grid': 'Background: Grid',
+    null: 'Background: None'
+  };
+
+  return {
+    icon: <Palette size={16} />,
+    title: titles[texture] || 'Background: None'
+  };
 }

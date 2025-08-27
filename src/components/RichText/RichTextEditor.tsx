@@ -78,8 +78,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const getBackgroundTextureClass = () => {
     switch (tab.backgroundTexture) {
-      case 'paper':
-        return 'texture-paper';
+      case 'lined':
+        return 'texture-lined';
+      case 'texture':
+        return 'texture-texture';
+      case 'dots':
+        return 'texture-dots';
       case 'grid':
         return 'texture-grid';
       default:
