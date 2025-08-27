@@ -552,6 +552,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       <div
         className="flex-grow relative overflow-hidden"
         ref={editorContainerRef}
+        data-testid="monaco-editor-container"
       >
         <div
           className="w-full h-full absolute inset-0"

@@ -98,3 +98,115 @@ Then('I should see the Monaco editor is displayed', async function() {
 Then('the Monaco editor should contain {string}', async function(expectedText: string) {
   await this.editor.expectEditorContentToContain(expectedText);
 });
+
+// New steps for image paste scenario
+When('I set clipboard content to contain an image', async function() {
+  // Create a simple base64-encoded 1x1 transparent PNG image for testing
+  const base64Image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+  
+  // Set the clipboard to contain image data using the browser's clipboard API
+  await this.page.evaluate(async (imageData) => {
+    // Convert base64 to blob
+    const response = await fetch(imageData);
+    const blob = await response.blob();
+    
+    // Create clipboard item with the image
+    const clipboardItem = new ClipboardItem({
+      'image/png': blob
+    });
+    
+    // Write to clipboard
+    await navigator.clipboard.write([clipboardItem]);
+  }, base64Image);
+});
+
+When('I paste into the editor', async function() {
+  // Focus the Monaco editor
+  const editor = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
+  await editor.focus();
+  
+  // Simulate a paste event using the actual clipboard content (generic for any content type)
+  await this.page.evaluate(async () => {
+    // Read from the actual clipboard that was set in previous step
+    const clipboardItems = await navigator.clipboard.read();
+    
+    // Create a DataTransfer with the clipboard data
+    const dataTransfer = new DataTransfer();
+    
+    for (const clipboardItem of clipboardItems) {
+      for (const type of clipboardItem.types) {
+        if (type.startsWith('image/')) {
+          // Handle image content
+          const blob = await clipboardItem.getType(type);
+          const file = new File([blob], 'clipboard-image.png', { type });
+          dataTransfer.items.add(file);
+        } else if (type === 'text/plain') {
+          // Handle text content
+          const textBlob = await clipboardItem.getType(type);
+          const text = await textBlob.text();
+          dataTransfer.items.add(text, type);
+        } else if (type.startsWith('text/')) {
+          // Handle other text types (html, rtf, etc.)
+          const contentBlob = await clipboardItem.getType(type);
+          const content = await contentBlob.text();
+          dataTransfer.items.add(content, type);
+        }
+        // Add more content types as needed in the future
+      }
+    }
+    
+    // Find the Monaco editor container using stable data-testid
+    const editorContainer = document.querySelector('[data-editor-pane-side="left"] [data-testid="monaco-editor-container"]');
+    if (editorContainer) {
+      // Create and dispatch paste event with actual clipboard data
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: dataTransfer
+      });
+      
+      editorContainer.dispatchEvent(pasteEvent);
+    }
+  });
+});
+
+Then('I should see the rich text conversion modal with {string} title', async function(expectedTitle: string) {
+  // Wait for the modal to appear using stable data-testid
+  const modal = this.page.locator('[data-testid="rich-text-upgrade-modal"]');
+  await expect(modal).toBeVisible();
+  
+  // Check for the title
+  await expect(this.page.getByText(expectedTitle)).toBeVisible();
+});
+
+Then('the modal should contain {string}', async function(expectedText: string) {
+  // Check that the expected text appears in the modal
+  const modal = this.page.locator('[data-testid="rich-text-upgrade-modal"]');
+  await expect(modal.getByText(expectedText)).toBeVisible();
+});
+
+When('I click {string} in the modal', async function(buttonText: string) {
+  // Click the specific button in the modal
+  const modal = this.page.locator('[data-testid="rich-text-upgrade-modal"]');
+  const button = modal.getByRole('button', { name: buttonText });
+  await expect(button).toBeVisible();
+  await button.click();
+});
+
+Then('the modal should be dismissed', async function() {
+  // Wait for the modal to close
+  const modal = this.page.locator('[data-testid="rich-text-upgrade-modal"]');
+  await expect(modal).not.toBeVisible();
+});
+
+Then('the Rich Text editor should contain an image', async function() {
+  // Look for an image element in the ProseMirror editor (exclude ProseMirror separator)
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const image = tipTapEditor.locator('img:not(.ProseMirror-separator)');
+  await expect(image).toBeVisible();
+  
+  // Verify it has a src attribute (data URL or blob URL)
+  const src = await image.getAttribute('src');
+  expect(src).toBeTruthy();
+  expect(src?.length).toBeGreaterThan(0);
+});
