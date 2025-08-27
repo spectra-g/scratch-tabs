@@ -87,26 +87,13 @@ export class RichTextService {
         isRich: false,
         content: plainTextContent,
         richContent: null,
-        backgroundTexture: null,
         lastModified: Date.now(),
       });
     });
   }
 
-  /**
-   * Set background texture for a rich text tab
-   */
-  static setBackgroundTexture(
-    tabId: string, 
-    texture: 'grid' | 'lined' | 'texture' | 'dots' | null
-  ): void {
-    const { updateTabState } = useTabsStore.getState();
-    
-    updateTabState(tabId, {
-      backgroundTexture: texture,
-      lastModified: Date.now(),
-    });
-  }
+  // Note: setBackgroundTexture method removed - background texture is now managed
+  // directly within richContent.attrs by the toolbar component
 
   /**
    * Check if a tab can be upgraded to rich text

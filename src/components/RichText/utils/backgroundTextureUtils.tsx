@@ -1,7 +1,6 @@
 import React from 'react';
 import { Palette } from '../../Icons';
-
-export type BackgroundTexture = 'grid' | 'lined' | 'texture' | 'dots' | null;
+import { BackgroundTexture } from '../../../types';
 
 export interface BackgroundConfig {
   icon: React.ReactElement;

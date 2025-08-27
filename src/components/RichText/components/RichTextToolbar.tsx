@@ -15,7 +15,7 @@ import { LinkModal } from './LinkModal';
 import { extractLinkTextForEditing } from '../utils/linkTextExtraction';
 import { getNextBackgroundTexture, getBackgroundConfig } from '../utils/backgroundTextureUtils';
 import { useRootStore } from '../../../stores/rootStore';
-import { Tab } from '../../../types';
+import { Tab, BackgroundTexture, RichContent } from '../../../types';
 
 interface RichTextToolbarProps {
   editor: any; // TipTap editor instance
@@ -166,12 +166,22 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
     setLastSelection(null); // Clear stored selection on cancel
   };
 
-  const handleBackgroundChange = (texture: 'grid' | 'lined' | 'texture' | 'dots' | null) => {
-    updateTabState(activeTab.id, { backgroundTexture: texture });
+  const handleBackgroundChange = (texture: BackgroundTexture) => {
+    // Update richContent.attrs.backgroundTexture instead of top-level property
+    const currentRichContent = activeTab.richContent as RichContent;
+    const updatedRichContent: RichContent = {
+      ...currentRichContent,
+      attrs: {
+        ...currentRichContent?.attrs,
+        backgroundTexture: texture
+      }
+    };
+    updateTabState(activeTab.id, { richContent: updatedRichContent });
   };
 
   const handleBackgroundCycle = () => {
-    const nextTexture = getNextBackgroundTexture(activeTab.backgroundTexture);
+    const currentTexture = activeTab.richContent?.attrs?.backgroundTexture;
+    const nextTexture = getNextBackgroundTexture(currentTexture);
     handleBackgroundChange(nextTexture);
   };
 
@@ -287,9 +297,9 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       <ToolbarButton
         onClick={handleBackgroundCycle}
         isActive={false}
-        title={getBackgroundConfig(activeTab.backgroundTexture).title}
+        title={getBackgroundConfig(activeTab.richContent?.attrs?.backgroundTexture).title}
       >
-        {getBackgroundConfig(activeTab.backgroundTexture).icon}
+        {getBackgroundConfig(activeTab.richContent?.attrs?.backgroundTexture).icon}
       </ToolbarButton>
 
       {/* Link Modal */}

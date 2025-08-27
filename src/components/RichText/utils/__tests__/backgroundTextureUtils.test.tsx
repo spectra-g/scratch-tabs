@@ -1,6 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { getNextBackgroundTexture, getBackgroundConfig, BackgroundTexture } from '../backgroundTextureUtils';
+import { getNextBackgroundTexture, getBackgroundConfig } from '../backgroundTextureUtils';
+import { BackgroundTexture } from '../../../../types';
 
 describe('backgroundTextureUtils', () => {
   describe('getNextBackgroundTexture', () => {

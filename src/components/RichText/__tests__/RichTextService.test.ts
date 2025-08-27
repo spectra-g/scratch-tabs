@@ -22,7 +22,6 @@ describe('RichTextService', () => {
       language: 'javascript',
       languageLocked: false,
       isRich: false,
-      backgroundTexture: null,
       isTablet: false,
       tabletState: '',
       cursorPosition: { lineNumber: 1, column: 1 },
@@ -34,11 +33,16 @@ describe('RichTextService', () => {
       id: 'tab-2',
       title: 'Rich Text Tab',
       content: 'plain text content',
-      richContent: { type: 'doc', content: [] },
+      richContent: { 
+        type: 'doc', 
+        content: [],
+        attrs: {
+          backgroundTexture: 'dots'
+        }
+      },
       language: 'plaintext',
       languageLocked: false,
       isRich: true,
-      backgroundTexture: 'dots',
       isTablet: false,
       tabletState: '',
       cursorPosition: { lineNumber: 1, column: 1 },
@@ -54,7 +58,6 @@ describe('RichTextService', () => {
       language: 'plaintext',
       languageLocked: false,
       isRich: false,
-      backgroundTexture: null,
       isTablet: true,
       tabletState: '{}',
       cursorPosition: { lineNumber: 1, column: 1 },
@@ -105,7 +108,6 @@ describe('RichTextService', () => {
           language: 'plaintext',
           languageLocked: false,
           isRich: false,
-          backgroundTexture: null,
           isTablet: false,
           tabletState: '',
           cursorPosition: { lineNumber: 1, column: 1 },
@@ -160,23 +162,6 @@ describe('RichTextService', () => {
     });
   });
 
-  describe('setBackgroundTexture', () => {
-    it('should update background texture', () => {
-      RichTextService.setBackgroundTexture('tab-1', 'paper');
-      
-      expect(mockUpdateTabState).toHaveBeenCalledWith('tab-1', {
-        backgroundTexture: 'dots',
-        lastModified: expect.any(Number),
-      });
-    });
-
-    it('should clear background texture when set to null', () => {
-      RichTextService.setBackgroundTexture('tab-1', null);
-      
-      expect(mockUpdateTabState).toHaveBeenCalledWith('tab-1', {
-        backgroundTexture: null,
-        lastModified: expect.any(Number),
-      });
-    });
-  });
+  // Note: setBackgroundTexture tests removed - background texture is now managed
+  // directly within richContent.attrs by the toolbar component
 });

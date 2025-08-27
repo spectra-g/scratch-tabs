@@ -122,7 +122,6 @@ describe('RichTextEditor', () => {
     language: 'plaintext',
     languageLocked: false,
     isRich: false,
-    backgroundTexture: null,
     isTablet: false,
     tabletState: '',
     cursorPosition: { lineNumber: 1, column: 1 },
@@ -168,7 +167,13 @@ describe('RichTextEditor', () => {
     it('should apply background texture classes', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: 'dots' 
+        richContent: {
+          type: 'doc',
+          content: [],
+          attrs: {
+            backgroundTexture: 'dots'
+          }
+        }
       });
       
       render(
@@ -271,10 +276,16 @@ describe('RichTextEditor', () => {
   });
 
   describe('Background Textures', () => {
-    it('should apply paper texture class', () => {
+    it('should apply dots texture class', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: 'dots' 
+        richContent: {
+          type: 'doc',
+          content: [],
+          attrs: {
+            backgroundTexture: 'dots'
+          }
+        }
       });
       
       render(
@@ -291,7 +302,13 @@ describe('RichTextEditor', () => {
     it('should apply grid texture class', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: 'grid' 
+        richContent: {
+          type: 'doc',
+          content: [],
+          attrs: {
+            backgroundTexture: 'grid'
+          }
+        }
       });
       
       render(
@@ -308,7 +325,13 @@ describe('RichTextEditor', () => {
     it('should not apply texture class when backgroundTexture is null', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: null 
+        richContent: {
+          type: 'doc',
+          content: [],
+          attrs: {
+            backgroundTexture: null
+          }
+        }
       });
       
       render(
@@ -321,6 +344,30 @@ describe('RichTextEditor', () => {
       const editorContainer = screen.getByTestId('editor-content').parentElement;
       expect(editorContainer).not.toHaveClass('texture-dots');
       expect(editorContainer).not.toHaveClass('texture-grid');
+    });
+
+    it('should not apply texture class when richContent has no attrs', () => {
+      const tab = createMockTab({ 
+        isRich: true, 
+        richContent: {
+          type: 'doc',
+          content: []
+          // No attrs property
+        }
+      });
+      
+      render(
+        <RichTextEditor
+          tab={tab}
+          onContentChange={mockOnContentChange}
+        />
+      );
+
+      const editorContainer = screen.getByTestId('editor-content').parentElement;
+      expect(editorContainer).not.toHaveClass('texture-dots');
+      expect(editorContainer).not.toHaveClass('texture-grid');
+      expect(editorContainer).not.toHaveClass('texture-lined');
+      expect(editorContainer).not.toHaveClass('texture-texture');
     });
   });
 

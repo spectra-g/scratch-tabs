@@ -35,7 +35,6 @@ export function createTab(options: Partial<Tab> = {}): Tab {
     language: "plaintext",
     languageLocked: false,
     isRich: false,
-    backgroundTexture: null,
     cursorPosition: { lineNumber: 1, column: 1 },
     dateCreated: Date.now(),
     lastModified: Date.now(),

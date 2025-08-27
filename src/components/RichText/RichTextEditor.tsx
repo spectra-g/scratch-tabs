@@ -77,7 +77,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const getBackgroundTextureClass = () => {
-    switch (tab.backgroundTexture) {
+    const backgroundTexture = tab.richContent?.attrs?.backgroundTexture;
+    switch (backgroundTexture) {
       case 'lined':
         return 'texture-lined';
       case 'texture':

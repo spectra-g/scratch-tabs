@@ -98,7 +98,10 @@ describe('RichTextEditor - Table Context Menu Integration', () => {
     content: 'Test content',
     language: 'markdown',
     isRich: true,
-    richContent: {},
+    richContent: {
+      type: 'doc',
+      content: []
+    },
     dateCreated: Date.now(),
     lastModified: Date.now(),
     workspaceId: 'test-workspace',

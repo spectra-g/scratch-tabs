@@ -37,7 +37,6 @@ describe('RichTextControls', () => {
     dateCreated: Date.now(),
     lastModified: Date.now(),
     isTablet: false,
-    backgroundTexture: null,
     cursorPosition: { lineNumber: 1, column: 1 },
     workspaceId: 'test-workspace',
   });

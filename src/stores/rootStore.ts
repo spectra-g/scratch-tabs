@@ -87,7 +87,6 @@ export const useRootStore = create<RootStore>((set, get) => {
       language: partialInputTab.language || language,
       languageLocked: partialInputTab.languageLocked ?? languageLocked,
       isRich: partialInputTab.isRich ?? false,
-      backgroundTexture: partialInputTab.backgroundTexture ?? null,
       workspaceId: workspaceId,
       dateCreated: partialInputTab.dateCreated || now,
       lastModified: now,
