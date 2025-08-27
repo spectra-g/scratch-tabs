@@ -4,7 +4,6 @@ import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { EditorInstance } from "./EditorInstance";
 import { TabletView } from "../Tab/TabletView";
-import { RichTextEditor } from "../RichText/RichTextEditor";
 import { smartViewRegistry } from "../../views/registry";
 import { StatusBar } from "../StatusBar";
 import { useMarkdownPreviewResizer } from "../../hooks/useMarkdownPreviewResizer";
@@ -15,12 +14,23 @@ import { modelManager } from "../../services/modelManager";
 import { migrateTextToRich } from "../RichText/utils/contentMigration";
 import { useClipboardStore } from "../../stores/clipboardStore";
 
+// Lazy load the RichTextEditor component
+const RichTextEditor = lazy(() => import("../RichText/RichTextEditor").then(module => ({ default: module.RichTextEditor })));
+
 interface EditorPaneWrapperProps {
   side: "left" | "right";
 }
 
 const PreviewLoadingFallback = () => (
   <div className="text-gray-400 p-4 animate-pulse">Loading Preview...</div>
+);
+
+const RichTextLoadingFallback = () => (
+  <div className="h-full flex items-center justify-center text-gray-400">
+    <div className="text-center">
+      <div className="animate-pulse">Loading Editor...</div>
+    </div>
+  </div>
 );
 
 // Full content accessor for preview components (removing large content guard)
@@ -160,13 +170,15 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 side={side}
               />
             ) : activeTab.isRich ? (
-              // Render rich text editor
-              <RichTextEditor
-                key={activeTab.id}
-                tab={activeTab}
-                onContentChange={handleRichContentChange}
-                onUpgradeToRich={handleUpgradeToRich}
-              />
+              // Render rich text editor with lazy loading
+              <Suspense fallback={<RichTextLoadingFallback />}>
+                <RichTextEditor
+                  key={activeTab.id}
+                  tab={activeTab}
+                  onContentChange={handleRichContentChange}
+                  onUpgradeToRich={handleUpgradeToRich}
+                />
+              </Suspense>
             ) : activeTab.isTablet ? (
               <TabletView tab={activeTab} onChange={handleTabletStateChange} />
             ) : (

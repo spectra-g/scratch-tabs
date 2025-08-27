@@ -13,11 +13,31 @@ import 'tiptap-extension-resizable-image/styles.css';
 import { Dropcursor } from '@tiptap/extension-dropcursor';
 import { Link } from '@tiptap/extension-link';
 import { createLowlight } from 'lowlight';
+import javascript from 'highlight.js/lib/languages/javascript';
+import typescript from 'highlight.js/lib/languages/typescript';
+import json from 'highlight.js/lib/languages/json';
+import xml from 'highlight.js/lib/languages/xml'; // HTML support
+import css from 'highlight.js/lib/languages/css';
+import markdown from 'highlight.js/lib/languages/markdown';
+import bash from 'highlight.js/lib/languages/bash'; // Shell support
+import python from 'highlight.js/lib/languages/python';
 import { DateCreatedNode } from './DateCreatedNode';
 import { SearchExtension } from './SearchExtension';
 import 'prosemirror-view/style/prosemirror.css';
 
+// Create lowlight instance with core library
 const lowlight = createLowlight();
+
+// Register only the languages we need
+lowlight.register('javascript', javascript);
+lowlight.register('typescript', typescript);
+lowlight.register('json', json);
+lowlight.register('html', xml); // HTML uses XML highlighter
+lowlight.register('css', css);
+lowlight.register('markdown', markdown);
+lowlight.register('shell', bash);
+lowlight.register('bash', bash);
+lowlight.register('python', python);
 
 export const tiptapExtensions = [
   StarterKit.configure({
