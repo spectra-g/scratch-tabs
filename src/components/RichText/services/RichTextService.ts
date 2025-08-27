@@ -56,7 +56,7 @@ export class RichTextService {
 
     // Import migration utility
     import('../utils/contentMigration').then(({ migrateTextToRich }) => {
-      const richContent = migrateTextToRich(
+      const { richContent } = migrateTextToRich(
         tab.content || '',
         tab.dateCreated
       );
