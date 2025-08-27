@@ -1,5 +1,3 @@
-// File: components/RichText/extensions/index.ts
-
 import StarterKit from '@tiptap/starter-kit';
 import { Code } from '@tiptap/extension-code';
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
@@ -25,19 +23,17 @@ import { DateCreatedNode } from './DateCreatedNode';
 import { SearchExtension } from './SearchExtension';
 import 'prosemirror-view/style/prosemirror.css';
 
-// Create lowlight instance with core library
-const lowlight = createLowlight();
-
-// Register only the languages we need
-lowlight.register('javascript', javascript);
-lowlight.register('typescript', typescript);
-lowlight.register('json', json);
-lowlight.register('html', xml); // HTML uses XML highlighter
-lowlight.register('css', css);
-lowlight.register('markdown', markdown);
-lowlight.register('shell', bash);
-lowlight.register('bash', bash);
-lowlight.register('python', python);
+// Create lowlight instance and register only the languages we need
+const lowlight = createLowlight({
+  javascript,
+  typescript,
+  json,
+  xml, // For HTML support
+  css,
+  markdown,
+  bash, // For shell/bash support
+  python
+});
 
 export const tiptapExtensions = [
   StarterKit.configure({
