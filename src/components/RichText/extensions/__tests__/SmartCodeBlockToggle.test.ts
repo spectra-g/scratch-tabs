@@ -104,4 +104,53 @@ describe('SmartCodeBlockToggle', () => {
       expect(extension?.storage.lastLanguage).toBe('javascript');
     });
   });
+
+  describe('Multi-line selection handling', () => {
+    it('should handle editor with multi-line content', () => {
+      // Insert multi-line content
+      editor.commands.insertContent('Line 1\nLine 2\nLine 3');
+      
+      // Select all content
+      editor.commands.setTextSelection({ from: 1, to: editor.state.doc.content.size - 1 });
+      
+      // Verify selection exists and has newlines
+      const { from, to } = editor.state.selection;
+      expect(from).not.toBe(to);
+      
+      const selectedText = editor.state.doc.textBetween(from, to, '\n');
+      expect(selectedText.includes('\n')).toBe(true);
+    });
+
+    it('should detect multi-line selections correctly', () => {
+      // Create multi-line content
+      editor.commands.insertContent('First line\nSecond line');
+      
+      // Select across lines  
+      editor.commands.setTextSelection({ from: 1, to: editor.state.doc.content.size - 1 });
+      
+      // Get the selection info
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to, '\n');
+      
+      // Verify we detected multi-line content
+      expect(selectedText).toContain('\n');
+      expect(selectedText).toContain('First line');
+      expect(selectedText).toContain('Second line');
+    });
+
+    it('should handle single line selections without newlines', () => {
+      // Insert single line content
+      editor.commands.insertContent('Single line content');
+      
+      // Select part of the line
+      editor.commands.setTextSelection({ from: 1, to: 7 }); // "Single"
+      
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to, '\n');
+      
+      // Should not contain newlines
+      expect(selectedText.includes('\n')).toBe(false);
+      expect(selectedText).toBe('Single');
+    });
+  });
 });

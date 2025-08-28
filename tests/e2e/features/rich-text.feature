@@ -112,3 +112,134 @@ Feature: Rich Text Editor
     When I type "Background test" in the Rich Text editor
     And I click the "Background" button in the Rich Text toolbar
     Then the background texture should change
+
+  Scenario: Code block with selected text content
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "function hello() { return 'world'; }" in the Rich Text editor
+    And I select all text in the Rich Text editor
+    And I click the "Code Block" button in the Rich Text toolbar
+    Then I should see a code block in the Rich Text editor
+    And the code block should contain "function hello() { return 'world'; }"
+
+  Scenario: Multi-line text to single code block conversion
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type the following content into the Rich Text editor:
+      """
+      Line one
+      Line two
+      Line three
+      """
+    And I select all text in the Rich Text editor
+    And I click the "Code Block" button in the Rich Text toolbar
+    Then I should see exactly one code block in the Rich Text editor
+    And the code block should contain "Line one"
+    And the code block should contain "Line two"
+    And the code block should contain "Line three"
+
+  Scenario: JSON language detection in code blocks
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type the following JSON content into the Rich Text editor:
+      """
+      {
+        "name": "test",
+        "value": 123
+      }
+      """
+    And I select all text in the Rich Text editor
+    And I click the "Code Block" button in the Rich Text toolbar
+    Then I should see a code block in the Rich Text editor
+    And the code block should have JSON syntax highlighting
+
+  Scenario: JavaScript language detection in code blocks
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "const greeting = 'Hello World'; console.log(greeting);" in the Rich Text editor
+    And I select all text in the Rich Text editor
+    And I click the "Code Block" button in the Rich Text toolbar
+    Then I should see a code block in the Rich Text editor
+    And the code block should have JavaScript syntax highlighting
+
+  Scenario: Tab indentation in code blocks
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I click the "Code Block" button in the Rich Text toolbar
+    And I type "if (true) {" in the code block
+    And I press Enter
+    And I press Tab
+    And I type "console.log('indented');" in the code block
+    Then the second line in the code block should be indented
+
+  Scenario: Shift+Tab deindentation in code blocks
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I click the "Code Block" button in the Rich Text toolbar
+    And I type "  indented line" in the code block
+    And I press Shift+Tab
+    Then the line should have reduced indentation
+
+  Scenario: Syntax highlighting preservation when toggling code blocks
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type the following JSON content into the Rich Text editor:
+      """
+      {
+        "test": "value"
+      }
+      """
+    And I select all text in the Rich Text editor
+    And I click the "Code Block" button in the Rich Text toolbar
+    Then I should see a code block in the Rich Text editor
+    And the code block should have JSON syntax highlighting
+    When I click the "Code Block" button in the Rich Text toolbar
+    Then I should see the text is no longer in a code block
+    When I click the "Code Block" button in the Rich Text toolbar
+    Then I should see a code block in the Rich Text editor
+    And the code block should have JSON syntax highlighting
+
+  Scenario: Background texture cycles properly on single click
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "Background cycling test" in the Rich Text editor
+    And I note the current background texture
+    When I click the "Background" button in the Rich Text toolbar once
+    Then the background texture should be different from the noted texture
+    When I click the "Background" button in the Rich Text toolbar once
+    Then the background texture should be different again
+
+  Scenario: Link creation and editing in Rich Text editor
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "Visit our website" in the Rich Text editor
+    And I select the text "website"
+    And I click the "Add Link" button in the Rich Text toolbar
+    Then I should see the link modal
+    And the link text field should contain "website"
+    When I type "https://example.com" in the URL field
+    And I click "Save" in the link modal
+    Then the text "website" should be a link
+    And the link should point to "https://example.com"
+
+  Scenario: Code block toggle preserves content
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "const x = 42;" in the Rich Text editor
+    And I select all text in the Rich Text editor
+    And I click the "Code Block" button in the Rich Text toolbar
+    Then I should see a code block in the Rich Text editor
+    And the code block should contain "const x = 42;"
+    When I click the "Code Block" button in the Rich Text toolbar
+    Then I should see the text is no longer in a code block
+    And the Rich Text editor should contain "const x = 42;"

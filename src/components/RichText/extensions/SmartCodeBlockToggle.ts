@@ -45,8 +45,36 @@ export const SmartCodeBlockToggle = Extension.create({
           // We're not in a code block, so create one
           // If no language provided, try to use the last stored language
           const language = attributes?.language || this.storage.lastLanguage || 'javascript';
+          
+          // Get the current selection to handle multi-line selections properly
+          const { from, to } = editor.state.selection;
+          
+          if (from !== to) {
+            // There's a selection - get the text content
+            const selectedText = editor.state.doc.textBetween(from, to, '\n');
+            
+            // For multi-line selections, we need to replace the entire selection
+            // with a single code block containing the combined text
+            if (selectedText.includes('\n')) {
+              // Multi-line selection: delete selection and insert code block with content
+              const result = chain()
+                .focus()
+                .deleteSelection()
+                .insertContent({
+                  type: 'codeBlock',
+                  attrs: { language },
+                  content: [{
+                    type: 'text',
+                    text: selectedText
+                  }]
+                })
+                .run();
+              return result;
+            }
+          }
+          
+          // Single line or no selection: use regular toggle
           const createResult = chain().focus().toggleCodeBlock({ language }).run();
-
           return createResult;
         }
       },
