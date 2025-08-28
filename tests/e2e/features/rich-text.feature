@@ -98,7 +98,6 @@ Feature: Rich Text Editor
     And I type "This is a quote"
     Then I should see a blockquote in the Rich Text editor
 
-    @wip
   Scenario: Rich text toolbar advanced controls
     Given I am on a plain text editor tab
     When I click the Rich Text toggle in the status bar

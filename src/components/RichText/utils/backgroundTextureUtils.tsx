@@ -22,6 +22,8 @@ export function getNextBackgroundTexture(current: BackgroundTexture): Background
       return 'grid';
     case 'grid':
       return null;
+    case undefined:
+      return 'lined';
     default:
       return null;
   }
@@ -42,6 +44,6 @@ export function getBackgroundConfig(texture: BackgroundTexture): BackgroundConfi
 
   return {
     icon: <Palette size={16} />,
-    title: titles[texture] || 'Background: None'
+    title: titles[texture as keyof typeof titles] || 'Background: None'
   };
 }

@@ -96,7 +96,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     <>
       <div 
         ref={editorContainerRef}
-        className={`rich-text-editor h-full w-full flex flex-col relative ${className}`}
+        className={`rich-text-editor h-full w-full flex flex-col relative ${getBackgroundTextureClass()} ${className}`}
       >
         {/* Inline Search Bar */}
         <InlineSearchBar
@@ -117,7 +117,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
         {/* Editor Container - Content below toolbar (parent handles scrolling) */}
         <div 
-          className={`flex-1 overflow-y-auto custom-scrollbar ${getBackgroundTextureClass()}`}
+          className="flex-1 overflow-y-auto custom-scrollbar"
           style={{ minHeight: '0' }}
         >
           <EditorContent 

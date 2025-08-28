@@ -183,8 +183,8 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).toHaveClass('texture-dots');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).toHaveClass('texture-dots');
     });
   });
 
@@ -295,8 +295,8 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).toHaveClass('texture-dots');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).toHaveClass('texture-dots');
     });
 
     it('should apply grid texture class', () => {
@@ -318,8 +318,8 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).toHaveClass('texture-grid');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).toHaveClass('texture-grid');
     });
 
     it('should not apply texture class when backgroundTexture is null', () => {
@@ -341,9 +341,9 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).not.toHaveClass('texture-dots');
-      expect(editorContainer).not.toHaveClass('texture-grid');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).not.toHaveClass('texture-dots');
+      expect(richTextEditor).not.toHaveClass('texture-grid');
     });
 
     it('should not apply texture class when richContent has no attrs', () => {
@@ -363,11 +363,11 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).not.toHaveClass('texture-dots');
-      expect(editorContainer).not.toHaveClass('texture-grid');
-      expect(editorContainer).not.toHaveClass('texture-lined');
-      expect(editorContainer).not.toHaveClass('texture-texture');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).not.toHaveClass('texture-dots');
+      expect(richTextEditor).not.toHaveClass('texture-grid');
+      expect(richTextEditor).not.toHaveClass('texture-lined');
+      expect(richTextEditor).not.toHaveClass('texture-texture');
     });
   });
 
