@@ -125,18 +125,12 @@
 
 /* Code block styles */
 
-/* Specific code block styles - default for all pre elements */
-.rich-text-editor .ProseMirror pre,
-.rich-text-editor .ProseMirror .hljs,
-.rich-text-editor .ProseMirror [data-type="codeBlock"],
-.rich-text-editor .ProseMirror .code-block {
+/* Code block styles - each pre element gets full borders since each code block is one pre element */
+.rich-text-editor .ProseMirror pre {
   background-color: #1f2937 !important; /* bg-gray-800 */
-  border-left: 1px solid #374151 !important; /* Always have side borders */
-  border-right: 1px solid #374151 !important;
-  border-top: none !important; /* Default: no top border */
-  border-bottom: none !important; /* Default: no bottom border */
-  border-radius: 0 !important; /* Default: no radius */
-  padding: 0.75rem 1rem !important; /* Better padding for cleaner look */
+  border: 1px solid #374151 !important; /* All borders for each code block */
+  border-radius: 0.25rem !important; /* Full border radius */
+  padding: 1rem 1rem !important; /* Added vertical padding for gap above/below content */
   overflow-x: auto !important;
   margin: 0 !important;
   line-height: 1.5 !important; /* Better line spacing for code */
@@ -144,6 +138,7 @@
   font-size: inherit !important;
   white-space: pre-wrap !important;
   display: block !important;
+  color: #d1d5db !important; /* text-gray-300 */
   
   /* Enable programming ligatures */
   font-variant-ligatures: common-ligatures;
@@ -151,28 +146,6 @@
   font-feature-settings: "liga" on, "calt" on;
 }
 
-/* First pre element gets top border and top radius */
-.rich-text-editor .ProseMirror pre:first-of-type,
-.rich-text-editor .ProseMirror .hljs:first-of-type {
-  border-top: 1px solid #374151 !important;
-  border-top-left-radius: 0.25rem !important;
-  border-top-right-radius: 0.25rem !important;
-}
-
-/* Last pre element gets bottom border and bottom radius */
-.rich-text-editor .ProseMirror pre:last-of-type,
-.rich-text-editor .ProseMirror .hljs:last-of-type {
-  border-bottom: 1px solid #374151 !important;
-  border-bottom-left-radius: 0.25rem !important;
-  border-bottom-right-radius: 0.25rem !important;
-}
-
-/* Single pre element gets all borders and full radius */
-.rich-text-editor .ProseMirror pre:only-of-type,
-.rich-text-editor .ProseMirror .hljs:only-of-type {
-  border: 1px solid #374151 !important;
-  border-radius: 0.25rem !important;
-}
 
 /* Override prose plugin for code blocks */
 .rich-text-editor .ProseMirror.prose pre {
