@@ -56,12 +56,6 @@ export const tiptapExtensions = [
     HTMLAttributes: {
       class: 'code-block-lowlight'
     }
-  }).extend({
-    addNodeView() {
-      return ({ node, getPos, editor }) => {
-        return {};
-      };
-    }
   }),
   Table.configure({
     resizable: true,
