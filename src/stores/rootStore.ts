@@ -59,6 +59,63 @@ interface RootStore {
   setInitialUrlProcessed: (status: boolean) => void;
 }
 
+/**
+ * Extracts image data from clipboard if present
+ */
+const _extractImageFromClipboard = async (): Promise<string | null> => {
+  const clipboardItems = await navigator.clipboard.read();
+  
+  for (const clipboardItem of clipboardItems) {
+    for (const type of clipboardItem.types) {
+      if (type.startsWith('image/')) {
+        const imageBlob = await clipboardItem.getType(type);
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageBlob);
+        });
+      }
+    }
+  }
+  
+  return null;
+};
+
+/**
+ * Creates a new rich text tab for image pasting
+ */
+const _createImageTab = async (
+  imageDataUrl: string, 
+  isRightSide: boolean, 
+  storeActions: RootStore,
+  createFinalTabObjectFn: (partialInputTab: Partial<Tab>, workspaceId: string, options: { defaultTitle: string; initialContent?: string }) => Tab
+): Promise<void> => {
+  const { canAddNewTab, addTab } = storeActions;
+  if (!canAddNewTab(isRightSide)) return;
+  
+  // Store image data for the rich text editor
+  const { useClipboardStore } = await import('./clipboardStore');
+  useClipboardStore.getState().setPendingImageData(imageDataUrl);
+  
+  // Generate proper "Scratch n" title
+  const ensuredWorkspaceId = await useWorkspaceStore.getState().ensureWorkspace();
+  if (!ensuredWorkspaceId) return;
+  
+  const currentTabs = useTabsStore.getState().tabs.filter((t) => t.workspaceId === ensuredWorkspaceId);
+  const nonWelcomeTabs = currentTabs.filter((tab) => tab.title !== "Welcome");
+  const defaultTitle = `${NEW_TAB_PREFIX} ${nonWelcomeTabs.length + 1}`;
+  
+  const newTabObject = createFinalTabObjectFn({
+    isRich: true,
+    content: '', // Rich text tabs use richContent, not content
+    richContent: null, // Will be initialized by the editor with the pending image
+  }, ensuredWorkspaceId, {
+    defaultTitle,
+  });
+  
+  addTab(newTabObject, isRightSide);
+};
+
 export const useRootStore = create<RootStore>((set, get) => {
   // NO MORE SUBSCRIPTIONS HERE
   const storage = StorageProviderFactory.getProvider();
@@ -87,7 +144,6 @@ export const useRootStore = create<RootStore>((set, get) => {
       language: partialInputTab.language || language,
       languageLocked: partialInputTab.languageLocked ?? languageLocked,
       isRich: partialInputTab.isRich ?? false,
-      backgroundTexture: partialInputTab.backgroundTexture ?? null,
       workspaceId: workspaceId,
       dateCreated: partialInputTab.dateCreated || now,
       lastModified: now,
@@ -168,10 +224,28 @@ export const useRootStore = create<RootStore>((set, get) => {
       addTab(newTabObject, isRightSide);
     },
 
-    handleNewTabFromPaste: (isRightSide) => {
-      navigator.clipboard
-        .readText()
-        .then((content) => get().handleNewTab(isRightSide, content));
+    handleNewTabFromPaste: async (isRightSide) => {
+      try {
+        const imageDataUrl = await _extractImageFromClipboard();
+        if (imageDataUrl) {
+          await _createImageTab(imageDataUrl, isRightSide, get(), _createFinalTabObject);
+          return;
+        }
+        
+        // No images found, fall back to text content
+        const content = await navigator.clipboard.readText();
+        get().handleNewTab(isRightSide, content);
+      } catch (error) {
+        // Fallback to text-only if clipboard API fails
+        console.warn('Clipboard API failed, falling back to text:', error);
+        navigator.clipboard
+          .readText()
+          .then((content) => get().handleNewTab(isRightSide, content))
+          .catch(() => {
+            // If even text reading fails, create an empty tab
+            get().handleNewTab(isRightSide, '');
+          });
+      }
     },
 
     removeTab: (id) => {

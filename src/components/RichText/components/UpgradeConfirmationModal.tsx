@@ -16,7 +16,7 @@ export const UpgradeConfirmationModal: React.FC<UpgradeConfirmationModalProps> =
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-      <div className="bg-gray-850 p-6 rounded-lg shadow-2xl max-w-md w-full border border-gray-700">
+      <div className="bg-gray-850 p-6 rounded-lg shadow-2xl max-w-md w-full border border-gray-700" data-testid="rich-text-upgrade-modal">
         <div className="flex items-center mb-4">
           <ImageIcon size={24} className="text-blue-400 mr-3" />
           <h3 className="text-lg font-semibold text-white">Convert to Rich Text?</h3>

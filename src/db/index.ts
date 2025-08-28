@@ -11,7 +11,6 @@ interface TabRecord {
   isTablet?: boolean;
   tabletState?: string;
   isRich?: boolean;
-  backgroundTexture?: string;
   lastModified: number;
   dateCreated: number;
   workspaceId: string;
@@ -119,7 +118,6 @@ const toTabRecord = (tab: Tab): TabRecord => ({
   ...tab,
   content: tab.content || "",
   richContent: tab.richContent ? JSON.stringify(tab.richContent) : undefined,
-  backgroundTexture: tab.backgroundTexture || undefined,
   lastModified: tab.lastModified,
   dateCreated: tab.dateCreated,
   workspaceId: tab.workspaceId,
@@ -142,7 +140,6 @@ const toTab = (record: TabRecord): Tab => {
     ...record,
     richContent,
     isRich: record.isRich || false,
-    backgroundTexture: (record.backgroundTexture as 'paper' | 'grid' | null) || null,
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: cursor,
@@ -168,7 +165,6 @@ const toTabMetadata = (record: TabRecord): Omit<Tab, "content"> => {
     ...metadata,
     richContent: parsedRichContent,
     isRich: metadata.isRich || false,
-    backgroundTexture: (metadata.backgroundTexture as 'paper' | 'grid' | null) || null,
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
     cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },

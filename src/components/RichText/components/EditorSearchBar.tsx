@@ -60,7 +60,8 @@ export const EditorSearchBar: React.FC<EditorSearchBarProps> = ({
 
   const handleClose = () => {
     if (editor) {
-      editor.commands.setSearchTerm('');
+      // Clear search term in the editor to remove highlights
+      editor.commands.clearSearchResults();
     }
     setSearchTerm('');
     setCurrentIndex(0);

@@ -34,7 +34,6 @@ const initializeTab = (tab: Tab): Tab => {
     language: tab.language ?? "plaintext",
     languageLocked: tab.languageLocked ?? false,
     isRich: tab.isRich ?? false,
-    backgroundTexture: tab.backgroundTexture ?? null,
     cursorPosition: tab.cursorPosition ?? { lineNumber: 1, column: 1 },
     dateCreated: tab.dateCreated ?? now,
     lastModified: tab.lastModified ?? now,

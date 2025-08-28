@@ -3,7 +3,6 @@ export { RichTextEditor } from './RichTextEditor';
 export { RichTextToolbar } from './components/RichTextToolbar';
 export { EditorSearchBar } from './components/EditorSearchBar';
 export { UpgradeConfirmationModal } from './components/UpgradeConfirmationModal';
-export { BlockContextMenu } from './components/BlockContextMenu';
 
 // Hooks
 export { useRichTextEditor } from './hooks/useRichTextEditor';

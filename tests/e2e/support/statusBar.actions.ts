@@ -253,4 +253,41 @@ export class StatusBarActions {
     
     return optionTexts;
   }
+
+  // Rich Text functionality
+  getRichTextToggle(side: 'left' | 'right' = 'left') {
+    return this.page.locator(`[data-editor-pane-side="${side}"] [data-testid="rich-text-toggle"]`);
+  }
+
+  async expectRichTextToggleVisible(side: 'left' | 'right' = 'left') {
+    const richTextToggle = this.getRichTextToggle(side);
+    await expect(richTextToggle).toBeVisible();
+  }
+
+  async expectRichTextToggleNotVisible(side: 'left' | 'right' = 'left') {
+    const richTextToggle = this.getRichTextToggle(side);
+    await expect(richTextToggle).not.toBeVisible();
+  }
+
+  async clickRichTextToggle(side: 'left' | 'right' = 'left') {
+    const richTextToggle = this.getRichTextToggle(side);
+    await expect(richTextToggle).toBeVisible();
+    await richTextToggle.click();
+    
+    // Wait for the editor mode to switch
+    await this.page.waitForFunction(() => {
+      // Wait for DOM changes to stabilize after the toggle
+      return document.readyState === 'complete';
+    });
+  }
+
+  async expectRichTextToggleText(text: 'Rich' | 'Text', side: 'left' | 'right' = 'left') {
+    const richTextToggle = this.getRichTextToggle(side);
+    await expect(richTextToggle).toContainText(text);
+  }
+
+  async expectRichTextToggleTitle(title: string, side: 'left' | 'right' = 'left') {
+    const richTextToggle = this.getRichTextToggle(side);
+    await expect(richTextToggle).toHaveAttribute('title', title);
+  }
 } 

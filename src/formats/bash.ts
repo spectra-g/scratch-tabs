@@ -1,5 +1,3 @@
-// File path: bash.ts
-
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
 import { DetectionResult, FormatModule  } from "./types";

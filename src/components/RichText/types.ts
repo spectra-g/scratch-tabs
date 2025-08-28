@@ -26,6 +26,8 @@ export interface EditorSearchBarProps {
 
 export interface RichTextToolbarProps {
   editor: any; // TipTap editor instance
+  activeTab: Tab;
+  onImportCode?: () => void;
 }
 
 export interface DateCreatedNodeProps {

@@ -35,9 +35,8 @@ export const SearchExtension = Extension.create<SearchOptions>({
 
   addCommands() {
     return {
-      setSearchTerm: (searchTerm: string) => ({ tr, state, dispatch }) => {
+      setSearchTerm: (searchTerm: string) => ({ tr, dispatch }) => {
         if (dispatch) {
-          const plugin = this.options;
           const newTr = tr.setMeta('search', { searchTerm });
           dispatch(newTr);
         }
@@ -79,10 +78,81 @@ export const SearchExtension = Extension.create<SearchOptions>({
         }
         return true;
       },
-    };
+
+      clearSearchResults: () => ({ tr, dispatch }) => {
+        if (dispatch) {
+          const newTr = tr.setMeta('search', { searchTerm: '' });
+          dispatch(newTr);
+        }
+        return true;
+      },
+    } as any;
   },
 
   addProseMirrorPlugins() {
+    const extension = this;
+    
+    // Helper function to find matches in ProseMirror document
+    const findMatches = (doc: any, searchTerm: string, options: SearchOptions) => {
+      const results: Array<{ from: number; to: number }> = [];
+      
+      if (!searchTerm) return results;
+
+      const searchText = options.caseSensitive ? searchTerm : searchTerm.toLowerCase();
+      
+      // Build a map of text content with proper positions
+      const textContent: { char: string; pos: number }[] = [];
+      
+      doc.descendants((node: any, pos: number) => {
+        if (node.isText) {
+          const text = node.text;
+          for (let i = 0; i < text.length; i++) {
+            textContent.push({
+              char: text[i],
+              pos: pos + i, // Remove the +1, it might be causing the offset
+            });
+          }
+        }
+      });
+      
+      // Convert to searchable text
+      const searchableText = textContent.map(item => 
+        options.caseSensitive ? item.char : item.char.toLowerCase()
+      ).join('');
+      
+      // Find matches in the searchable text
+      let index = 0;
+      while (index < searchableText.length) {
+        const found = searchableText.indexOf(searchText, index);
+        if (found === -1) break;
+
+        // Check for whole word match if required
+        if (options.wholeWord) {
+          const before = found > 0 ? searchableText[found - 1] : ' ';
+          const after = found + searchText.length < searchableText.length 
+            ? searchableText[found + searchText.length] 
+            : ' ';
+          
+          if (!/\W/.test(before) || !/\W/.test(after)) {
+            index = found + 1;
+            continue;
+          }
+        }
+
+        // Get actual document positions
+        if (textContent[found] && textContent[found + searchTerm.length - 1]) {
+          const from = textContent[found].pos;
+          const to = from + searchTerm.length;
+          
+          results.push({ from, to });
+        }
+        
+        index = found + 1;
+      }
+
+      return results;
+    };
+
     return [
       new Plugin({
         key: new PluginKey('search'),
@@ -100,12 +170,12 @@ export const SearchExtension = Extension.create<SearchOptions>({
             const meta = tr.getMeta('search');
             if (meta && meta.searchTerm !== undefined) {
               const searchTerm = meta.searchTerm;
-              const results = this.findMatches(tr.doc, searchTerm, this.spec.options);
+              const results = findMatches(tr.doc, searchTerm, extension.options);
               
               // Update storage
-              this.spec.extension.storage.searchTerm = searchTerm;
-              this.spec.extension.storage.results = results;
-              this.spec.extension.storage.currentIndex = results.length > 0 ? 0 : -1;
+              extension.storage.searchTerm = searchTerm;
+              extension.storage.results = results;
+              extension.storage.currentIndex = results.length > 0 ? 0 : -1;
               
               return {
                 searchTerm,
@@ -133,45 +203,6 @@ export const SearchExtension = Extension.create<SearchOptions>({
 
             return DecorationSet.create(state.doc, decorations);
           },
-        },
-
-        // Helper method to find matches
-        findMatches(doc: any, searchTerm: string, options: SearchOptions) {
-          const results: Array<{ from: number; to: number }> = [];
-          
-          if (!searchTerm) return results;
-
-          const text = doc.textContent;
-          const searchText = options.caseSensitive ? searchTerm : searchTerm.toLowerCase();
-          const documentText = options.caseSensitive ? text : text.toLowerCase();
-
-          let index = 0;
-          while (index < documentText.length) {
-            const found = documentText.indexOf(searchText, index);
-            if (found === -1) break;
-
-            // Check for whole word match if required
-            if (options.wholeWord) {
-              const before = found > 0 ? documentText[found - 1] : ' ';
-              const after = found + searchText.length < documentText.length 
-                ? documentText[found + searchText.length] 
-                : ' ';
-              
-              if (!/\W/.test(before) || !/\W/.test(after)) {
-                index = found + 1;
-                continue;
-              }
-            }
-
-            results.push({
-              from: found,
-              to: found + searchTerm.length,
-            });
-
-            index = found + 1;
-          }
-
-          return results;
         },
       }),
     ];

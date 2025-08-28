@@ -3,34 +3,59 @@
  */
 
 /**
+ * Converts Monaco editor position (line/column) to approximate character offset in plain text
+ */
+const monacoPositionToOffset = (plainTextContent: string, lineNumber: number, column: number): number => {
+  const lines = plainTextContent.split('\n');
+  let offset = 0;
+  
+  // Add characters from all lines before the target line (Monaco is 1-based)
+  for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
+    offset += lines[i].length + 1; // +1 for the newline character
+  }
+  
+  // Add characters from the target line up to the column (Monaco is 1-based)
+  const targetLineIndex = lineNumber - 1;
+  if (targetLineIndex < lines.length) {
+    offset += Math.min(column - 1, lines[targetLineIndex].length);
+  }
+  
+  return Math.max(0, offset);
+};
+
+/**
  * Converts plain text content to TipTap JSON format
+ * Also returns cursor position mapping if Monaco position is provided
  */
 export const migrateTextToRich = (
   plainTextContent: string,
-  dateCreated: number
-): any => {
+  dateCreated: number,
+  monacoCursorPosition?: { lineNumber: number; column: number }
+): { richContent: any; cursorOffset?: number } => {
   if (!plainTextContent.trim()) {
     return {
-      type: 'doc',
-      content: [
-        {
-          type: 'dateCreated',
-          attrs: {
-            dateCreated,
+      richContent: {
+        type: 'doc',
+        content: [
+          {
+            type: 'dateCreated',
+            attrs: {
+              dateCreated,
+            },
           },
-        },
-        {
-          type: 'paragraph',
-          content: [],
-        },
-      ],
+          {
+            type: 'paragraph',
+            content: [],
+          },
+        ],
+      },
     };
   }
 
   // Split content into paragraphs
   const paragraphs = plainTextContent.split('\n\n').filter(p => p.trim());
   
-  const content = [
+  const content: any[] = [
     {
       type: 'dateCreated',
       attrs: {
@@ -81,9 +106,24 @@ export const migrateTextToRich = (
     }
   });
 
-  return {
+  const richContent = {
     type: 'doc',
     content,
+  };
+  
+  // Calculate cursor offset if Monaco position is provided
+  let cursorOffset;
+  if (monacoCursorPosition) {
+    cursorOffset = monacoPositionToOffset(
+      plainTextContent,
+      monacoCursorPosition.lineNumber,
+      monacoCursorPosition.column
+    );
+  }
+  
+  return {
+    richContent,
+    cursorOffset,
   };
 };
 

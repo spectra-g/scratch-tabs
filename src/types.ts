@@ -1,14 +1,29 @@
+export type BackgroundTexture = 'grid' | 'lined' | 'texture' | 'dots' | null;
+
+export interface RichContentAttrs {
+  backgroundTexture?: BackgroundTexture;
+  // Future rich text settings can be added here:
+  // fontSize?: number;
+  // theme?: string;
+  // margins?: { top: number; bottom: number; };
+}
+
+export interface RichContent {
+  type: 'doc';
+  content: any[]; // TipTap content nodes
+  attrs?: RichContentAttrs;
+}
+
 export interface Tab {
   id: string;
   title: string;
   content?: string;
-  richContent?: any; // TipTap JSON structure
+  richContent?: RichContent; // Properly typed rich content structure
   language: string;
   languageLocked: boolean;
   isTablet?: boolean;
   tabletState?: string;
-  isRich: boolean; // New property for rich text mode
-  backgroundTexture?: 'paper' | 'grid' | null; // Background texture option
+  isRich?: boolean; // New property for rich text mode
   cursorPosition: EditorPosition;
   isPinned?: boolean;
   dateCreated: number;

@@ -12,7 +12,9 @@ export default {
     "^react-markdown$": "<rootDir>/src/__mocks__/react-markdown.js",
     "^remark-gfm$": "<rootDir>/src/__mocks__/remark-gfm.js",
     "^jsonpath-plus$": "<rootDir>/src/__mocks__/jsonpath-plus.js",
-    "^.*tablets/dynamicRegistry$": "<rootDir>/src/tablets/__mocks__/dynamicRegistry.ts"
+    "^lowlight$": "<rootDir>/src/__mocks__/lowlight.ts",
+    "^.*tablets/dynamicRegistry$": "<rootDir>/src/tablets/__mocks__/dynamicRegistry.ts",
+    "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js"
   },
   transform: {
     "^.+\\.(ts|tsx)$": [
@@ -41,5 +43,5 @@ export default {
   ],
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
-  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose|react-markdown|remark-gfm|yaml)/)"],
+  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose|react-markdown|remark-gfm|yaml|tiptap-extension-resizable-image)/)"],
 };

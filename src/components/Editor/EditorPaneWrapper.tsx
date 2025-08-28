@@ -1,10 +1,9 @@
-import React, { Suspense, lazy, useMemo } from "react";
+import React, { Suspense, lazy, useMemo, useCallback } from "react";
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { EditorInstance } from "./EditorInstance";
 import { TabletView } from "../Tab/TabletView";
-import { RichTextEditor } from "../RichText/RichTextEditor";
 import { smartViewRegistry } from "../../views/registry";
 import { StatusBar } from "../StatusBar";
 import { useMarkdownPreviewResizer } from "../../hooks/useMarkdownPreviewResizer";
@@ -13,6 +12,10 @@ import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { modelManager } from "../../services/modelManager";
 import { migrateTextToRich } from "../RichText/utils/contentMigration";
+import { useClipboardStore } from "../../stores/clipboardStore";
+
+// Lazy load the RichTextEditor component
+const RichTextEditor = lazy(() => import("../RichText/RichTextEditor").then(module => ({ default: module.RichTextEditor })));
 
 interface EditorPaneWrapperProps {
   side: "left" | "right";
@@ -20,6 +23,14 @@ interface EditorPaneWrapperProps {
 
 const PreviewLoadingFallback = () => (
   <div className="text-gray-400 p-4 animate-pulse">Loading Preview...</div>
+);
+
+const RichTextLoadingFallback = () => (
+  <div className="h-full flex items-center justify-center text-gray-400">
+    <div className="text-center">
+      <div className="animate-pulse">Loading Editor...</div>
+    </div>
+  </div>
 );
 
 // Full content accessor for preview components (removing large content guard)
@@ -89,21 +100,31 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     });
   };
 
-  const handleUpgradeToRich = () => {
+  const handleUpgradeToRich = useCallback(() => {
     if (!activeTab || !activeTabId) return;
     
-    // Migrate existing plain text content to rich format
-    const richContent = migrateTextToRich(
+    // Check if there's pending image data and cursor position
+    const { pendingImageData, pendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
+    
+    // Migrate existing plain text content to rich format, including cursor position mapping
+    const migration = migrateTextToRich(
       activeTab.content || '',
-      activeTab.dateCreated
+      activeTab.dateCreated,
+      pendingImageCursorPosition || undefined
     );
+    const { richContent, cursorOffset } = migration;
+    
+    // Store the calculated cursor offset for the rich text editor
+    if (cursorOffset !== undefined) {
+      setPendingImageCursorOffset(cursorOffset);
+    }
     
     updateTabState(activeTabId, {
       isRich: true,
       richContent,
       lastModified: Date.now(),
     });
-  };
+  }, [activeTab, activeTabId, updateTabState]);
   // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
   const extendedView =
@@ -133,7 +154,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         className={`overflow-hidden relative ${shouldShowSideBySidePreview ? "" : "flex-1 w-full"} flex flex-col`}
       >
         {/* Main Content Area */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           {activeTab && activeTabId ? (
             shouldShowReplacementView ? (
               // Render replacement view (like CSV table editor)
@@ -149,13 +170,15 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 side={side}
               />
             ) : activeTab.isRich ? (
-              // Render rich text editor
-              <RichTextEditor
-                tab={activeTab}
-                onContentChange={handleRichContentChange}
-                onUpgradeToRich={handleUpgradeToRich}
-                className="h-full"
-              />
+              // Render rich text editor with lazy loading
+              <Suspense fallback={<RichTextLoadingFallback />}>
+                <RichTextEditor
+                  key={activeTab.id}
+                  tab={activeTab}
+                  onContentChange={handleRichContentChange}
+                  onUpgradeToRich={handleUpgradeToRich}
+                />
+              </Suspense>
             ) : activeTab.isTablet ? (
               <TabletView tab={activeTab} onChange={handleTabletStateChange} />
             ) : (

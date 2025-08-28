@@ -24,6 +24,8 @@ jest.mock('@tiptap/react', () => ({
         results: [],
       },
     },
+    on: jest.fn(),
+    off: jest.fn(),
   })),
   EditorContent: ({ editor, className }: any) => (
     <div data-testid="editor-content" className={className}>
@@ -52,6 +54,8 @@ jest.mock('../hooks/useRichTextEditor', () => ({
         results: [],
       },
     },
+    on: jest.fn(),
+    off: jest.fn(),
   })),
 }));
 
@@ -66,13 +70,21 @@ jest.mock('../components/RichTextToolbar', () => ({
   RichTextToolbar: () => <div data-testid="rich-text-toolbar">Toolbar</div>,
 }));
 
-jest.mock('../components/EditorSearchBar', () => ({
-  EditorSearchBar: ({ isVisible, onClose }: any) => 
-    isVisible ? (
-      <div data-testid="editor-search-bar">
-        <button onClick={onClose} data-testid="close-search">Close</button>
-      </div>
-    ) : null,
+jest.mock('../components/InlineSearchBar', () => ({
+  InlineSearchBar: ({ isVisible, onClose, onOpen }: any) => (
+    <div>
+      {!isVisible && (
+        <button title="Search (Ctrl+F)" onClick={onOpen} data-testid="search-button">
+          Search
+        </button>
+      )}
+      {isVisible && (
+        <div data-testid="inline-search-bar">
+          <button onClick={onClose} data-testid="close-search">Close</button>
+        </div>
+      )}
+    </div>
+  ),
 }));
 
 jest.mock('../components/UpgradeConfirmationModal', () => ({
@@ -94,6 +106,10 @@ jest.mock('../components/ImportCodeModal', () => ({
     ) : null,
 }));
 
+jest.mock('../components/LinkBubbleMenu', () => ({
+  LinkBubbleMenu: () => <div data-testid="link-bubble-menu">Link Bubble Menu</div>,
+}));
+
 describe('RichTextEditor', () => {
   const mockOnContentChange = jest.fn();
   const mockOnUpgradeToRich = jest.fn();
@@ -106,7 +122,6 @@ describe('RichTextEditor', () => {
     language: 'plaintext',
     languageLocked: false,
     isRich: false,
-    backgroundTexture: null,
     isTablet: false,
     tabletState: '',
     cursorPosition: { lineNumber: 1, column: 1 },
@@ -152,7 +167,13 @@ describe('RichTextEditor', () => {
     it('should apply background texture classes', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: 'paper' 
+        richContent: {
+          type: 'doc',
+          content: [],
+          attrs: {
+            backgroundTexture: 'dots'
+          }
+        }
       });
       
       render(
@@ -162,8 +183,8 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).toHaveClass('texture-paper');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).toHaveClass('texture-dots');
     });
   });
 
@@ -181,7 +202,7 @@ describe('RichTextEditor', () => {
       const searchButton = screen.getByTitle('Search (Ctrl+F)');
       fireEvent.click(searchButton);
 
-      expect(screen.getByTestId('editor-search-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('inline-search-bar')).toBeInTheDocument();
     });
 
     it('should hide search toggle button when search bar is visible', () => {
@@ -218,7 +239,7 @@ describe('RichTextEditor', () => {
       const closeButton = screen.getByTestId('close-search');
       fireEvent.click(closeButton);
 
-      expect(screen.queryByTestId('editor-search-bar')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('inline-search-bar')).not.toBeInTheDocument();
     });
   });
 
@@ -255,10 +276,16 @@ describe('RichTextEditor', () => {
   });
 
   describe('Background Textures', () => {
-    it('should apply paper texture class', () => {
+    it('should apply dots texture class', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: 'paper' 
+        richContent: {
+          type: 'doc',
+          content: [],
+          attrs: {
+            backgroundTexture: 'dots'
+          }
+        }
       });
       
       render(
@@ -268,14 +295,20 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).toHaveClass('texture-paper');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).toHaveClass('texture-dots');
     });
 
     it('should apply grid texture class', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: 'grid' 
+        richContent: {
+          type: 'doc',
+          content: [],
+          attrs: {
+            backgroundTexture: 'grid'
+          }
+        }
       });
       
       render(
@@ -285,14 +318,20 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).toHaveClass('texture-grid');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).toHaveClass('texture-grid');
     });
 
     it('should not apply texture class when backgroundTexture is null', () => {
       const tab = createMockTab({ 
         isRich: true, 
-        backgroundTexture: null 
+        richContent: {
+          type: 'doc',
+          content: [],
+          attrs: {
+            backgroundTexture: null
+          }
+        }
       });
       
       render(
@@ -302,9 +341,33 @@ describe('RichTextEditor', () => {
         />
       );
 
-      const editorContainer = screen.getByTestId('editor-content').parentElement;
-      expect(editorContainer).not.toHaveClass('texture-paper');
-      expect(editorContainer).not.toHaveClass('texture-grid');
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).not.toHaveClass('texture-dots');
+      expect(richTextEditor).not.toHaveClass('texture-grid');
+    });
+
+    it('should not apply texture class when richContent has no attrs', () => {
+      const tab = createMockTab({ 
+        isRich: true, 
+        richContent: {
+          type: 'doc',
+          content: []
+          // No attrs property
+        }
+      });
+      
+      render(
+        <RichTextEditor
+          tab={tab}
+          onContentChange={mockOnContentChange}
+        />
+      );
+
+      const richTextEditor = document.querySelector('.rich-text-editor');
+      expect(richTextEditor).not.toHaveClass('texture-dots');
+      expect(richTextEditor).not.toHaveClass('texture-grid');
+      expect(richTextEditor).not.toHaveClass('texture-lined');
+      expect(richTextEditor).not.toHaveClass('texture-texture');
     });
   });
 
@@ -321,7 +384,7 @@ describe('RichTextEditor', () => {
 
       fireEvent.keyDown(document, { key: 'f', ctrlKey: true });
 
-      expect(screen.getByTestId('editor-search-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('inline-search-bar')).toBeInTheDocument();
     });
 
     it('should open search bar on Cmd+F (Mac)', () => {
@@ -336,7 +399,7 @@ describe('RichTextEditor', () => {
 
       fireEvent.keyDown(document, { key: 'f', metaKey: true });
 
-      expect(screen.getByTestId('editor-search-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('inline-search-bar')).toBeInTheDocument();
     });
   });
 

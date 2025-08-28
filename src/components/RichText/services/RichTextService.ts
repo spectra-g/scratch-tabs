@@ -10,7 +10,6 @@ export class RichTextService {
    * Import content from another tab as a code block
    */
   static async importContentAsCodeBlock(
-    targetTabId: string,
     sourceTabId: string,
     editor: any
   ): Promise<void> {
@@ -57,7 +56,7 @@ export class RichTextService {
 
     // Import migration utility
     import('../utils/contentMigration').then(({ migrateTextToRich }) => {
-      const richContent = migrateTextToRich(
+      const { richContent } = migrateTextToRich(
         tab.content || '',
         tab.dateCreated
       );
@@ -88,26 +87,13 @@ export class RichTextService {
         isRich: false,
         content: plainTextContent,
         richContent: null,
-        backgroundTexture: null,
         lastModified: Date.now(),
       });
     });
   }
 
-  /**
-   * Set background texture for a rich text tab
-   */
-  static setBackgroundTexture(
-    tabId: string, 
-    texture: 'paper' | 'grid' | null
-  ): void {
-    const { updateTabState } = useTabsStore.getState();
-    
-    updateTabState(tabId, {
-      backgroundTexture: texture,
-      lastModified: Date.now(),
-    });
-  }
+  // Note: setBackgroundTexture method removed - background texture is now managed
+  // directly within richContent.attrs by the toolbar component
 
   /**
    * Check if a tab can be upgraded to rich text
