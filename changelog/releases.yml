@@ -3,9 +3,22 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.2.0"
+  - version: "1.3.0"
     type: "latest"  # latest, beta, alpha
     draft: false
+    date: "2025-08-28"
+    headline: "🎉 Rich text editing"
+    description: "Rich text supporting images, tables, lists and more"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Rich text editing - Images:** Paste and resize images"
+          - "**Rich text editing - Style:** Create tables, lists, links"
+          - "**Rich text editing - Code:** Code blocks with highlighting"
+          - "**Rich text editing - Content:** Convert standard editor content to rich text or import content from other tabs"
+
+  - version: "1.2.0"
+    type: "release"  # latest, beta, alpha
     date: "2025-08-15"
     headline: "🎉 Properties and INI Smart View"
     description: "Smart View for Properties and INI formats"
