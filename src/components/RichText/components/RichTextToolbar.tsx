@@ -236,7 +236,63 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       </ToolbarButton>
 
       <ToolbarButton
-        onClick={() => editor.chain().focus().toggleCodeBlock({ language: 'javascript' }).run()}
+        onClick={() => {
+
+          // Use our smart toggle command
+          if (editor.isActive('codeBlock')) {
+
+            // Get current attributes before toggling off
+            const currentAttrs = editor.getAttributes('codeBlock');
+
+            (editor.commands as any).toggleCodeBlockSmart();
+          } else {
+
+            // If we're not in a code block, create one with language detection
+            const selectedText = editor.state.doc.textBetween(
+              editor.state.selection.from,
+              editor.state.selection.to
+            );
+            // Only do language detection if we have selected text
+            // Otherwise, let SmartCodeBlockToggle use the stored language
+            if (selectedText.length > 0) {
+              // Enhanced language detection based on content
+              const detectLanguage = (text: string): string => {
+                // JSON detection (enhanced)
+                if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
+                  return 'json';
+                }
+                
+                if (text.includes('{') && text.includes('}') && (text.includes('":') || text.includes('" :'))) {
+                  return 'json';
+                }
+                
+                // JavaScript detection
+                if (text.includes('function ') || text.includes('const ') || text.includes('let ') || text.includes('var ')) {
+                  return 'javascript';
+                }
+                
+                // Python detection  
+                if (text.includes('def ') || text.includes('import ') || text.includes('print(')) {
+                  return 'python';
+                }
+                
+                // XML/HTML detection
+                if (text.includes('<') && text.includes('>')) {
+                  return 'xml';
+                }
+                
+                return 'javascript'; // Default
+              };
+              
+              const language = detectLanguage(selectedText);
+
+              (editor.commands as any).toggleCodeBlockSmart({ language });
+            } else {
+              // No language detection needed - let the extension use stored language
+              (editor.commands as any).toggleCodeBlockSmart();
+            }
+          }
+        }}
         isActive={editor.isActive('codeBlock')}
         title="Code Block"
         testId="rich-text-code-block"

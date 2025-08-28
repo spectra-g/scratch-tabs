@@ -22,6 +22,7 @@ import python from 'highlight.js/lib/languages/python';
 import { DateCreatedNode } from './DateCreatedNode';
 import { SearchExtension } from './SearchExtension';
 import { CodeBlockTabExtension } from './CodeBlockTabExtension';
+import { SmartCodeBlockToggle } from './SmartCodeBlockToggle';
 import 'prosemirror-view/style/prosemirror.css';
 import 'highlight.js/styles/github-dark.css'; // Add syntax highlighting theme
 
@@ -52,6 +53,15 @@ export const tiptapExtensions = [
   CodeBlockLowlight.configure({
     lowlight,
     defaultLanguage: 'plaintext',
+    HTMLAttributes: {
+      class: 'code-block-lowlight'
+    }
+  }).extend({
+    addNodeView() {
+      return ({ node, getPos, editor }) => {
+        return {};
+      };
+    }
   }),
   Table.configure({
     resizable: true,
@@ -75,4 +85,5 @@ export const tiptapExtensions = [
   DateCreatedNode,
   SearchExtension,
   CodeBlockTabExtension,
+  SmartCodeBlockToggle,
 ];
