@@ -22,6 +22,7 @@ import python from 'highlight.js/lib/languages/python';
 import { DateCreatedNode } from './DateCreatedNode';
 import { SearchExtension } from './SearchExtension';
 import 'prosemirror-view/style/prosemirror.css';
+import 'highlight.js/styles/github-dark.css'; // Add syntax highlighting theme
 
 // Create lowlight instance and register only the languages we need
 const lowlight = createLowlight({

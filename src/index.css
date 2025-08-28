@@ -138,12 +138,16 @@
   font-size: inherit !important;
   white-space: pre-wrap !important;
   display: block !important;
-  color: #d1d5db !important; /* text-gray-300 */
   
   /* Enable programming ligatures */
   font-variant-ligatures: common-ligatures;
   -webkit-font-feature-settings: "liga" on, "calt" on;
   font-feature-settings: "liga" on, "calt" on;
+}
+
+/* Default text color for code blocks without syntax highlighting */
+.rich-text-editor .ProseMirror pre {
+  color: #d1d5db; /* text-gray-300 - no !important to allow syntax highlighting override */
 }
 
 

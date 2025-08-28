@@ -236,7 +236,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       </ToolbarButton>
 
       <ToolbarButton
-        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        onClick={() => editor.chain().focus().toggleCodeBlock({ language: 'javascript' }).run()}
         isActive={editor.isActive('codeBlock')}
         title="Code Block"
         testId="rich-text-code-block"
