@@ -243,3 +243,43 @@ Feature: Rich Text Editor
     When I click the "Code Block" button in the Rich Text toolbar
     Then I should see the text is no longer in a code block
     And the Rich Text editor should contain "const x = 42;"
+
+  Scenario: Cursor cannot move above created date with left arrow key
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    And I should see the date created text with "now" time
+    When I type "Hello World" in the Rich Text editor
+    And I place cursor at the beginning of the first line after the date
+    And I press the left arrow key multiple times
+    Then the cursor should remain after the date created text
+    And I should not be able to type above the date created text
+
+  Scenario: Cursor cannot move above created date with up arrow key after content import
+    Given I am on a plain text editor tab
+    When I type "Some content to import" in the Monaco editor
+    And I copy all content from the Monaco editor
+    And I click the icon for "New tab"
+    And I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    And I should see the date created text with "now" time
+    When I paste the copied content into the Rich Text editor
+    And I place cursor at the end of the imported content
+    And I press the up arrow key multiple times to try to reach the top
+    Then the cursor should remain after the date created text
+    And I should not be able to type above the date created text
+
+  Scenario: Date created text prevents all navigation methods that would go above it
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    And I should see the date created text with "now" time
+    When I type "Test content for navigation" in the Rich Text editor
+    And I place cursor at the beginning of the first line after the date
+    And I press the Home key
+    Then the cursor should remain after the date created text
+    When I press the up arrow key
+    Then the cursor should remain after the date created text
+    When I press the left arrow key
+    Then the cursor should remain after the date created text
+    And I should not be able to type above the date created text
