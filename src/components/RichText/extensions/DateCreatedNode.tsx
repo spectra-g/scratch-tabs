@@ -89,6 +89,28 @@ export const DateCreatedNode = Node.create({
     return [
       new Plugin({
         key: new PluginKey('dateCreatedNodePlugin'),
+        view: (view) => {
+          return {
+            update: (view, prevState) => {
+              // Check cursor position after any state change and fix if needed
+              const { state } = view;
+              const { selection } = state;
+              const { $from } = selection;
+              
+              const dateCreatedEnd = findDateCreatedEnd(state.doc);
+              if (dateCreatedEnd === null) {
+                return;
+              }
+              
+              // If cursor ended up before dateCreated, move it to after dateCreated
+              if ($from.pos < dateCreatedEnd) {
+                setTimeout(() => {
+                  moveCursorAfterDateCreated(view, dateCreatedEnd);
+                }, 0);
+              }
+            }
+          };
+        },
         props: {
           handleKeyDown: (view, event) => {
             const { state } = view;
@@ -100,34 +122,24 @@ export const DateCreatedNode = Node.create({
               return false;
             }
             
+            
             // Prevent cursor movement that would land before or within the dateCreated node
-            if (event.key === 'ArrowUp' || event.key === 'Home') {
+            if (event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'ArrowLeft') {
               let shouldPrevent = false;
               
               if (event.key === 'Home') {
                 // Home always tries to go to beginning of line/document
                 shouldPrevent = true;
+              } else if (event.key === 'ArrowLeft') {
+                // ArrowLeft: prevent if cursor would move before dateCreated node
+                if ($from.pos <= dateCreatedEnd + 1) {
+                  shouldPrevent = true;
+                }
               } else if (event.key === 'ArrowUp') {
-                // For ArrowUp, we need to predict where the cursor would land
-                // ProseMirror's ArrowUp behavior:
-                // 1. If there's a line above at the same column, go there
-                // 2. If no line above, go to start of current line
-                // 3. If already at start of first line, go to document start (position 0)
-                
-                // Get the resolved position to analyze the document structure
-                const $pos = state.doc.resolve($from.pos);
-                
-                // Check if we're in the first text block after dateCreated
-                // If the current position is in a paragraph directly after dateCreated,
-                // ArrowUp would likely try to go to the dateCreated node or before it
-                if ($pos.parent.type.name === 'paragraph') {
-                  // Find the paragraph's position in the document
-                  let paragraphStart = $pos.start();
-                  
-                  // If this paragraph starts right after dateCreated, ArrowUp would be problematic
-                  if (paragraphStart <= dateCreatedEnd + 1) {
-                    shouldPrevent = true;
-                  }
+                // ArrowUp: prevent if cursor is close enough to dateCreated that ArrowUp might go before it
+                // This is more reliable than trying to predict ProseMirror's exact behavior
+                if ($from.pos <= dateCreatedEnd + 10) { // Allow some buffer for content after dateCreated
+                  shouldPrevent = true;
                 }
               }
               
