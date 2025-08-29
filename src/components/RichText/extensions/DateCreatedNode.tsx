@@ -5,7 +5,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { TextSelection } from '@tiptap/pm/state';
 import type { ReactNodeViewProps } from '@tiptap/react';
 
-const DateCreatedComponent: React.FC<ReactNodeViewProps> = ({ node }) => {
+export const DateCreatedComponent: React.FC<ReactNodeViewProps> = ({ node }) => {
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString(undefined, {
       weekday: 'long',
@@ -66,6 +66,10 @@ export const DateCreatedNode = Node.create({
 
 
   addProseMirrorPlugins() {
+    // Constants for date created node detection
+    const DATE_CREATED_SELECTORS = '[data-type="date-created"], [data-testid="rich-text-date-created"]';
+    const DATE_CREATED_ATTRIBUTES = ['data-type="date-created"', 'data-testid="rich-text-date-created"'];
+
     // Helper function to find the dateCreated node end position
     const findDateCreatedEnd = (doc: any): number | null => {
       let dateCreatedEnd: number | null = null;
@@ -89,6 +93,29 @@ export const DateCreatedNode = Node.create({
     return [
       new Plugin({
         key: new PluginKey('dateCreatedNodePlugin'),
+        view: (view) => {
+          return {
+            update: (view, prevState) => {
+              // Check cursor position after any state change and fix if needed
+              const { state } = view;
+              const { selection } = state;
+              const { $from, $to } = selection;
+              
+              const dateCreatedEnd = findDateCreatedEnd(state.doc);
+              if (dateCreatedEnd === null) {
+                return;
+              }
+              
+              // Only fix cursor position if it's a cursor (not a selection)
+              // Don't interfere with selections like Ctrl+A
+              if ($from.pos === $to.pos && $from.pos < dateCreatedEnd) {
+                setTimeout(() => {
+                  moveCursorAfterDateCreated(view, dateCreatedEnd);
+                }, 0);
+              }
+            }
+          };
+        },
         props: {
           handleKeyDown: (view, event) => {
             const { state } = view;
@@ -100,34 +127,28 @@ export const DateCreatedNode = Node.create({
               return false;
             }
             
+            // Allow Ctrl+A (Select All) to work properly
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+              return false; // Let the default Select All behavior work
+            }
+            
             // Prevent cursor movement that would land before or within the dateCreated node
-            if (event.key === 'ArrowUp' || event.key === 'Home') {
+            if (event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'ArrowLeft') {
               let shouldPrevent = false;
               
               if (event.key === 'Home') {
                 // Home always tries to go to beginning of line/document
                 shouldPrevent = true;
+              } else if (event.key === 'ArrowLeft') {
+                // ArrowLeft: prevent if cursor would move before dateCreated node
+                if ($from.pos <= dateCreatedEnd + 1) {
+                  shouldPrevent = true;
+                }
               } else if (event.key === 'ArrowUp') {
-                // For ArrowUp, we need to predict where the cursor would land
-                // ProseMirror's ArrowUp behavior:
-                // 1. If there's a line above at the same column, go there
-                // 2. If no line above, go to start of current line
-                // 3. If already at start of first line, go to document start (position 0)
-                
-                // Get the resolved position to analyze the document structure
-                const $pos = state.doc.resolve($from.pos);
-                
-                // Check if we're in the first text block after dateCreated
-                // If the current position is in a paragraph directly after dateCreated,
-                // ArrowUp would likely try to go to the dateCreated node or before it
-                if ($pos.parent.type.name === 'paragraph') {
-                  // Find the paragraph's position in the document
-                  let paragraphStart = $pos.start();
-                  
-                  // If this paragraph starts right after dateCreated, ArrowUp would be problematic
-                  if (paragraphStart <= dateCreatedEnd + 1) {
-                    shouldPrevent = true;
-                  }
+                // ArrowUp: prevent if cursor is close enough to dateCreated that ArrowUp might go before it
+                // This is more reliable than trying to predict ProseMirror's exact behavior
+                if ($from.pos <= dateCreatedEnd + 10) { // Allow some buffer for content after dateCreated
+                  shouldPrevent = true;
                 }
               }
               
@@ -161,9 +182,123 @@ export const DateCreatedNode = Node.create({
             
             return false;
           },
+
+          handlePaste: (view, event) => {
+            // Filter out dateCreated nodes from pasted content
+            const clipboardData = event.clipboardData;
+            if (!clipboardData) return false;
+
+            const htmlData = clipboardData.getData('text/html');
+            if (!htmlData) return false;
+
+            // Check if the HTML contains a dateCreated node
+            if (DATE_CREATED_ATTRIBUTES.some(attr => htmlData.includes(attr))) {
+              // Create a temporary div to parse and filter the HTML
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = htmlData;
+              
+              // Remove all dateCreated nodes
+              const dateCreatedNodes = tempDiv.querySelectorAll(DATE_CREATED_SELECTORS);
+              dateCreatedNodes.forEach(node => node.remove());
+              
+              // Also remove parent div if it becomes empty
+              dateCreatedNodes.forEach(node => {
+                const parent = node.parentElement;
+                if (parent && parent.children.length === 0 && parent.textContent?.trim() === '') {
+                  parent.remove();
+                }
+              });
+
+              // Get the filtered HTML
+              const filteredHtml = tempDiv.innerHTML;
+              
+              if (filteredHtml.trim()) {
+                // Create a new paste event with filtered content
+                const newClipboardData = new DataTransfer();
+                newClipboardData.setData('text/html', filteredHtml);
+                
+                const filteredEvent = new ClipboardEvent('paste', {
+                  clipboardData: newClipboardData,
+                  bubbles: true,
+                  cancelable: true
+                });
+                
+                // Prevent the original paste
+                event.preventDefault();
+                
+                // Dispatch the filtered paste event
+                view.dom.dispatchEvent(filteredEvent);
+                return true;
+              } else {
+                // If filtering removed everything, prevent the paste
+                event.preventDefault();
+                return true;
+              }
+            }
+
+            return false;
+          },
+
+          handleTextInput: (view, from, to, text) => {
+            const dateCreatedEnd = findDateCreatedEnd(view.state.doc);
+            if (dateCreatedEnd === null) {
+              return false;
+            }
+
+            // If the text input range would delete the dateCreated node, prevent it
+            if (from < dateCreatedEnd) {
+              // Move the start position to after the dateCreated node
+              const tr = view.state.tr.insertText(text, Math.max(from, dateCreatedEnd), to);
+              view.dispatch(tr);
+              return true;
+            }
+
+            return false;
+          },
+
+          handleDOMEvents: {
+            beforeinput: (view, event) => {
+              const dateCreatedEnd = findDateCreatedEnd(view.state.doc);
+              if (dateCreatedEnd === null) {
+                return false;
+              }
+
+              // Handle text replacement that might affect the dateCreated node
+              if (event.inputType === 'insertReplacementText' || 
+                  event.inputType === 'insertText' ||
+                  event.inputType === 'insertCompositionText') {
+                
+                const { selection } = view.state;
+                const { $from, $to } = selection;
+                
+                // If the selection includes the dateCreated node, adjust the selection
+                if ($from.pos < dateCreatedEnd) {
+                  event.preventDefault();
+                  
+                  // Create a transaction that preserves the dateCreated node
+                  const inputData = event.data || '';
+                  const tr = view.state.tr;
+                  
+                  // Only replace content after the dateCreated node
+                  const startPos = Math.max($from.pos, dateCreatedEnd);
+                  const endPos = $to.pos;
+                  
+                  if (endPos > startPos) {
+                    tr.replaceWith(startPos, endPos, view.state.schema.text(inputData));
+                  } else {
+                    tr.insertText(inputData, dateCreatedEnd);
+                  }
+                  
+                  view.dispatch(tr);
+                  return true;
+                }
+              }
+
+              return false;
+            }
+          },
           
-          // beforeinput handler removed due to type incompatibility
-          // Text input protection is handled through other event handlers
+          // Text input protection is handled through event handlers above
         }
       })
     ];

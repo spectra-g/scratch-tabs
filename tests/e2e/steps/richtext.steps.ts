@@ -620,3 +620,315 @@ Then('the Rich Text editor should contain {string}', async function(expectedText
   const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
   await expect(tipTapEditor).toContainText(expectedText);
 });
+
+// Cursor positioning regression test step definitions
+When('I place cursor at the beginning of the first line after the date', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  
+  // Position cursor at the beginning of content after the date created node
+  await this.page.evaluate(() => {
+    const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror');
+    if (!editor) return;
+    
+    // Find the first paragraph after the date created node
+    const firstParagraph = editor.querySelector('p');
+    if (!firstParagraph) return;
+    
+    // Create range at the beginning of the first paragraph
+    const range = document.createRange();
+    range.setStart(firstParagraph, 0);
+    range.collapse(true);
+    
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  });
+});
+
+When('I press the left arrow key multiple times', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  
+  // Press left arrow multiple times to try to get above the date
+  for (let i = 0; i < 10; i++) {
+    await tipTapEditor.press('ArrowLeft');
+  }
+});
+
+When('I copy all content from the Monaco editor', async function() {
+  const monacoEditor = this.page.locator('[data-editor-pane-side="left"] [data-testid="monaco-editor-container"]');
+  await monacoEditor.focus();
+  await this.page.keyboard.press('Control+a');
+  await this.page.keyboard.press('Control+c');
+});
+
+When('I paste the copied content into the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.focus();
+  await this.page.keyboard.press('Control+v');
+});
+
+When('I place cursor at the end of the imported content', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.focus();
+  await this.page.keyboard.press('End');
+});
+
+When('I press the up arrow key multiple times to try to reach the top', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  
+  // Press up arrow multiple times to try to get above the date
+  for (let i = 0; i < 20; i++) {
+    await tipTapEditor.press('ArrowUp');
+  }
+});
+
+When('I press the Home key', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.press('Home');
+});
+
+When('I press the up arrow key', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.press('ArrowUp');
+});
+
+When('I press the left arrow key', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.press('ArrowLeft');
+});
+
+Then('the cursor should remain after the date created text', async function() {
+  // Check cursor position by attempting to type and verifying it appears after date
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  
+  // Type a test character to see where it appears
+  await tipTapEditor.type('X');
+  
+  // Check that the 'X' appears after the date created text, not before it
+  const dateCreatedNode = this.page.locator('[data-testid="rich-text-date-created"]');
+  const editorContent = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  
+  await expect(dateCreatedNode).toBeVisible();
+  await expect(editorContent).toContainText('X');
+  
+  // Verify 'X' appears after the date by checking DOM structure
+  const xAppearsAfterDate = await this.page.evaluate(() => {
+    const dateElement = document.querySelector('[data-testid="rich-text-date-created"]');
+    const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror');
+    
+    if (!dateElement || !editor) return false;
+    
+    // Check if 'X' appears in any text node after the date element
+    const walker = document.createTreeWalker(
+      editor,
+      NodeFilter.SHOW_TEXT,
+      node => {
+        const position = dateElement.compareDocumentPosition(node);
+        return (position & Node.DOCUMENT_POSITION_FOLLOWING) ? 
+          NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    );
+    
+    let textNode;
+    while (textNode = walker.nextNode()) {
+      if (textNode.textContent && textNode.textContent.includes('X')) {
+        return true;
+      }
+    }
+    return false;
+  });
+  
+  expect(xAppearsAfterDate).toBe(true);
+  
+  // Clean up by removing the test character
+  await tipTapEditor.press('Backspace');
+});
+
+Then('I should not be able to type above the date created text', async function() {
+  // This assertion is implicitly covered by "cursor should remain after date created text"
+  // since we verify that typed text appears after the date, not before it
+  
+  // Additional check: try to position cursor at document start and verify it gets corrected
+  await this.page.evaluate(() => {
+    const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror');
+    if (!editor) return;
+    
+    // Try to place cursor at the very beginning of the document
+    const range = document.createRange();
+    range.setStart(editor, 0);
+    range.collapse(true);
+    
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  });
+  
+  // Wait a moment for any cursor correction to happen
+  await this.page.waitForTimeout(100);
+  
+  // Type a character and verify it still appears after the date
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.type('Y');
+  
+  // Check that 'Y' appears after the date, confirming cursor was corrected
+  const yAppearsAfterDate = await this.page.evaluate(() => {
+    const dateElement = document.querySelector('[data-testid="rich-text-date-created"]');
+    const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror');
+    
+    if (!dateElement || !editor) return false;
+    
+    const walker = document.createTreeWalker(
+      editor,
+      NodeFilter.SHOW_TEXT,
+      node => {
+        const position = dateElement.compareDocumentPosition(node);
+        return (position & Node.DOCUMENT_POSITION_FOLLOWING) ? 
+          NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    );
+    
+    let textNode;
+    while (textNode = walker.nextNode()) {
+      if (textNode.textContent && textNode.textContent.includes('Y')) {
+        return true;
+      }
+    }
+    return false;
+  });
+  
+  expect(yAppearsAfterDate).toBe(true);
+  
+  // Clean up
+  await tipTapEditor.press('Backspace');
+});
+
+// Ctrl+A selection test step definitions
+When('I press Ctrl+A to select all content', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.focus();
+  
+  // Use the platform-specific modifier key
+  const modifier = process.platform === 'darwin' ? 'Meta+a' : 'Control+a';
+  await this.page.keyboard.press(modifier);
+  
+  // Wait for the selection to be processed
+  await this.page.waitForTimeout(100);
+});
+
+Then('all content should be selected including the date created text', async function() {
+  // Wait a moment for the selection to stabilize
+  await this.page.waitForTimeout(100);
+  
+  // Check that there is an active selection and get selection range info
+  const selectionInfo = await this.page.evaluate(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      return { hasSelection: false, text: '', rangeCount: 0, coversDateNode: false };
+    }
+    
+    const range = selection.getRangeAt(0);
+    const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror');
+    const dateNode = document.querySelector('[data-testid="rich-text-date-created"]');
+    
+    let coversDateNode = false;
+    let coversFullEditor = false;
+    
+    if (editor && dateNode && range) {
+      // Check if the selection range covers the date node by comparing positions
+      try {
+        const dateParent = dateNode.parentElement;
+        if (dateParent) {
+          // Check if the selection range includes the date node
+          coversDateNode = range.intersectsNode(dateParent) || 
+                          range.isPointInRange(dateParent, 0) ||
+                          (range.comparePoint(dateParent, 0) <= 0 && 
+                           range.comparePoint(dateParent, dateParent.childNodes.length) >= 0);
+        }
+        
+        // Check if selection covers the full editor content
+        coversFullEditor = range.startContainer === editor || 
+                          (range.startContainer.nodeType === Node.TEXT_NODE && range.startOffset === 0) ||
+                          range.commonAncestorContainer === editor;
+      } catch (e) {
+        console.log('Selection range check error:', e);
+      }
+    }
+    
+    return {
+      hasSelection: selection.toString().length > 0,
+      text: selection.toString(),
+      rangeCount: selection.rangeCount,
+      coversDateNode,
+      coversFullEditor,
+      startContainer: range?.startContainer?.nodeName,
+      endContainer: range?.endContainer?.nodeName,
+    };
+  });
+  
+  expect(selectionInfo.hasSelection).toBe(true);
+  expect(selectionInfo.rangeCount).toBeGreaterThan(0);
+  
+  // The typed content should definitely be selected
+  expect(selectionInfo.text).toContain('Some content to select with Ctrl+A');
+  
+  // For the date created node, we check if it's visually selected (range covers it)
+  // rather than checking if it's in the text selection, since it might not be extractable as text
+  expect(selectionInfo.coversDateNode || selectionInfo.coversFullEditor).toBe(true);
+});
+
+When('I type {string} to replace the selection', async function(replacementText: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  
+  // Type the replacement text - this should replace the selected content
+  await tipTapEditor.type(replacementText);
+});
+
+Then('the Rich Text editor should not contain {string}', async function(text: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await expect(tipTapEditor).not.toContainText(text);
+});
+
+// Copy-paste duplicate date created node test step definitions
+When('I press Ctrl+A to select all content including the date', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.focus();
+  
+  // Use the platform-specific modifier key
+  const modifier = process.platform === 'darwin' ? 'Meta+a' : 'Control+a';
+  await this.page.keyboard.press(modifier);
+  
+  // Wait for the selection to be processed
+  await this.page.waitForTimeout(100);
+});
+
+When('I press Ctrl+C to copy the selection', async function() {
+  const modifier = process.platform === 'darwin' ? 'Meta+c' : 'Control+c';
+  await this.page.keyboard.press(modifier);
+});
+
+When('I press Ctrl+V to paste the copied content', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.focus();
+  const modifier = process.platform === 'darwin' ? 'Meta+v' : 'Control+v';
+  await this.page.keyboard.press(modifier);
+});
+
+Then('I should see exactly one date created text', async function() {
+  const dateCreatedNodes = this.page.locator('[data-testid="rich-text-date-created"]');
+  await expect(dateCreatedNodes).toHaveCount(1);
+});
+
+Then('I should not see duplicate date created nodes', async function() {
+  // This step is essentially the same as checking for exactly one date created text
+  // We can also verify there's no text duplication in the single date node
+  const dateCreatedNode = this.page.locator('[data-testid="rich-text-date-created"]');
+  const dateText = await dateCreatedNode.textContent();
+  
+  // Ensure the text doesn't contain duplicate "Created" words
+  const createdCount = (dateText?.match(/Created/g) || []).length;
+  expect(createdCount).toBe(1);
+});
