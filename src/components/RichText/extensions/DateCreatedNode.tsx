@@ -5,7 +5,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { TextSelection } from '@tiptap/pm/state';
 import type { ReactNodeViewProps } from '@tiptap/react';
 
-const DateCreatedComponent: React.FC<ReactNodeViewProps> = ({ node }) => {
+export const DateCreatedComponent: React.FC<ReactNodeViewProps> = ({ node }) => {
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString(undefined, {
       weekday: 'long',
@@ -66,6 +66,10 @@ export const DateCreatedNode = Node.create({
 
 
   addProseMirrorPlugins() {
+    // Constants for date created node detection
+    const DATE_CREATED_SELECTORS = '[data-type="date-created"], [data-testid="rich-text-date-created"]';
+    const DATE_CREATED_ATTRIBUTES = ['data-type="date-created"', 'data-testid="rich-text-date-created"'];
+
     // Helper function to find the dateCreated node end position
     const findDateCreatedEnd = (doc: any): number | null => {
       let dateCreatedEnd: number | null = null;
@@ -188,13 +192,13 @@ export const DateCreatedNode = Node.create({
             if (!htmlData) return false;
 
             // Check if the HTML contains a dateCreated node
-            if (htmlData.includes('data-type="date-created"') || htmlData.includes('data-testid="rich-text-date-created"')) {
+            if (DATE_CREATED_ATTRIBUTES.some(attr => htmlData.includes(attr))) {
               // Create a temporary div to parse and filter the HTML
               const tempDiv = document.createElement('div');
               tempDiv.innerHTML = htmlData;
               
               // Remove all dateCreated nodes
-              const dateCreatedNodes = tempDiv.querySelectorAll('[data-type="date-created"], [data-testid="rich-text-date-created"]');
+              const dateCreatedNodes = tempDiv.querySelectorAll(DATE_CREATED_SELECTORS);
               dateCreatedNodes.forEach(node => node.remove());
               
               // Also remove parent div if it becomes empty
