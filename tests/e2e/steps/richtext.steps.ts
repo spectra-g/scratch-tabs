@@ -869,7 +869,6 @@ Then('all content should be selected including the date created text', async fun
     };
   });
   
-  console.log('Selection info:', selectionInfo);
   expect(selectionInfo.hasSelection).toBe(true);
   expect(selectionInfo.rangeCount).toBeGreaterThan(0);
   

@@ -284,7 +284,7 @@ Feature: Rich Text Editor
     Then the cursor should remain after the date created text
     And I should not be able to type above the date created text
 
-  Scenario: Select all (Ctrl+A) works properly and doesn't interfere with cursor positioning
+  Scenario: Select all (Ctrl+A) works properly and preserves date created text
     Given I am on a plain text editor tab
     When I click the Rich Text toggle in the status bar
     Then I should see the Rich Text editor is displayed

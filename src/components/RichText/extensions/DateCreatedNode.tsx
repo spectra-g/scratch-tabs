@@ -234,9 +234,67 @@ export const DateCreatedNode = Node.create({
 
             return false;
           },
+
+          handleTextInput: (view, from, to, text) => {
+            const dateCreatedEnd = findDateCreatedEnd(view.state.doc);
+            if (dateCreatedEnd === null) {
+              return false;
+            }
+
+            // If the text input range would delete the dateCreated node, prevent it
+            if (from < dateCreatedEnd) {
+              // Move the start position to after the dateCreated node
+              const tr = view.state.tr.insertText(text, Math.max(from, dateCreatedEnd), to);
+              view.dispatch(tr);
+              return true;
+            }
+
+            return false;
+          },
+
+          handleDOMEvents: {
+            beforeinput: (view, event) => {
+              const dateCreatedEnd = findDateCreatedEnd(view.state.doc);
+              if (dateCreatedEnd === null) {
+                return false;
+              }
+
+              // Handle text replacement that might affect the dateCreated node
+              if (event.inputType === 'insertReplacementText' || 
+                  event.inputType === 'insertText' ||
+                  event.inputType === 'insertCompositionText') {
+                
+                const { selection } = view.state;
+                const { $from, $to } = selection;
+                
+                // If the selection includes the dateCreated node, adjust the selection
+                if ($from.pos < dateCreatedEnd) {
+                  event.preventDefault();
+                  
+                  // Create a transaction that preserves the dateCreated node
+                  const inputData = event.data || '';
+                  const tr = view.state.tr;
+                  
+                  // Only replace content after the dateCreated node
+                  const startPos = Math.max($from.pos, dateCreatedEnd);
+                  const endPos = $to.pos;
+                  
+                  if (endPos > startPos) {
+                    tr.replaceWith(startPos, endPos, view.state.schema.text(inputData));
+                  } else {
+                    tr.insertText(inputData, dateCreatedEnd);
+                  }
+                  
+                  view.dispatch(tr);
+                  return true;
+                }
+              }
+
+              return false;
+            }
+          },
           
-          // beforeinput handler removed due to type incompatibility
-          // Text input protection is handled through other event handlers
+          // Text input protection is handled through event handlers above
         }
       })
     ];
