@@ -283,3 +283,33 @@ Feature: Rich Text Editor
     When I press the left arrow key
     Then the cursor should remain after the date created text
     And I should not be able to type above the date created text
+
+  Scenario: Select all (Ctrl+A) works properly and doesn't interfere with cursor positioning
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    And I should see the date created text with "now" time
+    When I type "Some content to select with Ctrl+A" in the Rich Text editor
+    And I press Ctrl+A to select all content
+    Then all content should be selected including the date created text
+    When I type "Replacement text" to replace the selection
+    Then I should see the date created text with "now" time
+    And the Rich Text editor should contain "Replacement text"
+    And the Rich Text editor should not contain "Some content to select with Ctrl+A"
+
+  Scenario: Copying content with date created node doesn't duplicate dates when pasted
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    And I should see the date created text with "now" time
+    When I type "Content to copy and paste" in the Rich Text editor
+    And I press Ctrl+A to select all content including the date
+    And I press Ctrl+C to copy the selection
+    When I click the icon for "New tab"
+    And I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    And I should see the date created text with "now" time
+    When I press Ctrl+V to paste the copied content
+    Then I should see exactly one date created text
+    And the Rich Text editor should contain "Content to copy and paste"
+    And I should not see duplicate date created nodes

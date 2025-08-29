@@ -95,15 +95,16 @@ export const DateCreatedNode = Node.create({
               // Check cursor position after any state change and fix if needed
               const { state } = view;
               const { selection } = state;
-              const { $from } = selection;
+              const { $from, $to } = selection;
               
               const dateCreatedEnd = findDateCreatedEnd(state.doc);
               if (dateCreatedEnd === null) {
                 return;
               }
               
-              // If cursor ended up before dateCreated, move it to after dateCreated
-              if ($from.pos < dateCreatedEnd) {
+              // Only fix cursor position if it's a cursor (not a selection)
+              // Don't interfere with selections like Ctrl+A
+              if ($from.pos === $to.pos && $from.pos < dateCreatedEnd) {
                 setTimeout(() => {
                   moveCursorAfterDateCreated(view, dateCreatedEnd);
                 }, 0);
@@ -122,6 +123,10 @@ export const DateCreatedNode = Node.create({
               return false;
             }
             
+            // Allow Ctrl+A (Select All) to work properly
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+              return false; // Let the default Select All behavior work
+            }
             
             // Prevent cursor movement that would land before or within the dateCreated node
             if (event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'ArrowLeft') {
@@ -171,6 +176,62 @@ export const DateCreatedNode = Node.create({
               return true;
             }
             
+            return false;
+          },
+
+          handlePaste: (view, event) => {
+            // Filter out dateCreated nodes from pasted content
+            const clipboardData = event.clipboardData;
+            if (!clipboardData) return false;
+
+            const htmlData = clipboardData.getData('text/html');
+            if (!htmlData) return false;
+
+            // Check if the HTML contains a dateCreated node
+            if (htmlData.includes('data-type="date-created"') || htmlData.includes('data-testid="rich-text-date-created"')) {
+              // Create a temporary div to parse and filter the HTML
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = htmlData;
+              
+              // Remove all dateCreated nodes
+              const dateCreatedNodes = tempDiv.querySelectorAll('[data-type="date-created"], [data-testid="rich-text-date-created"]');
+              dateCreatedNodes.forEach(node => node.remove());
+              
+              // Also remove parent div if it becomes empty
+              dateCreatedNodes.forEach(node => {
+                const parent = node.parentElement;
+                if (parent && parent.children.length === 0 && parent.textContent?.trim() === '') {
+                  parent.remove();
+                }
+              });
+
+              // Get the filtered HTML
+              const filteredHtml = tempDiv.innerHTML;
+              
+              if (filteredHtml.trim()) {
+                // Create a new paste event with filtered content
+                const newClipboardData = new DataTransfer();
+                newClipboardData.setData('text/html', filteredHtml);
+                
+                const filteredEvent = new ClipboardEvent('paste', {
+                  clipboardData: newClipboardData,
+                  bubbles: true,
+                  cancelable: true
+                });
+                
+                // Prevent the original paste
+                event.preventDefault();
+                
+                // Dispatch the filtered paste event
+                view.dom.dispatchEvent(filteredEvent);
+                return true;
+              } else {
+                // If filtering removed everything, prevent the paste
+                event.preventDefault();
+                return true;
+              }
+            }
+
             return false;
           },
           

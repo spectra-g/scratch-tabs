@@ -805,3 +805,131 @@ Then('I should not be able to type above the date created text', async function(
   // Clean up
   await tipTapEditor.press('Backspace');
 });
+
+// Ctrl+A selection test step definitions
+When('I press Ctrl+A to select all content', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.focus();
+  
+  // Use the platform-specific modifier key
+  const modifier = process.platform === 'darwin' ? 'Meta+a' : 'Control+a';
+  await this.page.keyboard.press(modifier);
+  
+  // Wait for the selection to be processed
+  await this.page.waitForTimeout(100);
+});
+
+Then('all content should be selected including the date created text', async function() {
+  // Wait a moment for the selection to stabilize
+  await this.page.waitForTimeout(100);
+  
+  // Check that there is an active selection and get selection range info
+  const selectionInfo = await this.page.evaluate(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      return { hasSelection: false, text: '', rangeCount: 0, coversDateNode: false };
+    }
+    
+    const range = selection.getRangeAt(0);
+    const editor = document.querySelector('[data-editor-pane-side="left"] .ProseMirror');
+    const dateNode = document.querySelector('[data-testid="rich-text-date-created"]');
+    
+    let coversDateNode = false;
+    let coversFullEditor = false;
+    
+    if (editor && dateNode && range) {
+      // Check if the selection range covers the date node by comparing positions
+      try {
+        const dateParent = dateNode.parentElement;
+        if (dateParent) {
+          // Check if the selection range includes the date node
+          coversDateNode = range.intersectsNode(dateParent) || 
+                          range.isPointInRange(dateParent, 0) ||
+                          (range.comparePoint(dateParent, 0) <= 0 && 
+                           range.comparePoint(dateParent, dateParent.childNodes.length) >= 0);
+        }
+        
+        // Check if selection covers the full editor content
+        coversFullEditor = range.startContainer === editor || 
+                          (range.startContainer.nodeType === Node.TEXT_NODE && range.startOffset === 0) ||
+                          range.commonAncestorContainer === editor;
+      } catch (e) {
+        console.log('Selection range check error:', e);
+      }
+    }
+    
+    return {
+      hasSelection: selection.toString().length > 0,
+      text: selection.toString(),
+      rangeCount: selection.rangeCount,
+      coversDateNode,
+      coversFullEditor,
+      startContainer: range?.startContainer?.nodeName,
+      endContainer: range?.endContainer?.nodeName,
+    };
+  });
+  
+  console.log('Selection info:', selectionInfo);
+  expect(selectionInfo.hasSelection).toBe(true);
+  expect(selectionInfo.rangeCount).toBeGreaterThan(0);
+  
+  // The typed content should definitely be selected
+  expect(selectionInfo.text).toContain('Some content to select with Ctrl+A');
+  
+  // For the date created node, we check if it's visually selected (range covers it)
+  // rather than checking if it's in the text selection, since it might not be extractable as text
+  expect(selectionInfo.coversDateNode || selectionInfo.coversFullEditor).toBe(true);
+});
+
+When('I type {string} to replace the selection', async function(replacementText: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  
+  // Type the replacement text - this should replace the selected content
+  await tipTapEditor.type(replacementText);
+});
+
+Then('the Rich Text editor should not contain {string}', async function(text: string) {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await expect(tipTapEditor).not.toContainText(text);
+});
+
+// Copy-paste duplicate date created node test step definitions
+When('I press Ctrl+A to select all content including the date', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.focus();
+  
+  // Use the platform-specific modifier key
+  const modifier = process.platform === 'darwin' ? 'Meta+a' : 'Control+a';
+  await this.page.keyboard.press(modifier);
+  
+  // Wait for the selection to be processed
+  await this.page.waitForTimeout(100);
+});
+
+When('I press Ctrl+C to copy the selection', async function() {
+  const modifier = process.platform === 'darwin' ? 'Meta+c' : 'Control+c';
+  await this.page.keyboard.press(modifier);
+});
+
+When('I press Ctrl+V to paste the copied content', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.focus();
+  const modifier = process.platform === 'darwin' ? 'Meta+v' : 'Control+v';
+  await this.page.keyboard.press(modifier);
+});
+
+Then('I should see exactly one date created text', async function() {
+  const dateCreatedNodes = this.page.locator('[data-testid="rich-text-date-created"]');
+  await expect(dateCreatedNodes).toHaveCount(1);
+});
+
+Then('I should not see duplicate date created nodes', async function() {
+  // This step is essentially the same as checking for exactly one date created text
+  // We can also verify there's no text duplication in the single date node
+  const dateCreatedNode = this.page.locator('[data-testid="rich-text-date-created"]');
+  const dateText = await dateCreatedNode.textContent();
+  
+  // Ensure the text doesn't contain duplicate "Created" words
+  const createdCount = (dateText?.match(/Created/g) || []).length;
+  expect(createdCount).toBe(1);
+});
