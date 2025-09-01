@@ -1,0 +1,628 @@
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { SmartViewProps } from '../../../../views/registry';
+import { 
+  Eye, 
+  EyeOff, 
+  Zap, 
+  Copy, 
+  Download, 
+  Info, 
+  Loader2, 
+  CheckCircle, 
+  AlertTriangle,
+  X,
+  Maximize2,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw
+} from '../../../../components/Icons';
+import { optimizeWithSvgo, basicCleanup } from '../../utils/optimizer';
+import { useActiveEditorStore } from '../../../../stores/activeEditorStore';
+
+interface ElementInfo {
+  tagName: string;
+  id?: string;
+  attributes: { [key: string]: string };
+  dataId: string;
+}
+
+interface SvgStats {
+  elements: number;
+  paths: number;
+  groups: number;
+  size: number;
+  viewBox?: string;
+}
+
+export const SvgViewer: React.FC<SmartViewProps> = ({
+  content,
+  onContentChange,
+  tabId,
+  side,
+}) => {
+  const [selectedElement, setSelectedElement] = useState<ElementInfo | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationResult, setOptimizationResult] = useState<{
+    originalSize: number;
+    optimizedSize: number;
+    savings: number;
+  } | null>(null);
+  const [showInspector, setShowInspector] = useState(true);
+  const [svgError, setSvgError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
+  const svgContainerRef = useRef<HTMLDivElement>(null);
+  const inspectorRef = useRef<HTMLDivElement>(null);
+  const { activeLeftEditor, activeRightEditor } = useActiveEditorStore();
+  
+  // Get the appropriate editor based on the side
+  const editor = side === 'left' ? activeLeftEditor : activeRightEditor;
+
+  // Parse and enhance SVG content with data-ids for element tracking
+  const enhancedSvgContent = useMemo(() => {
+    if (!content || !content.trim()) return '';
+    
+    try {
+      // Add unique data-id attributes to all SVG elements for click tracking
+      let enhancedContent = content;
+      let idCounter = 0;
+      
+      // Match all SVG elements and add data-id if they don't have an id
+      enhancedContent = enhancedContent.replace(
+        /<(\w+)([^>]*?)>/g,
+        (match, tagName, attributes) => {
+          // Skip if it's a closing tag or already has data-id
+          if (match.startsWith('</') || attributes.includes('data-id=')) {
+            return match;
+          }
+          
+          // Add data-id for tracking
+          const dataId = `svg-element-${idCounter++}`;
+          return `<${tagName}${attributes} data-id="${dataId}">`;
+        }
+      );
+      
+      setSvgError(null);
+      return enhancedContent;
+    } catch (error) {
+      setSvgError('Invalid SVG content');
+      return content;
+    }
+  }, [content]);
+
+  // Calculate SVG statistics
+  const svgStats = useMemo((): SvgStats => {
+    if (!content) return { elements: 0, paths: 0, groups: 0, size: 0 };
+    
+    const elementCount = (content.match(/<\w+/g) || []).length;
+    const pathCount = (content.match(/<path/g) || []).length;
+    const groupCount = (content.match(/<g\b/g) || []).length;
+    const viewBoxMatch = content.match(/viewBox=["']([^"']+)["']/);
+    
+    return {
+      elements: elementCount,
+      paths: pathCount,
+      groups: groupCount,
+      size: new Blob([content]).size,
+      viewBox: viewBoxMatch ? viewBoxMatch[1] : undefined,
+    };
+  }, [content]);
+
+  // Handle element clicks in the SVG preview
+  const handleSvgClick = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const target = event.target as Element;
+    if (!target || !target.closest) return;
+    
+    // Find the nearest SVG element with a data-id
+    const svgElement = target.closest('[data-id]') as SVGElement;
+    if (!svgElement) return;
+    
+    const dataId = svgElement.getAttribute('data-id');
+    if (!dataId) return;
+    
+    // Extract element information
+    const elementInfo: ElementInfo = {
+      tagName: svgElement.tagName.toLowerCase(),
+      id: svgElement.id || undefined,
+      dataId,
+      attributes: {},
+    };
+    
+    // Collect relevant attributes
+    const relevantAttrs = ['id', 'class', 'fill', 'stroke', 'stroke-width', 'd', 'cx', 'cy', 'r', 'x', 'y', 'width', 'height', 'transform'];
+    relevantAttrs.forEach(attr => {
+      const value = svgElement.getAttribute(attr);
+      if (value) {
+        elementInfo.attributes[attr] = value;
+      }
+    });
+    
+    setSelectedElement(elementInfo);
+    
+    // Highlight corresponding code in Monaco editor
+    if (editor && dataId) {
+      try {
+        const model = editor.getModel();
+        if (model && !model.isDisposed()) {
+          const fullText = model.getValue();
+          const lines = fullText.split('\n');
+          
+          // Find the line containing this data-id
+          let targetLine = -1;
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(dataId)) {
+              targetLine = i + 1; // Monaco uses 1-based line numbers
+              break;
+            }
+          }
+          
+          if (targetLine > 0) {
+            // Highlight and scroll to the line
+            editor.setSelection({
+              startLineNumber: targetLine,
+              startColumn: 1,
+              endLineNumber: targetLine,
+              endColumn: lines[targetLine - 1].length + 1,
+            });
+            editor.revealLineInCenter(targetLine);
+            editor.focus();
+          }
+        }
+      } catch (error) {
+        console.warn('[SvgViewer] Failed to highlight code:', error);
+      }
+    }
+  }, [editor]);
+
+  // Handle SVG optimization
+  const handleOptimize = useCallback(async (useAdvanced: boolean = true) => {
+    if (!content || isOptimizing) return;
+    
+    setIsOptimizing(true);
+    setOptimizationResult(null);
+    
+    try {
+      const originalSize = new Blob([content]).size;
+      let optimizedContent: string;
+      
+      if (useAdvanced) {
+        // Try SVGO optimization first
+        try {
+          optimizedContent = await optimizeWithSvgo(content);
+        } catch (error) {
+          console.warn('[SvgViewer] SVGO optimization failed, falling back to basic cleanup:', error);
+          optimizedContent = basicCleanup(content);
+        }
+      } else {
+        optimizedContent = basicCleanup(content);
+      }
+      
+      const optimizedSize = new Blob([optimizedContent]).size;
+      const savings = ((originalSize - optimizedSize) / originalSize) * 100;
+      
+      setOptimizationResult({
+        originalSize,
+        optimizedSize,
+        savings: Math.max(0, savings), // Ensure non-negative
+      });
+      
+      // Update the editor content
+      onContentChange(optimizedContent);
+      
+    } catch (error) {
+      console.error('[SvgViewer] Optimization failed:', error);
+      setSvgError('Optimization failed. Please check your SVG syntax.');
+    } finally {
+      setIsOptimizing(false);
+    }
+  }, [content, onContentChange, isOptimizing]);
+
+  // Handle copy to clipboard
+  const handleCopy = useCallback(async () => {
+    if (!content) return;
+    
+    try {
+      await navigator.clipboard.writeText(content);
+    } catch (error) {
+      console.error('[SvgViewer] Failed to copy to clipboard:', error);
+    }
+  }, [content]);
+
+  // Handle SVG export
+  const handleExport = useCallback(() => {
+    if (!content) return;
+    
+    try {
+      const blob = new Blob([content], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'optimized.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('[SvgViewer] Failed to export SVG:', error);
+    }
+  }, [content]);
+
+  // Format file size for display
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  // Handle zoom controls
+  const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 5));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.1));
+  const handleZoomReset = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  // Handle pan controls
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0) { // Left mouse button
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+    }
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      setPanOffset({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
+  }, [isDragging, dragStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Set up mouse event listeners for panning
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Validate SVG content
+  const isValidSvg = useMemo(() => {
+    if (!content || !content.trim()) return false;
+    return content.includes('<svg') && content.includes('</svg>');
+  }, [content]);
+
+  if (!content || !content.trim()) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-850 text-gray-400">
+        <div className="text-center">
+          <Eye size={48} className="mx-auto mb-4 opacity-50" />
+          <p className="text-lg font-medium">No SVG Content</p>
+          <p className="text-sm">Add SVG code to see the preview</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isValidSvg) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-850 text-gray-400">
+        <div className="text-center">
+          <AlertTriangle size={48} className="mx-auto mb-4 text-yellow-500" />
+          <p className="text-lg font-medium">Invalid SVG</p>
+          <p className="text-sm">Please check your SVG syntax</p>
+          {svgError && (
+            <p className="text-xs text-red-400 mt-2">{svgError}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-gray-850">
+      {/* Toolbar */}
+      <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <h3 className="text-sm font-medium text-gray-200 flex items-center">
+              <Eye size={16} className="mr-2" />
+              SVG Preview
+            </h3>
+            
+            {/* SVG Stats */}
+            <div className="flex items-center space-x-3 text-xs text-gray-400">
+              <span>{svgStats.elements} elements</span>
+              <span>{svgStats.paths} paths</span>
+              <span>{formatFileSize(svgStats.size)}</span>
+              {svgStats.viewBox && (
+                <span title={`ViewBox: ${svgStats.viewBox}`}>
+                  📐 {svgStats.viewBox.split(' ').slice(2).join('×')}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            {/* Zoom Controls */}
+            <div className="flex items-center space-x-1 bg-gray-700 rounded-md p-1">
+              <button
+                onClick={handleZoomOut}
+                className="p-1 hover:bg-gray-600 rounded transition-colors"
+                title="Zoom Out"
+                disabled={zoom <= 0.1}
+              >
+                <ZoomOut size={14} />
+              </button>
+              <span className="text-xs text-gray-300 px-2 min-w-[3rem] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                onClick={handleZoomIn}
+                className="p-1 hover:bg-gray-600 rounded transition-colors"
+                title="Zoom In"
+                disabled={zoom >= 5}
+              >
+                <ZoomIn size={14} />
+              </button>
+              <button
+                onClick={handleZoomReset}
+                className="p-1 hover:bg-gray-600 rounded transition-colors"
+                title="Reset View"
+              >
+                <RotateCcw size={14} />
+              </button>
+            </div>
+
+            {/* Inspector Toggle */}
+            <button
+              onClick={() => setShowInspector(!showInspector)}
+              className={`p-2 rounded transition-colors ${
+                showInspector 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+              title={showInspector ? 'Hide Inspector' : 'Show Inspector'}
+            >
+              <Info size={14} />
+            </button>
+
+            {/* Optimization Buttons */}
+            <button
+              onClick={() => handleOptimize(true)}
+              disabled={isOptimizing}
+              className="flex items-center space-x-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors"
+              title="Optimize with SVGO (Advanced)"
+            >
+              {isOptimizing ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Zap size={14} />
+              )}
+              <span className="text-xs">Optimize</span>
+            </button>
+
+            <button
+              onClick={() => handleOptimize(false)}
+              disabled={isOptimizing}
+              className="flex items-center space-x-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors"
+              title="Basic Cleanup (No External Libraries)"
+            >
+              <Zap size={14} />
+              <span className="text-xs">Basic</span>
+            </button>
+
+            {/* Export Controls */}
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={handleCopy}
+                className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+                title="Copy SVG Code"
+              >
+                <Copy size={14} />
+              </button>
+              <button
+                onClick={handleExport}
+                className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+                title="Export as .svg"
+              >
+                <Download size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Optimization Result */}
+        {optimizationResult && (
+          <div className="mt-3 p-2 bg-green-900/20 border border-green-700/50 rounded-md">
+            <div className="flex items-center space-x-2 text-green-400">
+              <CheckCircle size={14} />
+              <span className="text-xs">
+                Optimized: {formatFileSize(optimizationResult.originalSize)} → {formatFileSize(optimizationResult.optimizedSize)}
+                {optimizationResult.savings > 0 && (
+                  <span className="ml-2 font-medium">
+                    ({optimizationResult.savings.toFixed(1)}% smaller)
+                  </span>
+                )}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* SVG Preview */}
+        <div className="flex-1 relative overflow-hidden bg-gray-900">
+          <div
+            ref={svgContainerRef}
+            className="w-full h-full overflow-auto custom-scrollbar cursor-grab active:cursor-grabbing"
+            onMouseDown={handleMouseDown}
+            style={{
+              cursor: isDragging ? 'grabbing' : 'grab',
+            }}
+          >
+            <div
+              className="min-w-full min-h-full flex items-center justify-center p-4"
+              style={{
+                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
+                transformOrigin: 'center center',
+              }}
+            >
+              <div
+                className="bg-white rounded-lg shadow-lg p-4 max-w-full max-h-full overflow-visible"
+                onClick={handleSvgClick}
+                dangerouslySetInnerHTML={{ __html: enhancedSvgContent }}
+                style={{
+                  minWidth: '200px',
+                  minHeight: '200px',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Pan/Zoom Instructions */}
+          <div className="absolute bottom-4 left-4 bg-gray-800/90 text-gray-300 text-xs px-2 py-1 rounded">
+            Click & drag to pan • Scroll to zoom • Click elements to inspect
+          </div>
+        </div>
+
+        {/* Element Inspector Panel */}
+        {showInspector && (
+          <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col">
+            <div className="flex-shrink-0 p-3 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-gray-200">Element Inspector</h4>
+                <button
+                  onClick={() => setSelectedElement(null)}
+                  className="p-1 hover:bg-gray-700 rounded transition-colors"
+                  title="Clear Selection"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto custom-scrollbar">
+              {selectedElement ? (
+                <div className="p-3 space-y-4">
+                  {/* Element Header */}
+                  <div className="bg-gray-700/50 rounded-lg p-3">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-blue-400 font-mono text-sm">
+                        &lt;{selectedElement.tagName}&gt;
+                      </span>
+                      {selectedElement.id && (
+                        <span className="text-green-400 text-xs">
+                          #{selectedElement.id}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Data ID: {selectedElement.dataId}
+                    </div>
+                  </div>
+
+                  {/* Attributes */}
+                  <div>
+                    <h5 className="text-xs font-medium text-gray-300 mb-2 uppercase tracking-wide">
+                      Attributes
+                    </h5>
+                    {Object.keys(selectedElement.attributes).length > 0 ? (
+                      <div className="space-y-2">
+                        {Object.entries(selectedElement.attributes).map(([key, value]) => (
+                          <div key={key} className="bg-gray-700/30 rounded p-2">
+                            <div className="flex items-start justify-between">
+                              <span className="text-xs font-mono text-blue-300">{key}</span>
+                              <button
+                                onClick={() => navigator.clipboard.writeText(value)}
+                                className="p-1 hover:bg-gray-600 rounded transition-colors ml-2"
+                                title="Copy Value"
+                              >
+                                <Copy size={10} />
+                              </button>
+                            </div>
+                            <div className="text-xs text-gray-300 mt-1 break-all font-mono">
+                              {value.length > 50 ? `${value.substring(0, 50)}...` : value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500 italic">No attributes</p>
+                    )}
+                  </div>
+
+                  {/* Element-specific insights */}
+                  {selectedElement.tagName === 'path' && selectedElement.attributes.d && (
+                    <div>
+                      <h5 className="text-xs font-medium text-gray-300 mb-2 uppercase tracking-wide">
+                        Path Analysis
+                      </h5>
+                      <div className="bg-gray-700/30 rounded p-2 text-xs text-gray-300">
+                        <div>Commands: {(selectedElement.attributes.d.match(/[MLHVCSQTAZ]/gi) || []).length}</div>
+                        <div>Length: {selectedElement.attributes.d.length} chars</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-3 text-center text-gray-500">
+                  <Info size={32} className="mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">Click any element in the SVG to inspect it</p>
+                  <p className="text-xs mt-2">
+                    The corresponding code will be highlighted in the editor
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* SVG Statistics */}
+            <div className="flex-shrink-0 p-3 border-t border-gray-700 bg-gray-800/50">
+              <h5 className="text-xs font-medium text-gray-300 mb-2 uppercase tracking-wide">
+                Document Stats
+              </h5>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="text-gray-400">Elements:</div>
+                <div className="text-gray-200">{svgStats.elements}</div>
+                <div className="text-gray-400">Paths:</div>
+                <div className="text-gray-200">{svgStats.paths}</div>
+                <div className="text-gray-400">Groups:</div>
+                <div className="text-gray-200">{svgStats.groups}</div>
+                <div className="text-gray-400">Size:</div>
+                <div className="text-gray-200">{formatFileSize(svgStats.size)}</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Error Display */}
+      {svgError && (
+        <div className="absolute top-16 left-4 right-4 bg-red-900/20 border border-red-700/50 rounded-md p-3">
+          <div className="flex items-center space-x-2 text-red-400">
+            <AlertTriangle size={14} />
+            <span className="text-sm">{svgError}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

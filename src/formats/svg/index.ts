@@ -1,4 +1,7 @@
 import { FormatModule } from "../types";
+import { SmartView } from "../../views/registry";
+import { SvgSmartView } from "./views/components/SvgSmartView";
+import { Eye } from "../../components/Icons";
 import { SvgFormatDetector } from "../svg";
 import { formatRegistry } from "../registry";
 
@@ -40,6 +43,20 @@ export class SvgFormatModule implements FormatModule {
 
   getFileExtension(): string {
     return this.detector.getFileExtension();
+  }
+
+  getSmartViews(): SmartView[] {
+    return [
+      {
+        id: "svg-previewer",
+        languageId: "xml", // SVGs are parsed as XML
+        label: "SVG Preview",
+        icon: Eye,
+        component: SvgSmartView,
+        mode: "side-by-side", // Critical for interactive features
+        priority: 1,
+      },
+    ];
   }
 }
 
