@@ -964,21 +964,87 @@ export class JsonFormatDetector extends BaseFormatDetector implements FormatModu
       return sample;
     }
 
-    // If no preloaded sample, return a fallback and start preloading
+    // If no preloaded sample, generate one synchronously and start preloading for next time
     this.preloadDynamicSample();
-    return `{
-  "name": "Sample JSON",
-  "description": "A sample JSON object with various data types",
-  "isActive": true,
-  "count": 42,
-  "price": 19.99,
-  "tags": ["sample", "json", "data"],
-  "metadata": {
-    "created": "${new Date().toISOString()}",
-    "version": "1.0",
-    "random": ${Math.random()}
+    return this.generateFallbackSample();
   }
+
+  /**
+   * Generate a random fallback sample that's different each time
+   */
+  private generateFallbackSample(): string {
+    const themes = [
+      { name: "API Response", type: "users" },
+      { name: "Product Data", type: "products" },
+      { name: "Configuration", type: "config" },
+      { name: "Analytics Data", type: "analytics" },
+      { name: "User Profile", type: "profile" }
+    ];
+    
+    const theme = themes[Math.floor(Math.random() * themes.length)];
+    const randomId = Math.floor(Math.random() * 10000);
+    const randomScore = (Math.random() * 100).toFixed(2);
+    
+    switch (theme.type) {
+      case "users":
+        return `{
+  "users": [
+    {
+      "id": ${randomId},
+      "name": "Sample User ${randomId}",
+      "email": "user${randomId}@example.com",
+      "active": ${Math.random() > 0.5},
+      "score": ${randomScore}
+    }
+  ],
+  "total": 1,
+  "timestamp": "${new Date().toISOString()}"
 }`;
+      case "products":
+        return `{
+  "product": {
+    "id": "prod-${randomId}",
+    "name": "Sample Product ${randomId}",
+    "price": ${(Math.random() * 100).toFixed(2)},
+    "inStock": ${Math.random() > 0.3},
+    "rating": ${(Math.random() * 5).toFixed(1)}
+  },
+  "generated": "${new Date().toISOString()}"
+}`;
+      case "config":
+        return `{
+  "version": "1.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}",
+  "settings": {
+    "theme": "${Math.random() > 0.5 ? 'dark' : 'light'}",
+    "autoSave": ${Math.random() > 0.3},
+    "timeout": ${Math.floor(Math.random() * 5000 + 1000)}
+  },
+  "features": ["feature${randomId}"],
+  "updated": "${new Date().toISOString()}"
+}`;
+      case "analytics":
+        return `{
+  "analytics": {
+    "pageViews": ${Math.floor(Math.random() * 10000)},
+    "uniqueVisitors": ${Math.floor(Math.random() * 1000)},
+    "bounceRate": ${(Math.random() * 100).toFixed(2)}
+  },
+  "period": "last_30_days",
+  "generated": "${new Date().toISOString()}"
+}`;
+      default:
+        return `{
+  "profile": {
+    "id": "${randomId}",
+    "username": "user${randomId}",
+    "preferences": {
+      "notifications": ${Math.random() > 0.5},
+      "privacy": "${Math.random() > 0.5 ? 'public' : 'private'}"
+    }
+  },
+  "lastLogin": "${new Date().toISOString()}"
+}`;
+    }
   }
 
   /**
