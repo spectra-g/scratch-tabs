@@ -33,6 +33,7 @@ const mockMonaco = {
     createModel: jest.fn(),
     getModel: jest.fn(),
     setModelLanguage: jest.fn(),
+    getEditors: jest.fn(() => []),
   },
 };
 
@@ -43,6 +44,12 @@ const mockModel = {
   setValue: jest.fn(),
   onDidChangeContent: jest.fn(() => ({ dispose: jest.fn() })),
   dispose: jest.fn(),
+  getFullModelRange: jest.fn(() => ({
+    startLineNumber: 1,
+    startColumn: 1,
+    endLineNumber: 1,
+    endColumn: 13, // Length of "test content"
+  })),
 };
 
 const mockListener = {
@@ -346,6 +353,86 @@ describe("ModelManager", () => {
       // Disposed models don't throw errors, they just don't do anything
       expect(() =>
         modelManager.updateModelLanguage("test-tab", "typescript"),
+      ).not.toThrow();
+    });
+  });
+
+  describe("content updates", () => {
+    it("should replace content with undo support using executeEdits", async () => {
+      const mockEditor = {
+        getModel: jest.fn(() => mockModel),
+        pushUndoStop: jest.fn(),
+        executeEdits: jest.fn(),
+      };
+
+      mockMonaco.editor.getEditors = jest.fn(() => [mockEditor]);
+      mockModel.getFullModelRange = jest.fn(() => ({
+        startLineNumber: 1,
+        startColumn: 1,
+        endLineNumber: 10,
+        endColumn: 50,
+      }));
+
+      const testTab: Tab = {
+        id: "test-tab",
+        title: "Test Tab",
+        content: "original content",
+        language: "javascript",
+        languageLocked: false,
+        cursorPosition: { lineNumber: 1, column: 1 },
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        isTablet: false,
+        tabletState: "",
+        workspaceId: "default",
+      };
+
+      await modelManager.get(testTab);
+      
+      const newContent = "replacement content with undo support";
+      modelManager.replaceModelContentWithUndo("test-tab", newContent);
+
+      // Verify undo stops were added
+      expect(mockEditor.pushUndoStop).toHaveBeenCalledTimes(2);
+      
+      // Verify executeEdits was called with correct parameters
+      expect(mockEditor.executeEdits).toHaveBeenCalledWith('sample-content', [{
+        range: mockModel.getFullModelRange(),
+        text: newContent,
+        forceMoveMarkers: false,
+      }]);
+    });
+
+    it("should fallback to setValue when no editor found", async () => {
+      // Setup with no editors
+      mockMonaco.editor.getEditors = jest.fn(() => []);
+      
+      const testTab: Tab = {
+        id: "test-tab",
+        title: "Test Tab",
+        content: "original content",
+        language: "javascript",
+        languageLocked: false,
+        cursorPosition: { lineNumber: 1, column: 1 },
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        isTablet: false,
+        tabletState: "",
+        workspaceId: "default",
+      };
+
+      await modelManager.get(testTab);
+      
+      const newContent = "fallback content";
+      modelManager.replaceModelContentWithUndo("test-tab", newContent);
+
+      // Should fallback to setValue
+      expect(mockModel.setValue).toHaveBeenCalledWith(newContent);
+    });
+
+    it("should handle replaceModelContentWithUndo for non-existent model", () => {
+      expect(() =>
+        modelManager.replaceModelContentWithUndo("non-existent", "content")
       ).not.toThrow();
     });
   });

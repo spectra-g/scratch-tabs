@@ -85,6 +85,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           className="bg-gray-850 p-4 rounded-lg shadow-2xl max-w-md w-full border border-gray-700/50"
           style={dialogStyle}
           onClick={handleModalContentClick}
+          data-testid="confirmation-dialog"
         >
           <p className="text-white mb-6 font-medium">{message}</p>
           <div className="flex justify-end space-x-4">

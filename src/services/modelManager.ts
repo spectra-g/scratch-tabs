@@ -680,6 +680,37 @@ class ModelManager {
     }
   }
 
+  public replaceModelContentWithUndo(tabId: string, content: string): void {
+    const model = this.models.get(tabId);
+    if (model && !model.isDisposed() && this.monaco) {
+      try {
+        // Find the editor instance that has this model
+        const editors = this.monaco.editor.getEditors() || [];
+        const editor = editors.find((e) => e.getModel() === model);
+        
+        if (editor) {
+          // Use executeEdits to preserve undo stack
+          editor.pushUndoStop();
+          editor.executeEdits('sample-content', [{
+            range: model.getFullModelRange(),
+            text: content,
+            forceMoveMarkers: false,
+          }]);
+          editor.pushUndoStop();
+          // The onDidChangeContent listener will automatically sync this back to the store
+        } else {
+          // Fallback to setValue if no editor found
+          model.setValue(content);
+        }
+      } catch (error) {
+        console.warn(
+          `[ModelManager] Failed to replace model content with undo for tab ${tabId}:`,
+          error,
+        );
+      }
+    }
+  }
+
   public updateModelLanguage(tabId: string, language: string): void {
     const model = this.models.get(tabId);
     if (model && !model.isDisposed() && this.monaco) {

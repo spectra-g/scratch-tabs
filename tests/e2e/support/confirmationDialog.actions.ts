@@ -4,8 +4,8 @@ export class ConfirmationDialogActions {
   constructor(private page: Page) {}
 
   async expectConfirmationDialogToAppear(expectedMessage: string) {
-    // Wait for the confirmation dialog to appear - it has a backdrop and the modal content
-    const dialogContent = this.page.locator('.bg-gray-850.p-4.rounded-lg.shadow-2xl');
+    // Wait for the confirmation dialog to appear using stable data-testid
+    const dialogContent = this.page.locator('[data-testid="confirmation-dialog"]');
     await expect(dialogContent).toBeVisible();
     
     // Check that the message appears in the dialog
@@ -13,13 +13,18 @@ export class ConfirmationDialogActions {
   }
 
   async clickConfirmationButton(buttonText: string) {
-    // Click the confirmation button inside the dialog - be more specific to avoid conflicts
-    const dialogContent = this.page.locator('.bg-gray-850.p-4.rounded-lg.shadow-2xl');
+    // Click the confirmation button inside the dialog using stable data-testid
+    const dialogContent = this.page.locator('[data-testid="confirmation-dialog"]');
     const confirmButton = dialogContent.getByRole('button', { name: buttonText });
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
     
-    // Wait for the dialog to close - check that the dialog content is no longer visible
+    // Wait for the dialog to close
+    await expect(dialogContent).not.toBeVisible();
+  }
+
+  async expectConfirmationDialogNotVisible() {
+    const dialogContent = this.page.locator('[data-testid="confirmation-dialog"]');
     await expect(dialogContent).not.toBeVisible();
   }
 }

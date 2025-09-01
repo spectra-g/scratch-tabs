@@ -162,6 +162,102 @@ describe('RichTextService', () => {
     });
   });
 
+  describe('hasContent', () => {
+    it('should return false for null richContent', () => {
+      expect(RichTextService.hasContent(null)).toBe(false);
+    });
+
+    it('should return false for empty richContent', () => {
+      const emptyRichContent = { type: 'doc' as const, content: [] };
+      expect(RichTextService.hasContent(emptyRichContent)).toBe(false);
+    });
+
+    it('should return true for richContent with text', () => {
+      const richContentWithText = {
+        type: 'doc' as const,
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              { type: 'text', text: 'Hello world' }
+            ]
+          }
+        ]
+      };
+      expect(RichTextService.hasContent(richContentWithText)).toBe(true);
+    });
+
+    it('should return false for richContent with only empty paragraphs', () => {
+      const emptyParagraphs = {
+        type: 'doc' as const,
+        content: [
+          {
+            type: 'paragraph',
+            content: []
+          },
+          {
+            type: 'paragraph',
+            content: [
+              { type: 'text', text: '   ' } // Only whitespace
+            ]
+          }
+        ]
+      };
+      expect(RichTextService.hasContent(emptyParagraphs)).toBe(false);
+    });
+
+    it('should return true for richContent with images', () => {
+      const richContentWithImage = {
+        type: 'doc' as const,
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              { type: 'image', attrs: { src: 'image.png' } }
+            ]
+          }
+        ]
+      };
+      expect(RichTextService.hasContent(richContentWithImage)).toBe(true);
+    });
+
+    it('should return true for richContent with code blocks', () => {
+      const richContentWithCode = {
+        type: 'doc' as const,
+        content: [
+          {
+            type: 'codeBlock',
+            attrs: { code: 'console.log("test");', language: 'javascript' }
+          }
+        ]
+      };
+      expect(RichTextService.hasContent(richContentWithCode)).toBe(true);
+    });
+
+    it('should return false for richContent with empty code blocks', () => {
+      const richContentWithEmptyCode = {
+        type: 'doc' as const,
+        content: [
+          {
+            type: 'codeBlock',
+            attrs: { code: '   ', language: 'javascript' }
+          }
+        ]
+      };
+      expect(RichTextService.hasContent(richContentWithEmptyCode)).toBe(false);
+    });
+
+    it('should return true for richContent with horizontal rules', () => {
+      const richContentWithHR = {
+        type: 'doc' as const,
+        content: [
+          { type: 'horizontalRule' }
+        ]
+      };
+      expect(RichTextService.hasContent(richContentWithHR)).toBe(true);
+    });
+  });
+
   // Note: setBackgroundTexture tests removed - background texture is now managed
   // directly within richContent.attrs by the toolbar component
 });

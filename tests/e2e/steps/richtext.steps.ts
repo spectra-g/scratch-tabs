@@ -699,6 +699,11 @@ When('I press the left arrow key', async function() {
   await tipTapEditor.press('ArrowLeft');
 });
 
+When('I press Delete', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  await tipTapEditor.press('Delete');
+});
+
 Then('the cursor should remain after the date created text', async function() {
   // Check cursor position by attempting to type and verifying it appears after date
   const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
