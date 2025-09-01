@@ -324,4 +324,41 @@ export const tabletMetadata: TabletMetadata[] = [
       return [];
     }
   },
+  {
+    id: 'colorpalette',
+    label: 'Color Palette Workspace',
+    description: 'Extract, create, and test color palettes with accessibility insights',
+    category: 'Design',
+    keywords: ['color', 'palette', 'design', 'accessibility', 'contrast', 'css', 'extract'],
+    complexity: 'intermediate',
+    getActionsForContext: (context) => {
+      if (context.source === 'editor-tab' && context.content) {
+        // Check if content contains color values
+        const hasColors = /(?:#[a-fA-F0-9]{3,6}|rgb\(|hsl\(|color:)/i.test(context.content);
+        if (hasColors) {
+          return [
+            {
+              id: 'extract-colors-from-css',
+              label: 'Extract Colors to Palette',
+              icon: Palette,
+              action: () => {
+                // Extract colors from CSS/code and open color palette
+                tabletActionService.handleAction({
+                  targetTablet: 'colorpalette',
+                  action: 'new-tab',
+                  payload: { extractFromText: context.content },
+                  source: { 
+                    tabId: context.tab?.id,
+                    titleHint: 'Color Palette',
+                    side: context.side 
+                  },
+                });
+              },
+            },
+          ];
+        }
+      }
+      return [];
+    },
+  },
 ];
