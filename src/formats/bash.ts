@@ -10,7 +10,7 @@ export class BashFormatDetector extends BaseFormatDetector implements FormatModu
   id = "shell";
   name = "Bash/Shell";
   extensions = ["sh", "bash", ".profile", ".bashrc", ".zshrc"];
-  priority = 4;
+  priority = 3; // Lowered from 4 to reduce conflicts with markdown
 
   private coreShellKeywordsForRatio: Set<string>;
   private allShellKeywordsForPatterns: Set<string>;
@@ -269,7 +269,14 @@ exit 0
       /(?:Exception|Error|panic|Traceback)(?:[:\s]|$)/i, // Stacktrace
       /^\s*-\s+\[[ xX]\]\s+.+/m,
       /^\s*>\s*.+/m,
-      /!?\[.*?\]\(.*?\)/m, // Markdown structural elements
+      /!?\[.*?\]\(.*?\)/m, // Markdown links
+      // Enhanced markdown anti-patterns to prevent false positives
+      /^#{1,6}\s+.+/m, // Markdown headers
+      /\*\*[^*]+\*\*/, // Markdown bold
+      /\*[^*\n]+\*(?!\*)/, // Markdown italic (not part of bold)
+      /`{3,}[\w]*\s*$/, // Markdown code block fences
+      /^\s*\|.*\|.*\|/m, // Markdown tables
+      /^\s*[-*+]\s+/, // Markdown lists
     ];
 
     // Check anti-patterns on content WITHOUT comments (more accurate)

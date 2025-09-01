@@ -18,7 +18,7 @@ describe("BashFormatDetector", () => {
         ".bashrc",
         ".zshrc",
       ]);
-      expect(detector.priority).toBe(4);
+      expect(detector.priority).toBe(3);
     });
 
     test("should return correct file extension", () => {

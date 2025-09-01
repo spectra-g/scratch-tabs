@@ -124,32 +124,22 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     getTabletLabel();
   }, [activeTab]);
 
-  // Memoize language detection to avoid expensive operations on every render
-  const languageDetectionData = useMemo(() => {
+  // Memoize content sample for status bar items
+  const contentSample = useMemo(() => {
     if (!activeTab || activeTab.isTablet || activeTab.isRich) {
-      return {
-        potentialMatches: [],
-        contentSample: "",
-      };
+      return "";
     }
-
-    const contentSample = getContentForLanguageDetection(activeTab);
-    const potentialMatches = getPotentialFormatMatches(contentSample);
-
-    return {
-      potentialMatches,
-      contentSample,
-    };
+    return getContentForLanguageDetection(activeTab);
   }, [activeTab?.id, activeTab?.content, activeTab?.isTablet, activeTab?.isRich]);
 
-  // NEW LOGIC TO GET STATUS BAR ITEMS
   const statusBarItems = useMemo(() => {
     if (!activeTab || activeTab.isTablet || activeTab.isRich) return [];
     
     const module = formatRegistry.getById(activeTab.language);
-    if (!module) return [];
+    if (!module) {
+      return [];
+    }
 
-    // New system
     if (module.getStatusBarItems) {
       return module.getStatusBarItems().sort((a, b) => a.priority - b.priority);
     }
@@ -161,11 +151,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     }
     
     return [];
-  }, [activeTab]);
+  }, [activeTab?.language, activeTab?.id]);
+
+  const languageForOptions = useMemo(() => {
+    if (!activeTab || activeTab.isTablet || activeTab.isRich) return null;
+    return activeTab.language;
+  }, [activeTab?.language, activeTab?.isTablet, activeTab?.isRich]);
 
   const FormatOptionsMenu =
     activeTab && !activeTab.isTablet && !activeTab.isRich
-      ? getFormatOptionsMenu(activeTab.language, editor)
+      ? getFormatOptionsMenu(languageForOptions || 'plaintext', editor)
       : null;
 
   // Get languages to display in the popup with the new ordering rules
@@ -181,7 +176,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    const { potentialMatches, contentSample } = languageDetectionData;
+    // Only get potential matches when popup is open to avoid redundant detection calls
+    const potentialMatches = showLanguagePopup 
+      ? getPotentialFormatMatches(getContentForLanguageDetection(activeTab))
+      : [];
     const isLocked = activeTab.languageLocked;
     const currentLanguageId = activeTab.language;
     const popupList: PopupMenuItem[] = [];
@@ -290,7 +288,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     const currentLanguageName =
       currentLanguageObject?.name || currentLanguageId;
     const isLocked = activeTab.languageLocked;
-    const { potentialMatches } = languageDetectionData;
+    // Get potential matches only when we need them for the popup
+    const potentialMatches = activeTab && !activeTab.isTablet && !activeTab.isRich 
+      ? getPotentialFormatMatches(getContentForLanguageDetection(activeTab))
+      : [];
 
     let displayLabel = "Plaintext";
     let showDotIndicator = false;
@@ -304,7 +305,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       if (hasAlternatives) {
         showDotIndicator = true; // Show a dot if alternatives exist even when locked
       }
-    } else if (!languageDetectionData.contentSample?.trim()) {
+    } else if (!contentSample?.trim()) {
       displayLabel = "Plaintext"; // Already default
     } else if (
       potentialMatches.length === 0 ||
@@ -372,7 +373,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
               {statusBarItems.map(({ id, component: Component }) => (
                 <Component 
                   key={id} 
-                  content={languageDetectionData.contentSample} 
+                  content={contentSample} 
                   activeTab={activeTab}
                 />
               ))}

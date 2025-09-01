@@ -10,7 +10,7 @@ export class RustFormatDetector extends BaseFormatDetector implements FormatModu
   id = "rust"; // Monaco's built-in ID for Rust
   name = "Rust";
   extensions = ["rs"];
-  priority = 7; // High priority due to its very distinctive syntax
+  priority = 3; // Reduced priority to prevent false positives over markdown/other formats
 
   sampleContent(): string {
     return `// main.rs
@@ -266,7 +266,7 @@ fn main() -> Result<(), Box<dyn Error>> {
       specificRustHits++;
     }
 
-    // 4. Anti-patterns (more aggressive against JS)
+    // 4. Anti-patterns (more aggressive against JS and Markdown)
     const antiPatterns = [
       { pattern: /<\?php/i, weight: -0.8 },
       { pattern: /^\s*package\s+[\w.]+;/m, weight: -0.7 }, // Java package
@@ -278,6 +278,13 @@ fn main() -> Result<(), Box<dyn Error>> {
       { pattern: /<\w.*?>/g, weight: -0.6 }, // HTML/XML tags
       { pattern: /^\s*def\s+\w+\s*\(.*?\)\s*:/m, weight: -0.7 }, // Python def func():
       { pattern: /@ Grab\b/i, weight: -0.8 }, // Groovy @Grab
+      
+      // NEW: Markdown anti-patterns to prevent false positives
+      { pattern: /^#{1,6}\s+.+$/m, weight: -0.7 }, // Markdown headers
+      { pattern: /\|\s*:?-+:?\s*\|/g, weight: -0.6 }, // Markdown table separators  
+      { pattern: /^\s*\|.*\|.*\|/m, weight: -0.4 }, // Markdown table rows
+      { pattern: /\*\*[^*]+\*\*/g, weight: -0.3 }, // Markdown bold (when not in code context)
+      { pattern: /^>\s+/m, weight: -0.2 }, // Markdown blockquotes
     ];
 
     for (const ap of antiPatterns) {

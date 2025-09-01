@@ -109,24 +109,23 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     }));
   },
 
-  updateTabLanguage: (id, language, lock = true) =>
-    set((state) => {
-      // Update the model language if the model exists
-      try {
-        modelManager.updateModelLanguage(id, language);
-      } catch (error) {
-        console.warn(
-          `[TabsStore] ❌ Failed to update model language for tab ${id}:`,
-          error,
-        );
-      }
+  updateTabLanguage: (id, language, lock = true) => {
+    // Update the model language if the model exists
+    try {
+      modelManager.updateModelLanguage(id, language);
+    } catch (error) {
+      console.warn(
+        `[TabsStore] Failed to update model language for tab ${id}:`,
+        error,
+      );
+    }
 
-      return {
-        tabs: state.tabs.map((tab) =>
-          tab.id === id ? { ...tab, language, languageLocked: lock } : tab,
-        ),
-      };
-    }),
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, language, languageLocked: lock } : tab,
+      ),
+    }));
+  },
 
   updateTabTitle: (id, title) =>
     set((state) => ({
