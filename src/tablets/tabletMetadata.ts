@@ -1,5 +1,5 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText, Type, Shield } from "../components/Icons";
+import { FileText, Type, Shield, Network } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
@@ -274,5 +274,53 @@ export const tabletMetadata: TabletMetadata[] = [
     id: "datetime",
     label: "Date & Time",
     keywords: ["date", "time", "timestamp", "timezone", "convert", "parse", "duration", "calculator"],
+  },
+  {
+    id: "diagram",
+    label: "Diagram Editor",
+    description: "Interactive Mermaid diagram editor with live preview and optimization",
+    keywords: ["diagram", "mermaid", "flowchart", "sequence", "gantt", "chart", "graph", "visualization"],
+    getActionsForContext: (context) => {
+      if (context.source === 'editor-tab' && context.content) {
+        // Check if content looks like Mermaid diagram code
+        const mermaidPatterns = [
+          /flowchart\s+(TD|LR|BT|RL)/i,
+          /graph\s+(TD|LR|BT|RL)/i,
+          /sequenceDiagram/i,
+          /gantt/i,
+          /classDiagram/i,
+          /stateDiagram/i,
+          /erDiagram/i,
+          /journey/i,
+          /gitgraph/i,
+          /pie\s+title/i,
+          /mindmap/i,
+          /timeline/i
+        ];
+        
+        const isMermaidCode = mermaidPatterns.some(pattern => pattern.test(context.content));
+        
+        if (isMermaidCode) {
+          return [{
+            id: 'open-diagram-editor',
+            label: 'Open in Diagram Editor',
+            icon: Network,
+            action: () => {
+              tabletActionService.handleAction({
+                targetTablet: 'diagram',
+                action: 'new-tab',
+                payload: { mermaidCode: context.content },
+                source: { 
+                  tabId: context.tab?.id,
+                  titleHint: 'Diagram Editor',
+                  side: context.side 
+                }
+              });
+            }
+          }];
+        }
+      }
+      return [];
+    }
   },
 ];

@@ -85,6 +85,9 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
       } else {
         console.error(
           `❌ DynamicRegistry: Module for '${id}' did not export a matching tablet.`,
+      case 'diagram':
+        const { DiagramTablet } = await import('./diagram');
+        return DiagramTablet;
         );
         return undefined;
       }

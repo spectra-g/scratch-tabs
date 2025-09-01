@@ -57,4 +57,5 @@ export const tabletRegistry = {
     
     return null;
   }
+  diagram: () => import('./diagram').then(m => m.DiagramTablet),
 };
