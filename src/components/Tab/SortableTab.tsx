@@ -4,6 +4,7 @@ import { Tab } from "../../types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { RichTextService } from "../RichText/services/RichTextService";
 
 interface SortableTabProps {
   tab: Tab;
@@ -151,10 +152,14 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     // Check if CTRL key is pressed - if so, bypass confirmation
     const shouldBypassConfirmation = e.ctrlKey || e.metaKey; // Include metaKey for Mac Cmd+click
 
-    // Show confirmation for any tab that has content or is a tablet
+    // Show confirmation for any tab that has content (text or rich) or is a tablet
     // (tablets might not have traditional content but should still be confirmed)
     // BUT bypass confirmation if CTRL/Cmd+clicking
-    if (!shouldBypassConfirmation && ((tab.content && tab.content.trim() !== "") || tab.isTablet)) {
+    const hasTextContent = tab.content && tab.content.trim() !== "";
+    const hasRichContent = RichTextService.hasContent(tab.richContent);
+    const hasAnyContent = hasTextContent || hasRichContent;
+    
+    if (!shouldBypassConfirmation && (hasAnyContent || tab.isTablet)) {
       // Get the position of the close button for positioning the confirmation dialog
       const rect = e.currentTarget.getBoundingClientRect();
 

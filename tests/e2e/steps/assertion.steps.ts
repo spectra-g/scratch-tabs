@@ -298,3 +298,24 @@ Then('the {string} tab should not exist on the page', async function(tabTitle) {
 Then('the "{string}" tab should not exist on the page', async function(tabTitle) {
   await this.tabBar.expectTabDoesNotExist(tabTitle);
 });
+
+// Close confirmation dialog assertions
+Then('I should see the close confirmation dialog', async function() {
+  await this.confirmationDialog.expectConfirmationDialogToAppear("Tab content cannot be recovered once closed. Are you sure you want to close this tab?");
+});
+
+Then('the dialog should contain {string}', async function(expectedText) {
+  await this.confirmationDialog.expectConfirmationDialogToAppear(expectedText);
+});
+
+Then('the dialog should contain "{string}"', async function(expectedText) {
+  await this.confirmationDialog.expectConfirmationDialogToAppear(expectedText);
+});
+
+Then('the tab should close immediately without confirmation', async function() {
+  // Wait a brief moment to ensure no confirmation dialog appears
+  await this.page.waitForTimeout(500);
+  
+  // Use existing method that has expect imported
+  await this.confirmationDialog.expectConfirmationDialogNotVisible();
+});

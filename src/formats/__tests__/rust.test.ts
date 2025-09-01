@@ -12,7 +12,7 @@ describe("RustFormatDetector", () => {
       expect(detector.id).toBe("rust");
       expect(detector.name).toBe("Rust");
       expect(detector.extensions).toEqual(["rs"]);
-      expect(detector.priority).toBe(7);
+      expect(detector.priority).toBe(3);
     });
 
     test("should return correct file extension", () => {

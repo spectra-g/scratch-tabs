@@ -239,13 +239,11 @@ export const useContextMenuConfig = (
       if (currentTab && !currentTab.isTablet) {
         const sampleContent = language.sampleContent();
 
-        // Update the tab content and language in the store first
-        rootStore.updateTabContent(tabId, sampleContent);
+        // Update the language in the store first
         rootStore.updateTabLanguage(tabId, languageId, true);
 
-        // Update the model content directly if the model exists
-        // The model's listener will sync back to store, but content is already the same
-        modelManager.updateModelContent(tabId, sampleContent);
+        // Use undoable content replacement to preserve undo history
+        modelManager.replaceModelContentWithUndo(tabId, sampleContent);
       }
     }
     closeContextMenu();

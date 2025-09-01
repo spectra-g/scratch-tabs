@@ -16,6 +16,11 @@ releases:
           - "**Rich text editing - Style:** Create tables, lists, links"
           - "**Rich text editing - Code:** Code blocks with highlighting"
           - "**Rich text editing - Content:** Convert standard editor content to rich text or import content from other tabs"
+      - name: "🐛 Fixed"
+        changes:
+          - "JSON Smart View scroll-to from tree node now working at any nested level"
+          - "Can undo a \"From sample\" action"
+          - "Format detection issues - now more reliable"
 
   - version: "1.2.0"
     type: "release"  # latest, beta, alpha

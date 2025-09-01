@@ -79,3 +79,35 @@ Feature: JSON Smart View Tab Management
     Then I should not see the JSON Smart View
     And I should see the Monaco editor
     And the active editor content should contain "edited"
+
+  Scenario: TreeView click navigation works for nested JSON
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      {
+        "config": {
+            "name": "MyApp",
+            "version": "1.0.0",
+            "host": "localhost",
+            "port": 5432,
+            "timeout": 30000,
+            "caching": true,
+            "logging": false,
+            "maxConnections": 100,
+            "retryAttempts": 5,
+            "retryDelay": 2000,
+            "experimental": true,
+            "beta": false,
+            "darkMode": true,
+            "enableTLS": true,
+            "allowedIPs": "127.0.0.1",
+            "dataDir": "/var/lib/myapp/data",
+            "logDir": "/var/log/myapp",
+            "tempDir": "/tmp/myapp"
+      """
+    Then the status bar language should be "JSON"
+    When I click the Smart View button
+    Then I should see the JSON Smart View
+    When I click on the JSON tree node for "config.tempDir"
+    Then the Monaco editor should scroll to show "/tmp/myapp"
+    And the text "tempDir" should be highlighted in the Monaco editor

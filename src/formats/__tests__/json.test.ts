@@ -134,19 +134,45 @@ describe("JsonFormatDetector", () => {
   });
 
   describe("Sample Content", () => {
-    test("should provide valid fallback sample content", () => {
+    test("should provide valid random fallback sample content", () => {
       const sample = detector.sampleContent();
-      expect(sample).toContain('"name": "Sample JSON"');
       let parsed;
       expect(() => {
         parsed = JSON.parse(sample);
       }).not.toThrow();
-      expect(parsed).toHaveProperty("isActive", true);
+      
+      // Should be valid JSON with some common structure
+      expect(parsed).toBeDefined();
+      expect(typeof parsed).toBe('object');
+      
+      // Should contain a timestamp (all themes have this)
+      expect(sample).toMatch(/"timestamp"|"generated"|"updated"|"lastLogin"/);
+    });
+
+    test("should generate valid random fallback content", () => {
+      const sample = detector.sampleContent();
+      
+      // Should be valid JSON
+      expect(() => JSON.parse(sample)).not.toThrow();
+      
+      // Should contain timestamp indicating fresh generation
+      expect(sample).toMatch(/"timestamp"|"generated"|"updated"|"lastLogin"/);
+      
+      // Should be one of the expected fallback themes
+      const parsed = JSON.parse(sample);
+      const hasUsersTheme = 'users' in parsed;
+      const hasProductTheme = 'product' in parsed;
+      const hasVersionTheme = 'version' in parsed;
+      const hasAnalyticsTheme = 'analytics' in parsed;
+      const hasProfileTheme = 'profile' in parsed;
+      
+      expect(hasUsersTheme || hasProductTheme || hasVersionTheme || hasAnalyticsTheme || hasProfileTheme).toBe(true);
     });
 
     test("should preload a dynamic sample and return it on next call", async () => {
+      // Clear any existing preloaded sample
       const fallbackSample = detector.sampleContent();
-      expect(fallbackSample).toContain('"name": "Sample JSON"');
+      expect(() => JSON.parse(fallbackSample)).not.toThrow();
 
       await new Promise((res) => setTimeout(res, 100));
 

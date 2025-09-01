@@ -313,3 +313,40 @@ Feature: Rich Text Editor
     Then I should see exactly one date created text
     And the Rich Text editor should contain "Content to copy and paste"
     And I should not see duplicate date created nodes
+
+  Scenario: Rich text tab with content shows close confirmation
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "This is rich text content" in the Rich Text editor
+    When I click the close button on the "Scratch 1" tab
+    Then I should see the close confirmation dialog
+    And the dialog should contain "Tab content cannot be recovered once closed"
+
+  Scenario: Empty rich text tab does not show close confirmation
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I click the close button on the "Scratch 1" tab
+    Then the tab should close immediately without confirmation
+    And the "Scratch 1" tab should not exist on the page
+
+  Scenario: Rich text tab cleared of content does not show close confirmation
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "This will be deleted" in the Rich Text editor
+    When I select all text in the Rich Text editor
+    And I press Delete
+    When I click the close button on the "Scratch 1" tab
+    Then the tab should close immediately without confirmation
+    And the "Scratch 1" tab should not exist on the page
+
+  Scenario: CTRL+click bypasses close confirmation for rich text tabs
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "Content that should normally require confirmation" in the Rich Text editor
+    When I CTRL+click the close button on the "Scratch 1" tab
+    Then the tab should close immediately without confirmation
+    And the "Scratch 1" tab should not exist on the page

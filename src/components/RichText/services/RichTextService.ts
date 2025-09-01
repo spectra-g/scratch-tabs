@@ -1,4 +1,4 @@
-import { Tab } from '../../../types';
+import { Tab, RichContent } from '../../../types';
 import { useTabsStore } from '../../../stores/tabsStore';
 import { createCodeBlockNode } from '../utils/contentMigration';
 
@@ -107,5 +107,53 @@ export class RichTextService {
    */
   static canDowngradeToPlainText(tab: Tab): boolean {
     return !tab.isTablet && tab.isRich;
+  }
+
+  /**
+   * Check if rich content has actual editable content (not just empty document structure)
+   * Encapsulates TipTap document structure knowledge
+   */
+  static hasContent(richContent: RichContent | null): boolean {
+    if (!richContent?.content) return false;
+    
+    // Check if the document has any actual content nodes
+    return this.hasContentInNodes(richContent.content);
+  }
+
+  /**
+   * Recursively check if TipTap content nodes contain actual text/media
+   * Private method to encapsulate TipTap document traversal logic
+   */
+  private static hasContentInNodes(nodes: any[]): boolean {
+    if (!Array.isArray(nodes) || nodes.length === 0) return false;
+    
+    for (const node of nodes) {
+      // Text nodes with actual text content
+      if (node.type === 'text' && node.text && node.text.trim() !== '') {
+        return true;
+      }
+      
+      // Media nodes (images, etc.) count as content
+      if (node.type === 'image' || node.type === 'video') {
+        return true;
+      }
+      
+      // Code blocks with content
+      if (node.type === 'codeBlock' && node.attrs?.code && node.attrs.code.trim() !== '') {
+        return true;
+      }
+      
+      // Hard breaks and horizontal rules count as intentional content
+      if (node.type === 'hardBreak' || node.type === 'horizontalRule') {
+        return true;
+      }
+      
+      // Recursively check child nodes (for paragraphs, lists, etc.)
+      if (node.content && this.hasContentInNodes(node.content)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 }

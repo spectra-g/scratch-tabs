@@ -77,7 +77,7 @@ export const useLanguageDetection = (
       // --- 4. Perform Language Detection ---
       // Always detect unless manually locked or empty
       const newDetectedLanguage = detectFormat(trimmedNewContent);
-      const newDetectionIsAmbiguous = isAmbiguousFormat(newContent); // Use the ambiguity result from detection
+      const newDetectionIsAmbiguous = isAmbiguousFormat(newContent);
 
       // --- 5. Decide Whether to Update the Tab's Language ---
       let shouldUpdate = false;
@@ -106,7 +106,6 @@ export const useLanguageDetection = (
 
       // --- 6. Perform Update ---
       if (shouldUpdate) {
-        // Update the language with the lock parameter set to false to ensure user can override
         updateTabLanguage(tabId, newDetectedLanguage, false);
 
         // Trigger auto-format if this was a paste operation that resulted in language detection
