@@ -191,8 +191,18 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                 // Find the child key that comes after a parent key
                 const bestMatch = matches.find(match => {
                   return parentMatches.some(parentMatch => {
-                    return match.range.startLineNumber >= parentMatch.range.startLineNumber &&
-                           match.range.startLineNumber <= parentMatch.range.startLineNumber + 20; // Increased range for nested structures
+                    const lineDistance = match.range.startLineNumber - parentMatch.range.startLineNumber;
+                    
+                    // Dynamic range calculation based on JSON structure complexity
+                    // For deeply nested JSON, allow larger search ranges
+                    const pathDepth = path.split(/[.\[\]]+/).length;
+                    const baseLookAhead = Math.min(50, Math.max(20, pathDepth * 10));
+                    
+                    // Also consider total file size - larger files need bigger search ranges
+                    const totalLines = model.getLineCount();
+                    const adaptiveRange = totalLines > 100 ? Math.min(totalLines / 4, baseLookAhead * 2) : baseLookAhead;
+                    
+                    return lineDistance >= 0 && lineDistance <= adaptiveRange;
                   });
                 });
                 
@@ -286,8 +296,18 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                 // Find the child key that comes after a parent key
                 const bestMatch = matches.find(match => {
                   return parentMatches.some(parentMatch => {
-                    return match.range.startLineNumber >= parentMatch.range.startLineNumber &&
-                           match.range.startLineNumber <= parentMatch.range.startLineNumber + 20; // Increased range for nested structures
+                    const lineDistance = match.range.startLineNumber - parentMatch.range.startLineNumber;
+                    
+                    // Dynamic range calculation based on JSON structure complexity
+                    // For deeply nested JSON, allow larger search ranges
+                    const pathDepth = path.split(/[.\[\]]+/).length;
+                    const baseLookAhead = Math.min(50, Math.max(20, pathDepth * 10));
+                    
+                    // Also consider total file size - larger files need bigger search ranges
+                    const totalLines = model.getLineCount();
+                    const adaptiveRange = totalLines > 100 ? Math.min(totalLines / 4, baseLookAhead * 2) : baseLookAhead;
+                    
+                    return lineDistance >= 0 && lineDistance <= adaptiveRange;
                   });
                 });
                 

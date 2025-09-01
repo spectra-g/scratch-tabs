@@ -79,3 +79,16 @@ Feature: JSON Smart View Tab Management
     Then I should not see the JSON Smart View
     And I should see the Monaco editor
     And the active editor content should contain "edited"
+
+  Scenario: TreeView click navigation works for nested JSON
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      {"config": {"app": {"name": "MyApp"}, "database": {"host": "localhost", "port": 5432}}}
+      """
+    Then the status bar language should be "JSON"
+    When I click the Smart View button
+    Then I should see the JSON Smart View
+    When I click on the JSON tree node for "config.database.port"
+    Then the Monaco editor should scroll to show "5432"
+    And the text "port" should be highlighted in the Monaco editor
