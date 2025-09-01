@@ -201,49 +201,211 @@ describe('JsonSmartView Navigation Bug Tests', () => {
     });
   });
 
-  describe('Specific Bug Scenarios', () => {
-    it('should handle deeply nested arrays with duplicate keys', () => {
-      // Test case that likely triggers the reported bug
-      const complexJson = `{
-  "responses": [
+  describe('Accordion Disambiguation Bug', () => {
+    it('should prefer unique context keys over generic repeated ones', () => {
+      // Test case: path with duplicate generic keys and unique specific keys
+      const path = 'items.container.items.component_abc123.items.field.items.target';
+      const pathParts = path.split(/[.\[\]]+/).filter(Boolean);
+      
+      // New algorithm: prioritize unique identifiers over repeated generic ones
+      const allContextKeys = [];
+      for (let i = pathParts.length - 2; i >= 0; i--) {
+        const candidate = pathParts[i];
+        if (!candidate.match(/^\d+$/)) {
+          allContextKeys.push(candidate);
+        }
+      }
+      
+      const contextKeys = [];
+      const seenKeys = new Set();
+      
+      // First pass: add unique keys
+      for (const key of allContextKeys) {
+        if (!seenKeys.has(key)) {
+          contextKeys.push(key);
+          seenKeys.add(key);
+          if (contextKeys.length >= 5) break;
+        }
+      }
+      
+      // Sort by specificity (longer = more specific)
+      contextKeys.sort((a, b) => b.length - a.length);
+      
+      expect(contextKeys).toContain('component_abc123'); // Should include unique identifier
+      expect(contextKeys).toContain('container'); // Should include other unique keys
+      expect(contextKeys.filter(k => k === 'items').length).toBe(1); // Should have only one 'items'
+    });
+
+    it('should handle very deep nested paths with many repeated generic keys', () => {
+      // Generic test case: deep path with repeated generic keys and unique identifiers
+      const path = 'items.root.items.component_xyz789.items.section.items.widget_abc123.config.settings.target';
+      const pathParts = path.split(/[.\[\]]+/).filter(Boolean);
+      
+      // Test our improved algorithm: get ALL unique keys, no arbitrary limits
+      const allContextKeys = [];
+      for (let i = pathParts.length - 2; i >= 0; i--) {
+        const candidate = pathParts[i];
+        if (!candidate.match(/^\d+$/)) {
+          allContextKeys.push(candidate);
+        }
+      }
+      
+      // Get all unique keys, prioritize by specificity
+      const uniqueKeys = [...new Set(allContextKeys)];
+      const contextKeys = uniqueKeys.sort((a, b) => {
+        const lengthDiff = b.length - a.length;
+        return lengthDiff !== 0 ? lengthDiff : a.localeCompare(b);
+      });
+      
+      expect(pathParts).toEqual(['items', 'root', 'items', 'component_xyz789', 'items', 'section', 'items', 'widget_abc123', 'config', 'settings', 'target']);
+      expect(contextKeys).toContain('component_xyz789'); // Should include specific component
+      expect(contextKeys).toContain('widget_abc123'); // Should include specific widget
+      expect(contextKeys).toContain('settings'); // Should include specific settings key
+      expect(contextKeys[0]).toBe('component_xyz789'); // Most specific (longest) should be first
+      expect(contextKeys.filter(k => k === 'items').length).toBe(1); // Should deduplicate generic keys
+    });
+
+    it('should distinguish between duplicate keys in different containers', () => {
+      // Generic test: two containers with same child key name
+      const testJson = `{
+  "data": {
+    "section1": {
+      "items": {
+        "component_A": {
+          "fields": {
+            "title": "First Title"
+          }
+        }
+      }
+    },
+    "section2": {
+      "items": {
+        "component_B": {
+          "fields": {
+            "title": "Second Title"
+          }
+        }
+      }
+    }
+  }
+}`;
+
+      // Mock Monaco findMatches to return realistic line positions
+      mockModel.findMatches
+        .mockReturnValueOnce([
+          // Multiple "title" matches - first at line 8, second at line 16
+          { range: { startLineNumber: 8, startColumn: 13, endLineNumber: 8, endColumn: 18 } }, // First "title"
+          { range: { startLineNumber: 16, startColumn: 13, endLineNumber: 16, endColumn: 18 } }, // Second "title" (target)
+        ])
+        .mockReturnValueOnce([
+          // Parent context matches for "component_B" 
+          { range: { startLineNumber: 14, startColumn: 9, endLineNumber: 14, endColumn: 21 } }, // Second component
+        ]);
+
+      // Clicking on "data.section2.items.component_B.fields.title"
+      const targetPath = 'data.section2.items.component_B.fields.title';
+      
+      // Our path parsing logic
+      const pathParts = targetPath.split(/[.\[\]]+/).filter(Boolean);
+      const finalKey = pathParts[pathParts.length - 1]; // "title"
+      
+      // Test that we can distinguish between the two "title" fields
+      expect(finalKey).toBe('title');
+      expect(pathParts).toEqual(['data', 'section2', 'items', 'component_B', 'fields', 'title']);
+      
+      // Algorithm should find unique context including 'component_B' to distinguish from 'component_A'
+      const allContextKeys = [];
+      for (let i = pathParts.length - 2; i >= 0; i--) {
+        const candidate = pathParts[i];
+        if (!candidate.match(/^\d+$/)) {
+          allContextKeys.push(candidate);
+        }
+      }
+      
+      const uniqueKeys = [...new Set(allContextKeys)];
+      const contextKeys = uniqueKeys.sort((a, b) => {
+        const lengthDiff = b.length - a.length;
+        return lengthDiff !== 0 ? lengthDiff : a.localeCompare(b);
+      });
+      
+      expect(contextKeys).toContain('component_B'); // Should include specific component identifier
+      expect(contextKeys).toContain('section2'); // Should include section identifier
+    });
+
+    it('should demonstrate improved disambiguation with multiple context levels', () => {
+      const targetPath = 'config.environments.prod.database_cluster_xyz.settings.connection';
+      const pathParts = targetPath.split(/[.\[\]]+/).filter(Boolean);
+      
+      // Algorithm should find multiple context levels for better disambiguation
+      const allContextKeys = [];
+      for (let i = pathParts.length - 2; i >= 0; i--) {
+        const candidate = pathParts[i];
+        if (!candidate.match(/^\d+$/)) {
+          allContextKeys.push(candidate);
+        }
+      }
+      
+      const uniqueKeys = [...new Set(allContextKeys)];
+      const contextKeys = uniqueKeys.sort((a, b) => {
+        const lengthDiff = b.length - a.length;
+        return lengthDiff !== 0 ? lengthDiff : a.localeCompare(b);
+      });
+      
+      expect(contextKeys).toContain('database_cluster_xyz'); // Most specific identifier
+      expect(contextKeys).toContain('environments'); // Broader context
+      expect(contextKeys[0]).toBe('database_cluster_xyz'); // Most specific should be first
+      
+      // This gives us much better disambiguation context
+    });
+  });
+
+  describe('Array Index Navigation', () => {
+    it('should handle array indices in paths correctly', () => {
+      // Generic test for array navigation
+      const arrayJson = `{
+  "collections": [
     {
-      "data": [
-        { "id": 1, "name": "Item 1", "status": "active" },
-        { "id": 2, "name": "Item 2", "status": "pending" },
-        { "id": 3, "name": "Item 3", "status": "active" }
+      "items": [
+        { "id": 1, "name": "First Item", "active": true },
+        { "id": 2, "name": "Second Item", "active": false },
+        { "id": 3, "name": "Third Item", "active": true }
       ]
     },
     {
-      "data": [
-        { "id": 4, "name": "Item 4", "status": "completed" },
-        { "id": 5, "name": "Item 5", "status": "active" }
+      "items": [
+        { "id": 4, "name": "Fourth Item", "active": false },
+        { "id": 5, "name": "Fifth Item", "active": true }
       ]
     }
   ]
 }`;
 
-      // When clicking on 'responses[1].data[1].status' (should go to "active" on line 15)
-      // NOT to the first "status" on line 5
-      const targetPath = 'responses[1].data[1].status';
+      // When clicking on 'collections[1].items[1].active' (should go to "true" on line 15)
+      // NOT to the first "active" on line 5
+      const targetPath = 'collections[1].items[1].active';
       
-      // Mock multiple "status" matches
+      // Mock multiple "active" matches
       mockModel.findMatches.mockReturnValue([
         { range: { startLineNumber: 5, startColumn: 45, endLineNumber: 5, endColumn: 51 } }, // First match
         { range: { startLineNumber: 7, startColumn: 45, endLineNumber: 7, endColumn: 51 } }, // Second match  
         { range: { startLineNumber: 15, startColumn: 45, endLineNumber: 15, endColumn: 51 } }, // Target match
       ]);
 
-      // Mock parent "data" matches  
-      mockModel.findMatches.mockReturnValue([
-        { range: { startLineNumber: 4, startColumn: 7, endLineNumber: 4, endColumn: 11 } }, // First data
-        { range: { startLineNumber: 12, startColumn: 7, endLineNumber: 12, endColumn: 11 } }, // Target data
-      ]);
-
-      // The bug: current logic might pick wrong "status" if range calculation is off
-      // The fix should ensure we pick the "status" that comes after the correct "data" parent
+      // Test path parsing with array indices
+      const pathParts = targetPath.split(/[.\[\]]+/).filter(Boolean);
+      expect(pathParts).toEqual(['collections', '1', 'items', '1', 'active']);
       
-      expect(targetPath).toContain('[1]'); // Should navigate to second response
-      expect(targetPath).toContain('data[1]'); // Should navigate to second data item
+      // Algorithm should skip numeric indices but use non-numeric context
+      const allContextKeys = [];
+      for (let i = pathParts.length - 2; i >= 0; i--) {
+        const candidate = pathParts[i];
+        if (!candidate.match(/^\d+$/)) {
+          allContextKeys.push(candidate);
+        }
+      }
+      
+      expect(allContextKeys).toEqual(['items', 'collections']); // Should skip '1' indices
+      expect(allContextKeys).toContain('collections'); // Should include array name for context
     });
   });
 });

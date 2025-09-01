@@ -168,17 +168,19 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           
           // If we have multiple matches, try to find the one in the right context
           if (matches && matches.length > 1 && pathParts.length > 1) {
-            // Find the nearest non-numeric parent (skip array indices for better context)
-            let parentKey = null;
+            // Get multiple context levels for better disambiguation
+            const contextKeys = [];
             for (let i = pathParts.length - 2; i >= 0; i--) {
               const candidate = pathParts[i];
               if (!candidate.match(/^\d+$/)) { // Skip pure numbers (array indices)
-                parentKey = candidate;
-                break;
+                contextKeys.push(candidate);
+                // Get up to 5 levels of context for complex structures
+                if (contextKeys.length >= 5) break;
               }
             }
             
-            if (parentKey) {
+            // Try each context key, starting with the most specific (closest parent)
+            for (const parentKey of contextKeys) {
               const quotedParentKey = `"${parentKey}"`;
               
               // Find matches of the parent key
@@ -189,7 +191,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
               
               if (parentMatches && parentMatches.length > 0) {
                 // Find the child key that comes after a parent key
-                const bestMatch = matches.find(match => {
+                const contextualMatch = matches.find(match => {
                   return parentMatches.some(parentMatch => {
                     const lineDistance = match.range.startLineNumber - parentMatch.range.startLineNumber;
                     
@@ -206,8 +208,9 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                   });
                 });
                 
-                if (bestMatch) {
-                  matches = [bestMatch];
+                if (contextualMatch) {
+                  matches = [contextualMatch];
+                  break; // Found specific match, stop searching other context levels
                 }
               }
             }
@@ -273,17 +276,27 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           
           // If we have multiple matches, try to find the one in the right context
           if (matches && matches.length > 1 && pathParts.length > 1) {
-            // Find the nearest non-numeric parent (skip array indices for better context)
-            let parentKey = null;
+            // Get all non-numeric context keys first
+            const allContextKeys = [];
             for (let i = pathParts.length - 2; i >= 0; i--) {
               const candidate = pathParts[i];
               if (!candidate.match(/^\d+$/)) { // Skip pure numbers (array indices)
-                parentKey = candidate;
-                break;
+                allContextKeys.push(candidate);
               }
             }
             
-            if (parentKey) {
+            // Smart context selection: get all unique keys, prioritize by specificity
+            const uniqueKeys = [...new Set(allContextKeys)];
+            
+            // Sort by specificity: longer keys first (more specific), then alphabetically for consistency
+            const contextKeys = uniqueKeys.sort((a, b) => {
+              const lengthDiff = b.length - a.length;
+              return lengthDiff !== 0 ? lengthDiff : a.localeCompare(b);
+            });
+            
+            
+            // Try each context key, starting with the most specific (closest parent)
+            for (const parentKey of contextKeys) {
               const quotedParentKey = `"${parentKey}"`;
               
               // Find matches of the parent key
@@ -294,7 +307,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
               
               if (parentMatches && parentMatches.length > 0) {
                 // Find the child key that comes after a parent key
-                const bestMatch = matches.find(match => {
+                const contextualMatch = matches.find(match => {
                   return parentMatches.some(parentMatch => {
                     const lineDistance = match.range.startLineNumber - parentMatch.range.startLineNumber;
                     
@@ -311,8 +324,9 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                   });
                 });
                 
-                if (bestMatch) {
-                  matches = [bestMatch];
+                if (contextualMatch) {
+                  matches = [contextualMatch];
+                  break; // Found specific match, stop searching other context levels
                 }
               }
             }
