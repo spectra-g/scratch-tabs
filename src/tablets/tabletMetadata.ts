@@ -216,4 +216,62 @@ export const tabletMetadata: TabletMetadata[] = [
   label: "Emoji as Data",
   keywords: ["emoji", "unicode", "symbols", "formatter", "picker", "data", "encoding"],
 },
+  {
+    id: "loremipsum",
+    label: "Lorem Ipsum Generator",
+    keywords: ["lorem", "ipsum", "placeholder", "text", "mock", "data", "generator"],
+    description: "Generate realistic placeholder content and mock data",
+    category: "generator",
+    getActionsForContext: (context) => {
+      // Always available from any context
+      return [
+        {
+          id: 'generate-content',
+          label: 'Generate Mock Content',
+          icon: Type,
+          action: () => {
+            tabletActionService.handleAction({
+              targetTablet: 'loremipsum',
+              action: 'new-tab',
+              payload: {},
+              source: { 
+                titleHint: 'Lorem Ipsum Generator',
+                side: context.side 
+              },
+            });
+          },
+        },
+      ];
+    },
+  },
+  {
+    id: "checksum",
+    label: "Checksum Calculator",
+    keywords: ["checksum", "hash", "md5", "sha", "crc32", "verify", "integrity"],
+    description: "Calculate and verify file and text checksums securely",
+    category: "security",
+    getActionsForContext: (context) => {
+      const actions = [];
+      
+      // Always available
+      actions.push({
+        id: 'calculate-checksum',
+        label: 'Calculate Checksum',
+        icon: Shield,
+        action: () => {
+          tabletActionService.handleAction({
+            targetTablet: 'checksum',
+            action: 'new-tab',
+            payload: context.content ? { text: context.content } : {},
+            source: { 
+              titleHint: 'Checksum Calculator',
+              side: context.side 
+            },
+          });
+        },
+      });
+      
+      return actions;
+    },
+  },
 ];
