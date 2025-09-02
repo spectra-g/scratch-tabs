@@ -3,7 +3,7 @@ import { LoremIpsumState, LoremIpsumSettings } from './types';
 import { SettingsPanel } from './components/SettingsPanel';
 import { OutputArea } from './components/OutputArea';
 import { generateContent, validateOptions, getLanguageForMode } from './utils/generator';
-import { tabletActionService } from '../../services/tabletActionService';
+import { useTabletTabCreation } from '../bridge';
 
 interface LoremIpsumTabletProps {
   state: LoremIpsumState;
@@ -14,12 +14,46 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
   state,
   onChange,
 }) => {
+  const { createBackgroundTab } = useTabletTabCreation();
+  
   const updateSettings = useCallback((updates: Partial<LoremIpsumSettings>) => {
     const newSettings = { ...state.settings, ...updates };
+    
+    // Update settings first
     onChange({
       ...state,
       settings: newSettings,
     });
+    
+    if (state.generatedOutput && !state.isGenerating) {
+      const newState = { ...state, settings: newSettings };
+      
+      setTimeout(() => {
+        try {
+          const content = generateContent({
+            mode: newSettings.mode,
+            theme: newSettings.theme,
+            count: newSettings.count,
+            unit: newSettings.outputUnit,
+            customSource: newSettings.customSourceText,
+            startWithLorem: newSettings.startWithLorem,
+          });
+
+          onChange({
+            ...newState,
+            generatedOutput: content,
+            isGenerating: false,
+            lastGeneratedAt: Date.now(),
+          });
+        } catch (error) {
+          onChange({
+            ...newState,
+            generatedOutput: 'Error generating content. Please try again.',
+            isGenerating: false,
+          });
+        }
+      }, 50);
+    }
   }, [state, onChange]);
 
   const generateNewContent = useCallback(() => {
@@ -33,7 +67,6 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
     });
 
     if (validationError) {
-      console.error('Validation error:', validationError);
       return;
     }
 
@@ -42,7 +75,6 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
       isGenerating: true,
     });
 
-    // Use setTimeout to allow UI to update
     setTimeout(() => {
       try {
         const content = generateContent({
@@ -61,7 +93,6 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
           lastGeneratedAt: Date.now(),
         });
       } catch (error) {
-        console.error('Generation error:', error);
         onChange({
           ...state,
           generatedOutput: 'Error generating content. Please try again.',
@@ -71,8 +102,11 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
     }, 100);
   }, [state, onChange]);
 
-  const handleCreateNewTab = useCallback(async () => {
-    if (!state.generatedOutput) return;
+  const handleCreateNewTab = useCallback(() => {
+    
+    if (!state.generatedOutput) {
+      return;
+    }
 
     const language = getLanguageForMode(state.settings.mode);
     const modeLabels = {
@@ -83,30 +117,30 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
       custom: 'Custom'
     };
 
-    try {
-      await tabletActionService.handleAction({
-        targetTablet: 'text-editor', // This would create a regular text tab
-        action: 'new-tab',
-        payload: {
-          content: state.generatedOutput,
-          language,
-          title: `Generated ${modeLabels[state.settings.mode]} Content`,
-        },
-        source: {
-          titleHint: `Generated ${modeLabels[state.settings.mode]}`,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to create new tab:', error);
-    }
-  }, [state.generatedOutput, state.settings.mode]);
+    createBackgroundTab(
+      `Generated ${modeLabels[state.settings.mode]} Content`,
+      state.generatedOutput,
+      language
+    );
+  }, [state.generatedOutput, state.settings.mode, createBackgroundTab]);
 
-  // Auto-generate on first load
   useEffect(() => {
+    if (state.isGenerating && state.lastGeneratedAt) {
+      const timeSinceLastGeneration = Date.now() - state.lastGeneratedAt;
+      if (timeSinceLastGeneration > 5000) {
+        onChange({
+          ...state,
+          isGenerating: false,
+        });
+        return;
+      }
+    }
+
     if (!state.generatedOutput && !state.isGenerating) {
       generateNewContent();
     }
-  }, []);
+  }, [generateNewContent, state.generatedOutput, state.isGenerating, state.lastGeneratedAt, onChange]);
+
 
   return (
     <div className="h-full flex flex-col bg-gray-900 text-gray-200">
@@ -131,7 +165,7 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
       <div className="flex-1 overflow-hidden">
         <div className="h-full grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
           {/* Settings Panel */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 overflow-y-auto max-h-full custom-scrollbar">
             <SettingsPanel
               settings={state.settings}
               onSettingsChange={updateSettings}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Plus, RefreshCw, Download } from '../../../components/Icons';
+import { Copy, Plus, RefreshCw, Download, Check } from '../../../components/Icons';
 import { GenerationMode } from '../types';
 
 interface OutputAreaProps {
@@ -25,7 +25,7 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
-      console.error('Failed to copy content:', error);
+      // Silently handle copy failures - user will see no feedback
     }
   };
 
@@ -77,9 +77,13 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
           <button
             onClick={handleCopy}
             disabled={!content || isGenerating}
-            className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-gray-200 rounded-md transition-colors text-sm"
+            className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors text-sm ${
+              copySuccess 
+                ? 'bg-green-600 hover:bg-green-700 text-white' 
+                : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-gray-200'
+            }`}
           >
-            <Copy size={14} />
+            {copySuccess ? <Check size={14} /> : <Copy size={14} />}
             <span>{copySuccess ? 'Copied!' : 'Copy'}</span>
           </button>
           

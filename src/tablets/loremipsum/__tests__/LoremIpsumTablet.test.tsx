@@ -18,11 +18,11 @@ jest.mock('../utils/generator', () => ({
   }),
 }));
 
-// Mock the tablet action service
-jest.mock('../../../services/tabletActionService', () => ({
-  tabletActionService: {
-    handleAction: jest.fn().mockResolvedValue(undefined),
-  },
+// Mock the bridge hook
+jest.mock('../../bridge', () => ({
+  useTabletTabCreation: jest.fn(() => ({
+    createBackgroundTab: jest.fn(),
+  })),
 }));
 
 describe('LoremIpsumTablet', () => {
@@ -190,11 +190,75 @@ describe('LoremIpsumTablet', () => {
         })
       );
     });
+
+    it('should auto-generate content when settings change with existing content', async () => {
+      const generateContent = require('../utils/generator').generateContent;
+      generateContent.mockReturnValue('Auto-generated updated content');
+      
+      const state = createMockState({
+        generatedOutput: 'Initial content',
+        isGenerating: false,
+      });
+      
+      render(<LoremIpsumTablet state={state} onChange={mockOnChange} />);
+      
+      // Clear any previous calls
+      mockOnChange.mockClear();
+      generateContent.mockClear();
+      
+      // Change theme setting (this should trigger auto-generation)
+      const businessTheme = screen.getByText('Business');
+      fireEvent.click(businessTheme);
+      
+      // Should auto-generate when settings change
+      await waitFor(() => {
+        expect(generateContent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            theme: 'business',
+          })
+        );
+      });
+      
+      // Should update with new content
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            generatedOutput: 'Auto-generated updated content',
+            isGenerating: false,
+            lastGeneratedAt: expect.any(Number),
+          })
+        );
+      });
+    });
+
+    it('should recover from stuck generating state after timeout', async () => {
+      const oldTimestamp = Date.now() - 6000; // 6 seconds ago (past the 5 second timeout)
+      
+      const state = createMockState({
+        isGenerating: true,
+        lastGeneratedAt: oldTimestamp,
+      });
+      
+      render(<LoremIpsumTablet state={state} onChange={mockOnChange} />);
+      
+      // Should recover from stuck state
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isGenerating: false,
+          })
+        );
+      });
+    });
   });
 
   describe('new tab creation', () => {
     it('should create new tab with generated content', async () => {
-      const tabletActionService = require('../../../services/tabletActionService').tabletActionService;
+      const mockCreateBackgroundTab = jest.fn();
+      const useTabletTabCreation = require('../../bridge').useTabletTabCreation;
+      useTabletTabCreation.mockReturnValue({
+        createBackgroundTab: mockCreateBackgroundTab,
+      });
       
       const state = createMockState({
         generatedOutput: 'Test generated content',
@@ -205,25 +269,14 @@ describe('LoremIpsumTablet', () => {
       const newTabButton = screen.getByText('New Tab');
       fireEvent.click(newTabButton);
 
-      await waitFor(() => {
-        expect(tabletActionService.handleAction).toHaveBeenCalledWith({
-          targetTablet: 'text-editor',
-          action: 'new-tab',
-          payload: {
-            content: 'Test generated content',
-            language: 'markdown',
-            title: 'Generated Markdown Content',
-          },
-          source: {
-            titleHint: 'Generated Markdown',
-          },
-        });
-      });
+      expect(mockCreateBackgroundTab).toHaveBeenCalledWith(
+        'Generated Markdown Content',
+        'Test generated content',
+        'markdown'
+      );
     });
 
     it('should not create tab when no content is generated', () => {
-      const tabletActionService = require('../../../services/tabletActionService').tabletActionService;
-      
       const state = createMockState({
         generatedOutput: '', // No content
       });
