@@ -130,12 +130,16 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
   }, [state, onChange]);
 
   const handleAlgorithmToggle = useCallback((algorithm: HashAlgorithm) => {
-    const newAlgorithms = state.selectedAlgorithms.includes(algorithm)
+    const isCurrentlySelected = state.selectedAlgorithms.includes(algorithm);
+    
+    // Don't allow deselecting the last algorithm
+    if (isCurrentlySelected && state.selectedAlgorithms.length === 1) {
+      return;
+    }
+    
+    const newAlgorithms = isCurrentlySelected
       ? state.selectedAlgorithms.filter(alg => alg !== algorithm)
       : [...state.selectedAlgorithms, algorithm];
-    
-    // Ensure at least one algorithm is selected
-    if (newAlgorithms.length === 0) return;
 
     onChange({
       ...state,
@@ -187,6 +191,7 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
               {allAlgorithms.map((algorithm) => (
                 <button
                   key={algorithm}
+                  type="button"
                   onClick={() => handleAlgorithmToggle(algorithm)}
                   disabled={state.isProcessing}
                   className={`flex items-center space-x-2 p-3 rounded-md border transition-colors ${
@@ -255,6 +260,11 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
                 <div
                   className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${state.processingProgress}%` }}
+                  role="progressbar"
+                  aria-valuenow={state.processingProgress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Processing ${state.processingAlgorithm} - ${state.processingProgress}% complete`}
                 ></div>
               </div>
             </div>
@@ -270,4 +280,39 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
       </div>
     </div>
   );
+};
+
+// Default export for the dynamic registry
+const createChecksumInitialState = (payload?: any) => ({
+  type: 'checksum' as const,
+  inputText: payload?.text || '',
+  fileInfo: null,
+  calculatedHashes: {} as Record<import('./types').HashAlgorithm, string>,
+  expectedChecksum: '',
+  comparisonResult: 'none' as const,
+  isProcessing: false,
+  processingProgress: 0,
+  processingAlgorithm: '',
+  selectedAlgorithms: ['SHA-256', 'SHA-512', 'CRC32'] as import('./types').HashAlgorithm[],
+  lastProcessedAt: 0,
+});
+
+export default {
+  id: 'checksum',
+  label: 'Checksum Calculator',
+  
+  createInitialState: createChecksumInitialState,
+  
+  serializeState: (state: any) => JSON.stringify(state),
+  
+  deserializeState: (serialized: string) => {
+    try {
+      return JSON.parse(serialized);
+    } catch {
+      return createChecksumInitialState();
+    }
+  },
+  
+  render: (state: any, onChange: (newState: any) => void) => 
+    React.createElement(ChecksumTablet, { state, onChange }),
 };

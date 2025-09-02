@@ -66,8 +66,15 @@ export async function hashText(
   text: string,
   algorithms: HashAlgorithm[] = ['SHA-256']
 ): Promise<Record<HashAlgorithm, string>> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
+  // Use polyfill for Node.js test environment
+  const encoder = typeof TextEncoder !== 'undefined' 
+    ? new TextEncoder() 
+    : new (require('util').TextEncoder)();
+    
+  const rawData = encoder.encode(text);
+  
+  // Ensure we have a proper Uint8Array for browser compatibility
+  const data = rawData instanceof Uint8Array ? rawData : new Uint8Array(rawData);
   const results: Record<string, string> = {};
 
   for (const algorithm of algorithms) {

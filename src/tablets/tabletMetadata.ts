@@ -1,5 +1,5 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText } from "../components/Icons";
+import { FileText, Type, Shield } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
@@ -220,8 +220,6 @@ export const tabletMetadata: TabletMetadata[] = [
     id: "loremipsum",
     label: "Lorem Ipsum Generator",
     keywords: ["lorem", "ipsum", "placeholder", "text", "mock", "data", "generator"],
-    description: "Generate realistic placeholder content and mock data",
-    category: "generator",
     getActionsForContext: (context) => {
       // Always available from any context
       return [
@@ -248,8 +246,6 @@ export const tabletMetadata: TabletMetadata[] = [
     id: "checksum",
     label: "Checksum Calculator",
     keywords: ["checksum", "hash", "md5", "sha", "crc32", "verify", "integrity"],
-    description: "Calculate and verify file and text checksums securely",
-    category: "security",
     getActionsForContext: (context) => {
       const actions = [];
       

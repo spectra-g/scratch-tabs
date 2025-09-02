@@ -20,7 +20,7 @@ jest.mock('../utils/hashing', () => ({
 }));
 
 // Mock the tablet action service
-jest.mock('../../services/tabletActionService', () => ({
+jest.mock('../../../services/tabletActionService', () => ({
   tabletActionService: {
     handleAction: jest.fn().mockResolvedValue(undefined),
   },
@@ -136,6 +136,9 @@ describe('ChecksumTablet', () => {
         selectedAlgorithms: ['SHA-256'] // Only one selected
       });
       render(<ChecksumTablet state={state} onChange={mockOnChange} />);
+      
+      // Clear any onChange calls from effects during render
+      mockOnChange.mockClear();
 
       const sha256Button = screen.getByText('SHA-256').closest('button');
       fireEvent.click(sha256Button!);
@@ -251,11 +254,11 @@ describe('ChecksumTablet', () => {
       const state = createMockState();
       render(<ChecksumTablet state={state} onChange={mockOnChange} />);
 
-      const textArea = screen.getByRole('textbox');
+      const textArea = screen.getByPlaceholderText('Type or paste text here to calculate hashes in real-time...');
       expect(textArea).toBeInTheDocument();
 
-      const fileInput = screen.getByRole('button', { hidden: true }); // File input is hidden
-      expect(fileInput).toBeInTheDocument();
+      const expectedChecksumInput = screen.getByPlaceholderText('Paste expected checksum here for comparison...');
+      expect(expectedChecksumInput).toBeInTheDocument();
     });
 
     it('should be keyboard accessible', () => {

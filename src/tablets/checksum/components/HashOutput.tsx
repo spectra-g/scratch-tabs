@@ -70,6 +70,8 @@ export const HashOutput: React.FC<HashOutputProps> = ({
             <button
               onClick={() => onExpectedChecksumChange('')}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
+              aria-label="Clear expected checksum"
+              title="Clear expected checksum"
             >
               <XCircle size={16} />
             </button>

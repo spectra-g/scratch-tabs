@@ -154,3 +154,42 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
     </div>
   );
 };
+
+// Default export for the dynamic registry
+const createLoremIpsumInitialState = (payload?: any) => ({
+  type: 'loremipsum' as const,
+  settings: {
+    mode: 'text' as const,
+    theme: 'general' as const,
+    outputUnit: 'paragraphs' as const,
+    count: 3,
+    customSourceText: '',
+    includeNumbers: false,
+    includeSpecialChars: false,
+    startWithLorem: true,
+    ...payload,
+  },
+  generatedOutput: '',
+  isGenerating: false,
+  lastGeneratedAt: 0,
+});
+
+export default {
+  id: 'loremipsum',
+  label: 'Lorem Ipsum Generator',
+  
+  createInitialState: createLoremIpsumInitialState,
+  
+  serializeState: (state: any) => JSON.stringify(state),
+  
+  deserializeState: (serialized: string) => {
+    try {
+      return JSON.parse(serialized);
+    } catch {
+      return createLoremIpsumInitialState();
+    }
+  },
+  
+  render: (state: any, onChange: (newState: any) => void) => 
+    React.createElement(LoremIpsumTablet, { state, onChange }),
+};

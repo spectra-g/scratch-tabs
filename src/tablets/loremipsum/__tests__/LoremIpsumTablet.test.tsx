@@ -8,11 +8,18 @@ import { LoremIpsumState } from '../types';
 jest.mock('../utils/generator', () => ({
   generateContent: jest.fn().mockReturnValue('Generated lorem ipsum content'),
   validateOptions: jest.fn().mockReturnValue(null),
-  getLanguageForMode: jest.fn().mockReturnValue('plaintext'),
+  getLanguageForMode: jest.fn().mockImplementation((mode) => {
+    switch (mode) {
+      case 'html': return 'html';
+      case 'markdown': return 'markdown';
+      case 'json': return 'json';
+      default: return 'plaintext';
+    }
+  }),
 }));
 
 // Mock the tablet action service
-jest.mock('../../services/tabletActionService', () => ({
+jest.mock('../../../services/tabletActionService', () => ({
   tabletActionService: {
     handleAction: jest.fn().mockResolvedValue(undefined),
   },
@@ -187,7 +194,7 @@ describe('LoremIpsumTablet', () => {
 
   describe('new tab creation', () => {
     it('should create new tab with generated content', async () => {
-      const tabletActionService = require('../../services/tabletActionService').tabletActionService;
+      const tabletActionService = require('../../../services/tabletActionService').tabletActionService;
       
       const state = createMockState({
         generatedOutput: 'Test generated content',
@@ -215,14 +222,14 @@ describe('LoremIpsumTablet', () => {
     });
 
     it('should not create tab when no content is generated', () => {
-      const tabletActionService = require('../../services/tabletActionService').tabletActionService;
+      const tabletActionService = require('../../../services/tabletActionService').tabletActionService;
       
       const state = createMockState({
         generatedOutput: '', // No content
       });
       render(<LoremIpsumTablet state={state} onChange={mockOnChange} />);
 
-      const newTabButton = screen.getByText('New Tab');
+      const newTabButton = screen.getByText('New Tab').closest('button');
       expect(newTabButton).toBeDisabled();
     });
   });
@@ -262,13 +269,13 @@ describe('LoremIpsumTablet', () => {
       render(<LoremIpsumTablet state={state} onChange={mockOnChange} />);
 
       // Should show character count
-      expect(screen.getByText(/characters/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/characters/i).length).toBeGreaterThan(0);
       
       // Should show word count
-      expect(screen.getByText(/words/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/words/i).length).toBeGreaterThan(0);
       
       // Should show line count
-      expect(screen.getByText(/lines/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/lines/i).length).toBeGreaterThan(0);
     });
   });
 });

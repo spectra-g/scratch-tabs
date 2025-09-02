@@ -206,7 +206,7 @@ describe('FileDropzone', () => {
         lastModified: Date.now(),
       });
 
-      const fileInput = screen.getByRole('button', { hidden: true });
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       
       fireEvent.change(fileInput, {
         target: { files: [testFile] },
@@ -266,7 +266,7 @@ describe('FileDropzone', () => {
         />
       );
 
-      const fileInput = screen.getByRole('button', { hidden: true });
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       expect(fileInput).toHaveAttribute('type', 'file');
     });
 
@@ -279,7 +279,7 @@ describe('FileDropzone', () => {
         />
       );
 
-      const fileInput = screen.getByRole('button', { hidden: true });
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       expect(fileInput).toBeDisabled();
     });
   });

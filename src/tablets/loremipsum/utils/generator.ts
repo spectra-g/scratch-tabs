@@ -1,5 +1,5 @@
 import { themeWordlists, classicLoremWords } from '../wordlists';
-import { GenerationOptions } from '../types';
+import { GenerationOptions, GenerationMode } from '../types';
 
 /**
  * Simple Markov chain implementation for custom text generation
