@@ -1,4 +1,5 @@
 import { HashAlgorithm, HashingOptions, HashingProgress } from '../types';
+import CryptoJS from 'crypto-js';
 
 // Default chunk size: 10MB
 const DEFAULT_CHUNK_SIZE = 10 * 1024 * 1024;
@@ -82,8 +83,10 @@ export async function hashText(
       if (algorithm === 'CRC32') {
         results[algorithm] = CRC32.calculateHex(data);
       } else if (algorithm === 'MD5') {
-        // MD5 is not supported by Web Crypto API, use a simple fallback
-        results[algorithm] = 'MD5 not supported in browser';
+        // ⚠️ SECURITY WARNING: MD5 is cryptographically broken and should only be used for legacy compatibility
+        // For security purposes, use SHA-256 or higher instead
+        const hash = CryptoJS.MD5(text);
+        results[algorithm] = hash.toString(CryptoJS.enc.Hex).toUpperCase();
       } else {
         const webCryptoAlg = getWebCryptoAlgorithm(algorithm);
         const hashBuffer = await crypto.subtle.digest(webCryptoAlg, data);
@@ -111,12 +114,14 @@ export async function hashFile(
   // Initialize hash contexts for Web Crypto algorithms
   const webCryptoContexts: Record<string, { algorithm: string; chunks: Uint8Array[] }> = {};
   let crc32Context: Uint8Array[] = [];
+  let md5Context: any | null = null;
 
   for (const algorithm of algorithms) {
     if (algorithm === 'CRC32') {
       crc32Context = [];
     } else if (algorithm === 'MD5') {
-      results[algorithm] = 'MD5 not supported in browser';
+      // ⚠️ SECURITY WARNING: MD5 is cryptographically broken and should only be used for legacy compatibility
+      md5Context = CryptoJS.algo.MD5.create();
     } else {
       try {
         webCryptoContexts[algorithm] = {
@@ -150,6 +155,10 @@ export async function hashFile(
     for (const algorithm of algorithms) {
       if (algorithm === 'CRC32') {
         crc32Context.push(uint8Array);
+      } else if (algorithm === 'MD5' && md5Context) {
+        // Update MD5 hash with chunk data
+        const wordArray = CryptoJS.lib.WordArray.create(uint8Array);
+        md5Context.update(wordArray);
       } else if (webCryptoContexts[algorithm]) {
         webCryptoContexts[algorithm].chunks.push(uint8Array);
       }
@@ -180,6 +189,10 @@ export async function hashFile(
           offset += chunk.length;
         }
         results[algorithm] = CRC32.calculateHex(combined);
+      } else if (algorithm === 'MD5' && md5Context) {
+        // Finalize MD5 hash
+        const finalHash = md5Context.finalize();
+        results[algorithm] = finalHash.toString(CryptoJS.enc.Hex).toUpperCase();
       } else if (webCryptoContexts[algorithm]) {
         // Combine all chunks for Web Crypto API
         const context = webCryptoContexts[algorithm];

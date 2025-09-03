@@ -54,10 +54,12 @@ describe('Checksum Hashing Utils', () => {
       expect(result['CRC32']).toBeDefined();
     });
 
-    it('should handle MD5 gracefully (not supported)', async () => {
+    it('should calculate MD5 hash with security warning', async () => {
       const result = await hashText('test', ['MD5']);
       
-      expect(result['MD5']).toBe('MD5 not supported in browser');
+      // MD5 hash of 'test' should be '098F6BCD4621D373CADE4E832627B4F6'
+      expect(result['MD5']).toBe('098F6BCD4621D373CADE4E832627B4F6');
+      expect(result['MD5']).toMatch(/^[A-F0-9]{32}$/); // Valid MD5 format
     });
 
     it('should handle errors gracefully', async () => {

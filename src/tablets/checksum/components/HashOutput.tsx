@@ -130,6 +130,11 @@ export const HashOutput: React.FC<HashOutputProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <span className="font-medium text-gray-200">{algorithm}</span>
+                      {algorithm === 'MD5' && (
+                        <span className="text-xs bg-amber-900/20 text-amber-400 border border-amber-700/50 px-2 py-0.5 rounded-md font-medium">
+                          ⚠️ Legacy Only
+                        </span>
+                      )}
                       {state.expectedChecksum && hash && !isError && getComparisonIcon(hash)}
                     </div>
                     {hash && !isEmpty && !isError && (
@@ -158,6 +163,23 @@ export const HashOutput: React.FC<HashOutputProps> = ({
               );
             })}
           </div>
+
+          {/* Security Warning for MD5 */}
+          {state.selectedAlgorithms.includes('MD5') && state.calculatedHashes['MD5'] && !state.calculatedHashes['MD5'].startsWith('Error:') && (
+            <div className="bg-amber-900/10 border border-amber-700/30 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <span className="text-amber-400 font-semibold">⚠️</span>
+                <div>
+                  <h4 className="font-medium text-amber-300 mb-1">Security Notice</h4>
+                  <p className="text-sm text-amber-200/80">
+                    MD5 is cryptographically broken and should not be used for security purposes. 
+                    It's provided only for legacy compatibility with existing checksums. 
+                    For new applications, use SHA-256 or higher.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Comparison Summary */}
           {state.expectedChecksum.trim() && hasAnyHashes && (
