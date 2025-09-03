@@ -7,7 +7,7 @@ import { DetectionResult, FormatModule  } from "./types";
  */
 export class SvgFormatDetector extends BaseFormatDetector implements FormatModule
 {
-  id = "xml"; // SVG format uses xml ID
+  id = "svg"; // SVG format with its own ID
   name = "SVG";
   extensions = ["svg"];
   priority = 3;

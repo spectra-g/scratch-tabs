@@ -9,7 +9,7 @@ describe('SVG Language Detector', () => {
 
   describe('Basic Properties', () => {
     it('should have correct basic properties', () => {
-      expect(detector.id).toBe('xml');
+      expect(detector.id).toBe('svg');
       expect(detector.name).toBe('SVG');
       expect(detector.extensions).toEqual(['svg']);
       expect(detector.priority).toBe(3);
