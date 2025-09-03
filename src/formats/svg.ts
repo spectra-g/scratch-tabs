@@ -7,10 +7,10 @@ import { DetectionResult, FormatModule  } from "./types";
  */
 export class SvgFormatDetector extends BaseFormatDetector implements FormatModule
 {
-  id = "xml"; // Use Monaco's built-in XML language
+  id = "xml"; // SVG format uses xml ID
   name = "SVG";
   extensions = ["svg"];
-  priority = 3; // Higher priority than XML since SVG is more specific
+  priority = 3;
 
   sampleContent(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -210,15 +210,60 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
   }
 
   registerProvider(monaco: any): void {
-    // SVG uses Monaco's built-in XML language, so no additional provider registration is needed
-    // The XML language provider is already available in Monaco
+    // Register SVG as a language that uses XML syntax highlighting
+    if (monaco && monaco.languages) {
+      // Register the language
+      monaco.languages.register({ id: 'svg' });
+      
+      // Set SVG to use XML language configuration and tokenization
+      monaco.languages.setLanguageConfiguration('svg', {
+        // Use XML-like configuration
+        comments: {
+          blockComment: ['<!--', '-->']
+        },
+        brackets: [
+          ['<', '>']
+        ],
+        autoClosingPairs: [
+          { open: '<', close: '>' },
+          { open: '"', close: '"' },
+          { open: "'", close: "'" }
+        ],
+        surroundingPairs: [
+          { open: '<', close: '>' },
+          { open: '"', close: '"' },
+          { open: "'", close: "'" }
+        ]
+      });
+      
+      // Set SVG to use XML tokenization
+      monaco.languages.setMonarchTokensProvider('svg', {
+        tokenizer: {
+          root: [
+            [/<!--/, 'comment', '@comment'],
+            [/<\?[^>]*\?>/, 'metatag'],
+            [/<\/([a-zA-Z][\w:]*)/, { token: 'tag', bracket: '@close' }],
+            [/<([a-zA-Z][\w:]*)/, { token: 'tag', bracket: '@open' }, '@tag'],
+            [/[^<]+/, 'text']
+          ],
+          comment: [
+            [/-->/, 'comment', '@pop'],
+            [/./, 'comment']
+          ],
+          tag: [
+            [/\/?>/, { token: 'tag', bracket: '@close' }, '@pop'],
+            [/[\w:]+/, 'attribute.name'],
+            [/=/, 'delimiter'],
+            [/"[^"]*"/, 'attribute.value'],
+            [/'[^']*'/, 'attribute.value']
+          ]
+        }
+      });
+    }
   }
-
-  // No registerProvider needed - using Monaco's built-in XML language
 }
 
-// Create and register the detector
-const svgDetector = new SvgFormatDetector();
-formatRegistry.register(svgDetector);
+// Export the detector for use by the module wrapper
+// Registration is now handled by src/formats/svg/index.ts
 
 // No need for registerSvgProvider - using Monaco's built-in XML language 

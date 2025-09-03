@@ -11,9 +11,9 @@ import {
   CheckCircle, 
   AlertTriangle,
   X,
-  Maximize2,
-  ZoomIn,
-  ZoomOut,
+  Square, // Replacing Maximize2
+  PlusCircle, // Replacing ZoomIn
+  Minus, // Replacing ZoomOut  
   RotateCcw
 } from '../../../../components/Icons';
 import { optimizeWithSvgo, basicCleanup } from '../../utils/optimizer';
@@ -369,7 +369,7 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
                 title="Zoom Out"
                 disabled={zoom <= 0.1}
               >
-                <ZoomOut size={14} />
+                <Minus size={14} />
               </button>
               <span className="text-xs text-gray-300 px-2 min-w-[3rem] text-center">
                 {Math.round(zoom * 100)}%
@@ -380,7 +380,7 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
                 title="Zoom In"
                 disabled={zoom >= 5}
               >
-                <ZoomIn size={14} />
+                <PlusCircle size={14} />
               </button>
               <button
                 onClick={handleZoomReset}
@@ -487,6 +487,7 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
               }}
             >
               <div
+                data-testid="svg-container"
                 className="bg-white rounded-lg shadow-lg p-4 max-w-full max-h-full overflow-visible"
                 onClick={handleSvgClick}
                 dangerouslySetInnerHTML={{ __html: enhancedSvgContent }}

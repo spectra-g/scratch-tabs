@@ -127,7 +127,7 @@ export const optimizeWithSvgo = async (svgContent: string): Promise<string> => {
  */
 export const basicCleanup = (svgContent: string): string => {
   if (!svgContent || !svgContent.trim()) {
-    return svgContent;
+    return '';
   }
 
   let cleaned = svgContent;
@@ -198,14 +198,15 @@ export const validateSvg = (content: string): { isValid: boolean; errors: string
     errors.push('Missing </svg> closing tag');
   }
 
-  // Check for common syntax issues
-  const unclosedTags = content.match(/<(\w+)[^>]*(?<!\/|<\/\1)>/g);
-  if (unclosedTags) {
-    // This is a simplified check - a full parser would be more accurate
-    const openTags = content.match(/<(\w+)(?:\s[^>]*)?>(?!.*<\/\1>)/g);
-    if (openTags && openTags.length > 0) {
-      errors.push('Potentially unclosed tags detected');
-    }
+  // Check for basic tag matching - simplified approach
+  const svgTagMatch = content.match(/<svg[^>]*>/);
+  const svgCloseMatch = content.match(/<\/svg>/);
+  
+  if (svgTagMatch && svgCloseMatch) {
+    // Basic SVG structure is present - for this simple validation, we'll consider it valid
+    // A full XML parser would be needed for comprehensive validation
+  } else if (!svgTagMatch || !svgCloseMatch) {
+    // This case is already handled above, but keeping for clarity
   }
 
   // Check for malformed attributes

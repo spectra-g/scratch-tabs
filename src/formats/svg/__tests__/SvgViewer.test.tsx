@@ -65,9 +65,9 @@ describe('SvgViewer', () => {
     it('should display SVG statistics', () => {
       render(<SvgViewer {...defaultProps} />);
       
-      // Should show element count and file size
-      expect(screen.getByText(/elements/)).toBeInTheDocument();
-      expect(screen.getByText(/paths/)).toBeInTheDocument();
+      // Should show element count and file size - use more specific text patterns
+      expect(screen.getByText(/\d+ elements/)).toBeInTheDocument();
+      expect(screen.getByText(/\d+ paths/)).toBeInTheDocument();
     });
 
     it('should render empty state when no content', () => {
@@ -110,8 +110,8 @@ describe('SvgViewer', () => {
     it('should handle SVG element clicks', () => {
       render(<SvgViewer {...defaultProps} />);
       
-      // Find the SVG container and simulate a click
-      const svgContainer = screen.getByRole('generic', { hidden: true });
+      // Find the SVG container using test-id
+      const svgContainer = screen.getByTestId('svg-container');
       const mockEvent = {
         preventDefault: jest.fn(),
         stopPropagation: jest.fn(),
@@ -201,6 +201,11 @@ describe('SvgViewer', () => {
     });
 
     it('should export SVG as file', () => {
+      // Save original implementations
+      const originalCreateElement = document.createElement;
+      const originalAppendChild = document.body.appendChild;
+      const originalRemoveChild = document.body.removeChild;
+      
       // Mock document methods
       const mockClick = jest.fn();
       const mockAppendChild = jest.fn();
@@ -209,19 +214,25 @@ describe('SvgViewer', () => {
         href: '',
         download: '',
         click: mockClick,
-      }));
+      })) as unknown as typeof document.createElement;
       
+      render(<SvgViewer {...defaultProps} />);
+      
+      // Apply mocks after render
       document.createElement = mockCreateElement;
       document.body.appendChild = mockAppendChild;
       document.body.removeChild = mockRemoveChild;
-      
-      render(<SvgViewer {...defaultProps} />);
       
       const exportButton = screen.getByTitle('Export as .svg');
       fireEvent.click(exportButton);
       
       expect(mockCreateElement).toHaveBeenCalledWith('a');
       expect(mockClick).toHaveBeenCalled();
+      
+      // Restore original implementations
+      document.createElement = originalCreateElement;
+      document.body.appendChild = originalAppendChild;
+      document.body.removeChild = originalRemoveChild;
     });
   });
 
@@ -267,9 +278,9 @@ describe('SvgViewer', () => {
     it('should disable zoom buttons at limits', () => {
       render(<SvgViewer {...defaultProps} />);
       
-      // Zoom out to minimum
+      // Zoom out to minimum (need more clicks to reach 0.1 limit)
       const zoomOutButton = screen.getByTitle('Zoom Out');
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 15; i++) {
         fireEvent.click(zoomOutButton);
       }
       
@@ -279,8 +290,11 @@ describe('SvgViewer', () => {
 
   describe('error handling', () => {
     it('should handle optimization errors gracefully', async () => {
-      const { optimizeWithSvgo } = require('../utils/optimizer');
+      const { optimizeWithSvgo, basicCleanup } = require('../utils/optimizer');
       optimizeWithSvgo.mockRejectedValue(new Error('Optimization failed'));
+      basicCleanup.mockImplementation(() => {
+        throw new Error('Basic cleanup also failed');
+      });
       
       render(<SvgViewer {...defaultProps} />);
       

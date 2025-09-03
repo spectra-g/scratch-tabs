@@ -35,7 +35,7 @@ import "./sql";
 import "./stacktrace";
 import "./stacktrace/index";
 import "./diff/index";
-import "./svg";
+import "./svg/index";
 import "./vhost";
 import "./xml";
 import "./yaml";

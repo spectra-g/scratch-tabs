@@ -1,9 +1,12 @@
-import { FormatModule } from "../types";
-import { SmartView } from "../../views/registry";
+import React from "react";
+import { FormatModule, StatusBarItem } from "../types";
+import { SmartView, smartViewRegistry } from "../../views/registry";
 import { SvgSmartView } from "./views/components/SvgSmartView";
 import { Eye } from "../../components/Icons";
 import { SvgFormatDetector } from "../svg";
 import { formatRegistry } from "../registry";
+import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../../components/StatusBar/types";
 
 // Create the Svg format module that implements the new interface
 export class SvgFormatModule implements FormatModule {
@@ -49,7 +52,7 @@ export class SvgFormatModule implements FormatModule {
     return [
       {
         id: "svg-previewer",
-        languageId: "xml", // SVGs are parsed as XML
+        languageId: "svg", // SVG format ID
         label: "SVG Preview",
         icon: Eye,
         component: SvgSmartView,
@@ -58,11 +61,30 @@ export class SvgFormatModule implements FormatModule {
       },
     ];
   }
+
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'svg-smart-view-button',
+        component: (props: StatusItemProps) =>
+          React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          }),
+        priority: 20,
+      },
+    ];
+  }
 }
 
 // Create and register the module
 const svgModule = new SvgFormatModule();
 formatRegistry.register(svgModule);
+
+// Register smart views
+svgModule.getSmartViews().forEach(view => {
+  smartViewRegistry.register(view);
+});
 
 // Export for backward compatibility
 export const registerSvgProvider = (monaco: any) => {

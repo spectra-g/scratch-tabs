@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SvgSmartView } from '../views/components/SvgSmartView';
 import { SmartViewProps } from '../../../views/registry';
