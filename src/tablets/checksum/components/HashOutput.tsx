@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, CheckCircle, XCircle, Eye, EyeOff } from '../../../components/Icons';
+import { Copy, CheckCircle, XCircle, Eye, EyeOff, Type, File } from '../../../components/Icons';
 import { HashAlgorithm, ChecksumState } from '../types';
 import { compareHashes, formatProcessingTime } from '../utils/hashing';
 
@@ -83,7 +83,23 @@ export const HashOutput: React.FC<HashOutputProps> = ({
       {hasAnyHashes && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-200">Calculated Hashes</h3>
+            <div className="flex items-center space-x-3">
+              <h3 className="text-lg font-semibold text-gray-200">Calculated Hashes</h3>
+              {/* Source Indicator */}
+              <div className="flex items-center space-x-1 px-2 py-1 bg-gray-700/50 rounded-md">
+                {state.fileInfo ? (
+                  <>
+                    <File size={14} className="text-blue-400" />
+                    <span className="text-xs text-gray-300">{state.fileInfo.name}</span>
+                  </>
+                ) : (
+                  <>
+                    <Type size={14} className="text-green-400" />
+                    <span className="text-xs text-gray-300">Text Input</span>
+                  </>
+                )}
+              </div>
+            </div>
             <div className="flex items-center space-x-2">
               {processingTime && (
                 <span className="text-xs text-gray-400">

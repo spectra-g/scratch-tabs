@@ -1,9 +1,9 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo, useRef } from 'react';
 import { ChecksumState, HashAlgorithm, FileInfo, HashingProgress } from './types';
 import { FileDropzone } from './components/FileDropzone';
 import { HashOutput } from './components/HashOutput';
 import { hashText, hashFile, compareHashes } from './utils/hashing';
-import { Shield, Type, Settings, CheckSquare } from '../../components/Icons';
+import { Shield, Type, Settings, CheckSquare, Upload } from '../../components/Icons';
 
 interface ChecksumTabletProps {
   state: ChecksumState;
@@ -15,31 +15,57 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
   onChange,
 }) => {
   const [currentFile, setCurrentFile] = useState<File | null>(null);
-  const [processingStartTime, setProcessingStartTime] = useState<number>(0);
+  const [lastProcessingDuration, setLastProcessingDuration] = useState<number | undefined>(undefined);
+  const onChangeRef = useRef(onChange);
+  const stateRef = useRef(state);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Keep refs current
+  onChangeRef.current = onChange;
+  stateRef.current = state;
+  
+  // Sync textarea value when state changes externally (like file upload)
+  useEffect(() => {
+    if (textareaRef.current && textareaRef.current.value !== state.inputText) {
+      textareaRef.current.value = state.inputText;
+    }
+  }, [state.inputText]);
+
+  // Stabilize selectedAlgorithms reference to prevent unnecessary re-renders
+  const selectedAlgorithms = useMemo(() => state.selectedAlgorithms, [JSON.stringify(state.selectedAlgorithms)]);
 
   // Debounced text hashing
   useEffect(() => {
     if (!state.inputText.trim()) {
-      onChange({
-        ...state,
-        calculatedHashes: {} as Record<HashAlgorithm, string>,
-        comparisonResult: 'none',
-      });
+      // Only clear if we have hashes to avoid unnecessary re-renders
+      if (Object.keys(state.calculatedHashes).length > 0 || state.comparisonResult !== 'none') {
+        onChange({
+          ...state,
+          calculatedHashes: {} as Record<HashAlgorithm, string>,
+          comparisonResult: 'none',
+        });
+      }
       return;
     }
 
     const timeoutId = setTimeout(async () => {
       try {
-        onChange({ ...state, isProcessing: true });
+        const processingStart = Date.now();
         
-        const hashes = await hashText(state.inputText, state.selectedAlgorithms);
+        const hashes = await hashText(state.inputText, selectedAlgorithms);
+        
+        const processingEnd = Date.now();
+        const processingDuration = processingEnd - processingStart;
         
         onChange({
           ...state,
           calculatedHashes: hashes,
           isProcessing: false,
-          lastProcessedAt: Date.now(),
+          lastProcessedAt: processingEnd,
         });
+        
+        // Store the processing duration for display
+        setLastProcessingDuration(processingDuration);
       } catch (error) {
         console.error('Text hashing error:', error);
         onChange({
@@ -50,12 +76,16 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [state.inputText, state.selectedAlgorithms]);
+    // Deliberately excluding state and onChange from dependencies to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.inputText, selectedAlgorithms]);
 
   // Update comparison result when hashes or expected checksum changes
   useEffect(() => {
     if (!state.expectedChecksum.trim()) {
-      onChange({ ...state, comparisonResult: 'none' });
+      if (state.comparisonResult !== 'none') {
+        onChange({ ...state, comparisonResult: 'none' });
+      }
       return;
     }
 
@@ -67,37 +97,41 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
     if (newComparisonResult !== state.comparisonResult) {
       onChange({ ...state, comparisonResult: newComparisonResult });
     }
-  }, [state.calculatedHashes, state.expectedChecksum]);
+    // Deliberately excluding state and onChange from dependencies to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.calculatedHashes, state.expectedChecksum, state.comparisonResult]);
 
   const handleFileSelected = useCallback(async (file: File, fileInfo: FileInfo) => {
     setCurrentFile(file);
-    setProcessingStartTime(Date.now());
     
-    onChange({
-      ...state,
+    const currentState = stateRef.current;
+    const initialState = {
+      ...currentState,
+      inputText: '', // Clear text input when file is selected
       fileInfo,
       isProcessing: true,
       processingProgress: 0,
       calculatedHashes: {} as Record<HashAlgorithm, string>,
-      comparisonResult: 'none',
-    });
+      comparisonResult: 'none' as const,
+    };
+    onChangeRef.current(initialState);
 
     try {
+      const algorithms = selectedAlgorithms;
       const hashes = await hashFile(file, {
-        algorithms: state.selectedAlgorithms,
+        algorithms,
         onProgress: (progress: HashingProgress) => {
-          onChange({
-            ...state,
+          onChangeRef.current({
+            ...initialState,
             processingProgress: progress.progress,
             processingAlgorithm: progress.algorithm,
+            isProcessing: true,
           });
         },
       });
 
-      const processingTime = Date.now() - processingStartTime;
-
-      onChange({
-        ...state,
+      onChangeRef.current({
+        ...initialState,
         calculatedHashes: hashes,
         isProcessing: false,
         processingProgress: 100,
@@ -105,48 +139,51 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
       });
     } catch (error) {
       console.error('File hashing error:', error);
-      onChange({
-        ...state,
+      onChangeRef.current({
+        ...initialState,
         isProcessing: false,
         processingProgress: 0,
       });
     }
-  }, [state, processingStartTime]);
+  }, [selectedAlgorithms]);
 
   const handleTextChange = useCallback((text: string) => {
-    onChange({
-      ...state,
+    onChangeRef.current({
+      ...stateRef.current,
       inputText: text,
       fileInfo: null, // Clear file info when switching to text
     });
     setCurrentFile(null);
-  }, [state, onChange]);
+    // Clear processing time while typing
+    setLastProcessingDuration(undefined);
+  }, []);
 
   const handleExpectedChecksumChange = useCallback((checksum: string) => {
-    onChange({
-      ...state,
+    onChangeRef.current({
+      ...stateRef.current,
       expectedChecksum: checksum,
     });
-  }, [state, onChange]);
+  }, []);
 
   const handleAlgorithmToggle = useCallback((algorithm: HashAlgorithm) => {
-    const isCurrentlySelected = state.selectedAlgorithms.includes(algorithm);
+    const currentState = stateRef.current;
+    const isCurrentlySelected = currentState.selectedAlgorithms.includes(algorithm);
     
     // Don't allow deselecting the last algorithm
-    if (isCurrentlySelected && state.selectedAlgorithms.length === 1) {
+    if (isCurrentlySelected && currentState.selectedAlgorithms.length === 1) {
       return;
     }
     
     const newAlgorithms = isCurrentlySelected
-      ? state.selectedAlgorithms.filter(alg => alg !== algorithm)
-      : [...state.selectedAlgorithms, algorithm];
+      ? currentState.selectedAlgorithms.filter(alg => alg !== algorithm)
+      : [...currentState.selectedAlgorithms, algorithm];
 
-    onChange({
-      ...state,
+    onChangeRef.current({
+      ...currentState,
       selectedAlgorithms: newAlgorithms,
       calculatedHashes: {} as Record<HashAlgorithm, string>, // Clear previous results
     });
-  }, [state, onChange]);
+  }, []);
 
   const allAlgorithms: HashAlgorithm[] = ['MD5', 'SHA-1', 'SHA-256', 'SHA-384', 'SHA-512', 'CRC32'];
 
@@ -160,21 +197,37 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
             <div>
               <h1 className="text-2xl font-bold text-gray-100">Secure Checksum Calculator</h1>
               <p className="text-gray-400 mt-1">
-                Calculate file and text hashes locally in your browser
+                Calculate file and text hashes securely
               </p>
             </div>
           </div>
           
-          {state.isProcessing && (
-            <div className="text-right">
-              <div className="text-sm text-gray-300">
-                Processing {state.processingAlgorithm}...
+          <div className="flex items-center space-x-4">
+            {/* Processing Status */}
+            {state.isProcessing && (
+              <div className="text-right">
+                <div className="text-sm text-gray-300">
+                  Processing {state.processingAlgorithm}...
+                </div>
+                <div className="text-xs text-gray-500">
+                  {state.processingProgress}% complete
+                </div>
               </div>
-              <div className="text-xs text-gray-500">
-                {state.processingProgress}% complete
+            )}
+            
+            {/* Privacy Panel - Far Right */}
+            <div className="bg-green-900/20 border border-green-700 rounded-md p-2">
+              <div className="flex items-start space-x-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full mt-1 flex-shrink-0"></div>
+                <div>
+                  <div className="text-green-300 text-xs font-medium">Privacy Guaranteed</div>
+                  <div className="text-green-400/80 text-xs mt-0.5">
+                    Your files are never uploaded. All calculations happen locally in your browser.
+                  </div>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -182,30 +235,32 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
       <div className="flex-1 overflow-auto">
         <div className="p-6 space-y-6">
           {/* Algorithm Selection */}
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-4">
-              <Settings size={18} />
-              <h3 className="font-semibold text-gray-200">Hash Algorithms</h3>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {allAlgorithms.map((algorithm) => (
-                <button
-                  key={algorithm}
-                  type="button"
-                  onClick={() => handleAlgorithmToggle(algorithm)}
-                  disabled={state.isProcessing}
-                  className={`flex items-center space-x-2 p-3 rounded-md border transition-colors ${
-                    state.selectedAlgorithms.includes(algorithm)
-                      ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                      : 'border-gray-600 hover:border-gray-500 text-gray-300 hover:bg-gray-700/50'
-                  } ${state.isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <CheckSquare size={16} className={
-                    state.selectedAlgorithms.includes(algorithm) ? 'text-blue-400' : 'text-gray-500'
-                  } />
-                  <span className="text-sm font-medium">{algorithm}</span>
-                </button>
-              ))}
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Settings size={14} />
+                <h3 className="text-sm font-medium text-gray-200">Hash Algorithms</h3>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                {allAlgorithms.map((algorithm) => (
+                  <button
+                    key={algorithm}
+                    type="button"
+                    onClick={() => handleAlgorithmToggle(algorithm)}
+                    disabled={state.isProcessing}
+                    className={`flex items-center space-x-1 px-2.5 py-1.5 rounded border transition-colors text-xs ${
+                      state.selectedAlgorithms.includes(algorithm)
+                        ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                        : 'border-gray-600 hover:border-gray-500 text-gray-300 hover:bg-gray-700/50'
+                    } ${state.isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <CheckSquare size={10} className={
+                      state.selectedAlgorithms.includes(algorithm) ? 'text-blue-400' : 'text-gray-500'
+                    } />
+                    <span className="font-medium">{algorithm}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -220,7 +275,8 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
               
               <div className="space-y-3">
                 <textarea
-                  value={state.inputText}
+                  ref={textareaRef}
+                  defaultValue={state.inputText}
                   onChange={(e) => handleTextChange(e.target.value)}
                   placeholder="Type or paste text here to calculate hashes in real-time..."
                   disabled={state.isProcessing}
@@ -237,11 +293,18 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
 
             {/* File Input */}
             <div className="space-y-4">
-              <FileDropzone
-                onFileSelected={handleFileSelected}
-                isProcessing={state.isProcessing}
-                currentFile={state.fileInfo}
-              />
+              <div className="flex items-center space-x-2">
+                <Upload size={18} />
+                <h3 className="font-semibold text-gray-200">File Input</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <FileDropzone
+                  onFileSelected={handleFileSelected}
+                  isProcessing={state.isProcessing}
+                  currentFile={state.fileInfo}
+                />
+              </div>
             </div>
           </div>
 
@@ -274,7 +337,7 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
           <HashOutput
             state={state}
             onExpectedChecksumChange={handleExpectedChecksumChange}
-            processingTime={state.lastProcessedAt ? Date.now() - state.lastProcessedAt : undefined}
+            processingTime={lastProcessingDuration}
           />
         </div>
       </div>

@@ -34,7 +34,6 @@ describe('FileDropzone', () => {
 
       expect(screen.getByText('Drop file or click to select')).toBeInTheDocument();
       expect(screen.getByText('All processing happens locally in your browser')).toBeInTheDocument();
-      expect(screen.getByText('Privacy Guaranteed')).toBeInTheDocument();
     });
 
     it('should show processing state when processing', () => {

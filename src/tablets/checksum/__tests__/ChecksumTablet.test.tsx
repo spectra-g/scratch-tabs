@@ -54,7 +54,7 @@ describe('ChecksumTablet', () => {
       render(<ChecksumTablet state={state} onChange={mockOnChange} />);
 
       expect(screen.getByText('Secure Checksum Calculator')).toBeInTheDocument();
-      expect(screen.getByText('Calculate file and text hashes locally in your browser')).toBeInTheDocument();
+      expect(screen.getByText('Calculate file and text hashes securely')).toBeInTheDocument();
       expect(screen.getByText('Hash Algorithms')).toBeInTheDocument();
       expect(screen.getByText('Text Input')).toBeInTheDocument();
     });

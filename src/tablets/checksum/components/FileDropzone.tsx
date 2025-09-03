@@ -178,18 +178,6 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         </div>
       )}
 
-      {/* Privacy Notice */}
-      <div className="bg-green-900/20 border border-green-700 rounded-lg p-3">
-        <div className="flex items-start space-x-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
-          <div>
-            <div className="text-green-300 text-sm font-medium">Privacy Guaranteed</div>
-            <div className="text-green-400/80 text-xs mt-1">
-              Your files are never uploaded. All calculations happen locally in your browser.
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
