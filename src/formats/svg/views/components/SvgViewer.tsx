@@ -14,7 +14,8 @@ import {
   Square, // Replacing Maximize2
   PlusCircle, // Replacing ZoomIn
   Minus, // Replacing ZoomOut  
-  RotateCcw
+  RotateCcw,
+  AlignLeft
 } from '../../../../components/Icons';
 import { optimizeWithSvgo, basicCleanup } from '../../utils/optimizer';
 import { useActiveEditorStore } from '../../../../stores/activeEditorStore';
@@ -242,6 +243,24 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
     }
   }, [content, onContentChange, isOptimizing, editor]);
 
+  // Handle SVG formatting
+  const handleFormat = useCallback(async () => {
+    if (!editor || !content) return;
+
+    try {
+      // Use Monaco's built-in formatting action
+      const action = editor.getAction('editor.action.formatDocument');
+      if (action) {
+        await action.run();
+      } else {
+        // Fallback: trigger formatting command
+        await editor.trigger('format', 'editor.action.formatDocument', {});
+      }
+    } catch (error) {
+      // Silently handle formatting errors - Monaco will show any issues in the editor
+    }
+  }, [editor, content]);
+
   // Handle copy to clipboard
   const handleCopy = useCallback(async () => {
     if (!content) return;
@@ -421,7 +440,7 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
               <Info size={14} />
             </button>
 
-            {/* Optimization Button */}
+            {/* Optimization and Format Buttons */}
             <button
               onClick={() => handleOptimize()}
               disabled={isOptimizing}
@@ -434,6 +453,15 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
                 <Zap size={14} />
               )}
               <span className="text-xs">Optimize</span>
+            </button>
+
+            <button
+              onClick={handleFormat}
+              className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+              title="Format SVG"
+            >
+              <AlignLeft size={14} />
+              <span className="text-xs">Format</span>
             </button>
 
             {/* Export Controls */}

@@ -210,19 +210,21 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
   }
 
   registerProvider(monaco: any): void {
-    // Register SVG as a language that uses XML syntax highlighting
+    // SVG files should use XML language for proper syntax highlighting and formatting support
+    // Monaco has built-in XML support with formatting
     if (monaco && monaco.languages) {
-      // Register the language
+      // Register 'svg' language
       monaco.languages.register({ id: 'svg' });
       
-      // Set SVG to use XML language configuration and tokenization
+      // Configure SVG to use XML-like language configuration for formatting support
       monaco.languages.setLanguageConfiguration('svg', {
-        // Use XML-like configuration
         comments: {
           blockComment: ['<!--', '-->']
         },
         brackets: [
-          ['<', '>']
+          ['<', '>'],
+          ['"', '"'],
+          ["'", "'"]
         ],
         autoClosingPairs: [
           { open: '<', close: '>' },
@@ -233,33 +235,138 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
           { open: '<', close: '>' },
           { open: '"', close: '"' },
           { open: "'", close: "'" }
-        ]
+        ],
+        indentationRules: {
+          increaseIndentPattern: /<(?!\?|(?:area|base|br|col|frame|hr|img|input|link|meta|param)\s*\/?)([_:\w][_:\w-.\d]*)\s*(\s[^>]*)?>/i,
+          decreaseIndentPattern: /^\s*<\/([_:\w][_:\w-.\d]*)\s*>/i
+        }
       });
-      
-      // Set SVG to use XML tokenization
+
+      // Set SVG to use XML-style tokenization for proper syntax highlighting
       monaco.languages.setMonarchTokensProvider('svg', {
         tokenizer: {
           root: [
             [/<!--/, 'comment', '@comment'],
             [/<\?[^>]*\?>/, 'metatag'],
-            [/<\/([a-zA-Z][\w:]*)/, { token: 'tag', bracket: '@close' }],
-            [/<([a-zA-Z][\w:]*)/, { token: 'tag', bracket: '@open' }, '@tag'],
-            [/[^<]+/, 'text']
+            [/<!DOCTYPE/, 'metatag', '@doctype'],
+            [/<\/([a-zA-Z][\w:-]*)/, { token: 'tag', bracket: '@close' }],
+            [/<([a-zA-Z][\w:-]*)/, { token: 'tag', bracket: '@open', next: '@tag' }],
+            [/[^<]+/, '']
+          ],
+          doctype: [
+            [/>/, 'metatag', '@pop'],
+            [/./, 'metatag']
           ],
           comment: [
             [/-->/, 'comment', '@pop'],
             [/./, 'comment']
           ],
           tag: [
-            [/\/?>/, { token: 'tag', bracket: '@close' }, '@pop'],
-            [/[\w:]+/, 'attribute.name'],
+            [/\/?>/, { token: 'tag', bracket: '@close', next: '@pop' }],
+            [/[\w:-]+/, 'attribute.name'],
             [/=/, 'delimiter'],
             [/"[^"]*"/, 'attribute.value'],
-            [/'[^']*'/, 'attribute.value']
+            [/'[^']*'/, 'attribute.value'],
+            [/\s+/, '']
           ]
         }
       });
+
+      // Register formatting provider for SVG (using simple XML-style formatting)
+      monaco.languages.registerDocumentFormattingEditProvider('svg', {
+        provideDocumentFormattingEdits: (model: any) => {
+          const content = model.getValue();
+          const formatted = this.formatSvgContent(content);
+          
+          if (formatted !== content) {
+            return [{
+              range: model.getFullModelRange(),
+              text: formatted
+            }];
+          }
+          return [];
+        }
+      });
     }
+  }
+
+  // Simple SVG/XML formatter
+  private formatSvgContent(content: string): string {
+    if (!content.trim()) return content;
+
+    try {
+      // Basic XML formatting using browser's DOMParser and XMLSerializer
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, 'image/svg+xml');
+      
+      // Check for parsing errors
+      const parserError = doc.getElementsByTagName('parsererror')[0];
+      if (parserError) {
+        // If parsing failed, return original content
+        return content;
+      }
+
+      // Format using XMLSerializer and basic indentation
+      const serializer = new XMLSerializer();
+      let formatted = serializer.serializeToString(doc);
+      
+      // Add proper indentation
+      formatted = this.addIndentation(formatted);
+      
+      return formatted;
+    } catch (error) {
+      // If formatting fails, return original content
+      return content;
+    }
+  }
+
+  private addIndentation(xml: string): string {
+    let formatted = '';
+    let indent = 0;
+    const indentStr = '  '; // 2 spaces
+    
+    // Split by tags while preserving them
+    const parts = xml.split(/(<[^>]*>)/);
+    
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      
+      if (part.match(/<\/\w/)) {
+        // Closing tag - decrease indent before adding
+        indent--;
+        if (formatted && !formatted.endsWith('\n')) {
+          formatted += '\n';
+        }
+        formatted += indentStr.repeat(Math.max(0, indent)) + part;
+      } else if (part.match(/<\w[^>]*[^/]>/)) {
+        // Opening tag - add with current indent, then increase
+        if (formatted && !formatted.endsWith('\n')) {
+          formatted += '\n';
+        }
+        formatted += indentStr.repeat(indent) + part;
+        indent++;
+      } else if (part.match(/<\w[^>]*\/>/)) {
+        // Self-closing tag - add with current indent
+        if (formatted && !formatted.endsWith('\n')) {
+          formatted += '\n';
+        }
+        formatted += indentStr.repeat(indent) + part;
+      } else if (part.match(/^<\?/) || part.match(/^<!--/)) {
+        // Processing instruction or comment
+        if (formatted && !formatted.endsWith('\n')) {
+          formatted += '\n';
+        }
+        formatted += indentStr.repeat(indent) + part;
+      } else if (part.trim()) {
+        // Text content - add without extra newline if it's short
+        const trimmed = part.trim();
+        if (trimmed) {
+          formatted += trimmed;
+        }
+      }
+    }
+    
+    return formatted.trim();
   }
 }
 

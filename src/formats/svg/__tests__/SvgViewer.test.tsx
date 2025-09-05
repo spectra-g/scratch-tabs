@@ -183,6 +183,16 @@ describe('SvgViewer', () => {
       
       expect(optimizeButton).toBeDisabled();
     });
+
+    it('should handle formatting action', () => {
+      render(<SvgViewer {...defaultProps} />);
+      
+      const formatButton = screen.getByTitle('Format SVG');
+      fireEvent.click(formatButton);
+      
+      // Should not throw an error when clicked
+      expect(formatButton).toBeInTheDocument();
+    });
   });
 
   describe('export functionality', () => {
@@ -328,6 +338,7 @@ describe('SvgViewer', () => {
       expect(screen.getByTitle('Hide Inspector')).toBeInTheDocument();
       expect(screen.getByTitle('Copy SVG Code')).toBeInTheDocument();
       expect(screen.getByTitle('Export as .svg')).toBeInTheDocument();
+      expect(screen.getByTitle('Format SVG')).toBeInTheDocument();
     });
 
     it('should handle keyboard navigation', () => {
