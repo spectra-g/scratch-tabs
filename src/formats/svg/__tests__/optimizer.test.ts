@@ -1,6 +1,84 @@
-import { basicCleanup, validateSvg, extractSvgMetadata, generateOptimizationSuggestions } from '../utils/optimizer';
+import { basicCleanup, validateSvg, extractSvgMetadata, generateOptimizationSuggestions, optimizeWithSvgo } from '../utils/optimizer';
 
 describe('SVG Optimizer Utils', () => {
+  describe('optimizeWithSvgo', () => {
+    it('should optimize valid SVG content', async () => {
+      const svg = '<svg><g>  <rect x="10.123456" y="20.789012" />  </g></svg>';
+      const result = await optimizeWithSvgo(svg);
+      expect(result).toBeTruthy();
+      expect(result.length).toBeLessThanOrEqual(svg.length);
+    });
+
+    it('should handle empty content', async () => {
+      const result = await optimizeWithSvgo('');
+      expect(result).toBe('');
+    });
+
+    it('should handle whitespace-only content', async () => {
+      const result = await optimizeWithSvgo('   ');
+      expect(result).toBe('');
+    });
+
+    it('should fallback to basic cleanup on advanced optimization failure', async () => {
+      // Mock DOMParser to throw an error to test fallback
+      const originalDOMParser = global.DOMParser;
+      global.DOMParser = jest.fn(() => ({
+        parseFromString: jest.fn(() => {
+          throw new Error('Mock DOM parsing error');
+        })
+      })) as any;
+
+      const svg = '<svg><rect /></svg>';
+      const result = await optimizeWithSvgo(svg);
+      
+      // Should still return a result (basic cleanup)
+      expect(result).toBeTruthy();
+      expect(result).toContain('<rect />');
+      
+      // Restore original DOMParser
+      global.DOMParser = originalDOMParser;
+    });
+
+    it('should optimize path data', async () => {
+      const svg = '<svg><path d="M 10.123456 , 20.789012 L 30.456789 , 40.123456" /></svg>';
+      const result = await optimizeWithSvgo(svg);
+      expect(result).toContain('M10.12,20.79L30.46,40.12');
+    });
+
+    it('should remove unused definitions', async () => {
+      const svg = `
+        <svg>
+          <defs>
+            <linearGradient id="used">
+              <stop offset="0%" stop-color="red"/>
+            </linearGradient>
+            <linearGradient id="unused">
+              <stop offset="0%" stop-color="blue"/>
+            </linearGradient>
+          </defs>
+          <rect fill="url(#used)" />
+        </svg>
+      `;
+      const result = await optimizeWithSvgo(svg);
+      expect(result).toContain('id="used"');
+      expect(result).not.toContain('id="unused"');
+    });
+
+    it('should remove redundant transforms', async () => {
+      const svg = '<svg><g transform="translate(0,0) scale(1)"><rect /></g></svg>';
+      const result = await optimizeWithSvgo(svg);
+      expect(result).not.toContain('transform=');
+    });
+
+    it('should optimize numeric attributes', async () => {
+      const svg = '<svg><rect x="10.000" y="20.500" width="30.123456" /></svg>';
+      const result = await optimizeWithSvgo(svg);
+      expect(result).toContain('x="10"');
+      expect(result).toContain('y="20.5"');
+      expect(result).toContain('width="30.12"');
+    });
+  });
+
   describe('basicCleanup', () => {
     it('should remove XML comments', () => {
       const svg = '<svg><!-- This is a comment --><rect /></svg>';

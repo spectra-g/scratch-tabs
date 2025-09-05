@@ -72,8 +72,8 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
       
       // Match all SVG elements and add data-id if they don't have an id
       enhancedContent = enhancedContent.replace(
-        /<(\w+)([^>]*?)>/g,
-        (match, tagName, attributes) => {
+        /<(\w+)([^>]*?)(\/?)\s*>/g,
+        (match, tagName, attributes, selfClosing) => {
           // Skip if it's a closing tag or already has data-id
           if (match.startsWith('</') || attributes.includes('data-id=')) {
             return match;
@@ -81,7 +81,13 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
           
           // Add data-id for tracking
           const dataId = `svg-element-${idCounter++}`;
-          return `<${tagName}${attributes} data-id="${dataId}">`;
+          
+          // Handle self-closing tags properly
+          if (selfClosing) {
+            return `<${tagName}${attributes} data-id="${dataId}" />`;
+          } else {
+            return `<${tagName}${attributes} data-id="${dataId}">`;
+          }
         }
       );
       
@@ -175,13 +181,13 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
           }
         }
       } catch (error) {
-        console.warn('[SvgViewer] Failed to highlight code:', error);
+        // Silently handle highlighting errors
       }
     }
   }, [editor]);
 
   // Handle SVG optimization
-  const handleOptimize = useCallback(async (useAdvanced: boolean = true) => {
+  const handleOptimize = useCallback(async () => {
     if (!content || isOptimizing) return;
     
     setIsOptimizing(true);
@@ -191,15 +197,10 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
       const originalSize = new Blob([content]).size;
       let optimizedContent: string;
       
-      if (useAdvanced) {
-        // Try SVGO optimization first
-        try {
-          optimizedContent = await optimizeWithSvgo(content);
-        } catch (error) {
-          console.warn('[SvgViewer] SVGO optimization failed, falling back to basic cleanup:', error);
-          optimizedContent = basicCleanup(content);
-        }
-      } else {
+      // Try advanced optimization first, with basic cleanup as fallback
+      try {
+        optimizedContent = await optimizeWithSvgo(content);
+      } catch (error) {
         optimizedContent = basicCleanup(content);
       }
       
@@ -212,16 +213,34 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
         savings: Math.max(0, savings), // Ensure non-negative
       });
       
-      // Update the editor content
-      onContentChange(optimizedContent);
+      
+      // Update the editor content directly via the editor rather than invalidating the model
+      // This prevents the Monaco editor from disappearing
+      if (editor && !editor.getModel()?.isDisposed()) {
+        
+        // Use executeEdits to preserve undo stack and avoid model invalidation
+        const model = editor.getModel();
+        if (model) {
+          editor.pushUndoStop();
+          editor.executeEdits('svg-optimization', [{
+            range: model.getFullModelRange(),
+            text: optimizedContent,
+            forceMoveMarkers: false,
+          }]);
+          editor.pushUndoStop();
+        }
+      } else {
+        // Fallback to the traditional method if editor is not available
+        onContentChange(optimizedContent);
+      }
+      
       
     } catch (error) {
-      console.error('[SvgViewer] Optimization failed:', error);
       setSvgError('Optimization failed. Please check your SVG syntax.');
     } finally {
       setIsOptimizing(false);
     }
-  }, [content, onContentChange, isOptimizing]);
+  }, [content, onContentChange, isOptimizing, editor]);
 
   // Handle copy to clipboard
   const handleCopy = useCallback(async () => {
@@ -230,7 +249,6 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
     try {
       await navigator.clipboard.writeText(content);
     } catch (error) {
-      console.error('[SvgViewer] Failed to copy to clipboard:', error);
     }
   }, [content]);
 
@@ -249,7 +267,6 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('[SvgViewer] Failed to export SVG:', error);
     }
   }, [content]);
 
@@ -404,12 +421,12 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
               <Info size={14} />
             </button>
 
-            {/* Optimization Buttons */}
+            {/* Optimization Button */}
             <button
-              onClick={() => handleOptimize(true)}
+              onClick={() => handleOptimize()}
               disabled={isOptimizing}
               className="flex items-center space-x-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors"
-              title="Optimize with SVGO (Advanced)"
+              title="Optimize SVG"
             >
               {isOptimizing ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -417,16 +434,6 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
                 <Zap size={14} />
               )}
               <span className="text-xs">Optimize</span>
-            </button>
-
-            <button
-              onClick={() => handleOptimize(false)}
-              disabled={isOptimizing}
-              className="flex items-center space-x-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors"
-              title="Basic Cleanup (No External Libraries)"
-            >
-              <Zap size={14} />
-              <span className="text-xs">Basic</span>
             </button>
 
             {/* Export Controls */}
