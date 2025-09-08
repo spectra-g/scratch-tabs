@@ -1,6 +1,12 @@
+import React from "react";
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatModule  } from "./types";
+import { DetectionResult, FormatModule, StatusBarItem } from "./types";
+import { smartViewRegistry, SmartView } from "../views/registry";
+import { Eye } from "../components/Icons";
+import { SvgSmartView } from "./svg/views/components/SvgSmartView";
+import { SmartViewButtons } from "../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../components/StatusBar/types";
 
 /**
  * SVG language detector
@@ -10,7 +16,7 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
   id = "svg"; // SVG format with its own ID
   name = "SVG";
   extensions = ["svg"];
-  priority = 3;
+  priority = 6; // Higher priority than PHP (5) to ensure it's chosen for SVG content with <?xml
 
   sampleContent(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -198,11 +204,13 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
     // Determine if this is a match
     const isMatch = strongSignalFound && confidenceScore >= 0.4;
 
-    return {
+    const result = {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
       matchedDefinitive: isMatch && strongSignalFound,
     };
+    
+    return result;
   }
 
   getFileExtension(): string {
@@ -368,9 +376,48 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
     
     return formatted.trim();
   }
+
+  getSmartViews(): SmartView[] {
+    return [
+      {
+        id: "svg-previewer",
+        languageId: "svg", // SVG format ID
+        label: "SVG Preview",
+        icon: Eye,
+        component: SvgSmartView,
+        mode: "side-by-side", // Critical for interactive features
+        priority: 1,
+      },
+    ];
+  }
+
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'svg-smart-view-button',
+        component: (props: StatusItemProps) => {
+          return React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          });
+        },
+        priority: 20,
+      },
+    ];
+  }
 }
 
-// Export the detector for use by the module wrapper
-// Registration is now handled by src/formats/svg/index.ts
+// Create and register the module
+const svgModule = new SvgFormatDetector();
+formatRegistry.register(svgModule);
 
-// No need for registerSvgProvider - using Monaco's built-in XML language 
+// Register smart views explicitly
+const smartViews = svgModule.getSmartViews();
+smartViews.forEach(view => {
+  smartViewRegistry.register(view);
+});
+
+// Export for backward compatibility
+export const registerSvgProvider = (monaco: any) => {
+  svgModule.registerProvider(monaco);
+};
