@@ -18,6 +18,7 @@ import {
   AlignLeft
 } from '../../../../components/Icons';
 import { optimizeWithSvgo, basicCleanup } from '../../utils/optimizer';
+import { useActiveEditorStore } from '../../../../stores/activeEditorStore';
 
 interface ElementInfo {
   tagName: string;
@@ -56,6 +57,10 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
   
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const inspectorRef = useRef<HTMLDivElement>(null);
+  const { activeLeftEditor, activeRightEditor } = useActiveEditorStore();
+  
+  // Get the appropriate editor based on the side
+  const editor = side === 'left' ? activeLeftEditor : activeRightEditor;
 
   // Parse and enhance SVG content with data-ids for element tracking
   const enhancedSvgContent = useMemo(() => {
@@ -146,7 +151,41 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
     });
     
     setSelectedElement(elementInfo);
-  }, []);
+    
+    // Highlight corresponding code in Monaco editor
+    if (editor && dataId) {
+      try {
+        const model = editor.getModel();
+        if (model && !model.isDisposed()) {
+          const fullText = model.getValue();
+          const lines = fullText.split('\n');
+          
+          // Find the line containing this data-id
+          let targetLine = -1;
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(dataId)) {
+              targetLine = i + 1; // Monaco uses 1-based line numbers
+              break;
+            }
+          }
+          
+          if (targetLine > 0) {
+            // Highlight and scroll to the line
+            editor.setSelection({
+              startLineNumber: targetLine,
+              startColumn: 1,
+              endLineNumber: targetLine,
+              endColumn: lines[targetLine - 1].length + 1,
+            });
+            editor.revealLineInCenter(targetLine);
+            editor.focus();
+          }
+        }
+      } catch (error) {
+        // Silently handle highlighting errors
+      }
+    }
+  }, [editor]);
 
   // Handle SVG optimization
   const handleOptimize = useCallback(async () => {
@@ -176,8 +215,25 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
       });
       
       
-      // Update content through the standard callback
-      onContentChange(optimizedContent);
+      // Update the editor content directly via the editor rather than invalidating the model
+      // This prevents the Monaco editor from disappearing
+      if (editor && !editor.getModel()?.isDisposed()) {
+        
+        // Use executeEdits to preserve undo stack and avoid model invalidation
+        const model = editor.getModel();
+        if (model) {
+          editor.pushUndoStop();
+          editor.executeEdits('svg-optimization', [{
+            range: model.getFullModelRange(),
+            text: optimizedContent,
+            forceMoveMarkers: false,
+          }]);
+          editor.pushUndoStop();
+        }
+      } else {
+        // Fallback to the traditional method if editor is not available
+        onContentChange(optimizedContent);
+      }
       
       
     } catch (error) {
@@ -185,13 +241,25 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
     } finally {
       setIsOptimizing(false);
     }
-  }, [content, onContentChange, isOptimizing]);
+  }, [content, onContentChange, isOptimizing, editor]);
 
-  // Handle SVG formatting - Format Document option is available via right-click in editor
+  // Handle SVG formatting
   const handleFormat = useCallback(async () => {
-    // This is now handled by Monaco editor's built-in Format Document action
-    // Users can access it via right-click context menu or Ctrl+Shift+I
-  }, []);
+    if (!editor || !content) return;
+
+    try {
+      // Use Monaco's built-in formatting action
+      const action = editor.getAction('editor.action.formatDocument');
+      if (action) {
+        await action.run();
+      } else {
+        // Fallback: trigger formatting command
+        await editor.trigger('format', 'editor.action.formatDocument', {});
+      }
+    } catch (error) {
+      // Silently handle formatting errors - Monaco will show any issues in the editor
+    }
+  }, [editor, content]);
 
   // Handle copy to clipboard
   const handleCopy = useCallback(async () => {
