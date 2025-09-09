@@ -9,6 +9,49 @@ import { DateCalculator } from './components/DateCalculator';
 import { ParseInspector } from './components/ParseInspector';
 import { HistoryPanel } from './components/HistoryPanel';
 import { formatForAllOutputs, isValidDateValue, ensureDate } from './utils/dateUtils';
+import { ChevronDown, ChevronRight } from '../../components/Icons';
+
+interface AccordionSectionProps {
+  id: string;
+  title: string;
+  description: string;
+  isExpanded: boolean;
+  onToggle: (id: string) => void;
+  children: React.ReactNode;
+}
+
+const AccordionSection: React.FC<AccordionSectionProps> = ({
+  id,
+  title,
+  description,
+  isExpanded,
+  onToggle,
+  children
+}) => {
+  return (
+    <div className="bg-gray-800 rounded-lg overflow-hidden">
+      <button
+        onClick={() => onToggle(id)}
+        className="w-full bg-gray-750 px-4 py-3 border-b border-gray-600 flex items-center justify-between hover:bg-gray-700 transition-colors"
+      >
+        <div className="text-left">
+          <h3 className="font-medium text-gray-200">{title}</h3>
+          <p className="text-sm text-gray-400 mt-1">{description}</p>
+        </div>
+        {isExpanded ? (
+          <ChevronDown size={20} className="text-gray-400 flex-shrink-0" />
+        ) : (
+          <ChevronRight size={20} className="text-gray-400 flex-shrink-0" />
+        )}
+      </button>
+      {isExpanded && (
+        <div className="p-4">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChange }) => {
   const [conversionFormats, setConversionFormats] = useState<any>(null);
@@ -73,6 +116,24 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
       data: {
         ...state.data,
         history: newHistory
+      }
+    });
+  }, [onChange, state]);
+
+  // Handle accordion toggle
+  const handleAccordionToggle = useCallback((sectionId: string) => {
+    const expandedSections = state.data.expandedAccordionSections || [];
+    const isCurrentlyExpanded = expandedSections.includes(sectionId);
+    
+    const newExpandedSections = isCurrentlyExpanded
+      ? expandedSections.filter(id => id !== sectionId)
+      : [...expandedSections, sectionId];
+    
+    onChange({
+      ...state,
+      data: {
+        ...state.data,
+        expandedAccordionSections: newExpandedSections
       }
     });
   }, [onChange, state]);
@@ -150,76 +211,68 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
             </p>
           </div>
 
-          <div className="flex-1 overflow-auto p-6 space-y-6 custom-scrollbar">
+          <div className="flex-1 overflow-auto p-6 space-y-4 custom-scrollbar">
             {/* Timezone Explorer */}
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <div className="bg-gray-750 px-4 py-3 border-b border-gray-600">
-                <h3 className="font-medium text-gray-200">Timezone Explorer</h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  View your date across different timezones
-                </p>
-              </div>
-              <div className="p-4">
-                <TimezoneExplorer
-                  parsedDate={state.data.parsedDate}
-                  selectedTimezones={state.data.selectedTimezones}
-                  onTimezonesChange={handleTimezonesChange}
-                />
-              </div>
-            </div>
+            <AccordionSection
+              id="timezone"
+              title="Timezone Explorer"
+              description="View your date across different timezones"
+              isExpanded={state.data.expandedAccordionSections?.includes('timezone') || false}
+              onToggle={handleAccordionToggle}
+            >
+              <TimezoneExplorer
+                parsedDate={state.data.parsedDate}
+                selectedTimezones={state.data.selectedTimezones}
+                onTimezonesChange={handleTimezonesChange}
+              />
+            </AccordionSection>
 
             {/* Date Calculator */}
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <div className="bg-gray-750 px-4 py-3 border-b border-gray-600">
-                <h3 className="font-medium text-gray-200">Date Calculator</h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  Add, subtract time or calculate durations
-                </p>
-              </div>
-              <div className="p-4">
-                <DateCalculator
-                  parsedDate={state.data.parsedDate}
-                  calculatorState={state.data.calculatorState}
-                  onCalculatorStateChange={handleCalculatorStateChange}
-                  onCalculationComplete={handleCalculationComplete}
-                />
-              </div>
-            </div>
+            <AccordionSection
+              id="calculator"
+              title="Date Calculator"
+              description="Add, subtract time or calculate durations"
+              isExpanded={state.data.expandedAccordionSections?.includes('calculator') || false}
+              onToggle={handleAccordionToggle}
+            >
+              <DateCalculator
+                parsedDate={state.data.parsedDate}
+                calculatorState={state.data.calculatorState}
+                onCalculatorStateChange={handleCalculatorStateChange}
+                onCalculationComplete={handleCalculationComplete}
+              />
+            </AccordionSection>
 
             {/* Parse Inspector */}
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <div className="bg-gray-750 px-4 py-3 border-b border-gray-600">
-                <h3 className="font-medium text-gray-200">Parse Inspector</h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  See how different languages would parse this date
-                </p>
-              </div>
-              <div className="p-4">
-                <ParseInspector
-                  inputValue=""
-                  parsedDate={state.data.parsedDate}
-                />
-              </div>
-            </div>
+            <AccordionSection
+              id="parser"
+              title="Parse Inspector"
+              description="See how different languages would parse this date"
+              isExpanded={state.data.expandedAccordionSections?.includes('parser') || false}
+              onToggle={handleAccordionToggle}
+            >
+              <ParseInspector
+                inputValue=""
+                parsedDate={state.data.parsedDate}
+              />
+            </AccordionSection>
 
             {/* History Panel */}
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <div className="bg-gray-750 px-4 py-3 border-b border-gray-600">
-                <h3 className="font-medium text-gray-200">History</h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  Recently used dates
-                </p>
-              </div>
-              <div className="p-4">
-                <HistoryPanel
-                  history={state.data.history}
-                  onHistoryChange={handleHistoryChange}
-                  onSelectDate={(date, input) => handleSelectDate(date)}
-                  currentInput=""
-                  parsedDate={state.data.parsedDate}
-                />
-              </div>
-            </div>
+            <AccordionSection
+              id="history"
+              title="History"
+              description="Recently used dates"
+              isExpanded={state.data.expandedAccordionSections?.includes('history') || false}
+              onToggle={handleAccordionToggle}
+            >
+              <HistoryPanel
+                history={state.data.history}
+                onHistoryChange={handleHistoryChange}
+                onSelectDate={(date, input) => handleSelectDate(date)}
+                currentInput=""
+                parsedDate={state.data.parsedDate}
+              />
+            </AccordionSection>
           </div>
         </div>
       </div>
@@ -253,7 +306,8 @@ export const DateTimeTablet: Tablet = {
         },
         history: [],
         isOptimizing: false,
-        selectedElementId: null
+        selectedElementId: null,
+        expandedAccordionSections: ['timezone', 'calculator']
       }
     };
   },

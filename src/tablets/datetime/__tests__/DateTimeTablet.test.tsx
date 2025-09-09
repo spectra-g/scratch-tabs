@@ -86,6 +86,7 @@ describe('DateTimeTablet', () => {
       history: [],
       isOptimizing: false,
       selectedElementId: null,
+      expandedAccordionSections: ['timezone', 'calculator', 'parser', 'history'],
       ...overrides
     }
   });
@@ -114,6 +115,27 @@ describe('DateTimeTablet', () => {
       expect(screen.getByTestId('date-calculator')).toBeInTheDocument();
       expect(screen.getByTestId('parse-inspector')).toBeInTheDocument();
       expect(screen.getByTestId('history-panel')).toBeInTheDocument();
+    });
+
+    it('should handle accordion toggle functionality', () => {
+      const state = createMockState({ expandedAccordionSections: ['timezone'] });
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
+
+      // Timezone should be visible, others should not
+      expect(screen.getByTestId('timezone-explorer')).toBeInTheDocument();
+      expect(screen.queryByTestId('date-calculator')).not.toBeInTheDocument();
+
+      // Click on calculator section to expand it
+      fireEvent.click(screen.getByText('Date Calculator'));
+
+      // Should call onChange to expand calculator section
+      expect(mockOnChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            expandedAccordionSections: ['timezone', 'calculator']
+          })
+        })
+      );
     });
 
     it('should render tabbed input and conversion dashboard in left column', () => {

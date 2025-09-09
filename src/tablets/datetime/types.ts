@@ -19,6 +19,7 @@ export interface DateTimeTabletData {
   history: PinnedDate[];
   isOptimizing: boolean;
   selectedElementId: string | null;
+  expandedAccordionSections?: string[];
 }
 
 export interface DateTimeTabletState extends TabletState {
