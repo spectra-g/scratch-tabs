@@ -1,5 +1,6 @@
-export interface DateTimeTabletState {
-  inputValue: string;
+import { TabletState } from '../types';
+
+export interface DateTimeTabletData {
   parsedDate: Date | null;
   error: string | null;
   selectedTimezones: string[];
@@ -18,6 +19,11 @@ export interface DateTimeTabletState {
   history: PinnedDate[];
   isOptimizing: boolean;
   selectedElementId: string | null;
+}
+
+export interface DateTimeTabletState extends TabletState {
+  type: "datetime";
+  data: DateTimeTabletData;
 }
 
 export interface PinnedDate {

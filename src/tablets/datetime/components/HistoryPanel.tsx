@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { History, Pin, X, Copy, Plus } from '../../../components/Icons';
 import { PinnedDate } from '../types';
 import { format } from 'date-fns';
+import { isValidDateValue, ensureDate } from '../utils/dateUtils';
 
 interface HistoryPanelProps {
   history: PinnedDate[];
@@ -22,14 +23,21 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
   const [showAddForm, setShowAddForm] = useState(false);
 
   const pinCurrentDate = () => {
-    if (!parsedDate || !currentInput.trim()) return;
+    if (!isValidDateValue(parsedDate)) return;
+    
+    const validDate = ensureDate(parsedDate);
+    if (!validDate) return;
+
+    // Generate a default input if none provided (since TabbedInput manages its own state)
+    const defaultInput = validDate.toISOString();
+    const inputToUse = currentInput.trim() || defaultInput;
 
     const label = newLabel.trim() || `Date ${history.length + 1}`;
     const newPinnedDate: PinnedDate = {
       id: crypto.randomUUID(),
       label,
-      date: parsedDate,
-      originalInput: currentInput.trim(),
+      date: validDate,
+      originalInput: inputToUse,
       pinnedAt: Date.now()
     };
 
@@ -45,8 +53,8 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
   const copyDateInput = async (input: string) => {
     try {
       await navigator.clipboard.writeText(input);
-    } catch (error) {
-      console.error('Failed to copy:', error);
+    } catch {
+      // Silently handle copy failures
     }
   };
 
@@ -59,7 +67,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
             Pinned Dates
           </h3>
           
-          {parsedDate && (
+          {isValidDateValue(parsedDate) && (
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors flex items-center"
@@ -103,7 +111,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
       {/* History list */}
       {history.length > 0 ? (
-        <div className="divide-y divide-gray-700 max-h-64 overflow-y-auto">
+        <div className="divide-y divide-gray-700 max-h-64 overflow-y-auto custom-scrollbar">
           {history.map((item) => (
             <div key={item.id} className="p-4 hover:bg-gray-700/30 transition-colors">
               <div className="flex items-center justify-between mb-2">
@@ -131,7 +139,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
               <div className="space-y-1 text-sm">
                 <div className="text-gray-300">
-                  {format(item.date, 'EEEE, MMMM d, yyyy, h:mm:ss a')}
+                  {format(ensureDate(item.date) || new Date(), 'EEEE, MMMM d, yyyy, h:mm:ss a')}
                 </div>
                 <div className="text-gray-500 font-mono text-xs">
                   Input: {item.originalInput}
@@ -139,7 +147,12 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
               </div>
 
               <button
-                onClick={() => onSelectDate(item.date, item.originalInput)}
+                onClick={() => {
+                  const validDate = ensureDate(item.date);
+                  if (validDate) {
+                    onSelectDate(validDate, item.originalInput);
+                  }
+                }}
                 className="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
               >
                 Load this date
@@ -152,7 +165,10 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
           <Pin size={32} className="mx-auto text-gray-600 mb-2" />
           <p className="text-gray-400">No pinned dates yet</p>
           <p className="text-gray-500 text-sm mt-1">
-            Pin important dates for quick reference
+            {isValidDateValue(parsedDate) 
+              ? "Click 'Pin Current' above to save this date" 
+              : "Enter a date above, then pin it for quick reference"
+            }
           </p>
         </div>
       )}

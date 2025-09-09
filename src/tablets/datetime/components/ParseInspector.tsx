@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Code, CheckCircle, XCircle, Copy } from '../../../components/Icons';
 import { ParseResult } from '../types';
-import { simulateCrossPlatformParsing } from '../utils/dateUtils';
-import { useState } from 'react';
+import { simulateCrossPlatformParsing, isValidDateValue, ensureDate } from '../utils/dateUtils';
 
 interface ParseInspectorProps {
   inputValue: string;
@@ -17,25 +16,42 @@ export const ParseInspector: React.FC<ParseInspectorProps> = ({
   const [parseResults, setParseResults] = useState<ParseResult[]>([]);
 
   React.useEffect(() => {
+    // Use the same validation utilities as TabbedInput to handle serialized dates
+    if (isValidDateValue(parsedDate)) {
+      const validDate = ensureDate(parsedDate);
+      if (validDate) {
+        const valueToTest = validDate.toISOString();
+        const results = simulateCrossPlatformParsing(valueToTest);
+        setParseResults(results);
+        return;
+      }
+    }
+    
     if (inputValue.trim()) {
+      // Fall back to input value if no valid parsed date
       const results = simulateCrossPlatformParsing(inputValue.trim());
       setParseResults(results);
     } else {
       setParseResults([]);
     }
-  }, [inputValue]);
+  }, [inputValue, parsedDate]);
 
   const copyCode = async (code: string, language: string) => {
     try {
       await navigator.clipboard.writeText(code);
       setCopiedCode(language);
       setTimeout(() => setCopiedCode(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy code:', error);
+    } catch {
+      // Silently handle copy failures
     }
   };
 
-  if (!inputValue.trim()) {
+  // Show empty state only if we have neither a valid parsed date nor input value
+  // Use the same validation utilities as TabbedInput to handle serialized dates
+  const hasValidDate = isValidDateValue(parsedDate);
+  const hasInputValue = inputValue.trim();
+  
+  if (!hasValidDate && !hasInputValue) {
     return (
       <div className="bg-gray-800 rounded-lg p-6 text-center">
         <Code size={32} className="mx-auto text-gray-600 mb-2" />
@@ -55,7 +71,15 @@ export const ParseInspector: React.FC<ParseInspectorProps> = ({
           Cross-Platform Parse Inspector
         </h3>
         <p className="text-sm text-gray-400 mt-1">
-          How different languages would parse: <code className="bg-gray-600 px-1 rounded">{inputValue}</code>
+          {hasValidDate ? (
+            <>
+              How different languages would parse: <code className="bg-gray-600 px-1 rounded">{ensureDate(parsedDate)?.toISOString()}</code>
+            </>
+          ) : hasInputValue ? (
+            <>
+              How different languages would parse: <code className="bg-gray-600 px-1 rounded">{inputValue}</code>
+            </>
+          ) : null}
         </p>
       </div>
 

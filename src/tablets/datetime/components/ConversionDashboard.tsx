@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Copy, Check } from '../../../components/Icons';
 import { ConversionFormats } from '../types';
-import { useState } from 'react';
 
 interface ConversionDashboardProps {
   formats: ConversionFormats | null;
@@ -15,8 +14,8 @@ export const ConversionDashboard: React.FC<ConversionDashboardProps> = ({ format
       await navigator.clipboard.writeText(text);
       setCopiedField(fieldName);
       setTimeout(() => setCopiedField(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+    } catch {
+      // Silently handle copy failures
     }
   };
 

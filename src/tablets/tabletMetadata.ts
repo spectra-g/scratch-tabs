@@ -247,13 +247,6 @@ export const tabletMetadata: TabletMetadata[] = [
     label: "Checksum Calculator",
     keywords: ["checksum", "hash", "md5", "sha", "crc32", "verify", "integrity"],
     getActionsForContext: (context) => {
-  {
-    id: "datetime",
-    label: "Date & Time Toolkit",
-    keywords: ["date", "time", "timestamp", "timezone", "convert", "parse", "duration", "calculator"],
-    description: "Ultimate date/time converter with intelligent parsing and cross-platform compatibility",
-    category: "Development Tools",
-  },
       const actions = [];
       
       // Always available
@@ -276,5 +269,10 @@ export const tabletMetadata: TabletMetadata[] = [
       
       return actions;
     },
+  },
+  {
+    id: "datetime",
+    label: "Date & Time Toolkit",
+    keywords: ["date", "time", "timestamp", "timezone", "convert", "parse", "duration", "calculator"],
   },
 ];

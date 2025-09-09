@@ -34,7 +34,7 @@ describe('dateUtils', () => {
       const isoString = '2023-01-01T12:00:00Z';
       const result = intelligentParse(isoString);
       expect(result).toBeInstanceOf(Date);
-      expect(result!.toISOString()).toBe(isoString);
+      expect(result!.toISOString()).toBe('2023-01-01T12:00:00.000Z');
     });
 
     it('should parse common database formats', () => {

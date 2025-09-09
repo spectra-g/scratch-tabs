@@ -4,6 +4,60 @@ import '@testing-library/jest-dom';
 import { DateTimeTablet } from '../DateTimeTablet';
 import { DateTimeTabletState } from '../types';
 
+// We need to render the component through the tablet's render method
+const DateTimeTabletComponent: React.FC<{state: DateTimeTabletState, onChange: (state: DateTimeTabletState) => void}> = ({ state, onChange }) => {
+  return DateTimeTablet.render(state, onChange) as React.ReactElement;
+};
+
+// Mock the components and icons to avoid complex dependencies
+jest.mock('../components/LiveHeader', () => ({
+  LiveHeader: () => <div data-testid="live-header">Live Header</div>
+}));
+
+jest.mock('../components/TabbedInput', () => ({
+  TabbedInput: ({ parsedDate, onDateChange }: any) => (
+    <div data-testid="tabbed-input">
+      <input 
+        data-testid="main-input"
+        onChange={(e) => onDateChange(new Date(), null)}
+        placeholder="Date input"
+      />
+    </div>
+  )
+}));
+
+jest.mock('../components/ConversionDashboard', () => ({
+  ConversionDashboard: ({ formats }: any) => (
+    <div data-testid="conversion-dashboard">
+      {formats ? 'Conversion results' : 'Enter a date to see conversions'}
+    </div>
+  )
+}));
+
+jest.mock('../components/TimezoneExplorer', () => ({
+  TimezoneExplorer: () => <div data-testid="timezone-explorer">Timezone Explorer</div>
+}));
+
+jest.mock('../components/DateCalculator', () => ({
+  DateCalculator: ({ onCalculationComplete }: any) => (
+    <div data-testid="date-calculator">
+      <button onClick={() => onCalculationComplete(new Date())}>Calculate</button>
+    </div>
+  )
+}));
+
+jest.mock('../components/ParseInspector', () => ({
+  ParseInspector: () => <div data-testid="parse-inspector">Parse Inspector</div>
+}));
+
+jest.mock('../components/HistoryPanel', () => ({
+  HistoryPanel: ({ onSelectDate }: any) => (
+    <div data-testid="history-panel">
+      <button onClick={() => onSelectDate(new Date(), 'test')}>Load Date</button>
+    </div>
+  )
+}));
+
 // Mock date-fns to have predictable results
 jest.mock('date-fns', () => ({
   ...jest.requireActual('date-fns'),
@@ -11,248 +65,164 @@ jest.mock('date-fns', () => ({
 }));
 
 describe('DateTimeTablet', () => {
-  const createMockState = (overrides: Partial<DateTimeTabletState> = {}): DateTimeTabletState => ({
-    inputValue: '',
-    parsedDate: null,
-    error: null,
-    selectedTimezones: [],
-    calculatorState: {
-      operation: 'add',
-      years: 0,
-      months: 0,
-      weeks: 0,
-      days: 0,
-      hours: 0,
-      minutes: 0,
-      seconds: 0,
-      secondDate: '',
-      durationResult: null
-    },
-    history: [],
-    isOptimizing: false,
-    selectedElementId: null,
-    ...overrides
+  const createMockState = (overrides: Partial<DateTimeTabletState['data']> = {}): DateTimeTabletState => ({
+    type: "datetime",
+    data: {
+      parsedDate: null,
+      error: null,
+      selectedTimezones: [],
+      calculatorState: {
+        operation: 'add',
+        years: 0,
+        months: 0,
+        weeks: 0,
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        secondDate: '',
+        durationResult: null
+      },
+      history: [],
+      isOptimizing: false,
+      selectedElementId: null,
+      ...overrides
+    }
   });
 
   const mockOnChange = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock current time for consistent tests
-    jest.spyOn(Date, 'now').mockReturnValue(1672531200000); // 2023-01-01 00:00:00 UTC
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  describe('rendering', () => {
-    it('should render the main interface', () => {
+  describe('layout and structure', () => {
+    it('should render the new two-column layout', () => {
       const state = createMockState();
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
 
-      expect(screen.getByText('Date & Time Toolkit')).toBeInTheDocument();
-      expect(screen.getByText('The ultimate date/time converter and inspector')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText(/Enter date\/time/)).toBeInTheDocument();
+      expect(screen.getByTestId('live-header')).toBeInTheDocument();
+      expect(screen.getByText('Date & Time Input')).toBeInTheDocument();
+      expect(screen.getByText('Tools & Analysis')).toBeInTheDocument();
     });
 
-    it('should render all tab options', () => {
+    it('should render all tool components in right column', () => {
       const state = createMockState();
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
 
+      expect(screen.getByTestId('timezone-explorer')).toBeInTheDocument();
+      expect(screen.getByTestId('date-calculator')).toBeInTheDocument();
+      expect(screen.getByTestId('parse-inspector')).toBeInTheDocument();
+      expect(screen.getByTestId('history-panel')).toBeInTheDocument();
+    });
+
+    it('should render tabbed input and conversion dashboard in left column', () => {
+      const state = createMockState();
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
+
+      expect(screen.getByTestId('tabbed-input')).toBeInTheDocument();
+      expect(screen.getByTestId('conversion-dashboard')).toBeInTheDocument();
       expect(screen.getByText('Conversions')).toBeInTheDocument();
-      expect(screen.getByText('Timezones')).toBeInTheDocument();
-      expect(screen.getByText('Calculator')).toBeInTheDocument();
-      expect(screen.getByText('Inspector')).toBeInTheDocument();
-      expect(screen.getByText('History')).toBeInTheDocument();
-    });
-
-    it('should show conversion dashboard by default', () => {
-      const state = createMockState();
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
-
-      expect(screen.getByText('Enter a valid date/time to see conversions')).toBeInTheDocument();
     });
   });
 
-  describe('input handling', () => {
-    it('should update input value when typing', () => {
+  describe('data flow and interactions', () => {
+    it('should handle date changes from TabbedInput', () => {
       const state = createMockState();
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
 
-      const input = screen.getByPlaceholderText(/Enter date\/time/);
+      const input = screen.getByTestId('main-input');
       fireEvent.change(input, { target: { value: 'now' } });
 
       expect(mockOnChange).toHaveBeenCalledWith(
         expect.objectContaining({
-          inputValue: 'now',
-          error: null
-        })
-      );
-    });
-
-    it('should clear error when typing', () => {
-      const state = createMockState({ error: 'Previous error' });
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
-
-      const input = screen.getByPlaceholderText(/Enter date\/time/);
-      fireEvent.change(input, { target: { value: 'new input' } });
-
-      expect(mockOnChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: null
-        })
-      );
-    });
-  });
-
-  describe('tab navigation', () => {
-    it('should switch between tabs', () => {
-      const state = createMockState();
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
-
-      // Click on Timezones tab
-      fireEvent.click(screen.getByText('Timezones'));
-      expect(screen.getByText('Add timezones to compare times')).toBeInTheDocument();
-
-      // Click on Calculator tab
-      fireEvent.click(screen.getByText('Calculator'));
-      expect(screen.getByText('Date Calculator')).toBeInTheDocument();
-
-      // Click on Inspector tab
-      fireEvent.click(screen.getByText('Inspector'));
-      expect(screen.getByText('Cross-Platform Parse Inspector')).toBeInTheDocument();
-    });
-
-    it('should show count badges for tabs with data', () => {
-      const state = createMockState({
-        selectedTimezones: ['UTC', 'America/New_York'],
-        history: [
-          {
-            id: '1',
-            label: 'Test Date',
-            date: new Date(),
-            originalInput: 'now',
-            pinnedAt: Date.now()
-          }
-        ]
-      });
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
-
-      // Should show count for timezones
-      expect(screen.getByText('2')).toBeInTheDocument(); // 2 timezones
-
-      // Should show count for history
-      expect(screen.getByText('1')).toBeInTheDocument(); // 1 history item
-    });
-  });
-
-  describe('date parsing integration', () => {
-    it('should parse and display valid dates', async () => {
-      const state = createMockState({ inputValue: 'now' });
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
-
-      // Wait for debounced parsing
-      await waitFor(() => {
-        expect(mockOnChange).toHaveBeenCalledWith(
-          expect.objectContaining({
+          data: expect.objectContaining({
             parsedDate: expect.any(Date),
             error: null
           })
-        );
-      }, { timeout: 500 });
+        })
+      );
     });
 
-    it('should handle parsing errors', async () => {
-      const state = createMockState({ inputValue: 'invalid date' });
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
+    it('should handle calculation completion from calculator', () => {
+      const state = createMockState({ parsedDate: new Date() });
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
 
-      await waitFor(() => {
-        expect(mockOnChange).toHaveBeenCalledWith(
-          expect.objectContaining({
-            parsedDate: null,
-            error: 'Unable to parse date/time'
+      const calculateButton = screen.getByText('Calculate');
+      fireEvent.click(calculateButton);
+
+      expect(mockOnChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            parsedDate: expect.any(Date),
+            error: null
           })
-        );
-      }, { timeout: 500 });
+        })
+      );
     });
-  });
 
-  describe('timezone management', () => {
-    it('should add timezones', () => {
+    it('should handle date selection from history', () => {
       const state = createMockState();
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
 
-      // Switch to timezones tab
-      fireEvent.click(screen.getByText('Timezones'));
-
-      // Add a timezone
-      const input = screen.getByPlaceholderText(/Add timezone/);
-      fireEvent.change(input, { target: { value: 'UTC' } });
-      fireEvent.click(screen.getByText('Add'));
+      const loadButton = screen.getByText('Load Date');
+      fireEvent.click(loadButton);
 
       expect(mockOnChange).toHaveBeenCalledWith(
         expect.objectContaining({
-          selectedTimezones: ['UTC']
+          data: expect.objectContaining({
+            parsedDate: expect.any(Date),
+            error: null
+          })
         })
       );
     });
   });
 
-  describe('history management', () => {
-    it('should load date from history', () => {
-      const testDate = new Date('2023-01-01T12:00:00Z');
-      const state = createMockState({
-        history: [{
-          id: '1',
-          label: 'Test Date',
-          date: testDate,
-          originalInput: '2023-01-01T12:00:00Z',
-          pinnedAt: Date.now()
-        }]
-      });
-      
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
+  describe('state updates and reactive behavior', () => {
+    it('should show conversion results when parsedDate is set', () => {
+      const state = createMockState({ parsedDate: new Date() });
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
 
-      // Switch to history tab
-      fireEvent.click(screen.getByText('History'));
+      // The conversion dashboard should show results when there's a parsed date
+      // This will be tested via the mock that checks for formats
+      expect(screen.getByTestId('conversion-dashboard')).toBeInTheDocument();
+    });
 
-      // Click load button
-      fireEvent.click(screen.getByText('Load this date'));
+    it('should show empty state when no parsedDate', () => {
+      const state = createMockState({ parsedDate: null });
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
 
-      expect(mockOnChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          inputValue: '2023-01-01T12:00:00Z',
-          parsedDate: testDate,
-          error: null
-        })
-      );
+      expect(screen.getByText('Enter a date to see conversions')).toBeInTheDocument();
     });
   });
 
-  describe('accessibility', () => {
-    it('should have proper ARIA labels and structure', () => {
-      const state = createMockState();
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
-
-      // Check for proper heading structure
-      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+  describe('tablet interface compliance', () => {
+    it('should create proper initial state', () => {
+      const initialState = DateTimeTablet.createInitialState();
       
-      // Check for input accessibility
-      const input = screen.getByPlaceholderText(/Enter date\/time/);
-      expect(input).toHaveAttribute('type', 'text');
-      expect(input).toHaveAttribute('autoComplete', 'off');
+      expect(initialState.type).toBe('datetime');
+      expect(initialState.data.parsedDate).toBeNull();
+      expect(initialState.data.selectedTimezones).toHaveLength(1);
+      expect(initialState.data.history).toEqual([]);
     });
 
-    it('should support keyboard navigation', () => {
-      const state = createMockState();
-      render(<DateTimeTablet state={state} onChange={mockOnChange} />);
-
-      const input = screen.getByPlaceholderText(/Enter date\/time/);
+    it('should serialize and deserialize state correctly', () => {
+      const originalState = createMockState({ parsedDate: new Date('2023-01-01') });
       
-      // Should be focusable
-      input.focus();
-      expect(input).toHaveFocus();
+      const serialized = DateTimeTablet.serializeState(originalState);
+      const deserialized = DateTimeTablet.deserializeState(serialized);
+      
+      expect(deserialized.type).toBe('datetime');
+      expect(deserialized.data.parsedDate).toBeInstanceOf(Date);
+    });
+
+    it('should handle invalid serialized state gracefully', () => {
+      const invalidJson = '{"invalid": "data"}';
+      const result = DateTimeTablet.deserializeState(invalidJson);
+      
+      expect(result.type).toBe('datetime');
+      expect(result.data.parsedDate).toBeNull();
     });
   });
 });

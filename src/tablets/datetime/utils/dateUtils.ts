@@ -20,12 +20,51 @@ import {
   getSeconds
 } from 'date-fns';
 import { 
-  zonedTimeToUtc, 
-  utcToZonedTime, 
+  toZonedTime, 
   format as formatTz,
   getTimezoneOffset
 } from 'date-fns-tz';
 import { ConversionFormats, DurationResult, TimezoneInfo, ParseResult } from '../types';
+
+/**
+ * Check if a value is a valid date (either Date object or valid date string)
+ */
+export function isValidDateValue(value: any): boolean {
+  if (!value) return false;
+  
+  // If it's already a Date object, check if it's valid
+  if (value instanceof Date) {
+    return !isNaN(value.getTime());
+  }
+  
+  // If it's a string, try to parse it as a date
+  if (typeof value === 'string') {
+    const parsed = new Date(value);
+    return !isNaN(parsed.getTime());
+  }
+  
+  return false;
+}
+
+/**
+ * Convert a value to a Date object if possible
+ */
+export function ensureDate(value: any): Date | null {
+  if (!value) return null;
+  
+  // If it's already a valid Date object, return it
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value;
+  }
+  
+  // If it's a string, try to parse it
+  if (typeof value === 'string') {
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
+  
+  return null;
+}
 
 /**
  * Intelligent date parsing that handles multiple input formats
@@ -108,8 +147,8 @@ export function intelligentParse(input: string): Date | null {
       return naturalLanguageResult;
     }
 
-  } catch (error) {
-    console.warn('Date parsing error:', error);
+  } catch {
+    // Silently handle parsing errors
   }
 
   return null;
@@ -218,8 +257,8 @@ export function getTimezoneInfo(date: Date, timezones: string[]): TimezoneInfo[]
 
   return timezones.map(timezone => {
     try {
-      const zonedDate = utcToZonedTime(date, timezone);
-      const currentTime = utcToZonedTime(new Date(), timezone);
+      const zonedDate = toZonedTime(date, timezone);
+      const currentTime = toZonedTime(new Date(), timezone);
       
       // Get timezone offset
       const offset = getTimezoneOffset(timezone, date);
@@ -235,7 +274,7 @@ export function getTimezoneInfo(date: Date, timezones: string[]): TimezoneInfo[]
         offset: offsetString,
         isDST: isDaylightSavingTime(date, timezone)
       };
-    } catch (error) {
+    } catch {
       return {
         timezone,
         currentTime: 'Invalid timezone',
@@ -335,7 +374,7 @@ export function simulateCrossPlatformParsing(dateString: string): ParseResult[] 
       error: isValid(jsDate) ? undefined : 'Invalid Date',
       code: `new Date("${dateString}")`
     });
-  } catch (error) {
+  } catch {
     results.push({
       language: 'JavaScript',
       success: false,

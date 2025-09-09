@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, X, Globe, Clock } from '../../../components/Icons';
 import { TimezoneInfo } from '../types';
-import { getTimezoneInfo, getPopularTimezones, isValidTimezone, getCurrentTimeInTimezone } from '../utils/dateUtils';
+import { getTimezoneInfo, getPopularTimezones, isValidTimezone, getCurrentTimeInTimezone, isValidDateValue, ensureDate } from '../utils/dateUtils';
 
 interface TimezoneExplorerProps {
   parsedDate: Date | null;
@@ -27,9 +27,14 @@ export const TimezoneExplorer: React.FC<TimezoneExplorerProps> = ({
 
   // Update timezone info when date or timezones change
   useEffect(() => {
-    if (parsedDate && selectedTimezones.length > 0) {
-      const info = getTimezoneInfo(parsedDate, selectedTimezones);
-      setTimezoneInfo(info);
+    if (isValidDateValue(parsedDate) && selectedTimezones.length > 0) {
+      const validDate = ensureDate(parsedDate);
+      if (validDate) {
+        const info = getTimezoneInfo(validDate, selectedTimezones);
+        setTimezoneInfo(info);
+      } else {
+        setTimezoneInfo([]);
+      }
     } else {
       setTimezoneInfo([]);
     }
@@ -101,7 +106,7 @@ export const TimezoneExplorer: React.FC<TimezoneExplorerProps> = ({
               
               {/* Suggestions dropdown */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar">
                   {suggestions.slice(0, 8).map(timezone => (
                     <button
                       key={timezone}
@@ -130,7 +135,7 @@ export const TimezoneExplorer: React.FC<TimezoneExplorerProps> = ({
       {/* Timezone list */}
       {selectedTimezones.length > 0 && (
         <div className="divide-y divide-gray-700">
-          {selectedTimezones.map((timezone, index) => {
+          {selectedTimezones.map((timezone) => {
             const info = timezoneInfo.find(tz => tz.timezone === timezone);
             const currentTime = currentTimes[timezone];
             
@@ -154,23 +159,32 @@ export const TimezoneExplorer: React.FC<TimezoneExplorerProps> = ({
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <div className="text-gray-400 mb-1">Current Time</div>
-                    <div className="text-gray-200 font-mono flex items-center">
-                      <Clock size={14} className="mr-1 text-green-400" />
-                      {currentTime || 'Loading...'}
-                    </div>
-                  </div>
-                  
-                  {info && (
+                <div className="space-y-3">
+                  {info ? (
                     <div>
-                      <div className="text-gray-400 mb-1">Converted Time</div>
-                      <div className="text-gray-200 font-mono">
+                      <div className="text-gray-400 mb-1">Your Date/Time</div>
+                      <div className="text-gray-200 font-mono text-base flex items-center">
+                        <Clock size={16} className="mr-2 text-blue-400" />
                         {info.convertedTime}
                       </div>
                     </div>
+                  ) : (
+                    <div>
+                      <div className="text-gray-400 mb-1">Your Date/Time</div>
+                      <div className="text-gray-500 font-mono text-base flex items-center">
+                        <Clock size={16} className="mr-2 text-gray-500" />
+                        Enter a date above to see conversion
+                      </div>
+                    </div>
                   )}
+                  
+                  <div>
+                    <div className="text-gray-400 mb-1">Current Time (Live)</div>
+                    <div className="text-gray-200 font-mono text-sm flex items-center">
+                      <Clock size={14} className="mr-2 text-green-400" />
+                      {currentTime || 'Loading...'}
+                    </div>
+                  </div>
                 </div>
 
                 {info && (
@@ -188,7 +202,12 @@ export const TimezoneExplorer: React.FC<TimezoneExplorerProps> = ({
         <div className="p-6 text-center">
           <Globe size={32} className="mx-auto text-gray-600 mb-2" />
           <p className="text-gray-400">Add timezones to compare times</p>
-          <p className="text-gray-500 text-sm mt-1">Perfect for scheduling international meetings</p>
+          <p className="text-gray-500 text-sm mt-1">
+            {isValidDateValue(parsedDate) 
+              ? "See your entered date/time across different timezones"
+              : "Perfect for scheduling international meetings"
+            }
+          </p>
         </div>
       )}
     </div>

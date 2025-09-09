@@ -1,7 +1,7 @@
 import React from 'react';
 import { Calculator, Plus, Minus, Clock } from '../../../components/Icons';
 import { DurationResult } from '../types';
-import { performDateArithmetic, calculateDuration, intelligentParse } from '../utils/dateUtils';
+import { performDateArithmetic, calculateDuration, intelligentParse, isValidDateValue, ensureDate } from '../utils/dateUtils';
 
 interface DateCalculatorProps {
   parsedDate: Date | null;
@@ -18,12 +18,14 @@ interface DateCalculatorProps {
     durationResult: DurationResult | null;
   };
   onCalculatorStateChange: (newState: any) => void;
+  onCalculationComplete?: (newDate: Date) => void;
 }
 
 export const DateCalculator: React.FC<DateCalculatorProps> = ({
   parsedDate,
   calculatorState,
-  onCalculatorStateChange
+  onCalculatorStateChange,
+  onCalculationComplete
 }) => {
   const updateField = (field: string, value: any) => {
     onCalculatorStateChange({
@@ -33,12 +35,19 @@ export const DateCalculator: React.FC<DateCalculatorProps> = ({
   };
 
   const performCalculation = () => {
-    if (!parsedDate) return;
+    if (!isValidDateValue(parsedDate)) {
+      return;
+    }
+    
+    const validDate = ensureDate(parsedDate);
+    if (!validDate) {
+      return;
+    }
 
     if (calculatorState.operation === 'duration') {
       const secondDate = intelligentParse(calculatorState.secondDate);
       if (secondDate) {
-        const duration = calculateDuration(parsedDate, secondDate);
+        const duration = calculateDuration(validDate, secondDate);
         updateField('durationResult', duration);
       }
     } else {
@@ -52,9 +61,11 @@ export const DateCalculator: React.FC<DateCalculatorProps> = ({
         seconds: calculatorState.seconds
       };
 
-      const result = performDateArithmetic(parsedDate, calculatorState.operation, duration);
-      // You could emit this result or display it in a separate area
-      console.log('Calculation result:', result);
+      const result = performDateArithmetic(validDate, calculatorState.operation, duration);
+      // Emit the result back to the parent
+      if (onCalculationComplete) {
+        onCalculationComplete(result);
+      }
     }
   };
 
