@@ -362,7 +362,7 @@ const createChecksumInitialState = (payload?: any) => ({
 
 export default {
   id: 'checksum',
-  label: 'Checksum Calculator',
+  label: 'Checksum',
   
   createInitialState: createChecksumInitialState,
   

@@ -282,7 +282,7 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
 
 export const DateTimeTablet: Tablet = {
   id: "datetime",
-  label: "Date & Time Toolkit",
+  label: "Date & Time",
   keywords: ["date", "time", "timestamp", "timezone", "convert", "parse", "duration", "calculator"],
 
   createInitialState(): DateTimeTabletState {

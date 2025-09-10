@@ -244,7 +244,7 @@ export const tabletMetadata: TabletMetadata[] = [
   },
   {
     id: "checksum",
-    label: "Checksum Calculator",
+    label: "Checksum",
     keywords: ["checksum", "hash", "md5", "sha", "crc32", "verify", "integrity"],
     getActionsForContext: (context) => {
       const actions = [];
@@ -260,7 +260,7 @@ export const tabletMetadata: TabletMetadata[] = [
             action: 'new-tab',
             payload: context.content ? { text: context.content } : {},
             source: { 
-              titleHint: 'Checksum Calculator',
+              titleHint: 'Checksum',
               side: context.side 
             },
           });
@@ -272,7 +272,7 @@ export const tabletMetadata: TabletMetadata[] = [
   },
   {
     id: "datetime",
-    label: "Date & Time Toolkit",
+    label: "Date & Time",
     keywords: ["date", "time", "timestamp", "timezone", "convert", "parse", "duration", "calculator"],
   },
 ];

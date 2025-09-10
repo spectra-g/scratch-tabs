@@ -140,9 +140,17 @@ export const HashOutput: React.FC<HashOutputProps> = ({
                     {hash && !isEmpty && !isError && (
                       <button
                         onClick={() => handleCopyHash(algorithm, hash)}
-                        className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+                        className={`flex items-center space-x-1 px-2 py-1 text-xs rounded transition-colors ${
+                          copiedHash === algorithm 
+                            ? 'bg-green-700/20 border border-green-600 text-green-400' 
+                            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                        }`}
                       >
-                        <Copy size={12} />
+                        {copiedHash === algorithm ? (
+                          <CheckCircle size={12} className="text-green-400" />
+                        ) : (
+                          <Copy size={12} />
+                        )}
                         <span>{copiedHash === algorithm ? 'Copied!' : 'Copy'}</span>
                       </button>
                     )}
