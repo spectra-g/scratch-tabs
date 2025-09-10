@@ -57,10 +57,19 @@ export function parseMermaidError(error: Error, code: string): DiagramError {
   let type: DiagramError['type'] = 'render';
   let suggestion: string | undefined;
   
-  if (message.includes('syntax') || message.includes('parse')) {
+  if (message.toLowerCase().includes('syntax error')) {
     type = 'syntax';
     suggestion = getSyntaxSuggestion(message, code);
-  } else if (message.includes('semantic') || message.includes('invalid')) {
+  } else if (message.toLowerCase().includes('semantic error')) {
+    type = 'semantic';
+    suggestion = getSemanticSuggestion(message, code);
+  } else if (message.toLowerCase().includes('parse error')) {
+    type = 'render'; // Parse errors are render-time errors
+    suggestion = getSyntaxSuggestion(message, code);
+  } else if (message.toLowerCase().includes('invalid') && message.toLowerCase().includes('syntax')) {
+    type = 'syntax';
+    suggestion = getSyntaxSuggestion(message, code);
+  } else if (message.toLowerCase().includes('invalid')) {
     type = 'semantic';
     suggestion = getSemanticSuggestion(message, code);
   }
@@ -196,7 +205,10 @@ export function extractDiagramMetadata(code: string) {
   
   lines.forEach(line => {
     const trimmed = line.trim();
-    if (trimmed.includes('-->') || trimmed.includes('-.->') || trimmed.includes('==>')) {
+    // Check for various arrow types
+    if (trimmed.includes('-->') || trimmed.includes('-.->') || trimmed.includes('==>') ||
+        trimmed.includes('->>') || trimmed.includes('-->>') || trimmed.includes('-x') ||
+        trimmed.includes('--x') || trimmed.includes('-)') || trimmed.includes('--)')) {
       connectionCount++;
     }
     if (trimmed.match(/^\s*[A-Za-z0-9_]+[\[\(\{]/)) {
@@ -204,12 +216,14 @@ export function extractDiagramMetadata(code: string) {
     }
   });
   
+  const totalElements = nodeCount + connectionCount;
+  
   return {
     type,
     title,
     nodeCount,
     connectionCount,
     lineCount: lines.length,
-    complexity: nodeCount > 10 ? 'high' : nodeCount > 5 ? 'medium' : 'low'
+    complexity: totalElements > 10 ? 'high' : totalElements > 5 ? 'medium' : 'low'
   };
 }

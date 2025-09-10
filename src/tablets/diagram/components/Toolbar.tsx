@@ -40,7 +40,7 @@ const THEMES: { value: MermaidTheme; label: string }[] = [
   { value: 'neutral', label: 'Neutral' }
 ];
 
-export const Toolbar: React.FC<ToolbarProps> = ({
+export const Toolbar: React.FC<ToolbarProps> = React.memo(({
   onExportSvg,
   onExportPng,
   onCopyCode,
@@ -230,4 +230,4 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       )}
     </div>
   );
-};
+});

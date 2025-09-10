@@ -6,6 +6,7 @@ export interface TabletMetadata {
   id: string;
   label: string;
   keywords: string[];
+  description?: string;
   // NEW: Add the optional action discovery function to the metadata.
   getActionsForContext?(context: TabletActionContext): TabletAction[];
 }

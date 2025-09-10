@@ -1,11 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { DiagramTabletState, DiagramTemplate, MermaidTheme, DiagramError } from './types';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { DiagramTabletState, DiagramTemplate, MermaidTheme, DiagramError, ExportSettings } from './types';
 import { Toolbar } from './components/Toolbar';
 import { PreviewPanel } from './components/PreviewPanel';
 import { TemplateLibrary } from './components/TemplateLibrary';
 import { ErrorPanel } from './components/ErrorPanel';
 import { useMermaidRenderer } from './hooks/useMermaidRenderer';
-import { detectDiagramType, extractDiagramMetadata } from './utils/mermaidUtils';
+// import { detectDiagramType, extractDiagramMetadata } from './utils/mermaidUtils';
 
 interface DiagramTabletProps {
   state: DiagramTabletState;
@@ -27,6 +27,10 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
   const [currentError, setCurrentError] = useState<DiagramError | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  
+  // Ref to access current state without causing re-renders
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Initialize with default code if empty
   useEffect(() => {
@@ -43,22 +47,23 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
     renderedSvg,
     isRendering,
     error,
-    elementMap,
     handleElementClick,
-    forceRender,
-    getStatistics
+    forceRender
   } = useMermaidRenderer({
     code: state.mermaidCode,
     theme: state.activeTheme,
     onError: setCurrentError,
-    onRenderComplete: (result) => {
-      onChange({
-        ...state,
-        renderedSvg: result.svg,
-        errorState: null,
-        lastRenderTime: Date.now()
-      });
-    }
+    onRenderComplete: useCallback((result) => {
+      // Only update if the SVG actually changed to prevent infinite re-renders
+      if (stateRef.current.renderedSvg !== result.svg) {
+        onChange({
+          ...stateRef.current,
+          renderedSvg: result.svg,
+          errorState: null,
+          lastRenderTime: Date.now()
+        });
+      }
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
   });
 
   /**
@@ -66,11 +71,11 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
    */
   const updateCode = useCallback((newCode: string) => {
     onChange({
-      ...state,
+      ...stateRef.current,
       mermaidCode: newCode,
       errorState: null
     });
-  }, [state, onChange]);
+  }, [onChange]);
 
   /**
    * Handles template selection
@@ -85,21 +90,30 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
    */
   const handleThemeChange = useCallback((newTheme: MermaidTheme) => {
     onChange({
-      ...state,
+      ...stateRef.current,
       activeTheme: newTheme
     });
-  }, [state, onChange]);
+  }, [onChange]);
+
+  /**
+   * Shows temporary feedback message
+   */
+  const showCopyFeedback = useCallback((message: string) => {
+    setCopyFeedback(message);
+    setTimeout(() => setCopyFeedback(null), 2000);
+  }, []);
 
   /**
    * Optimizes the current diagram code
    */
   const handleOptimize = useCallback(async () => {
-    if (!state.mermaidCode.trim()) return;
+    const currentCode = stateRef.current.mermaidCode;
+    if (!currentCode.trim()) return;
 
     setIsOptimizing(true);
     try {
       // Basic optimization: remove comments and extra whitespace
-      const optimized = state.mermaidCode
+      const optimized = currentCode
         .split('\n')
         .map(line => line.trim())
         .filter(line => line && !line.startsWith('%%'))
@@ -113,35 +127,27 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
     } finally {
       setIsOptimizing(false);
     }
-  }, [state.mermaidCode, updateCode]);
-
-  /**
-   * Shows temporary feedback message
-   */
-  const showCopyFeedback = useCallback((message: string) => {
-    setCopyFeedback(message);
-    setTimeout(() => setCopyFeedback(null), 2000);
-  }, []);
+  }, [updateCode, showCopyFeedback]);
 
   /**
    * Copies code to clipboard
    */
   const handleCopyCode = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(state.mermaidCode);
+      await navigator.clipboard.writeText(stateRef.current.mermaidCode);
       showCopyFeedback('Code copied!');
     } catch (error) {
       console.error('Failed to copy code:', error);
       showCopyFeedback('Copy failed');
     }
-  }, [state.mermaidCode, showCopyFeedback]);
+  }, [showCopyFeedback]);
 
   /**
    * Copies optimized code to clipboard
    */
   const handleCopyOptimized = useCallback(async () => {
     try {
-      const optimized = state.mermaidCode
+      const optimized = stateRef.current.mermaidCode
         .split('\n')
         .map(line => line.trim())
         .filter(line => line && !line.startsWith('%%'))
@@ -153,7 +159,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       console.error('Failed to copy optimized code:', error);
       showCopyFeedback('Copy failed');
     }
-  }, [state.mermaidCode, showCopyFeedback]);
+  }, [showCopyFeedback]);
 
   /**
    * Exports diagram as SVG
@@ -191,12 +197,14 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
 
       const img = new Image();
       img.onload = () => {
-        const resolution = state.exportSettings.resolution;
+        // Get current export settings from ref to avoid dependency on state
+        const exportSettings = stateRef.current.exportSettings;
+        const resolution = exportSettings.resolution;
         canvas.width = img.width * resolution;
         canvas.height = img.height * resolution;
         
         // Set background color
-        ctx.fillStyle = state.exportSettings.backgroundColor;
+        ctx.fillStyle = exportSettings.backgroundColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         // Draw the SVG
@@ -226,7 +234,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       console.error('Failed to export PNG:', error);
       showCopyFeedback('Export failed');
     }
-  }, [renderedSvg, state.exportSettings, showCopyFeedback]);
+  }, [renderedSvg, showCopyFeedback]);
 
   /**
    * Handles element clicks for bidirectional syncing
@@ -248,7 +256,37 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
     setCurrentError(null);
   }, []);
 
-  const statistics = getStatistics();
+  const handleShowTemplates = useCallback(() => {
+    setShowTemplateLibrary(true);
+  }, []);
+
+  const handleExportSettingsChange = useCallback((settings: Partial<ExportSettings>) => {
+    onChange({
+      ...stateRef.current,
+      exportSettings: { ...stateRef.current.exportSettings, ...settings }
+    });
+  }, [onChange]);
+
+  const statistics = useMemo(() => {
+    if (!renderedSvg) return null;
+
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(renderedSvg, 'image/svg+xml');
+    
+    const elements = svgDoc.querySelectorAll('*');
+    const paths = svgDoc.querySelectorAll('path');
+    const texts = svgDoc.querySelectorAll('text');
+    const groups = svgDoc.querySelectorAll('g');
+    
+    return {
+      totalElements: elements.length,
+      paths: paths.length,
+      texts: texts.length,
+      groups: groups.length,
+      codeLines: state.mermaidCode.split('\n').length,
+      codeSize: new Blob([state.mermaidCode]).size
+    };
+  }, [renderedSvg, state.mermaidCode]);
 
   return (
     <div className="h-full flex flex-col bg-gray-900">
@@ -259,17 +297,14 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
         onCopyCode={handleCopyCode}
         onCopyOptimized={handleCopyOptimized}
         onOptimize={handleOptimize}
-        onShowTemplates={() => setShowTemplateLibrary(true)}
+        onShowTemplates={handleShowTemplates}
         onRefresh={forceRender}
         theme={state.activeTheme}
         onThemeChange={handleThemeChange}
         isRendering={isRendering}
         isOptimizing={isOptimizing}
         exportSettings={state.exportSettings}
-        onExportSettingsChange={(settings) => onChange({
-          ...state,
-          exportSettings: { ...state.exportSettings, ...settings }
-        })}
+        onExportSettingsChange={handleExportSettingsChange}
         statistics={statistics}
       />
 
@@ -337,4 +372,51 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       )}
     </div>
   );
+};
+
+// Default export for the dynamic registry
+const createDiagramInitialState = (payload?: { mermaidCode?: string }): DiagramTabletState => ({
+  type: 'diagram' as const,
+  mermaidCode: payload?.mermaidCode || `flowchart TD
+    A[Start] --> B{Decision?}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+    C --> E[End]
+    D --> E`,
+  renderedSvg: null,
+  errorState: null,
+  activeTheme: 'default',
+  selectedTimezones: [],
+  history: [],
+  pinnedDiagrams: [],
+  isRendering: false,
+  lastRenderTime: 0,
+  templateSearchQuery: '',
+  showTemplateLibrary: false,
+  exportSettings: {
+    format: 'svg',
+    resolution: 2,
+    includeStyles: true,
+    backgroundColor: 'transparent'
+  }
+});
+
+export default {
+  id: 'diagram',
+  label: 'Diagram Editor',
+  
+  createInitialState: createDiagramInitialState,
+  
+  serializeState: (state: DiagramTabletState) => JSON.stringify(state),
+  
+  deserializeState: (serialized: string): DiagramTabletState => {
+    try {
+      return JSON.parse(serialized);
+    } catch {
+      return createDiagramInitialState();
+    }
+  },
+  
+  render: (state: DiagramTabletState, onChange: (newState: DiagramTabletState) => void) => 
+    React.createElement(DiagramTablet, { state, onChange }),
 };

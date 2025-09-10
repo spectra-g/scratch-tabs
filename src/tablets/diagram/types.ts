@@ -1,4 +1,5 @@
 export interface DiagramTabletState {
+  type: 'diagram';
   mermaidCode: string;
   renderedSvg: string | null;
   errorState: DiagramError | null;

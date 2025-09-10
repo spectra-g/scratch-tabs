@@ -27,25 +27,132 @@ export const useMermaidRenderer = ({
   const [isRendering, setIsRendering] = useState(false);
   const [elementMap, setElementMap] = useState<Map<string, number>>(new Map());
   const [error, setError] = useState<DiagramError | null>(null);
+  const [mermaidLoaded, setMermaidLoaded] = useState(false);
   
-  const workerRef = useRef<Worker | null>(null);
   const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * Creates a Web Worker for Mermaid rendering
+   * Global reference to prevent multiple loads
+   */
+  const loadMermaidPromise = useRef<Promise<any> | null>(null);
+
+  /**
+   * Loads Mermaid library dynamically in main thread with proper singleton handling
+   */
+  const loadMermaid = useCallback(async () => {
+    // Return existing Mermaid instance if already loaded
+    if (typeof window !== 'undefined' && (window as any).mermaid) {
+      return (window as any).mermaid;
+    }
+
+    // Return existing loading promise to prevent multiple simultaneous loads
+    if (loadMermaidPromise.current) {
+      return loadMermaidPromise.current;
+    }
+
+    // Check if script is already being loaded or exists
+    const existingScript = document.querySelector('script[src*="mermaid"]');
+    if (existingScript && (window as any).mermaid) {
+      return (window as any).mermaid;
+    }
+
+    // Create new loading promise
+    loadMermaidPromise.current = new Promise((resolve, reject) => {
+      // Temporarily disable AMD to prevent conflicts
+      const originalDefine = (window as any).define;
+      const originalRequire = (window as any).require;
+      
+      if (originalDefine) {
+        (window as any).define = undefined;
+      }
+      if (originalRequire) {
+        (window as any).require = undefined;
+      }
+
+      const restoreAMD = () => {
+        if (originalDefine) {
+          (window as any).define = originalDefine;
+        }
+        if (originalRequire) {
+          (window as any).require = originalRequire;
+        }
+      };
+
+      const tryLoadFromCDN = (url: string, isLastTry = false) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.type = 'text/javascript';
+        
+        script.onload = () => {
+          restoreAMD();
+          
+          if ((window as any).mermaid) {
+            (window as any).mermaid.initialize({
+              startOnLoad: false,
+              theme: 'dark',
+              securityLevel: 'loose',
+              fontFamily: 'Inter, system-ui, sans-serif'
+            });
+            resolve((window as any).mermaid);
+          } else {
+            reject(new Error('Mermaid object not found after loading'));
+          }
+        };
+        
+        script.onerror = () => {
+          script.remove();
+          
+          if (!isLastTry) {
+            // Try fallback CDN
+            tryLoadFromCDN('https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js', true);
+          } else {
+            restoreAMD();
+            reject(new Error('Failed to load Mermaid from all CDN sources'));
+          }
+        };
+        
+        document.head.appendChild(script);
+      };
+
+      // Start loading from primary CDN
+      tryLoadFromCDN('https://unpkg.com/mermaid@10.6.1/dist/mermaid.min.js');
+    });
+
+    return loadMermaidPromise.current;
+  }, []);
+
+  /**
+   * Legacy Web Worker approach (kept for reference but not used)
    */
   const createMermaidWorker = useCallback(() => {
     const workerCode = `
-      // Import Mermaid from CDN
-      importScripts('https://cdn.skypack.dev/mermaid@10.6.1');
+      // Import Mermaid from CDN with fallback
+      let mermaidLoaded = false;
       
-      // Configure Mermaid
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: 'dark',
-        securityLevel: 'loose',
-        fontFamily: 'Inter, system-ui, sans-serif'
-      });
+      const cdnUrls = [
+        'https://unpkg.com/mermaid@10.6.1/dist/mermaid.min.js',
+        'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js'
+      ];
+      
+      for (const url of cdnUrls) {
+        try {
+          importScripts(url);
+          mermaidLoaded = true;
+          break; // Success, exit loop
+        } catch (error) {
+          console.warn('Failed to load Mermaid from ' + url + ':', error.message);
+        }
+      }
+      
+      if (mermaidLoaded) {
+        // Configure Mermaid
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          securityLevel: 'loose',
+          fontFamily: 'Inter, system-ui, sans-serif'
+        });
+      }
       
       // Message handler
       self.onmessage = async function(e) {
@@ -53,6 +160,11 @@ export const useMermaidRenderer = ({
         
         if (type === 'render') {
           try {
+            // Check if Mermaid loaded successfully
+            if (!mermaidLoaded || typeof mermaid === 'undefined') {
+              throw new Error('Mermaid library failed to load');
+            }
+            
             const { code, theme, id } = payload;
             
             // Update theme if provided
@@ -129,9 +241,9 @@ export const useMermaidRenderer = ({
   }, []);
 
   /**
-   * Renders the Mermaid diagram
+   * Renders the Mermaid diagram using main thread
    */
-  const renderDiagram = useCallback((diagramCode: string, diagramTheme: MermaidTheme) => {
+  const renderDiagram = useCallback(async (diagramCode: string, diagramTheme: MermaidTheme) => {
     if (!diagramCode.trim()) {
       setRenderedSvg(null);
       setError(null);
@@ -142,55 +254,87 @@ export const useMermaidRenderer = ({
     setIsRendering(true);
     setError(null);
 
-    // Create worker if it doesn't exist
-    if (!workerRef.current) {
-      workerRef.current = createMermaidWorker();
+    try {
+      // Load Mermaid if not already loaded
+      const mermaid = await loadMermaid();
+      setMermaidLoaded(true);
       
-      workerRef.current.onmessage = (e: MessageEvent<MermaidWorkerMessage>) => {
-        const { type, payload } = e.data;
-        
-        if (type === 'result') {
-          const { svg, elementMap } = payload;
-          setRenderedSvg(svg);
-          setElementMap(new Map(elementMap));
-          setIsRendering(false);
-          
-          onRenderComplete?.({
-            svg,
-            elementMap: new Map(elementMap)
-          });
-        } else if (type === 'error') {
-          const errorObj = payload as DiagramError;
-          setError(errorObj);
-          setRenderedSvg(null);
-          setIsRendering(false);
-          onError?.(errorObj);
-        }
-      };
-
-      workerRef.current.onerror = (error) => {
-        const errorObj: DiagramError = {
-          line: 1,
-          message: 'Worker error: Failed to load Mermaid renderer',
-          type: 'render',
-          suggestion: 'Check your internet connection and try again'
-        };
-        setError(errorObj);
-        setIsRendering(false);
-        onError?.(errorObj);
-      };
-    }
-
-    // Send render request to worker
-    workerRef.current.postMessage({
-      type: 'render',
-      payload: {
-        code: diagramCode,
-        theme: diagramTheme,
-        id: `diagram-${Date.now()}`
+      // Update theme if provided
+      if (diagramTheme) {
+        mermaid.initialize({ theme: diagramTheme });
       }
-    });
-  }, [createMermaidWorker, onError, onRenderComplete]);
+      
+      // Render the diagram
+      const id = `diagram-${Date.now()}`;
+      const { svg } = await mermaid.render(id, diagramCode);
+      
+      // Create element mapping for click-to-highlight
+      const elementMap = new Map();
+      const lines = diagramCode.split('\n');
+      
+      // Parse the SVG to create element mappings
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
+      const elements = svgDoc.querySelectorAll('[id]');
+      
+      elements.forEach(element => {
+        const elementId = element.id;
+        // Find corresponding line in code (simplified mapping)
+        lines.forEach((line, index) => {
+          if (line.includes(elementId) || 
+              (element.textContent && line.includes(element.textContent.trim()))) {
+            elementMap.set(elementId, index + 1);
+          }
+        });
+      });
+      
+      // Only update if SVG actually changed to prevent infinite re-renders
+      if (renderedSvg !== svg) {
+        setRenderedSvg(svg);
+        setElementMap(elementMap);
+        
+        onRenderComplete?.({
+          svg,
+          elementMap
+        });
+      }
+      setIsRendering(false);
+      
+    } catch (error: any) {
+      // Parse Mermaid error for better user feedback
+      const errorMessage = error.message || 'Unknown rendering error';
+      const lineMatch = errorMessage.match(/line (\d+)/i);
+      const line = lineMatch ? parseInt(lineMatch[1]) : 1;
+      
+      const errorObj: DiagramError = {
+        line,
+        message: errorMessage,
+        type: 'render',
+        suggestion: getSuggestionForError(errorMessage)
+      };
+      
+      setError(errorObj);
+      setRenderedSvg(null);
+      setIsRendering(false);
+      onError?.(errorObj);
+    }
+  }, [loadMermaid, onError, onRenderComplete]);
+  
+  /**
+   * Helper function to provide error suggestions
+   */
+  const getSuggestionForError = (message: string): string => {
+    if (message.includes('arrow')) {
+      return 'Check arrow syntax. Use --> for solid arrows, -.-> for dotted arrows';
+    }
+    if (message.includes('node')) {
+      return 'Check node syntax. Ensure proper brackets: [] for rectangles, () for rounded';
+    }
+    if (message.includes('syntax')) {
+      return 'Check diagram syntax. Ensure proper indentation and valid Mermaid syntax';
+    }
+    return 'Check the Mermaid documentation for valid syntax';
+  };
 
   /**
    * Debounced rendering to avoid excessive re-renders
@@ -212,14 +356,10 @@ export const useMermaidRenderer = ({
   }, [code, theme, renderDiagram]);
 
   /**
-   * Cleanup worker on unmount
+   * Cleanup on unmount
    */
   useEffect(() => {
     return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
       if (renderTimeoutRef.current) {
         clearTimeout(renderTimeoutRef.current);
       }
@@ -238,7 +378,7 @@ export const useMermaidRenderer = ({
       if (element.id && elementMap.has(element.id)) {
         const lineNumber = elementMap.get(element.id);
         return {
-          elementId: element.id,
+          id: element.id,
           lineNumber: lineNumber!,
           elementType: element.tagName.toLowerCase(),
           attributes: Array.from(element.attributes).reduce((acc, attr) => {

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { ZoomIn, ZoomOut, RotateCcw, Info, X } from '../../../components/Icons';
+import { PlusCircle, Minus, RotateCcw, Info, X } from '../../../components/Icons';
 import { ClickableElement } from '../types';
 
 interface PreviewPanelProps {
@@ -132,7 +132,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
           className="p-2 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-200"
           title="Zoom out"
         >
-          <ZoomOut size={16} />
+          <Minus size={16} />
         </button>
         
         <div className="px-3 py-2 text-sm font-mono text-gray-200 min-w-[60px] text-center">
@@ -145,7 +145,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
           className="p-2 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-200"
           title="Zoom in"
         >
-          <ZoomIn size={16} />
+          <PlusCircle size={16} />
         </button>
         
         <div className="w-px h-6 bg-gray-600" />

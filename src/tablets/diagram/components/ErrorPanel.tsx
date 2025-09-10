@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, X, Lightbulb } from '../../../components/Icons';
+import { AlertTriangle, X, Info } from '../../../components/Icons';
 import { DiagramError } from '../types';
 
 interface ErrorPanelProps {
@@ -67,7 +67,7 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({
 
             {error.suggestion && (
               <div className="flex items-start space-x-2 mt-2 p-2 bg-gray-800/50 rounded">
-                <Lightbulb size={14} className="text-yellow-400 mt-0.5 flex-shrink-0" />
+                <Info size={14} className="text-yellow-400 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-gray-400">
                   <strong className="text-yellow-400">Suggestion:</strong> {error.suggestion}
                 </p>
