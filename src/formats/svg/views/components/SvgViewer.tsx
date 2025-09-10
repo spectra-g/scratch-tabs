@@ -15,7 +15,8 @@ import {
   PlusCircle, // Replacing ZoomIn
   Minus, // Replacing ZoomOut  
   RotateCcw,
-  AlignLeft
+  AlignLeft,
+  ImageIcon
 } from '../../../../components/Icons';
 import { optimizeWithSvgo, basicCleanup } from '../../utils/optimizer';
 import { useActiveEditorStore } from '../../../../stores/activeEditorStore';
@@ -272,7 +273,7 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
   }, [content]);
 
   // Handle SVG export
-  const handleExport = useCallback(() => {
+  const handleExportSvg = useCallback(() => {
     if (!content) return;
     
     try {
@@ -280,12 +281,100 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'optimized.svg';
+      a.download = 'export.svg';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
+    }
+  }, [content]);
+
+  // Handle PNG export
+  const handleExportPng = useCallback(() => {
+    if (!content) return;
+    
+    try {
+      // Create a temporary SVG element to get dimensions
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
+      const svgElement = tempDiv.querySelector('svg');
+      
+      if (!svgElement) return;
+      
+      // Get SVG dimensions
+      let width = 800; // default width
+      let height = 600; // default height
+      
+      // Try to get dimensions from width/height attributes
+      const widthAttr = svgElement.getAttribute('width');
+      const heightAttr = svgElement.getAttribute('height');
+      
+      if (widthAttr && heightAttr) {
+        width = parseInt(widthAttr) || width;
+        height = parseInt(heightAttr) || height;
+      } else if (svgElement.viewBox) {
+        // Try to get dimensions from viewBox
+        const viewBox = svgElement.viewBox.baseVal;
+        if (viewBox.width && viewBox.height) {
+          width = viewBox.width;
+          height = viewBox.height;
+        }
+      }
+      
+      // Create a canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      // Set canvas dimensions with device pixel ratio for better quality
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const scaleFactor = 2; // Additional scaling for higher quality
+      canvas.width = width * devicePixelRatio * scaleFactor;
+      canvas.height = height * devicePixelRatio * scaleFactor;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      
+      // Scale the context for high-DPI displays
+      ctx.scale(devicePixelRatio * scaleFactor, devicePixelRatio * scaleFactor);
+      
+      // Set white background
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, width, height);
+      
+      // Create an image from the SVG
+      const img = new Image();
+      img.onload = () => {
+        // Draw the image on the canvas
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert canvas to PNG blob
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'export.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 'image/png', 1.0);
+      };
+      
+      // Create a blob URL for the SVG
+      const svgBlob = new Blob([content], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      img.src = svgUrl;
+      
+      // Clean up after a delay
+      setTimeout(() => {
+        URL.revokeObjectURL(svgUrl);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('PNG export failed:', error);
     }
   }, [content]);
 
@@ -474,11 +563,18 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
                 <Copy size={14} />
               </button>
               <button
-                onClick={handleExport}
+                onClick={handleExportSvg}
                 className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
-                title="Export as .svg"
+                title="Export as SVG"
               >
                 <Download size={14} />
+              </button>
+              <button
+                onClick={handleExportPng}
+                className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+                title="Export as PNG"
+              >
+                <ImageIcon size={14} />
               </button>
             </div>
           </div>

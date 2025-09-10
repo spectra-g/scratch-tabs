@@ -230,7 +230,7 @@ describe('SvgViewer', () => {
       document.body.appendChild = mockAppendChild;
       document.body.removeChild = mockRemoveChild;
       
-      const exportButton = screen.getByTitle('Export as .svg');
+      const exportButton = screen.getByTitle('Export as SVG');
       fireEvent.click(exportButton);
       
       expect(mockCreateElement).toHaveBeenCalledWith('a');
@@ -240,6 +240,13 @@ describe('SvgViewer', () => {
       document.createElement = originalCreateElement;
       document.body.appendChild = originalAppendChild;
       document.body.removeChild = originalRemoveChild;
+    });
+
+    it('should have PNG export button', () => {
+      render(<SvgViewer {...defaultProps} />);
+      
+      const pngExportButton = screen.getByTitle('Export as PNG');
+      expect(pngExportButton).toBeInTheDocument();
     });
   });
 
@@ -337,7 +344,8 @@ describe('SvgViewer', () => {
       expect(screen.getByTitle('Reset View')).toBeInTheDocument();
       expect(screen.getByTitle('Hide Inspector')).toBeInTheDocument();
       expect(screen.getByTitle('Copy SVG Code')).toBeInTheDocument();
-      expect(screen.getByTitle('Export as .svg')).toBeInTheDocument();
+      expect(screen.getByTitle('Export as SVG')).toBeInTheDocument();
+      expect(screen.getByTitle('Export as PNG')).toBeInTheDocument();
       expect(screen.getByTitle('Format SVG')).toBeInTheDocument();
     });
 
