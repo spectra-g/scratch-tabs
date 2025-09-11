@@ -16,14 +16,6 @@ const isErrorSvg = (svg: string): boolean => {
   const hasErrorAria = svg.includes('aria-roledescription="error"');
   const hasErrorText = svg.includes('Syntax error') || svg.includes('Parse error');
   
-  // Debug logging
-  if (hasErrorAria || hasErrorText) {
-    console.log('PreviewPanel: Detected potential error SVG');
-    console.log('  - Has error ARIA:', hasErrorAria);
-    console.log('  - Has error text:', hasErrorText);
-    console.log('  - SVG sample:', svg.substring(0, 300));
-  }
-  
   return hasErrorAria || hasErrorText;
 };
 
@@ -54,8 +46,6 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
           if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as Element;
             if (element.id?.startsWith('ddiagram-') || element.innerHTML?.includes('Syntax error')) {
-              console.log('PreviewPanel: Detected unauthorized SVG injection:', element);
-              console.log('Removing injected element...');
               element.remove();
             }
           }
@@ -164,7 +154,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="relative h-full bg-white overflow-hidden"
+      className="relative h-full bg-white overflow-hidden min-h-0"
       onWheel={handleWheel}
     >
       {/* Zoom Controls */}
@@ -204,7 +194,11 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
       {/* Main content area */}
       <div 
-        className="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
+        className={`w-full h-full cursor-grab active:cursor-grabbing p-4 min-h-0 ${
+          (isRendering || !svgContent || isErrorSvg(svgContent || '')) 
+            ? 'flex items-center justify-center' 
+            : ''
+        }`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -218,7 +212,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
         ) : svgContent && !isErrorSvg(svgContent) ? (
           <div
             ref={svgRef}
-            className="select-none"
+            className="select-none w-full h-full min-h-0 overflow-hidden"
             style={{
               transform: `scale(${zoom / 100}) translate(${pan.x}px, ${pan.y}px)`,
               transformOrigin: 'center center'

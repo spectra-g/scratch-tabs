@@ -4,8 +4,8 @@ import { Toolbar } from './components/Toolbar';
 import { PreviewPanel } from './components/PreviewPanel';
 import { TemplateLibrary } from './components/TemplateLibrary';
 import { ErrorPanel } from './components/ErrorPanel';
+import { MermaidEditor } from './components/MermaidEditor';
 import { useMermaidRenderer } from './hooks/useMermaidRenderer';
-// import { detectDiagramType, extractDiagramMetadata } from './utils/mermaidUtils';
 
 interface DiagramTabletProps {
   state: DiagramTabletState;
@@ -124,7 +124,6 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       updateCode(optimized);
       showCopyFeedback('Code optimized!');
     } catch (error) {
-      console.error('Optimization failed:', error);
       showCopyFeedback('Optimization failed');
     } finally {
       setIsOptimizing(false);
@@ -139,7 +138,6 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       await navigator.clipboard.writeText(stateRef.current.mermaidCode);
       showCopyFeedback('Code copied!');
     } catch (error) {
-      console.error('Failed to copy code:', error);
       showCopyFeedback('Copy failed');
     }
   }, [showCopyFeedback]);
@@ -158,7 +156,6 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       await navigator.clipboard.writeText(optimized);
       showCopyFeedback('Optimized code copied!');
     } catch (error) {
-      console.error('Failed to copy optimized code:', error);
       showCopyFeedback('Copy failed');
     }
   }, [showCopyFeedback]);
@@ -181,7 +178,6 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       URL.revokeObjectURL(url);
       showCopyFeedback('SVG exported!');
     } catch (error) {
-      console.error('Failed to export SVG:', error);
       showCopyFeedback('Export failed');
     }
   }, [renderedSvg, showCopyFeedback]);
@@ -233,7 +229,6 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       const svgUrl = URL.createObjectURL(svgBlob);
       img.src = svgUrl;
     } catch (error) {
-      console.error('Failed to export PNG:', error);
       showCopyFeedback('Export failed');
     }
   }, [renderedSvg, showCopyFeedback]);
@@ -243,11 +238,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
    */
   const handlePreviewElementClick = useCallback((event: React.MouseEvent) => {
     const clickedElement = handleElementClick(event);
-    if (clickedElement) {
-      // This would typically trigger Monaco editor highlighting
-      // For now, we'll just log the interaction
-      console.log('Element clicked:', clickedElement);
-    }
+    // Element click handling for bidirectional syncing
     return clickedElement;
   }, [handleElementClick]);
 
@@ -316,16 +307,16 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
           error={currentError || error}
           onClose={handleErrorClose}
           onGoToLine={(lineNumber) => {
-            // This would typically trigger Monaco editor navigation
-            console.log('Navigate to line:', lineNumber);
+            // Navigation to specific line in Monaco editor
+            // TODO: Implement Monaco editor line navigation
           }}
         />
       )}
 
       {/* Main content area */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         {/* Code Editor Panel */}
-        <div className="w-1/2 border-r border-gray-700">
+        <div className="w-1/2 h-full border-r border-gray-700 min-h-0">
           <div className="h-full bg-gray-850 p-4">
             <div className="mb-3">
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -336,24 +327,25 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
               </div>
             </div>
             
-            <textarea
-              value={state.mermaidCode}
-              onChange={(e) => updateCode(e.target.value)}
-              className="w-full h-[calc(100%-80px)] bg-gray-800 border border-gray-600 rounded-md p-3 text-gray-200 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent custom-scrollbar"
-              placeholder="Enter your Mermaid diagram code here..."
-              spellCheck={false}
-            />
+            <div className="h-[calc(100%-80px)] bg-gray-800 border border-gray-600 rounded-md overflow-hidden">
+              <MermaidEditor
+                value={state.mermaidCode}
+                onChange={updateCode}
+                className="h-full"
+              />
+            </div>
           </div>
         </div>
 
         {/* Preview Panel */}
-        <div className="w-1/2">
+        <div className="w-1/2 h-full min-h-0">
           <PreviewPanel
             svgContent={renderedSvg}
             isRendering={isRendering}
             onElementClick={handlePreviewElementClick}
             onHighlightLine={(lineNumber) => {
-              console.log('Highlight line:', lineNumber);
+              // Line highlighting in Monaco editor
+              // TODO: Implement Monaco editor line highlighting
             }}
           />
         </div>

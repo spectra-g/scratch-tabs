@@ -38,7 +38,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
       await navigator.clipboard.writeText(template.code);
       // Could add a toast notification here
     } catch (error) {
-      console.error('Failed to copy template code:', error);
+      // Silently handle clipboard errors
     }
   };
 

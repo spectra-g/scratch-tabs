@@ -141,35 +141,37 @@ const getIntelligentErrorSuggestion = (message: string, code: string): string =>
 };
 
 /**
+ * Determines if an element is an unwanted Mermaid div that should be removed
+ */
+const isUnwantedMermaidDiv = (element: Element): boolean => {
+  const isDirectBodyChild = element.parentElement === document.body;
+  const containsErrorContent = element.innerHTML.includes('<svg') && 
+    (element.innerHTML.includes('Syntax error') || 
+     element.innerHTML.includes('error-text') ||
+     element.innerHTML.includes('aria-roledescription="error"'));
+  
+  return isDirectBodyChild && containsErrorContent;
+};
+
+/**
  * Cleans up unwanted DOM elements that Mermaid.js injects into the body
  * Mermaid creates a div with ID "d{id}" when the target element doesn't exist
  */
 const cleanupUnwantedMermaidDiv = (diagramId: string): void => {
   const unwantedDivId = `d${diagramId}`;
-  const unwantedDiv = document.getElementById(unwantedDivId);
   
-  if (unwantedDiv) {
-    // Verify this is the unwanted Mermaid div by checking:
-    // 1. It's a direct child of body
-    // 2. It contains SVG error content
-    const isDirectBodyChild = unwantedDiv.parentElement === document.body;
-    const containsErrorSvg = unwantedDiv.innerHTML.includes('<svg') && 
-                             (unwantedDiv.innerHTML.includes('Syntax error') || 
-                              unwantedDiv.innerHTML.includes('error-text') ||
-                              unwantedDiv.innerHTML.includes('aria-roledescription="error"'));
-    
-    if (isDirectBodyChild && containsErrorSvg) {
+  const attemptCleanup = () => {
+    const unwantedDiv = document.getElementById(unwantedDivId);
+    if (unwantedDiv && isUnwantedMermaidDiv(unwantedDiv)) {
       unwantedDiv.remove();
     }
-  }
+  };
+
+  // Immediate cleanup
+  attemptCleanup();
   
-  // Also try cleanup with delays in case the element is created asynchronously
-  setTimeout(() => {
-    const delayedUnwantedDiv = document.getElementById(unwantedDivId);
-    if (delayedUnwantedDiv?.parentElement === document.body) {
-      delayedUnwantedDiv.remove();
-    }
-  }, CLEANUP_DELAY);
+  // Delayed cleanup for asynchronously created elements
+  setTimeout(attemptCleanup, CLEANUP_DELAY);
 };
 
 /**
@@ -204,9 +206,12 @@ const processSvgForBetterSizing = (svg: string): string => {
         svgElement.setAttribute('width', `${finalWidth}px`);
         svgElement.setAttribute('height', `${finalHeight}px`);
       } else {
-        // For larger diagrams, use original dimensions but ensure responsive scaling
-        svgElement.setAttribute('width', `${width}px`);
-        svgElement.setAttribute('height', `${height}px`);
+        // For larger diagrams, remove fixed dimensions and set up responsive scaling
+        svgElement.removeAttribute('width');
+        svgElement.removeAttribute('height');
+        
+        // Set preserveAspectRatio to ensure proper scaling
+        svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       }
     } else {
       // If no viewBox, set reasonable default dimensions
@@ -214,9 +219,14 @@ const processSvgForBetterSizing = (svg: string): string => {
       svgElement.setAttribute('height', DEFAULT_DIMENSIONS.height);
     }
     
-    // Always ensure responsive scaling to fit container
+    // Apply CSS for aggressive containment - force SVG to fit container
     svgElement.style.maxWidth = '100%';
-    svgElement.style.height = 'auto';
+    svgElement.style.maxHeight = '100%';
+    svgElement.style.width = '100%';
+    svgElement.style.height = '100%';
+    svgElement.style.display = 'block';
+    svgElement.style.objectFit = 'contain';
+    svgElement.style.objectPosition = 'center';
     
     return new XMLSerializer().serializeToString(svgDoc);
   } catch {

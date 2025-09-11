@@ -4,6 +4,45 @@ import '@testing-library/jest-dom';
 import { DiagramTablet } from '../DiagramTablet';
 import { DiagramTabletState } from '../types';
 
+// Mock Monaco editor
+jest.mock('@monaco-editor/react', () => ({
+  __esModule: true,
+  default: ({ value, onChange, onMount }: any) => {
+    // Simulate Monaco editor behavior
+    React.useEffect(() => {
+      if (onMount) {
+        const mockEditor = {
+          updateOptions: jest.fn(),
+          getModel: jest.fn(() => ({ getLanguageId: jest.fn(() => 'mermaid') })),
+        };
+        const mockMonaco = {
+          languages: {
+            getLanguages: jest.fn(() => []),
+            register: jest.fn(),
+            setMonarchTokensProvider: jest.fn(),
+          },
+          editor: {
+            defineTheme: jest.fn(),
+            setTheme: jest.fn(),
+            setModelLanguage: jest.fn(),
+          },
+        };
+        onMount(mockEditor, mockMonaco);
+      }
+    }, [onMount]);
+    
+    return React.createElement('div', {
+      'data-testid': 'monaco-editor',
+      children: React.createElement('textarea', {
+        value,
+        onChange: (e: any) => onChange && onChange(e.target.value),
+        placeholder: 'Enter your Mermaid diagram code here...',
+        'data-testid': 'mermaid-code-editor'
+      })
+    });
+  },
+}));
+
 // Mock the Mermaid renderer hook
 jest.mock('../hooks/useMermaidRenderer', () => ({
   useMermaidRenderer: jest.fn(() => ({
@@ -63,7 +102,7 @@ describe('DiagramTablet', () => {
       render(<DiagramTablet state={state} onChange={mockOnChange} />);
 
       expect(screen.getByText('Mermaid Code')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('Enter your Mermaid diagram code here...')).toBeInTheDocument();
+      expect(screen.getByTestId('mermaid-code-editor')).toBeInTheDocument();
     });
 
     it('should initialize with default code when empty', () => {
@@ -88,12 +127,12 @@ describe('DiagramTablet', () => {
   });
 
   describe('Code Editing', () => {
-    it('should update code when textarea changes', () => {
+    it('should update code when editor changes', () => {
       const state = createMockState();
       render(<DiagramTablet state={state} onChange={mockOnChange} />);
 
-      const textarea = screen.getByPlaceholderText('Enter your Mermaid diagram code here...');
-      fireEvent.change(textarea, { target: { value: 'graph TD\n    X --> Y' } });
+      const editor = screen.getByTestId('mermaid-code-editor');
+      fireEvent.change(editor, { target: { value: 'graph TD\n    X --> Y' } });
 
       expect(mockOnChange).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -113,8 +152,8 @@ describe('DiagramTablet', () => {
       });
       render(<DiagramTablet state={state} onChange={mockOnChange} />);
 
-      const textarea = screen.getByPlaceholderText('Enter your Mermaid diagram code here...');
-      fireEvent.change(textarea, { target: { value: 'new code' } });
+      const editor = screen.getByTestId('mermaid-code-editor');
+      fireEvent.change(editor, { target: { value: 'new code' } });
 
       expect(mockOnChange).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -251,7 +290,7 @@ describe('DiagramTablet', () => {
       }).not.toThrow();
       
       // Should still render the main interface
-      expect(screen.getByPlaceholderText('Enter your Mermaid diagram code here...')).toBeInTheDocument();
+      expect(screen.getByTestId('mermaid-code-editor')).toBeInTheDocument();
     });
 
     it('should close error panel when close button is clicked', () => {
@@ -282,8 +321,8 @@ describe('DiagramTablet', () => {
       const state = createMockState();
       render(<DiagramTablet state={state} onChange={mockOnChange} />);
 
-      const textarea = screen.getByPlaceholderText('Enter your Mermaid diagram code here...');
-      expect(textarea).toHaveAttribute('spellCheck', 'false');
+      const editor = screen.getByTestId('mermaid-code-editor');
+      expect(editor).toBeInTheDocument();
       
       // Check that buttons have proper titles
       const templatesButton = screen.getByText('Templates');
@@ -294,14 +333,14 @@ describe('DiagramTablet', () => {
       const state = createMockState();
       render(<DiagramTablet state={state} onChange={mockOnChange} />);
 
-      const textarea = screen.getByPlaceholderText('Enter your Mermaid diagram code here...');
+      const editor = screen.getByTestId('mermaid-code-editor');
       
-      // Test that textarea accepts keyboard input
-      fireEvent.keyDown(textarea, { key: 'Enter' });
-      fireEvent.keyDown(textarea, { key: 'Tab' });
+      // Test that editor accepts keyboard input
+      fireEvent.keyDown(editor, { key: 'Enter' });
+      fireEvent.keyDown(editor, { key: 'Tab' });
       
       // Should not throw errors
-      expect(textarea).toBeInTheDocument();
+      expect(editor).toBeInTheDocument();
     });
   });
 
@@ -315,7 +354,7 @@ describe('DiagramTablet', () => {
       rerender(<DiagramTablet state={newState} onChange={mockOnChange} />);
 
       // Verify that the component handles state changes without errors
-      expect(screen.getByPlaceholderText('Enter your Mermaid diagram code here...')).toBeInTheDocument();
+      expect(screen.getByTestId('mermaid-code-editor')).toBeInTheDocument();
     });
 
     it('should handle empty state gracefully', () => {
