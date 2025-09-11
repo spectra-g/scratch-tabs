@@ -70,6 +70,8 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
    * Updates the Mermaid code
    */
   const updateCode = useCallback((newCode: string) => {
+    // Clear both local and state errors when code changes
+    setCurrentError(null);
     onChange({
       ...stateRef.current,
       mermaidCode: newCode,
@@ -337,7 +339,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
             <textarea
               value={state.mermaidCode}
               onChange={(e) => updateCode(e.target.value)}
-              className="w-full h-[calc(100%-80px)] bg-gray-800 border border-gray-600 rounded-md p-3 text-gray-200 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full h-[calc(100%-80px)] bg-gray-800 border border-gray-600 rounded-md p-3 text-gray-200 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent custom-scrollbar"
               placeholder="Enter your Mermaid diagram code here..."
               spellCheck={false}
             />

@@ -9,6 +9,24 @@ interface PreviewPanelProps {
   onHighlightLine?: (lineNumber: number) => void;
 }
 
+/**
+ * Check if SVG content is an error SVG that should not be displayed
+ */
+const isErrorSvg = (svg: string): boolean => {
+  const hasErrorAria = svg.includes('aria-roledescription="error"');
+  const hasErrorText = svg.includes('Syntax error') || svg.includes('Parse error');
+  
+  // Debug logging
+  if (hasErrorAria || hasErrorText) {
+    console.log('PreviewPanel: Detected potential error SVG');
+    console.log('  - Has error ARIA:', hasErrorAria);
+    console.log('  - Has error text:', hasErrorText);
+    console.log('  - SVG sample:', svg.substring(0, 300));
+  }
+  
+  return hasErrorAria || hasErrorText;
+};
+
 export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   svgContent,
   isRendering,
@@ -24,6 +42,31 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<HTMLDivElement>(null);
+
+  // Monitor for any unauthorized DOM changes
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element;
+            if (element.id?.startsWith('ddiagram-') || element.innerHTML?.includes('Syntax error')) {
+              console.log('PreviewPanel: Detected unauthorized SVG injection:', element);
+              console.log('Removing injected element...');
+              element.remove();
+            }
+          }
+        });
+      });
+    });
+
+    observer.observe(container, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   /**
    * Handles zoom controls
@@ -172,7 +215,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             <span className="text-sm">Rendering diagram...</span>
           </div>
-        ) : svgContent ? (
+        ) : svgContent && !isErrorSvg(svgContent) ? (
           <div
             ref={svgRef}
             className="select-none"

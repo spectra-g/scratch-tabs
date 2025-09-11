@@ -107,7 +107,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
         </div>
 
         {/* Template grid */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
           {filteredTemplates.length === 0 ? (
             <div className="text-center py-12">
               <FileText size={48} className="text-gray-600 mx-auto mb-4" />

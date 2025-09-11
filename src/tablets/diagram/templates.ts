@@ -121,44 +121,44 @@ export const DIAGRAM_TEMPLATES: DiagramTemplate[] = [
     category: 'class',
     code: `classDiagram
     class User {
-        +String id
-        +String email
-        +String name
-        +Date createdAt
+        +id: String
+        +email: String
+        +name: String
+        +createdAt: Date
         +login()
         +logout()
     }
     
     class Product {
-        +String id
-        +String name
-        +Decimal price
-        +Integer stock
-        +String description
+        +id: String
+        +name: String
+        +price: Decimal
+        +stock: Integer
+        +description: String
         +updateStock()
         +setPrice()
     }
     
     class Order {
-        +String id
-        +String userId
-        +Date orderDate
-        +OrderStatus status
-        +Decimal total
+        +id: String
+        +userId: String
+        +orderDate: Date
+        +status: OrderStatus
+        +total: Decimal
         +addItem()
         +calculateTotal()
         +updateStatus()
     }
     
     class OrderItem {
-        +String productId
-        +Integer quantity
-        +Decimal unitPrice
+        +productId: String
+        +quantity: Integer
+        +unitPrice: Decimal
     }
     
-    User ||--o{ Order : places
-    Order ||--o{ OrderItem : contains
-    Product ||--o{ OrderItem : "ordered as"`,
+    User "1" o-- "0..*" Order : "places"
+    Order "1" *-- "1..*" OrderItem : "contains"
+    Product "1" -- "0..*" OrderItem : "ordered as"`,
     tags: ['ecommerce', 'domain', 'model', 'database'],
     complexity: 'intermediate'
   },
@@ -265,11 +265,11 @@ export const DIAGRAM_TEMPLATES: DiagramTemplate[] = [
         datetime created_at
     }
     
-    USER ||--o{ POST : writes
-    POST }o--o{ CATEGORY : belongs_to
-    POST }o--o{ TAG : tagged_with
-    POST ||--o{ COMMENT : has
-    USER ||--o{ COMMENT : writes`,
+    USER ||--o{ POST : "writes"
+    POST }o--o{ CATEGORY : "belongs_to"
+    POST }o--o{ TAG : "tagged_with"
+    POST ||--o{ COMMENT : "has"
+    USER ||--o{ COMMENT : "writes"`,
     tags: ['database', 'blog', 'schema', 'relationships'],
     complexity: 'advanced'
   },
@@ -309,7 +309,7 @@ export const DIAGRAM_TEMPLATES: DiagramTemplate[] = [
     name: 'Feature Branch Workflow',
     description: 'Git branching strategy with feature development',
     category: 'gitgraph',
-    code: `gitgraph
+    code: `gitGraph
     commit id: "Initial commit"
     branch develop
     checkout develop
