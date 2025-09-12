@@ -6,12 +6,14 @@ interface MermaidEditorProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  onEditorReady?: (editor: editor.IStandaloneCodeEditor) => void;
 }
 
 export const MermaidEditor: React.FC<MermaidEditorProps> = ({
   value,
   onChange,
-  className = ""
+  className = "",
+  onEditorReady
 }) => {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
@@ -115,7 +117,12 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
 
     // Set language to mermaid
     monaco.editor.setModelLanguage(editor.getModel()!, 'mermaid');
-  }, []);
+
+    // Notify parent component that editor is ready
+    if (onEditorReady) {
+      onEditorReady(editor);
+    }
+  }, [onEditorReady]);
 
   const handleEditorChange = useCallback((value: string | undefined) => {
     if (value !== undefined) {

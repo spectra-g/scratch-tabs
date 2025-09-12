@@ -7,13 +7,30 @@ import { DiagramTabletState } from '../types';
 // Mock Monaco editor
 jest.mock('@monaco-editor/react', () => ({
   __esModule: true,
-  default: ({ value, onChange, onMount }: any) => {
+  default: ({ value, onChange, onMount, onEditorReady }: any) => {
     // Simulate Monaco editor behavior
     React.useEffect(() => {
       if (onMount) {
+        const mockModel = {
+          getLanguageId: jest.fn(() => 'mermaid'),
+          getFullModelRange: jest.fn(() => ({
+            startLineNumber: 1,
+            startColumn: 1,
+            endLineNumber: 10,
+            endColumn: 1
+          })),
+          isDisposed: jest.fn(() => false)
+        };
         const mockEditor = {
           updateOptions: jest.fn(),
-          getModel: jest.fn(() => ({ getLanguageId: jest.fn(() => 'mermaid') })),
+          getModel: jest.fn(() => mockModel),
+          pushUndoStop: jest.fn(),
+          executeEdits: jest.fn((source, edits) => {
+            // Simulate the executeEdits by calling onChange with the new text
+            if (edits && edits[0] && edits[0].text) {
+              onChange(edits[0].text);
+            }
+          }),
         };
         const mockMonaco = {
           languages: {
@@ -199,7 +216,8 @@ describe('DiagramTablet', () => {
         expect(navigator.clipboard.writeText).toHaveBeenCalledWith(state.mermaidCode);
       });
 
-      expect(screen.getByText('Code copied!')).toBeInTheDocument();
+      // Should show green tick feedback instead of toast
+      expect(screen.getByText('Copied!')).toBeInTheDocument();
     });
 
     it('should handle copy errors gracefully', async () => {
@@ -211,9 +229,14 @@ describe('DiagramTablet', () => {
       const copyButton = screen.getByText('Copy Code');
       fireEvent.click(copyButton);
 
+      // Should handle errors silently - no error message displayed
       await waitFor(() => {
-        expect(screen.getByText('Copy failed')).toBeInTheDocument();
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(state.mermaidCode);
       });
+
+      // Should not show any error message or success message when copy fails
+      expect(screen.queryByText('Copy failed')).not.toBeInTheDocument();
+      expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
     });
   });
 

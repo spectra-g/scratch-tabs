@@ -5,6 +5,7 @@ import {
   EyeOff, 
   Zap, 
   Copy, 
+  Check,
   Download, 
   Info, 
   Loader2, 
@@ -55,6 +56,7 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [copySuccess, setCopySuccess] = useState(false);
   
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const inspectorRef = useRef<HTMLDivElement>(null);
@@ -268,7 +270,10 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
     
     try {
       await navigator.clipboard.writeText(content);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
+      // Silently handle errors
     }
   }, [content]);
 
@@ -557,10 +562,14 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
             <div className="flex items-center space-x-1">
               <button
                 onClick={handleCopy}
-                className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
-                title="Copy SVG Code"
+                className={`p-2 rounded transition-colors ${
+                  copySuccess 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                }`}
+                title={copySuccess ? "Copied!" : "Copy SVG Code"}
               >
-                <Copy size={14} />
+                {copySuccess ? <Check size={14} /> : <Copy size={14} />}
               </button>
               <button
                 onClick={handleExportSvg}

@@ -2,6 +2,7 @@ import React from 'react';
 import { 
   Download, 
   Copy, 
+  Check,
   RefreshCw, 
   Settings, 
   FileDown,
@@ -23,6 +24,8 @@ interface ToolbarProps {
   onThemeChange: (theme: MermaidTheme) => void;
   isRendering: boolean;
   isOptimizing: boolean;
+  copyCodeSuccess?: boolean;
+  optimizeSuccess?: boolean;
   exportSettings: ExportSettings;
   onExportSettingsChange: (settings: Partial<ExportSettings>) => void;
   statistics?: {
@@ -52,6 +55,8 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
   onThemeChange,
   isRendering,
   isOptimizing,
+  copyCodeSuccess = false,
+  optimizeSuccess = false,
   statistics
 }) => {
   const [showExportMenu, setShowExportMenu] = React.useState(false);
@@ -62,7 +67,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
     disabled?: boolean;
     title: string;
     children: React.ReactNode;
-    variant?: 'primary' | 'secondary';
+    variant?: 'primary' | 'secondary' | 'success';
   }> = ({ onClick, disabled = false, title, children, variant = 'secondary' }) => (
     <button
       onClick={onClick}
@@ -71,7 +76,9 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
       className={`
         flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
         ${variant === 'primary' 
-          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+          : variant === 'success'
+          ? 'bg-green-600 hover:bg-green-700 text-white'
           : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -96,15 +103,17 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
         <ToolbarButton
           onClick={onOptimize}
           disabled={isOptimizing}
-          title="Optimize diagram code"
-          variant="primary"
+          title={optimizeSuccess ? "Optimized!" : "Optimize diagram code"}
+          variant={optimizeSuccess ? "success" : "primary"}
         >
           {isOptimizing ? (
             <RefreshCw size={16} className="animate-spin" />
+          ) : optimizeSuccess ? (
+            <Check size={16} />
           ) : (
             <Settings size={16} />
           )}
-          <span>{isOptimizing ? 'Optimizing...' : 'Optimize'}</span>
+          <span>{isOptimizing ? 'Optimizing...' : optimizeSuccess ? 'Optimized!' : 'Optimize'}</span>
         </ToolbarButton>
 
         <ToolbarButton
@@ -161,10 +170,11 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
         {/* Copy actions */}
         <ToolbarButton
           onClick={onCopyCode}
-          title="Copy diagram code to clipboard"
+          title={copyCodeSuccess ? "Copied!" : "Copy diagram code to clipboard"}
+          variant={copyCodeSuccess ? "success" : "secondary"}
         >
-          <Copy size={16} />
-          <span>Copy Code</span>
+          {copyCodeSuccess ? <Check size={16} /> : <Copy size={16} />}
+          <span>{copyCodeSuccess ? 'Copied!' : 'Copy Code'}</span>
         </ToolbarButton>
 
         {/* Export menu */}

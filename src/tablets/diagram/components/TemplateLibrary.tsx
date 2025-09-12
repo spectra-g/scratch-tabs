@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, X, Copy, FileText, Tag } from '../../../components/Icons';
+import { Search, X, Copy, Check, FileText, Tag } from '../../../components/Icons';
 import { DiagramTemplate, DiagramType } from '../types';
 import { DIAGRAM_TEMPLATES, TEMPLATE_CATEGORIES, searchTemplates } from '../templates';
 
@@ -16,6 +16,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<DiagramType | 'all'>('all');
+  const [copiedTemplateId, setCopiedTemplateId] = useState<string | null>(null);
 
   const filteredTemplates = useMemo(() => {
     let templates = searchTemplates(searchQuery);
@@ -36,7 +37,8 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
     event.stopPropagation();
     try {
       await navigator.clipboard.writeText(template.code);
-      // Could add a toast notification here
+      setCopiedTemplateId(template.id);
+      setTimeout(() => setCopiedTemplateId(null), 2000);
     } catch (error) {
       // Silently handle clipboard errors
     }
@@ -133,10 +135,16 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
                     </div>
                     <button
                       onClick={(e) => copyTemplateCode(template, e)}
-                      className="p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Copy code"
+                      className={`p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-all ${
+                        copiedTemplateId === template.id ? 'opacity-100 bg-green-600' : ''
+                      }`}
+                      title={copiedTemplateId === template.id ? "Copied!" : "Copy code"}
                     >
-                      <Copy size={14} className="text-gray-400" />
+                      {copiedTemplateId === template.id ? (
+                        <Check size={14} className="text-white" />
+                      ) : (
+                        <Copy size={14} className="text-gray-400" />
+                      )}
                     </button>
                   </div>
 

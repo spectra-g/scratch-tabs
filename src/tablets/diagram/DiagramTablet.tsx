@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import type { editor } from 'monaco-editor';
 import { DiagramTabletState, DiagramTemplate, MermaidTheme, DiagramError, ExportSettings } from './types';
 import { Toolbar } from './components/Toolbar';
 import { PreviewPanel } from './components/PreviewPanel';
@@ -26,11 +27,16 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [currentError, setCurrentError] = useState<DiagramError | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
+  const [optimizeSuccess, setOptimizeSuccess] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   
   // Ref to access current state without causing re-renders
   const stateRef = useRef(state);
   stateRef.current = state;
+  
+  // Ref to access Monaco editor instance
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
   // Initialize with default code if empty
   useEffect(() => {
@@ -113,6 +119,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
     if (!currentCode.trim()) return;
 
     setIsOptimizing(true);
+    setOptimizeSuccess(false);
     try {
       // Basic optimization: remove comments and extra whitespace
       const optimized = currentCode
@@ -121,14 +128,31 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
         .filter(line => line && !line.startsWith('%%'))
         .join('\n');
 
-      updateCode(optimized);
-      showCopyFeedback('Code optimized!');
+      // Use Monaco editor's executeEdits to preserve undo history
+      if (editorRef.current && !editorRef.current.getModel()?.isDisposed()) {
+        const model = editorRef.current.getModel();
+        if (model) {
+          editorRef.current.pushUndoStop();
+          editorRef.current.executeEdits('diagram-optimization', [{
+            range: model.getFullModelRange(),
+            text: optimized,
+            forceMoveMarkers: false,
+          }]);
+          editorRef.current.pushUndoStop();
+        }
+      } else {
+        // Fallback to state update if editor is not available
+        updateCode(optimized);
+      }
+
+      setOptimizeSuccess(true);
+      setTimeout(() => setOptimizeSuccess(false), 2000);
     } catch (error) {
-      showCopyFeedback('Optimization failed');
+      // Silently handle errors - no feedback for failures
     } finally {
       setIsOptimizing(false);
     }
-  }, [updateCode, showCopyFeedback]);
+  }, [updateCode]);
 
   /**
    * Copies code to clipboard
@@ -136,11 +160,12 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
   const handleCopyCode = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(stateRef.current.mermaidCode);
-      showCopyFeedback('Code copied!');
+      setCopyCodeSuccess(true);
+      setTimeout(() => setCopyCodeSuccess(false), 2000);
     } catch (error) {
-      showCopyFeedback('Copy failed');
+      // Silently handle errors - no feedback for failures
     }
-  }, [showCopyFeedback]);
+  }, []);
 
   /**
    * Copies optimized code to clipboard
@@ -260,6 +285,13 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
     });
   }, [onChange]);
 
+  /**
+   * Handle Monaco editor ready
+   */
+  const handleEditorReady = useCallback((editor: editor.IStandaloneCodeEditor) => {
+    editorRef.current = editor;
+  }, []);
+
   const statistics = useMemo(() => {
     if (!renderedSvg) return null;
 
@@ -296,6 +328,8 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
         onThemeChange={handleThemeChange}
         isRendering={isRendering}
         isOptimizing={isOptimizing}
+        copyCodeSuccess={copyCodeSuccess}
+        optimizeSuccess={optimizeSuccess}
         exportSettings={state.exportSettings}
         onExportSettingsChange={handleExportSettingsChange}
         statistics={statistics}
@@ -331,6 +365,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
               <MermaidEditor
                 value={state.mermaidCode}
                 onChange={updateCode}
+                onEditorReady={handleEditorReady}
                 className="h-full"
               />
             </div>
