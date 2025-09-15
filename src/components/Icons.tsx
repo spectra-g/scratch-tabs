@@ -170,6 +170,10 @@ export {
   Braces,
   FileTerminal,
   GitCompare,
+  Shuffle,
+  Image,
+  Heart,
+  ShoppingCart,
 } from 'lucide-react';
 
 // Export types separately

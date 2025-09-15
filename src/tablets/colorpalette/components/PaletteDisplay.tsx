@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Copy, Check, Trash2, Plus } from '../../../components/Icons';
-import { ColorInfo } from '../types';
-import { createColorInfo, isValidHexColor } from '../utils/colorUtils';
+import { Copy, Check, Trash2, Plus, Palette, Shuffle } from '../../../components/Icons';
+import { ColorInfo, ColorHarmonyOptions } from '../types';
+import { createColorInfo, isValidHexColor, generateColorHarmony, hslToRgb, rgbToHex } from '../utils/colorUtils';
 
 interface PaletteDisplayProps {
   colors: ColorInfo[];
@@ -19,6 +19,8 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [harmonyBase, setHarmonyBase] = useState('#3B82F6');
+  const [harmonyType, setHarmonyType] = useState<ColorHarmonyOptions['type']>('complementary');
 
   const handleCopyColor = async (color: ColorInfo, index: number) => {
     try {
@@ -78,6 +80,31 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
     } else if (e.key === 'Escape') {
       handleCancelEdit();
     }
+  };
+
+  const handleGenerateHarmony = () => {
+    try {
+      const harmonyColors = generateColorHarmony({
+        type: harmonyType,
+        baseColor: harmonyBase,
+        variations: 4
+      });
+      onColorsChange(harmonyColors);
+    } catch (error) {
+      console.error('Failed to generate color harmony:', error);
+    }
+  };
+
+  const handleGenerateRandom = () => {
+    const randomColors = Array.from({ length: 5 }, () => {
+      const hue = Math.floor(Math.random() * 360);
+      const saturation = Math.floor(Math.random() * 50) + 50; // 50-100%
+      const lightness = Math.floor(Math.random() * 40) + 30; // 30-70%
+      const rgb = hslToRgb(hue, saturation, lightness);
+      const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+      return createColorInfo(hex);
+    });
+    onColorsChange(randomColors);
   };
 
   return (

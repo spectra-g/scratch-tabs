@@ -47,11 +47,13 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
     target: keyof UIPreviewMapping;
     children: React.ReactNode;
     className?: string;
-  }> = ({ target, children, className = '' }) => (
+    style?: React.CSSProperties;
+  }> = ({ target, children, className = '', style }) => (
     <div
       className={`transition-all ${className} ${
         draggedColor ? 'ring-2 ring-blue-400/50 ring-offset-2 ring-offset-gray-800' : ''
       }`}
+      style={style}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();

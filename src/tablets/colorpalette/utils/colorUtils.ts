@@ -394,34 +394,46 @@ export function generateColorHarmony(options: ColorHarmonyOptions): ColorInfo[] 
   const colors: ColorInfo[] = [baseColorInfo];
   
   switch (type) {
-    case 'complementary':
-      colors.push(createColorInfo(rgbToHex(...hslToRgb((baseHue + 180) % 360, baseSat, baseLum))));
+    case 'complementary': {
+      const rgb = hslToRgb((baseHue + 180) % 360, baseSat, baseLum);
+      colors.push(createColorInfo(rgbToHex(rgb.r, rgb.g, rgb.b)));
+    }
       break;
       
-    case 'triadic':
-      colors.push(createColorInfo(rgbToHex(...hslToRgb((baseHue + 120) % 360, baseSat, baseLum))));
-      colors.push(createColorInfo(rgbToHex(...hslToRgb((baseHue + 240) % 360, baseSat, baseLum))));
+    case 'triadic': {
+      const rgb1 = hslToRgb((baseHue + 120) % 360, baseSat, baseLum);
+      colors.push(createColorInfo(rgbToHex(rgb1.r, rgb1.g, rgb1.b)));
+      const rgb2 = hslToRgb((baseHue + 240) % 360, baseSat, baseLum);
+      colors.push(createColorInfo(rgbToHex(rgb2.r, rgb2.g, rgb2.b)));
+    }
       break;
       
     case 'analogous':
       for (let i = 1; i <= variations; i++) {
         const offset = (i * 30) % 360;
-        colors.push(createColorInfo(rgbToHex(...hslToRgb((baseHue + offset) % 360, baseSat, baseLum))));
-        colors.push(createColorInfo(rgbToHex(...hslToRgb((baseHue - offset + 360) % 360, baseSat, baseLum))));
+        const rgb1 = hslToRgb((baseHue + offset) % 360, baseSat, baseLum);
+        colors.push(createColorInfo(rgbToHex(rgb1.r, rgb1.g, rgb1.b)));
+        const rgb2 = hslToRgb((baseHue - offset + 360) % 360, baseSat, baseLum);
+        colors.push(createColorInfo(rgbToHex(rgb2.r, rgb2.g, rgb2.b)));
       }
       break;
       
     case 'monochromatic':
       for (let i = 1; i <= variations; i++) {
         const lightness = Math.max(10, Math.min(90, baseLum + (i * 15) - (variations * 7.5)));
-        colors.push(createColorInfo(rgbToHex(...hslToRgb(baseHue, baseSat, lightness))));
+        const rgb = hslToRgb(baseHue, baseSat, lightness);
+        colors.push(createColorInfo(rgbToHex(rgb.r, rgb.g, rgb.b)));
       }
       break;
       
-    case 'tetradic':
-      colors.push(createColorInfo(rgbToHex(...hslToRgb((baseHue + 90) % 360, baseSat, baseLum))));
-      colors.push(createColorInfo(rgbToHex(...hslToRgb((baseHue + 180) % 360, baseSat, baseLum))));
-      colors.push(createColorInfo(rgbToHex(...hslToRgb((baseHue + 270) % 360, baseSat, baseLum))));
+    case 'tetradic': {
+      const rgb1 = hslToRgb((baseHue + 90) % 360, baseSat, baseLum);
+      colors.push(createColorInfo(rgbToHex(rgb1.r, rgb1.g, rgb1.b)));
+      const rgb2 = hslToRgb((baseHue + 180) % 360, baseSat, baseLum);
+      colors.push(createColorInfo(rgbToHex(rgb2.r, rgb2.g, rgb2.b)));
+      const rgb3 = hslToRgb((baseHue + 270) % 360, baseSat, baseLum);
+      colors.push(createColorInfo(rgbToHex(rgb3.r, rgb3.g, rgb3.b)));
+    }
       break;
   }
   

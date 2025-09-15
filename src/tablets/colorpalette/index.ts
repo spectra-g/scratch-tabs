@@ -1,2 +1,2 @@
-export { ColorPaletteTablet } from './ColorPaletteTablet';
+export { default as ColorPaletteTablet } from './ColorPaletteTablet';
 export type * from './types';

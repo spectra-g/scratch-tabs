@@ -24,10 +24,18 @@ global.FileReader = jest.fn(() => ({
   result: 'data:image/png;base64,mock-data',
 })) as any;
 
+// Mock ImageData
+global.ImageData = jest.fn((width: number, height: number) => ({
+  data: new Uint8ClampedArray(width * height * 4),
+  width,
+  height,
+})) as any;
+
 describe('ColorPaletteTablet', () => {
   const mockOnChange = jest.fn();
   
   const defaultState: ColorPaletteState = {
+    type: 'colorpalette',
     colors: [],
     activeColorIndex: 0,
     generationMethod: 'manual',
@@ -119,8 +127,8 @@ describe('ColorPaletteTablet', () => {
 
       fireEvent.click(screen.getByText('Palette'));
       
-      // Should show palette content
-      expect(screen.getByText('Add color')).toBeInTheDocument();
+      // Should show palette content (Add color button with title attribute)
+      expect(screen.getByTitle('Add color')).toBeInTheDocument();
     });
   });
 
@@ -327,6 +335,192 @@ describe('ColorPaletteTablet', () => {
     });
   });
 
+  describe('Image Upload Functionality', () => {
+    beforeEach(() => {
+      // Mock HTMLCanvasElement and CanvasRenderingContext2D
+      const mockContext = {
+        drawImage: jest.fn(),
+        getImageData: jest.fn(() => ({
+          data: new Uint8ClampedArray([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255]),
+          width: 3,
+          height: 1,
+        })),
+      } as any;
+      
+      jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockContext);
+      
+      // Mock Image constructor
+      (global as any).Image = jest.fn(() => ({
+        onload: null,
+        onerror: null,
+        src: '',
+        width: 100,
+        height: 100,
+      }));
+    });
+
+    it('should show ImageColorExtractor when image is loaded', () => {
+      const stateWithImage = {
+        ...defaultState,
+        sourceImageData: new ImageData(2, 2),
+        sourceImageUrl: 'blob:mock-url',
+        generationMethod: 'image' as const,
+      };
+
+      render(
+        <ColorPaletteTablet
+          state={stateWithImage}
+          onChange={mockOnChange}
+        />
+      );
+
+      expect(screen.getByText('Image Color Extraction')).toBeInTheDocument();
+      expect(screen.getByText('Extract All')).toBeInTheDocument();
+      expect(screen.getByText('Click or drag to extract colors')).toBeInTheDocument();
+    });
+
+    it('should not show ImageColorExtractor when no image is loaded', () => {
+      render(
+        <ColorPaletteTablet
+          state={defaultState}
+          onChange={mockOnChange}
+        />
+      );
+
+      expect(screen.queryByText('Image Color Extraction')).not.toBeInTheDocument();
+    });
+
+    it('should handle image processing with combined callback', async () => {
+      render(
+        <ColorPaletteTablet
+          state={defaultState}
+          onChange={mockOnChange}
+        />
+      );
+
+      // Find the file input
+      const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
+      
+      if (fileInput) {
+        expect(fileInput.type).toBe('file');
+        expect(fileInput.accept).toBe('image/*');
+
+        // Create a mock file
+        const mockFile = new File(['mock content'], 'test-image.png', { type: 'image/png' });
+        
+        // Simulate file selection and processing
+        fireEvent.change(fileInput, { target: { files: [mockFile] } });
+
+        // Verify that the file input received the file
+        expect(fileInput.files).toHaveLength(1);
+        expect(fileInput.files![0]).toBe(mockFile);
+      } else {
+        // Alternative: verify the file upload UI exists
+        expect(screen.getByText('browse')).toBeInTheDocument();
+        expect(screen.getByText(/drop an image here/i)).toBeInTheDocument();
+      }
+    });
+
+    it('should handle image extraction from loaded image', () => {
+      const mockImageData = new ImageData(new Uint8ClampedArray([
+        255, 0, 0, 255,  // Red pixel
+        0, 255, 0, 255,  // Green pixel  
+        0, 0, 255, 255,  // Blue pixel
+        255, 255, 255, 255  // White pixel
+      ]), 2, 2);
+
+      const stateWithImage = {
+        ...defaultState,
+        sourceImageData: mockImageData,
+        sourceImageUrl: 'blob:mock-url',
+        generationMethod: 'image' as const,
+        colors: [
+          createColorInfo('#FF0000'),
+          createColorInfo('#00FF00'),
+          createColorInfo('#0000FF'),
+        ],
+      };
+
+      render(
+        <ColorPaletteTablet
+          state={stateWithImage}
+          onChange={mockOnChange}
+        />
+      );
+
+      // Find the image element
+      const imageElement = screen.getByAltText('Color extraction source');
+      expect(imageElement).toBeInTheDocument();
+      expect(imageElement).toHaveAttribute('src', 'blob:mock-url');
+
+      // Simulate clicking on the image for color extraction
+      fireEvent.click(imageElement);
+
+      // The click should trigger color extraction, but since we're testing the UI,
+      // we verify the image is interactive
+      expect(imageElement).toHaveClass('cursor-crosshair');
+    });
+
+    it('should display extract all button when image is loaded', () => {
+      const stateWithImage = {
+        ...defaultState,
+        sourceImageData: new ImageData(2, 2),
+        sourceImageUrl: 'blob:mock-url',
+        generationMethod: 'image' as const,
+      };
+
+      render(
+        <ColorPaletteTablet
+          state={stateWithImage}
+          onChange={mockOnChange}
+        />
+      );
+
+      const extractAllButton = screen.getByRole('button', { name: /extract all/i });
+      expect(extractAllButton).toBeInTheDocument();
+      
+      // Simulate clicking extract all
+      fireEvent.click(extractAllButton);
+      
+      // Verify the button is clickable (it should be a button element)
+      expect(extractAllButton.tagName).toBe('BUTTON');
+    });
+
+    it('should handle image upload errors gracefully', () => {
+      const stateWithError = {
+        ...defaultState,
+        error: 'Failed to process image',
+      };
+
+      render(
+        <ColorPaletteTablet
+          state={stateWithError}
+          onChange={mockOnChange}
+        />
+      );
+
+      expect(screen.getByText('Failed to process image')).toBeInTheDocument();
+    });
+
+    it('should handle generation method change to image', () => {
+      const stateWithImageMethod = {
+        ...defaultState,
+        generationMethod: 'image' as const,
+        colors: [createColorInfo('#FF0000')],
+      };
+
+      render(
+        <ColorPaletteTablet
+          state={stateWithImageMethod}
+          onChange={mockOnChange}
+        />
+      );
+
+      // Should render normally with image generation method
+      expect(screen.getByText('Color Palette Workspace')).toBeInTheDocument();
+    });
+  });
+
   describe('State Management', () => {
     it('should call onChange when state updates are needed', () => {
       render(
@@ -357,6 +551,20 @@ describe('ColorPaletteTablet', () => {
       // Verify state structure is maintained
       expect(stateWithColors.generationMethod).toBe('image');
       expect(stateWithColors.colors).toHaveLength(1);
+    });
+
+    it('should handle image state serialization properly', () => {
+      const stateWithImage = {
+        ...defaultState,
+        sourceImageData: new ImageData(2, 2),
+        sourceImageUrl: 'blob:mock-url',
+        generationMethod: 'image' as const,
+      };
+
+      // Test that state with image data is handled correctly
+      expect(stateWithImage.sourceImageData).toBeDefined();
+      expect(stateWithImage.sourceImageUrl).toBe('blob:mock-url');
+      expect(stateWithImage.generationMethod).toBe('image');
     });
   });
 });

@@ -34,6 +34,7 @@ export interface ExportFormat {
 }
 
 export interface ColorPaletteState {
+  type: 'colorpalette';
   colors: ColorInfo[];
   activeColorIndex: number;
   generationMethod: 'manual' | 'image' | 'harmony';

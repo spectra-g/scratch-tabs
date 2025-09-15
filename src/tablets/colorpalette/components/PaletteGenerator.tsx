@@ -9,15 +9,24 @@ import {
   createColorInfo 
 } from '../utils/colorUtils';
 
+const IMAGE_EXTRACTION_DEFAULTS = {
+  maxColors: 8,
+  quality: 10,
+} as const;
+
+const RANDOM_PALETTE_SIZE = 6;
+
 interface PaletteGeneratorProps {
   onColorsGenerated: (colors: ColorInfo[]) => void;
   onImageLoaded: (imageData: ImageData, imageUrl: string) => void;
+  onImageLoadedAndColorsGenerated?: (imageData: ImageData, imageUrl: string, colors: ColorInfo[]) => void;
   onError: (error: string) => void;
 }
 
 export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
   onColorsGenerated,
   onImageLoaded,
+  onImageLoadedAndColorsGenerated,
   onError,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -63,14 +72,16 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
       const imageData = await loadImageFromFile(file);
       const imageUrl = URL.createObjectURL(file);
       
-      onImageLoaded(imageData, imageUrl);
+      const colors = extractColorsFromImageData(imageData, IMAGE_EXTRACTION_DEFAULTS);
       
-      const colors = extractColorsFromImageData(imageData, {
-        maxColors: 8,
-        quality: 10,
-      });
-      
-      onColorsGenerated(colors);
+      // Use combined callback if available to avoid race conditions
+      if (onImageLoadedAndColorsGenerated) {
+        onImageLoadedAndColorsGenerated(imageData, imageUrl, colors);
+      } else {
+        // Fallback to separate callbacks
+        onImageLoaded(imageData, imageUrl);
+        onColorsGenerated(colors);
+      }
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Failed to process image');
     } finally {
@@ -92,7 +103,7 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
   }, [harmonyType, harmonyBase, onColorsGenerated, onError]);
 
   const handleGenerateRandom = useCallback(() => {
-    const colors = generateRandomPalette(6);
+    const colors = generateRandomPalette(RANDOM_PALETTE_SIZE);
     onColorsGenerated(colors);
   }, [onColorsGenerated]);
 

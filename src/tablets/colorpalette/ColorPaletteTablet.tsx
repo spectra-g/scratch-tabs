@@ -13,7 +13,7 @@ interface ColorPaletteTabletProps {
   onChange: (newState: ColorPaletteState) => void;
 }
 
-const defaultUIMapping: UIPreviewMapping = {
+const DEFAULT_UI_MAPPING: UIPreviewMapping = {
   background: '#FFFFFF',
   text: '#1F2937',
   primary: '#3B82F6',
@@ -22,27 +22,30 @@ const defaultUIMapping: UIPreviewMapping = {
   border: '#E5E7EB',
 };
 
+const DEFAULT_COLORS = [
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Yellow
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+] as const;
+
 export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   state,
   onChange,
 }) => {
+  
   const [activeTab, setActiveTab] = useState<'generator' | 'palette' | 'preview' | 'accessibility' | 'export'>('generator');
 
   // Initialize with default colors if empty
   useEffect(() => {
     if (state.colors.length === 0) {
-      const defaultColors = [
-        createColorInfo('#3B82F6'), // Blue
-        createColorInfo('#10B981'), // Green
-        createColorInfo('#F59E0B'), // Yellow
-        createColorInfo('#EF4444'), // Red
-        createColorInfo('#8B5CF6'), // Purple
-      ];
+      const defaultColors = DEFAULT_COLORS.map(createColorInfo);
       
       onChange({
         ...state,
         colors: defaultColors,
-        uiMapping: defaultUIMapping,
+        uiMapping: DEFAULT_UI_MAPPING,
       });
     }
   }, [state, onChange]);
@@ -62,6 +65,18 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
       sourceImageData: imageData,
       sourceImageUrl: imageUrl,
       generationMethod: 'image',
+      error: null,
+    });
+  }, [state, onChange]);
+
+  const handleImageProcessed = useCallback((imageData: ImageData, imageUrl: string, colors: ColorInfo[]) => {
+    onChange({
+      ...state,
+      sourceImageData: imageData,
+      sourceImageUrl: imageUrl,
+      colors,
+      activeColorIndex: 0,
+      generationMethod: 'image' as const,
       error: null,
     });
   }, [state, onChange]);
@@ -170,6 +185,7 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
             <PaletteGenerator
               onColorsGenerated={handleColorsGenerated}
               onImageLoaded={handleImageLoaded}
+              onImageLoadedAndColorsGenerated={handleImageProcessed}
               onError={handleError}
             />
             
@@ -225,4 +241,47 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
       </div>
     </div>
   );
+};
+
+// Default export for the dynamic registry
+const createColorPaletteInitialState = (payload?: any): ColorPaletteState => ({
+  type: 'colorpalette' as const,
+  colors: [],
+  activeColorIndex: 0,
+  generationMethod: 'manual',
+  sourceImageUrl: null,
+  sourceImageData: null,
+  extractionRegion: null,
+  uiMapping: DEFAULT_UI_MAPPING,
+  selectedExportFormat: 'hex',
+  isExtracting: false,
+  error: null,
+  harmonyType: 'complementary',
+  baseColor: DEFAULT_COLORS[0]
+});
+
+export default {
+  id: 'colorpalette',
+  label: 'Color Palette',
+  
+  createInitialState: createColorPaletteInitialState,
+  
+  serializeState: (state: ColorPaletteState) => {
+    // Exclude non-serializable ImageData from state persistence
+    const { sourceImageData, ...serializableState } = state;
+    return JSON.stringify(serializableState);
+  },
+  
+  deserializeState: (serialized: string): ColorPaletteState => {
+    try {
+      const parsed = JSON.parse(serialized);
+      // Ensure sourceImageData is null after deserialization since it can't be persisted
+      return { ...parsed, sourceImageData: null };
+    } catch (error) {
+      return createColorPaletteInitialState();
+    }
+  },
+  
+  render: (state: ColorPaletteState, onChange: (newState: ColorPaletteState) => void) => 
+    React.createElement(ColorPaletteTablet, { state, onChange }),
 };

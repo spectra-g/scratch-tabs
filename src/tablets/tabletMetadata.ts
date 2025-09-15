@@ -1,5 +1,5 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText, Type, Shield, Network } from "../components/Icons";
+import { FileText, Type, Shield, Network, Palette } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
@@ -328,9 +328,7 @@ export const tabletMetadata: TabletMetadata[] = [
     id: 'colorpalette',
     label: 'Color Palette Workspace',
     description: 'Extract, create, and test color palettes with accessibility insights',
-    category: 'Design',
     keywords: ['color', 'palette', 'design', 'accessibility', 'contrast', 'css', 'extract'],
-    complexity: 'intermediate',
     getActionsForContext: (context) => {
       if (context.source === 'editor-tab' && context.content) {
         // Check if content contains color values
