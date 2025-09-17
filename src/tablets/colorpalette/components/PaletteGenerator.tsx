@@ -1,12 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { Upload, Palette, Shuffle, Image as ImageIcon } from '../../../components/Icons';
-import { ColorInfo, ImageExtractionOptions, ColorHarmonyOptions } from '../types';
-import { 
-  loadImageFromFile, 
-  extractColorsFromImageData, 
-  generateColorHarmony, 
-  generateRandomPalette,
-  createColorInfo 
+import { Palette, Shuffle, Image as ImageIcon } from '../../../components/Icons';
+import { ColorInfo, ColorHarmonyOptions } from '../types';
+import {
+  loadImageFromFile,
+  extractColorsFromImageData,
+  generateColorHarmony,
+  generateRandomPalette
 } from '../utils/colorUtils';
 
 const IMAGE_EXTRACTION_DEFAULTS = {
@@ -34,46 +33,13 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
   const [harmonyBase, setHarmonyBase] = useState('#3B82F6');
   const [harmonyType, setHarmonyType] = useState<ColorHarmonyOptions['type']>('complementary');
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    const imageFile = files.find(file => file.type.startsWith('image/'));
-    
-    if (!imageFile) {
-      onError('Please drop an image file');
-      return;
-    }
-    
-    await handleImageFile(imageFile);
-  }, [onColorsGenerated, onImageLoaded, onError]);
-
-  const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      await handleImageFile(file);
-    }
-  }, [onColorsGenerated, onImageLoaded, onError]);
-
-  const handleImageFile = async (file: File) => {
+  const handleImageFile = useCallback(async (file: File) => {
     setIsExtracting(true);
     try {
       const imageData = await loadImageFromFile(file);
       const imageUrl = URL.createObjectURL(file);
-      
       const colors = extractColorsFromImageData(imageData, IMAGE_EXTRACTION_DEFAULTS);
-      
+
       // Use combined callback if available to avoid race conditions
       if (onImageLoadedAndColorsGenerated) {
         onImageLoadedAndColorsGenerated(imageData, imageUrl, colors);
@@ -87,7 +53,39 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
     } finally {
       setIsExtracting(false);
     }
-  };
+  }, [onColorsGenerated, onImageLoaded, onImageLoadedAndColorsGenerated, onError]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith('image/'));
+
+    if (!imageFile) {
+      onError('Please drop an image file');
+      return;
+    }
+
+    await handleImageFile(imageFile);
+  }, [handleImageFile, onError]);
+
+  const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      await handleImageFile(file);
+    }
+  }, [handleImageFile]);
 
   const handleGenerateHarmony = useCallback(() => {
     try {
@@ -97,7 +95,7 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
         variations: 3,
       });
       onColorsGenerated(colors);
-    } catch (error) {
+    } catch {
       onError('Failed to generate color harmony');
     }
   }, [harmonyType, harmonyBase, onColorsGenerated, onError]);

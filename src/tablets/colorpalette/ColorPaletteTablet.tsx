@@ -34,8 +34,18 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   state,
   onChange,
 }) => {
-  
+
   const [activeTab, setActiveTab] = useState<'generator' | 'palette' | 'preview' | 'accessibility' | 'export'>('generator');
+
+  // Store ImageData separately since it can't be serialized by the tablet framework
+  const [currentImageData, setCurrentImageData] = useState<ImageData | null>(null);
+
+  // Sync imageData with imageUrl state
+  useEffect(() => {
+    if (!state.sourceImageUrl) {
+      setCurrentImageData(null);
+    }
+  }, [state.sourceImageUrl]);
 
   // Initialize with default colors if empty
   useEffect(() => {
@@ -60,9 +70,9 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   }, [state, onChange]);
 
   const handleImageLoaded = useCallback((imageData: ImageData, imageUrl: string) => {
+    setCurrentImageData(imageData);
     onChange({
       ...state,
-      sourceImageData: imageData,
       sourceImageUrl: imageUrl,
       generationMethod: 'image',
       error: null,
@@ -70,9 +80,9 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   }, [state, onChange]);
 
   const handleImageProcessed = useCallback((imageData: ImageData, imageUrl: string, colors: ColorInfo[]) => {
+    setCurrentImageData(imageData);
     onChange({
       ...state,
-      sourceImageData: imageData,
       sourceImageUrl: imageUrl,
       colors,
       activeColorIndex: 0,
@@ -125,7 +135,7 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
     });
   }, [state, onChange]);
 
-  const handleCreateNewTab = useCallback((content: string, language: string, title: string) => {
+  const handleCreateNewTab = useCallback((content: string) => {
     // This would integrate with the tablet bridge to create a new tab
     // For now, we'll copy to clipboard as fallback
     navigator.clipboard.writeText(content).catch(console.error);
@@ -189,9 +199,9 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
               onError={handleError}
             />
             
-            {state.sourceImageData && state.sourceImageUrl && (
+            {currentImageData && state.sourceImageUrl && (
               <ImageColorExtractor
-                imageData={state.sourceImageData}
+                imageData={currentImageData}
                 imageUrl={state.sourceImageUrl}
                 onColorsExtracted={handleColorsGenerated}
                 onRegionSelect={handleRegionSelect}
@@ -244,7 +254,7 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
 };
 
 // Default export for the dynamic registry
-const createColorPaletteInitialState = (payload?: any): ColorPaletteState => ({
+const createColorPaletteInitialState = (): ColorPaletteState => ({
   type: 'colorpalette' as const,
   colors: [],
   activeColorIndex: 0,
@@ -268,6 +278,7 @@ export default {
   
   serializeState: (state: ColorPaletteState) => {
     // Exclude non-serializable ImageData from state persistence
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sourceImageData, ...serializableState } = state;
     return JSON.stringify(serializableState);
   },
@@ -277,7 +288,7 @@ export default {
       const parsed = JSON.parse(serialized);
       // Ensure sourceImageData is null after deserialization since it can't be persisted
       return { ...parsed, sourceImageData: null };
-    } catch (error) {
+    } catch {
       return createColorPaletteInitialState();
     }
   },
