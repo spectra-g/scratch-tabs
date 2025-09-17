@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Copy, Check, Trash2, Plus, Palette, Shuffle } from '../../../components/Icons';
-import { ColorInfo, ColorHarmonyOptions } from '../types';
-import { createColorInfo, isValidHexColor, generateColorHarmony, hslToRgb, rgbToHex } from '../utils/colorUtils';
+import { Copy, Check, Trash2, Plus } from '../../../components/Icons';
+import { ColorInfo } from '../types';
+import { createColorInfo, isValidHexColor } from '../utils/colorUtils';
 
 interface PaletteDisplayProps {
   colors: ColorInfo[];
@@ -19,8 +19,6 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
-  const [harmonyBase, setHarmonyBase] = useState('#3B82F6');
-  const [harmonyType, setHarmonyType] = useState<ColorHarmonyOptions['type']>('complementary');
 
   const handleCopyColor = async (color: ColorInfo, index: number) => {
     try {
@@ -82,30 +80,6 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
     }
   };
 
-  const handleGenerateHarmony = () => {
-    try {
-      const harmonyColors = generateColorHarmony({
-        type: harmonyType,
-        baseColor: harmonyBase,
-        variations: 4
-      });
-      onColorsChange(harmonyColors);
-    } catch (error) {
-      console.error('Failed to generate color harmony:', error);
-    }
-  };
-
-  const handleGenerateRandom = () => {
-    const randomColors = Array.from({ length: 5 }, () => {
-      const hue = Math.floor(Math.random() * 360);
-      const saturation = Math.floor(Math.random() * 50) + 50; // 50-100%
-      const lightness = Math.floor(Math.random() * 40) + 30; // 30-70%
-      const rgb = hslToRgb(hue, saturation, lightness);
-      const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-      return createColorInfo(hex);
-    });
-    onColorsChange(randomColors);
-  };
 
   return (
     <div className="space-y-4">
@@ -209,59 +183,6 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
         ))}
       </div>
 
-      {/* Color Harmony Generator */}
-      <div className="space-y-3 pt-4 border-t border-gray-700">
-        <h4 className="text-sm font-medium text-gray-300">Generate Harmony</h4>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Base Color</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="color"
-                value={harmonyBase}
-                onChange={(e) => setHarmonyBase(e.target.value)}
-                className="w-6 h-6 rounded border border-gray-600 bg-transparent cursor-pointer"
-              />
-              <input
-                type="text"
-                value={harmonyBase}
-                onChange={(e) => setHarmonyBase(e.target.value)}
-                className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200 font-mono"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Type</label>
-            <select
-              value={harmonyType}
-              onChange={(e) => setHarmonyType(e.target.value as ColorHarmonyOptions['type'])}
-              className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200"
-            >
-              <option value="complementary">Complementary</option>
-              <option value="triadic">Triadic</option>
-              <option value="analogous">Analogous</option>
-              <option value="monochromatic">Monochromatic</option>
-              <option value="tetradic">Tetradic</option>
-            </select>
-          </div>
-        </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={handleGenerateHarmony}
-            className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
-          >
-            <Palette size={14} />
-            <span>Generate</span>
-          </button>
-          <button
-            onClick={handleGenerateRandom}
-            className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors"
-            title="Random palette"
-          >
-            <Shuffle size={14} />
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

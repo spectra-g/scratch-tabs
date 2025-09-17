@@ -198,7 +198,7 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
               onImageLoadedAndColorsGenerated={handleImageProcessed}
               onError={handleError}
             />
-            
+
             {currentImageData && state.sourceImageUrl && (
               <ImageColorExtractor
                 imageData={currentImageData}
@@ -206,6 +206,38 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
                 onColorsExtracted={handleColorsGenerated}
                 onRegionSelect={handleRegionSelect}
               />
+            )}
+
+            {/* Generated Colors Preview */}
+            {state.colors.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-gray-300">Generated Palette</h3>
+                  <span className="text-xs text-gray-500">{state.colors.length} colors</span>
+                </div>
+                <div className="grid grid-cols-6 gap-2">
+                  {state.colors.map((color, index) => (
+                    <div key={index} className="group relative">
+                      <div
+                        className="w-full h-12 rounded-lg border border-gray-600 cursor-pointer transition-transform hover:scale-105"
+                        style={{ backgroundColor: color.hex }}
+                        title={`${color.hex} • ${color.name || 'Unnamed'}`}
+                      />
+                      <div className="mt-1 text-center">
+                        <span className="text-xs font-mono text-gray-400">{color.hex}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-center">
+                  <button
+                    onClick={() => setActiveTab('palette')}
+                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    View in Palette tab for editing →
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}
