@@ -259,47 +259,13 @@ function getColorName(hex: string): string {
 }
 
 /**
- * Extracts dominant colors from image data using median cut algorithm
+ * Extracts dominant colors from image data using enhanced median cut algorithm
  */
 export function extractColorsFromImageData(
   imageData: ImageData,
-  options: ImageExtractionOptions = { maxColors: 8, quality: 10 }
+  options: ImageExtractionOptions = { maxColors: 8, quality: 3 }
 ): ColorInfo[] {
-  const { maxColors, quality, region } = options;
-  const pixels: Array<[number, number, number]> = [];
-  
-  // Extract pixel data with quality sampling
-  const { data, width, height } = imageData;
-  const startX = region?.x || 0;
-  const startY = region?.y || 0;
-  const endX = region ? Math.min(startX + region.width, width) : width;
-  const endY = region ? Math.min(startY + region.height, height) : height;
-  
-  for (let y = startY; y < endY; y += quality) {
-    for (let x = startX; x < endX; x += quality) {
-      const index = (y * width + x) * 4;
-      const r = data[index];
-      const g = data[index + 1];
-      const b = data[index + 2];
-      const a = data[index + 3];
-      
-      // Skip transparent pixels
-      if (a > 128) {
-        pixels.push([r, g, b]);
-      }
-    }
-  }
-  
-  if (pixels.length === 0) {
-    return [createColorInfo('#000000')];
-  }
-  
-  // Apply median cut algorithm
-  const dominantColors = medianCut(pixels, maxColors);
-  
-  return dominantColors.map(rgb => 
-    createColorInfo(rgbToHex(rgb[0], rgb[1], rgb[2]))
-  );
+  return extractColorsWithEnhancedAlgorithm(imageData, options);
 }
 
 /**
@@ -523,7 +489,7 @@ export function loadImageFromFile(file: File): Promise<ImageData> {
       try {
         const imageData = ctx.getImageData(0, 0, img.width, img.height);
         resolve(imageData);
-      } catch (error) {
+      } catch {
         reject(new Error('Failed to extract image data'));
       }
     };
@@ -536,6 +502,130 @@ export function loadImageFromFile(file: File): Promise<ImageData> {
   });
 }
 
+// Constants for color extraction
+const COLOR_SIMILARITY_THRESHOLD = 25;
+const MIN_LIGHTNESS_THRESHOLD = 20;
+const MAX_LIGHTNESS_THRESHOLD = 80;
+const MAX_RGB_DIFFERENCE = 765; // 255 * 3
+const LIGHTNESS_PENALTY = 0.3;
+
+type RGBTuple = [number, number, number];
+
+/**
+ * Calculates Euclidean distance between two RGB colors
+ */
+function calculateColorDistance(color1: RGBTuple, color2: RGBTuple): number {
+  const [r1, g1, b1] = color1;
+  const [r2, g2, b2] = color2;
+  return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+}
+
+/**
+ * Filters out similar colors to maintain palette diversity
+ */
+function filterSimilarColors(
+  colors: RGBTuple[],
+  threshold: number = COLOR_SIMILARITY_THRESHOLD
+): RGBTuple[] {
+  const uniqueColors: RGBTuple[] = [];
+
+  for (const color of colors) {
+    const hasExistingSimilar = uniqueColors.some(existingColor =>
+      calculateColorDistance(color, existingColor) < threshold
+    );
+
+    if (!hasExistingSimilar) {
+      uniqueColors.push(color);
+    }
+  }
+
+  return uniqueColors;
+}
+
+/**
+ * Calculates visual interest score for color selection priority
+ */
+function calculateColorInterestScore(color: RGBTuple): number {
+  const [r, g, b] = color;
+  const { s, l } = rgbToHsl(r, g, b);
+
+  const saturationScore = s / 100;
+  const lightnessScore = (l > MIN_LIGHTNESS_THRESHOLD && l < MAX_LIGHTNESS_THRESHOLD)
+    ? 1
+    : LIGHTNESS_PENALTY;
+  const diversityScore = (Math.abs(r - g) + Math.abs(g - b) + Math.abs(r - b)) / MAX_RGB_DIFFERENCE;
+
+  return saturationScore * lightnessScore * (1 + diversityScore);
+}
+
+// Constants for enhanced color extraction
+const ALPHA_THRESHOLD = 128;
+const DEFAULT_EXTRACTION_QUALITY = 3;
+const COLOR_EXPANSION_FACTOR = 2;
+const MAX_INITIAL_COLORS = 16;
+
+/**
+ * Enhanced color extraction with diversity filtering and intelligent selection
+ */
+function extractColorsWithEnhancedAlgorithm(
+  imageData: ImageData,
+  options: ImageExtractionOptions = { maxColors: 8, quality: DEFAULT_EXTRACTION_QUALITY }
+): ColorInfo[] {
+  const { maxColors, quality = DEFAULT_EXTRACTION_QUALITY, region } = options;
+  const pixels: RGBTuple[] = [];
+
+  // Extract pixel data from specified region or entire image
+  const { data, width, height } = imageData;
+  const bounds = {
+    startX: region?.x || 0,
+    startY: region?.y || 0,
+    endX: region ? Math.min(region.x + region.width, width) : width,
+    endY: region ? Math.min(region.y + region.height, height) : height,
+  };
+
+  // Sample pixels with specified quality
+  for (let y = bounds.startY; y < bounds.endY; y += quality) {
+    for (let x = bounds.startX; x < bounds.endX; x += quality) {
+      const pixelIndex = (y * width + x) * 4;
+      const rgba = {
+        r: data[pixelIndex],
+        g: data[pixelIndex + 1],
+        b: data[pixelIndex + 2],
+        a: data[pixelIndex + 3],
+      };
+
+      // Include only non-transparent pixels
+      if (rgba.a > ALPHA_THRESHOLD) {
+        pixels.push([rgba.r, rgba.g, rgba.b]);
+      }
+    }
+  }
+
+  if (pixels.length === 0) {
+    return [createColorInfo('#000000')];
+  }
+
+  // Extract initial set of dominant colors
+  const initialColorCount = Math.min(maxColors * COLOR_EXPANSION_FACTOR, MAX_INITIAL_COLORS);
+  const dominantColors = medianCut(pixels, initialColorCount);
+
+  // Filter out similar colors for diversity
+  const uniqueColors = filterSimilarColors(dominantColors);
+
+  // Rank colors by visual interest and select the best ones
+  const rankedColors = uniqueColors
+    .map(color => ({
+      color,
+      interestScore: calculateColorInterestScore(color)
+    }))
+    .sort((a, b) => b.interestScore - a.interestScore)
+    .slice(0, maxColors);
+
+  return rankedColors.map(({ color }) =>
+    createColorInfo(rgbToHex(color[0], color[1], color[2]))
+  );
+}
+
 /**
  * Extracts colors from a specific region of image data
  */
@@ -544,9 +634,9 @@ export function extractColorsFromRegion(
   region: { x: number; y: number; width: number; height: number },
   maxColors: number = 5
 ): ColorInfo[] {
-  return extractColorsFromImageData(imageData, {
+  return extractColorsWithEnhancedAlgorithm(imageData, {
     maxColors,
-    quality: 10,
+    quality: 2,
     region,
   });
 }

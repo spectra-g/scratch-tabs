@@ -39,6 +39,10 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
 
   // Store ImageData separately since it can't be serialized by the tablet framework
   const [currentImageData, setCurrentImageData] = useState<ImageData | null>(null);
+  const [colorsUpdated, setColorsUpdated] = useState(false);
+
+  // Local color override to bypass tablet framework state issues
+  const [localColors, setLocalColors] = useState<ColorInfo[] | null>(null);
 
   // Sync imageData with imageUrl state
   useEffect(() => {
@@ -51,7 +55,7 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   useEffect(() => {
     if (state.colors.length === 0) {
       const defaultColors = DEFAULT_COLORS.map(createColorInfo);
-      
+
       onChange({
         ...state,
         colors: defaultColors,
@@ -61,9 +65,15 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   }, [state, onChange]);
 
   const handleColorsGenerated = useCallback((colors: ColorInfo[]) => {
+    // Update local colors immediately for UI responsiveness
+    setLocalColors([...colors]);
+    setColorsUpdated(true);
+    setTimeout(() => setColorsUpdated(false), 500);
+
+    // Update the tablet state
     onChange({
       ...state,
-      colors,
+      colors: [...colors],
       activeColorIndex: 0,
       error: null,
     });
@@ -209,19 +219,32 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
             )}
 
             {/* Generated Colors Preview */}
-            {state.colors.length > 0 && (
-              <div className="space-y-3">
+            {((localColors && localColors.length > 0) || state.colors.length > 0) && (
+              <div className={`space-y-3 border rounded-lg p-4 transition-all duration-300 ${
+                colorsUpdated
+                  ? 'border-green-400 bg-green-800/20 shadow-lg shadow-green-400/20'
+                  : 'border-gray-600 bg-gray-800/30'
+              }`}>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-300">Generated Palette</h3>
-                  <span className="text-xs text-gray-500">{state.colors.length} colors</span>
+                  <h3 className="text-sm font-medium text-gray-300">
+                    Generated Palette
+                    {colorsUpdated && <span className="ml-2 text-green-400 animate-pulse">● Updated</span>}
+                  </h3>
+                  <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
+                    {(localColors || state.colors).length} colors
+                  </span>
                 </div>
                 <div className="grid grid-cols-6 gap-2">
-                  {state.colors.map((color, index) => (
-                    <div key={index} className="group relative">
+                  {(localColors || state.colors).map((color, index) => (
+                    <div
+                      key={`color-${index}-${color.hex}`}
+                      className="group relative"
+                    >
                       <div
-                        className="w-full h-12 rounded-lg border border-gray-600 cursor-pointer transition-transform hover:scale-105"
+                        className="w-full h-12 rounded-lg border border-gray-600 cursor-pointer transition-all duration-200 hover:scale-105 hover:border-blue-400"
                         style={{ backgroundColor: color.hex }}
                         title={`${color.hex} • ${color.name || 'Unnamed'}`}
+                        onClick={() => setActiveTab('palette')}
                       />
                       <div className="mt-1 text-center">
                         <span className="text-xs font-mono text-gray-400">{color.hex}</span>
@@ -232,7 +255,7 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
                 <div className="text-center">
                   <button
                     onClick={() => setActiveTab('palette')}
-                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors underline"
                   >
                     View in Palette tab for editing →
                   </button>

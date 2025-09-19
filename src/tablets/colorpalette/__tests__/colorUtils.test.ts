@@ -15,7 +15,25 @@ import {
   generateJsonArray,
   generateRandomPalette,
   sortColors,
+  extractColorsFromImageData,
+  extractColorsFromRegion,
 } from '../utils/colorUtils';
+
+// Mock ImageData for Node.js environment
+class MockImageData {
+  data: Uint8ClampedArray;
+  width: number;
+  height: number;
+
+  constructor(data: Uint8ClampedArray, width: number, height: number) {
+    this.data = data;
+    this.width = width;
+    this.height = height;
+  }
+}
+
+// Set up global ImageData for tests
+(global as unknown as { ImageData: typeof MockImageData }).ImageData = MockImageData;
 
 describe('colorUtils', () => {
   describe('hexToRgb', () => {
@@ -250,6 +268,151 @@ describe('colorUtils', () => {
       const sorted = sortColors(colors, 'luminance');
       expect(sorted[0].luminance).toBeGreaterThanOrEqual(sorted[1].luminance);
       expect(sorted[1].luminance).toBeGreaterThanOrEqual(sorted[2].luminance);
+    });
+  });
+
+  describe('Image Color Extraction', () => {
+    // Helper function to create test ImageData
+    function createTestImageData(width: number, height: number, pixelData: number[][]): ImageData {
+      const data = new Uint8ClampedArray(width * height * 4);
+
+      for (let i = 0; i < pixelData.length; i++) {
+        const [r, g, b, a = 255] = pixelData[i];
+        const pixelIndex = i * 4;
+        data[pixelIndex] = r;
+        data[pixelIndex + 1] = g;
+        data[pixelIndex + 2] = b;
+        data[pixelIndex + 3] = a;
+      }
+
+      return new ImageData(data, width, height);
+    }
+
+    describe('extractColorsFromImageData', () => {
+      it('should extract colors from simple ImageData', () => {
+        const imageData = createTestImageData(2, 2, [
+          [255, 0, 0],    // Red
+          [0, 255, 0],    // Green
+          [0, 0, 255],    // Blue
+          [255, 255, 255] // White
+        ]);
+
+        const colors = extractColorsFromImageData(imageData, { maxColors: 4, quality: 1 });
+
+        expect(colors).toHaveLength(4);
+        expect(colors.every(color => color.hex.match(/^#[A-F0-9]{6}$/))).toBe(true);
+      });
+
+      it('should handle transparent pixels', () => {
+        const imageData = createTestImageData(2, 2, [
+          [255, 0, 0, 255],  // Red (opaque)
+          [0, 255, 0, 0],    // Green (transparent)
+          [0, 0, 255, 255],  // Blue (opaque)
+          [255, 255, 255, 128] // White (semi-transparent)
+        ]);
+
+        const colors = extractColorsFromImageData(imageData, { maxColors: 4, quality: 1 });
+
+        // Should extract colors from non-transparent pixels
+        expect(colors.length).toBeGreaterThan(0);
+        expect(colors.length).toBeLessThanOrEqual(4);
+      });
+
+      it('should limit colors to maxColors parameter', () => {
+        const imageData = createTestImageData(3, 3, [
+          [255, 0, 0], [0, 255, 0], [0, 0, 255],
+          [255, 255, 0], [255, 0, 255], [0, 255, 255],
+          [128, 128, 128], [64, 64, 64], [192, 192, 192]
+        ]);
+
+        const colors = extractColorsFromImageData(imageData, { maxColors: 3, quality: 1 });
+
+        expect(colors).toHaveLength(3);
+      });
+
+      it('should return black for empty image', () => {
+        const imageData = createTestImageData(1, 1, [[0, 0, 0, 0]]); // Transparent black
+
+        const colors = extractColorsFromImageData(imageData, { maxColors: 5, quality: 1 });
+
+        expect(colors).toHaveLength(1);
+        expect(colors[0].hex).toBe('#000000');
+      });
+    });
+
+    describe('extractColorsFromRegion', () => {
+      it('should extract colors from specified region', () => {
+        const imageData = createTestImageData(4, 4, [
+          [255, 0, 0], [255, 0, 0], [0, 255, 0], [0, 255, 0],
+          [255, 0, 0], [255, 0, 0], [0, 255, 0], [0, 255, 0],
+          [0, 0, 255], [0, 0, 255], [255, 255, 0], [255, 255, 0],
+          [0, 0, 255], [0, 0, 255], [255, 255, 0], [255, 255, 0]
+        ]);
+
+        // Extract from top-left quadrant (should be mostly red)
+        const region = { x: 0, y: 0, width: 2, height: 2 };
+        const colors = extractColorsFromRegion(imageData, region, 3);
+
+        expect(colors.length).toBeGreaterThan(0);
+        expect(colors.length).toBeLessThanOrEqual(3);
+      });
+
+      it('should handle region boundaries correctly', () => {
+        const imageData = createTestImageData(2, 2, [
+          [255, 0, 0], [0, 255, 0],
+          [0, 0, 255], [255, 255, 255]
+        ]);
+
+        // Region that goes outside image bounds
+        const region = { x: 1, y: 1, width: 5, height: 5 };
+        const colors = extractColorsFromRegion(imageData, region, 2);
+
+        // Should not crash and should return valid colors
+        expect(colors.length).toBeGreaterThan(0);
+        expect(colors.every(color => typeof color.hex === 'string')).toBe(true);
+      });
+    });
+
+    describe('Color Diversity and Quality', () => {
+      it('should prioritize vibrant colors over dull ones', () => {
+        const imageData = createTestImageData(3, 3, [
+          [240, 240, 240], [240, 240, 240], [240, 240, 240], // Dull grays
+          [240, 240, 240], [255, 0, 0], [240, 240, 240],     // One bright red
+          [240, 240, 240], [240, 240, 240], [240, 240, 240]  // More dull grays
+        ]);
+
+        const colors = extractColorsFromImageData(imageData, { maxColors: 2, quality: 1 });
+
+        // Should prefer the vibrant red over the dull grays
+        const hasVibrantColor = colors.some(color => {
+          const { s } = color.hsl;
+          return s > 50; // High saturation indicates vibrant color
+        });
+
+        expect(hasVibrantColor).toBe(true);
+      });
+
+      it('should remove similar colors for diversity', () => {
+        const imageData = createTestImageData(3, 3, [
+          [255, 0, 0], [254, 1, 1], [253, 2, 2],     // Very similar reds
+          [0, 255, 0], [1, 254, 1], [2, 253, 2],     // Very similar greens
+          [0, 0, 255], [1, 1, 254], [2, 2, 253]      // Very similar blues
+        ]);
+
+        const colors = extractColorsFromImageData(imageData, { maxColors: 6, quality: 1 });
+
+        // Should have fewer than 9 colors due to similarity filtering
+        expect(colors.length).toBeLessThan(9);
+
+        // Check that colors are reasonably diverse
+        for (let i = 0; i < colors.length - 1; i++) {
+          for (let j = i + 1; j < colors.length; j++) {
+            const color1 = colors[i];
+            const color2 = colors[j];
+            expect(color1.hex).not.toBe(color2.hex);
+          }
+        }
+      });
     });
   });
 });
