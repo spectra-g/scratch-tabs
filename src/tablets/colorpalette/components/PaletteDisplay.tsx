@@ -25,8 +25,8 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
       await navigator.clipboard.writeText(color.hex);
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy color:', error);
+    } catch {
+      // Silently fail if clipboard access is denied
     }
   };
 

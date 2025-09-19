@@ -41,9 +41,6 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   const [currentImageData, setCurrentImageData] = useState<ImageData | null>(null);
   const [colorsUpdated, setColorsUpdated] = useState(false);
 
-  // Local color override to bypass tablet framework state issues
-  const [localColors, setLocalColors] = useState<ColorInfo[] | null>(null);
-
   // Sync imageData with imageUrl state
   useEffect(() => {
     if (!state.sourceImageUrl) {
@@ -65,16 +62,25 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   }, [state, onChange]);
 
   const handleColorsGenerated = useCallback((colors: ColorInfo[]) => {
-    // Update local colors immediately for UI responsiveness
-    setLocalColors([...colors]);
     setColorsUpdated(true);
     setTimeout(() => setColorsUpdated(false), 500);
+
+    // Auto-map colors to UI elements for immediate preview
+    const autoMapping: UIPreviewMapping = {
+      background: colors[0]?.hex || DEFAULT_UI_MAPPING.background,
+      text: colors[colors.length - 1]?.hex || DEFAULT_UI_MAPPING.text,
+      primary: colors[1]?.hex || DEFAULT_UI_MAPPING.primary,
+      secondary: colors[2]?.hex || DEFAULT_UI_MAPPING.secondary,
+      accent: colors[3]?.hex || DEFAULT_UI_MAPPING.accent,
+      border: colors[4]?.hex || DEFAULT_UI_MAPPING.border,
+    };
 
     // Update the tablet state
     onChange({
       ...state,
       colors: [...colors],
       activeColorIndex: 0,
+      uiMapping: autoMapping,
       error: null,
     });
   }, [state, onChange]);
@@ -91,12 +97,24 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
 
   const handleImageProcessed = useCallback((imageData: ImageData, imageUrl: string, colors: ColorInfo[]) => {
     setCurrentImageData(imageData);
+
+    // Auto-map colors to UI elements for immediate preview
+    const autoMapping: UIPreviewMapping = {
+      background: colors[0]?.hex || DEFAULT_UI_MAPPING.background,
+      text: colors[colors.length - 1]?.hex || DEFAULT_UI_MAPPING.text,
+      primary: colors[1]?.hex || DEFAULT_UI_MAPPING.primary,
+      secondary: colors[2]?.hex || DEFAULT_UI_MAPPING.secondary,
+      accent: colors[3]?.hex || DEFAULT_UI_MAPPING.accent,
+      border: colors[4]?.hex || DEFAULT_UI_MAPPING.border,
+    };
+
     onChange({
       ...state,
       sourceImageUrl: imageUrl,
       colors,
       activeColorIndex: 0,
       generationMethod: 'image' as const,
+      uiMapping: autoMapping,
       error: null,
     });
   }, [state, onChange]);
@@ -148,7 +166,9 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
   const handleCreateNewTab = useCallback((content: string) => {
     // This would integrate with the tablet bridge to create a new tab
     // For now, we'll copy to clipboard as fallback
-    navigator.clipboard.writeText(content).catch(console.error);
+    navigator.clipboard.writeText(content).catch(() => {
+      // Silently fail if clipboard access is denied
+    });
   }, []);
 
   const tabs = [
@@ -219,7 +239,7 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
             )}
 
             {/* Generated Colors Preview */}
-            {((localColors && localColors.length > 0) || state.colors.length > 0) && (
+            {state.colors.length > 0 && (
               <div className={`space-y-3 border rounded-lg p-4 transition-all duration-300 ${
                 colorsUpdated
                   ? 'border-green-400 bg-green-800/20 shadow-lg shadow-green-400/20'
@@ -231,11 +251,11 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
                     {colorsUpdated && <span className="ml-2 text-green-400 animate-pulse">● Updated</span>}
                   </h3>
                   <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
-                    {(localColors || state.colors).length} colors
+                    {state.colors.length} colors
                   </span>
                 </div>
                 <div className="grid grid-cols-6 gap-2">
-                  {(localColors || state.colors).map((color, index) => (
+                  {state.colors.map((color, index) => (
                     <div
                       key={`color-${index}-${color.hex}`}
                       className="group relative"

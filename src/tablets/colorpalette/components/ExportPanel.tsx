@@ -51,8 +51,8 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
       await navigator.clipboard.writeText(code);
       setCopiedFormat(format);
       setTimeout(() => setCopiedFormat(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+    } catch {
+      // Silently fail if clipboard access is denied
     }
   };
 

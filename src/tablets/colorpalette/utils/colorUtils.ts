@@ -1,23 +1,42 @@
 import { ColorInfo, ContrastResult, ImageExtractionOptions, ColorHarmonyOptions } from '../types';
 
+// Color conversion constants
+const RGB_MAX_VALUE = 255;
+const HEX_BASE = 16;
+const GAMMA_THRESHOLD = 0.03928;
+const GAMMA_DIVISOR = 12.92;
+const GAMMA_OFFSET = 0.055;
+const GAMMA_MULTIPLIER = 1.055;
+const GAMMA_EXPONENT = 2.4;
+
+// Luminance coefficients (ITU-R BT.709)
+const LUMINANCE_RED = 0.2126;
+const LUMINANCE_GREEN = 0.7152;
+const LUMINANCE_BLUE = 0.0722;
+
+// WCAG contrast levels
+const WCAG_AAA_THRESHOLD = 7;
+const WCAG_AA_THRESHOLD = 4.5;
+const CONTRAST_BASE = 0.05;
+
 /**
  * Converts hex color to RGB
  */
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const cleanHex = hex.replace('#', '');
-  
+
   if (cleanHex.length === 3) {
     return {
-      r: parseInt(cleanHex[0] + cleanHex[0], 16),
-      g: parseInt(cleanHex[1] + cleanHex[1], 16),
-      b: parseInt(cleanHex[2] + cleanHex[2], 16),
+      r: parseInt(cleanHex[0] + cleanHex[0], HEX_BASE),
+      g: parseInt(cleanHex[1] + cleanHex[1], HEX_BASE),
+      b: parseInt(cleanHex[2] + cleanHex[2], HEX_BASE),
     };
   }
-  
+
   return {
-    r: parseInt(cleanHex.slice(0, 2), 16),
-    g: parseInt(cleanHex.slice(2, 4), 16),
-    b: parseInt(cleanHex.slice(4, 6), 16),
+    r: parseInt(cleanHex.slice(0, 2), HEX_BASE),
+    g: parseInt(cleanHex.slice(2, 4), HEX_BASE),
+    b: parseInt(cleanHex.slice(4, 6), HEX_BASE),
   };
 }
 
@@ -25,7 +44,7 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
  * Converts RGB to hex
  */
 export function rgbToHex(r: number, g: number, b: number): string {
-  const toHex = (n: number) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
+  const toHex = (n: number) => Math.round(Math.max(0, Math.min(RGB_MAX_VALUE, n))).toString(HEX_BASE).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
@@ -33,9 +52,9 @@ export function rgbToHex(r: number, g: number, b: number): string {
  * Converts RGB to HSL
  */
 export function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
-  r /= 255;
-  g /= 255;
-  b /= 255;
+  r /= RGB_MAX_VALUE;
+  g /= RGB_MAX_VALUE;
+  b /= RGB_MAX_VALUE;
 
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
@@ -81,7 +100,7 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
   l /= 100;
 
   if (s === 0) {
-    const gray = Math.round(l * 255);
+    const gray = Math.round(l * RGB_MAX_VALUE);
     return { r: gray, g: gray, b: gray };
   }
 
@@ -98,9 +117,9 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
   const p = 2 * l - q;
 
   return {
-    r: Math.round(hue2rgb(p, q, h + 1/3) * 255),
-    g: Math.round(hue2rgb(p, q, h) * 255),
-    b: Math.round(hue2rgb(p, q, h - 1/3) * 255),
+    r: Math.round(hue2rgb(p, q, h + 1/3) * RGB_MAX_VALUE),
+    g: Math.round(hue2rgb(p, q, h) * RGB_MAX_VALUE),
+    b: Math.round(hue2rgb(p, q, h - 1/3) * RGB_MAX_VALUE),
   };
 }
 
@@ -109,11 +128,11 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
  */
 export function getLuminance(r: number, g: number, b: number): number {
   const [rs, gs, bs] = [r, g, b].map(c => {
-    c = c / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    c = c / RGB_MAX_VALUE;
+    return c <= GAMMA_THRESHOLD ? c / GAMMA_DIVISOR : Math.pow((c + GAMMA_OFFSET) / GAMMA_MULTIPLIER, GAMMA_EXPONENT);
   });
-  
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+
+  return LUMINANCE_RED * rs + LUMINANCE_GREEN * gs + LUMINANCE_BLUE * bs;
 }
 
 /**
@@ -124,16 +143,16 @@ export function getContrastRatio(color1: ColorInfo, color2: ColorInfo): number {
   const l2 = color2.luminance;
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
-  
-  return (lighter + 0.05) / (darker + 0.05);
+
+  return (lighter + CONTRAST_BASE) / (darker + CONTRAST_BASE);
 }
 
 /**
  * Evaluates contrast ratio against WCAG standards
  */
 export function evaluateContrast(ratio: number): ContrastResult['level'] {
-  if (ratio >= 7) return 'AAA';
-  if (ratio >= 4.5) return 'AA';
+  if (ratio >= WCAG_AAA_THRESHOLD) return 'AAA';
+  if (ratio >= WCAG_AA_THRESHOLD) return 'AA';
   return 'FAIL';
 }
 
@@ -145,17 +164,17 @@ export function generateContrastSuggestion(
   background: ColorInfo,
   currentRatio: number
 ): string | undefined {
-  if (currentRatio >= 4.5) return undefined;
+  if (currentRatio >= WCAG_AA_THRESHOLD) return undefined;
 
-  const targetRatio = 4.5;
+  const targetRatio = WCAG_AA_THRESHOLD;
   const fgLum = foreground.luminance;
   const bgLum = background.luminance;
 
   // Calculate required luminance changes
-  const requiredFgLumDark = (bgLum + 0.05) / targetRatio - 0.05;
-  const requiredFgLumLight = (bgLum + 0.05) * targetRatio - 0.05;
-  const requiredBgLumDark = (fgLum + 0.05) / targetRatio - 0.05;
-  const requiredBgLumLight = (fgLum + 0.05) * targetRatio - 0.05;
+  const requiredFgLumDark = (bgLum + CONTRAST_BASE) / targetRatio - CONTRAST_BASE;
+  const requiredFgLumLight = (bgLum + CONTRAST_BASE) * targetRatio - CONTRAST_BASE;
+  const requiredBgLumDark = (fgLum + CONTRAST_BASE) / targetRatio - CONTRAST_BASE;
+  const requiredBgLumLight = (fgLum + CONTRAST_BASE) * targetRatio - CONTRAST_BASE;
 
   // Find the closest achievable option
   const options = [];

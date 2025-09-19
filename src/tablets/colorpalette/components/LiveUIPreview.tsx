@@ -14,6 +14,7 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
   onMappingChange,
 }) => {
   const [draggedColor, setDraggedColor] = useState<string | null>(null);
+  const [currentPresetIndex, setCurrentPresetIndex] = useState(0);
 
   const handleDragStart = (color: string) => {
     setDraggedColor(color);
@@ -30,6 +31,68 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
         [target]: draggedColor,
       });
     }
+  };
+
+  // Different mapping presets for cycling through
+  const generateMappingPresets = (colors: ColorInfo[]): UIPreviewMapping[] => {
+    if (colors.length === 0) return [mapping];
+
+    const presets: UIPreviewMapping[] = [
+      // Preset 1: Light theme with first color as background
+      {
+        background: colors[0]?.hex || '#FFFFFF',
+        text: colors[colors.length - 1]?.hex || '#1F2937',
+        primary: colors[1]?.hex || '#3B82F6',
+        secondary: colors[2]?.hex || '#6B7280',
+        accent: colors[3]?.hex || '#10B981',
+        border: colors[4]?.hex || '#E5E7EB',
+      },
+      // Preset 2: Dark theme with last color as background
+      {
+        background: colors[colors.length - 1]?.hex || '#1F2937',
+        text: colors[0]?.hex || '#FFFFFF',
+        primary: colors[Math.floor(colors.length / 2)]?.hex || '#60A5FA',
+        secondary: colors[1]?.hex || '#9CA3AF',
+        accent: colors[colors.length - 2]?.hex || '#34D399',
+        border: colors[2]?.hex || '#374151',
+      },
+      // Preset 3: Vibrant theme with middle colors prominent
+      {
+        background: colors[Math.floor(colors.length / 2)]?.hex || '#F9FAFB',
+        text: colors[colors.length - 1]?.hex || '#111827',
+        primary: colors[0]?.hex || '#EF4444',
+        secondary: colors[colors.length - 2]?.hex || '#F59E0B',
+        accent: colors[1]?.hex || '#8B5CF6',
+        border: colors[3]?.hex || '#D1D5DB',
+      },
+      // Preset 4: Monochromatic with different saturations
+      {
+        background: colors[colors.length - 2]?.hex || '#F3F4F6',
+        text: colors[colors.length - 1]?.hex || '#1F2937',
+        primary: colors[0]?.hex || '#4F46E5',
+        secondary: colors[1]?.hex || '#6366F1',
+        accent: colors[2]?.hex || '#8B5CF6',
+        border: colors[3]?.hex || '#C7D2FE',
+      },
+      // Preset 5: High contrast
+      {
+        background: colors[1]?.hex || '#FFFFFF',
+        text: colors[colors.length - 1]?.hex || '#000000',
+        primary: colors[0]?.hex || '#DC2626',
+        secondary: colors[2]?.hex || '#525252',
+        accent: colors[3]?.hex || '#059669',
+        border: colors[4]?.hex || '#D4D4D4',
+      },
+    ];
+
+    return presets;
+  };
+
+  const cycleMappingPreset = () => {
+    const presets = generateMappingPresets(colors);
+    const nextIndex = (currentPresetIndex + 1) % presets.length;
+    setCurrentPresetIndex(nextIndex);
+    onMappingChange(presets[nextIndex]);
   };
 
   const ColorSwatch: React.FC<{ color: ColorInfo }> = ({ color }) => (
@@ -67,15 +130,35 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-300">Live UI Preview</h3>
+        <div className="flex items-center space-x-3">
+          <h3 className="text-sm font-medium text-gray-300">Live UI Preview</h3>
+          {colors.length > 0 && (
+            <span className="text-xs px-2 py-1 bg-gray-700 text-gray-400 rounded">
+              Style {currentPresetIndex + 1}/5
+            </span>
+          )}
+        </div>
         <div className="text-xs text-gray-500">Drag colors to elements</div>
       </div>
 
       {/* Color Swatches */}
-      <div className="flex flex-wrap gap-2 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-        {colors.map((color, index) => (
-          <ColorSwatch key={index} color={color} />
-        ))}
+      <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+        <div className="flex flex-wrap gap-2 flex-1">
+          {colors.map((color, index) => (
+            <ColorSwatch key={index} color={color} />
+          ))}
+        </div>
+
+        {colors.length > 0 && (
+          <button
+            onClick={cycleMappingPreset}
+            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors flex items-center space-x-1 whitespace-nowrap"
+            title="Cycle through different color mapping styles"
+          >
+            <span>🔄</span>
+            <span>Remix</span>
+          </button>
+        )}
       </div>
 
       {/* UI Preview */}

@@ -22,14 +22,14 @@ global.FileReader = jest.fn(() => ({
   onload: null,
   onerror: null,
   result: 'data:image/png;base64,mock-data',
-})) as any;
+})) as unknown as typeof FileReader;
 
 // Mock ImageData
 global.ImageData = jest.fn((width: number, height: number) => ({
   data: new Uint8ClampedArray(width * height * 4),
   width,
   height,
-})) as any;
+})) as unknown as typeof ImageData;
 
 describe('ColorPaletteTablet', () => {
   const mockOnChange = jest.fn();
@@ -162,9 +162,6 @@ describe('ColorPaletteTablet', () => {
         />
       );
 
-      // Simulate color generation (this would be triggered by child components)
-      const { handleColorsGenerated } = mockOnChange.mock.calls[0]?.[0] || {};
-      
       // This test verifies the callback structure is correct
       expect(typeof mockOnChange).toBe('function');
     });
@@ -345,11 +342,12 @@ describe('ColorPaletteTablet', () => {
           width: 3,
           height: 1,
         })),
-      } as any;
-      
+      } as unknown as CanvasRenderingContext2D;
+
       jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockContext);
-      
+
       // Mock Image constructor
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global as any).Image = jest.fn(() => ({
         onload: null,
         onerror: null,
