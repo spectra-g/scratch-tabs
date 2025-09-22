@@ -6,7 +6,7 @@ import {
   extractColorsFromImageData,
   generateColorHarmony,
   generateRandomPalette
-} from '../utils/colorUtils';
+} from '../utils/colourUtils';
 
 const IMAGE_EXTRACTION_DEFAULTS = {
   maxColors: 8,
@@ -154,7 +154,7 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-gray-400 mb-1">Base Color</label>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 h-8">
               <input
                 type="color"
                 value={harmonyBase}
@@ -165,7 +165,7 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
                 type="text"
                 value={harmonyBase}
                 onChange={(e) => setHarmonyBase(e.target.value)}
-                className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200 font-mono"
+                className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200 font-mono h-8"
                 placeholder="#3B82F6"
               />
             </div>
@@ -175,7 +175,7 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
             <select
               value={harmonyType}
               onChange={(e) => setHarmonyType(e.target.value as ColorHarmonyOptions['type'])}
-              className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200"
+              className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200 h-8"
             >
               <option value="complementary">Complementary</option>
               <option value="triadic">Triadic</option>

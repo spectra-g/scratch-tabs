@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { AccessibilityMatrix } from '../AccessibilityMatrix';
-import { createColorInfo } from '../../utils/colorUtils';
+import { createColorInfo } from '../../utils/colourUtils';
 
 describe('AccessibilityMatrix', () => {
   const mockOnColorSuggestionApply = jest.fn();

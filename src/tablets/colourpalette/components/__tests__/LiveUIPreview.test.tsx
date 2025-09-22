@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { LiveUIPreview } from '../LiveUIPreview';
 import { ColorInfo, UIPreviewMapping } from '../../types';
-import { createColorInfo } from '../../utils/colorUtils';
+import { createColorInfo } from '../../utils/colourUtils';
 
 describe('LiveUIPreview', () => {
   const mockColors: ColorInfo[] = [

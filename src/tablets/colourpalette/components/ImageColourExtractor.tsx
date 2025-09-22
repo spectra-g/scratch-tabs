@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { ColorInfo } from '../types';
-import { extractColorsFromImageData, extractColorsFromRegion } from '../utils/colorUtils';
+import { extractColorsFromImageData, extractColorsFromRegion } from '../utils/colourUtils';
 import { Target, RefreshCw } from '../../../components/Icons';
 
 interface ImageColorExtractorProps {

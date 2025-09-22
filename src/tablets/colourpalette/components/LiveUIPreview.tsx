@@ -174,7 +174,7 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
             
             <DropZone target="secondary">
               <p className="text-sm" style={{ color: mapping.secondary }}>
-                This is a sample description that shows how your color palette works in a real UI context.
+                This is a sample description that shows how your colour palette works in a real UI context.
               </p>
             </DropZone>
             

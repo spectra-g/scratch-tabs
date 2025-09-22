@@ -325,10 +325,10 @@ export const tabletMetadata: TabletMetadata[] = [
     }
   },
   {
-    id: 'colorpalette',
-    label: 'Color Palette Workspace',
-    description: 'Extract, create, and test color palettes with accessibility insights',
-    keywords: ['color', 'palette', 'design', 'accessibility', 'contrast', 'css', 'extract'],
+    id: 'colourpalette',
+    label: 'Colour Palette',
+    description: 'Extract, create, and test colour palettes with accessibility insights',
+    keywords: ['colour', 'palette', 'design', 'accessibility', 'contrast', 'css', 'extract'],
     getActionsForContext: (context) => {
       if (context.source === 'editor-tab' && context.content) {
         // Check if content contains color values
@@ -340,14 +340,14 @@ export const tabletMetadata: TabletMetadata[] = [
               label: 'Extract Colors to Palette',
               icon: Palette,
               action: () => {
-                // Extract colors from CSS/code and open color palette
+                // Extract colors from CSS/code and open colour palette
                 tabletActionService.handleAction({
-                  targetTablet: 'colorpalette',
+                  targetTablet: 'colourpalette',
                   action: 'new-tab',
                   payload: { extractFromText: context.content },
                   source: { 
                     tabId: context.tab?.id,
-                    titleHint: 'Color Palette',
+                    titleHint: 'Colour Palette',
                     side: context.side 
                   },
                 });

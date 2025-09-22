@@ -33,8 +33,8 @@ export interface ExportFormat {
   generator: (colors: ColorInfo[]) => string;
 }
 
-export interface ColorPaletteState {
-  type: 'colorpalette';
+export interface ColourPaletteState {
+  type: 'colourpalette';
   colors: ColorInfo[];
   activeColorIndex: number;
   generationMethod: 'manual' | 'image' | 'harmony';

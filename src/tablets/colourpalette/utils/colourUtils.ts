@@ -433,7 +433,7 @@ export function isValidHexColor(hex: string): boolean {
 }
 
 /**
- * Generates CSS variables from color palette
+ * Generates CSS variables from colour palette
  */
 export function generateCssVariables(colors: ColorInfo[]): string {
   const variables = colors.map((color, index) => {
@@ -445,7 +445,7 @@ export function generateCssVariables(colors: ColorInfo[]): string {
 }
 
 /**
- * Generates SCSS variables from color palette
+ * Generates SCSS variables from colour palette
  */
 export function generateScssVariables(colors: ColorInfo[]): string {
   return colors.map((color, index) => {
@@ -455,7 +455,7 @@ export function generateScssVariables(colors: ColorInfo[]): string {
 }
 
 /**
- * Generates Tailwind CSS config from color palette
+ * Generates Tailwind CSS config from colour palette
  */
 export function generateTailwindConfig(colors: ColorInfo[]): string {
   const colorObject = colors.reduce((acc, color, index) => {
@@ -473,7 +473,7 @@ export function generateTailwindConfig(colors: ColorInfo[]): string {
 }
 
 /**
- * Generates JSON array from color palette
+ * Generates JSON array from colour palette
  */
 export function generateJsonArray(colors: ColorInfo[]): string {
   const colorData = colors.map(color => ({
@@ -662,7 +662,7 @@ export function extractColorsFromRegion(
 }
 
 /**
- * Generates a random color palette
+ * Generates a random colour palette
  */
 export function generateRandomPalette(count: number = 5): ColorInfo[] {
   const colors: ColorInfo[] = [];

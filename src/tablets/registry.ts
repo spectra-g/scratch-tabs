@@ -58,5 +58,5 @@ export const tabletRegistry = {
     return null;
   }
   diagram: () => import('./diagram').then(m => m.DiagramTablet),
-  colorpalette: () => import('./colorpalette').then(m => m.ColorPaletteTablet),
+  colourpalette: () => import('./colourpalette').then(m => m.ColourPaletteTablet),
 };

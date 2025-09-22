@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { ColorPaletteTablet } from '../ColorPaletteTablet';
-import { ColorPaletteState } from '../types';
-import { createColorInfo } from '../utils/colorUtils';
+import { ColourPaletteTablet } from '../ColourPaletteTablet';
+import { ColourPaletteState } from '../types';
+import { createColorInfo } from '../utils/colourUtils';
 
 // Mock the clipboard API
 Object.assign(navigator, {
@@ -15,6 +15,13 @@ Object.assign(navigator, {
 // Mock URL.createObjectURL
 global.URL.createObjectURL = jest.fn(() => 'mock-url');
 global.URL.revokeObjectURL = jest.fn();
+
+// Mock the bridge hook
+jest.mock('../../bridge', () => ({
+  useTabletTabCreation: jest.fn(() => ({
+    createBackgroundTab: jest.fn(),
+  })),
+}));
 
 // Mock FileReader
 global.FileReader = jest.fn(() => ({
@@ -31,11 +38,11 @@ global.ImageData = jest.fn((width: number, height: number) => ({
   height,
 })) as unknown as typeof ImageData;
 
-describe('ColorPaletteTablet', () => {
+describe('ColourPaletteTablet', () => {
   const mockOnChange = jest.fn();
   
-  const defaultState: ColorPaletteState = {
-    type: 'colorpalette',
+  const defaultState: ColourPaletteState = {
+    type: 'colourpalette',
     colors: [],
     activeColorIndex: 0,
     generationMethod: 'manual',
@@ -64,13 +71,13 @@ describe('ColorPaletteTablet', () => {
   describe('Initialization', () => {
     it('should render with default colors when empty', async () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
       );
 
-      expect(screen.getByText('Color Palette Workspace')).toBeInTheDocument();
+      expect(screen.getByText('Colour Palette')).toBeInTheDocument();
       
       // Should initialize with default colors
       await waitFor(() => {
@@ -91,7 +98,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithColors}
           onChange={mockOnChange}
         />
@@ -104,7 +111,7 @@ describe('ColorPaletteTablet', () => {
   describe('Tab Navigation', () => {
     it('should render all tabs', () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -119,7 +126,7 @@ describe('ColorPaletteTablet', () => {
 
     it('should switch tabs when clicked', () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -140,7 +147,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithError}
           onChange={mockOnChange}
         />
@@ -156,7 +163,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithError}
           onChange={mockOnChange}
         />
@@ -175,7 +182,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithColors}
           onChange={mockOnChange}
         />
@@ -197,7 +204,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithColors}
           onChange={mockOnChange}
         />
@@ -215,7 +222,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithColors}
           onChange={mockOnChange}
         />
@@ -240,7 +247,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithColors}
           onChange={mockOnChange}
         />
@@ -259,7 +266,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithOneColor}
           onChange={mockOnChange}
         />
@@ -280,7 +287,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithColors}
           onChange={mockOnChange}
         />
@@ -295,7 +302,7 @@ describe('ColorPaletteTablet', () => {
 
     it('should show message when no colors to export', () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -311,7 +318,7 @@ describe('ColorPaletteTablet', () => {
   describe('Privacy Features', () => {
     it('should display privacy message', () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -322,7 +329,7 @@ describe('ColorPaletteTablet', () => {
 
     it('should show local processing message in image upload', () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -359,7 +366,7 @@ describe('ColorPaletteTablet', () => {
 
     it('should show ImageColorExtractor when image is loaded via callback', async () => {
       const { rerender } = render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -381,7 +388,7 @@ describe('ColorPaletteTablet', () => {
       // Since the component manages ImageData internally, we can't test it directly
       // through props anymore. This is the expected behavior after the fix.
       rerender(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateAfterImageLoad}
           onChange={mockOnChange}
         />
@@ -394,7 +401,7 @@ describe('ColorPaletteTablet', () => {
 
     it('should not show ImageColorExtractor when no image is loaded', () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -405,7 +412,7 @@ describe('ColorPaletteTablet', () => {
 
     it('should handle image processing with combined callback', async () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -451,7 +458,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithOnlyUrl}
           onChange={mockOnChange}
         />
@@ -471,7 +478,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithOnlyUrl}
           onChange={mockOnChange}
         />
@@ -490,7 +497,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithError}
           onChange={mockOnChange}
         />
@@ -507,21 +514,21 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithImageMethod}
           onChange={mockOnChange}
         />
       );
 
       // Should render normally with image generation method
-      expect(screen.getByText('Color Palette Workspace')).toBeInTheDocument();
+      expect(screen.getByText('Colour Palette')).toBeInTheDocument();
     });
   });
 
   describe('State Management', () => {
     it('should call onChange when state updates are needed', () => {
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -539,7 +546,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithColors}
           onChange={mockOnChange}
         />
@@ -566,7 +573,7 @@ describe('ColorPaletteTablet', () => {
 
     it('should manage ImageData separately from serializable state', () => {
       const { rerender } = render(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={defaultState}
           onChange={mockOnChange}
         />
@@ -583,7 +590,7 @@ describe('ColorPaletteTablet', () => {
       };
 
       rerender(
-        <ColorPaletteTablet
+        <ColourPaletteTablet
           state={stateWithOnlyUrl}
           onChange={mockOnChange}
         />
@@ -602,6 +609,93 @@ describe('ColorPaletteTablet', () => {
 
       // This test confirms the fix works correctly
       expect(screen.queryByText('Image Color Extraction')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('export functionality with bridge', () => {
+    it('should create new tab when clicking New Tab button in export panel', async () => {
+      const { useTabletTabCreation } = require('../../bridge');
+      const mockCreateBackgroundTab = jest.fn();
+      useTabletTabCreation.mockReturnValue({
+        createBackgroundTab: mockCreateBackgroundTab,
+      });
+
+      const stateWithColors = {
+        ...defaultState,
+        colors: [
+          createColorInfo('#FF0000'),
+          createColorInfo('#00FF00'),
+          createColorInfo('#0000FF'),
+        ],
+      };
+
+      render(
+        <ColourPaletteTablet
+          state={stateWithColors}
+          onChange={mockOnChange}
+        />
+      );
+
+      // Navigate to export tab
+      const exportTab = screen.getByText('Export');
+      fireEvent.click(exportTab);
+
+      // Should show export panel
+      expect(screen.getByText('Export Palette')).toBeInTheDocument();
+
+      // Should show New Tab button
+      const newTabButton = screen.getByText('New Tab');
+      expect(newTabButton).toBeInTheDocument();
+
+      // Click New Tab button
+      fireEvent.click(newTabButton);
+
+      // Should call createBackgroundTab with correct parameters
+      await waitFor(() => {
+        expect(mockCreateBackgroundTab).toHaveBeenCalledTimes(1);
+        expect(mockCreateBackgroundTab).toHaveBeenCalledWith(
+          'Colour Palette - CSS Variables',
+          expect.stringContaining(':root {'),
+          'css'
+        );
+      });
+    });
+
+    it('should fallback to clipboard if createBackgroundTab fails', async () => {
+      const { useTabletTabCreation } = require('../../bridge');
+      const mockCreateBackgroundTab = jest.fn().mockRejectedValue(new Error('Bridge failed'));
+      useTabletTabCreation.mockReturnValue({
+        createBackgroundTab: mockCreateBackgroundTab,
+      });
+
+      const stateWithColors = {
+        ...defaultState,
+        colors: [createColorInfo('#FF0000')],
+      };
+
+      render(
+        <ColourPaletteTablet
+          state={stateWithColors}
+          onChange={mockOnChange}
+        />
+      );
+
+      // Navigate to export tab
+      const exportTab = screen.getByText('Export');
+      fireEvent.click(exportTab);
+
+      // Click New Tab button
+      const newTabButton = screen.getByText('New Tab');
+      fireEvent.click(newTabButton);
+
+      // Should still attempt to create background tab
+      await waitFor(() => {
+        expect(mockCreateBackgroundTab).toHaveBeenCalledTimes(1);
+      });
+
+      // Should fallback to clipboard (we can't easily test this without spying on console.error)
+      // but the component should not crash
+      expect(screen.getByText('Export Palette')).toBeInTheDocument();
     });
   });
 });

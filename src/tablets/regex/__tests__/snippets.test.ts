@@ -313,7 +313,7 @@ describe("snippets", () => {
         expect(regex.test("555.123.4567")).toBe(true);
       }
 
-      // Test hex color pattern
+      // Test hex colour pattern
       const hexColor = getSnippetById("hex-color");
       expect(hexColor).toBeDefined();
       if (hexColor) {

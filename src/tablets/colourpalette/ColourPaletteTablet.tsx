@@ -1,16 +1,17 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ColorPaletteState, ColorInfo, UIPreviewMapping } from './types';
+import { ColourPaletteState, ColorInfo, UIPreviewMapping } from './types';
 import { PaletteGenerator } from './components/PaletteGenerator';
 import { PaletteDisplay } from './components/PaletteDisplay';
 import { LiveUIPreview } from './components/LiveUIPreview';
 import { AccessibilityMatrix } from './components/AccessibilityMatrix';
 import { ExportPanel } from './components/ExportPanel';
-import { ImageColorExtractor } from './components/ImageColorExtractor';
-import { createColorInfo } from './utils/colorUtils';
+import { ImageColorExtractor } from './components/ImageColourExtractor';
+import { createColorInfo } from './utils/colourUtils';
+import { useTabletTabCreation } from '../bridge';
 
-interface ColorPaletteTabletProps {
-  state: ColorPaletteState;
-  onChange: (newState: ColorPaletteState) => void;
+interface ColourPaletteTabletProps {
+  state: ColourPaletteState;
+  onChange: (newState: ColourPaletteState) => void;
 }
 
 const DEFAULT_UI_MAPPING: UIPreviewMapping = {
@@ -30,10 +31,11 @@ const DEFAULT_COLORS = [
   '#8B5CF6', // Purple
 ] as const;
 
-export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
+export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
   state,
   onChange,
 }) => {
+  const { createBackgroundTab } = useTabletTabCreation();
 
   const [activeTab, setActiveTab] = useState<'generator' | 'palette' | 'preview' | 'accessibility' | 'export'>('generator');
 
@@ -163,13 +165,17 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
     });
   }, [state, onChange]);
 
-  const handleCreateNewTab = useCallback((content: string) => {
-    // This would integrate with the tablet bridge to create a new tab
-    // For now, we'll copy to clipboard as fallback
-    navigator.clipboard.writeText(content).catch(() => {
-      // Silently fail if clipboard access is denied
-    });
-  }, []);
+  const handleCreateNewTab = useCallback(async (content: string, language: string, title: string) => {
+    try {
+      await createBackgroundTab(title, content, language);
+    } catch (error) {
+      console.error('Failed to create background tab:', error);
+      // Fallback to clipboard as backup
+      navigator.clipboard.writeText(content).catch(() => {
+        // Silently fail if clipboard access is denied
+      });
+    }
+  }, [createBackgroundTab]);
 
   const tabs = [
     { id: 'generator', label: 'Generate', icon: '🎨' },
@@ -185,9 +191,9 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
       <div className="flex-shrink-0 p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-white">Color Palette Workspace</h1>
+            <h1 className="text-lg font-semibold text-white">Colour Palette</h1>
             <p className="text-sm text-gray-400">
-              Extract, create, and test color palettes with accessibility insights
+              Extract, create, and test colour palettes with accessibility insights
             </p>
           </div>
           {state.error && (
@@ -329,8 +335,8 @@ export const ColorPaletteTablet: React.FC<ColorPaletteTabletProps> = ({
 };
 
 // Default export for the dynamic registry
-const createColorPaletteInitialState = (): ColorPaletteState => ({
-  type: 'colorpalette' as const,
+const createColourPaletteInitialState = (): ColourPaletteState => ({
+  type: 'colourpalette' as const,
   colors: [],
   activeColorIndex: 0,
   generationMethod: 'manual',
@@ -346,28 +352,28 @@ const createColorPaletteInitialState = (): ColorPaletteState => ({
 });
 
 export default {
-  id: 'colorpalette',
-  label: 'Color Palette',
+  id: 'colourpalette',
+  label: 'Colour Palette',
   
-  createInitialState: createColorPaletteInitialState,
+  createInitialState: createColourPaletteInitialState,
   
-  serializeState: (state: ColorPaletteState) => {
+  serializeState: (state: ColourPaletteState) => {
     // Exclude non-serializable ImageData from state persistence
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sourceImageData, ...serializableState } = state;
     return JSON.stringify(serializableState);
   },
   
-  deserializeState: (serialized: string): ColorPaletteState => {
+  deserializeState: (serialized: string): ColourPaletteState => {
     try {
       const parsed = JSON.parse(serialized);
       // Ensure sourceImageData is null after deserialization since it can't be persisted
       return { ...parsed, sourceImageData: null };
     } catch {
-      return createColorPaletteInitialState();
+      return createColourPaletteInitialState();
     }
   },
   
-  render: (state: ColorPaletteState, onChange: (newState: ColorPaletteState) => void) => 
-    React.createElement(ColorPaletteTablet, { state, onChange }),
+  render: (state: ColourPaletteState, onChange: (newState: ColourPaletteState) => void) =>
+    React.createElement(ColourPaletteTablet, { state, onChange }),
 };

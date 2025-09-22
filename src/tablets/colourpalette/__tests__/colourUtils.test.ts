@@ -17,7 +17,7 @@ import {
   sortColors,
   extractColorsFromImageData,
   extractColorsFromRegion,
-} from '../utils/colorUtils';
+} from '../utils/colourUtils';
 
 // Mock ImageData for Node.js environment
 class MockImageData {

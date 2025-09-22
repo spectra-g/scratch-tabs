@@ -6,7 +6,7 @@ import {
   generateScssVariables, 
   generateTailwindConfig, 
   generateJsonArray 
-} from '../utils/colorUtils';
+} from '../utils/colourUtils';
 
 interface ExportPanelProps {
   colors: ColorInfo[];
@@ -71,7 +71,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
   const handleCreateTab = () => {
     if (onCreateNewTab) {
       const language = selectedFormat === 'js' ? 'javascript' : selectedFormat;
-      onCreateNewTab(generatedCode, language, `Color Palette - ${currentFormat.name}`);
+      onCreateNewTab(generatedCode, language, `Colour Palette - ${currentFormat.name}`);
     }
   };
 

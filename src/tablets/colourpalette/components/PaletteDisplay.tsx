@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Check, Trash2, Plus } from '../../../components/Icons';
 import { ColorInfo } from '../types';
-import { createColorInfo, isValidHexColor } from '../utils/colorUtils';
+import { createColorInfo, isValidHexColor } from '../utils/colourUtils';
 
 interface PaletteDisplayProps {
   colors: ColorInfo[];
@@ -84,7 +84,7 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-300">Color Palette</h3>
+        <h3 className="text-sm font-medium text-gray-300">Colour Palette</h3>
         <button
           onClick={handleAddColor}
           className="p-1 text-gray-400 hover:text-gray-200 transition-colors"

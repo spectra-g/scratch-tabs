@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Check, X, AlertTriangle } from '../../../components/Icons';
 import { ColorInfo, AccessibilityPair } from '../types';
-import { getContrastRatio, evaluateContrast, generateContrastSuggestion, createColorInfo } from '../utils/colorUtils';
+import { getContrastRatio, evaluateContrast, generateContrastSuggestion, createColorInfo } from '../utils/colourUtils';
 
 interface AccessibilityMatrixProps {
   colors: ColorInfo[];
