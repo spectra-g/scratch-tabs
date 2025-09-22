@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Check, X, AlertTriangle } from '../../../components/Icons';
 import { ColorInfo, AccessibilityPair } from '../types';
-import { getContrastRatio, evaluateContrast, generateContrastSuggestion } from '../utils/colorUtils';
+import { getContrastRatio, evaluateContrast, generateContrastSuggestion, createColorInfo } from '../utils/colorUtils';
 
 interface AccessibilityMatrixProps {
   colors: ColorInfo[];
@@ -132,14 +132,22 @@ export const AccessibilityMatrix: React.FC<AccessibilityMatrixProps> = ({
                     onClick={() => {
                       // Parse suggestion and apply it
                       const suggestion = pair.contrast.suggestion!;
-                      if (suggestion.includes('Darken text') || suggestion.includes('Lighten text')) {
-                        const newHex = suggestion.match(/#[A-Fa-f0-9]{6}/)?.[0];
-                        if (newHex) {
-                          const colorIndex = colors.findIndex(c => c.hex === pair.foreground.hex);
-                          if (colorIndex !== -1) {
-                            const newColor = { ...pair.foreground, hex: newHex.toUpperCase() };
-                            onColorSuggestionApply(colorIndex, newColor);
-                          }
+                      const newHex = suggestion.match(/#[A-Fa-f0-9]{6}/)?.[0];
+                      if (newHex) {
+                        let colorIndex = -1;
+
+                        if (suggestion.includes('Darken text') || suggestion.includes('Lighten text')) {
+                          // Apply to foreground color
+                          colorIndex = colors.findIndex(c => c.hex === pair.foreground.hex);
+                        } else if (suggestion.includes('Darken background') || suggestion.includes('Lighten background')) {
+                          // Apply to background color
+                          colorIndex = colors.findIndex(c => c.hex === pair.background.hex);
+                        }
+
+                        if (colorIndex !== -1) {
+                          // Use createColorInfo to properly recalculate all color properties including luminance
+                          const newColor = createColorInfo(newHex.toUpperCase());
+                          onColorSuggestionApply(colorIndex, newColor);
                         }
                       }
                     }}

@@ -145,9 +145,32 @@ describe('colorUtils', () => {
     it('should return undefined for passing contrast', () => {
       const black = createColorInfo('#000000');
       const white = createColorInfo('#FFFFFF');
-      
+
       const suggestion = generateContrastSuggestion(black, white, 21);
       expect(suggestion).toBeUndefined();
+    });
+
+    it('should generate suggestions that achieve target contrast ratio with buffer', () => {
+      // Test case that was previously failing at 4.49:1
+      const darkRed = createColorInfo('#924A45');
+      const lightBg = createColorInfo('#BDDEDA');
+
+      const suggestion = generateContrastSuggestion(darkRed, lightBg, 4.49);
+      expect(suggestion).toBeDefined();
+
+      if (suggestion) {
+        // Extract the suggested hex color
+        const newHexMatch = suggestion.match(/#[A-Fa-f0-9]{6}/);
+        expect(newHexMatch).toBeTruthy();
+
+        if (newHexMatch) {
+          const newColor = createColorInfo(newHexMatch[0]);
+          const newRatio = getContrastRatio(newColor, lightBg);
+
+          // Should achieve at least AA standard (4.5:1) with buffer
+          expect(newRatio).toBeGreaterThan(4.5);
+        }
+      }
     });
   });
 

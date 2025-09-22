@@ -166,7 +166,7 @@ export function generateContrastSuggestion(
 ): string | undefined {
   if (currentRatio >= WCAG_AA_THRESHOLD) return undefined;
 
-  const targetRatio = WCAG_AA_THRESHOLD;
+  const targetRatio = WCAG_AA_THRESHOLD + 0.1; // Add small buffer to ensure we clearly pass the threshold
   const fgLum = foreground.luminance;
   const bgLum = background.luminance;
 
@@ -528,6 +528,13 @@ const MAX_LIGHTNESS_THRESHOLD = 80;
 const MAX_RGB_DIFFERENCE = 765; // 255 * 3
 const LIGHTNESS_PENALTY = 0.3;
 
+// Constants for enhanced color extraction
+const ALPHA_THRESHOLD = 128;
+const DEFAULT_EXTRACTION_QUALITY = 3;
+const COLOR_EXPANSION_FACTOR = 2;
+const MAX_INITIAL_COLORS = 16;
+const RGBA_PIXEL_SIZE = 4;
+
 type RGBTuple = [number, number, number];
 
 /**
@@ -577,12 +584,6 @@ function calculateColorInterestScore(color: RGBTuple): number {
   return saturationScore * lightnessScore * (1 + diversityScore);
 }
 
-// Constants for enhanced color extraction
-const ALPHA_THRESHOLD = 128;
-const DEFAULT_EXTRACTION_QUALITY = 3;
-const COLOR_EXPANSION_FACTOR = 2;
-const MAX_INITIAL_COLORS = 16;
-
 /**
  * Enhanced color extraction with diversity filtering and intelligent selection
  */
@@ -605,7 +606,7 @@ function extractColorsWithEnhancedAlgorithm(
   // Sample pixels with specified quality
   for (let y = bounds.startY; y < bounds.endY; y += quality) {
     for (let x = bounds.startX; x < bounds.endX; x += quality) {
-      const pixelIndex = (y * width + x) * 4;
+      const pixelIndex = (y * width + x) * RGBA_PIXEL_SIZE;
       const rgba = {
         r: data[pixelIndex],
         g: data[pixelIndex + 1],
