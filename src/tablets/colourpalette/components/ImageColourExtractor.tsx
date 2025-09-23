@@ -3,14 +3,14 @@ import { ColorInfo } from '../types';
 import { extractColorsFromImageData, extractColorsFromRegion } from '../utils/colourUtils';
 import { Target, RefreshCw } from '../../../components/Icons';
 
-interface ImageColorExtractorProps {
+interface ImageColourExtractorProps {
   imageData: ImageData | null;
   imageUrl: string | null;
   onColorsExtracted: (colors: ColorInfo[]) => void;
   onRegionSelect: (region: { x: number; y: number; width: number; height: number }) => void;
 }
 
-export const ImageColorExtractor: React.FC<ImageColorExtractorProps> = ({
+export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
   imageData,
   imageUrl,
   onColorsExtracted,

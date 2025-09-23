@@ -5,7 +5,7 @@ import { PaletteDisplay } from './components/PaletteDisplay';
 import { LiveUIPreview } from './components/LiveUIPreview';
 import { AccessibilityMatrix } from './components/AccessibilityMatrix';
 import { ExportPanel } from './components/ExportPanel';
-import { ImageColorExtractor } from './components/ImageColourExtractor';
+import { ImageColourExtractor } from './components/ImageColourExtractor';
 import { createColorInfo } from './utils/colourUtils';
 import { useTabletTabCreation } from '../bridge';
 
@@ -236,7 +236,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
             />
 
             {currentImageData && state.sourceImageUrl && (
-              <ImageColorExtractor
+              <ImageColourExtractor
                 imageData={currentImageData}
                 imageUrl={state.sourceImageUrl}
                 onColorsExtracted={handleColorsGenerated}

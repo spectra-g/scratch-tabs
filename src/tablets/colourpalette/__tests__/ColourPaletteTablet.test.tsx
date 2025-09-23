@@ -364,7 +364,7 @@ describe('ColourPaletteTablet', () => {
       }));
     });
 
-    it('should show ImageColorExtractor when image is loaded via callback', async () => {
+    it('should show ImageColourExtractor when image is loaded via callback', async () => {
       const { rerender } = render(
         <ColourPaletteTablet
           state={defaultState}
@@ -372,7 +372,7 @@ describe('ColourPaletteTablet', () => {
         />
       );
 
-      // Initially should not show ImageColorExtractor
+      // Initially should not show ImageColourExtractor
       expect(screen.queryByText('Image Color Extraction')).not.toBeInTheDocument();
 
       // Simulate the component receiving fresh image data via callback
@@ -394,12 +394,12 @@ describe('ColourPaletteTablet', () => {
         />
       );
 
-      // After our fix, ImageColorExtractor won't show unless ImageData is set internally
+      // After our fix, ImageColourExtractor won't show unless ImageData is set internally
       // This is the correct behavior to prevent showing empty image containers
       expect(screen.queryByText('Image Color Extraction')).not.toBeInTheDocument();
     });
 
-    it('should not show ImageColorExtractor when no image is loaded', () => {
+    it('should not show ImageColourExtractor when no image is loaded', () => {
       render(
         <ColourPaletteTablet
           state={defaultState}
@@ -442,7 +442,7 @@ describe('ColourPaletteTablet', () => {
     });
 
     it('should handle image extraction from loaded image', () => {
-      // After our fix, ImageColorExtractor won't be rendered unless both
+      // After our fix, ImageColourExtractor won't be rendered unless both
       // currentImageData (internal state) AND sourceImageUrl are present.
       // This test now verifies that without internal ImageData, no image UI is shown.
 
@@ -579,7 +579,7 @@ describe('ColourPaletteTablet', () => {
         />
       );
 
-      // Initial state should not show ImageColorExtractor
+      // Initial state should not show ImageColourExtractor
       expect(screen.queryByText('Image Color Extraction')).not.toBeInTheDocument();
 
       // State with only image URL (simulating after serialization/deserialization)
@@ -596,14 +596,14 @@ describe('ColourPaletteTablet', () => {
         />
       );
 
-      // Should still not show ImageColorExtractor because internal ImageData state is null
+      // Should still not show ImageColourExtractor because internal ImageData state is null
       expect(screen.queryByText('Image Color Extraction')).not.toBeInTheDocument();
 
       // After our fix, the component manages ImageData internally via callbacks
       // So passing ImageData in props doesn't work anymore - it must be set via handleImageProcessed
       // This verifies that the fix correctly separates ImageData from serializable state
 
-      // The ImageColorExtractor will only appear when:
+      // The ImageColourExtractor will only appear when:
       // 1. sourceImageUrl exists in props
       // 2. currentImageData exists in internal state (set via callbacks)
 
