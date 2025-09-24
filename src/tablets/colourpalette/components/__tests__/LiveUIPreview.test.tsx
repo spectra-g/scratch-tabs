@@ -39,7 +39,7 @@ describe('LiveUIPreview', () => {
     );
 
     expect(screen.getByText('Live UI Preview')).toBeInTheDocument();
-    expect(screen.getByText('Style 1/5')).toBeInTheDocument();
+    expect(screen.getByText('Style 1/8')).toBeInTheDocument();
     expect(screen.getByText('Remix')).toBeInTheDocument();
   });
 
@@ -97,10 +97,10 @@ describe('LiveUIPreview', () => {
     expect(mockOnMappingChange).toHaveBeenCalledTimes(1);
 
     // Should update style indicator
-    expect(screen.getByText('Style 2/5')).toBeInTheDocument();
+    expect(screen.getByText('Style 2/8')).toBeInTheDocument();
   });
 
-  it('should cycle through all 5 preset styles', () => {
+  it('should cycle through all 8 preset styles', () => {
     render(
       <LiveUIPreview
         colors={mockColors}
@@ -111,13 +111,13 @@ describe('LiveUIPreview', () => {
 
     const remixButton = screen.getByText('Remix');
 
-    // Click through all 5 presets
-    for (let i = 1; i <= 5; i++) {
+    // Click through all 8 presets
+    for (let i = 1; i <= 8; i++) {
       fireEvent.click(remixButton);
-      expect(screen.getByText(`Style ${i === 5 ? 1 : i + 1}/5`)).toBeInTheDocument();
+      expect(screen.getByText(`Style ${i === 8 ? 1 : i + 1}/8`)).toBeInTheDocument();
     }
 
-    expect(mockOnMappingChange).toHaveBeenCalledTimes(5);
+    expect(mockOnMappingChange).toHaveBeenCalledTimes(8);
   });
 
   it('should render UI preview components with applied styles', () => {
@@ -202,7 +202,7 @@ describe('LiveUIPreview', () => {
       />
     );
 
-    expect(screen.queryByText('Style 1/5')).not.toBeInTheDocument();
+    expect(screen.queryByText('Style 1/8')).not.toBeInTheDocument();
   });
 
   it('should generate different mappings for different preset types', () => {
@@ -233,6 +233,139 @@ describe('LiveUIPreview', () => {
     });
     Object.values(preset2).forEach(color => {
       expect(color).toMatch(/^#[A-F0-9]{6}$/);
+    });
+  });
+
+  describe('Lock Functionality', () => {
+    it('should render lock/unlock buttons for each color element', () => {
+      render(
+        <LiveUIPreview
+          colors={mockColors}
+          mapping={mockMapping}
+          onMappingChange={mockOnMappingChange}
+        />
+      );
+
+      // Should have 6 lock buttons (one for each mapping element)
+      const lockButtons = screen.getAllByRole('button', { name: /lock|unlock/i });
+      expect(lockButtons).toHaveLength(6);
+    });
+
+    it('should toggle lock state when lock button is clicked', () => {
+      render(
+        <LiveUIPreview
+          colors={mockColors}
+          mapping={mockMapping}
+          onMappingChange={mockOnMappingChange}
+        />
+      );
+
+      const backgroundLockButton = screen.getByTitle('Lock background (will stay the same on remix)');
+      expect(backgroundLockButton).toBeInTheDocument();
+
+      // Click to lock
+      fireEvent.click(backgroundLockButton);
+
+      // Should now show unlock button
+      expect(screen.getByTitle('Unlock background (will change on remix)')).toBeInTheDocument();
+    });
+
+    it('should show lock status message when elements are locked', () => {
+      render(
+        <LiveUIPreview
+          colors={mockColors}
+          mapping={mockMapping}
+          onMappingChange={mockOnMappingChange}
+        />
+      );
+
+      const backgroundLockButton = screen.getByTitle('Lock background (will stay the same on remix)');
+      fireEvent.click(backgroundLockButton);
+
+      expect(screen.getByText('🔒 1 element locked - will not change on remix')).toBeInTheDocument();
+    });
+
+    it('should preserve locked elements during remix', () => {
+      render(
+        <LiveUIPreview
+          colors={mockColors}
+          mapping={mockMapping}
+          onMappingChange={mockOnMappingChange}
+        />
+      );
+
+      // Lock the background element
+      const backgroundLockButton = screen.getByTitle('Lock background (will stay the same on remix)');
+      fireEvent.click(backgroundLockButton);
+
+      // Clear previous calls
+      mockOnMappingChange.mockClear();
+
+      // Click remix
+      const remixButton = screen.getByText('Remix');
+      fireEvent.click(remixButton);
+
+      // Should preserve the background color from original mapping
+      expect(mockOnMappingChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          background: mockMapping.background, // Should remain unchanged
+        })
+      );
+    });
+
+    it('should show correct plural/singular in lock status message', () => {
+      render(
+        <LiveUIPreview
+          colors={mockColors}
+          mapping={mockMapping}
+          onMappingChange={mockOnMappingChange}
+        />
+      );
+
+      const backgroundLockButton = screen.getByTitle('Lock background (will stay the same on remix)');
+      const textLockButton = screen.getByTitle('Lock text (will stay the same on remix)');
+
+      // Lock one element
+      fireEvent.click(backgroundLockButton);
+      expect(screen.getByText('🔒 1 element locked - will not change on remix')).toBeInTheDocument();
+
+      // Lock another element
+      fireEvent.click(textLockButton);
+      expect(screen.getByText('🔒 2 elements locked - will not change on remix')).toBeInTheDocument();
+    });
+
+    it('should handle multiple locked elements correctly', () => {
+      render(
+        <LiveUIPreview
+          colors={mockColors}
+          mapping={mockMapping}
+          onMappingChange={mockOnMappingChange}
+        />
+      );
+
+      // Lock multiple elements
+      const backgroundLockButton = screen.getByTitle('Lock background (will stay the same on remix)');
+      const textLockButton = screen.getByTitle('Lock text (will stay the same on remix)');
+      const primaryLockButton = screen.getByTitle('Lock primary (will stay the same on remix)');
+
+      fireEvent.click(backgroundLockButton);
+      fireEvent.click(textLockButton);
+      fireEvent.click(primaryLockButton);
+
+      mockOnMappingChange.mockClear();
+
+      // Click remix
+      const remixButton = screen.getByText('Remix');
+      fireEvent.click(remixButton);
+
+      // Should preserve all locked elements
+      expect(mockOnMappingChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          background: mockMapping.background,
+          text: mockMapping.text,
+          primary: mockMapping.primary,
+        })
+      );
     });
   });
 });

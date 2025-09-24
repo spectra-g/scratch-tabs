@@ -73,6 +73,8 @@ export {
   Calendar,
   Calculator,
   Key,
+  Lock,
+  Unlock,
   Database,
   Terminal,
   Network,

@@ -15,6 +15,8 @@ export interface ContrastResult {
 export interface AccessibilityPair {
   foreground: ColorInfo;
   background: ColorInfo;
+  foregroundIndex: number;
+  backgroundIndex: number;
   contrast: ContrastResult;
 }
 

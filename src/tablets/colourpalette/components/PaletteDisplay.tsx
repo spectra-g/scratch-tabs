@@ -20,6 +20,13 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
 
+  // Helper function to validate hex color with proper formatting
+  const validateHexColor = (value: string): boolean => {
+    if (!value) return false;
+    const colorToValidate = value.startsWith('#') ? value : '#' + value;
+    return isValidHexColor(colorToValidate);
+  };
+
   const handleCopyColor = async (color: ColorInfo, index: number) => {
     try {
       await navigator.clipboard.writeText(color.hex);
@@ -37,15 +44,16 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
 
   const handleSaveEdit = () => {
     if (editingIndex === null) return;
-    
-    if (isValidHexColor(editValue)) {
+
+    if (validateHexColor(editValue)) {
+      const colorToSave = editValue.startsWith('#') ? editValue : '#' + editValue;
       const newColors = [...colors];
-      newColors[editingIndex] = createColorInfo(editValue);
+      newColors[editingIndex] = createColorInfo(colorToSave);
       onColorsChange(newColors);
+      setEditingIndex(null);
+      setEditValue('');
     }
-    
-    setEditingIndex(null);
-    setEditValue('');
+    // If invalid hex, don't save but keep editing mode open
   };
 
   const handleCancelEdit = () => {
@@ -105,24 +113,75 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
             }`}
             onClick={() => onActiveColorChange(index)}
           >
-            {/* Color Swatch */}
-            <div
-              className="h-16 w-full"
-              style={{ backgroundColor: color.hex }}
-            />
-            
+            {/* Color Swatch with Edit overlay */}
+            <div className="relative">
+              <div
+                className="h-16 w-full"
+                style={{ backgroundColor: color.hex }}
+              />
+
+              {/* Edit overlay - only covers the color swatch area */}
+              <div
+                className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditColor(index);
+                }}
+              >
+                <span className="text-white text-xs font-medium">Edit</span>
+              </div>
+            </div>
+
             {/* Color Info */}
             <div className="p-3 bg-gray-800">
               {editingIndex === index ? (
-                <input
-                  type="text"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleSaveEdit}
-                  onKeyDown={handleKeyDown}
-                  className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs font-mono text-gray-200"
-                  autoFocus
-                />
+                <div className="space-y-2">
+                  {/* Color Picker */}
+                  <input
+                    type="color"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="w-full h-8 rounded border border-gray-600 bg-gray-700 cursor-pointer"
+                    title="Pick a color"
+                  />
+
+                  {/* Hex Input */}
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value.toUpperCase())}
+                    onKeyDown={handleKeyDown}
+                    className={`w-full px-2 py-1 bg-gray-700 rounded text-xs font-mono text-gray-200 border transition-colors ${
+                      editValue && !validateHexColor(editValue)
+                        ? 'border-red-500'
+                        : 'border-gray-600'
+                    }`}
+                    placeholder="#FFFFFF"
+                    maxLength={7}
+                    autoFocus
+                  />
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-2 py-1 text-xs text-gray-400 hover:text-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={editValue && !validateHexColor(editValue)}
+                      className={`px-2 py-1 text-xs rounded transition-colors ${
+                        editValue && !validateHexColor(editValue)
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
@@ -167,17 +226,6 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
                   )}
                 </div>
               )}
-            </div>
-            
-            {/* Edit overlay */}
-            <div
-              className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditColor(index);
-              }}
-            >
-              <span className="text-white text-xs font-medium">Edit</span>
             </div>
           </div>
         ))}

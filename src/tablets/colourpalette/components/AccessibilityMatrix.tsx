@@ -14,7 +14,7 @@ export const AccessibilityMatrix: React.FC<AccessibilityMatrixProps> = ({
 }) => {
   const accessibilityPairs = useMemo(() => {
     const pairs: AccessibilityPair[] = [];
-    
+
     for (let i = 0; i < colors.length; i++) {
       for (let j = 0; j < colors.length; j++) {
         if (i !== j) {
@@ -22,19 +22,21 @@ export const AccessibilityMatrix: React.FC<AccessibilityMatrixProps> = ({
           const background = colors[j];
           const ratio = getContrastRatio(foreground, background);
           const level = evaluateContrast(ratio);
-          const suggestion = level === 'FAIL' 
+          const suggestion = level === 'FAIL'
             ? generateContrastSuggestion(foreground, background, ratio)
             : undefined;
-          
+
           pairs.push({
             foreground,
             background,
+            foregroundIndex: i,
+            backgroundIndex: j,
             contrast: { ratio, level, suggestion },
           });
         }
       }
     }
-    
+
     return pairs;
   }, [colors]);
 
@@ -84,27 +86,40 @@ export const AccessibilityMatrix: React.FC<AccessibilityMatrixProps> = ({
             className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700"
           >
             {/* Color Combination Preview */}
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2">
-                <div
-                  className="w-6 h-6 rounded border border-gray-600"
-                  style={{ backgroundColor: pair.foreground.hex }}
-                  title={`Foreground: ${pair.foreground.hex}`}
-                />
-                <span className="text-xs text-gray-400">on</span>
-                <div
-                  className="w-6 h-6 rounded border border-gray-600"
-                  style={{ backgroundColor: pair.background.hex }}
-                  title={`Background: ${pair.background.hex}`}
-                />
+            <div className="flex items-center space-x-4">
+              {/* Color Swatches with Hex Values */}
+              <div className="flex items-center space-x-3">
+                <div className="flex flex-col items-center">
+                  <div
+                    className="w-8 h-8 rounded border border-gray-600"
+                    style={{ backgroundColor: pair.foreground.hex }}
+                    title={`Text color: ${pair.foreground.hex}`}
+                  />
+                  <div className="text-xs font-mono text-gray-300 mt-1">
+                    {pair.foreground.hex}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div
+                    className="w-8 h-8 rounded border border-gray-600"
+                    style={{ backgroundColor: pair.background.hex }}
+                    title={`Background color: ${pair.background.hex}`}
+                  />
+                  <div className="text-xs font-mono text-gray-300 mt-1">
+                    {pair.background.hex}
+                  </div>
+                </div>
               </div>
-              
+
               {/* Live Text Preview */}
               <div
-                className="px-3 py-1 rounded text-sm font-medium"
+                className="px-3 py-2 rounded text-sm font-medium border flex items-center"
                 style={{
                   color: pair.foreground.hex,
                   backgroundColor: pair.background.hex,
+                  borderColor: pair.contrast.level === 'FAIL' ? '#ef4444' : '#6b7280',
+                  minHeight: '32px',
                 }}
               >
                 Sample Text
@@ -137,11 +152,11 @@ export const AccessibilityMatrix: React.FC<AccessibilityMatrixProps> = ({
                         let colorIndex = -1;
 
                         if (suggestion.includes('Darken text') || suggestion.includes('Lighten text')) {
-                          // Apply to foreground color
-                          colorIndex = colors.findIndex(c => c.hex === pair.foreground.hex);
+                          // Apply to foreground color using the stored index
+                          colorIndex = pair.foregroundIndex;
                         } else if (suggestion.includes('Darken background') || suggestion.includes('Lighten background')) {
-                          // Apply to background color
-                          colorIndex = colors.findIndex(c => c.hex === pair.background.hex);
+                          // Apply to background color using the stored index
+                          colorIndex = pair.backgroundIndex;
                         }
 
                         if (colorIndex !== -1) {
