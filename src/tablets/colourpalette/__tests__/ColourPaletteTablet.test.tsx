@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { ColourPaletteTablet } from '../ColourPaletteTablet';
 import { ColourPaletteState } from '../types';
 import { createColorInfo } from '../utils/colourUtils';
+import { useTabletTabCreation } from '../../bridge';
 
 // Mock the clipboard API
 Object.assign(navigator, {
@@ -17,9 +18,10 @@ global.URL.createObjectURL = jest.fn(() => 'mock-url');
 global.URL.revokeObjectURL = jest.fn();
 
 // Mock the bridge hook
+const mockCreateBackgroundTab = jest.fn();
 jest.mock('../../bridge', () => ({
   useTabletTabCreation: jest.fn(() => ({
-    createBackgroundTab: jest.fn(),
+    createBackgroundTab: mockCreateBackgroundTab,
   })),
 }));
 
@@ -614,9 +616,9 @@ describe('ColourPaletteTablet', () => {
 
   describe('export functionality with bridge', () => {
     it('should create new tab when clicking New Tab button in export panel', async () => {
-      const { useTabletTabCreation } = require('../../bridge');
-      const mockCreateBackgroundTab = jest.fn();
-      useTabletTabCreation.mockReturnValue({
+      const mockUseTabletTabCreation = useTabletTabCreation as jest.MockedFunction<typeof useTabletTabCreation>;
+      mockCreateBackgroundTab.mockResolvedValue(undefined);
+      mockUseTabletTabCreation.mockReturnValue({
         createBackgroundTab: mockCreateBackgroundTab,
       });
 
@@ -662,10 +664,10 @@ describe('ColourPaletteTablet', () => {
     });
 
     it('should fallback to clipboard if createBackgroundTab fails', async () => {
-      const { useTabletTabCreation } = require('../../bridge');
-      const mockCreateBackgroundTab = jest.fn().mockRejectedValue(new Error('Bridge failed'));
-      useTabletTabCreation.mockReturnValue({
-        createBackgroundTab: mockCreateBackgroundTab,
+      const mockUseTabletTabCreation = useTabletTabCreation as jest.MockedFunction<typeof useTabletTabCreation>;
+      const failingMockCreateBackgroundTab = jest.fn().mockRejectedValue(new Error('Bridge failed'));
+      mockUseTabletTabCreation.mockReturnValue({
+        createBackgroundTab: failingMockCreateBackgroundTab,
       });
 
       const stateWithColors = {
@@ -690,7 +692,7 @@ describe('ColourPaletteTablet', () => {
 
       // Should still attempt to create background tab
       await waitFor(() => {
-        expect(mockCreateBackgroundTab).toHaveBeenCalledTimes(1);
+        expect(failingMockCreateBackgroundTab).toHaveBeenCalledTimes(1);
       });
 
       // Should fallback to clipboard (we can't easily test this without spying on console.error)

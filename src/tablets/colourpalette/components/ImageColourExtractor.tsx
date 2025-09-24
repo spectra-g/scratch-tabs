@@ -7,14 +7,14 @@ interface ImageColourExtractorProps {
   imageData: ImageData | null;
   imageUrl: string | null;
   onColorsExtracted: (colors: ColorInfo[]) => void;
-  onRegionSelect: (region: { x: number; y: number; width: number; height: number }) => void;
+  onRegionExtracted: (colors: ColorInfo[], region: { x: number; y: number; width: number; height: number }) => void;
 }
 
 export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
   imageData,
   imageUrl,
   onColorsExtracted,
-  onRegionSelect,
+  onRegionExtracted,
 }) => {
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
@@ -46,15 +46,14 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
     setLastExtractionPoint({ x: e.clientX - rect.left, y: e.clientY - rect.top });
 
     const colors = extractColorsFromRegion(imageData, region, 8);
-    onColorsExtracted(colors);
-    onRegionSelect(region);
+    onRegionExtracted(colors, region);
 
     // Clear extraction indicator after a delay
     setTimeout(() => {
       setIsExtracting(false);
       setLastExtractionPoint(null);
     }, 1000);
-  }, [imageData, onColorsExtracted, onRegionSelect]);
+  }, [imageData, onRegionExtracted]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
     if (!imageRef.current) return;
@@ -92,35 +91,34 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
       setCurrentSelection(null);
       return;
     }
-    
+
     const rect = imageRef.current.getBoundingClientRect();
     const scaleX = imageData.width / rect.width;
     const scaleY = imageData.height / rect.height;
-    
+
     const region = {
       x: Math.floor(currentSelection.x * scaleX),
       y: Math.floor(currentSelection.y * scaleY),
       width: Math.floor(currentSelection.width * scaleX),
       height: Math.floor(currentSelection.height * scaleY),
     };
-    
+
     if (region.width > 10 && region.height > 10) {
       setIsExtracting(true);
 
       const colors = extractColorsFromRegion(imageData, region, 8);
-      onColorsExtracted(colors);
-      onRegionSelect(region);
+      onRegionExtracted(colors, region);
 
       // Clear extraction indicator after a delay
       setTimeout(() => {
         setIsExtracting(false);
       }, 1000);
     }
-    
+
     setIsSelecting(false);
     setSelectionStart(null);
     setCurrentSelection(null);
-  }, [isSelecting, currentSelection, imageData, onColorsExtracted, onRegionSelect]);
+  }, [isSelecting, currentSelection, imageData, onRegionExtracted]);
 
   const handleExtractAll = useCallback(() => {
     if (!imageData) return;

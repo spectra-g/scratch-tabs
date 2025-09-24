@@ -77,7 +77,7 @@ export const useRichTextEditor = ({
                     const tr = state.tr.replaceSelectionWith(imageNode);
                     dispatch(tr);
                   } catch (error) {
-                    console.log('❌ Error inserting image:', error);
+                    // Image insertion failed - error is handled silently
                   }
                 };
                 reader.readAsDataURL(file);

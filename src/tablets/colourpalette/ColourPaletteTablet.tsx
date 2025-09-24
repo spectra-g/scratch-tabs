@@ -158,19 +158,36 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
     });
   }, [state, onChange]);
 
-  const handleRegionSelect = useCallback((region: { x: number; y: number; width: number; height: number }) => {
+  const handleRegionExtraction = useCallback((colors: ColorInfo[], region: { x: number; y: number; width: number; height: number }) => {
+    setColorsUpdated(true);
+    setTimeout(() => setColorsUpdated(false), 500);
+
+    // Auto-map colors to UI elements for immediate preview
+    const autoMapping: UIPreviewMapping = {
+      background: colors[0]?.hex || DEFAULT_UI_MAPPING.background,
+      text: colors[colors.length - 1]?.hex || DEFAULT_UI_MAPPING.text,
+      primary: colors[1]?.hex || DEFAULT_UI_MAPPING.primary,
+      secondary: colors[2]?.hex || DEFAULT_UI_MAPPING.secondary,
+      accent: colors[3]?.hex || DEFAULT_UI_MAPPING.accent,
+      border: colors[4]?.hex || DEFAULT_UI_MAPPING.border,
+    };
+
     onChange({
       ...state,
+      colors: [...colors],
+      activeColorIndex: 0,
+      uiMapping: autoMapping,
       extractionRegion: region,
+      error: null,
     });
   }, [state, onChange]);
+
 
   const handleCreateNewTab = useCallback(async (content: string, language: string, title: string) => {
     try {
       await createBackgroundTab(title, content, language);
-    } catch (error) {
-      console.error('Failed to create background tab:', error);
-      // Fallback to clipboard as backup
+    } catch {
+      // Failed to create background tab, fallback to clipboard as backup
       navigator.clipboard.writeText(content).catch(() => {
         // Silently fail if clipboard access is denied
       });
@@ -240,7 +257,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
                 imageData={currentImageData}
                 imageUrl={state.sourceImageUrl}
                 onColorsExtracted={handleColorsGenerated}
-                onRegionSelect={handleRegionSelect}
+                onRegionExtracted={handleRegionExtraction}
               />
             )}
 

@@ -535,6 +535,11 @@ const COLOR_EXPANSION_FACTOR = 2;
 const MAX_INITIAL_COLORS = 16;
 const RGBA_PIXEL_SIZE = 4;
 
+// Constants for background color filtering
+const WHITE_COLOR_THRESHOLD = 240; // RGB values above this are considered "white-ish"
+const GRAY_SATURATION_THRESHOLD = 15; // Colors with saturation below this are considered gray/white
+const BACKGROUND_COLOR_PENALTY = 0.1; // Heavy penalty for background colors
+
 type RGBTuple = [number, number, number];
 
 /**
@@ -569,6 +574,25 @@ function filterSimilarColors(
 }
 
 /**
+ * Detects if a color is likely a background color (white, near-white, or gray)
+ */
+function isBackgroundColor(color: RGBTuple): boolean {
+  const [r, g, b] = color;
+  const { s, l } = rgbToHsl(r, g, b);
+
+  // Check if it's white-ish (high RGB values)
+  const isWhitish = r > WHITE_COLOR_THRESHOLD && g > WHITE_COLOR_THRESHOLD && b > WHITE_COLOR_THRESHOLD;
+
+  // Check if it's gray-ish (low saturation)
+  const isGrayish = s < GRAY_SATURATION_THRESHOLD;
+
+  // Check if it's very light
+  const isVeryLight = l > 85;
+
+  return isWhitish || (isGrayish && isVeryLight);
+}
+
+/**
  * Calculates visual interest score for color selection priority
  */
 function calculateColorInterestScore(color: RGBTuple): number {
@@ -581,7 +605,10 @@ function calculateColorInterestScore(color: RGBTuple): number {
     : LIGHTNESS_PENALTY;
   const diversityScore = (Math.abs(r - g) + Math.abs(g - b) + Math.abs(r - b)) / MAX_RGB_DIFFERENCE;
 
-  return saturationScore * lightnessScore * (1 + diversityScore);
+  // Apply heavy penalty for background colors
+  const backgroundPenalty = isBackgroundColor(color) ? BACKGROUND_COLOR_PENALTY : 1;
+
+  return saturationScore * lightnessScore * (1 + diversityScore) * backgroundPenalty;
 }
 
 /**
@@ -647,18 +674,98 @@ function extractColorsWithEnhancedAlgorithm(
 }
 
 /**
- * Extracts colors from a specific region of image data
+ * Filters colors to remove background colors (white, gray, transparent)
+ */
+function filterBackgroundColors(colors: ColorInfo[]): ColorInfo[] {
+  return colors.filter(colorInfo => {
+    const rgb: RGBTuple = [colorInfo.rgb.r, colorInfo.rgb.g, colorInfo.rgb.b];
+    return !isBackgroundColor(rgb);
+  });
+}
+
+/**
+ * Creates an expanded region for fallback color extraction
+ */
+function createExpandedRegion(
+  originalRegion: { x: number; y: number; width: number; height: number },
+  imageData: ImageData,
+  expansion: number = 20
+): { x: number; y: number; width: number; height: number } {
+  const expandedX = Math.max(0, originalRegion.x - expansion);
+  const expandedY = Math.max(0, originalRegion.y - expansion);
+
+  return {
+    x: expandedX,
+    y: expandedY,
+    width: Math.min(imageData.width - expandedX, originalRegion.width + expansion * 2),
+    height: Math.min(imageData.height - expandedY, originalRegion.height + expansion * 2),
+  };
+}
+
+/**
+ * Removes duplicate colors based on hex values
+ */
+function removeDuplicateColors(colors: ColorInfo[]): ColorInfo[] {
+  return colors.filter((color, index, array) =>
+    array.findIndex(c => c.hex === color.hex) === index
+  );
+}
+
+/**
+ * Extracts colors from a specific region of image data with enhanced background filtering
  */
 export function extractColorsFromRegion(
   imageData: ImageData,
   region: { x: number; y: number; width: number; height: number },
   maxColors: number = 5
 ): ColorInfo[] {
-  return extractColorsWithEnhancedAlgorithm(imageData, {
-    maxColors,
-    quality: 2,
+  const INITIAL_COLOR_MULTIPLIER = 2;
+  const HIGH_QUALITY_SAMPLING = 1;
+  const MEDIUM_QUALITY_SAMPLING = 2;
+  const LOW_QUALITY_SAMPLING = 4;
+  const MIN_COLORS_THRESHOLD_STRICT = 3;
+  const MIN_COLORS_THRESHOLD_RELAXED = 2;
+
+  // Strategy 1: Extract from specified region with high quality
+  const regionColors = extractColorsWithEnhancedAlgorithm(imageData, {
+    maxColors: maxColors * INITIAL_COLOR_MULTIPLIER,
+    quality: HIGH_QUALITY_SAMPLING,
     region,
   });
+
+  const nonBackgroundColors = filterBackgroundColors(regionColors);
+  if (nonBackgroundColors.length >= Math.min(maxColors, MIN_COLORS_THRESHOLD_STRICT)) {
+    return nonBackgroundColors.slice(0, maxColors);
+  }
+
+  // Strategy 2: Expand region and try again
+  const expandedRegion = createExpandedRegion(region, imageData);
+  const expandedColors = extractColorsWithEnhancedAlgorithm(imageData, {
+    maxColors: maxColors * INITIAL_COLOR_MULTIPLIER,
+    quality: MEDIUM_QUALITY_SAMPLING,
+    region: expandedRegion,
+  });
+
+  const expandedNonBackgroundColors = filterBackgroundColors(expandedColors);
+  if (expandedNonBackgroundColors.length >= Math.min(maxColors, MIN_COLORS_THRESHOLD_RELAXED)) {
+    return expandedNonBackgroundColors.slice(0, maxColors);
+  }
+
+  // Strategy 3: Extract from entire image as final fallback
+  const globalColors = extractColorsWithEnhancedAlgorithm(imageData, {
+    maxColors,
+    quality: LOW_QUALITY_SAMPLING,
+  });
+
+  // Combine all results, prioritizing region-based colors
+  const combinedColors = [
+    ...nonBackgroundColors,
+    ...expandedNonBackgroundColors,
+    ...globalColors
+  ];
+
+  const uniqueColors = removeDuplicateColors(combinedColors);
+  return uniqueColors.slice(0, maxColors);
 }
 
 /**

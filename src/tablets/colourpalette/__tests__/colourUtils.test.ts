@@ -394,6 +394,68 @@ describe('colorUtils', () => {
         expect(colors.length).toBeGreaterThan(0);
         expect(colors.every(color => typeof color.hex === 'string')).toBe(true);
       });
+
+      it('should filter out background colors (white/gray)', () => {
+        const imageData = createTestImageData(3, 3, [
+          [255, 255, 255], [255, 255, 255], [255, 255, 255], // White background
+          [255, 255, 255], [255, 0, 0], [255, 255, 255],     // One red pixel
+          [255, 255, 255], [255, 255, 255], [255, 255, 255]  // More white background
+        ]);
+
+        const region = { x: 0, y: 0, width: 3, height: 3 };
+        const colors = extractColorsFromRegion(imageData, region, 5);
+
+        // Should prioritize the red color over white background
+        const redColor = colors.find(color => {
+          const { r, g, b } = color.rgb;
+          return r > 200 && g < 50 && b < 50;
+        });
+
+        expect(redColor).toBeDefined();
+        expect(colors.length).toBeGreaterThan(0);
+      });
+
+      it('should use region expansion fallback for mostly white regions', () => {
+        // Create image where the center is white but edges have colors
+        const imageData = createTestImageData(5, 5, [
+          [255, 0, 0], [255, 0, 0], [0, 255, 0], [0, 255, 0], [0, 0, 255],
+          [255, 0, 0], [255, 255, 255], [255, 255, 255], [255, 255, 255], [0, 0, 255],
+          [0, 255, 0], [255, 255, 255], [255, 255, 255], [255, 255, 255], [0, 0, 255],
+          [255, 0, 0], [255, 255, 255], [255, 255, 255], [255, 255, 255], [0, 0, 255],
+          [255, 0, 0], [255, 0, 0], [0, 255, 0], [0, 255, 0], [0, 0, 255]
+        ]);
+
+        // Select the white center region
+        const region = { x: 1, y: 1, width: 3, height: 3 };
+        const colors = extractColorsFromRegion(imageData, region, 3);
+
+        // Should expand and find the colored edges
+        expect(colors.length).toBeGreaterThan(0);
+
+        // Should contain some non-white colors due to expansion
+        const nonWhiteColors = colors.filter(color => {
+          const { r, g, b } = color.rgb;
+          return !(r > 240 && g > 240 && b > 240);
+        });
+
+        expect(nonWhiteColors.length).toBeGreaterThan(0);
+      });
+
+      it('should fall back to global extraction when region is entirely background', () => {
+        const imageData = createTestImageData(4, 4, [
+          [255, 0, 0], [255, 0, 0], [255, 255, 255], [255, 255, 255],
+          [255, 0, 0], [255, 0, 0], [255, 255, 255], [255, 255, 255],
+          [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255],
+          [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255]
+        ]);
+
+        // Select only the white region
+        const region = { x: 2, y: 2, width: 2, height: 2 };
+        const colors = extractColorsFromRegion(imageData, region, 2);
+
+        // Should fall back to global extraction and find the red colors
+        expect(colors.length).toBeGreaterThan(0);
+      });
     });
 
     describe('Color Diversity and Quality', () => {
