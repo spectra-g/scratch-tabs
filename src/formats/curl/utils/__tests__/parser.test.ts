@@ -132,6 +132,45 @@ That's all for now.`;
         expect(result[0].request.body).toContain('{\n    "name": "John Doe",\n    "email": "john@example.com",\n    "role": "admin"\n}');
       }
     });
+
+    it('should handle nested quotes in multiline data', () => {
+      const content = `curl -X POST -d \\
+  '{
+    "message": "He said \"Hello world!\"",
+    "nested": {
+      "value": "test"
+    }
+}' \\
+  https://api.example.com/test`;
+
+      const result = parseCurlDocument(content);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('curl');
+      if (result[0].type === 'curl') {
+        expect(result[0].request.body).toContain('"message": "He said "Hello world!""');
+        expect(result[0].request.body).toContain('"nested": {\n      "value": "test"\n    }');
+      }
+    });
+
+    it('should handle multiple multiline quoted strings in same command', () => {
+      const content = `curl -X POST -H \\
+  'Content-Type:
+    application/json' \\
+  -d '{
+    "data": "value"
+}' \\
+  https://api.example.com/test`;
+
+      const result = parseCurlDocument(content);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('curl');
+      if (result[0].type === 'curl') {
+        expect(result[0].request.headers[0].value).toContain('application/json');
+        expect(result[0].request.body).toContain('"data": "value"');
+      }
+    });
   });
 
   describe('getCurlDocumentSummary', () => {
