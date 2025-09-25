@@ -15,7 +15,7 @@ releases:
           - "**Mermaid Diagram Tablet:** Create flowcharts, sequence diagrams, and more with live preview"
           - "**Checksum Tablet:** Generate MD5, SHA-1, SHA-256 checksums for text and files"
           - "**DateTime Tablet:** Parse, format, and convert dates across timezones and formats"
-          - "**Colour Palette Tablet:** Create and export color palettes with live UI preview"
+          - "**Colour Palette Tablet:** Create and export colour palettes with live UI preview"
           - "**Lorem Ipsum Tablet:** Generate placeholder text with customizable options"
           - "**SVG Smart View:** Live preview SVG with syntax highlighting and optimization"
       - name: "🔧 Technical Highlights"
