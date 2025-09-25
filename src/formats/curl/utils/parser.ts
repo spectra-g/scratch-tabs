@@ -79,16 +79,45 @@ export function parseCurlDocument(text: string): ParsedDocument {
 }
 
 /**
- * Extract a complete curl command (handling line continuations)
+ * Extract a complete curl command (handling line continuations and multiline quoted strings)
  */
 function extractCurlCommand(lines: string[], startIndex: number): { curlLines: string[]; endIndex: number } {
   const curlLines: string[] = [];
   let currentIndex = startIndex;
-  
+  let inQuotedString = false;
+  let quoteChar = '';
+  let hasOpenQuote = false;
+
   while (currentIndex < lines.length) {
     const line = lines[currentIndex];
     curlLines.push(line);
-    
+
+    // Track quoted strings to handle multiline JSON/data
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const prevChar = i > 0 ? line[i - 1] : '';
+
+      // Skip escaped quotes
+      if (prevChar === '\\') {
+        continue;
+      }
+
+      if (!inQuotedString && (char === '"' || char === "'")) {
+        inQuotedString = true;
+        quoteChar = char;
+        hasOpenQuote = true;
+      } else if (inQuotedString && char === quoteChar) {
+        inQuotedString = false;
+        quoteChar = '';
+      }
+    }
+
+    // Continue if we have an open quoted string
+    if (hasOpenQuote && inQuotedString) {
+      currentIndex++;
+      continue;
+    }
+
     // Check if line ends with continuation character
     if (line.trim().endsWith('\\')) {
       currentIndex++;
@@ -96,7 +125,7 @@ function extractCurlCommand(lines: string[], startIndex: number): { curlLines: s
       break;
     }
   }
-  
+
   return { curlLines, endIndex: currentIndex };
 }
 
@@ -104,11 +133,10 @@ function extractCurlCommand(lines: string[], startIndex: number): { curlLines: s
  * Parse a single curl command string into a structured request object
  */
 function parseSingleCurlCommand(curlText: string): CurlRequest {
-  // Remove line continuations and normalize whitespace
-  const normalizedText = curlText
-    .replace(/\\\s*\n\s*/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // Remove line continuations but preserve quoted string content
+  const normalizedText = normalizeContiguousWhitespace(
+    curlText.replace(/\\\s*\n\s*/g, ' ')
+  ).trim();
 
   const request: CurlRequest = {
     method: 'GET',
@@ -226,11 +254,72 @@ function tokenizeCurlCommand(text: string): string[] {
  * Remove quotes from a string if they wrap the entire string
  */
 function unquoteString(str: string): string {
-  if ((str.startsWith('"') && str.endsWith('"')) || 
+  if ((str.startsWith('"') && str.endsWith('"')) ||
       (str.startsWith("'") && str.endsWith("'"))) {
     return str.slice(1, -1);
   }
   return str;
+}
+
+/**
+ * Normalize whitespace while preserving content inside quoted strings
+ */
+function normalizeContiguousWhitespace(text: string): string {
+  let result = '';
+  let inQuotes = false;
+  let quoteChar = '';
+  let i = 0;
+
+  while (i < text.length) {
+    const char = text[i];
+    const prevChar = i > 0 ? text[i - 1] : '';
+
+    // Skip escaped quotes
+    if (prevChar === '\\') {
+      result += char;
+      i++;
+      continue;
+    }
+
+    // Handle quote boundaries
+    if (!inQuotes && (char === '"' || char === "'")) {
+      inQuotes = true;
+      quoteChar = char;
+      result += char;
+      i++;
+      continue;
+    } else if (inQuotes && char === quoteChar) {
+      inQuotes = false;
+      quoteChar = '';
+      result += char;
+      i++;
+      continue;
+    }
+
+    // If we're inside quotes, preserve all whitespace
+    if (inQuotes) {
+      result += char;
+      i++;
+      continue;
+    }
+
+    // Outside quotes, normalize whitespace
+    if (/\s/.test(char)) {
+      // Skip multiple whitespace characters, only add one space
+      if (result.length > 0 && !result.endsWith(' ')) {
+        result += ' ';
+      }
+      // Skip all consecutive whitespace
+      while (i < text.length && /\s/.test(text[i])) {
+        i++;
+      }
+    } else {
+      result += char;
+      i++;
+    }
+  }
+
+  return result;
 }
 
 /**

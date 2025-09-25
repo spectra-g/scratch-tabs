@@ -84,10 +84,10 @@ That's all for now.`;
   https://skyidappintl.sky.com/signin/otp`;
 
       const result = parseCurlDocument(content);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('curl');
-      
+
       if (result[0].type === 'curl') {
         expect(result[0].request.method).toBe('POST');
         expect(result[0].request.url).toBe('https://skyidappintl.sky.com/signin/otp');
@@ -102,6 +102,34 @@ That's all for now.`;
         expect(result[0].request.headers[3].value).toBe('application/x-www-form-urlencoded');
         expect(result[0].request.body).toBe('userIdentifier=girish@test.com');
         expect(result[0].request.otherOptions).toContainEqual({ flag: '-v' });
+      }
+    });
+
+    it('should handle multiline JSON in -d parameter', () => {
+      const content = `curl -X POST -H "Content-Type: application/json" -H \\
+  "Authorization: Bearer token123" -d \\
+  '{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "admin"
+}' \\
+  https://api.example.com/users`;
+
+      const result = parseCurlDocument(content);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('curl');
+
+      if (result[0].type === 'curl') {
+        expect(result[0].request.method).toBe('POST');
+        expect(result[0].request.url).toBe('https://api.example.com/users');
+        expect(result[0].request.headers).toHaveLength(2);
+        expect(result[0].request.headers[0].key).toBe('Content-Type');
+        expect(result[0].request.headers[0].value).toBe('application/json');
+        expect(result[0].request.headers[1].key).toBe('Authorization');
+        expect(result[0].request.headers[1].value).toBe('Bearer token123');
+        // The multiline JSON should preserve its structure
+        expect(result[0].request.body).toContain('{\n    "name": "John Doe",\n    "email": "john@example.com",\n    "role": "admin"\n}');
       }
     });
   });
