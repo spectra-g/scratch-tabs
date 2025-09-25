@@ -9,10 +9,10 @@ describe('SVG Language Detector', () => {
 
   describe('Basic Properties', () => {
     it('should have correct basic properties', () => {
-      expect(detector.id).toBe('xml');
+      expect(detector.id).toBe('svg');
       expect(detector.name).toBe('SVG');
       expect(detector.extensions).toEqual(['svg']);
-      expect(detector.priority).toBe(3);
+      expect(detector.priority).toBe(6);
     });
 
     it('should return correct file extension', () => {
@@ -248,6 +248,33 @@ describe('SVG Language Detector', () => {
       
       const result = detector.detect(content);
       expect(result.confidence).toBeLessThan(0.8);
+    });
+  });
+
+  describe('Smart Views Integration', () => {
+    it('should provide smart views', () => {
+      const smartViews = detector.getSmartViews();
+      expect(smartViews).toHaveLength(1);
+      
+      const svgView = smartViews[0];
+      expect(svgView.id).toBe('svg-previewer');
+      expect(svgView.languageId).toBe('svg');
+      expect(svgView.label).toBe('SVG Preview');
+      expect(svgView.mode).toBe('side-by-side');
+      expect(svgView.priority).toBe(1);
+      expect(svgView.component).toBeDefined();
+      expect(svgView.icon).toBeDefined();
+    });
+
+    it('should provide status bar items', () => {
+      const statusBarItems = detector.getStatusBarItems();
+      expect(statusBarItems).toHaveLength(1);
+      
+      const svgButton = statusBarItems[0];
+      expect(svgButton.id).toBe('svg-smart-view-button');
+      expect(svgButton.priority).toBe(20);
+      expect(svgButton.component).toBeDefined();
+      expect(typeof svgButton.component).toBe('function');
     });
   });
 }); 

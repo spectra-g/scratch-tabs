@@ -1,16 +1,22 @@
+import React from "react";
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
-import { DetectionResult, FormatModule  } from "./types";
+import { DetectionResult, FormatModule, StatusBarItem } from "./types";
+import { smartViewRegistry, SmartView } from "../views/registry";
+import { Eye } from "../components/Icons";
+import { SvgSmartView } from "./svg/views/components/SvgSmartView";
+import { SmartViewButtons } from "../components/StatusBar/SmartViewButtons";
+import { StatusItemProps } from "../components/StatusBar/types";
 
 /**
  * SVG language detector
  */
 export class SvgFormatDetector extends BaseFormatDetector implements FormatModule
 {
-  id = "xml"; // Use Monaco's built-in XML language
+  id = "svg"; // SVG format with its own ID
   name = "SVG";
   extensions = ["svg"];
-  priority = 3; // Higher priority than XML since SVG is more specific
+  priority = 6; // Higher priority than PHP (5) to ensure it's chosen for SVG content with <?xml
 
   sampleContent(): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -198,11 +204,13 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
     // Determine if this is a match
     const isMatch = strongSignalFound && confidenceScore >= 0.4;
 
-    return {
+    const result = {
       match: isMatch,
       confidence: isMatch ? confidenceScore : 0.0,
       matchedDefinitive: isMatch && strongSignalFound,
     };
+    
+    return result;
   }
 
   getFileExtension(): string {
@@ -210,15 +218,206 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
   }
 
   registerProvider(monaco: any): void {
-    // SVG uses Monaco's built-in XML language, so no additional provider registration is needed
-    // The XML language provider is already available in Monaco
+    // SVG files should use XML language for proper syntax highlighting and formatting support
+    // Monaco has built-in XML support with formatting
+    if (monaco && monaco.languages) {
+      // Register 'svg' language
+      monaco.languages.register({ id: 'svg' });
+      
+      // Configure SVG to use XML-like language configuration for formatting support
+      monaco.languages.setLanguageConfiguration('svg', {
+        comments: {
+          blockComment: ['<!--', '-->']
+        },
+        brackets: [
+          ['<', '>'],
+          ['"', '"'],
+          ["'", "'"]
+        ],
+        autoClosingPairs: [
+          { open: '<', close: '>' },
+          { open: '"', close: '"' },
+          { open: "'", close: "'" }
+        ],
+        surroundingPairs: [
+          { open: '<', close: '>' },
+          { open: '"', close: '"' },
+          { open: "'", close: "'" }
+        ],
+        indentationRules: {
+          increaseIndentPattern: /<(?!\?|(?:area|base|br|col|frame|hr|img|input|link|meta|param)\s*\/?)([_:\w][_:\w-.\d]*)\s*(\s[^>]*)?>/i,
+          decreaseIndentPattern: /^\s*<\/([_:\w][_:\w-.\d]*)\s*>/i
+        }
+      });
+
+      // Set SVG to use XML-style tokenization for proper syntax highlighting
+      monaco.languages.setMonarchTokensProvider('svg', {
+        tokenizer: {
+          root: [
+            [/<!--/, 'comment', '@comment'],
+            [/<\?[^>]*\?>/, 'metatag'],
+            [/<!DOCTYPE/, 'metatag', '@doctype'],
+            [/<\/([a-zA-Z][\w:-]*)/, { token: 'tag', bracket: '@close' }],
+            [/<([a-zA-Z][\w:-]*)/, { token: 'tag', bracket: '@open', next: '@tag' }],
+            [/[^<]+/, '']
+          ],
+          doctype: [
+            [/>/, 'metatag', '@pop'],
+            [/./, 'metatag']
+          ],
+          comment: [
+            [/-->/, 'comment', '@pop'],
+            [/./, 'comment']
+          ],
+          tag: [
+            [/\/?>/, { token: 'tag', bracket: '@close', next: '@pop' }],
+            [/[\w:-]+/, 'attribute.name'],
+            [/=/, 'delimiter'],
+            [/"[^"]*"/, 'attribute.value'],
+            [/'[^']*'/, 'attribute.value'],
+            [/\s+/, '']
+          ]
+        }
+      });
+
+      // Register formatting provider for SVG (using simple XML-style formatting)
+      monaco.languages.registerDocumentFormattingEditProvider('svg', {
+        provideDocumentFormattingEdits: (model: any) => {
+          const content = model.getValue();
+          const formatted = this.formatSvgContent(content);
+          
+          if (formatted !== content) {
+            return [{
+              range: model.getFullModelRange(),
+              text: formatted
+            }];
+          }
+          return [];
+        }
+      });
+    }
   }
 
-  // No registerProvider needed - using Monaco's built-in XML language
+  // Simple SVG/XML formatter
+  private formatSvgContent(content: string): string {
+    if (!content.trim()) return content;
+
+    try {
+      // Basic XML formatting using browser's DOMParser and XMLSerializer
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, 'image/svg+xml');
+      
+      // Check for parsing errors
+      const parserError = doc.getElementsByTagName('parsererror')[0];
+      if (parserError) {
+        // If parsing failed, return original content
+        return content;
+      }
+
+      // Format using XMLSerializer and basic indentation
+      const serializer = new XMLSerializer();
+      let formatted = serializer.serializeToString(doc);
+      
+      // Add proper indentation
+      formatted = this.addIndentation(formatted);
+      
+      return formatted;
+    } catch (error) {
+      // If formatting fails, return original content
+      return content;
+    }
+  }
+
+  private addIndentation(xml: string): string {
+    let formatted = '';
+    let indent = 0;
+    const indentStr = '  '; // 2 spaces
+    
+    // Split by tags while preserving them
+    const parts = xml.split(/(<[^>]*>)/);
+    
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      
+      if (part.match(/<\/\w/)) {
+        // Closing tag - decrease indent before adding
+        indent--;
+        if (formatted && !formatted.endsWith('\n')) {
+          formatted += '\n';
+        }
+        formatted += indentStr.repeat(Math.max(0, indent)) + part;
+      } else if (part.match(/<\w[^>]*[^/]>/)) {
+        // Opening tag - add with current indent, then increase
+        if (formatted && !formatted.endsWith('\n')) {
+          formatted += '\n';
+        }
+        formatted += indentStr.repeat(indent) + part;
+        indent++;
+      } else if (part.match(/<\w[^>]*\/>/)) {
+        // Self-closing tag - add with current indent
+        if (formatted && !formatted.endsWith('\n')) {
+          formatted += '\n';
+        }
+        formatted += indentStr.repeat(indent) + part;
+      } else if (part.match(/^<\?/) || part.match(/^<!--/)) {
+        // Processing instruction or comment
+        if (formatted && !formatted.endsWith('\n')) {
+          formatted += '\n';
+        }
+        formatted += indentStr.repeat(indent) + part;
+      } else if (part.trim()) {
+        // Text content - add without extra newline if it's short
+        const trimmed = part.trim();
+        if (trimmed) {
+          formatted += trimmed;
+        }
+      }
+    }
+    
+    return formatted.trim();
+  }
+
+  getSmartViews(): SmartView[] {
+    return [
+      {
+        id: "svg-previewer",
+        languageId: "svg", // SVG format ID
+        label: "SVG Preview",
+        icon: Eye,
+        component: SvgSmartView,
+        mode: "side-by-side", // Critical for interactive features
+        priority: 1,
+      },
+    ];
+  }
+
+  getStatusBarItems(): StatusBarItem[] {
+    return [
+      {
+        id: 'svg-smart-view-button',
+        component: (props: StatusItemProps) => {
+          return React.createElement(SmartViewButtons, {
+            language: this.id,
+            tabId: props.activeTab?.id || ''
+          });
+        },
+        priority: 20,
+      },
+    ];
+  }
 }
 
-// Create and register the detector
-const svgDetector = new SvgFormatDetector();
-formatRegistry.register(svgDetector);
+// Create and register the module
+const svgModule = new SvgFormatDetector();
+formatRegistry.register(svgModule);
 
-// No need for registerSvgProvider - using Monaco's built-in XML language 
+// Register smart views explicitly
+const smartViews = svgModule.getSmartViews();
+smartViews.forEach(view => {
+  smartViewRegistry.register(view);
+});
+
+// Export for backward compatibility
+export const registerSvgProvider = (monaco: any) => {
+  svgModule.registerProvider(monaco);
+};

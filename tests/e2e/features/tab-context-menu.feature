@@ -1,4 +1,3 @@
-@please-fix
 Feature: Tab context menu
 
   Background:

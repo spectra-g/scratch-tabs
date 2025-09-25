@@ -1,4 +1,3 @@
-@new-feature
 Feature: Rich Text Editor
 
   Background:

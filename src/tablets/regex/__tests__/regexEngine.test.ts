@@ -298,5 +298,88 @@ describe("regexEngine", () => {
       const explanation = explainRegex("\\[\\]\\{\\}\\(\\)");
       expect(explanation.every((exp) => exp.type === "escape")).toBe(true);
     });
+
+    it("should provide detailed explanations for capturing groups with alternation", () => {
+      const explanation = explainRegex("(-|[A-Z])+");
+      expect(explanation).toHaveLength(2);
+      expect(explanation[0].type).toBe("group");
+      expect(explanation[0].description).toBe("Capturing group containing: either a hyphen (-) or uppercase letters");
+      expect(explanation[1].type).toBe("quantifier");
+      expect(explanation[1].description).toBe("Match one or more repetitions");
+    });
+
+    it("should provide meaningful character class explanations", () => {
+      const testCases = [
+        { pattern: "[A-Z]", expected: "Match uppercase letters" },
+        { pattern: "[a-z]", expected: "Match lowercase letters" },
+        { pattern: "[0-9]", expected: "Match digits" },
+        { pattern: "[a-zA-Z]", expected: "Match letters" },
+        { pattern: "[^A-Z]", expected: "Match any character except uppercase letters" },
+      ];
+
+      testCases.forEach(({ pattern, expected }) => {
+        const explanation = explainRegex(pattern);
+        expect(explanation[0].description).toBe(expected);
+      });
+    });
+
+    it("should explain named capturing groups with content details", () => {
+      const explanation = explainRegex("(?<name>[A-Z]+)");
+      expect(explanation).toHaveLength(1);
+      expect(explanation[0].type).toBe("group");
+      expect(explanation[0].description).toBe("Named capturing group \"name\" containing: uppercase letters (one or more)");
+    });
+
+    it("should explain non-capturing groups", () => {
+      const explanation = explainRegex("(?:hello|world)");
+      expect(explanation).toHaveLength(1);
+      expect(explanation[0].type).toBe("group");
+      expect(explanation[0].description).toBe("Non-capturing group containing: either \"hello\" or \"world\"");
+    });
+
+    it("should handle multiple alternatives in groups", () => {
+      const explanation = explainRegex("(a|b|c)");
+      expect(explanation).toHaveLength(1);
+      expect(explanation[0].type).toBe("group");
+      expect(explanation[0].description).toBe("Capturing group containing: one of 3 alternatives: \"a\", \"b\", \"c\"");
+    });
+
+    it("should explain character classes with quantifiers inside groups", () => {
+      const explanation = explainRegex("([0-9]+)");
+      expect(explanation).toHaveLength(1);
+      expect(explanation[0].type).toBe("group");
+      expect(explanation[0].description).toBe("Capturing group containing: digits (one or more)");
+    });
+
+    it("should handle simple character lists in character classes", () => {
+      const testCases = [
+        { pattern: "[abc]", expected: "Match one of \"a\", \"b\", \"c\"" },
+        { pattern: "[xy]", expected: "Match \"x\" or \"y\"" },
+        { pattern: "[z]", expected: "Match \"z\"" },
+      ];
+
+      testCases.forEach(({ pattern, expected }) => {
+        const explanation = explainRegex(pattern);
+        expect(explanation[0].description).toBe(expected);
+      });
+    });
+
+    it("should handle character ranges", () => {
+      const testCases = [
+        { pattern: "[a-c]", expected: "Match letters from a to c" },
+        { pattern: "[X-Z]", expected: "Match uppercase letters from X to Z" },
+        { pattern: "[1-5]", expected: "Match digits from 1 to 5" },
+      ];
+
+      testCases.forEach(({ pattern, expected }) => {
+        const explanation = explainRegex(pattern);
+        expect(explanation[0].description).toBe(expected);
+      });
+    });
+
+    it("should provide fallback for complex character classes", () => {
+      const explanation = explainRegex("[a-z\\d\\s]");
+      expect(explanation[0].description).toBe("Match characters matching [a-z\\d\\s]");
+    });
   });
 }); 

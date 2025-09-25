@@ -117,8 +117,11 @@ $squared = array_map(fn($n) => $n * $n, $numbers);
     let isDefinitivePhp = false;
 
     // 1. Check for PHP opening tags (very strong indicator)
-    const openTagMatch = trimmedContentStart.match(/^<\?(?:php|=)?/i); // Anchor to start
-    if (openTagMatch) {
+    // But exclude XML declarations like <?xml
+    const openTagMatch = trimmedContentStart.match(/^<\?(?:php|=)/i); // Anchor to start, require php or =
+    const isXmlDeclaration = trimmedContentStart.match(/^<\?xml\s/i);
+    
+    if (openTagMatch && !isXmlDeclaration) {
       hasPhpTags = true;
       confidenceScore = 0.75; // High base confidence for any PHP tag
       // Don't increment patternsMatched here - only count actual PHP content patterns

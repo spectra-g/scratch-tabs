@@ -1,4 +1,6 @@
 import { Tablet, TabletRegistry } from "./types";
+import { ChecksumTablet } from "./checksum";
+import { DateTimeTablet } from "./datetime";
 
 class TabletRegistryImpl implements TabletRegistry {
   private tablets: Tablet[] = [];
@@ -35,5 +37,26 @@ class TabletRegistryImpl implements TabletRegistry {
   }
 }
 
-// Export singleton instance
-export const tabletRegistry = new TabletRegistryImpl();
+// Static registry for tablets that are always loaded
+export const tabletRegistry = {
+  staticTablets: {
+    checksum: {
+      ...ChecksumTablet,
+    },
+    datetime: {
+      ...DateTimeTablet,
+    },
+  },
+
+  async getById(id: string): Promise<Tablet | null> {
+    // Check static tablets first
+    const staticTablet = this.staticTablets[id];
+    if (staticTablet) {
+      return staticTablet;
+    }
+    
+    return null;
+  }
+  diagram: () => import('./diagram').then(m => m.DiagramTablet),
+  colourpalette: () => import('./colourpalette').then(m => m.ColourPaletteTablet),
+};

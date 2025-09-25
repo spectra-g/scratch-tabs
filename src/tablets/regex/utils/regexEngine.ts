@@ -250,7 +250,7 @@ export function explainRegex(pattern: string): RegexExplanation[] {
         explainToken(
           char,
           "quantifier",
-          "Zero or more of the preceding element",
+          "Match zero or more repetitions",
           start,
           pos + 1,
         );
@@ -259,7 +259,7 @@ export function explainRegex(pattern: string): RegexExplanation[] {
         explainToken(
           char,
           "quantifier",
-          "One or more of the preceding element",
+          "Match one or more repetitions",
           start,
           pos + 1,
         );
@@ -268,7 +268,7 @@ export function explainRegex(pattern: string): RegexExplanation[] {
         explainToken(
           char,
           "quantifier",
-          "Zero or one of the preceding element",
+          "Match zero or one occurrence (optional)",
           start,
           pos + 1,
         );
@@ -297,7 +297,7 @@ export function explainRegex(pattern: string): RegexExplanation[] {
           explainToken(
             charClass,
             "character-class",
-            `Character class: ${charClass}`,
+            `Match ${explainCharacterClass(charClass)}`,
             start,
             classEnd + 1,
           );
@@ -401,11 +401,173 @@ function findMatchingBrace(pattern: string, start: number): number {
 }
 
 function getGroupType(group: string): string {
-  if (group.startsWith("(?:")) return "Non-capturing group";
+  if (group.startsWith("(?:")) {
+    const content = group.slice(3, -1);
+    return `Non-capturing group containing: ${summarizeGroupContent(content)}`;
+  }
   if (group.startsWith("(?=")) return "Positive lookahead";
   if (group.startsWith("(?!")) return "Negative lookahead";
   if (group.startsWith("(?<=")) return "Positive lookbehind";
   if (group.startsWith("(?<!")) return "Negative lookbehind";
-  if (group.startsWith("(?<")) return "Named capturing group";
-  return "Capturing group";
+  if (group.startsWith("(?<")) {
+    const nameEnd = group.indexOf('>', 3);
+    if (nameEnd > 0) {
+      const name = group.slice(3, nameEnd);
+      const content = group.slice(nameEnd + 1, -1);
+      return `Named capturing group "${name}" containing: ${summarizeGroupContent(content)}`;
+    }
+    return "Named capturing group";
+  }
+
+  // Regular capturing group - explain what's inside
+  const content = group.slice(1, -1);
+  return `Capturing group containing: ${summarizeGroupContent(content)}`;
+}
+
+function summarizeGroupContent(content: string): string {
+  if (content.includes('|')) {
+    return summarizeAlternation(content);
+  }
+
+  const charClassWithQuantifierMatch = content.match(/^(\[.+?\])([*+?]?)(.*)$/);
+  if (charClassWithQuantifierMatch) {
+    return summarizeCharacterClassWithQuantifier(charClassWithQuantifierMatch);
+  }
+
+  if (content.match(/^\[.+\]$/)) {
+    return explainCharacterClass(content);
+  }
+
+  return isSimpleLiteral(content) ? `"${content}"` : `"${content}"`;
+}
+
+function summarizeAlternation(content: string): string {
+  const alternatives = content.split('|');
+
+  if (alternatives.length === 2) {
+    return summarizeBinaryAlternation(alternatives);
+  }
+
+  return summarizeMultipleAlternatives(alternatives);
+}
+
+function summarizeBinaryAlternation(alternatives: string[]): string {
+  const [alt1, alt2] = alternatives.map(alt => alt.trim());
+
+  if (isHyphenAndCharacterClass(alt1, alt2)) {
+    return `either a hyphen (-) or ${explainCharacterClass(alt2)}`;
+  }
+
+  return `either "${alt1}" or "${alt2}"`;
+}
+
+function summarizeMultipleAlternatives(alternatives: string[]): string {
+  const quotedAlternatives = alternatives.map(alt => `"${alt.trim()}"`).join(', ');
+  return `one of ${alternatives.length} alternatives: ${quotedAlternatives}`;
+}
+
+function summarizeCharacterClassWithQuantifier(match: RegExpMatchArray): string {
+  const [, charClass, quantifier, rest] = match;
+  let explanation = explainCharacterClass(charClass);
+
+  if (quantifier) {
+    explanation += getQuantifierDescription(quantifier);
+  }
+
+  if (rest) {
+    explanation += ` followed by "${rest}"`;
+  }
+
+  return explanation;
+}
+
+function isHyphenAndCharacterClass(alt1: string, alt2: string): boolean {
+  return alt1 === '-' && /^\[.+\]$/.test(alt2);
+}
+
+function isSimpleLiteral(content: string): boolean {
+  return content.length <= 10 && !/[\\.*+?^${}()|[\]]/.test(content);
+}
+
+function getQuantifierDescription(quantifier: string): string {
+  const quantifierMap: Record<string, string> = {
+    '+': ' (one or more)',
+    '*': ' (zero or more)',
+    '?': ' (optional)'
+  };
+  return quantifierMap[quantifier] || '';
+}
+
+function explainCharacterClass(charClass: string): string {
+  const inside = charClass.slice(1, -1);
+
+  // Handle negated character classes
+  if (inside.startsWith('^')) {
+    const negatedContent = inside.slice(1);
+    return `any character except ${explainCharacterClassContent(negatedContent)}`;
+  }
+
+  return explainCharacterClassContent(inside);
+}
+
+function explainCharacterClassContent(content: string): string {
+  const commonPatterns = getCommonCharacterClassPatterns();
+
+  if (commonPatterns.has(content)) {
+    return commonPatterns.get(content)!;
+  }
+
+  const rangeMatch = content.match(/^([a-z])-([a-z])$|^([A-Z])-([A-Z])$|^([0-9])-([0-9])$/);
+  if (rangeMatch) {
+    return describeCharacterRange(rangeMatch, content);
+  }
+
+  if (isSimpleCharacterList(content)) {
+    return describeSimpleCharacterList(content);
+  }
+
+  return `characters matching [${content}]`;
+}
+
+function getCommonCharacterClassPatterns(): Map<string, string> {
+  return new Map([
+    ['a-z', 'lowercase letters'],
+    ['A-Z', 'uppercase letters'],
+    ['0-9', 'digits'],
+    ['a-zA-Z', 'letters'],
+    ['a-zA-Z0-9', 'alphanumeric characters'],
+    ['A-Za-z0-9', 'alphanumeric characters'],
+    ['0-9a-fA-F', 'hexadecimal digits']
+  ]);
+}
+
+function describeCharacterRange(rangeMatch: RegExpMatchArray, content: string): string {
+  if (rangeMatch[1] && rangeMatch[2]) {
+    return `letters from ${content[0]} to ${content[2]}`;
+  }
+  if (rangeMatch[3] && rangeMatch[4]) {
+    return `uppercase letters from ${content[0]} to ${content[2]}`;
+  }
+  if (rangeMatch[5] && rangeMatch[6]) {
+    return `digits from ${content[0]} to ${content[2]}`;
+  }
+  return `characters matching [${content}]`;
+}
+
+function isSimpleCharacterList(content: string): boolean {
+  return content.length <= 5 && !content.includes('-') && !content.includes('\\');
+}
+
+function describeSimpleCharacterList(content: string): string {
+  const chars = content.split('').map(c => `"${c}"`);
+
+  if (chars.length === 1) {
+    return chars[0];
+  }
+
+  if (chars.length === 2) {
+    return `${chars[0]} or ${chars[1]}`;
+  }
+
+  return `one of ${chars.join(', ')}`;
 }

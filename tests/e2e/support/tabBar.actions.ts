@@ -56,8 +56,9 @@ export class TabBarActions {
     const tabletSelector = this.page.locator('.bg-gray-800.border.border-gray-700.rounded-lg');
     await expect(tabletSelector).toBeVisible();
     
-    // Click on the tablet with the specified name - use the actual structure
-    const tabletOption = this.page.locator('.font-medium.text-base', { hasText: tabletName });
+    // Click on the tablet with the specified name - use exact text matching to avoid conflicts
+    // Find the element with .font-medium.text-base that has exactly the text we want
+    const tabletOption = this.page.locator('.font-medium.text-base').filter({ hasText: new RegExp(`^${tabletName}$`) });
     await expect(tabletOption).toBeVisible();
     await tabletOption.click();
     

@@ -1,11 +1,12 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText } from "../components/Icons";
+import { FileText, Type, Shield, Network, Palette } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
   id: string;
   label: string;
   keywords: string[];
+  description?: string;
   // NEW: Add the optional action discovery function to the metadata.
   getActionsForContext?(context: TabletActionContext): TabletAction[];
 }
@@ -216,4 +217,146 @@ export const tabletMetadata: TabletMetadata[] = [
   label: "Emoji as Data",
   keywords: ["emoji", "unicode", "symbols", "formatter", "picker", "data", "encoding"],
 },
+  {
+    id: "loremipsum",
+    label: "Lorem Ipsum Generator",
+    keywords: ["lorem", "ipsum", "placeholder", "text", "mock", "data", "generator"],
+    getActionsForContext: (context) => {
+      // Always available from any context
+      return [
+        {
+          id: 'generate-content',
+          label: 'Generate Mock Content',
+          icon: Type,
+          action: () => {
+            tabletActionService.handleAction({
+              targetTablet: 'loremipsum',
+              action: 'new-tab',
+              payload: {},
+              source: { 
+                titleHint: 'Lorem Ipsum Generator',
+                side: context.side 
+              },
+            });
+          },
+        },
+      ];
+    },
+  },
+  {
+    id: "checksum",
+    label: "Checksum",
+    keywords: ["checksum", "hash", "md5", "sha", "crc32", "verify", "integrity"],
+    getActionsForContext: (context) => {
+      const actions = [];
+      
+      // Always available
+      actions.push({
+        id: 'calculate-checksum',
+        label: 'Calculate Checksum',
+        icon: Shield,
+        action: () => {
+          tabletActionService.handleAction({
+            targetTablet: 'checksum',
+            action: 'new-tab',
+            payload: context.content ? { text: context.content } : {},
+            source: { 
+              titleHint: 'Checksum',
+              side: context.side 
+            },
+          });
+        },
+      });
+      
+      return actions;
+    },
+  },
+  {
+    id: "datetime",
+    label: "Date & Time",
+    keywords: ["date", "time", "timestamp", "timezone", "convert", "parse", "duration", "calculator"],
+  },
+  {
+    id: "diagram",
+    label: "Diagram Editor",
+    description: "Interactive Mermaid diagram editor with live preview and optimization",
+    keywords: ["diagram", "mermaid", "flowchart", "sequence", "gantt", "chart", "graph", "visualization"],
+    getActionsForContext: (context) => {
+      if (context.source === 'editor-tab' && context.content) {
+        // Check if content looks like Mermaid diagram code
+        const mermaidPatterns = [
+          /flowchart\s+(TD|LR|BT|RL)/i,
+          /graph\s+(TD|LR|BT|RL)/i,
+          /sequenceDiagram/i,
+          /gantt/i,
+          /classDiagram/i,
+          /stateDiagram/i,
+          /erDiagram/i,
+          /journey/i,
+          /gitgraph/i,
+          /pie\s+title/i,
+          /mindmap/i,
+          /timeline/i
+        ];
+        
+        const isMermaidCode = mermaidPatterns.some(pattern => pattern.test(context.content));
+        
+        if (isMermaidCode) {
+          return [{
+            id: 'open-diagram-editor',
+            label: 'Open in Diagram Editor',
+            icon: Network,
+            action: () => {
+              tabletActionService.handleAction({
+                targetTablet: 'diagram',
+                action: 'new-tab',
+                payload: { mermaidCode: context.content },
+                source: { 
+                  tabId: context.tab?.id,
+                  titleHint: 'Diagram Editor',
+                  side: context.side 
+                }
+              });
+            }
+          }];
+        }
+      }
+      return [];
+    }
+  },
+  {
+    id: 'colourpalette',
+    label: 'Colour Palette',
+    description: 'Extract, create, and test colour palettes with accessibility insights',
+    keywords: ['colour', 'palette', 'design', 'accessibility', 'contrast', 'css', 'extract'],
+    getActionsForContext: (context) => {
+      if (context.source === 'editor-tab' && context.content) {
+        // Check if content contains color values
+        const hasColors = /(?:#[a-fA-F0-9]{3,6}|rgb\(|hsl\(|color:)/i.test(context.content);
+        if (hasColors) {
+          return [
+            {
+              id: 'extract-colors-from-css',
+              label: 'Extract Colors to Palette',
+              icon: Palette,
+              action: () => {
+                // Extract colors from CSS/code and open colour palette
+                tabletActionService.handleAction({
+                  targetTablet: 'colourpalette',
+                  action: 'new-tab',
+                  payload: { extractFromText: context.content },
+                  source: { 
+                    tabId: context.tab?.id,
+                    titleHint: 'Colour Palette',
+                    side: context.side 
+                  },
+                });
+              },
+            },
+          ];
+        }
+      }
+      return [];
+    },
+  },
 ];

@@ -120,6 +120,27 @@ console.log(message);`;
       expect(detector.detect("   ").match).toBe(false);
       expect(detector.detect("<?php").match).toBe(false);
     });
+
+    test("should not detect XML/SVG content with <?xml declarations", () => {
+      const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <circle cx="50" cy="50" r="40" fill="red"/>
+</svg>`;
+      const result = detector.detect(xmlContent);
+      expect(result.match).toBe(false);
+      expect(result.confidence).toBe(0);
+    });
+
+    test("should not detect XML documents", () => {
+      const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item id="1">Test</item>
+  <item id="2">Another test</item>
+</root>`;
+      const result = detector.detect(xmlContent);
+      expect(result.match).toBe(false);
+      expect(result.confidence).toBe(0);
+    });
   });
 
   describe("Monaco Provider Registration", () => {
