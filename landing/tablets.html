@@ -1,415 +1,357 @@
 <!doctype html>
 <html lang="en" style="scroll-behavior: smooth">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Specialized Tablets - Scratch Tabs</title>
-    <meta
-      name="description"
-      content="Explore specialized tablets in Scratch Tabs - Password Generator, Regex Tester, JWT Tools, Data Converters, Clipboard Manager and more developer tools."
-    />
-    <meta
-      name="keywords"
-      content="tablets, developer tools, password generator, regex tester, jwt tools, data converters, clipboard manager, scratch tabs"
-    />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://scratchtabs.com/tablets.html" />
-    <meta
-      property="og:title"
-      content="Specialized Tablets - Scratch Tabs"
-    />
-    <meta
-      property="og:description"
-      content="Explore specialized tablets in Scratch Tabs - Password Generator, Regex Tester, JWT Tools, Data Converters, Clipboard Manager and more developer tools."
-    />
-    <meta
-      property="og:image"
-      content="https://scratchtabs.b-cdn.net/og-image.png"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Complete Tablet Ecosystem - Scratch Tabs</title>
+  <meta name="description"
+        content="Explore the complete arsenal of 25+ specialized developer tools (Tablets) in Scratch Tabs, from a JWT Toolkit and REST Client to a JSON Mapper and Diagram Editor." />
+  <meta name="keywords"
+        content="tablets, developer tools, jwt toolkit, rest client, json mapper, data converters, regex tester, password generator, scratch tabs" />
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://scratchtabs.com/tablets.html" />
-    <meta
-      property="twitter:title"
-      content="Specialized Tablets - Scratch Tabs"
-    />
-    <meta
-      property="twitter:description"
-      content="Explore specialized tablets in Scratch Tabs - Password Generator, Regex Tester, JWT Tools, Data Converters, Clipboard Manager and more developer tools."
-    />
-    <meta
-      property="twitter:image"
-      content="https://scratchtabs.b-cdn.net/og-image.png"
-    />
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://scratchtabs.com/tablets.html" />
+  <meta property="og:title" content="The Complete Tablet Ecosystem - Scratch Tabs" />
+  <meta property="og:description"
+        content="Explore the complete arsenal of 25+ specialized developer tools (Tablets) in Scratch Tabs, from a JWT Toolkit and REST Client to a JSON Mapper and Diagram Editor." />
+  <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://scratchtabs.com/tablets.html" />
+  <meta property="twitter:title" content="The Complete Tablet Ecosystem - Scratch Tabs" />
+  <meta property="twitter:description"
+        content="Explore the complete arsenal of 25+ specialized developer tools (Tablets) in Scratch Tabs, from a JWT Toolkit and REST Client to a JSON Mapper and Diagram Editor." />
+  <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
-    <style>
-      html {
-        scroll-padding-top: 5rem;
-        /* Offset for sticky header */
-      }
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+  <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
 
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-          Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-          "Segoe UI Symbol";
-        background-color: #111827;
-        color: #d1d5db;
-      }
+  <style>
+    html {
+      scroll-padding-top: 5rem;
+      /* Offset for sticky header */
+    }
 
-      .section-title {
-        color: #f3f4f6;
-      }
+    body {
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+        Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol";
+      background-color: #111827;
+      color: #d1d5db;
+    }
 
-      .tablet-card {
-        background-color: #1f2937;
-        border: 1px solid #374151;
-        transition:
-          transform 0.3s ease,
-          box-shadow 0.3s ease;
-      }
+    .section-title {
+      color: #f3f4f6;
+    }
 
-      .tablet-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-      }
+    .tablet-card {
+      background-color: #1f2937;
+      border: 1px solid #374151;
+      transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
 
-      .icon-placeholder {
-        background-color: rgba(59, 130, 246, 0.15);
-        color: #60a5fa;
-        width: 3rem;
-        height: 3rem;
+    .tablet-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      border-color: #3b82f6;
+    }
+
+    .tablet-card .keywords {
+        margin-top: auto;
+        padding-top: 1rem;
+    }
+
+    .keyword-badge {
+        display: inline-block;
+        background-color: #374151;
+        color: #9ca3af;
+        padding: 0.125rem 0.5rem;
         border-radius: 9999px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-      }
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
 
-      .icon-zap {
-        width: 24px;
-        height: 24px;
-        stroke: currentColor;
-        fill: none;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
+    .new-badge {
+        display: inline-block;
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.125rem 0.625rem;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+    }
 
-      .logo-size {
-        width: 22px;
-        height: 22px;
-      }
-    </style>
-  </head>
+    .logo-size {
+      width: 22px;
+      height: 22px;
+    }
+  </style>
+</head>
 
-  <body class="antialiased">
-    <header
-      class="py-4 px-6 sticky top-0 z-50 bg-gray-900 border-b border-gray-700/50"
-    >
-      <div class="container mx-auto flex justify-between items-center">
-        <a href="index.html" class="flex items-center space-x-2">
-          <img
-            src="https://scratchtabs.b-cdn.net/favicon-gray.svg"
-            alt="Scratch Tabs Logo"
-            class="logo-size"
-          />
-          <!-- Responsive text size for the brand name -->
-          <span class="text-xl sm:text-2xl font-semibold text-white"
-            >Scratch Tabs</span
-          >
-        </a>
-        <!-- Desktop Nav -->
-        <nav class="hidden md:flex items-center space-x-6">
-          <a
-            href="features.html"
-            class="text-sm text-gray-300 hover:text-white transition-colors"
-            >Features</a
-          >
-          <a
-            href="tablets.html"
-            class="text-sm text-blue-400 font-medium"
-            >Tablets</a
-          >
-          <a
-            href="changelog.html"
-            class="text-sm text-gray-300 hover:text-white transition-colors"
-            >Changelog</a
-          >
-          <a
-            href="index.html#privacy"
-            class="text-sm text-gray-300 hover:text-white transition-colors"
-            >Privacy</a
-          >
-          <a
-            href="faq.html"
-            class="text-sm text-gray-300 hover:text-white transition-colors"
-            >FAQ</a
-          >
-        </nav>
-        <div class="flex items-center space-x-2">
-          <a
-            href="https://app.scratchtabs.com"
-            target="_blank"
-            class="bg-blue-600 hover:bg-blue-700 text-sm font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out text-white"
-          >
-            Launch App
-          </a>
-          <!-- Mobile Menu Button -->
-          <button
-            id="mobile-menu-button"
-            class="md:hidden p-2 text-gray-300 hover:text-white"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              ></path>
-            </svg>
-          </button>
+<body class="antialiased">
+<header class="py-4 px-6 sticky top-0 z-50 bg-gray-900 border-b border-gray-700/50">
+  <div class="container mx-auto flex justify-between items-center">
+    <a href="index.html" class="flex items-center space-x-2">
+      <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
+      <span class="text-xl sm:text-2xl font-semibold text-white">Scratch Tabs</span>
+    </a>
+    <nav class="hidden md:flex items-center space-x-6">
+      <a href="features.html" class="text-sm text-gray-300 hover:text-white transition-colors">Features</a>
+      <a href="tablets.html" class="text-sm text-blue-400 font-medium">Tablets</a>
+      <a href="changelog.html" class="text-sm text-gray-300 hover:text-white transition-colors">Changelog</a>
+      <a href="index.html#privacy" class="text-sm text-gray-300 hover:text-white transition-colors">Privacy</a>
+      <a href="faq.html" class="text-sm text-gray-300 hover:text-white transition-colors">FAQ</a>
+    </nav>
+    <div class="flex items-center space-x-2">
+      <a href="https://app.scratchtabs.com" target="_blank"
+         class="bg-blue-600 hover:bg-blue-700 text-sm font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out text-white">
+        Launch App
+      </a>
+      <button id="mobile-menu-button" class="md:hidden p-2 text-gray-300 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="mobile-menu" class="hidden md:hidden mt-4">
+    <a href="features.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Features</a>
+    <a href="tablets.html" class="block py-2 px-4 text-sm text-blue-400 font-medium bg-gray-700 rounded">Tablets</a>
+    <a href="changelog.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Changelog</a>
+    <a href="index.html#privacy" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Privacy</a>
+    <a href="faq.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">FAQ</a>
+  </div>
+</header>
+
+<!-- Section 1: Hero Section -->
+<section class="py-16 md:py-24 bg-gray-800/30">
+  <div class="container mx-auto px-6 text-center">
+    <h1 class="section-title text-4xl md:text-6xl font-bold mb-6">Your All-in-One Developer Arsenal</h1>
+    <p class="text-gray-300 text-lg md:text-xl max-w-3xl mx-auto">
+      Scratch Tabs is more than an editor. It's a collection of 25+ powerful, specialized mini-apps called Tablets, designed to solve specific developer problems. Explore the full toolkit below.
+    </p>
+  </div>
+</section>
+
+<!-- Section 2: The Tablet Catalog -->
+<section class="py-16">
+  <div class="container mx-auto px-6 space-y-16">
+
+    <!-- Category: API & Web Development -->
+    <div>
+      <h2 class="text-3xl font-bold text-blue-400 border-b border-gray-700 pb-4 mb-8">API & Web Development</h2>
+      <p class="text-gray-400 max-w-4xl mb-8 -mt-4">Essential tools for building, testing, and debugging modern web services and applications.</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">JWT Toolkit</h3>
+          <p class="text-gray-400 text-sm mb-4">A complete suite for JSON Web Tokens. Decode, verify signatures with public keys or secrets, and sign new tokens—all securely within your browser.</p>
+          <div class="keywords"><div class="keyword-badge">jwt</div> <div class="keyword-badge">token</div> <div class="keyword-badge">auth</div> <div class="keyword-badge">decode</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">REST Client</h3>
+          <p class="text-gray-400 text-sm mb-4">A convenient client for making quick HTTP requests. Perfect for testing CORS-enabled APIs, webhook endpoints, or local development servers without leaving your workspace.</p>
+          <div class="keywords"><div class="keyword-badge">rest</div> <div class="keyword-badge">api</div> <div class="keyword-badge">http</div> <div class="keyword-badge">curl</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">URL Parser</h3>
+          <p class="text-gray-400 text-sm mb-4">Deconstruct and analyze any URL. Instantly break down schemes, hosts, query parameters, and fragments, while identifying common security issues.</p>
+          <div class="keywords"><div class="keyword-badge">url</div> <div class="keyword-badge">parser</div> <div class="keyword-badge">query</div> <div class="keyword-badge">security</div></div>
         </div>
       </div>
-      <!-- Mobile Menu -->
-      <div id="mobile-menu" class="hidden md:hidden mt-4">
-        <a
-          href="features.html"
-          class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded"
-          >Features</a
-        >
-        <a
-          href="tablets.html"
-          class="block py-2 px-4 text-sm text-blue-400 font-medium"
-          >Tablets</a
-        >
-        <a
-          href="changelog.html"
-          class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded"
-          >Changelog</a
-        >
-        <a
-          href="index.html#privacy"
-          class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded"
-          >Privacy</a
-        >
-        <a
-          href="faq.html"
-          class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded"
-          >FAQ</a
-        >
-      </div>
-    </header>
+    </div>
 
-    <!-- Specialized Tablets Section -->
-    <section id="tablets" class="py-16">
-      <div class="container mx-auto px-6">
-        <h2
-          class="section-title text-3xl md:text-4xl font-bold text-center mb-4"
-        >
-          Specialized Tablets, Limitless Potential
-        </h2>
-        <p class="text-gray-400 text-center text-lg mb-16 max-w-2xl mx-auto">
-          Go beyond text editing with integrated mini-apps designed for common
-          developer tasks, all running locally.
-        </p>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          <div class="tablet-card rounded-lg p-6 shadow-lg">
-            <h3 class="text-xl font-semibold text-white mb-2">
-              Password Generator
-            </h3>
-            <p class="text-gray-400 text-sm mb-4">
-              Create strong, random passwords with customizable complexity and
-              length. Includes history and secure local storage.
-            </p>
-            <img src="https://scratchtabs.b-cdn.net/tablet-password.png" alt="Password Generator" />
-          </div>
-
-          <div class="tablet-card rounded-lg p-6 shadow-lg">
-            <h3 class="text-xl font-semibold text-white mb-2">Cron Builder</h3>
-            <p class="text-gray-400 text-sm mb-4">
-              Build and understand cron expressions with natural language interface.
-            </p>
-            <img src="https://scratchtabs.b-cdn.net/cron.png" alt="Cron Builder" />
-          </div>
-          <div class="tablet-card rounded-lg p-6 shadow-lg">
-            <h3 class="text-xl font-semibold text-white mb-2">Prompt Manager</h3>
-            <p class="text-gray-400 text-sm mb-4">
-              Organize and manage your AI prompts and workflows efficiently.
-            </p>
-            <img src="https://scratchtabs.b-cdn.net/prompt.png" alt="Prompt Manager" />
-          </div>
-          <div class="tablet-card rounded-lg p-6 shadow-lg">
-            <h3 class="text-xl font-semibold text-white mb-2">
-              Data Converters
-            </h3>
-            <p class="text-gray-400 text-sm mb-4">
-              A suite of converters for Base64, URL encoding, hashing (MD5,
-              SHA), number bases, text cases, colors, date/time, and networking
-              utilities like CIDR calculator.
-            </p>
-            <img src="https://scratchtabs.b-cdn.net/tablet-converter.png" alt="Converters" />
-          </div>
-          <div class="tablet-card rounded-lg p-6 shadow-lg">
-            <h3 class="text-xl font-semibold text-white mb-2">
-              Clipboard Manager
-            </h3>
-            <p class="text-gray-400 text-sm mb-4">
-              Keep a history of your clipboard items with automatic expiry,
-              pinning, title editing, and easy access. Open any item in a new
-              tab.
-            </p>
-            <img src="https://scratchtabs.b-cdn.net/tablet-clipboard.png" alt="Clipboard Manager" />
-          </div>
-          <div
-            class="tablet-card rounded-lg p-6 shadow-lg flex flex-col justify-center items-center"
-          >
-            <div class="icon-placeholder">
-              <svg class="icon-zap" viewBox="0 0 24 24">
-                <rect width="18" height="18" x="3" y="3" rx="2"></rect>
-                <path d="M12 8v8"></path>
-                <path d="M8 12h8"></path>
-              </svg>
-            </div>
-            <h3 class="text-xl font-semibold text-white mb-2">
-              And Many More...
-            </h3>
-            <p class="text-gray-400 text-sm text-center">
-              Explore tablets for Base64 Encode/Decode, Temporary Email, REST
-              API Client, Pomodoro Timer, JSON Mapper, Knowledge Vault, 
-              Diagram Sketching and more plus new additions added regularly!
-            </p>
-          </div>
+    <!-- Category: Data Transformation & Analysis -->
+    <div>
+      <h2 class="text-3xl font-bold text-blue-400 border-b border-gray-700 pb-4 mb-8">Data Transformation & Analysis</h2>
+      <p class="text-gray-400 max-w-4xl mb-8 -mt-4">Powerful utilities to parse, convert, verify, and visualize your data in any format.</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">JSON Mapper</h3>
+          <p class="text-gray-400 text-sm mb-4">Visually transform complex JSON structures. Define mapping rules between a source and target schema with an intuitive UI and generate transformation code on the fly.</p>
+          <div class="keywords"><div class="keyword-badge">json</div> <div class="keyword-badge">mapper</div> <div class="keyword-badge">transform</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Regex Tester</h3>
+          <p class="text-gray-400 text-sm mb-4">Test patterns with live highlighting, detailed match explanations, and capture group visualization. Use it when you need to build or debug a complex regular expression.</p>
+          <div class="keywords"><div class="keyword-badge">regex</div> <div class="keyword-badge">expression</div> <div class="keyword-badge">test</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Diagram Editor<span class="new-badge">New</span></h3>
+          <p class="text-gray-400 text-sm mb-4">Create and visualize diagrams on the fly. Write Mermaid code for flowcharts, sequence diagrams, and more with a live-updating preview.</p>
+          <div class="keywords"><div class="keyword-badge">diagram</div> <div class="keyword-badge">mermaid</div> <div class="keyword-badge">flowchart</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Checksum Calculator<span class="new-badge">New</span></h3>
+          <p class="text-gray-400 text-sm mb-4">Generate and verify file and text integrity. Calculates MD5, SHA-1, SHA-256, and SHA-512 hashes for any input, all processed locally.</p>
+          <div class="keywords"><div class="keyword-badge">checksum</div> <div class="keyword-badge">hash</div> <div class="keyword-badge">md5</div> <div class="keyword-badge">sha</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Base64 Converter</h3>
+          <p class="text-gray-400 text-sm mb-4">Easily encode and decode data using various Base64 formats, including Standard (RFC 4648), URL-safe, and MIME.</p>
+          <div class="keywords"><div class="keyword-badge">base64</div> <div class="keyword-badge">encode</div> <div class="keyword-badge">decode</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">DateTime Converter<span class="new-badge">New</span></h3>
+          <p class="text-gray-400 text-sm mb-4">Parse, format, and convert dates across timezones and formats. Perfect for debugging timestamp issues between systems.</p>
+          <div class="keywords"><div class="keyword-badge">date</div> <div class="keyword-badge">time</div> <div class="keyword-badge">timezone</div> <div class="keyword-badge">unix</div></div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Call to Action -->
-    <section class="py-20">
-      <div class="container mx-auto px-6 text-center">
-        <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">
-          Ready to Explore These Tools?
-        </h2>
-        <p class="text-gray-300 text-lg mb-8 max-w-xl mx-auto">
-          All these specialized tablets are available right in your browser.
-          <strong>No installation. No setup. Just powerful tools that work.</strong>
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-          <a
-            href="https://app.scratchtabs.com"
-            target="_blank"
-            class="bg-blue-600 hover:bg-blue-700 text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105 text-white"
-            >Launch App</a
-          >
-          <a
-            href="index.html"
-            class="text-gray-400 hover:text-white border border-gray-600 hover:border-white text-xl font-bold py-4 px-10 rounded-lg transition-colors duration-150"
-            >Back to Home</a
-          >
+    <!-- Category: Productivity & Workflow -->
+    <div>
+      <h2 class="text-3xl font-bold text-blue-400 border-b border-gray-700 pb-4 mb-8">Productivity & Workflow</h2>
+      <p class="text-gray-400 max-w-4xl mb-8 -mt-4">Tools designed to keep you focused, organized, and efficient throughout your development day.</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Knowledge Vault</h3>
+          <p class="text-gray-400 text-sm mb-4">Your personal and searchable snippet library. Securely store commands, code snippets, notes, and links for quick access.</p>
+          <div class="keywords"><div class="keyword-badge">vault</div> <div class="keyword-badge">snippets</div> <div class="keyword-badge">notes</div></div>
         </div>
-        <div class="text-sm text-gray-500 space-y-2">
-          <p>✓ No registration required</p>
-          <p>✓ Works offline</p>
-          <p>✓ Zero data collection</p>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Pomodoro Timer</h3>
+          <p class="text-gray-400 text-sm mb-4">Boost your productivity with a built-in Pomodoro timer. Manage focus sessions and breaks to stay in the zone.</p>
+          <div class="keywords"><div class="keyword-badge">pomodoro</div> <div class="keyword-badge">timer</div> <div class="keyword-badge">focus</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Prompt Manager</h3>
+          <p class="text-gray-400 text-sm mb-4">Organize your AI prompts. Create, edit, and categorize prompts to get consistent and high-quality results from language models.</p>
+          <div class="keywords"><div class="keyword-badge">prompt</div> <div class="keyword-badge">ai</div> <div class="keyword-badge">templates</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Cron Builder</h3>
+          <p class="text-gray-400 text-sm mb-4">Build and understand cron expressions with a natural language interface. Use it when scheduling automated tasks.</p>
+          <div class="keywords"><div class="keyword-badge">cron</div> <div class="keyword-badge">schedule</div> <div class="keyword-badge">job</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Clipboard Manager</h3>
+          <p class="text-gray-400 text-sm mb-4">Keeps a history of your clipboard items. Perfect for when you are gathering data from multiple sources and need to recall it later.</p>
+          <div class="keywords"><div class="keyword-badge">clipboard</div> <div class="keyword-badge">history</div> <div class="keyword-badge">paste</div></div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Footer -->
-    <footer class="py-8 text-center border-t border-gray-700/50">
-      <div class="container mx-auto px-6">
-        <p class="text-sm text-gray-500 mb-4">
-          © <span id="currentYear"></span> Scratch Tabs. Your Local Data
-          Companion.
-        </p>
-        <div class="flex justify-center items-center space-x-6 mb-4">
-          <a
-            href="https://github.com/spectra-g/scratch-tabs-feedback/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-            title="GitHub Issues"
-            ><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path
+    <!-- Category: Generators & Utilities -->
+    <div>
+      <h2 class="text-3xl font-bold text-blue-400 border-b border-gray-700 pb-4 mb-8">Generators & Utilities</h2>
+      <p class="text-gray-400 max-w-4xl mb-8 -mt-4">Generate placeholder data, secure credentials, and unique identifiers on demand.</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Password Generator</h3>
+          <p class="text-gray-400 text-sm mb-4">Create strong, random passwords with customizable complexity and length. Includes history and secure local storage.</p>
+          <div class="keywords"><div class="keyword-badge">password</div> <div class="keyword-badge">security</div> <div class="keyword-badge">generator</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">UUID Generator</h3>
+          <p class="text-gray-400 text-sm mb-4">Generate universally unique identifiers (UUIDs) in various versions (v1, v4). Use when you need a unique key for database entries or assets.</p>
+          <div class="keywords"><div class="keyword-badge">uuid</div> <div class="keyword-badge">guid</div> <div class="keyword-badge">generator</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Lorem Ipsum Generator<span class="new-badge">New</span></h3>
+          <p class="text-gray-400 text-sm mb-4">Generate placeholder text with customizable options for paragraphs, sentences, and words. Essential for mockups and UI prototyping.</p>
+          <div class="keywords"><div class="keyword-badge">lorem ipsum</div> <div class="keyword-badge">text</div> <div class="keyword-badge">placeholder</div></div>
+        </div>
+        <div class="tablet-card p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-white mb-2">Colour Palette Generator<span class="new-badge">New</span></h3>
+          <p class="text-gray-400 text-sm mb-4">Create and export beautiful colour palettes with a live UI preview. Perfect for brainstorming UI/UX color schemes.</p>
+          <div class="keywords"><div class="keyword-badge">color</div> <div class="keyword-badge">palette</div> <div class="keyword-badge">ui</div> <div class="keyword-badge">design</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Section 3: And More To Come... -->
+<section class="py-16 bg-gray-800/30">
+  <div class="container mx-auto px-6 text-center">
+    <h2 class="section-title text-3xl md:text-4xl font-bold mb-4">An Ever-Growing Toolkit</h2>
+    <p class="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
+      The Tablet ecosystem is constantly expanding. Have an idea for a tool that would make your life easier? Suggest a feature on our GitHub or join our Discord community.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
+         class="inline-flex items-center justify-center px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+        Suggest a Feature on GitHub
+      </a>
+      <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
+         class="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
+        Join the Discord Community
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Section 4: Final CTA -->
+<section class="py-20">
+  <div class="container mx-auto px-6 text-center">
+    <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">Ready to Explore the Full Toolkit?</h2>
+    <p class="text-gray-300 text-lg mb-8 max-w-xl mx-auto">
+      All these specialized tablets are available instantly in your browser. No installation. No setup. Just powerful tools that work.
+    </p>
+    <a href="https://app.scratchtabs.com" target="_blank"
+       class="bg-blue-600 hover:bg-blue-700 text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105 text-white">Launch App</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-8 text-center border-t border-gray-700/50">
+  <div class="container mx-auto px-6">
+    <p class="text-sm text-gray-500 mb-4">
+      © <span id="currentYear"></span> Scratch Tabs. Your Local Data Companion.
+    </p>
+    <div class="flex justify-center items-center space-x-6 mb-4">
+      <a
+              href="https://github.com/spectra-g/scratch-tabs-feedback/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
+              title="GitHub Issues"
+      ><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path
                 d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.237 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-              /></svg
-            ><span class="text-sm">GitHub Issues</span></a
-          >
-          <a
-            href="https://discord.gg/HwsfpTzMVS"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-            title="Join Discord"
-            ><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path
+        /></svg
+      ><span class="text-sm">GitHub Issues</span></a
+      >
+      <a
+              href="https://discord.gg/HwsfpTzMVS"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
+              title="Join Discord"
+      ><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path
                 d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z"
-              /></svg
-            ><span class="text-sm">Join Discord</span></a
-          >
-          <a
-            href="https://ko-fi.com/scratchtabs"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-            title="Support the Project on Ko-fi"
-            ><svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-              <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
-              <line x1="6" x2="6" y1="2" y2="4"></line>
-              <line x1="10" x2="10" y1="2" y2="4"></line>
-              <line x1="14" x2="14" y1="2" y2="4"></line></svg
-            ><span class="text-sm">Support the Project</span></a
-          >
-        </div>
-        <p class="text-xs text-gray-600">
-          Connect with us for feedback, support, and community discussions.
-        </p>
-      </div>
-    </footer>
+        /></svg
+      ><span class="text-sm">Join Discord</span></a
+      >
+    </div>
+    <p class="text-xs text-gray-600">
+      Connect with us for feedback, support, and community discussions.
+    </p>
+  </div>
+</footer>
 
-    <script>
-      document.getElementById("currentYear").textContent =
-        new Date().getFullYear();
+<script>
+  document.getElementById("currentYear").textContent = new Date().getFullYear();
+  const mobileMenuButton = document.getElementById("mobile-menu-button");
+  const mobileMenu = document.getElementById("mobile-menu");
+  const mobileMenuLinks = mobileMenu.querySelectorAll("a");
+  mobileMenuButton.addEventListener("click", () => { mobileMenu.classList.toggle("hidden"); });
+  mobileMenuLinks.forEach((link) => { link.addEventListener("click", () => { mobileMenu.classList.add("hidden"); }); });
+</script>
+</body>
 
-      // Mobile menu toggle script
-      const mobileMenuButton = document.getElementById("mobile-menu-button");
-      const mobileMenu = document.getElementById("mobile-menu");
-      const mobileMenuLinks = mobileMenu.querySelectorAll("a");
-
-      mobileMenuButton.addEventListener("click", () => {
-        mobileMenu.classList.toggle("hidden");
-      });
-
-      // Close menu when a link is clicked
-      mobileMenuLinks.forEach((link) => {
-        link.addEventListener("click", () => {
-          mobileMenu.classList.add("hidden");
-        });
-      });
-    </script>
-  </body>
-</html> 
+</html>
