@@ -105,7 +105,15 @@ export const initializeFormatProviders = () => {
 export const detectFormat = (content: string): string => {
   // Sample content for performance - detectors work with first N lines only
   const sampledContent = sampleContentForDetection(content);
-  return formatRegistry.detectFormat(sampledContent);
+
+  // Use the same ranking system as getPotentialFormatMatches
+  // This ensures consistency between single detection and status bar display
+  const potentialMatches = formatRegistry.getPotentialMatches(sampledContent, 1);
+  const detectedFormat = potentialMatches.length > 0
+    ? potentialMatches[0].id
+    : formatRegistry.detectFormat(sampledContent); // Fallback to old method
+
+  return detectedFormat;
 };
 
 /**
