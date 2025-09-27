@@ -79,16 +79,6 @@ export const RawExpressionInput: React.FC<RawExpressionInputProps> = ({
             placeholder={`Enter cron expression (e.g., "0 0 * * *" for daily at midnight)`}
           />
 
-          {detectedDialect && (
-            <div className="absolute top-full left-0 mt-1 bg-yellow-900/30 border border-yellow-900/50 rounded-md p-2 text-xs text-yellow-400 flex items-center">
-              <MagicWand size={12} className="mr-1" />
-              <span>
-                Detected {detectedDialect} dialect. Consider switching dialects
-                for better validation.
-              </span>
-            </div>
-          )}
-
           {globalError ? (
             <div
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500"
@@ -105,6 +95,16 @@ export const RawExpressionInput: React.FC<RawExpressionInputProps> = ({
             </div>
           ) : null}
         </div>
+
+        {detectedDialect && (
+          <div className="bg-yellow-900/30 border border-yellow-900/50 rounded-md p-2 text-xs text-yellow-400 flex items-center">
+            <MagicWand size={12} className="mr-1" />
+            <span>
+              Detected {detectedDialect} dialect. Consider switching dialects
+              for better validation.
+            </span>
+          </div>
+        )}
 
         <div className="text-xs text-gray-400">
           <p>

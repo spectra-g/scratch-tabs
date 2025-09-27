@@ -149,14 +149,97 @@
       <p class="text-gray-400 text-lg mb-12">
         Scratch Tabs is a polyglot data environment. When you paste data, it's not just formatted—it's loaded into a specialized, interactive "workbench" or "smart view" that understands its structure.
       </p>
-      <div class="bg-gray-900 border border-gray-700 p-4 rounded-lg text-left text-sm mb-12">
-        <p class="font-mono text-gray-500">// Developer Scenario</p>
-        <p class="text-gray-300"><strong>When analyzing a messy API response,</strong> just paste the minified JSON. Scratch Tabs instantly formats it and presents an interactive tree view, letting you collapse nodes and search for keys without manual cleanup.</p>
+      <!-- Developer Scenarios as Individual Cards -->
+      <div class="space-y-8 mb-12">
+        <!-- JSON API Response Scenario -->
+        <div class="grid md:grid-cols-2 gap-8 items-stretch">
+          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
+            <div class="flex items-start space-x-4">
+              <div class="icon-placeholder flex-shrink-0">
+                <svg class="icon-tool" viewBox="0 0 24 24"><path d="M9 5c-1.5 0-2.5 1-2.5 2.5v2c0 1.5-.5 2.5-2.5 2.5 2 0 2.5 1 2.5 2.5v2c0 1.5 1 2.5 2.5 2.5"/><path d="M15 5c1.5 0 2.5 1 2.5 2.5v2c0 1.5.5 2.5 2.5 2.5-2 0-2.5 1-2.5 2.5v2c0 1.5-1 2.5-2.5 2.5"/></svg>
+              </div>
+              <div>
+                <p class="text-gray-300"><strong>When analyzing a messy API response,</strong> just paste the minified JSON. Scratch Tabs instantly formats it and presents an interactive tree view, letting you collapse nodes and search for keys without manual cleanup.</p>
+              </div>
+            </div>
+          </div>
+          <div class="order-first md:order-last flex items-center">
+            <img src="https://scratchtabs.b-cdn.net/scenario-json-tree.png" alt="JSON tree view" class="rounded-lg border border-gray-600 w-full">
+          </div>
+        </div>
+
+        <!-- Log Troubleshooting Scenario -->
+        <div class="grid md:grid-cols-2 gap-8 items-stretch">
+          <div class="order-last md:order-first flex items-center">
+            <img src="https://scratchtabs.b-cdn.net/scenario-ndjson.png" alt="Log parsing" class="rounded-lg border border-gray-600 w-full">
+          </div>
+          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
+            <div class="flex items-start space-x-4">
+              <div class="icon-placeholder flex-shrink-0">
+                <svg class="icon-tool" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"></path></svg>
+              </div>
+              <div>
+                <p class="text-gray-300"><strong>When troubleshooting production errors with scattered log entries,</strong> just paste the multiple log lines. Scratch Tabs instantly parses and filters them, making error patterns immediately visible. For JSON logs with metadata prefixes, it automatically cleans them leaving pure JSONs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Regex Understanding Scenario -->
+        <div class="grid md:grid-cols-2 gap-8 items-stretch">
+          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
+            <div class="flex items-start space-x-4">
+              <div class="icon-placeholder flex-shrink-0">
+                <svg class="icon-tool" viewBox="0 0 24 24"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+              </div>
+              <div>
+                <p class="text-gray-300"><strong>When struggling to understand a complicated regex pattern,</strong> paste it into the regex tablet. Scratch Tabs provides a human-readable interpretation of what the pattern actually matches.</p>
+              </div>
+            </div>
+          </div>
+          <div class="order-first md:order-last flex items-center">
+            <img src="https://scratchtabs.b-cdn.net/scenario-regex.png" alt="Regex explanation" class="rounded-lg border border-gray-600 w-full">
+          </div>
+        </div>
+
+        <!-- Cron Expression Scenario -->
+        <div class="grid md:grid-cols-2 gap-8 items-stretch">
+          <div class="order-last md:order-first flex items-center">
+            <img src="https://scratchtabs.b-cdn.net/scenario-cron.png" alt="Cron breakdown" class="rounded-lg border border-gray-600 w-full">
+          </div>
+          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
+            <div class="flex items-start space-x-4">
+              <div class="icon-placeholder flex-shrink-0">
+                <svg class="icon-tool" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+              </div>
+              <div>
+                <p class="text-gray-300"><strong>When unsure if cron expressions will parse equivalently across systems,</strong> paste the cron syntax. Scratch Tabs gives you a full breakdown of the schedule timing and execution pattern.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Properties File Scenario -->
+        <div class="grid md:grid-cols-2 gap-8 items-stretch">
+          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
+            <div class="flex items-start space-x-4">
+              <div class="icon-placeholder flex-shrink-0">
+                <svg class="icon-tool" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              </div>
+              <div>
+                <p class="text-gray-300"><strong>When dealing with a messy application.properties file from a legacy system,</strong> paste the content. Scratch Tabs intelligently cleans and groups properties with one-click functions for instant organization.</p>
+              </div>
+            </div>
+          </div>
+          <div class="order-first md:order-last flex items-center">
+            <img src="https://scratchtabs.b-cdn.net/scenario-properties.png" alt="Properties organization" class="rounded-lg border border-gray-600 w-full">
+          </div>
+        </div>
       </div>
     </div>
     <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
       <div class="feature-card p-6 rounded-lg flex items-start space-x-4">
-        <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24"><path d="M10 20v-6m0 0V4m0 8h10M4 12h6"></path></svg></div>
+        <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg></div>
         <div>
           <h3 class="text-xl font-semibold text-white mb-2">Data Formats</h3>
           <p class="text-gray-400 text-sm">Instantly parse, explore, and manipulate complex data. Our interactive viewers for JSON, YAML, XML, and CSV turn raw text into navigable structures.</p>
@@ -180,7 +263,7 @@
         <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></div>
         <div>
           <h3 class="text-xl font-semibold text-white mb-2">Developer Utilities</h3>
-          <p class="text-gray-400 text-sm">Handle common developer artifacts with dedicated tools for cURL commands, SQL queries, Diff/Patch files, and SVG with live preview.</p>
+          <p class="text-gray-400 text-sm">Handle common developer artifacts with dedicated tools for Curl commands, SQL queries, Diff/Patch files, and SVG with live preview.</p>
         </div>
       </div>
     </div>
