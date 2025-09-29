@@ -138,229 +138,129 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
     }
   }, [editor, canRedo]);
 
-  const handlePathChange = useCallback((path: string) => {
-    setCurrentPath(path);
-    
-    // Implement smart search functionality in Monaco editor
-    if (editor && path.trim()) {
-      const model = editor.getModel();
-      if (!model) return;
-      
-      let matches: monaco.editor.FindMatch[] | null = null;
-      
-      // First, try to find as JSON path - convert path like "pageTitle.display" to search for the key
-      if (path.includes('.') || path.includes('[')) {
-        // Extract the final key from the path (e.g., "display" from "pageTitle.display")
-        const pathParts = path.split(/[.\[\]]+/).filter(Boolean);
-        const finalKey = pathParts[pathParts.length - 1];
-        
-        if (finalKey && !finalKey.match(/^\d+$/)) { // Don't search for array indices
-          // Try to find the key with quotes (as it appears in JSON)
-          const quotedKey = `"${finalKey}"`;
-          matches = model.findMatches(
-            quotedKey,
-            false, // searchOnlyEditableRange
-            false, // isRegex
-            false, // matchCase
-            null,  // wordSeparators
-            false  // captureMatches
+  const navigateToPath = useCallback((path: string) => {
+    if (!editor || !path.trim()) return;
+
+    const model = editor.getModel();
+    if (!model) return;
+
+    // Step 1: Path Parsing
+    const pathParts = path.split(/[.\[\]]+/).filter(Boolean);
+    const finalKey = pathParts[pathParts.length - 1];
+
+    // Early exit if finalKey is a number (array index) - nothing to search for
+    if (!finalKey || finalKey.match(/^\d+$/)) {
+      return;
+    }
+
+    const searchTarget = `"${finalKey}"`;
+
+    // Step 2: Context Key Extraction (The Core Fix)
+    const contextKeys: string[] = [];
+
+    // Iterate backwards from the second-to-last part of pathParts
+    for (let i = pathParts.length - 2; i >= 0; i--) {
+      const candidate = pathParts[i];
+      // Skip any parts that are purely numeric (array indices)
+      if (!candidate.match(/^\d+$/)) {
+        contextKeys.push(candidate);
+      }
+    }
+
+    // Step 3: Multi-Pass Monaco Editor Search
+    let targetMatch: monaco.editor.FindMatch | null = null;
+
+    // Pass 1: Contextual Search
+    if (contextKeys.length > 0) {
+      const finalKeyMatches = model.findMatches(
+        searchTarget,
+        false, // searchOnlyEditableRange
+        false, // isRegex
+        false, // matchCase
+        null,  // wordSeparators
+        false  // captureMatches
+      );
+
+      if (finalKeyMatches && finalKeyMatches.length > 0) {
+        // Try each context key, from most specific (closest parent) to least specific
+        for (const parentKey of contextKeys) {
+          const quotedParentKey = `"${parentKey}"`;
+
+          const parentMatches = model.findMatches(
+            quotedParentKey,
+            false, false, false, null, false
           );
-          
-          // If we have multiple matches, try to find the one in the right context
-          if (matches && matches.length > 1 && pathParts.length > 1) {
-            // Get multiple context levels for better disambiguation
-            const contextKeys = [];
-            for (let i = pathParts.length - 2; i >= 0; i--) {
-              const candidate = pathParts[i];
-              if (!candidate.match(/^\d+$/)) { // Skip pure numbers (array indices)
-                contextKeys.push(candidate);
-                // Get up to 5 levels of context for complex structures
-                if (contextKeys.length >= 5) break;
-              }
-            }
-            
-            // Try each context key, starting with the most specific (closest parent)
-            for (const parentKey of contextKeys) {
-              const quotedParentKey = `"${parentKey}"`;
-              
-              // Find matches of the parent key
-              const parentMatches = model.findMatches(
-                quotedParentKey,
-                false, false, false, null, false
-              );
-              
-              if (parentMatches && parentMatches.length > 0) {
-                // Find the child key that comes after a parent key
-                const contextualMatch = matches.find(match => {
-                  return parentMatches.some(parentMatch => {
-                    const lineDistance = match.range.startLineNumber - parentMatch.range.startLineNumber;
-                    
-                    // Dynamic range calculation based on JSON structure complexity
-                    // For deeply nested JSON, allow larger search ranges
-                    const pathDepth = path.split(/[.\[\]]+/).length;
-                    const baseLookAhead = Math.min(50, Math.max(20, pathDepth * 10));
-                    
-                    // Also consider total file size - larger files need bigger search ranges
-                    const totalLines = model.getLineCount();
-                    const adaptiveRange = totalLines > 100 ? Math.min(totalLines / 4, baseLookAhead * 2) : baseLookAhead;
-                    
-                    return lineDistance >= 0 && lineDistance <= adaptiveRange;
-                  });
-                });
-                
-                if (contextualMatch) {
-                  matches = [contextualMatch];
-                  break; // Found specific match, stop searching other context levels
-                }
-              }
+
+          if (parentMatches && parentMatches.length > 0) {
+            // Find finalKey match that appears after a parentKey match within reasonable range
+            const contextualMatch = finalKeyMatches.find(finalMatch => {
+              return parentMatches.some(parentMatch => {
+                const lineDistance = finalMatch.range.startLineNumber - parentMatch.range.startLineNumber;
+
+                // Dynamic Range Calculation
+                const pathDepth = pathParts.length;
+                const baseLookAhead = Math.min(50, Math.max(20, pathDepth * 10));
+                const totalLines = model.getLineCount();
+                const adaptiveRange = totalLines > 100 ? Math.min(totalLines / 4, baseLookAhead * 2) : baseLookAhead;
+
+                return lineDistance >= 0 && lineDistance <= adaptiveRange;
+              });
+            });
+
+            if (contextualMatch) {
+              targetMatch = contextualMatch;
+              break; // Found specific match, stop searching other context levels
             }
           }
         }
       }
-      
-      // Fallback: try exact text search
-      if (!matches || matches.length === 0) {
-        matches = model.findMatches(
-          path,
-          false, // searchOnlyEditableRange
-          false, // isRegex
-          false, // matchCase
-          null,  // wordSeparators
-          false  // captureMatches
-        );
+    }
+
+    // Pass 2: Non-Contextual Fallback
+    if (!targetMatch) {
+      const fallbackMatches = model.findMatches(
+        searchTarget,
+        false, false, false, null, false
+      );
+
+      if (fallbackMatches && fallbackMatches.length > 0) {
+        targetMatch = fallbackMatches[0]; // Take first result as fallback
       }
-      
-      // Navigate to the first match
-      if (matches && matches.length > 0) {
-        editor.setPosition({
-          lineNumber: matches[0].range.startLineNumber,
-          column: matches[0].range.startColumn
-        });
-        
-        // Reveal the line in the center
-        editor.revealLineInCenter(matches[0].range.startLineNumber);
-        
-        // Set selection to highlight the found text
-        editor.setSelection(matches[0].range);
+    }
+
+    // Additional fallback: try exact text search if still no match
+    if (!targetMatch) {
+      const exactMatches = model.findMatches(
+        path,
+        false, false, false, null, false
+      );
+
+      if (exactMatches && exactMatches.length > 0) {
+        targetMatch = exactMatches[0];
       }
+    }
+
+    // Step 4: Editor Navigation
+    if (targetMatch) {
+      editor.setPosition({
+        lineNumber: targetMatch.range.startLineNumber,
+        column: targetMatch.range.startColumn
+      });
+
+      editor.revealLineInCenter(targetMatch.range.startLineNumber);
+      editor.setSelection(targetMatch.range);
     }
   }, [editor]);
 
+  const handlePathChange = useCallback((path: string) => {
+    setCurrentPath(path);
+    navigateToPath(path);
+  }, [navigateToPath]);
+
   const handleNodeSelect = useCallback((path: string) => {
     setCurrentPath(path);
-    
-    // Use the same smart search functionality as handlePathChange
-    if (editor && path.trim()) {
-      const model = editor.getModel();
-      if (!model) return;
-      
-      let matches: monaco.editor.FindMatch[] | null = null;
-      
-      // First, try to find as JSON path - convert path like "pageTitle.display" to search for the key
-      if (path.includes('.') || path.includes('[')) {
-        // Extract the final key from the path (e.g., "display" from "pageTitle.display")
-        const pathParts = path.split(/[.\[\]]+/).filter(Boolean);
-        const finalKey = pathParts[pathParts.length - 1];
-        
-        if (finalKey && !finalKey.match(/^\d+$/)) { // Don't search for array indices
-          // Try to find the key with quotes (as it appears in JSON)
-          const quotedKey = `"${finalKey}"`;
-          matches = model.findMatches(
-            quotedKey,
-            false, // searchOnlyEditableRange
-            false, // isRegex
-            false, // matchCase
-            null,  // wordSeparators
-            false  // captureMatches
-          );
-          
-          // If we have multiple matches, try to find the one in the right context
-          if (matches && matches.length > 1 && pathParts.length > 1) {
-            // Get all non-numeric context keys first
-            const allContextKeys = [];
-            for (let i = pathParts.length - 2; i >= 0; i--) {
-              const candidate = pathParts[i];
-              if (!candidate.match(/^\d+$/)) { // Skip pure numbers (array indices)
-                allContextKeys.push(candidate);
-              }
-            }
-            
-            // Smart context selection: get all unique keys, prioritize by specificity
-            const uniqueKeys = [...new Set(allContextKeys)];
-            
-            // Sort by specificity: longer keys first (more specific), then alphabetically for consistency
-            const contextKeys = uniqueKeys.sort((a, b) => {
-              const lengthDiff = b.length - a.length;
-              return lengthDiff !== 0 ? lengthDiff : a.localeCompare(b);
-            });
-            
-            
-            // Try each context key, starting with the most specific (closest parent)
-            for (const parentKey of contextKeys) {
-              const quotedParentKey = `"${parentKey}"`;
-              
-              // Find matches of the parent key
-              const parentMatches = model.findMatches(
-                quotedParentKey,
-                false, false, false, null, false
-              );
-              
-              if (parentMatches && parentMatches.length > 0) {
-                // Find the child key that comes after a parent key
-                const contextualMatch = matches.find(match => {
-                  return parentMatches.some(parentMatch => {
-                    const lineDistance = match.range.startLineNumber - parentMatch.range.startLineNumber;
-                    
-                    // Dynamic range calculation based on JSON structure complexity
-                    // For deeply nested JSON, allow larger search ranges
-                    const pathDepth = path.split(/[.\[\]]+/).length;
-                    const baseLookAhead = Math.min(50, Math.max(20, pathDepth * 10));
-                    
-                    // Also consider total file size - larger files need bigger search ranges
-                    const totalLines = model.getLineCount();
-                    const adaptiveRange = totalLines > 100 ? Math.min(totalLines / 4, baseLookAhead * 2) : baseLookAhead;
-                    
-                    return lineDistance >= 0 && lineDistance <= adaptiveRange;
-                  });
-                });
-                
-                if (contextualMatch) {
-                  matches = [contextualMatch];
-                  break; // Found specific match, stop searching other context levels
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      // Fallback: try exact text search
-      if (!matches || matches.length === 0) {
-        matches = model.findMatches(
-          path,
-          false, // searchOnlyEditableRange
-          false, // isRegex
-          false, // matchCase
-          null,  // wordSeparators
-          false  // captureMatches
-        );
-      }
-      
-      // Navigate to the first match
-      if (matches && matches.length > 0) {
-        editor.setPosition({
-          lineNumber: matches[0].range.startLineNumber,
-          column: matches[0].range.startColumn
-        });
-        
-        // Reveal the line in the center
-        editor.revealLineInCenter(matches[0].range.startLineNumber);
-        
-        // Set selection to highlight the found text
-        editor.setSelection(matches[0].range);
-      }
-    }
-  }, [editor]);
+    navigateToPath(path);
+  }, [navigateToPath]);
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-gray-200">
