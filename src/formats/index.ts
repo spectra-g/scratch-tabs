@@ -103,15 +103,12 @@ export const initializeFormatProviders = () => {
  * Content is automatically sampled to first 100 lines for performance optimization
  */
 export const detectFormat = (content: string): string => {
-  // Sample content for performance - detectors work with first N lines only
-  const sampledContent = sampleContentForDetection(content);
+  // Use the exact same logic as status bar for consistency
+  const potentialMatches = getPotentialFormatMatches(content, 1);
 
-  // Use the same ranking system as getPotentialFormatMatches
-  // This ensures consistency between single detection and status bar display
-  const potentialMatches = formatRegistry.getPotentialMatches(sampledContent, 1);
   const detectedFormat = potentialMatches.length > 0
     ? potentialMatches[0].id
-    : formatRegistry.detectFormat(sampledContent); // Fallback to old method
+    : "plaintext";
 
   return detectedFormat;
 };
@@ -131,7 +128,7 @@ export const isAmbiguousFormat = (content: string): boolean => {
  * @param content The full content to sample
  * @returns Sampled content with first N lines (or full content if small)
  */
-const sampleContentForDetection = (content: string): string => {
+export const sampleContentForDetection = (content: string): string => {
   if (!content) return content;
 
   // Skip sampling for small files

@@ -338,8 +338,10 @@ export const TabBar: React.FC<TabBarProps> = ({
 
     if (!tab.isTablet) {
       content.lineCount = getTabLineCount(tab.content);
+
       try {
         const detector = formatRegistry.getById(tab.language);
+
         if (detector) {
           content.language =
             detector.id === tab.language
@@ -350,6 +352,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         }
       } catch (error) {
         content.language = tab.language || "Error";
+        console.error("[TAB TOOLTIP] Error getting language info:", error);
       }
     }
 

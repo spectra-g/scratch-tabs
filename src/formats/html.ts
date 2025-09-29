@@ -53,18 +53,32 @@ export class HtmlFormatDetector extends BaseFormatDetector implements FormatModu
     }
 
     const normalizedContent = content.trim(); // Used for some initial checks
+
     let confidenceScore = 0.0;
     let patternsMatched = 0; // Count of distinct pattern types hit
     let strongSignalFound = false;
 
-    // 1. DOCTYPE declaration (very strong signal)
-    if (/^\s*<!DOCTYPE\s+html\s*>/i.test(normalizedContent)) {
-      confidenceScore += 0.7;
-      patternsMatched++;
-      strongSignalFound = true;
+    // 1. DOCTYPE declaration (very strong signal - absolutely definitive)
+    if (/^\s*<!DOCTYPE\s+html\s*.*?>/i.test(normalizedContent)) {
+      // DOCTYPE html is absolutely definitive - no other format should win
+      return {
+        match: true,
+        confidence: 1.0,
+        matchedDefinitive: true,
+      };
     }
 
-    // 2. Core HTML tags (<html>, <head>, <body> are very strong)
+    // 2. HTML tag at the very beginning (also definitive)
+    if (/^\s*<!doctype[^>]*>\s*<\s*html\b/i.test(normalizedContent) || /^\s*<\s*html\b/i.test(normalizedContent)) {
+      // <html> at start is also absolutely definitive
+      return {
+        match: true,
+        confidence: 1.0,
+        matchedDefinitive: true,
+      };
+    }
+
+    // 3. Core HTML tags (<html>, <head>, <body> are very strong)
     const coreTagPatterns = [
       { pattern: /<html[\s>]/i, weight: 0.35 },
       { pattern: /<head[\s>][\s\S]*?<\/head>/i, weight: 0.25 }, // Presence of head block
@@ -82,7 +96,7 @@ export class HtmlFormatDetector extends BaseFormatDetector implements FormatModu
       }
     }
 
-    // 3. Common HTML tags and structures
+    // 4. Common HTML tags and structures
     const commonHtmlPatterns = [
       { pattern: /<div[\s>]/gi, weight: 0.05, perMatch: 0.01 },
       { pattern: /<span[\s>]/gi, weight: 0.05, perMatch: 0.01 },
@@ -119,7 +133,7 @@ export class HtmlFormatDetector extends BaseFormatDetector implements FormatModu
       }
     }
 
-    // 4. Embedded <script> and <style> tags (common in HTML, but can also appear elsewhere)
+    // 5. Embedded <script> and <style> tags (common in HTML, but can also appear elsewhere)
     if (/<script[\s>]/.test(content) && /<\/script>/i.test(content)) {
       confidenceScore += 0.05; // Small boost
       patternsMatched++;
@@ -129,13 +143,13 @@ export class HtmlFormatDetector extends BaseFormatDetector implements FormatModu
       patternsMatched++;
     }
 
-    // 5. HTML Comments <!-- ... -->
+    // 6. HTML Comments <!-- ... -->
     if (/<!--[\s\S]*?-->/g.test(content)) {
       confidenceScore += 0.1;
       patternsMatched++;
     }
 
-    // 6. Anti-patterns (syntax strongly indicating other languages)
+    // 7. Anti-patterns (syntax strongly indicating other languages)
     // Be careful as HTML can embed JS and CSS
     const antiPatterns = [
       { pattern: /^package\s+\w+;/im, weight: -0.6 }, // Java package
@@ -158,7 +172,7 @@ export class HtmlFormatDetector extends BaseFormatDetector implements FormatModu
       }
     }
 
-    // 7. Final Adjustments and Clamping
+    // 8. Final Adjustments and Clamping
     if (patternsMatched >= 3 && strongSignalFound) {
       confidenceScore += 0.1;
     }

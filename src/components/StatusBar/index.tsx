@@ -14,6 +14,7 @@ import { Search, Coffee } from "../Icons";
 import { useSearchStore } from "../../stores/searchStore";
 import { formatRegistry } from "../../formats";
 import { getPotentialFormatMatches } from "../../formats";
+import { getTabContentForLanguageDetection } from "../../utils/formatDetectionUtils";
 import { FormatSelectionPopup } from "./FormatSelectionPopup";
 import { SmartViewButtons } from "./SmartViewButtons";
 import { FontSizeControls } from "./FontSizeControls";
@@ -26,14 +27,6 @@ interface StatusBarProps {
   activeTab: Tab;
   side: "left" | "right";
 }
-
-// Helper function to get content for language detection
-const getContentForLanguageDetection = (tab: Tab): string => {
-  if (!tab.content) return "";
-  return tab.content.length > 1000
-    ? tab.content.substring(0, 1000)
-    : tab.content;
-};
 
 // Custom hook to get real-time cursor position from Monaco editor
 const useCursorPosition = (
@@ -129,12 +122,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     if (!activeTab || activeTab.isTablet || activeTab.isRich) {
       return "";
     }
-    return getContentForLanguageDetection(activeTab);
+    return getTabContentForLanguageDetection(activeTab);
   }, [activeTab?.id, activeTab?.content, activeTab?.isTablet, activeTab?.isRich]);
 
   const statusBarItems = useMemo(() => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) return [];
-    
+    if (!activeTab || activeTab.isTablet || activeTab.isRich) {
+      return [];
+    }
+
     const module = formatRegistry.getById(activeTab.language);
     if (!module) {
       return [];
@@ -178,7 +173,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
     // Only get potential matches when popup is open to avoid redundant detection calls
     const potentialMatches = showLanguagePopup 
-      ? getPotentialFormatMatches(getContentForLanguageDetection(activeTab))
+      ? getPotentialFormatMatches(getTabContentForLanguageDetection(activeTab))
       : [];
     const isLocked = activeTab.languageLocked;
     const currentLanguageId = activeTab.language;
@@ -282,15 +277,17 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     if (activeTab.isRich) {
       return <span className="capitalize">Rich Text</span>;
     }
+
     // Language Info
     const currentLanguageId = activeTab.language;
     const currentLanguageObject = formatRegistry.getById(currentLanguageId);
     const currentLanguageName =
       currentLanguageObject?.name || currentLanguageId;
     const isLocked = activeTab.languageLocked;
+
     // Get potential matches only when we need them for the popup
-    const potentialMatches = activeTab && !activeTab.isTablet && !activeTab.isRich 
-      ? getPotentialFormatMatches(getContentForLanguageDetection(activeTab))
+    const potentialMatches = activeTab && !activeTab.isTablet && !activeTab.isRich
+      ? getPotentialFormatMatches(getTabContentForLanguageDetection(activeTab))
       : [];
 
     let displayLabel = "Plaintext";
@@ -298,6 +295,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
     if (isLocked) {
       displayLabel = currentLanguageName;
+
       // For locked languages, show alternatives if content is ambiguous or different
       const hasAlternatives =
         potentialMatches.length > 0 &&
@@ -315,6 +313,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     } else {
       const topSuggestion = potentialMatches[0];
       displayLabel = topSuggestion.name;
+
       if (potentialMatches.length > 1 && topSuggestion.id !== "plaintext") {
         showDotIndicator = true;
       }
