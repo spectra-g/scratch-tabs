@@ -12,6 +12,114 @@ import { useRootStore } from "../../../stores";
 import { Tab } from "../../../types";
 import { useActiveEditorStore } from "../../../stores/activeEditorStore";
 
+/**
+ * Represents the boundaries of a JSON container (object or array)
+ */
+interface ScopeBoundary {
+  startLine: number;
+  endLine: number;
+}
+
+// Constants for navigation configuration
+const NAVIGATION_CONFIG = {
+  FALLBACK_RANGE_BEFORE: 10,
+  FALLBACK_RANGE_AFTER: 50,
+} as const;
+
+const JSON_DELIMITERS = {
+  OBJECT_START: '{',
+  OBJECT_END: '}',
+  ARRAY_START: '[',
+  ARRAY_END: ']',
+} as const;
+
+/**
+ * Finds the scope boundaries of a JSON container starting from the given line
+ * Supports both objects {} and arrays []
+ */
+const findJsonContainerScope = (
+  model: monaco.editor.ITextModel,
+  startLine: number
+): ScopeBoundary | null => {
+  let braceCount = 0;
+  let bracketCount = 0;
+  let foundStart = false;
+  let startLineActual = startLine;
+  let isObjectScope = false;
+  let isArrayScope = false;
+
+  for (let lineNum = startLine; lineNum <= model.getLineCount(); lineNum++) {
+    const lineContent = model.getLineContent(lineNum);
+
+    for (const char of lineContent) {
+      switch (char) {
+        case JSON_DELIMITERS.OBJECT_START:
+          if (!foundStart) {
+            foundStart = true;
+            startLineActual = lineNum;
+            isObjectScope = true;
+          }
+          braceCount++;
+          break;
+
+        case JSON_DELIMITERS.OBJECT_END:
+          braceCount--;
+          if (foundStart && isObjectScope && braceCount === 0) {
+            return { startLine: startLineActual, endLine: lineNum };
+          }
+          break;
+
+        case JSON_DELIMITERS.ARRAY_START:
+          if (!foundStart) {
+            foundStart = true;
+            startLineActual = lineNum;
+            isArrayScope = true;
+          }
+          bracketCount++;
+          break;
+
+        case JSON_DELIMITERS.ARRAY_END:
+          bracketCount--;
+          if (foundStart && isArrayScope && bracketCount === 0) {
+            return { startLine: startLineActual, endLine: lineNum };
+          }
+          break;
+      }
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Determines if a path part is a numeric array index
+ */
+const isArrayIndex = (part: string): boolean => /^\d+$/.test(part);
+
+/**
+ * Parses a JSON path into individual parts
+ */
+const parseJsonPath = (path: string): string[] => {
+  return path.split(/[.\[\]]+/).filter(Boolean);
+};
+
+/**
+ * Creates a fallback search scope around a given line
+ */
+const createFallbackScope = (
+  model: monaco.editor.ITextModel,
+  targetLine: number
+): monaco.Range => {
+  const fallbackStart = Math.max(1, targetLine - NAVIGATION_CONFIG.FALLBACK_RANGE_BEFORE);
+  const fallbackEnd = Math.min(model.getLineCount(), targetLine + NAVIGATION_CONFIG.FALLBACK_RANGE_AFTER);
+
+  return new monaco.Range(
+    fallbackStart, 1,
+    fallbackEnd,
+    model.getLineMaxColumn(fallbackEnd)
+  );
+};
+
 export const JsonSmartView: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
@@ -138,127 +246,38 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
     }
   }, [editor, canRedo]);
 
+  /**
+   * Navigates to a specific JSON path using iterative descent with array index awareness
+   * @param path - JSON path (e.g., "data.items[1].name")
+   */
   const navigateToPath = useCallback((path: string) => {
     if (!editor || !path.trim()) return;
 
     const model = editor.getModel();
     if (!model) return;
 
-    // Step 1: Path Parsing
-    const pathParts = path.split(/[.\[\]]+/).filter(Boolean);
+    const pathParts = parseJsonPath(path);
 
-    // Early exit if no path parts or ends with pure array index
+    // Early exit conditions
     if (pathParts.length === 0) return;
     const finalKey = pathParts[pathParts.length - 1];
-    if (finalKey.match(/^\d+$/)) return;
+    if (isArrayIndex(finalKey)) return; // Don't navigate to pure numeric indices
 
-    // Helper function to find the scope of a specific element within an array
-    const findArrayElementScope = (arrayStartLine: number, arrayEndLine: number, elementIndex: number): { startLine: number; endLine: number } | null => {
-      let currentElementIndex = 0;
-      let braceCount = 0;
-      let bracketCount = 0;
-      let inElementScope = false;
-      let elementStartLine = arrayStartLine;
-      let isInArray = false;
-
-      for (let lineNum = arrayStartLine; lineNum <= arrayEndLine; lineNum++) {
-        const lineContent = model.getLineContent(lineNum);
-
-        for (const char of lineContent) {
-          if (char === '[') {
-            bracketCount++;
-            if (bracketCount === 1) {
-              isInArray = true;
-            }
-          } else if (char === ']') {
-            bracketCount--;
-          } else if (char === '{' && isInArray && bracketCount === 1) {
-            // Start of an object element within the array
-            if (currentElementIndex === elementIndex) {
-              inElementScope = true;
-              elementStartLine = lineNum;
-            }
-            braceCount++;
-          } else if (char === '}' && isInArray) {
-            braceCount--;
-            if (inElementScope && braceCount === 0) {
-              // Found the end of our target element
-              return { startLine: elementStartLine, endLine: lineNum };
-            } else if (braceCount === 0) {
-              // End of current element, move to next
-              currentElementIndex++;
-            }
-          } else if (char === '{') {
-            braceCount++;
-          } else if (char === '}') {
-            braceCount--;
-          }
-        }
-      }
-
-      return null; // Element not found or scope detection failed
-    };
-
-    // Helper function to find JSON container scope boundaries (objects or arrays)
-    const findObjectScope = (startLine: number): { startLine: number; endLine: number } | null => {
-      let braceCount = 0;
-      let bracketCount = 0;
-      let foundStart = false;
-      let startLineActual = startLine;
-      let isObjectScope = false;
-      let isArrayScope = false;
-
-      for (let lineNum = startLine; lineNum <= model.getLineCount(); lineNum++) {
-        const lineContent = model.getLineContent(lineNum);
-
-        for (const char of lineContent) {
-          if (char === '{') {
-            if (!foundStart) {
-              foundStart = true;
-              startLineActual = lineNum;
-              isObjectScope = true;
-            }
-            braceCount++;
-          } else if (char === '}') {
-            braceCount--;
-            if (foundStart && isObjectScope && braceCount === 0) {
-              return { startLine: startLineActual, endLine: lineNum };
-            }
-          } else if (char === '[') {
-            if (!foundStart) {
-              foundStart = true;
-              startLineActual = lineNum;
-              isArrayScope = true;
-            }
-            bracketCount++;
-          } else if (char === ']') {
-            bracketCount--;
-            if (foundStart && isArrayScope && bracketCount === 0) {
-              return { startLine: startLineActual, endLine: lineNum };
-            }
-          }
-        }
-      }
-
-      return null; // Scope not found
-    };
-
-    // Step 2: Initialize Search Scope
+    // Initialize search scope to entire document
     let currentSearchScope = new monaco.Range(
-      1,
-      1,
+      1, 1,
       model.getLineCount(),
       model.getLineMaxColumn(model.getLineCount())
     );
 
     let lastSuccessfulMatch: monaco.editor.FindMatch | null = null;
 
-    // Step 3: Iterative Search Loop
+    // Iteratively search for each key in the path
     for (let i = 0; i < pathParts.length; i++) {
       const part = pathParts[i];
 
-      // Skip numeric parts (array indices) - they are processed in the next iteration
-      if (part.match(/^\d+$/)) {
+      // Skip numeric parts (array indices) - they're applied to the next search
+      if (isArrayIndex(part)) {
         continue;
       }
 
@@ -267,84 +286,51 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       const matches = model.findMatches(
         quotedKey,
         currentSearchScope,
-        false, // isRegex
-        false, // matchCase
-        null,  // wordSeparators
-        false  // captureMatches
-      );
+        false, false, null, false
+      ) || [];
 
-      if (!matches || matches.length === 0) {
-        // No matches found, break the search
-        break;
-      }
+      if (matches.length === 0) break;
 
-      // Check if there's an array index from a previous iteration that should apply to this search
-      let targetMatch: monaco.editor.FindMatch;
+      // Determine target match (considering array indices from previous part)
       const prevPartIndex = i - 1;
-      let arrayIndexForThisSearch: number | null = null;
+      const arrayIndex = prevPartIndex >= 0 && isArrayIndex(pathParts[prevPartIndex])
+        ? parseInt(pathParts[prevPartIndex], 10)
+        : null;
 
-      if (prevPartIndex >= 0 && pathParts[prevPartIndex].match(/^\d+$/)) {
-        // Previous part was an index, use it to select the Nth match for this search
-        arrayIndexForThisSearch = parseInt(pathParts[prevPartIndex], 10);
-      }
-
-      if (arrayIndexForThisSearch !== null && arrayIndexForThisSearch < matches.length) {
-        // Use the array index to select the specific match
-        targetMatch = matches[arrayIndexForThisSearch];
-      } else if (arrayIndexForThisSearch !== null && arrayIndexForThisSearch >= matches.length) {
-        // Index out of bounds, search fails
-        break;
+      let targetMatch: monaco.editor.FindMatch;
+      if (arrayIndex !== null && arrayIndex < matches.length) {
+        targetMatch = matches[arrayIndex];
+      } else if (arrayIndex !== null) {
+        break; // Array index out of bounds
       } else {
-        // No index specified, take the first match
         targetMatch = matches[0];
       }
 
-      // Update the last successful match
       lastSuccessfulMatch = targetMatch;
 
-      // Check if there are more non-numeric parts to process after this one
-      let hasMoreKeys = false;
-      for (let j = i + 1; j < pathParts.length; j++) {
-        if (!pathParts[j].match(/^\d+$/)) {
-          hasMoreKeys = true;
-          break;
-        }
-      }
+      // Check if there are more non-numeric parts to process
+      const hasMoreKeys = pathParts.slice(i + 1).some(p => !isArrayIndex(p));
+      if (!hasMoreKeys) break;
 
-      // If no more keys to process, this is our final target
-      if (!hasMoreKeys) {
-        break;
-      }
-
-      // Update the search scope to the boundaries of the target match's containing object/array
-      const objectScope = findObjectScope(targetMatch.range.startLineNumber);
-      if (objectScope) {
+      // Narrow search scope for next iteration
+      const containerScope = findJsonContainerScope(model, targetMatch.range.startLineNumber);
+      if (containerScope) {
         currentSearchScope = new monaco.Range(
-          objectScope.startLine,
-          1,
-          objectScope.endLine,
-          model.getLineMaxColumn(objectScope.endLine)
+          containerScope.startLine, 1,
+          containerScope.endLine,
+          model.getLineMaxColumn(containerScope.endLine)
         );
       } else {
-        // If scope detection fails, use a fallback range around the match
-        const fallbackStartLine = Math.max(1, targetMatch.range.startLineNumber - 10);
-        const fallbackEndLine = Math.min(model.getLineCount(), targetMatch.range.startLineNumber + 50);
-        currentSearchScope = new monaco.Range(
-          fallbackStartLine,
-          1,
-          fallbackEndLine,
-          model.getLineMaxColumn(fallbackEndLine)
-        );
+        currentSearchScope = createFallbackScope(model, targetMatch.range.startLineNumber);
       }
     }
 
-    // Step 4: Final Navigation
+    // Navigate to the final match if found
     if (lastSuccessfulMatch) {
       editor.setPosition({
         lineNumber: lastSuccessfulMatch.range.startLineNumber,
         column: lastSuccessfulMatch.range.startColumn
       });
-
       editor.revealLineInCenter(lastSuccessfulMatch.range.startLineNumber);
       editor.setSelection(lastSuccessfulMatch.range);
     }
