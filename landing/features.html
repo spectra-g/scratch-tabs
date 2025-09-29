@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Features - Scratch Tabs</title>
+  <title>Developer Tool Features for JSON, Data & APIs | Scratch Tabs</title>
   <meta name="description"
         content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
   <meta name="keywords"
@@ -28,6 +28,49 @@
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+
+  <!-- Structured Data for SEO -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "How to Use Scratch Tabs for Developer Data Tasks",
+      "description": "Learn how to analyze messy API responses, troubleshoot logs, understand regex patterns, and handle configuration files with Scratch Tabs",
+      "image": "https://scratchtabs.b-cdn.net/app-screenshot.png",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Analyzing Messy API Responses",
+          "text": "When analyzing a messy API response, just paste the minified JSON. Scratch Tabs instantly formats it and presents an interactive tree view, letting you collapse nodes and search for keys without manual cleanup.",
+          "image": "https://scratchtabs.b-cdn.net/scenario-json-tree.png"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Troubleshooting Production Logs",
+          "text": "When troubleshooting production errors with scattered log entries, just paste the multiple log lines. Scratch Tabs instantly parses and filters them, making error patterns immediately visible. For JSON logs with metadata prefixes, it automatically cleans them leaving pure JSONs.",
+          "image": "https://scratchtabs.b-cdn.net/scenario-ndjson.png"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Understanding Complex Regex Patterns",
+          "text": "When struggling to understand a complicated regex pattern, paste it into the regex tablet. Scratch Tabs provides a human-readable interpretation of what the pattern actually matches.",
+          "image": "https://scratchtabs.b-cdn.net/scenario-regex.png"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Parsing Cron Expressions",
+          "text": "When unsure if cron expressions will parse equivalently across systems, paste the cron syntax. Scratch Tabs gives you a full breakdown of the schedule timing and execution pattern.",
+          "image": "https://scratchtabs.b-cdn.net/scenario-cron.png"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Organizing Configuration Files",
+          "text": "When dealing with a messy application.properties file from a legacy system, paste the content. Scratch Tabs intelligently cleans and groups properties with one-click functions for instant organization.",
+          "image": "https://scratchtabs.b-cdn.net/scenario-properties.png"
+        }
+      ]
+    }
+  </script>
 
   <style>
     html {
