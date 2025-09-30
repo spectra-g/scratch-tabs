@@ -3,9 +3,10 @@ import { Tab } from "../types";
 import { useTabsStore } from "../stores/tabsStore";
 import { useRootStore } from "../stores/rootStore";
 import { StorageProviderFactory } from "../db";
-import { detectFormat, isAmbiguousFormat } from "../formats";
+import { detectFormat, isAmbiguousFormat, getPotentialFormatMatches } from "../formats";
 import { updateCursorIndicator } from "../utils/testIndicators";
 import { contentProcessingService } from "./contentProcessing";
+import { getContentForLanguageDetection } from "../utils/formatDetectionUtils";
 
 // The maximum number of models to keep in memory
 const MAX_MODELS = 10;
@@ -230,14 +231,14 @@ class ModelManager {
       // Clear the paste flag at the start of language detection
       if (isFromPaste) {
         this.isPasteRef.delete(tabId);
-        
+
         // Clear the timeout since we consumed the flag
         const timeout = this.pasteFlagTimeouts.get(tabId);
         if (timeout) {
           clearTimeout(timeout);
           this.pasteFlagTimeouts.delete(tabId);
         }
-        
+
       }
       const currentTab = useTabsStore
         .getState()
@@ -246,7 +247,7 @@ class ModelManager {
       if (!currentTab) {
         return;
       }
-      
+
       // If language is locked and this is not initial content processing, skip language detection
       // This prevents manually set languages (like from Sample menu) from being overridden
       if (currentTab.languageLocked && !isInitialContent) {
@@ -263,7 +264,10 @@ class ModelManager {
         return;
       }
 
-      const newDetectedLanguage = detectFormat(trimmedNewContent);
+      // Use the exact same method as StatusBar
+      const contentForDetection = getContentForLanguageDetection(newContent);
+      const potentialMatches = getPotentialFormatMatches(contentForDetection);
+      const newDetectedLanguage = potentialMatches.length > 0 ? potentialMatches[0].id : "plaintext";
 
       const additionalFlags = isInitialContent ? { isFromClipboardImport: true } : undefined;
       const processingResult = await this.processContent(

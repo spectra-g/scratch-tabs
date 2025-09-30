@@ -159,10 +159,37 @@ export const DateCreatedNode = Node.create({
               }
             }
             
-            // Prevent backspace/delete that would affect the dateCreated node
-            if ((event.key === 'Backspace' || event.key === 'Delete') && $from.pos <= dateCreatedEnd) {
-              event.preventDefault();
-              return true;
+            // Handle backspace/delete that might affect the dateCreated node
+            if (event.key === 'Backspace' || event.key === 'Delete') {
+              const { $to } = selection;
+
+              // If this is a selection that includes content after the dateCreated node,
+              // allow deletion of content after dateCreated while preserving the dateCreated node
+              if ($from.pos < dateCreatedEnd && $to.pos > dateCreatedEnd) {
+                event.preventDefault();
+
+                // Delete only the content after the dateCreated node
+                const tr = view.state.tr.delete(dateCreatedEnd, $to.pos);
+
+                // Position cursor right after the dateCreated node
+                const newSelection = TextSelection.near(tr.doc.resolve(dateCreatedEnd));
+                tr.setSelection(newSelection);
+
+                view.dispatch(tr);
+                return true;
+              }
+
+              // If cursor/selection is entirely before dateCreated end, prevent deletion
+              if ($from.pos < dateCreatedEnd && $to.pos <= dateCreatedEnd) {
+                event.preventDefault();
+                return true;
+              }
+
+              // If cursor is right at dateCreated end and this is backspace, prevent it
+              if (event.key === 'Backspace' && $from.pos === dateCreatedEnd) {
+                event.preventDefault();
+                return true;
+              }
             }
             
             return false;
@@ -263,8 +290,40 @@ export const DateCreatedNode = Node.create({
                 return false;
               }
 
+              // Handle deletion input types that might affect the dateCreated node
+              if (event.inputType === 'deleteContentBackward' ||
+                  event.inputType === 'deleteContentForward' ||
+                  event.inputType === 'deleteByCut' ||
+                  event.inputType === 'deleteByDrag') {
+
+                const { selection } = view.state;
+                const { $from, $to } = selection;
+
+                // If this is a selection that includes content after the dateCreated node,
+                // allow deletion of content after dateCreated while preserving the dateCreated node
+                if ($from.pos < dateCreatedEnd && $to.pos > dateCreatedEnd) {
+                  event.preventDefault();
+
+                  // Delete only the content after the dateCreated node
+                  const tr = view.state.tr.delete(dateCreatedEnd, $to.pos);
+
+                  // Position cursor right after the dateCreated node
+                  const newSelection = TextSelection.near(tr.doc.resolve(dateCreatedEnd));
+                  tr.setSelection(newSelection);
+
+                  view.dispatch(tr);
+                  return true;
+                }
+
+                // If deletion would affect the dateCreated node, prevent it
+                if ($from.pos < dateCreatedEnd) {
+                  event.preventDefault();
+                  return true;
+                }
+              }
+
               // Handle text replacement that might affect the dateCreated node
-              if (event.inputType === 'insertReplacementText' || 
+              if (event.inputType === 'insertReplacementText' ||
                   event.inputType === 'insertText' ||
                   event.inputType === 'insertCompositionText') {
                 

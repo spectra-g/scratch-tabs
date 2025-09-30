@@ -505,8 +505,17 @@ function applyRegexFindReplace(
   config: { find: string; replace: string; flags?: string },
 ): string {
   try {
-    const flags = config.flags || "g";
-    const regex = new RegExp(config.find, flags);
+    // Default flags include 'gm' to support line anchors (^ and $) properly
+    const defaultFlags = "gm";
+    const flags = config.flags || defaultFlags;
+
+    // Ensure 'm' flag is included if the pattern contains ^ or $ anchors
+    let finalFlags = flags;
+    if ((config.find.includes('^') || config.find.includes('$')) && !flags.includes('m')) {
+      finalFlags = flags + 'm';
+    }
+
+    const regex = new RegExp(config.find, finalFlags);
     return text.replace(regex, config.replace);
   } catch (error) {
     console.error("Regex find/replace error:", error);
