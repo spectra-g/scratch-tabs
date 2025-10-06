@@ -1,4 +1,5 @@
 import StarterKit from '@tiptap/starter-kit';
+import { Underline } from '@tiptap/extension-underline';
 import { Code } from '@tiptap/extension-code';
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { Table } from '@tiptap/extension-table';
@@ -45,6 +46,7 @@ export const tiptapExtensions = [
     link: false,
     code: false,
   }),
+  Underline,
   Code.configure({
     HTMLAttributes: {
       class: 'inline-code',
@@ -59,6 +61,7 @@ export const tiptapExtensions = [
   }),
   Table.configure({
     resizable: true,
+    allowTableNodeSelection: true,
   }),
   TableRow,
   TableHeader,

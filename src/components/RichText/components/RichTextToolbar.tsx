@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Bold, 
-  Italic, 
-  List, 
-  ListOrdered, 
+import {
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
   Table,
   Code,
   FileCode,
   Link,
   Quote,
-  Download
+  Download,
+  Minus
 } from '../../Icons';
 import { LinkModal } from './LinkModal';
 import { extractLinkTextForEditing } from '../utils/linkTextExtraction';
@@ -209,6 +210,35 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
   return (
     <div className="flex items-center space-x-1 bg-gray-800 p-2">
       <ToolbarButton
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        isActive={editor.isActive('heading', { level: 1 })}
+        title="Heading 1"
+        testId="rich-text-h1"
+      >
+        H1
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        isActive={editor.isActive('heading', { level: 2 })}
+        title="Heading 2"
+        testId="rich-text-h2"
+      >
+        H2
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        isActive={editor.isActive('heading', { level: 3 })}
+        title="Heading 3"
+        testId="rich-text-h3"
+      >
+        H3
+      </ToolbarButton>
+
+      <div className="w-px h-6 bg-gray-600 mx-1" />
+
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
         isActive={editor.isActive('bold')}
         title="Bold"
@@ -224,6 +254,15 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         testId="rich-text-italic"
       >
         <Italic size={16} />
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        isActive={editor.isActive('underline')}
+        title="Underline"
+        testId="rich-text-underline"
+      >
+        U
       </ToolbarButton>
 
       <ToolbarButton
@@ -327,6 +366,15 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         testId="rich-text-blockquote"
       >
         <Quote size={16} />
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        isActive={false}
+        title="Insert Separator"
+        testId="rich-text-hr"
+      >
+        <Minus size={16} />
       </ToolbarButton>
 
       <div className="w-px h-6 bg-gray-600 mx-1" />
