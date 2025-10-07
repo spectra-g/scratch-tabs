@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { FileDiff, Hunk, DiffLine } from '../../utils/parser';
 import { ChevronDown, ChevronRight, Copy } from '../../../../components/Icons';
@@ -75,6 +75,7 @@ export const UnifiedDiffView: React.FC<UnifiedDiffViewProps> = ({
       return item.type === 'hunk-header' ? 40 : 24;
     },
     overscan: 20,
+    measureElement: (element) => element.getBoundingClientRect().height,
   });
 
   // Handle copying line content
@@ -145,63 +146,97 @@ export const UnifiedDiffView: React.FC<UnifiedDiffViewProps> = ({
         >
           {rowVirtualizer.getVirtualItems().map((virtualItem) => {
             const item = renderItems[virtualItem.index];
-            
+
             return (
-              <div
+              <VirtualRow
                 key={virtualItem.key}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${virtualItem.size}px`,
-                  transform: `translateY(${virtualItem.start}px)`,
-                }}
-              >
-                {item.type === 'hunk-header' ? (
-                  <div className="flex items-center px-3 py-2 bg-gray-800 border-b border-gray-700">
-                    <button
-                      onClick={() => onToggleHunk(item.hunkId)}
-                      className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
-                    >
-                      {collapsedHunks.has(item.hunkId) ? (
-                        <ChevronRight size={16} />
-                      ) : (
-                        <ChevronDown size={16} />
-                      )}
-                      <span className="text-sm font-medium">{item.hunk.header}</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className={`flex border-b border-gray-700/30 ${getLineStyle(item.line!)}`}>
-                    {/* Line number */}
-                    <div className="w-12 flex-shrink-0 text-center text-gray-500 text-xs py-1 border-r border-gray-700/50">
-                      {item.lineNumber}
-                    </div>
-
-                    {/* Prefix */}
-                    <div className="w-6 flex-shrink-0 text-center text-xs py-1 border-r border-gray-700/50">
-                      {getLinePrefix(item.line!)}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 px-3 py-1 group relative">
-                      <span>{item.line!.content}</span>
-                      <button
-                        onClick={() => handleCopyLine(item.line!.content)}
-                        className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-700 rounded transition-all"
-                        title="Copy line"
-                      >
-                        <Copy size={12} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                virtualItem={virtualItem}
+                rowVirtualizer={rowVirtualizer}
+                item={item}
+                collapsedHunks={collapsedHunks}
+                onToggleHunk={onToggleHunk}
+                handleCopyLine={handleCopyLine}
+                getLineStyle={getLineStyle}
+                getLinePrefix={getLinePrefix}
+              />
             );
           })}
         </div>
       </div>
+    </div>
+  );
+};
+
+// Separate component for each virtual row to handle measurement
+const VirtualRow: React.FC<{
+  virtualItem: any;
+  rowVirtualizer: any;
+  item: RenderItem;
+  collapsedHunks: Set<string>;
+  onToggleHunk: (hunkId: string) => void;
+  handleCopyLine: (content: string) => void;
+  getLineStyle: (line: DiffLine) => string;
+  getLinePrefix: (line: DiffLine) => string;
+}> = ({ virtualItem, rowVirtualizer, item, collapsedHunks, onToggleHunk, handleCopyLine, getLineStyle, getLinePrefix }) => {
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (rowRef.current && typeof rowVirtualizer.measureElement === 'function') {
+      rowVirtualizer.measureElement(rowRef.current);
+    }
+  }, [rowVirtualizer, item]);
+
+  return (
+    <div
+      ref={rowRef}
+      data-index={virtualItem.index}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        transform: `translateY(${virtualItem.start}px)`,
+      }}
+    >
+      {item.type === 'hunk-header' ? (
+        <div className="flex items-center px-3 py-2 bg-gray-800 border-b border-gray-700">
+          <button
+            onClick={() => onToggleHunk(item.hunkId)}
+            className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            {collapsedHunks.has(item.hunkId) ? (
+              <ChevronRight size={16} />
+            ) : (
+              <ChevronDown size={16} />
+            )}
+            <span className="text-sm font-medium">{item.hunk.header}</span>
+          </button>
+        </div>
+      ) : (
+        <div className={`flex border-b border-gray-700/30 ${getLineStyle(item.line!)}`}>
+          {/* Line number */}
+          <div className="w-12 flex-shrink-0 text-center text-gray-500 text-xs py-1 border-r border-gray-700/50">
+            {item.lineNumber}
+          </div>
+
+          {/* Prefix */}
+          <div className="w-6 flex-shrink-0 text-center text-xs py-1 border-r border-gray-700/50">
+            {getLinePrefix(item.line!)}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 px-3 py-1 group relative">
+            <span>{item.line!.content}</span>
+            <button
+              onClick={() => handleCopyLine(item.line!.content)}
+              className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-700 rounded transition-all"
+              title="Copy line"
+            >
+              <Copy size={12} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
