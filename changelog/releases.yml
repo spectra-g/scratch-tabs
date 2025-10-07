@@ -3,8 +3,26 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.4.0"
+  - version: "1.5.0"
     type: "latest"  # latest, beta, alpha
+    draft: false
+    date: "2025-10-07"
+    headline: "✨ Rich text enhancements and bug fixes"
+    description: "Enhanced rich text editing with new formatting options and critical bug fixes"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Rich text H1, H2, H3:** Added heading support for better document structure"
+          - "**Rich text Underline:** Added underline formatting option"
+          - "**Rich text Separator:** Added horizontal separator for content division"
+      - name: "🐛 Fixed"
+        changes:
+          - "Rich text table selection bug"
+          - "IP Details tablet caching IP address issue"
+          - "Diff Smart View line wrapping causing text overlap"
+
+  - version: "1.4.0"
+    type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-09-25"
     headline: "🛠️ New tablets and improvements"
