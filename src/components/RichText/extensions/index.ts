@@ -101,6 +101,7 @@ export const tiptapExtensions = [
     dropcursor: false,
     link: false,
     code: false,
+    underline: false, // Disable StarterKit's underline to use the explicit import
   }),
   Underline,
   Code.configure({
