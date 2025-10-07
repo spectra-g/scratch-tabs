@@ -66,9 +66,13 @@ const IPDetailsTabletUI: React.FC<{
     }
   };
 
-  // Fetch IP details on initial load
+  // Fetch IP details on initial load or if data is stale
   useEffect(() => {
-    if (!state.data.ip) {
+    const shouldRefresh = !state.data.ip || // No data yet
+      !state.data.lastUpdated || // No timestamp
+      (Date.now() - state.data.lastUpdated > 60 * 60 * 1000); // Older than 1 hour
+
+    if (shouldRefresh) {
       fetchIPDetails();
     }
   }, []);
