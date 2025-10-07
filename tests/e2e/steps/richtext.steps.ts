@@ -3,13 +3,18 @@ import { expect } from '@playwright/test';
 
 // Shared mapping for toolbar button names to test IDs
 const TOOLBAR_BUTTON_TEST_IDS: { [key: string]: string } = {
+  'H1': 'rich-text-h1',
+  'H2': 'rich-text-h2',
+  'H3': 'rich-text-h3',
   'Bold': 'rich-text-bold',
   'Italic': 'rich-text-italic',
+  'Underline': 'rich-text-underline',
   'Inline Code': 'rich-text-code',
   'Code Block': 'rich-text-code-block',
   'Bullet List': 'rich-text-bullet-list',
   'Numbered List': 'rich-text-ordered-list',
   'Quote': 'rich-text-blockquote',
+  'Insert Separator': 'rich-text-hr',
   'Insert Table': 'rich-text-table',
   'Add Link': 'rich-text-link',
   'Import Code': 'rich-text-import-code',
@@ -932,8 +937,41 @@ Then('I should not see duplicate date created nodes', async function() {
   // We can also verify there's no text duplication in the single date node
   const dateCreatedNode = this.page.locator('[data-testid="rich-text-date-created"]');
   const dateText = await dateCreatedNode.textContent();
-  
+
   // Ensure the text doesn't contain duplicate "Created" words
   const createdCount = (dateText?.match(/Created/g) || []).length;
   expect(createdCount).toBe(1);
+});
+
+// Heading formatting step definitions
+Then('the text should be formatted as H1 in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const h1Text = tipTapEditor.locator('h1');
+  await expect(h1Text).toBeVisible();
+});
+
+Then('the text should be formatted as H2 in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const h2Text = tipTapEditor.locator('h2');
+  await expect(h2Text).toBeVisible();
+});
+
+Then('the text should be formatted as H3 in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const h3Text = tipTapEditor.locator('h3');
+  await expect(h3Text).toBeVisible();
+});
+
+// Underline formatting step definition
+Then('the selected text should be underlined in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const underlinedText = tipTapEditor.locator('u');
+  await expect(underlinedText).toBeVisible();
+});
+
+// Horizontal separator step definition
+Then('I should see a horizontal separator in the Rich Text editor', async function() {
+  const tipTapEditor = this.page.locator('[data-editor-pane-side="left"] .ProseMirror');
+  const horizontalRule = tipTapEditor.locator('hr');
+  await expect(horizontalRule).toBeVisible();
 });

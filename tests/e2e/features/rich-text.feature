@@ -1,3 +1,4 @@
+@rich-text
 Feature: Rich Text Editor
 
   Background:
@@ -65,6 +66,23 @@ Feature: Rich Text Editor
     And the Rich Text editor should contain the text "This is plain text content"
     And I should see the date created text with "now" time
 
+  Scenario: Rich text toolbar heading controls
+    Given I am on a plain text editor tab
+    When I click the Rich Text toggle in the status bar
+    Then I should see the Rich Text editor is displayed
+    When I type "Heading 1" in the Rich Text editor
+    And I select the text "Heading 1"
+    And I click the "H1" button in the Rich Text toolbar
+    Then the text should be formatted as H1 in the Rich Text editor
+    When I press Enter and type "Heading 2"
+    And I select the text "Heading 2"
+    And I click the "H2" button in the Rich Text toolbar
+    Then the text should be formatted as H2 in the Rich Text editor
+    When I press Enter and type "Heading 3"
+    And I select the text "Heading 3"
+    And I click the "H3" button in the Rich Text toolbar
+    Then the text should be formatted as H3 in the Rich Text editor
+
   Scenario: Rich text toolbar formatting controls
     Given I am on a plain text editor tab
     When I click the Rich Text toggle in the status bar
@@ -76,6 +94,9 @@ Feature: Rich Text Editor
     When I select the text "will be"
     And I click the "Italic" button in the Rich Text toolbar
     Then the selected text should be italic in the Rich Text editor
+    When I select the text "will be"
+    And I click the "Underline" button in the Rich Text toolbar
+    Then the selected text should be underlined in the Rich Text editor
     When I select the text "be"
     And I click the "Inline Code" button in the Rich Text toolbar
     Then the selected text should be inline code in the Rich Text editor
@@ -106,6 +127,9 @@ Feature: Rich Text Editor
     And I type "console.log('Hello World');" in the code block
     Then I should see a code block in the Rich Text editor
     When I click after the code block
+    And I click the "Insert Separator" button in the Rich Text toolbar
+    Then I should see a horizontal separator in the Rich Text editor
+    When I press Enter
     And I click the "Insert Table" button in the Rich Text toolbar
     Then I should see a table with 3 rows and 3 columns in the Rich Text editor
     When I type "Background test" in the Rich Text editor
