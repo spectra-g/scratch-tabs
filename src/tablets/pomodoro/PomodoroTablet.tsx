@@ -37,11 +37,11 @@ const PomodoroTabletUI: React.FC<{
   const handleStateChange = useCallback(
     (newData: PomodoroState) => {
       onChange({
-        ...state,
+        type: "pomodoro",
         data: newData,
       });
     },
-    [onChange, state],
+    [onChange],
   );
 
   const {
