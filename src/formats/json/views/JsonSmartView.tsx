@@ -369,7 +369,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           <div className="p-3 border-b border-gray-700">
             <h3 className="text-sm font-medium text-gray-300">Navigator</h3>
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
             <Navigator
               content={content}
               onNodeSelect={handleNodeSelect}
