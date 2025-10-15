@@ -3,8 +3,22 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.5.0"
+  - version: "1.6.0"
     type: "latest"  # latest, beta, alpha
+    draft: false
+    date: "2025-10-15"
+    headline: "🚀 GraphQL tablet and Pomodoro fixes"
+    description: "New GraphQL query builder and critical Pomodoro timer bug fix"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**GraphQL Tablet:** Interactive GraphQL query builder with schema introspection, query validation, and variables support"
+      - name: "🐛 Fixed"
+        changes:
+          - "Pomodoro timer getting stuck at 00:01 when auto-start next session is enabled"
+
+  - version: "1.5.0"
+    type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-10-07"
     headline: "✨ Rich text enhancements and bug fixes"

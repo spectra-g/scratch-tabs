@@ -112,6 +112,11 @@ export const tabletMetadata: TabletMetadata[] = [
     keywords: ["rest", "api", "http", "client", "request", "curl"],
   },
   {
+    id: "graphql",
+    label: "GraphQL Client",
+    keywords: ["graphql", "api", "query", "mutation", "subscription", "schema"],
+  },
+  {
     id: "shapesnap",
     label: "Shape Snap",
     keywords: [
