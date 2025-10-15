@@ -562,6 +562,91 @@ describe("usePomodoroEngine", () => {
 
       unmount();
     });
+
+    it("should properly transition from completed focus to running break without getting stuck", () => {
+      const shortState = {
+        ...initialState,
+        settings: {
+          ...initialState.settings,
+          autoStartNextSession: true,
+        },
+        currentSession: {
+          ...initialState.currentSession,
+          duration: 2,
+          timeRemaining: 2,
+        },
+      };
+
+      const { result, unmount } = renderHook(() =>
+        usePomodoroEngine(shortState, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleStart();
+      });
+
+      // Complete the focus session
+      act(() => {
+        jest.advanceTimersByTime(3000);
+      });
+
+      // Verify the break session started automatically
+      expect(result.current.state.status).toBe("running");
+      expect(result.current.state.currentSession.type).toBe("shortBreak");
+      expect(result.current.state.currentSession.startTime).toBeGreaterThan(0);
+
+      // Verify the break timer is actually counting down
+      const breakTimeRemaining = result.current.state.currentSession.timeRemaining;
+
+      act(() => {
+        jest.advanceTimersByTime(2000);
+      });
+
+      // Time should have decreased (not stuck)
+      expect(result.current.state.currentSession.timeRemaining).toBeLessThan(
+        breakTimeRemaining
+      );
+
+      unmount();
+    });
+
+    it("should update stats correctly when transitioning between sessions with auto-start", () => {
+      const shortState = {
+        ...initialState,
+        settings: {
+          ...initialState.settings,
+          autoStartNextSession: true,
+        },
+        currentSession: {
+          ...initialState.currentSession,
+          duration: 2,
+          timeRemaining: 2,
+        },
+      };
+
+      const { result, unmount } = renderHook(() =>
+        usePomodoroEngine(shortState, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleStart();
+      });
+
+      expect(result.current.state.todayStats.focusCompleted).toBe(0);
+
+      act(() => {
+        jest.advanceTimersByTime(3000);
+      });
+
+      // Stats should be updated after focus completion
+      expect(result.current.state.todayStats.focusCompleted).toBe(1);
+      expect(result.current.state.todayStats.currentStreak).toBe(1);
+      expect(result.current.state.todayStats.totalFocusTime).toBe(2);
+      expect(result.current.state.sessions.length).toBe(1);
+      expect(result.current.state.sessions[0].completed).toBe(true);
+
+      unmount();
+    });
   });
 
   describe("onChange callback", () => {

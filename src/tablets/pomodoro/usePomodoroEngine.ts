@@ -1,4 +1,3 @@
-// src/tablets/pomodoro/usePomodoroEngine.ts
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   PomodoroState,
@@ -79,77 +78,88 @@ export const usePomodoroEngine = (
     pendingStateRef.current = newState;
   }, []);
 
+  // Helper function to calculate the next state after session completion
+  const calculateNextSessionState = useCallback(
+    (prevState: PomodoroState, completedSession: PomodoroSession): PomodoroState => {
+      // Update stats based on completed session
+      const newTodayStats = { ...prevState.todayStats };
+      if (completedSession.type === "focus" && completedSession.completed) {
+        newTodayStats.focusCompleted++;
+        newTodayStats.totalFocusTime += completedSession.duration;
+        newTodayStats.currentStreak++;
+        newTodayStats.bestStreak = Math.max(
+          newTodayStats.bestStreak,
+          newTodayStats.currentStreak,
+        );
+      } else {
+        newTodayStats.currentStreak = 0;
+        if (completedSession.type === "shortBreak")
+          newTodayStats.shortBreakCompleted++;
+        if (completedSession.type === "longBreak")
+          newTodayStats.longBreakCompleted++;
+      }
+
+      // Determine next session type
+      let nextSessionType: SessionType = "focus";
+      if (completedSession.type === "focus") {
+        nextSessionType =
+          newTodayStats.focusCompleted %
+            prevState.settings.longBreakInterval ===
+          0
+            ? "longBreak"
+            : "shortBreak";
+      }
+
+      // Calculate next session duration
+      const durationMap = {
+        focus: prevState.settings.focusDuration * 60,
+        shortBreak: prevState.settings.shortBreakDuration * 60,
+        longBreak: prevState.settings.longBreakDuration * 60,
+      };
+      const nextDuration = durationMap[nextSessionType];
+
+      // Create next session
+      const newSession = {
+        type: nextSessionType,
+        duration: nextDuration,
+        timeRemaining: nextDuration,
+        startTime: prevState.settings.autoStartNextSession ? Date.now() : 0,
+        pauseTime: 0,
+        totalPausedTime: 0,
+        goal: "",
+      };
+
+      const newStatus: TimerStatus = prevState.settings.autoStartNextSession
+        ? "running"
+        : "idle";
+
+      return {
+        ...prevState,
+        status: newStatus,
+        currentSession: newSession,
+        sessions: [...prevState.sessions, completedSession],
+        todayStats: newTodayStats,
+      };
+    },
+    [],
+  );
+
   const startNextSession = useCallback(
     (completedSession: PomodoroSession) => {
       setState((prevState) => {
-        const newTodayStats = { ...prevState.todayStats };
-        if (completedSession.type === "focus" && completedSession.completed) {
-          newTodayStats.focusCompleted++;
-          newTodayStats.totalFocusTime += completedSession.duration;
-          newTodayStats.currentStreak++;
-          newTodayStats.bestStreak = Math.max(
-            newTodayStats.bestStreak,
-            newTodayStats.currentStreak,
-          );
-        } else {
-          newTodayStats.currentStreak = 0; // Reset streak on breaks or skips
-          if (completedSession.type === "shortBreak")
-            newTodayStats.shortBreakCompleted++;
-          if (completedSession.type === "longBreak")
-            newTodayStats.longBreakCompleted++;
-        }
-
-        let nextSessionType: SessionType = "focus";
-        if (completedSession.type === "focus") {
-          nextSessionType =
-            newTodayStats.focusCompleted %
-              prevState.settings.longBreakInterval ===
-            0
-              ? "longBreak"
-              : "shortBreak";
-        }
-
-        const durationMap = {
-          focus: prevState.settings.focusDuration * 60,
-          shortBreak: prevState.settings.shortBreakDuration * 60,
-          longBreak: prevState.settings.longBreakDuration * 60,
-        };
-        const nextDuration = durationMap[nextSessionType];
-
-        const newSession = {
-          type: nextSessionType,
-          duration: nextDuration,
-          timeRemaining: nextDuration,
-          startTime: prevState.settings.autoStartNextSession ? Date.now() : 0,
-          pauseTime: 0,
-          totalPausedTime: 0,
-          goal: "",
-        };
-
-        const newStatus: TimerStatus = prevState.settings.autoStartNextSession
-          ? "running"
-          : "idle";
-        const newState: PomodoroState = {
-          ...prevState,
-          status: newStatus,
-          currentSession: newSession,
-          sessions: [...prevState.sessions, completedSession],
-          todayStats: newTodayStats,
-        };
-
-        // Queue the state change for parent instead of calling onChange directly
+        const newState = calculateNextSessionState(prevState, completedSession);
         queueStateChange(newState);
         return newState;
       });
     },
-    [queueStateChange],
+    [queueStateChange, calculateNextSessionState],
   );
 
   useEffect(() => {
     if (state.status !== "running") {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
-      document.title = "Scratch Tabs"; // Reset title when not running
+      document.title = "Scratch Tabs";
       return;
     }
 
@@ -190,28 +200,26 @@ export const usePomodoroEngine = (
           timerRef.current = null;
 
           if (prevState.soundEnabled && audioRef.current) {
-            // Try to play the sound with better error handling
             const playPromise = audioRef.current.play();
             if (playPromise !== undefined) {
-              playPromise
-                .then(() => {
-                  // Sound played successfully
-                })
-                .catch((err) => {
-                  console.error("Audio play failed:", err);
-                });
+              playPromise.catch((err) => {
+                console.error("Audio play failed:", err);
+              });
             }
           }
 
-          startNextSession({
+          const completedSession: PomodoroSession = {
             type: prevState.currentSession.type,
             duration: prevState.currentSession.duration,
             startTime: prevState.currentSession.startTime,
             endTime: now,
             completed: true,
             goal: prevState.currentSession.goal,
-          });
-          return prevState;
+          };
+
+          const nextState = calculateNextSessionState(prevState, completedSession);
+          queueStateChange(nextState);
+          return nextState;
         }
 
         const newState: PomodoroState = {
@@ -235,7 +243,7 @@ export const usePomodoroEngine = (
     state.currentSession.duration,
     state.currentSession.type,
     state.soundEnabled,
-    startNextSession,
+    calculateNextSessionState,
     queueStateChange,
   ]);
 
