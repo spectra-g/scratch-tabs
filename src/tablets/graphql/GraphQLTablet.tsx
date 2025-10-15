@@ -44,6 +44,7 @@ import {
   KeyValuePair,
 } from "./types";
 import { Editor } from "@monaco-editor/react";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 
 interface GraphQLTabletStateWrapper extends TabletState {
@@ -58,7 +59,14 @@ const MonacoEditor: React.FC<{
   language: string;
   readOnly?: boolean;
   height?: string;
-}> = ({ value, onChange, language, readOnly = false, height = "100%" }) => {
+  onMount?: (editor: monaco.editor.IStandaloneCodeEditor) => void;
+}> = ({ value, onChange, language, readOnly = false, height = "100%", onMount }) => {
+  const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
+    if (onMount) {
+      onMount(editor);
+    }
+  };
+
   return (
     <div style={{ height }}>
       <Editor
@@ -66,6 +74,7 @@ const MonacoEditor: React.FC<{
         language={language}
         value={value}
         onChange={(val) => onChange(val || "")}
+        onMount={handleEditorDidMount}
         theme="vs-dark"
         options={{
           readOnly,
@@ -143,7 +152,7 @@ const SchemaExplorer: React.FC<{
     return <div className="border-b border-gray-700/50"><button onClick={() => toggleSection(sectionKey)} className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"><div className="flex items-center space-x-2">{icon}<span className="font-medium text-gray-100">{title}</span><span className="text-xs text-gray-500">({fields.length})</span></div>{expandedSections.has(sectionKey) ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}</button>{expandedSections.has(sectionKey) && <div className="bg-gray-800/50">{filteredFields.map(field => renderField(field, sectionKey))}</div>}</div>;
   };
   const selectedTypeObj = selectedType ? findTypeByName(schema, selectedType) : null;
-  return <div className="h-full bg-gray-900 flex flex-col"><div className="flex-none p-3 border-b border-gray-700/50"><div className="relative"><Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /><input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search fields..." className="w-full bg-gray-800 text-gray-100 pl-10 pr-4 py-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm" /></div></div><div className="flex-1 overflow-y-auto">{rootTypes.queries.length > 0 && renderSection("Queries", rootTypes.queries, <Code size={16} className="text-green-400" />, "queries")}{rootTypes.mutations.length > 0 && renderSection("Mutations", rootTypes.mutations, <Zap size={16} className="text-yellow-400" />, "mutations")}{rootTypes.subscriptions.length > 0 && renderSection("Subscriptions", rootTypes.subscriptions, <RefreshCw size={16} className="text-purple-400" />, "subscriptions")}{userTypes.length > 0 && <div className="border-b border-gray-700/50"><button onClick={() => toggleSection("types")} className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"><div className="flex items-center space-x-2"><Book size={16} className="text-blue-400" /><span className="font-medium text-gray-100">Types</span><span className="text-xs text-gray-500">({userTypes.length})</span></div>{expandedSections.has("types") ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}</button>{expandedSections.has("types") && <div className="bg-gray-800/50">{userTypes.map(type => <div key={type.name} className="border-b border-gray-700/30"><button onClick={() => { onTypeSelect(type.name!); toggleType(type.name!); }} className="w-full flex items-center justify-between p-2 px-4 hover:bg-gray-700/30 text-sm"><span className="text-blue-300">{type.name}</span>{expandedTypes.has(type.name!) ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}</button>{expandedTypes.has(type.name!) && type.fields && <div className="bg-gray-900/50">{type.fields.map(field => renderField(field, type.name!))}</div>}</div>)}</div>}</div>}</div>{selectedTypeObj && <div className="flex-none p-3 border-t border-gray-700/50 bg-gray-800"><div className="text-xs text-gray-400"><div className="font-medium text-gray-300 mb-1">{selectedTypeObj.name}</div>{selectedTypeObj.description && <p>{selectedTypeObj.description}</p>}</div></div>}</div>;
+  return <div className="h-full bg-gray-900 flex flex-col"><div className="flex-none p-3 border-b border-gray-700/50"><div className="relative"><Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /><input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search fields..." className="w-full bg-gray-800 text-gray-100 pl-10 pr-4 py-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm" /></div></div><div className="flex-1 overflow-y-auto custom-scrollbar">{rootTypes.queries.length > 0 && renderSection("Queries", rootTypes.queries, <Code size={16} className="text-green-400" />, "queries")}{rootTypes.mutations.length > 0 && renderSection("Mutations", rootTypes.mutations, <Zap size={16} className="text-yellow-400" />, "mutations")}{rootTypes.subscriptions.length > 0 && renderSection("Subscriptions", rootTypes.subscriptions, <RefreshCw size={16} className="text-purple-400" />, "subscriptions")}{userTypes.length > 0 && <div className="border-b border-gray-700/50"><button onClick={() => toggleSection("types")} className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"><div className="flex items-center space-x-2"><Book size={16} className="text-blue-400" /><span className="font-medium text-gray-100">Types</span><span className="text-xs text-gray-500">({userTypes.length})</span></div>{expandedSections.has("types") ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}</button>{expandedSections.has("types") && <div className="bg-gray-800/50">{userTypes.map(type => <div key={type.name} className="border-b border-gray-700/30"><button onClick={() => { onTypeSelect(type.name!); toggleType(type.name!); }} className="w-full flex items-center justify-between p-2 px-4 hover:bg-gray-700/30 text-sm"><span className="text-blue-300">{type.name}</span>{expandedTypes.has(type.name!) ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}</button>{expandedTypes.has(type.name!) && type.fields && <div className="bg-gray-900/50">{type.fields.map(field => renderField(field, type.name!))}</div>}</div>)}</div>}</div>}</div>{selectedTypeObj && <div className="flex-none p-3 border-t border-gray-700/50 bg-gray-800"><div className="text-xs text-gray-400"><div className="font-medium text-gray-300 mb-1">{selectedTypeObj.name}</div>{selectedTypeObj.description && <p>{selectedTypeObj.description}</p>}</div></div>}</div>;
 };
 
 const QueryHistory: React.FC<{
@@ -158,7 +167,7 @@ const QueryHistory: React.FC<{
     if (!a.isPinned && b.isPinned) return 1;
     return b.timestamp - a.timestamp;
   });
-  return <div className="h-full bg-gray-900 flex flex-col"><div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/50"><div className="flex items-center space-x-2"><History size={18} className="text-gray-400" /><span className="font-medium text-gray-100">Query History</span><span className="text-xs text-gray-500">({history.length})</span></div><button onClick={onClose} className="text-gray-400 hover:text-gray-100 transition-colors"><X size={18} /></button></div><div className="flex-1 overflow-y-auto">{sortedHistory.length === 0 ? <div className="p-8 text-center text-gray-400"><Clock size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">No query history yet</p></div> : sortedHistory.map(item => <div key={item.id} className="p-3 border-b border-gray-700/50 hover:bg-gray-800/50 transition-colors"><div className="flex items-start justify-between mb-2"><div className="flex-1"><div className="text-sm font-medium text-gray-100 mb-1">{item.name || "Unnamed Query"}</div><div className="text-xs text-gray-400">{new Date(item.timestamp).toLocaleString()}</div></div><div className="flex items-center space-x-2"><button onClick={() => onPin(item.id, !item.isPinned)} className={`${item.isPinned ? "text-yellow-400" : "text-gray-500"} hover:text-yellow-400 transition-colors`}><Pin size={14} /></button><button onClick={() => onDelete(item.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 size={14} /></button></div></div><pre className="text-xs text-gray-300 bg-gray-800 p-2 rounded overflow-x-auto mb-2">{item.query.substring(0, 100)}{item.query.length > 100 && "..."}</pre><button onClick={() => onRestore(item)} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Restore</button></div>)}</div></div>;
+  return <div className="h-full bg-gray-900 flex flex-col"><div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/50"><div className="flex items-center space-x-2"><History size={18} className="text-gray-400" /><span className="font-medium text-gray-100">Query History</span><span className="text-xs text-gray-500">({history.length})</span></div><button onClick={onClose} className="text-gray-400 hover:text-gray-100 transition-colors"><X size={18} /></button></div><div className="flex-1 overflow-y-auto custom-scrollbar">{sortedHistory.length === 0 ? <div className="p-8 text-center text-gray-400"><Clock size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">No query history yet</p></div> : sortedHistory.map(item => <div key={item.id} className="p-3 border-b border-gray-700/50 hover:bg-gray-800/50 transition-colors"><div className="flex items-start justify-between mb-2"><div className="flex-1"><div className="text-sm font-medium text-gray-100 mb-1">{item.name || "Unnamed Query"}</div><div className="text-xs text-gray-400">{new Date(item.timestamp).toLocaleString()}</div></div><div className="flex items-center space-x-2"><button onClick={() => onPin(item.id, !item.isPinned)} className={`${item.isPinned ? "text-yellow-400" : "text-gray-500"} hover:text-yellow-400 transition-colors`}><Pin size={14} /></button><button onClick={() => onDelete(item.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 size={14} /></button></div></div><pre className="text-xs text-gray-300 bg-gray-800 p-2 rounded overflow-x-auto mb-2">{item.query.substring(0, 100)}{item.query.length > 100 && "..."}</pre><button onClick={() => onRestore(item)} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Restore</button></div>)}</div></div>;
 };
 
 const HeadersEditor: React.FC<{
@@ -200,6 +209,7 @@ const GraphQLTabletComponent: React.FC<{
   const { data } = state;
   const [showHistory, setShowHistory] = useState(false);
   const wsClientRef = useRef<GraphQLWebSocketClient | null>(null);
+  const queryEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const updateState = (newData: Partial<GraphQLTabletState>) => {
     onChange({
@@ -376,8 +386,30 @@ const GraphQLTabletComponent: React.FC<{
   };
 
   const handleFieldClick = (fieldName: string, typeName: string) => {
-    const newQuery = data.query + `\n  ${fieldName}`;
-    updateState({ query: newQuery });
+    const editor = queryEditorRef.current;
+    if (!editor) {
+      // Fallback in case editor is not ready
+      const newQuery = data.query + `\n  ${fieldName}`;
+      updateState({ query: newQuery });
+      return;
+    }
+
+    const selection = editor.getSelection();
+    if (!selection) return;
+
+    const id = { major: 1, minor: 1 };
+    const op = {
+      identifier: id,
+      range: selection,
+      text: fieldName,
+      forceMoveMarkers: true,
+    };
+
+    // Use executeEdits to insert the text. This correctly handles the undo/redo stack.
+    editor.executeEdits("schema-explorer-click", [op]);
+
+    // Return focus to the editor so the user can continue typing.
+    editor.focus();
   };
 
   useEffect(() => {
@@ -481,6 +513,9 @@ const GraphQLTabletComponent: React.FC<{
                   value={data.query}
                   onChange={(value) => updateState({ query: value })}
                   language="graphql"
+                  onMount={(editor) => {
+                    queryEditorRef.current = editor;
+                  }}
                 />
               )}
               {data.activeTab === "variables" && (
