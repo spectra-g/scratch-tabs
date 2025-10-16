@@ -485,6 +485,98 @@ describe("ConverterTablet", () => {
     });
   });
 
+  describe("state migration", () => {
+    it("should migrate old state format missing sectionData", () => {
+      // This is the exact format from the customer bug report
+      const oldStateJson = JSON.stringify({
+        type: "converter",
+        data: {
+          activeSection: "encode-decode",
+          // Missing sectionData entirely
+        },
+      });
+
+      const deserialized = ConverterTablet.deserializeState(oldStateJson);
+
+      // Should have migrated to include all sections
+      expect(deserialized.data.sectionData).toBeDefined();
+      expect(deserialized.data.sectionData["encode-decode"]).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.hashing).toEqual({ input: "" });
+      expect(deserialized.data.sectionData.number).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.text).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.datetime).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.color).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.networking).toEqual({ inputs: {} });
+    });
+
+    it("should migrate state with partial sectionData", () => {
+      const partialStateJson = JSON.stringify({
+        type: "converter",
+        data: {
+          activeSection: "encode-decode",
+          sectionData: {
+            "encode-decode": { inputs: { base64: "test" } },
+            // Missing other sections
+          },
+        },
+      });
+
+      const deserialized = ConverterTablet.deserializeState(partialStateJson);
+
+      // Should preserve existing section data
+      expect(deserialized.data.sectionData["encode-decode"]).toEqual({
+        inputs: { base64: "test" },
+      });
+
+      // Should add missing sections with defaults
+      expect(deserialized.data.sectionData.hashing).toEqual({ input: "" });
+      expect(deserialized.data.sectionData.number).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.text).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.datetime).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.color).toEqual({ inputs: {} });
+      expect(deserialized.data.sectionData.networking).toEqual({ inputs: {} });
+    });
+
+    it("should not modify valid state with all sections", () => {
+      const validState = ConverterTablet.createInitialState();
+      if (validState.type === "converter") {
+        validState.data.sectionData.number = {
+          inputs: { decimal: "42" },
+        };
+      }
+
+      const serialized = ConverterTablet.serializeState(validState);
+      const deserialized = ConverterTablet.deserializeState(serialized);
+
+      // Should remain unchanged
+      expect(deserialized).toEqual(validState);
+    });
+
+    it("should handle runtime initialization when sectionData is missing", async () => {
+      const stateWithoutSectionData = {
+        type: "converter" as const,
+        data: {
+          activeSection: "encode-decode",
+          // Missing sectionData - simulating runtime corruption
+        },
+      } as any;
+
+      const rendered = ConverterTablet.render(stateWithoutSectionData, mockOnChange);
+      render(<>{rendered}</>);
+
+      // Should show initialization message
+      expect(screen.getByText("Initializing converter...")).toBeInTheDocument();
+
+      // Should trigger onChange with fixed state
+      await waitFor(() => {
+        expect(mockOnChange).toHaveBeenCalled();
+        const lastCall = mockOnChange.mock.calls[mockOnChange.mock.calls.length - 1][0];
+        expect(lastCall.data.sectionData).toBeDefined();
+        expect(lastCall.data.sectionData["encode-decode"]).toEqual({ inputs: {} });
+      });
+    });
+  });
+
   describe("error handling", () => {
     it("should handle missing section gracefully", () => {
       const state = ConverterTablet.createInitialState();
