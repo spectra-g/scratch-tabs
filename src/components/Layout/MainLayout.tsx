@@ -25,6 +25,7 @@ import { updateSaveIndicator } from "../../utils/testIndicators";
 import { useAIStore } from "../../stores/aiStore";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
+import { getTabsInVisualOrder } from "../../utils/diffModalHelpers";
 
 const MainLayout: React.FC = () => {
   // Update document title with workspace name
@@ -200,9 +201,12 @@ const MainLayout: React.FC = () => {
         }
 
         if (previousTabId) {
+          const tabList = isRightSide ? currentSplitView.rightTabs : currentSplitView.leftTabs;
+          const { leftTabId, rightTabId } = getTabsInVisualOrder(tabList, currentTabId, previousTabId);
+
           setDiffModal({
-            leftTabId: isRightSide ? previousTabId : currentTabId,
-            rightTabId: isRightSide ? currentTabId : previousTabId,
+            leftTabId,
+            rightTabId,
             fromHistory: true,
           });
         }
