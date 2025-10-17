@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from "react";
-import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, GitCompare, Wand2, Copy, Check } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, GitCompare, Wand2, Copy, Check, Sparkles } from "lucide-react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { formatJson, applyEditToEditor } from "../../actions/jsonOperations";
 import { useJsonModals } from "../../hooks/useJsonModals";
-import { autoFixJson, formatFixedJson } from "../../actions/jsonAutoFix";
+import { autoFixJson, formatFixedJson, sanitizeJson } from "../../actions/jsonAutoFix";
 
 interface ToolbarProps {
   isValid: boolean;
@@ -46,10 +46,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
   const handleAutoFix = () => {
     if (!editor) return;
-    
+
     const content = editor.getValue();
     const result = autoFixJson(content);
-    
+
     if (result.success && result.fixedContent) {
       try {
         const formatted = formatFixedJson(result.fixedContent);
@@ -62,6 +62,23 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     } else {
       console.warn("Auto-fix failed:", result.error);
       // Could show a toast/notification here in the future
+    }
+  };
+
+  const handleSanitize = () => {
+    if (!editor) return;
+
+    const content = editor.getValue();
+    const result = sanitizeJson(content);
+
+    if (result.success && result.sanitizedContent) {
+      applyEditToEditor(editor, result.sanitizedContent, "sanitize");
+    } else {
+      console.warn("Sanitization encountered issues:", result.error);
+      // Even if not fully successful, apply the sanitized version
+      if (result.sanitizedContent) {
+        applyEditToEditor(editor, result.sanitizedContent, "sanitize");
+      }
     }
   };
 
@@ -181,6 +198,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         >
           <WrapText size={14} />
           <span className="text-sm">Format</span>
+        </button>
+        <button
+          onClick={handleSanitize}
+          className="flex items-center space-x-1 px-3 py-1 bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
+          title="Sanitize JSON - Escape control characters like null bytes"
+        >
+          <Sparkles size={14} />
+          <span className="text-sm">Sanitize</span>
         </button>
         <button
           onClick={handleCompareStructures}

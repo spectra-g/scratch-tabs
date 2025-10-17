@@ -124,3 +124,82 @@ export function formatFixedJson(content: string): string {
     return content;
   }
 }
+
+/**
+ * Result of attempting to sanitize JSON
+ */
+export interface SanitizeResult {
+  success: boolean;
+  sanitizedContent?: string;
+  changesMade: boolean;
+  error?: string;
+}
+
+/**
+ * Sanitizes JSON content by escaping control characters and invalid bytes.
+ * Useful for content copied from tools like Postman that may include literal null bytes
+ * or other control characters that are invalid in JSON strings.
+ */
+export function sanitizeJson(content: string): SanitizeResult {
+  if (!content.trim()) {
+    return {
+      success: false,
+      changesMade: false,
+      error: "No content to sanitize"
+    };
+  }
+
+  try {
+    // First, try to parse as-is to check if it's already valid
+    JSON.parse(content);
+    // If it parses successfully, no sanitization needed
+    return {
+      success: true,
+      sanitizedContent: content,
+      changesMade: false
+    };
+  } catch (error) {
+    // Content has issues, let's sanitize it
+    let changesMade = false;
+
+    // Replace control characters (0x00-0x1F except whitespace) with Unicode escapes
+    // Preserve: tab (0x09), line feed (0x0A), carriage return (0x0D)
+    let sanitized = content.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, (char) => {
+      changesMade = true;
+      const code = char.charCodeAt(0);
+      return `\\u${code.toString(16).padStart(4, '0')}`;
+    });
+
+    // Try parsing the sanitized content
+    try {
+      const parsed = JSON.parse(sanitized);
+      // Format it nicely
+      const formatted = JSON.stringify(parsed, null, 2);
+      return {
+        success: true,
+        sanitizedContent: formatted,
+        changesMade
+      };
+    } catch (parseError) {
+      // Still invalid after sanitization
+      return {
+        success: false,
+        sanitizedContent: sanitized,
+        changesMade,
+        error: parseError instanceof Error ? parseError.message : 'Unknown parsing error'
+      };
+    }
+  }
+}
+
+/**
+ * Format sanitized JSON content
+ */
+export function formatSanitizedJson(content: string): string {
+  try {
+    const parsed = JSON.parse(content);
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    return content;
+  }
+}
