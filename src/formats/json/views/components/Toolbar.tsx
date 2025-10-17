@@ -1,9 +1,14 @@
 import React, { useState, useCallback } from "react";
-import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, GitCompare, Wand2, Copy, Check } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, Wand2, Copy, Check, Sparkles } from "lucide-react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { formatJson, applyEditToEditor } from "../../actions/jsonOperations";
 import { useJsonModals } from "../../hooks/useJsonModals";
-import { autoFixJson, formatFixedJson } from "../../actions/jsonAutoFix";
+import { autoFixJson, formatFixedJson, sanitizeJson } from "../../actions/jsonAutoFix";
+import { CompareDropdown } from "./CompareDropdown";
+import { useTabsStore } from "../../../../stores/tabsStore";
+import { useWorkspaceStore } from "../../../../stores/workspaceStore";
+import { useDiffModalStore } from "../../../../stores/diffModalStore";
+import { getRecentJsonTabs, isValidJson } from "../../../../utils/jsonTabHelpers";
 
 interface ToolbarProps {
   isValid: boolean;
@@ -16,7 +21,12 @@ interface ToolbarProps {
   onRedo: () => void;
   editor: monaco.editor.IStandaloneCodeEditor | null;
   onContentChange: (content: string) => void;
+  tabId: string;
 }
+
+// Constants
+const COPY_FEEDBACK_DURATION_MS = 2000;
+const MAX_RECENT_TABS = 5;
 
 export const Toolbar: React.FC<ToolbarProps> = ({
   isValid,
@@ -29,9 +39,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onRedo,
   editor,
   onContentChange: _onContentChange, // Passed to maintain interface compatibility, handled by Monaco events
+  tabId,
 }) => {
   const { openStructureComparisonModal } = useJsonModals();
+  const { tabs } = useTabsStore();
+  const { activeWorkspaceId } = useWorkspaceStore();
+  const { openDiffModalWithContent } = useDiffModalStore();
   const [isCopied, setIsCopied] = useState(false);
+
+  // Get recent JSON tabs from current workspace
+  const recentJsonTabs = getRecentJsonTabs(tabs, tabId, activeWorkspaceId || "", MAX_RECENT_TABS);
 
   const handleFormat = () => {
     if (!editor) return;
@@ -46,10 +63,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
   const handleAutoFix = () => {
     if (!editor) return;
-    
+
     const content = editor.getValue();
     const result = autoFixJson(content);
-    
+
     if (result.success && result.fixedContent) {
       try {
         const formatted = formatFixedJson(result.fixedContent);
@@ -65,10 +82,82 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     }
   };
 
+  const handleSanitize = () => {
+    if (!editor) return;
+
+    const content = editor.getValue();
+    const result = sanitizeJson(content);
+
+    if (result.success && result.sanitizedContent) {
+      applyEditToEditor(editor, result.sanitizedContent, "sanitize");
+    } else {
+      console.warn("Sanitization encountered issues:", result.error);
+      // Even if not fully successful, apply the sanitized version
+      if (result.sanitizedContent) {
+        applyEditToEditor(editor, result.sanitizedContent, "sanitize");
+      }
+    }
+  };
+
   const handleCompareStructures = () => {
     if (!editor) return;
     const content = editor.getValue();
     openStructureComparisonModal(content);
+  };
+
+  /**
+   * Opens diff modal with current content vs comparison content
+   * Updates editor with changes when modal closes
+   */
+  const openComparisonDiff = useCallback(
+    (comparisonContent: string, comparisonTitle: string) => {
+      if (!editor) return;
+
+      const currentContent = editor.getValue();
+
+      openDiffModalWithContent(
+        currentContent,
+        comparisonContent,
+        "Current JSON",
+        comparisonTitle,
+        (updatedContent) => {
+          // When diff modal closes, update current editor with changes
+          if (updatedContent !== undefined && updatedContent !== currentContent) {
+            applyEditToEditor(editor, updatedContent, "diff-update");
+          }
+        }
+      );
+    },
+    [editor, openDiffModalWithContent]
+  );
+
+  const handleCompareWithClipboard = async () => {
+    if (!editor) return;
+
+    try {
+      const clipboardContent = await navigator.clipboard.readText();
+
+      if (!isValidJson(clipboardContent)) {
+        console.warn("Clipboard does not contain valid JSON");
+        // TODO: Show toast notification
+        return;
+      }
+
+      openComparisonDiff(clipboardContent, "Clipboard JSON");
+    } catch (error) {
+      console.error("Failed to compare with clipboard:", error);
+      // TODO: Show toast notification
+    }
+  };
+
+  const handleCompareWithTab = (compareTabId: string) => {
+    const compareTab = tabs.find((t) => t.id === compareTabId);
+    if (!compareTab || !compareTab.content) {
+      console.warn("Tab not found or has no content");
+      return;
+    }
+
+    openComparisonDiff(compareTab.content, compareTab.title);
   };
 
   const handleCopy = useCallback(async () => {
@@ -79,10 +168,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       await navigator.clipboard.writeText(content);
       setIsCopied(true);
       
-      // Reset the icon after 2 seconds
+      // Reset the icon after feedback duration
       setTimeout(() => {
         setIsCopied(false);
-      }, 2000);
+      }, COPY_FEEDBACK_DURATION_MS);
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
     }
@@ -183,13 +272,19 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <span className="text-sm">Format</span>
         </button>
         <button
-          onClick={handleCompareStructures}
-          className="flex items-center space-x-1 px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors"
-          title="Compare Structures"
+          onClick={handleSanitize}
+          className="flex items-center space-x-1 px-3 py-1 bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
+          title="Sanitize JSON - Escape control characters like null bytes"
         >
-          <GitCompare size={14} />
-          <span className="text-sm">Compare Structures</span>
+          <Sparkles size={14} />
+          <span className="text-sm">Sanitize</span>
         </button>
+        <CompareDropdown
+          recentJsonTabs={recentJsonTabs}
+          onCompareWithClipboard={handleCompareWithClipboard}
+          onCompareWithTab={handleCompareWithTab}
+          onCompareStructure={handleCompareStructures}
+        />
       </div>
     </div>
   );

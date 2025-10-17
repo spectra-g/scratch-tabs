@@ -36,6 +36,41 @@ const sections = [
   { id: "networking", label: "Networking", component: NetworkingConversion },
 ];
 
+const DEFAULT_SECTION_DATA: ConverterState["data"]["sectionData"] = {
+  "encode-decode": { inputs: {} },
+  hashing: { input: "" },
+  number: { inputs: {} },
+  text: { inputs: {} },
+  datetime: { inputs: {} },
+  color: { inputs: {} },
+  networking: { inputs: {} },
+};
+
+/**
+ * Ensures the state has valid sectionData structure for backward compatibility.
+ * Migrates old states that are missing sectionData or individual sections.
+ */
+function ensureValidSectionData(
+  state: ConverterState,
+): ConverterState["data"]["sectionData"] {
+  if (!state.data?.sectionData) {
+    return { ...DEFAULT_SECTION_DATA };
+  }
+
+  // Create a properly typed result object
+  const result: ConverterState["data"]["sectionData"] = {
+    "encode-decode": state.data.sectionData["encode-decode"] || DEFAULT_SECTION_DATA["encode-decode"],
+    hashing: state.data.sectionData.hashing || DEFAULT_SECTION_DATA.hashing,
+    number: state.data.sectionData.number || DEFAULT_SECTION_DATA.number,
+    text: state.data.sectionData.text || DEFAULT_SECTION_DATA.text,
+    datetime: state.data.sectionData.datetime || DEFAULT_SECTION_DATA.datetime,
+    color: state.data.sectionData.color || DEFAULT_SECTION_DATA.color,
+    networking: state.data.sectionData.networking || DEFAULT_SECTION_DATA.networking,
+  };
+
+  return result;
+}
+
 // Separate React component for the converter UI
 const ConverterUI: React.FC<{
   state: ConverterState;
@@ -70,6 +105,24 @@ const ConverterUI: React.FC<{
     (section) => section.id === state.data.activeSection,
   );
   const ActiveComponent = activeSection?.component;
+
+  // Defensive check: Ensure sectionData exists before accessing
+  // This is a safety net in case deserialization migration didn't run
+  if (!state.data.sectionData) {
+    onChange({
+      ...state,
+      data: {
+        ...state.data,
+        sectionData: { ...DEFAULT_SECTION_DATA },
+      },
+    });
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        Initializing converter...
+      </div>
+    );
+  }
+
   const sectionData =
     state.data.sectionData[
       state.data.activeSection as keyof typeof state.data.sectionData
@@ -146,15 +199,7 @@ export const ConverterTablet: Tablet = {
       type: "converter",
       data: {
         activeSection: sections[0].id,
-        sectionData: {
-          "encode-decode": { inputs: {} },
-          hashing: { input: "" },
-          number: { inputs: {} },
-          text: { inputs: {} },
-          datetime: { inputs: {} },
-          color: { inputs: {} },
-          networking: { inputs: {} },
-        },
+        sectionData: { ...DEFAULT_SECTION_DATA },
       },
     };
   },
@@ -164,7 +209,20 @@ export const ConverterTablet: Tablet = {
   },
 
   deserializeState(json: string): TabletState {
-    return JSON.parse(json);
+    const parsed = JSON.parse(json) as ConverterState;
+
+    // Handle corrupted state where data is null or missing
+    if (!parsed.data) {
+      parsed.data = {
+        activeSection: sections[0].id,
+        sectionData: { ...DEFAULT_SECTION_DATA },
+      };
+    } else {
+      // Migrate old state format to ensure all sections exist
+      parsed.data.sectionData = ensureValidSectionData(parsed);
+    }
+
+    return parsed;
   },
 
   render(state: ConverterState, onChange) {

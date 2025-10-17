@@ -98,9 +98,9 @@ Feature: Tab context menu
     When I right-click the "Scratch 2" tab
     And I select "Compare with previous tab" from the context menu
     Then the diff modal should appear
-    And the diff modal should show comparison between "Scratch 2" and "Scratch 1"
-    And the diff modal left side should contain "Modified content in second tab"
-    And the diff modal right side should contain "Original content in first tab"
+    And the diff modal should show comparison between "Scratch 1" and "Scratch 2"
+    And the diff modal left side should contain "Original content in first tab"
+    And the diff modal right side should contain "Modified content in second tab"
 
   Scenario: Compare with other side in split view
     When I click the icon for "New tab"

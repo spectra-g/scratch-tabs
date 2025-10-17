@@ -11,6 +11,8 @@ import { useJsonModals } from "../hooks/useJsonModals";
 import { useRootStore } from "../../../stores";
 import { Tab } from "../../../types";
 import { useActiveEditorStore } from "../../../stores/activeEditorStore";
+import { useDiffModalStore } from "../../../stores/diffModalStore";
+import { ContentDiffModal } from "../../../components/ContentDiffModal";
 
 /**
  * Represents the boundaries of a JSON container (object or array)
@@ -136,9 +138,12 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   const [isValid, setIsValid] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [activeRightTab, setActiveRightTab] = useState<'toolbox' | 'insights'>('toolbox');
-  
+
   // Initialize JSON modals
   const { renderModal } = useJsonModals();
+
+  // Get diff modal state
+  const diffModalState = useDiffModalStore();
   
   // Get addBackgroundTab function from root store for background tab creation
   const { addBackgroundTab: rootAddBackgroundTab } = useRootStore();
@@ -360,6 +365,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         onRedo={handleRedo}
         editor={editor}
         onContentChange={onContentChange}
+        tabId={tabId}
       />
 
       {/* Main Content Area */}
@@ -448,9 +454,26 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Render modals */}
       {renderModal()}
+
+      {/* Render diff modal if open and content-based */}
+      {diffModalState.isOpen && diffModalState.leftContent && diffModalState.rightContent && (
+        <ContentDiffModal
+          leftContent={diffModalState.leftContent}
+          rightContent={diffModalState.rightContent}
+          leftTitle={diffModalState.leftLabel || "Left"}
+          rightTitle={diffModalState.rightLabel || "Right"}
+          language="json"
+          onClose={(updatedContent) => {
+            if (diffModalState.onClose) {
+              diffModalState.onClose(updatedContent);
+            }
+            diffModalState.closeDiffModal();
+          }}
+        />
+      )}
     </div>
   );
 };

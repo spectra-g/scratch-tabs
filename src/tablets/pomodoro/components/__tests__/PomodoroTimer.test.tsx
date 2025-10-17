@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import { PomodoroTimer } from "../PomodoroTimer";
 import { CurrentSession, TimerStatus } from "../../types";
 
