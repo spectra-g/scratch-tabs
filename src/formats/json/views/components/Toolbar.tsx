@@ -26,7 +26,6 @@ interface ToolbarProps {
 
 // Constants
 const COPY_FEEDBACK_DURATION_MS = 2000;
-const MAX_RECENT_TABS = 5;
 
 export const Toolbar: React.FC<ToolbarProps> = ({
   isValid,
@@ -47,8 +46,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const { openDiffModalWithContent } = useDiffModalStore();
   const [isCopied, setIsCopied] = useState(false);
 
-  // Get recent JSON tabs from current workspace
-  const recentJsonTabs = getRecentJsonTabs(tabs, tabId, activeWorkspaceId || "", MAX_RECENT_TABS);
+  // Get all JSON tabs from current workspace
+  const recentJsonTabs = getRecentJsonTabs(tabs, tabId, activeWorkspaceId || "");
 
   const handleFormat = () => {
     if (!editor) return;

@@ -26,6 +26,7 @@ import { useActiveEditorStore } from "../../stores/activeEditorStore";
 interface StatusBarProps {
   activeTab: Tab;
   side: "left" | "right";
+  isInSmartView?: boolean;
 }
 
 // Custom hook to get real-time cursor position from Monaco editor
@@ -72,6 +73,7 @@ const useCursorPosition = (
 export const StatusBar: React.FC<StatusBarProps> = ({
   activeTab,
   side,
+  isInSmartView = false,
 }) => {
   // GET EDITOR FROM THE STORE
   const editor = useActiveEditorStore((state) => 
@@ -365,23 +367,26 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             {!activeTab.isTablet && !activeTab.isRich && (
               <div className="w-px h-4 bg-gray-600"></div>
             )}
-            <div className="p-0.5 flex items-center space-x-2">
-              {renderLanguageSection()}
+            {/* Only show language/format info when NOT in rich text mode */}
+            {!activeTab.isRich && (
+              <div className="p-0.5 flex items-center space-x-2">
+                {renderLanguageSection()}
 
-              {/* REPLACE the old FormatStatusItem and SmartViewButtons with this */}
-              {statusBarItems.map(({ id, component: Component }) => (
-                <Component 
-                  key={id} 
-                  content={contentSample} 
-                  activeTab={activeTab}
-                />
-              ))}
+                {/* REPLACE the old FormatStatusItem and SmartViewButtons with this */}
+                {statusBarItems.map(({ id, component: Component }) => (
+                  <Component
+                    key={id}
+                    content={contentSample}
+                    activeTab={activeTab}
+                  />
+                ))}
 
-              {/* Keep legacy options menu for now */}
-              {FormatOptionsMenu && editor && (
-                <FormatOptionsMenu editor={editor} />
-              )}
-            </div>
+                {/* Keep legacy options menu for now */}
+                {FormatOptionsMenu && editor && (
+                  <FormatOptionsMenu editor={editor} />
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -398,7 +403,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             />
           )}
           
-          {!activeTab?.isTablet && (
+          {!activeTab?.isTablet && !isInSmartView && (
             <RichTextControls activeTab={activeTab} />
           )}
         </div>

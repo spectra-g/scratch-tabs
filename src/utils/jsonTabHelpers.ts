@@ -1,20 +1,18 @@
 import { Tab } from "../types";
 
 /**
- * Gets the most recent JSON tabs from the current workspace, excluding the current tab.
+ * Gets all JSON tabs from the current workspace, excluding the current tab.
  * Returns tabs sorted by last accessed time (most recent first).
  *
  * @param tabs - All tabs in the store
  * @param currentTabId - ID of the current tab to exclude
  * @param currentWorkspaceId - ID of the current workspace
- * @param limit - Maximum number of tabs to return (default: 5)
  * @returns Array of JSON tabs sorted by most recent first
  */
 export const getRecentJsonTabs = (
   tabs: Tab[],
   currentTabId: string,
-  currentWorkspaceId: string,
-  limit: number = 5
+  currentWorkspaceId: string
 ): Tab[] => {
   return tabs
     .filter((tab) =>
@@ -31,8 +29,7 @@ export const getRecentJsonTabs = (
     .sort((a, b) =>
       // Sort by lastModified descending (most recent first)
       (b.lastModified || 0) - (a.lastModified || 0)
-    )
-    .slice(0, limit);
+    );
 };
 
 /**

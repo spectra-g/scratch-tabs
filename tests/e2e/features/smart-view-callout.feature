@@ -1,4 +1,3 @@
-@smart-view-callout
 Feature: Smart View Callout Notification
   As a user pasting content with available smart views
   I want to see a notification suggesting the smart view

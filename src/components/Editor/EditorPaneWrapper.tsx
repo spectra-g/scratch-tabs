@@ -203,6 +203,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
             <StatusBar
               activeTab={activeTab}
               side={side}
+              isInSmartView={shouldShowReplacementView}
             />
           </div>
         )}
