@@ -107,7 +107,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   );
 
   // Smart View Callout Store
-  const { isVisible: isCalloutVisible, tabId: calloutTabId, view: calloutView } = useCalloutStore();
+  const { isVisible: isCalloutVisible, tabId: calloutTabId, view: calloutView, languageId: calloutLanguageId } = useCalloutStore();
 
   // --- Ref to hold the latest activeTab data ---
   const latestActiveTabRef = useRef(activeTab);
@@ -336,7 +336,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     const editor = editorRef.current;
     if (!editor || !monacoRef.current) return;
 
-    const shouldShowHere = isCalloutVisible && calloutTabId === activeTabId && calloutView;
+    const shouldShowHere = isCalloutVisible && calloutTabId === activeTabId && calloutView && calloutLanguageId;
 
     if (shouldShowHere) {
       // Create the widget if it doesn't exist
@@ -365,6 +365,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         calloutRootRef.current.render(
           <SmartViewCalloutWidget
             view={calloutView}
+            languageId={calloutLanguageId}
             onSwitch={() => {
               setActiveView(activeTabId, calloutView.id);
               useTabsStore.getState().updateTabState(activeTabId, { smartViewIndicatorDismissed: true });
@@ -425,7 +426,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         }, 0);
       }
     };
-  }, [editorRef.current, isCalloutVisible, calloutTabId, calloutView, activeTabId]);
+  }, [editorRef.current, isCalloutVisible, calloutTabId, calloutView, calloutLanguageId, activeTabId]);
 
   const handleEditorDidMount = (
     editor: Monaco.editor.IStandaloneCodeEditor,

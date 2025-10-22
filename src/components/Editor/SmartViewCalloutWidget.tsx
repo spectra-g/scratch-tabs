@@ -1,18 +1,21 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { X, Sparkles } from '../Icons';
 import { SmartView } from '../../views/registry';
+import { formatRegistry } from '../../formats';
 
 const AUTO_DISMISS_TIMEOUT_MS = 15000;
 
 interface SmartViewCalloutWidgetProps {
   view: SmartView;
+  languageId: string;
   onSwitch: () => void;
   onDismiss: () => void;
 }
 
 export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
   view,
+  languageId,
   onSwitch,
   onDismiss,
 }) => {
@@ -21,6 +24,12 @@ export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
     const timer = setTimeout(onDismiss, AUTO_DISMISS_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [onDismiss]);
+
+  // Get the format name from the registry (same as status bar)
+  const formatName = useMemo(() => {
+    const formatModule = formatRegistry.getById(languageId);
+    return formatModule?.name || languageId.toUpperCase();
+  }, [languageId]);
 
   return (
     <motion.div
@@ -37,7 +46,7 @@ export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
       <div className="flex items-center space-x-3">
         <Sparkles size={18} className="text-blue-400 flex-shrink-0" />
         <div className="text-sm">
-          A <span className="font-semibold text-white">{view.label}</span> is available.
+          Smart View for <span className="font-semibold text-white">{formatName}</span> is available.
         </div>
       </div>
       <div className="flex items-center space-x-1 ml-3">

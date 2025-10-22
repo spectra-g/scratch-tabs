@@ -9,6 +9,7 @@ describe('calloutStore', () => {
       isVisible: false,
       tabId: null,
       view: null,
+      languageId: null,
     });
   });
 
@@ -17,6 +18,7 @@ describe('calloutStore', () => {
     expect(state.isVisible).toBe(false);
     expect(state.tabId).toBe(null);
     expect(state.view).toBe(null);
+    expect(state.languageId).toBe(null);
   });
 
   it('should show callout with view and tabId', () => {
@@ -31,12 +33,13 @@ describe('calloutStore', () => {
     };
 
     const { showCallout } = useCalloutStore.getState();
-    showCallout('test-tab-id', mockView);
+    showCallout('test-tab-id', mockView, 'json');
 
     const state = useCalloutStore.getState();
     expect(state.isVisible).toBe(true);
     expect(state.tabId).toBe('test-tab-id');
     expect(state.view).toEqual(mockView);
+    expect(state.languageId).toBe('json');
   });
 
   it('should hide callout and clear state', () => {
@@ -53,7 +56,7 @@ describe('calloutStore', () => {
     const { showCallout, hideCallout } = useCalloutStore.getState();
 
     // First show the callout
-    showCallout('test-tab-id', mockView);
+    showCallout('test-tab-id', mockView, 'json');
     expect(useCalloutStore.getState().isVisible).toBe(true);
 
     // Then hide it
@@ -63,6 +66,7 @@ describe('calloutStore', () => {
     expect(state.isVisible).toBe(false);
     expect(state.tabId).toBe(null);
     expect(state.view).toBe(null);
+    expect(state.languageId).toBe(null);
   });
 
   it('should replace existing callout when showing new one', () => {
@@ -89,13 +93,15 @@ describe('calloutStore', () => {
     const { showCallout } = useCalloutStore.getState();
 
     // Show first callout
-    showCallout('tab-1', mockView1);
+    showCallout('tab-1', mockView1, 'json');
     expect(useCalloutStore.getState().tabId).toBe('tab-1');
     expect(useCalloutStore.getState().view?.id).toBe('view-1');
+    expect(useCalloutStore.getState().languageId).toBe('json');
 
     // Show second callout (should replace first)
-    showCallout('tab-2', mockView2);
+    showCallout('tab-2', mockView2, 'csv');
     expect(useCalloutStore.getState().tabId).toBe('tab-2');
     expect(useCalloutStore.getState().view?.id).toBe('view-2');
+    expect(useCalloutStore.getState().languageId).toBe('csv');
   });
 });

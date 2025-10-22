@@ -344,7 +344,7 @@ class ModelManager {
         const availableViews = smartViewRegistry.getViewsForLanguage(languageToCheck);
         if (availableViews.length > 0) {
           // Show callout for the first (highest priority) smart view
-          useCalloutStore.getState().showCallout(tabId, availableViews[0]);
+          useCalloutStore.getState().showCallout(tabId, availableViews[0], languageToCheck);
         }
       }
     } catch (error) {
