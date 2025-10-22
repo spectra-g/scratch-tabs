@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
+import { createRoot } from "react-dom/client";
 import { Editor } from "@monaco-editor/react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useRootStore } from "../../stores";
@@ -18,6 +19,8 @@ import { shallow } from "zustand/shallow";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
 import { UpgradeConfirmationModal } from "../RichText";
 import { useClipboardStore } from "../../stores/clipboardStore";
+import { useCalloutStore } from "../../stores/calloutStore";
+import { SmartViewCalloutWidget } from "./SmartViewCalloutWidget";
 
 interface EditorInstanceProps {
   side: "left" | "right";
@@ -28,6 +31,9 @@ interface EditorInstanceProps {
 
 // Global storage for view states (scroll position, etc.)
 const tabViewStates = new Map<string, Monaco.editor.ICodeEditorViewState>();
+
+// Time window (ms) to detect if a tab was just created from paste
+const NEW_TAB_DETECTION_WINDOW_MS = 500;
 
 export const EditorInstance: React.FC<EditorInstanceProps> = ({
   side,
@@ -42,6 +48,11 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { setActiveEditor } = useActiveEditorStore();
   const { setPendingImageData, setPendingImageCursorPosition } = useClipboardStore();
+
+  // Smart View Callout Widget refs
+  const calloutWidgetRef = useRef<Monaco.editor.IOverlayWidget | null>(null);
+  const calloutContainerRef = useRef<HTMLDivElement | null>(null);
+  const calloutRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
   // Get active tab using standard Zustand approach (simplified since cursor position is no longer in state)
   const activeTab = useTabsStore((state) => {
@@ -94,6 +105,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }),
     shallow,
   );
+
+  // Smart View Callout Store
+  const { isVisible: isCalloutVisible, tabId: calloutTabId, view: calloutView } = useCalloutStore();
 
   // --- Ref to hold the latest activeTab data ---
   const latestActiveTabRef = useRef(activeTab);
@@ -175,7 +189,14 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         }
 
         // Get the model from ModelManager (this ensures it exists and is loaded)
-        const newModel = await modelManager.get(activeTabWithoutCursor);
+        // Check if this is a new tab from paste (created recently with content)
+        const now = Date.now();
+        const isNewTabWithContent = activeTabWithoutCursor &&
+          now - activeTabWithoutCursor.dateCreated < NEW_TAB_DETECTION_WINDOW_MS &&
+          (activeTabWithoutCursor.content?.trim().length || 0) > 0;
+        const newModel = await modelManager.get(activeTabWithoutCursor, {
+          isNewTabFromPaste: isNewTabWithContent
+        });
 
         // Set the model on the editor directly (following architecture)
         if (editor.getModel() !== newModel) {
@@ -309,6 +330,103 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       container.removeEventListener('paste', handlePaste, true);
     };
   }, [activeTab, onUpgradeToRich, setPendingImageData]);
+
+  // Smart View Callout Widget Effect
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor || !monacoRef.current) return;
+
+    const shouldShowHere = isCalloutVisible && calloutTabId === activeTabId && calloutView;
+
+    if (shouldShowHere) {
+      // Create the widget if it doesn't exist
+      if (!calloutWidgetRef.current) {
+        // Create the container div for our React component
+        calloutContainerRef.current = document.createElement('div');
+        calloutRootRef.current = createRoot(calloutContainerRef.current);
+
+        // Create the Monaco overlay widget
+        calloutWidgetRef.current = {
+          getId: () => 'smart-view-callout-widget',
+          getDomNode: () => calloutContainerRef.current!,
+          getPosition: () => ({
+            preference: monacoRef.current!.editor.OverlayWidgetPositionPreference.TOP_RIGHT_CORNER,
+          }),
+        };
+
+        editor.addOverlayWidget(calloutWidgetRef.current);
+      }
+
+      // Render/update the React component inside the container
+      if (calloutRootRef.current && calloutContainerRef.current) {
+        const { hideCallout } = useCalloutStore.getState();
+        const { setActiveView } = useRootStore.getState();
+
+        calloutRootRef.current.render(
+          <SmartViewCalloutWidget
+            view={calloutView}
+            onSwitch={() => {
+              setActiveView(activeTabId, calloutView.id);
+              useTabsStore.getState().updateTabState(activeTabId, { smartViewIndicatorDismissed: true });
+              // Defer state update to avoid synchronous unmount during render
+              setTimeout(() => hideCallout(), 0);
+            }}
+            onDismiss={() => {
+              useTabsStore.getState().updateTabState(activeTabId, { smartViewIndicatorDismissed: true });
+              // Defer state update to avoid synchronous unmount during render
+              setTimeout(() => hideCallout(), 0);
+            }}
+          />
+        );
+      }
+    } else if (calloutWidgetRef.current) {
+      // Hide and clean up the widget (deferred to avoid race condition)
+      const widgetToRemove = calloutWidgetRef.current;
+      const rootToUnmount = calloutRootRef.current;
+
+      // Clear refs immediately
+      calloutWidgetRef.current = null;
+      calloutContainerRef.current = null;
+      calloutRootRef.current = null;
+
+      // Defer cleanup to next tick to avoid synchronous unmount during render
+      setTimeout(() => {
+        try {
+          editor.removeOverlayWidget(widgetToRemove);
+        } catch (e) {
+          // Widget might already be removed, ignore error
+        }
+        if (rootToUnmount) {
+          rootToUnmount.unmount();
+        }
+      }, 0);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (calloutWidgetRef.current) {
+        const widgetToRemove = calloutWidgetRef.current;
+        const rootToUnmount = calloutRootRef.current;
+
+        calloutWidgetRef.current = null;
+        calloutContainerRef.current = null;
+        calloutRootRef.current = null;
+
+        // Defer cleanup
+        setTimeout(() => {
+          try {
+            editor.removeOverlayWidget(widgetToRemove);
+          } catch (e) {
+            // Editor might be disposed, ignore errors on cleanup
+          }
+          if (rootToUnmount) {
+            rootToUnmount.unmount();
+          }
+        }, 0);
+      }
+    };
+  }, [editorRef.current, isCalloutVisible, calloutTabId, calloutView, activeTabId]);
+
   const handleEditorDidMount = (
     editor: Monaco.editor.IStandaloneCodeEditor,
     monaco: typeof Monaco,
@@ -332,7 +450,13 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         if (activeTab) {
           try {
             // Get the model from ModelManager (this ensures it exists and is loaded)
-            const initialModel = await modelManager.get(activeTab);
+            // Check if this is a new tab from paste (created recently with content)
+            const now = Date.now();
+            const isNewTabWithContent = now - activeTab.dateCreated < NEW_TAB_DETECTION_WINDOW_MS &&
+              (activeTab.content?.trim().length || 0) > 0;
+            const initialModel = await modelManager.get(activeTab, {
+              isNewTabFromPaste: isNewTabWithContent
+            });
 
             // Set the model on the editor directly
             if (editor.getModel() !== initialModel) {

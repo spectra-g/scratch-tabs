@@ -7,6 +7,8 @@ import { detectFormat, isAmbiguousFormat, getPotentialFormatMatches } from "../f
 import { updateCursorIndicator } from "../utils/testIndicators";
 import { contentProcessingService } from "./contentProcessing";
 import { getContentForLanguageDetection } from "../utils/formatDetectionUtils";
+import { smartViewRegistry } from "../views/registry";
+import { useCalloutStore } from "../stores/calloutStore";
 
 // The maximum number of models to keep in memory
 const MAX_MODELS = 10;
@@ -177,7 +179,8 @@ class ModelManager {
   private scheduleInitialContentProcessing(tabId: string, content: string): void {
     setTimeout(async () => {
       try {
-        await this.handleLanguageDetection(tabId, content, "", false, true);
+        // Pass true for isFromPaste so smart view callout can be triggered for clipboard-created tabs
+        await this.handleLanguageDetection(tabId, content, "", true, true);
       } catch (error) {
         console.warn(`[ModelManager] Initial language detection failed for tab ${tabId}:`, error);
       }
@@ -330,6 +333,18 @@ class ModelManager {
           setTimeout(() => {
             this.triggerAutoFormat(tabId, newDetectedLanguage);
           }, 50);
+        }
+      }
+
+      // Trigger smart view callout for initial content from paste, even if language didn't change
+      // This handles the case where language was already detected during tab creation
+      if (isFromPaste && !currentTab.smartViewIndicatorDismissed) {
+        // Use the current language if no language change was detected
+        const languageToCheck = shouldUpdate ? newDetectedLanguage : currentTab.language;
+        const availableViews = smartViewRegistry.getViewsForLanguage(languageToCheck);
+        if (availableViews.length > 0) {
+          // Show callout for the first (highest priority) smart view
+          useCalloutStore.getState().showCallout(tabId, availableViews[0]);
         }
       }
     } catch (error) {
@@ -520,7 +535,7 @@ class ModelManager {
     this.listeners.get(tab.id)?.dispose();
 
     const shouldProcessInitialContent = await this.isNewContent(tab, content) || options?.isNewTabFromPaste;
-    
+
     if (shouldProcessInitialContent) {
       this.scheduleInitialContentProcessing(tab.id, content);
     }

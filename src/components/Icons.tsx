@@ -176,6 +176,7 @@ export {
   Image,
   Heart,
   ShoppingCart,
+  Sparkles,
 } from 'lucide-react';
 
 // Export types separately

@@ -32,6 +32,7 @@ export interface Tab {
   activeViewId?: string | null; // For extended views like CSV table editor
   previewMode?: boolean; // Per-tab preview mode for markdown/html
   fontSize?: number; // Per-tab font size for editor tabs
+  smartViewIndicatorDismissed?: boolean; // Track if user dismissed smart view notification
 }
 
 export interface EditorPosition {
