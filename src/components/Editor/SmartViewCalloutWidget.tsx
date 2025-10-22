@@ -33,6 +33,7 @@ export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
 
   return (
     <motion.div
+      data-testid="smart-view-callout"
       initial={{ opacity: 0, y: -20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -45,18 +46,20 @@ export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
     >
       <div className="flex items-center space-x-3">
         <Sparkles size={18} className="text-blue-400 flex-shrink-0" />
-        <div className="text-sm">
+        <div className="text-sm" data-testid="smart-view-callout-message">
           Smart View for <span className="font-semibold text-white">{formatName}</span> is available.
         </div>
       </div>
       <div className="flex items-center space-x-1 ml-3">
         <button
+          data-testid="smart-view-callout-switch"
           onClick={onSwitch}
           className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
         >
           Switch
         </button>
         <button
+          data-testid="smart-view-callout-dismiss"
           onClick={onDismiss}
           className="p-1 text-gray-400 hover:text-white hover:bg-blue-800/50 rounded"
           title="Dismiss"
