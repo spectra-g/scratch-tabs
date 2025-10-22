@@ -18,7 +18,7 @@ import { modelManager } from "../services/modelManager";
 interface RootStore {
   // ACTIONS ONLY
   addTab: (tab: Tab, toRightSide?: boolean) => void;
-  handleNewPopulatedTab: (tab: Tab, toRightSide?: boolean) => void;
+  handleNewPopulatedTab: (tab: Partial<Tab>, toRightSide?: boolean) => void;
   addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
   handleNewTab: (isRightSide: boolean, content?: string) => void;
   handleNewTabFromPaste: (isRightSide: boolean) => void;

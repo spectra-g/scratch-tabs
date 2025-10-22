@@ -20,6 +20,7 @@ import {
   Download,
   History,
   ExternalLink,
+  Scissors,
 } from "lucide-react";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
@@ -49,6 +50,11 @@ export interface UseContextMenuConfigReturn {
     onConfirm: () => void;
     onCancel: () => void;
   } | null;
+  splitModalProps: {
+    isOpen: boolean;
+    tabId: string;
+    onClose: () => void;
+  } | null;
 }
 
 // Hook implementation
@@ -74,6 +80,7 @@ export const useContextMenuConfig = (
   } | null>(null);
 
   const [dynamicMenuItems, setDynamicMenuItems] = useState<MenuItem[]>([]);
+  const [splitModalState, setSplitModalState] = useState<{ tabId: string } | null>(null);
 
   const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
 
@@ -366,6 +373,16 @@ Add any other context about the problem here.
     closeContextMenu();
   };
 
+  const handleOpenSplitModal = () => {
+    setSplitModalState({ tabId });
+    // Don't close the context menu here - it will be hidden while modal is open
+  };
+
+  const handleCloseSplitModal = () => {
+    setSplitModalState(null);
+    closeContextMenu(); // Close context menu when modal closes
+  };
+
   const menuItems: MenuItem[] = [
     {
       id: "transformations",
@@ -386,6 +403,13 @@ Add any other context about the problem here.
       label: "Copy content",
       icon: Copy,
       action: handleCopyContent,
+      condition: !!tab && !tab.isTablet,
+    },
+    {
+      id: "splitTab",
+      label: "Split Tab...",
+      icon: Scissors,
+      action: handleOpenSplitModal,
       condition: !!tab && !tab.isTablet,
     },
     {
@@ -600,6 +624,13 @@ Add any other context about the problem here.
           confirmButtonText: getConfirmButtonText(confirmationState.type),
           onConfirm: executeConfirmedAction,
           onCancel: cancelConfirmation,
+        }
+      : null,
+    splitModalProps: splitModalState
+      ? {
+          isOpen: true,
+          tabId: splitModalState.tabId,
+          onClose: handleCloseSplitModal,
         }
       : null,
   };

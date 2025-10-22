@@ -7,6 +7,7 @@ import {
 import { ContextMenuItem } from "./ContextMenuItem";
 import { DownloadModal } from "./DownloadModal";
 import { ConfirmationDialog } from "./ConfirmationDialog"; // Import the confirmation dialog
+import { SplitTabModal } from "./SplitTabModal";
 import { ContextMenuAction, TabSide } from "../../constants";
 
 interface ContextMenuActionPayload {
@@ -47,17 +48,6 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     }
   };
 
-  useClickOutside(menuRef, () => {
-    // Only close if no modal (download or confirmation) is open.
-    // The confirmationDialogProps.isOpen check handles the confirmation dialog.
-    if (
-      !showDownloadModal &&
-      (!confirmationDialogProps || !confirmationDialogProps.isOpen)
-    ) {
-      closeThisContextMenu();
-    }
-  });
-
   const handleOpenDownloadModal = () => {
     setShowDownloadModal(true);
     // Unlike confirmation, DownloadModal likely doesn't require the context menu to close first,
@@ -69,7 +59,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     closeThisContextMenu(); // Close context menu when download modal closes
   };
 
-  const { menuItems, confirmationDialogProps }: UseContextMenuConfigReturn =
+  const { menuItems, confirmationDialogProps, splitModalProps }: UseContextMenuConfigReturn =
     useContextMenuConfig(
       tabId,
       isRightSide,
@@ -81,7 +71,8 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
   useClickOutside(menuRef, () => {
     if (
       !showDownloadModal &&
-      (!confirmationDialogProps || !confirmationDialogProps.isOpen)
+      (!confirmationDialogProps || !confirmationDialogProps.isOpen) &&
+      (!splitModalProps || !splitModalProps.isOpen)
     ) {
       closeThisContextMenu();
     }
@@ -89,28 +80,31 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
 
   return (
     <>
-      <div
-        ref={menuRef}
-        className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg z-50 py-1"
-        style={{
-          top: `${position.y}px`,
-          left: `${position.x}px`,
-          minWidth: "200px",
-        }}
-        onContextMenu={(e) => e.preventDefault()} // Prevent native context menu over custom one
-      >
-        {menuItems.map((item) => {
-          if (item.isSeparator) {
-            return (
-              <div
-                key={item.id}
-                className="border-t border-gray-600 my-1 mx-1"
-              ></div>
-            );
-          }
-          return <ContextMenuItem key={item.id} item={item} />;
-        })}
-      </div>
+      {/* Hide context menu when split modal is open, but keep component mounted */}
+      {(!splitModalProps || !splitModalProps.isOpen) && (
+        <div
+          ref={menuRef}
+          className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg z-50 py-1"
+          style={{
+            top: `${position.y}px`,
+            left: `${position.x}px`,
+            minWidth: "200px",
+          }}
+          onContextMenu={(e) => e.preventDefault()} // Prevent native context menu over custom one
+        >
+          {menuItems.map((item) => {
+            if (item.isSeparator) {
+              return (
+                <div
+                  key={item.id}
+                  className="border-t border-gray-600 my-1 mx-1"
+                ></div>
+              );
+            }
+            return <ContextMenuItem key={item.id} item={item} />;
+          })}
+        </div>
+      )}
 
       {showDownloadModal && (
         <DownloadModal onClose={handleCloseDownloadModal} />
@@ -124,6 +118,14 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
           confirmButtonText={confirmationDialogProps.confirmButtonText}
           onConfirm={confirmationDialogProps.onConfirm}
           onCancel={confirmationDialogProps.onCancel}
+        />
+      )}
+
+      {/* Render the split tab modal */}
+      {splitModalProps && splitModalProps.isOpen && (
+        <SplitTabModal
+          tabId={splitModalProps.tabId}
+          onClose={splitModalProps.onClose}
         />
       )}
     </>

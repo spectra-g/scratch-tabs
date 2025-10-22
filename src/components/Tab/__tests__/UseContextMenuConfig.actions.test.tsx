@@ -251,7 +251,7 @@ describe('UseContextMenuConfig - Dynamic Actions', () => {
   });
 
   it('should maintain dependency array for useEffect correctly', () => {
-    const { rerender } = renderHook(() => 
+    const { rerender } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
@@ -259,8 +259,56 @@ describe('UseContextMenuConfig - Dynamic Actions', () => {
 
     // Rerender with same props - should not trigger additional calls due to useEffect deps
     rerender();
-    
+
     // The hook should be stable and not cause unnecessary re-renders
     expect((mockTabletMetadata.flatMap as jest.Mock).mock.calls.length).toBe(initialCallCount);
+  });
+
+  it('should include split tab menu item for non-tablet tabs', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const splitTabItem = menuItems.find(item => item.id === 'splitTab');
+
+    expect(splitTabItem).toBeDefined();
+    expect(splitTabItem?.label).toBe('Split Tab...');
+  });
+
+  it('should not include split tab menu item for tablet tabs', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('tablet-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const splitTabItem = menuItems.find(item => item.id === 'splitTab');
+
+    expect(splitTabItem).toBeUndefined();
+  });
+
+  it('should set splitModalProps when split tab action is triggered', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    // Initially, splitModalProps should be null
+    expect(result.current.splitModalProps).toBeNull();
+
+    // Find and execute the split tab action
+    const menuItems = result.current.menuItems;
+    const splitTabItem = menuItems.find(item => item.id === 'splitTab');
+
+    expect(splitTabItem).toBeDefined();
+
+    // Execute the action
+    act(() => {
+      splitTabItem?.action?.();
+    });
+
+    // Now splitModalProps should be set
+    expect(result.current.splitModalProps).not.toBeNull();
+    expect(result.current.splitModalProps?.isOpen).toBe(true);
+    expect(result.current.splitModalProps?.tabId).toBe('test-tab-id');
   });
 });
