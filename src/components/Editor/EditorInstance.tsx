@@ -12,7 +12,6 @@ import { useEditorAI } from "../../hooks/useEditorAI";
 import { TabletSelector } from "../../tablets";
 import { Tablet } from "../../tablets";
 import { useAIStore } from "../../stores/aiStore";
-import { BatchToolsModal } from "../BatchTools/BatchToolsModal";
 import { modelManager } from "../../services/modelManager";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
@@ -636,41 +635,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     setShowUpgradeModal(false);
   };
 
-  const handleBatchToolsApply = useCallback((content: string) => {
-    const editor = editorRef.current;
-    if (!editor) return;
-
-    try {
-      const selection = editor.getSelection();
-      const model = editor.getModel();
-      const selectedText =
-        selection && !selection.isEmpty() && model && !model.isDisposed()
-          ? model.getValueInRange(selection) || ""
-          : "";
-
-      if (selectedText) {
-        // Replace only the selected text
-        editor.executeEdits("batch-tools", [
-          {
-            range: selection!,
-            text: content,
-          },
-        ]);
-      } else {
-        // Replace entire content
-        if (model && !model.isDisposed()) {
-          editor.executeEdits("batch-tools", [
-            {
-              range: model.getFullModelRange(),
-              text: content,
-            },
-          ]);
-        }
-      }
-    } catch (error) {
-      console.warn("[EditorInstance] Failed to apply batch tools:", error);
-    }
-  }, []);
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-850">
@@ -724,7 +688,6 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
           )}
         </div>
       </div>
-      <BatchToolsModal onApply={handleBatchToolsApply} />
       <UpgradeConfirmationModal
         isOpen={showUpgradeModal}
         onConfirm={handleUpgradeConfirm}
