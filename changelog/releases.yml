@@ -3,8 +3,29 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.6.0"
+  - version: "1.7.0"
     type: "latest"  # latest, beta, alpha
+    draft: false
+    date: "2025-10-24"
+    headline: "✂️ Split tabs, JSON improvements, and bug fixes"
+    description: "Major update with split tab functionality, enhanced JSON features, and critical bug fixes"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Split Tab:** Split tab content into multiple tabs with extensive split configuration controls"
+          - "**Smart View Callout Widget:** Visual indicator when smart view is available after auto-format detection"
+          - "**JSON Sanitize:** Added sanitize feature for JSON smart view"
+      - name: "🔧 Improvements"
+        changes:
+          - "**JSON Mapper:** Enhanced filename controls for mapped files in folders with pattern matching and transformation rules"
+          - "**Diff Viewer:** Now shows files in tab view order for better context"
+      - name: "🐛 Fixed"
+        changes:
+          - "Compare with JSON smart view bug fix"
+          - "Pomodoro timer now appears correctly in browser title when running"
+
+  - version: "1.6.0"
+    type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-10-15"
     headline: "🚀 GraphQL tablet and Pomodoro fixes"

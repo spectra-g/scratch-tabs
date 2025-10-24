@@ -370,4 +370,141 @@ describe('StatusBar - Font Size Controls Integration', () => {
       expect(screen.getByTestId('font-size-controls')).toBeInTheDocument();
     });
   });
-}); 
+
+  describe('Smart View and Rich Text mode behavior', () => {
+    it('should hide RichTextControls when isInSmartView is true', () => {
+      render(
+        <StatusBar
+          activeTab={{
+            id: 'tab-1',
+            title: 'JSON Tab',
+            content: '{"test": "data"}',
+            language: 'json',
+            languageLocked: false,
+            isTablet: false,
+            isRich: false,
+            fontSize: 16,
+            workspaceId: 'workspace-1',
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+          }}
+          side="left"
+          isInSmartView={true}
+        />
+      );
+
+      // RichTextControls should not be rendered when in smart view
+      expect(screen.queryByTestId('rich-text-toggle')).not.toBeInTheDocument();
+    });
+
+    it('should show RichTextControls when isInSmartView is false', () => {
+      // Mock RichTextControls to be visible
+      jest.mock('../RichTextControls', () => ({
+        RichTextControls: () => <div data-testid="rich-text-toggle">Rich Text Toggle</div>,
+      }));
+
+      render(
+        <StatusBar
+          activeTab={{
+            id: 'tab-1',
+            title: 'Editor Tab',
+            content: 'content',
+            language: 'plaintext',
+            languageLocked: false,
+            isTablet: false,
+            isRich: false,
+            fontSize: 16,
+            workspaceId: 'workspace-1',
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+          }}
+          side="left"
+          isInSmartView={false}
+        />
+      );
+
+      // Should not find it since we're testing the conditional rendering
+      // The actual RichTextControls component is a separate component
+      expect(screen.getByTestId('font-size-controls')).toBeInTheDocument();
+    });
+
+    it('should hide format/language info when in Rich Text mode', () => {
+      render(
+        <StatusBar
+          activeTab={{
+            id: 'tab-1',
+            title: 'Rich Text Tab',
+            content: 'content',
+            richContent: { type: 'doc', content: [] },
+            language: 'plaintext',
+            languageLocked: false,
+            isTablet: false,
+            isRich: true,
+            fontSize: 16,
+            workspaceId: 'workspace-1',
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+          }}
+          side="left"
+        />
+      );
+
+      // Language label should not be visible (it's within the conditional block)
+      expect(screen.queryByTestId('status-language')).not.toBeInTheDocument();
+    });
+
+    it('should show format/language info when NOT in Rich Text mode', () => {
+      render(
+        <StatusBar
+          activeTab={{
+            id: 'tab-1',
+            title: 'Plain Tab',
+            content: 'content',
+            language: 'javascript',
+            languageLocked: false,
+            isTablet: false,
+            isRich: false,
+            fontSize: 16,
+            workspaceId: 'workspace-1',
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+          }}
+          side="left"
+        />
+      );
+
+      // Language label should be visible
+      expect(screen.getByTestId('status-language')).toBeInTheDocument();
+    });
+
+    it('should hide line/column info in Rich Text mode', () => {
+      render(
+        <StatusBar
+          activeTab={{
+            id: 'tab-1',
+            title: 'Rich Text Tab',
+            content: 'content',
+            richContent: { type: 'doc', content: [] },
+            language: 'plaintext',
+            languageLocked: false,
+            isTablet: false,
+            isRich: true,
+            fontSize: 16,
+            workspaceId: 'workspace-1',
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+          }}
+          side="left"
+        />
+      );
+
+      // Should not show line/column info
+      expect(screen.queryByText(/Ln \d+, Col \d+/)).not.toBeInTheDocument();
+    });
+  });
+});

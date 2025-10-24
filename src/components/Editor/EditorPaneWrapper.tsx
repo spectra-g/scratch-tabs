@@ -13,6 +13,7 @@ import { shallow } from "zustand/shallow";
 import { modelManager } from "../../services/modelManager";
 import { migrateTextToRich } from "../RichText/utils/contentMigration";
 import { useClipboardStore } from "../../stores/clipboardStore";
+import { BatchToolsModal } from "../BatchTools/BatchToolsModal";
 
 // Lazy load the RichTextEditor component
 const RichTextEditor = lazy(() => import("../RichText/RichTextEditor").then(module => ({ default: module.RichTextEditor })));
@@ -102,10 +103,10 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
 
   const handleUpgradeToRich = useCallback(() => {
     if (!activeTab || !activeTabId) return;
-    
+
     // Check if there's pending image data and cursor position
     const { pendingImageData, pendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
-    
+
     // Migrate existing plain text content to rich format, including cursor position mapping
     const migration = migrateTextToRich(
       activeTab.content || '',
@@ -113,18 +114,31 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
       pendingImageCursorPosition || undefined
     );
     const { richContent, cursorOffset } = migration;
-    
+
     // Store the calculated cursor offset for the rich text editor
     if (cursorOffset !== undefined) {
       setPendingImageCursorOffset(cursorOffset);
     }
-    
+
     updateTabState(activeTabId, {
       isRich: true,
       richContent,
       lastModified: Date.now(),
     });
   }, [activeTab, activeTabId, updateTabState]);
+
+  const handleBatchToolsApply = useCallback((content: string) => {
+    if (!activeTabId) return;
+
+    // Update tab content directly
+    updateTabState(activeTabId, {
+      content,
+      lastModified: Date.now(),
+    });
+
+    // Invalidate the model so it gets recreated with the new content
+    modelManager.invalidateModel(activeTabId);
+  }, [activeTabId, updateTabState]);
   // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
   const extendedView =
@@ -203,6 +217,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
             <StatusBar
               activeTab={activeTab}
               side={side}
+              isInSmartView={shouldShowReplacementView}
             />
           </div>
         )}
@@ -244,6 +259,9 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
           </div>
         </div>
       )}
+
+      {/* BatchToolsModal - Always available regardless of view mode */}
+      <BatchToolsModal onApply={handleBatchToolsApply} />
     </div>
   );
 };

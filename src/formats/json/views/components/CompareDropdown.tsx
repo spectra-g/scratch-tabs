@@ -55,9 +55,9 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded shadow-lg z-50">
-          <div className="py-1">
-            {/* Compare with Clipboard */}
+        <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded shadow-lg z-50 max-h-96 flex flex-col">
+          {/* Compare with Clipboard - Fixed at top */}
+          <div className="py-1 border-b border-gray-700">
             <button
               onClick={() => handleOptionClick(onCompareWithClipboard)}
               className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
@@ -65,29 +65,27 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
               <Clipboard size={16} className="text-blue-400" />
               <span>With clipboard</span>
             </button>
+          </div>
 
-            {/* Separator if there are recent JSON tabs */}
-            {recentJsonTabs.length > 0 && (
-              <div className="border-t border-gray-700 my-1" />
-            )}
+          {/* Scrollable JSON Tabs Section */}
+          {recentJsonTabs.length > 0 && (
+            <div className="overflow-y-auto max-h-60 py-1 custom-scrollbar">
+              {recentJsonTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleOptionClick(() => onCompareWithTab(tab.id))}
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                  title={`Compare with ${tab.title}`}
+                >
+                  <FileJson size={16} className="text-green-400 flex-shrink-0" />
+                  <span className="truncate">With {tab.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
-            {/* Recent JSON Tabs */}
-            {recentJsonTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleOptionClick(() => onCompareWithTab(tab.id))}
-                className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-                title={`Compare with ${tab.title}`}
-              >
-                <FileJson size={16} className="text-green-400" />
-                <span className="truncate">With {tab.title}</span>
-              </button>
-            ))}
-
-            {/* Separator */}
-            <div className="border-t border-gray-700 my-1" />
-
-            {/* Compare Structure */}
+          {/* Compare Structure - Fixed at bottom */}
+          <div className="py-1 border-t border-gray-700">
             <button
               onClick={() => handleOptionClick(onCompareStructure)}
               className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"

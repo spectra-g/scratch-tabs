@@ -84,7 +84,7 @@ describe("jsonTabHelpers", () => {
       expect(result.map((t) => t.id)).toEqual(["tab-2", "tab-3", "tab-1"]);
     });
 
-    it("should limit results to specified limit", () => {
+    it("should return all matching tabs without limit", () => {
       const tabs: Tab[] = [
         createTab({ id: "tab-1", lastModified: 1000 }),
         createTab({ id: "tab-2", lastModified: 900 }),
@@ -94,10 +94,10 @@ describe("jsonTabHelpers", () => {
         createTab({ id: "tab-6", lastModified: 500 }),
       ];
 
-      const result = getRecentJsonTabs(tabs, "current", "workspace-1", 3);
+      const result = getRecentJsonTabs(tabs, "current", "workspace-1");
 
-      expect(result).toHaveLength(3);
-      expect(result.map((t) => t.id)).toEqual(["tab-1", "tab-2", "tab-3"]);
+      expect(result).toHaveLength(6);
+      expect(result.map((t) => t.id)).toEqual(["tab-1", "tab-2", "tab-3", "tab-4", "tab-5", "tab-6"]);
     });
 
     it("should return empty array if no matching tabs", () => {

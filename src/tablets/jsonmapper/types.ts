@@ -70,3 +70,18 @@ export interface SuggestionResult {
   sourceType: DataType;
   targetType: DataType;
 }
+
+export type FilenameTransformType = "prefix" | "suffix" | "replace";
+
+export interface FilenameTransformRule {
+  type: FilenameTransformType;
+  search?: string; // For 'replace' type
+  value: string; // The prefix, suffix, or replacement value
+}
+
+export interface BatchProcessingOptions {
+  filePattern?: string; // e.g., "data*.json" or "*.json"
+  preserveOriginals: boolean; // If true, keep original files in the output zip
+  filenameRule?: FilenameTransformRule; // How to transform output filenames
+  preserveEmptyFolders: boolean; // If true, keep empty folders in output
+}
