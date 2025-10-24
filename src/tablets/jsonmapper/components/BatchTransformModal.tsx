@@ -6,8 +6,14 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
+  HelpCircle,
 } from "lucide-react";
-import { MappingConfig, MappingDirection } from "../types";
+import {
+  MappingConfig,
+  MappingDirection,
+  FilenameTransformType,
+  BatchProcessingOptions,
+} from "../types";
 import {
   processJsonFile,
   processZipFile,
@@ -37,9 +43,20 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
     content?: string;
     zip?: JSZip;
     error?: string;
+    filesProcessed?: number;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bridge = useTabletBridge();
+
+  // Batch processing options
+  const [filePattern, setFilePattern] = useState("*.json");
+  const [preserveOriginals, setPreserveOriginals] = useState(false);
+  const [preserveEmptyFolders, setPreserveEmptyFolders] = useState(true);
+  const [filenameTransformType, setFilenameTransformType] =
+    useState<FilenameTransformType>("suffix");
+  const [filenameTransformSearch, setFilenameTransformSearch] = useState("");
+  const [filenameTransformValue, setFilenameTransformValue] =
+    useState("_transformed");
 
   // Suppress global drag & drop while this modal is open
   useEffect(() => {
@@ -97,11 +114,30 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
         const result = await processJsonFile(file, mapping, direction);
         setResult(result);
       } else if (file.name.toLowerCase().endsWith(".zip")) {
+        // Build batch processing options
+        const options: BatchProcessingOptions = {
+          filePattern,
+          preserveOriginals,
+          preserveEmptyFolders,
+          filenameRule:
+            filenameTransformType === "replace"
+              ? {
+                  type: filenameTransformType,
+                  search: filenameTransformSearch,
+                  value: filenameTransformValue,
+                }
+              : {
+                  type: filenameTransformType,
+                  value: filenameTransformValue,
+                },
+        };
+
         // Process ZIP file
         const result = await processZipFile(
           file,
           mapping,
           direction,
+          options,
           setProgress,
         );
         setResult(result);
@@ -204,6 +240,119 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
               </div>
             </div>
 
+            {/* Batch Processing Options - Only show for ZIP files */}
+            {file?.name.toLowerCase().endsWith(".zip") && !result && (
+              <div className="space-y-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                <h3 className="text-sm font-medium text-gray-300 flex items-center space-x-2">
+                  <span>ZIP Processing Options</span>
+                </h3>
+
+                {/* File Pattern */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">
+                    File Pattern
+                  </label>
+                  <input
+                    type="text"
+                    value={filePattern}
+                    onChange={(e) => setFilePattern(e.target.value)}
+                    placeholder="e.g., data*.json"
+                    className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Use * as wildcard. Examples: data*.json, *.json,
+                    data_*.json
+                  </p>
+                </div>
+
+                {/* Filename Transformation */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">
+                    Output Filename
+                  </label>
+                  <div className="space-y-2">
+                    <div className="flex space-x-2">
+                      <select
+                        value={filenameTransformType}
+                        onChange={(e) =>
+                          setFilenameTransformType(
+                            e.target.value as FilenameTransformType,
+                          )
+                        }
+                        className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+                      >
+                        <option value="prefix">Add Prefix</option>
+                        <option value="suffix">Add Suffix</option>
+                        <option value="replace">Replace Text</option>
+                      </select>
+
+                      {filenameTransformType === "replace" && (
+                        <input
+                          type="text"
+                          value={filenameTransformSearch}
+                          onChange={(e) =>
+                            setFilenameTransformSearch(e.target.value)
+                          }
+                          placeholder="Find (e.g., data)"
+                          className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+                        />
+                      )}
+
+                      <input
+                        type="text"
+                        value={filenameTransformValue}
+                        onChange={(e) =>
+                          setFilenameTransformValue(e.target.value)
+                        }
+                        placeholder={
+                          filenameTransformType === "prefix"
+                            ? "Prefix"
+                            : filenameTransformType === "suffix"
+                              ? "Suffix"
+                              : "Replace with (e.g., products)"
+                        }
+                        className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {filenameTransformType === "prefix" &&
+                        `Example: ${filenameTransformValue}my_data.json`}
+                      {filenameTransformType === "suffix" &&
+                        `Example: my_data${filenameTransformValue}.json`}
+                      {filenameTransformType === "replace" &&
+                        filenameTransformSearch &&
+                        filenameTransformValue &&
+                        `Example: my_data.json → ${`my_data.json`.replace(filenameTransformSearch, filenameTransformValue)}`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Checkboxes */}
+                <div className="space-y-2">
+                  <label className="flex items-center space-x-2 text-sm text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preserveOriginals}
+                      onChange={(e) => setPreserveOriginals(e.target.checked)}
+                      className="rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-blue-500"
+                    />
+                    <span>Keep original files in output ZIP</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-sm text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preserveEmptyFolders}
+                      onChange={(e) =>
+                        setPreserveEmptyFolders(e.target.checked)
+                      }
+                      className="rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-blue-500"
+                    />
+                    <span>Preserve empty folders</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             {/* File Upload */}
             {!result && (
               <div
@@ -301,11 +450,53 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                 ) : (
                   <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 text-green-400">
                     <h3 className="font-medium mb-2">Success</h3>
-                    <p>
-                      {result.content
-                        ? "JSON file transformed successfully."
-                        : "ZIP file processed successfully."}
-                    </p>
+                    {result.content ? (
+                      <p>JSON file transformed successfully.</p>
+                    ) : (
+                      <div className="space-y-1 text-sm">
+                        <p>
+                          ZIP file processed successfully.
+                          {result.filesProcessed !== undefined &&
+                            ` ${result.filesProcessed} file(s) transformed.`}
+                        </p>
+                        {file?.name.toLowerCase().endsWith(".zip") && (
+                          <div className="mt-2 space-y-1 text-xs opacity-80">
+                            <p>
+                              • Pattern:{" "}
+                              <span className="font-mono">{filePattern}</span>
+                            </p>
+                            {filenameTransformType === "replace" &&
+                              filenameTransformSearch && (
+                                <p>
+                                  • Renamed: "{filenameTransformSearch}" → "
+                                  {filenameTransformValue}"
+                                </p>
+                              )}
+                            {filenameTransformType === "prefix" && (
+                              <p>
+                                • Prefix: "
+                                <span className="font-mono">
+                                  {filenameTransformValue}
+                                </span>
+                                "
+                              </p>
+                            )}
+                            {filenameTransformType === "suffix" && (
+                              <p>
+                                • Suffix: "
+                                <span className="font-mono">
+                                  {filenameTransformValue}
+                                </span>
+                                "
+                              </p>
+                            )}
+                            {preserveOriginals && (
+                              <p>• Original files preserved</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
