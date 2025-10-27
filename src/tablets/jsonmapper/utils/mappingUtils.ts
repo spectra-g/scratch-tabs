@@ -301,6 +301,25 @@ export function transformJson(
           continue;
         }
 
+        /**
+         * Handle empty source arrays - preserve empty arrays in target
+         * This ensures that mappings like promotions[*] -> promotions[*] will create
+         * an empty array in the target when the source is empty, maintaining structure.
+         *
+         * Exception: Skip for join conditions with nested targets (e.g., conflicts[*] -> products[*].conflicts[*])
+         * as these require special handling to not overwrite existing nested structures.
+         */
+        const hasJoinWithNestedTarget = rule.joinCondition &&
+          (currentRuleTargetPath.match(/\[\*\]/g) || []).length >= 2;
+
+        if (sourceArray.length === 0 && !hasJoinWithNestedTarget) {
+          const existingTargetArray = getValueByPath(outputObject, targetContainerPath);
+          if (!existingTargetArray || !Array.isArray(existingTargetArray)) {
+            setValueByPath(outputObject, targetContainerPath, []);
+          }
+          continue;
+        }
+
         // Case 2a: Array-to-nested-array with join condition
         if (rule.joinCondition) {
 
@@ -515,11 +534,18 @@ export function transformJson(
         // Get or create target array
         let targetArray = getValueByPath(outputObject, targetContainerPath);
         if (!targetArray || !Array.isArray(targetArray)) {
-          // Check if we should copy structure from source
-          // Only deep clone if:
-          // 1. Same container (source == target)
-          // 2. AND target field path has nested structure beyond the first level
-          //    (e.g., ".weights.uoms" needs weights object, but ".depositCharge" doesn't)
+          /**
+           * Determine if we need to preserve parent object structure from source.
+           * Only deep clone when:
+           * 1. Same container (source path == target path)
+           * 2. AND target field has nested structure beyond first level
+           *
+           * Example needing structure:
+           *   products[*].weights.uoms → needs weights object to exist
+           *
+           * Example NOT needing structure:
+           *   conflicts[*].depositCharge → just needs conflicts array
+           */
           const fieldPathWithoutLeadingDot = targetFieldPath.replace(/^\./, "").replace(/^\['/, "");
           const hasNestedStructure = fieldPathWithoutLeadingDot.includes(".") ||
                                      fieldPathWithoutLeadingDot.includes("']['");
@@ -616,7 +642,10 @@ export function transformJson(
                   }
                 }
 
-                // Apply transformation if needed
+                /**
+                 * Apply transformation to nested array values.
+                 * This supports transformations on nested-to-nested array mappings.
+                 */
                 let transformedNestedValue = nestedSourceValue;
                 if (
                   direction === "sourceToTarget" &&
@@ -720,12 +749,20 @@ export function transformJson(
         for (let i = 0; i < sourceArray.length; i++) {
           const sourceItem = sourceArray[i];
 
-          // Extract the correct field value from the source item
+          /**
+           * Extract the correct field value from the source item.
+           * Supports nested array wildcards in field paths (e.g., ".weights.uoms[*]")
+           * to allow copying entire nested arrays.
+           */
           let sourceValue;
           if (sourceFieldPath) {
             // Check if field path contains nested array wildcard
             if (sourceFieldPath.includes("[*]")) {
-              // Handle nested array in field path (e.g., ".weights.uoms[*]")
+              /**
+               * Handle nested array wildcard in source field path.
+               * Example: products[*].weights.uoms[*]
+               * Extracts the entire uoms array: ["C62", "KG"]
+               */
               const fieldContainerPath = sourceFieldPath.substring(0, sourceFieldPath.indexOf("[*]"));
 
               // Navigate to the array container
@@ -778,14 +815,18 @@ export function transformJson(
             continue;
           }
 
-          // Apply transformation if needed
+          /**
+           * Apply transformation if needed.
+           * For arrays (from nested array wildcards), applies transformation to each element.
+           * Example: toUpperCase() on ["a", "b"] produces ["A", "B"]
+           */
           let transformedValue = sourceValue;
           if (
             direction === "sourceToTarget" &&
             currentRuleTransformationType !== "none"
           ) {
-            // If source value is an array (from nested array wildcard), apply transformation to each element
             if (Array.isArray(sourceValue)) {
+              // Apply transformation to each array element
               transformedValue = sourceValue.map((element) =>
                 applyTransformation(
                   element,
@@ -795,6 +836,7 @@ export function transformJson(
                 )
               );
             } else {
+              // Apply transformation to single value
               transformedValue = applyTransformation(
                 sourceValue,
                 currentRuleTransformation,
@@ -811,11 +853,17 @@ export function transformJson(
           }
           let targetItem = targetArray[i];
 
-          // Process field mapping
+          /**
+           * Process field mapping to target.
+           * Supports nested array wildcards in target path (e.g., ".weights.uoms[*]")
+           */
           if (targetFieldPath) {
-            // Check if target field path contains nested array wildcard
             if (targetFieldPath.includes("[*]")) {
-              // Handle nested array in target field path (e.g., ".weights.uoms[*]")
+              /**
+               * Handle nested array wildcard in target field path.
+               * Example: products[*].weights.uoms[*]
+               * Assigns the entire array to the target nested location.
+               */
               const fieldContainerPath = targetFieldPath.substring(0, targetFieldPath.indexOf("[*]"));
 
               // Parse the field container path
