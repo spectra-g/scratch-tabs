@@ -1110,4 +1110,186 @@ describe("transformJson", () => {
       });
     });
   });
+
+  describe("Nested array wildcard in field paths", () => {
+    it("should handle nested array wildcard in field path (uoms example)", () => {
+      const sourceJson = {
+        products: [
+          {
+            weights: {
+              per: "per01",
+              price: "123",
+              uoms: ["C62", "KG"]
+            }
+          },
+          {
+            weights: {
+              per: "per02",
+              price: "456",
+              uoms: ["LB"]
+            }
+          }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.products[*].weights.uoms[*]",
+        targetPath: "$.products[*].weights.uoms[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.products).toHaveLength(2);
+      expect(result.products[0].weights.uoms).toEqual(["C62", "KG"]);
+      expect(result.products[1].weights.uoms).toEqual(["LB"]);
+    });
+
+    it("should handle nested array wildcard with dot notation", () => {
+      const sourceJson = {
+        items: [
+          { tags: ["tag1", "tag2", "tag3"] },
+          { tags: ["tag4"] }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.items[*].tags[*]",
+        targetPath: "$.items[*].tags[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].tags).toEqual(["tag1", "tag2", "tag3"]);
+      expect(result.items[1].tags).toEqual(["tag4"]);
+    });
+
+    it("should handle empty nested arrays", () => {
+      const sourceJson = {
+        products: [
+          { weights: { uoms: [] } },
+          { weights: { uoms: ["KG"] } }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.products[*].weights.uoms[*]",
+        targetPath: "$.products[*].weights.uoms[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.products[0].weights.uoms).toEqual([]);
+      expect(result.products[1].weights.uoms).toEqual(["KG"]);
+    });
+
+    it("should handle nested array wildcard with bracket notation", () => {
+      const sourceJson = {
+        data: [
+          { values: [1, 2, 3] },
+          { values: [4, 5] }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$['data'][*]['values'][*]",
+        targetPath: "$['data'][*]['values'][*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "number",
+        targetDataType: "number",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.data[0].values).toEqual([1, 2, 3]);
+      expect(result.data[1].values).toEqual([4, 5]);
+    });
+
+    it("should handle nested array wildcard with transformation", () => {
+      const sourceJson = {
+        items: [
+          { codes: ["a", "b"] },
+          { codes: ["c"] }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.items[*].codes[*]",
+        targetPath: "$.items[*].codes[*]",
+        transformationType: "builtin",
+        transformation: "toUpperCase()",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.items[0].codes).toEqual(["A", "B"]);
+      expect(result.items[1].codes).toEqual(["C"]);
+    });
+
+    it("should handle deeply nested array wildcards", () => {
+      const sourceJson = {
+        level1: [
+          {
+            level2: {
+              level3: {
+                items: ["a", "b"]
+              }
+            }
+          }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.level1[*].level2.level3.items[*]",
+        targetPath: "$.level1[*].level2.level3.items[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.level1[0].level2.level3.items).toEqual(["a", "b"]);
+    });
+  });
 });
