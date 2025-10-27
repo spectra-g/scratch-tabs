@@ -297,10 +297,13 @@ export function transformJson(
 
         // Get source array
         const sourceArray = getValueByPath(sourceJson, sourceContainerPath);
-        if (!Array.isArray(sourceArray)) continue;
+        if (!Array.isArray(sourceArray)) {
+          continue;
+        }
 
         // Case 2a: Array-to-nested-array with join condition
         if (rule.joinCondition) {
+
           // Count wildcards to detect nested array mapping
           const targetWildcardCount = (currentRuleTargetPath.match(/\[\*\]/g) || []).length;
 
@@ -355,6 +358,23 @@ export function transformJson(
               .replace(/'\]$/, "")
               .replace(/^\./, "");
             const sourceFieldPathForJoin = `['${sourceFieldName}']`;
+
+            // Track which source items have been mapped to which nested array indices
+            // This allows multiple rules to merge into the same nested object
+            // Key: sourceKeyValue (e.g., "p1"), Value: nested array index
+            const sourceToNestedIndexMap = new Map<any, number>();
+
+            // Pre-scan existing nested arrays to build the map
+            for (const targetParentItem of targetParentArray) {
+              if (targetParentItem && typeof targetParentItem === "object") {
+                const targetKeyValue = targetParentItem[rule.joinCondition.targetKey];
+                const existingNestedArray = targetParentItem[targetNestedArrayPath];
+                if (Array.isArray(existingNestedArray) && existingNestedArray.length > 0) {
+                  // Map this target key to the nested array index 0 (assuming one nested item per match)
+                  sourceToNestedIndexMap.set(targetKeyValue, 0);
+                }
+              }
+            }
 
             // Process each source item and find matching target parent
             for (const sourceItem of sourceArray) {
@@ -437,8 +457,21 @@ export function transformJson(
                 );
               }
 
-              // Create target nested item
-              let targetNestedItem: any = {};
+              // Get or create target nested item
+              // Check if we've already created a nested item for this source key
+              let nestedItemIndex = sourceToNestedIndexMap.get(sourceKeyValue);
+              let targetNestedItem: any;
+
+              if (nestedItemIndex !== undefined && targetNestedArray[nestedItemIndex]) {
+                // Reuse existing nested item
+                targetNestedItem = targetNestedArray[nestedItemIndex];
+              } else {
+                // Create new nested item
+                targetNestedItem = {};
+                nestedItemIndex = targetNestedArray.length;
+                sourceToNestedIndexMap.set(sourceKeyValue, nestedItemIndex);
+                targetNestedArray.push(targetNestedItem);
+              }
 
               if (targetFieldPathForJoin) {
                 // Map to specific field in nested item
@@ -464,14 +497,12 @@ export function transformJson(
               } else {
                 // Map entire item
                 if (typeof transformedValue === "object" && !Array.isArray(transformedValue)) {
-                  targetNestedItem = transformedValue;
+                  Object.assign(targetNestedItem, transformedValue);
                 } else {
                   targetNestedItem = transformedValue;
+                  targetNestedArray[nestedItemIndex] = targetNestedItem;
                 }
               }
-
-              // Append to nested array
-              targetNestedArray.push(targetNestedItem);
             }
 
             // Update modified target parent array
@@ -481,46 +512,47 @@ export function transformJson(
           }
         }
 
-        // Get or create target array
+        // Get or create target array (but don't pre-fill with empty objects)
         let targetArray = getValueByPath(outputObject, targetContainerPath);
         if (!targetArray || !Array.isArray(targetArray)) {
-          targetArray = Array.from({ length: sourceArray.length }, () => ({}));
+          targetArray = [];
           setValueByPath(outputObject, targetContainerPath, targetArray);
+        } else {
+          // IMPORTANT: Get a fresh reference from outputObject to ensure we're modifying the actual array
+          // This fixes the issue where multiple rules modifying the same nested array lose each other's changes
+          const freshTargetArray = getValueByPath(outputObject, targetContainerPath);
+          if (freshTargetArray && Array.isArray(freshTargetArray)) {
+            targetArray = freshTargetArray;
+          }
         }
 
-        // If target array is smaller than source, extend it
-        if (targetArray.length < sourceArray.length) {
-          const extension = Array.from(
-            { length: sourceArray.length - targetArray.length },
-            () => ({}),
-          );
-          targetArray.push(...extension);
-        }
+        // Special case: Handle nested array in target path (flat-to-nested or nested-to-nested)
+        if (targetFieldPath.includes("[*]")) {
 
-        // Special case: Handle two levels of array nesting (nested array to object mapping)
-        if (
-          sourceFieldPath.includes("[*]") &&
-          targetFieldPath.includes("[*]")
-        ) {
           // Improved extraction of the inner array field names
-          // Extract source inner field name
-          const sourceFieldMatch = sourceFieldPath.match(/^\['([^']+)'\]/);
+          // Extract source inner field name and remaining path
+          const sourceFieldMatch = sourceFieldPath.match(/^\['([^']+)'\]|\.\['([^']+)'\]|\.([^.\[]+)/);
           const sourceInnerFieldName = sourceFieldMatch
-            ? sourceFieldMatch[1]
+            ? (sourceFieldMatch[1] || sourceFieldMatch[2] || sourceFieldMatch[3])
+            : "";
+
+          // Extract the path after the nested array [*] in source
+          const sourceNestedFieldPath = sourceFieldPath.includes("[*]")
+            ? sourceFieldPath.substring(sourceFieldPath.indexOf("[*]") + 3)
             : "";
 
           // Extract target path components
           const targetPathParts = targetFieldPath.split(/\[\*\]/);
 
-          // Get the first component (like 'contactMethods')
-          const firstTargetMatch = targetPathParts[0].match(/^\['([^']+)'\]/);
+          // Get the first component (like 'contactMethods' or 'conflicts')
+          const firstTargetMatch = targetPathParts[0].match(/^\['([^']+)'\]|\.\['([^']+)'\]|\.([^.\[]+)/);
           const firstTargetComponent = firstTargetMatch
-            ? firstTargetMatch[1]
+            ? (firstTargetMatch[1] || firstTargetMatch[2] || firstTargetMatch[3])
             : "";
 
-          // Get the last component (like 'value')
-          const lastTargetMatch = targetPathParts[1]?.match(/^\['([^']+)'\]/);
-          const lastTargetComponent = lastTargetMatch ? lastTargetMatch[1] : "";
+          // Get the last component (like 'value' or 'priority')
+          const lastTargetMatch = targetPathParts[1]?.match(/^\['([^']+)'\]|\.\['([^']+)'\]|\.([^.\[]+)/);
+          const lastTargetComponent = lastTargetMatch ? (lastTargetMatch[1] || lastTargetMatch[2] || lastTargetMatch[3]) : "";
 
           // Process each array item
           for (let i = 0; i < sourceArray.length; i++) {
@@ -528,10 +560,12 @@ export function transformJson(
 
             if (!sourceItem || typeof sourceItem !== "object") continue;
 
+            // Case 1: Source has nested array (e.g., contacts[*].phones[*].number)
             // Get the nested array from the source item
             const sourceNestedArray = sourceItem[sourceInnerFieldName];
 
             if (Array.isArray(sourceNestedArray)) {
+
               // Create target item if it doesn't exist
               if (!targetArray[i]) {
                 targetArray[i] = {};
@@ -543,24 +577,106 @@ export function transformJson(
               }
 
               // Transform each value in the source nested array into an object in the target
-              const targetNestedArray = sourceNestedArray.map((value: any) => {
-                // If the target path has two components, create an object with the second component as a property
-                if (lastTargetComponent) {
-                  const obj: any = {};
-                  obj[lastTargetComponent] = value;
+              for (let j = 0; j < sourceNestedArray.length; j++) {
+                const nestedSourceItem = sourceNestedArray[j];
 
-                  // DO NOT add any additional fields that aren't explicitly mapped
-                  // Let the user define all field mappings explicitly through rules
+                // Extract the actual field value from nested source item
+                let nestedSourceValue = nestedSourceItem;
+                if (sourceNestedFieldPath) {
+                  const nestedPathParts = sourceNestedFieldPath
+                    .replace(/^\['/, "")
+                    .replace(/'\]$/, "")
+                    .replace(/^\./, "")
+                    .split(/'\]\['|'\]\.|'\.'|\./);
 
-                  return obj;
-                } else {
-                  // If no second component, just use the value directly
-                  return value;
+                  for (const segment of nestedPathParts) {
+                    if (!segment) continue;
+                    if (nestedSourceValue && typeof nestedSourceValue === "object") {
+                      nestedSourceValue = nestedSourceValue[segment];
+                    } else {
+                      nestedSourceValue = undefined;
+                      break;
+                    }
+                  }
                 }
-              });
 
-              // Set the transformed array on the target
-              targetArray[i][firstTargetComponent] = targetNestedArray;
+                // Get or create nested target object at this index
+                if (!targetArray[i][firstTargetComponent][j]) {
+                  targetArray[i][firstTargetComponent][j] = {};
+                }
+                const targetNestedItem = targetArray[i][firstTargetComponent][j];
+
+                // Set the field value on the nested object
+                if (lastTargetComponent && nestedSourceValue !== undefined) {
+                  targetNestedItem[lastTargetComponent] = nestedSourceValue;
+                } else if (!lastTargetComponent && nestedSourceValue !== undefined) {
+                  // If no last component, replace the entire item
+                  targetArray[i][firstTargetComponent][j] = nestedSourceValue;
+                }
+              }
+            } else {
+              // Case 2: Source does NOT have nested array (e.g., conflicts[*].priority -> products[*].conflicts[*].priority)
+              // This is a flat-to-nested array mapping
+
+              // Extract source value (it's a simple field, not a nested array)
+              let sourceValue = sourceItem;
+              if (sourceFieldPath && !sourceFieldPath.startsWith("[*]")) {
+                const pathParts = sourceFieldPath
+                  .replace(/^\['/, "")
+                  .replace(/'\]$/, "")
+                  .replace(/^\./, "")
+                  .split(/'\]\['|'\]\.|'\.'|\./);
+
+                for (const segment of pathParts) {
+                  if (!segment) continue;
+                  if (sourceValue && typeof sourceValue === "object") {
+                    sourceValue = sourceValue[segment];
+                  } else {
+                    sourceValue = undefined;
+                    break;
+                  }
+                }
+              }
+
+              if (sourceValue === undefined) continue;
+
+              // Apply transformation
+              let transformedValue = sourceValue;
+              if (
+                direction === "sourceToTarget" &&
+                currentRuleTransformationType !== "none"
+              ) {
+                transformedValue = applyTransformation(
+                  sourceValue,
+                  currentRuleTransformation,
+                  currentRuleTransformationType,
+                  sourceJson,
+                );
+              }
+
+              // Create target item if it doesn't exist
+              if (!targetArray[i]) {
+                targetArray[i] = {};
+              }
+
+              // Initialize the nested array if it doesn't exist
+              if (!targetArray[i][firstTargetComponent]) {
+                targetArray[i][firstTargetComponent] = [];
+              }
+
+              // Get or create nested object at index 0 (since source has no nested array, map to first nested item)
+              if (!targetArray[i][firstTargetComponent][0]) {
+                targetArray[i][firstTargetComponent][0] = {};
+              }
+
+              const targetNestedItem = targetArray[i][firstTargetComponent][0];
+
+              // Set the field value
+              if (lastTargetComponent) {
+                targetNestedItem[lastTargetComponent] = transformedValue;
+              } else {
+                targetArray[i][firstTargetComponent][0] = transformedValue;
+              }
             }
           }
 
@@ -578,13 +694,15 @@ export function transformJson(
           if (sourceFieldPath) {
             // For nested paths, extract the specific field
             const pathParts = sourceFieldPath
-              .replace(/^\['/, "")
-              .replace(/'\]$/, "")
-              .split(/'\]\['|'\.'|'\]\./);
+              .replace(/^\['/, "")    // Remove leading ['
+              .replace(/'\]$/, "")    // Remove trailing ']
+              .replace(/^\./, "")     // Remove leading dot (for dot notation like .field)
+              .split(/'\]\['|'\.'|'\]\.|\./)  // Split on bracket/quote/dot separators
 
             // Navigate to the field
             sourceValue = sourceItem;
             for (const segment of pathParts) {
+              if (!segment) continue;  // Skip empty segments
               if (!sourceValue || typeof sourceValue !== "object") {
                 sourceValue = undefined;
                 break;
@@ -613,22 +731,27 @@ export function transformJson(
             );
           }
 
-          // Get the existing target item (or create if it doesn't exist)
-          let targetItem = targetArray[i] || {};
+          // Get the existing target item (or create if it doesn't exist and we have a value)
+          // Ensure the array can hold this index
+          if (!targetArray[i]) {
+            targetArray[i] = {};
+          }
+          let targetItem = targetArray[i];
 
           // Process field mapping
           if (targetFieldPath) {
             // Parse the target field path
             const pathParts = targetFieldPath
-              .replace(/^\['/, "")
-              .replace(/'\]$/, "")
-              .split(/'\]\['|'\.'|'\]\./);
+              .replace(/^\['/, "")    // Remove leading ['
+              .replace(/'\]$/, "")    // Remove trailing ']
+              .replace(/^\./, "")     // Remove leading dot (for dot notation like .field)
+              .split(/'\]\['|'\.'|'\]\.|\./)  // Split on bracket/quote/dot separators
+              .filter(segment => segment);  // Remove empty segments
 
             // Build the nested structure
             let current = targetItem;
             for (let j = 0; j < pathParts.length - 1; j++) {
               const segment = pathParts[j];
-              if (!segment) continue;
 
               if (!current[segment]) {
                 current[segment] = {};
@@ -705,7 +828,51 @@ export function transformJson(
     }
   }
 
+  // Clean up: Remove empty objects from all arrays in the output
+  cleanupEmptyObjects(outputObject);
+
   return outputObject;
+}
+
+/**
+ * Recursively removes empty objects from arrays in the object tree.
+ * Preserves null values and other valid data types, only removes objects with no properties.
+ */
+function cleanupEmptyObjects(obj: any): void {
+  if (Array.isArray(obj)) {
+    // Filter out only empty objects {}, keep null and undefined as they might be intentional
+    const filtered = obj.filter((item) => {
+      // Keep null and undefined
+      if (item === null || item === undefined) {
+        return true;
+      }
+      // Remove empty objects {}
+      if (typeof item === 'object' && !Array.isArray(item)) {
+        if (Object.keys(item).length === 0) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // Remove items from the original array and replace with filtered
+    obj.length = 0;
+    obj.push(...filtered);
+
+    // Recursively clean nested structures
+    obj.forEach(item => {
+      if (item && typeof item === 'object') {
+        cleanupEmptyObjects(item);
+      }
+    });
+  } else if (obj && typeof obj === 'object') {
+    // Recursively clean all object properties
+    Object.values(obj).forEach(value => {
+      if (value && typeof value === 'object') {
+        cleanupEmptyObjects(value);
+      }
+    });
+  }
 }
 
 /**
