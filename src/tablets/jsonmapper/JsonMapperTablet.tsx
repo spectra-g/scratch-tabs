@@ -31,6 +31,7 @@ export const JsonMapperTablet: Tablet = {
         selectedDirection: "sourceToTarget",
         generatedCode: "",
         searchQuery: "",
+        editorScrollPosition: 0,
       },
     };
   },
@@ -139,6 +140,46 @@ export const JsonMapperTablet: Tablet = {
       setShowBatchTransform(true);
     };
 
+    const handleMappingChange = (updatedMapping: MappingConfig) => {
+      // Continuously update the mapping in state as user makes changes
+      // Only update if the mapping actually changed
+      const currentMapping = state.data.mappings.find(m => m.id === updatedMapping.id);
+      if (!currentMapping) return;
+
+      // Deep comparison to prevent unnecessary updates
+      const hasChanged =
+        currentMapping.name !== updatedMapping.name ||
+        currentMapping.description !== updatedMapping.description ||
+        currentMapping.sourceJson !== updatedMapping.sourceJson ||
+        currentMapping.targetJson !== updatedMapping.targetJson ||
+        currentMapping.rules.length !== updatedMapping.rules.length;
+
+      if (!hasChanged) return;
+
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          mappings: state.data.mappings.map((m) =>
+            m.id === updatedMapping.id ? updatedMapping : m,
+          ),
+        },
+      });
+    };
+
+    const handleScrollPositionChange = (position: number) => {
+      // Only update if position actually changed
+      if (state.data.editorScrollPosition === position) return;
+
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          editorScrollPosition: position,
+        },
+      });
+    };
+
     const handleSaveMapping = (updatedMapping: MappingConfig) => {
       onChange({
         ...state,
@@ -150,6 +191,7 @@ export const JsonMapperTablet: Tablet = {
           activeMappingId: null,
           isEditingMapping: false,
           isCreatingMapping: false,
+          editorScrollPosition: 0,
         },
       });
     };
@@ -166,6 +208,7 @@ export const JsonMapperTablet: Tablet = {
             ),
             activeMappingId: null,
             isCreatingMapping: false,
+            editorScrollPosition: 0,
           },
         });
       } else {
@@ -176,6 +219,7 @@ export const JsonMapperTablet: Tablet = {
             ...state.data,
             activeMappingId: null,
             isEditingMapping: false,
+            editorScrollPosition: 0,
           },
         });
       }
@@ -248,6 +292,9 @@ export const JsonMapperTablet: Tablet = {
                 isNew={state.data.isCreatingMapping}
                 onSave={handleSaveMapping}
                 onCancel={handleCancelEdit}
+                onMappingChange={handleMappingChange}
+                scrollPosition={state.data.editorScrollPosition}
+                onScrollPositionChange={handleScrollPositionChange}
                 onTest={(mappingInProgress) => {
                   onChange({
                     ...state,

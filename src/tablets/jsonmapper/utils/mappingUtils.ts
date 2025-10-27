@@ -16,6 +16,58 @@ import {
 } from "./jsonUtils";
 
 /**
+ * Helper to extract path segments for join condition mapping
+ * Handles both dot notation ($.array[*].field) and bracket notation ($['array'][*]['field'])
+ */
+function extractJoinPathSegments(path: string) {
+  // Find all [*] positions
+  const wildcards: number[] = [];
+  let index = 0;
+  while ((index = path.indexOf("[*]", index)) !== -1) {
+    wildcards.push(index);
+    index += 3;
+  }
+
+  if (wildcards.length < 2) {
+    return null; // Not a nested array path
+  }
+
+  const firstWildcardIndex = wildcards[0];
+  const lastWildcardIndex = wildcards[wildcards.length - 1];
+
+  // Extract parent array path (everything before first [*])
+  const parentArrayPath = path.substring(0, firstWildcardIndex);
+
+  // Extract nested array path (between first [*] and last [*])
+  const betweenWildcards = path.substring(firstWildcardIndex + 3, lastWildcardIndex);
+
+  // Parse nested array name from betweenWildcards
+  // Handle formats: .conflicts, ['conflicts'], .['conflicts']
+  let nestedArrayName = betweenWildcards
+    .replace(/^\['/, "") // Remove leading ['
+    .replace(/'\]$/, "") // Remove trailing ']
+    .replace(/^\./, "")  // Remove leading .
+    .replace(/\['/, "")  // Remove ['
+    .replace(/'\]/, ""); // Remove ']
+
+  // Extract field path after last [*]
+  const afterLastWildcard = path.substring(lastWildcardIndex + 3);
+
+  // Parse field name
+  // Handle formats: .priority, ['priority']
+  let fieldName = afterLastWildcard
+    .replace(/^\['/, "")  // Remove leading ['
+    .replace(/'\]$/, "")  // Remove trailing ']
+    .replace(/^\./, "");  // Remove leading .
+
+  return {
+    parentArrayPath,
+    nestedArrayName,
+    fieldName,
+  };
+}
+
+/**
  * Suggests mappings between source and target JSON
  */
 export function suggestMappings(
@@ -246,6 +298,188 @@ export function transformJson(
         // Get source array
         const sourceArray = getValueByPath(sourceJson, sourceContainerPath);
         if (!Array.isArray(sourceArray)) continue;
+
+        // Case 2a: Array-to-nested-array with join condition
+        if (rule.joinCondition) {
+          // Count wildcards to detect nested array mapping
+          const targetWildcardCount = (currentRuleTargetPath.match(/\[\*\]/g) || []).length;
+
+          if (targetWildcardCount >= 2) {
+            // Extract target parent array path (first [*])
+            const firstWildcardIndex = currentRuleTargetPath.indexOf("[*]");
+            const targetParentPath = currentRuleTargetPath.substring(0, firstWildcardIndex);
+
+            // Get target parent array from output, or copy from source if available
+            let targetParentArray = getValueByPath(outputObject, targetParentPath);
+            if (!Array.isArray(targetParentArray)) {
+              // Try to get it from source
+              const targetFromSource = getValueByPath(sourceJson, targetParentPath);
+              if (Array.isArray(targetFromSource)) {
+                // Deep clone to avoid modifying source
+                targetParentArray = JSON.parse(JSON.stringify(targetFromSource));
+                setValueByPath(outputObject, targetParentPath, targetParentArray);
+              } else {
+                continue; // Skip if target parent array doesn't exist anywhere
+              }
+            }
+
+            // Create Map for O(1) lookup: targetKey -> targetParentItem
+            const targetMap = new Map<any, any>();
+            const matchType = rule.joinCondition.matchType || "equals";
+
+            for (const targetParentItem of targetParentArray) {
+              if (targetParentItem && typeof targetParentItem === "object") {
+                const targetKeyValue = targetParentItem[rule.joinCondition.targetKey];
+                if (targetKeyValue !== undefined && targetKeyValue !== null) {
+                  targetMap.set(targetKeyValue, targetParentItem);
+                }
+              }
+            }
+
+            // Extract target path segments using helper function
+            const targetSegments = extractJoinPathSegments(currentRuleTargetPath);
+            if (!targetSegments) {
+              continue; // Invalid target path format
+            }
+
+            const targetNestedArrayPath = targetSegments.nestedArrayName;
+            const targetFieldPathForJoin = `['${targetSegments.fieldName}']`;
+
+            // Extract source field path (source only has 1 wildcard)
+            const sourceAfterWildcard = currentRuleSourcePath.substring(
+              currentRuleSourcePath.indexOf("[*]") + 3
+            );
+            // Clean up the path - handle both .field and ['field'] formats
+            const sourceFieldName = sourceAfterWildcard
+              .replace(/^\['/, "")
+              .replace(/'\]$/, "")
+              .replace(/^\./, "");
+            const sourceFieldPathForJoin = `['${sourceFieldName}']`;
+
+            // Process each source item and find matching target parent
+            for (const sourceItem of sourceArray) {
+              if (!sourceItem || typeof sourceItem !== "object") continue;
+
+              // Get join key from source item
+              const sourceKeyValue = sourceItem[rule.joinCondition.sourceKey];
+              if (sourceKeyValue === undefined || sourceKeyValue === null) continue;
+
+              // Find matching target parent using Map (O(1) lookup)
+              let matchingTargetParent: any = null;
+
+              if (matchType === "equals") {
+                matchingTargetParent = targetMap.get(sourceKeyValue);
+              } else if (matchType === "contains" || matchType === "startsWith") {
+                // For non-equals matches, fallback to linear search
+                for (const targetParentItem of targetParentArray) {
+                  if (targetParentItem && typeof targetParentItem === "object") {
+                    const targetKeyValue = targetParentItem[rule.joinCondition.targetKey];
+                    if (targetKeyValue !== undefined && targetKeyValue !== null) {
+                      const sourceStr = String(sourceKeyValue);
+                      const targetStr = String(targetKeyValue);
+                      if (matchType === "contains" && targetStr.includes(sourceStr)) {
+                        matchingTargetParent = targetParentItem;
+                        break;
+                      } else if (matchType === "startsWith" && targetStr.startsWith(sourceStr)) {
+                        matchingTargetParent = targetParentItem;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+
+              if (!matchingTargetParent) {
+                // No match found - skip (left join behavior)
+                continue;
+              }
+
+              // Ensure nested array exists in target parent
+              if (!matchingTargetParent[targetNestedArrayPath]) {
+                matchingTargetParent[targetNestedArrayPath] = [];
+              }
+
+              const targetNestedArray = matchingTargetParent[targetNestedArrayPath];
+
+              // Extract source value
+              let sourceValue;
+              if (sourceFieldPathForJoin) {
+                const pathParts = sourceFieldPathForJoin
+                  .replace(/^\['/, "")
+                  .replace(/'\]$/, "")
+                  .split(/'\]\['|'\.'|'\]\./);
+
+                sourceValue = sourceItem;
+                for (const segment of pathParts) {
+                  if (!sourceValue || typeof sourceValue !== "object") {
+                    sourceValue = undefined;
+                    break;
+                  }
+                  sourceValue = sourceValue[segment];
+                }
+              } else {
+                sourceValue = sourceItem;
+              }
+
+              if (sourceValue === undefined) continue;
+
+              // Apply transformation
+              let transformedValue = sourceValue;
+              if (
+                direction === "sourceToTarget" &&
+                currentRuleTransformationType !== "none"
+              ) {
+                transformedValue = applyTransformation(
+                  sourceValue,
+                  currentRuleTransformation,
+                  currentRuleTransformationType,
+                  sourceJson,
+                );
+              }
+
+              // Create target nested item
+              let targetNestedItem: any = {};
+
+              if (targetFieldPathForJoin) {
+                // Map to specific field in nested item
+                const pathParts = targetFieldPathForJoin
+                  .replace(/^\['/, "")
+                  .replace(/'\]$/, "")
+                  .split(/'\]\['|'\.'|'\]\./);
+
+                let current = targetNestedItem;
+                for (let j = 0; j < pathParts.length - 1; j++) {
+                  const segment = pathParts[j];
+                  if (!segment) continue;
+                  if (!current[segment]) {
+                    current[segment] = {};
+                  }
+                  current = current[segment];
+                }
+
+                const lastSegment = pathParts[pathParts.length - 1];
+                if (lastSegment) {
+                  current[lastSegment] = transformedValue;
+                }
+              } else {
+                // Map entire item
+                if (typeof transformedValue === "object" && !Array.isArray(transformedValue)) {
+                  targetNestedItem = transformedValue;
+                } else {
+                  targetNestedItem = transformedValue;
+                }
+              }
+
+              // Append to nested array
+              targetNestedArray.push(targetNestedItem);
+            }
+
+            // Update modified target parent array
+            setValueByPath(outputObject, targetParentPath, targetParentArray);
+
+            continue;
+          }
+        }
 
         // Get or create target array
         let targetArray = getValueByPath(outputObject, targetContainerPath);
