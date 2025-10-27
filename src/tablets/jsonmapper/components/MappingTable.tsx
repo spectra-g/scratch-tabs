@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Edit,
   Trash2,
@@ -24,6 +24,7 @@ interface MappingTableProps {
   sourceJson: string;
   targetJson: string;
   onSortedRulesChange?: (sortedRules: MappingRule[]) => void;
+  autoEditRuleId?: string | null;
 }
 
 type SortField =
@@ -46,10 +47,18 @@ export const MappingTable: React.FC<MappingTableProps> = ({
   sourceJson,
   targetJson,
   onSortedRulesChange,
+  autoEditRuleId,
 }) => {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>("sourcePath");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  // Automatically open editor for newly added rules
+  useEffect(() => {
+    if (autoEditRuleId) {
+      setEditingRuleId(autoEditRuleId);
+    }
+  }, [autoEditRuleId]);
 
   const handleEditRule = (id: string) => {
     setEditingRuleId(id);

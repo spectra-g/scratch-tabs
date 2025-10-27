@@ -687,5 +687,427 @@ describe("transformJson", () => {
         cleanData: ["value1", null, "value3", null]
       });
     });
+
+    it("should merge multiple fields from flat array into same nested array object", () => {
+      // Bug fix: When mapping multiple fields from a flat array to a nested array,
+      // they should be merged into the same object, not create separate objects
+      const sourceJson = {
+        conflicts: [
+          {
+            productId: "p1",
+            priority: 10,
+            reason: "Stock issue"
+          },
+          {
+            productId: "p2",
+            priority: 5,
+            reason: "Delivery delay"
+          }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.conflicts[*].priority",
+          targetPath: "$.products[*].conflicts[*].priority",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "number",
+          targetDataType: "number",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: true
+        },
+        {
+          id: "2",
+          sourcePath: "$['conflicts'][*]['productId']",
+          targetPath: "$['products'][*]['id']",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 0.33,
+          isUserDefined: false
+        },
+        {
+          id: "3",
+          sourcePath: "$.conflicts[*].reason",
+          targetPath: "$.products[*].conflicts[*].reason",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.05,
+          isUserDefined: true
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Both priority and reason should be in the SAME nested object
+      expect(result).toEqual({
+        products: [
+          {
+            id: "p1",
+            conflicts: [
+              {
+                priority: 10,
+                reason: "Stock issue"
+              }
+            ]
+          },
+          {
+            id: "p2",
+            conflicts: [
+              {
+                priority: 5,
+                reason: "Delivery delay"
+              }
+            ]
+          }
+        ]
+      });
+    });
+
+    it("should extract specific nested field value, not entire nested object", () => {
+      // Bug fix: When mapping from a nested path like filters[*].filters[*].filterTag.id,
+      // should extract just the 'id' value, not the entire filterTag object
+      const sourceJson = {
+        criteria: {
+          filters: [
+            {
+              filters: [
+                {
+                  filterTag: {
+                    id: "ft01",
+                    group: "g01"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$['criteria']['filters'][*]['filters'][*]['filterTag']['group']",
+          targetPath: "$['criteria']['filters'][*]['filters'][*]['group']",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.075,
+          isUserDefined: false
+        },
+        {
+          id: "2",
+          sourcePath: "$['criteria']['filters'][*]['filters'][*]['filterTag']['id']",
+          targetPath: "$['criteria']['filters'][*]['filters'][*]['id']",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.073,
+          isUserDefined: false
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Should extract just id and group values, not nest the entire filterTag object
+      expect(result).toEqual({
+        criteria: {
+          filters: [
+            {
+              filters: [
+                {
+                  id: "ft01",
+                  group: "g01"
+                }
+              ]
+            }
+          ]
+        }
+      });
+    });
+
+    it("should handle dot notation paths correctly", () => {
+      // Bug fix: Dot notation like .depositCharge wasn't being parsed correctly
+      const sourceJson = {
+        conflicts: [
+          {
+            depositCharge: "12",
+            productId: "p1",
+            priority: 10
+          },
+          {
+            productId: "p2",
+            priority: 5
+          }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.conflicts[*].depositCharge",
+          targetPath: "$.conflicts[*].depositCharge",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: true
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Should correctly extract and map depositCharge from first item only
+      expect(result).toEqual({
+        conflicts: [
+          {
+            depositCharge: "12"
+          }
+        ]
+      });
+    });
+
+    it("should remove empty objects from arrays after mapping", () => {
+      // Bug fix: Empty objects should be cleaned up from arrays
+      const sourceJson = {
+        items: [
+          {
+            id: "1",
+            value: "A"
+          },
+          {
+            id: "2"
+            // No value field
+          },
+          {
+            id: "3",
+            value: "C"
+          }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.items[*].value",
+          targetPath: "$.output[*].value",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: false
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Should only have 2 items, empty object removed
+      expect(result).toEqual({
+        output: [
+          { value: "A" },
+          { value: "C" }
+        ]
+      });
+    });
+
+    it("should merge multiple join condition rules into same nested object", () => {
+      // Bug fix: Multiple rules with join conditions should merge into the same nested object
+      const sourceJson = {
+        conflicts: [
+          {
+            productId: "p1",
+            priority: 10,
+            reason: "Stock issue"
+          },
+          {
+            productId: "p2",
+            priority: 5,
+            reason: "Delivery delay"
+          }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$['conflicts'][*]['productId']",
+          targetPath: "$['products'][*]['id']",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 0.33,
+          isUserDefined: false
+        },
+        {
+          id: "2",
+          sourcePath: "$.conflicts[*].priority",
+          targetPath: "$.products[*].conflicts[*].priority",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "number",
+          targetDataType: "number",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals"
+          }
+        },
+        {
+          id: "3",
+          sourcePath: "$.conflicts[*].reason",
+          targetPath: "$.products[*].conflicts[*].reason",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.05,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals"
+          }
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Both priority and reason should be in the SAME nested object
+      expect(result).toEqual({
+        products: [
+          {
+            id: "p1",
+            conflicts: [
+              {
+                priority: 10,
+                reason: "Stock issue"
+              }
+            ]
+          },
+          {
+            id: "p2",
+            conflicts: [
+              {
+                priority: 5,
+                reason: "Delivery delay"
+              }
+            ]
+          }
+        ]
+      });
+    });
+
+    it("should handle mixed dot and bracket notation in paths", () => {
+      const sourceJson = {
+        users: [
+          {
+            name: "Alice",
+            age: 30
+          },
+          {
+            name: "Bob",
+            age: 25
+          }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.users[*].name",  // Dot notation
+          targetPath: "$['people'][*]['fullName']",  // Bracket notation
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: false
+        },
+        {
+          id: "2",
+          sourcePath: "$['users'][*]['age']",  // Bracket notation
+          targetPath: "$.people[*].years",  // Dot notation
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "number",
+          targetDataType: "number",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: false
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      expect(result).toEqual({
+        people: [
+          {
+            fullName: "Alice",
+            years: 30
+          },
+          {
+            fullName: "Bob",
+            years: 25
+          }
+        ]
+      });
+    });
+
+    it("should not create empty objects when source values are undefined", () => {
+      const sourceJson = {
+        items: [
+          { a: 1 },
+          { b: 2 },
+          { c: 3 }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.items[*].a",
+          targetPath: "$.output[*].value",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "number",
+          targetDataType: "number",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: false
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Should only have one item (only first source item has 'a' field)
+      expect(result).toEqual({
+        output: [
+          { value: 1 }
+        ]
+      });
+    });
   });
 });

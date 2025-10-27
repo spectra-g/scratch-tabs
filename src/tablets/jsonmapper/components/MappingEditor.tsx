@@ -11,7 +11,10 @@ import {
   DownloadCloud,
   Copy,
   Check,
+  ChevronDown,
+  ExternalLink,
 } from "lucide-react";
+import { useTabletTabCreation } from "../../bridge";
 import { MappingConfig, MappingRule, PathInfo } from "../types";
 import { MappingTable } from "./MappingTable";
 import {
@@ -68,6 +71,10 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSyncedStateRef = useRef<string>("");
+  const [autoEditRuleId, setAutoEditRuleId] = useState<string | null>(null);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const exportDropdownRef = useRef<HTMLDivElement>(null);
+  const { createBackgroundTab } = useTabletTabCreation();
 
   // Sync local state changes back to parent (prevents data loss on tab switch)
   useEffect(() => {
@@ -172,12 +179,11 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     setCurrentSortedRules(sortedRules);
   }, []);
 
-  const handleExportRulesToCsv = () => {
-    if (currentSortedRules.length === 0) {
-      alert("No rules to export.");
-      return;
-    }
-
+  /**
+   * Generates a CSV string and filename from the current rules
+   * @returns Object containing the CSV string and suggested filename
+   */
+  const generateRulesCsv = useCallback((): { csvString: string; filename: string } => {
     const headers = [
       "ID",
       "Source Path (Readable)",
@@ -195,7 +201,6 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
 
     const csvRows = [headers.join(",")];
 
-    // Use sorted rules instead of original rules
     currentSortedRules.forEach((rule) => {
       const row = [
         `"${rule.id}"`,
@@ -204,7 +209,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
         `"${rule.sourcePath}"`,
         `"${rule.targetPath}"`,
         `"${rule.transformationType}"`,
-        `"${rule.transformation.replace(/"/g, '""')}"`, // Escape double quotes in transformation script
+        `"${rule.transformation.replace(/"/g, '""')}"`,
         `"${rule.sourceDataType}"`,
         `"${rule.targetDataType}"`,
         `"${rule.status}"`,
@@ -217,7 +222,20 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     const csvString = csvRows.join("\n");
     const filename = `${name.trim().replace(/\s+/g, "_") || "mapping"}_rules.csv`;
 
-    // Create and trigger download
+    return { csvString, filename };
+  }, [currentSortedRules, name]);
+
+  /**
+   * Downloads mapping rules as a CSV file
+   */
+  const handleExportRulesToCsv = useCallback(() => {
+    if (currentSortedRules.length === 0) {
+      alert("No rules to export.");
+      return;
+    }
+
+    const { csvString, filename } = generateRulesCsv();
+
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -227,7 +245,29 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+    URL.revokeObjectURL(url);
+    setShowExportDropdown(false);
+  }, [currentSortedRules, generateRulesCsv]);
+
+  /**
+   * Opens mapping rules in a new background tab as CSV
+   */
+  const handleExportRulesToNewTab = useCallback(async () => {
+    if (currentSortedRules.length === 0) {
+      alert("No rules to export.");
+      return;
+    }
+
+    const { csvString, filename } = generateRulesCsv();
+
+    try {
+      await createBackgroundTab(filename, csvString, "csv");
+      setShowExportDropdown(false);
+    } catch (error) {
+      console.error("Failed to create tab:", error);
+      alert("Failed to create new tab");
+    }
+  }, [currentSortedRules, generateRulesCsv, createBackgroundTab]);
 
   const handleSourceJsonChange = (value: string | undefined) => {
     setSourceJson(value || "");
@@ -441,7 +481,24 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     }
   };
 
-  const handleAddRule = () => {
+  // Close export dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target as Node)) {
+        setShowExportDropdown(false);
+      }
+    };
+
+    if (showExportDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showExportDropdown]);
+
+  /**
+   * Adds a new empty rule and automatically opens it for editing
+   */
+  const handleAddRule = useCallback(() => {
     const newRule: MappingRule = {
       id: crypto.randomUUID(),
       sourcePath: "",
@@ -455,8 +512,12 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       isUserDefined: true,
     };
 
-    setRules([...rules, newRule]);
-  };
+    setRules((prevRules) => [...prevRules, newRule]);
+    setAutoEditRuleId(newRule.id);
+
+    // Clear auto-edit trigger to allow subsequent add operations
+    setTimeout(() => setAutoEditRuleId(null), 100);
+  }, []);
 
   const handleUpdateRule = (updatedRule: MappingRule) => {
     setRules(
@@ -904,15 +965,38 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                   <Wand2 size={14} />
                   <span>Re-evaluate All</span>
                 </button>
-                <button
-                  onClick={handleExportRulesToCsv}
-                  className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
-                  disabled={rules.length === 0}
-                  title="Export rules to CSV"
-                >
-                  <DownloadCloud size={14} />
-                  <span>Export</span>
-                </button>
+                {/* Export Dropdown */}
+                <div className="relative" ref={exportDropdownRef}>
+                  <button
+                    onClick={() => setShowExportDropdown(!showExportDropdown)}
+                    className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                    disabled={rules.length === 0}
+                    title="Export rules to CSV"
+                  >
+                    <DownloadCloud size={14} />
+                    <span>Export</span>
+                    <ChevronDown size={12} />
+                  </button>
+
+                  {showExportDropdown && (
+                    <div className="absolute right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
+                      <button
+                        onClick={handleExportRulesToCsv}
+                        className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors"
+                      >
+                        <DownloadCloud size={14} />
+                        <span>Download CSV</span>
+                      </button>
+                      <button
+                        onClick={handleExportRulesToNewTab}
+                        className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors border-t border-gray-700"
+                      >
+                        <ExternalLink size={14} />
+                        <span>Open in New Tab</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={handleClearAllRules}
                   className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
@@ -933,6 +1017,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               sourceJson={sourceJson}
               targetJson={targetJson}
               onSortedRulesChange={handleSortedRulesChange}
+              autoEditRuleId={autoEditRuleId}
             />
           </div>
         </div>

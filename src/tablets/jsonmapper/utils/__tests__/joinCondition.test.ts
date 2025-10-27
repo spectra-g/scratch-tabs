@@ -64,14 +64,20 @@ describe("transformJson - Join Condition", () => {
       expect(result.products[0].conflicts).toEqual([]);
 
       // Verify products[1] (id=p1) has conflict from conflicts[0]
-      expect(result.products[1].conflicts).toHaveLength(2); // 2 rules = 2 items per conflict
-      expect(result.products[1].conflicts[0]).toMatchObject({ priority: 10 });
-      expect(result.products[1].conflicts[1]).toMatchObject({ reason: "Stock issue" });
+      // Both rules should merge into a single nested object
+      expect(result.products[1].conflicts).toHaveLength(1);
+      expect(result.products[1].conflicts[0]).toMatchObject({
+        priority: 10,
+        reason: "Stock issue"
+      });
 
       // Verify products[2] (id=p2) has conflict from conflicts[1]
-      expect(result.products[2].conflicts).toHaveLength(2);
-      expect(result.products[2].conflicts[0]).toMatchObject({ priority: 5 });
-      expect(result.products[2].conflicts[1]).toMatchObject({ reason: "Delivery delay" });
+      // Both rules should merge into a single nested object
+      expect(result.products[2].conflicts).toHaveLength(1);
+      expect(result.products[2].conflicts[0]).toMatchObject({
+        priority: 5,
+        reason: "Delivery delay"
+      });
     });
 
     it("should handle one-to-one join mapping correctly", () => {
@@ -423,14 +429,18 @@ describe("transformJson - Join Condition", () => {
         expect(Object.keys(firstConflict).some(k => k.includes("['"))).toBe(false);
       }
 
-      // Verify correct mapping
-      expect(result.products[0].conflicts).toHaveLength(2);
-      expect(result.products[0].conflicts[0]).toMatchObject({ priority: 10 });
-      expect(result.products[0].conflicts[1]).toMatchObject({ reason: "Stock issue" });
+      // Verify correct mapping - both rules should merge into single nested object
+      expect(result.products[0].conflicts).toHaveLength(1);
+      expect(result.products[0].conflicts[0]).toMatchObject({
+        priority: 10,
+        reason: "Stock issue"
+      });
 
-      expect(result.products[1].conflicts).toHaveLength(2);
-      expect(result.products[1].conflicts[0]).toMatchObject({ priority: 5 });
-      expect(result.products[1].conflicts[1]).toMatchObject({ reason: "Delivery delay" });
+      expect(result.products[1].conflicts).toHaveLength(1);
+      expect(result.products[1].conflicts[0]).toMatchObject({
+        priority: 5,
+        reason: "Delivery delay"
+      });
     });
   });
 
