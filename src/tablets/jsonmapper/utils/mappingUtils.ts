@@ -16,6 +16,58 @@ import {
 } from "./jsonUtils";
 
 /**
+ * Helper to extract path segments for join condition mapping
+ * Handles both dot notation ($.array[*].field) and bracket notation ($['array'][*]['field'])
+ */
+function extractJoinPathSegments(path: string) {
+  // Find all [*] positions
+  const wildcards: number[] = [];
+  let index = 0;
+  while ((index = path.indexOf("[*]", index)) !== -1) {
+    wildcards.push(index);
+    index += 3;
+  }
+
+  if (wildcards.length < 2) {
+    return null; // Not a nested array path
+  }
+
+  const firstWildcardIndex = wildcards[0];
+  const lastWildcardIndex = wildcards[wildcards.length - 1];
+
+  // Extract parent array path (everything before first [*])
+  const parentArrayPath = path.substring(0, firstWildcardIndex);
+
+  // Extract nested array path (between first [*] and last [*])
+  const betweenWildcards = path.substring(firstWildcardIndex + 3, lastWildcardIndex);
+
+  // Parse nested array name from betweenWildcards
+  // Handle formats: .conflicts, ['conflicts'], .['conflicts']
+  let nestedArrayName = betweenWildcards
+    .replace(/^\['/, "") // Remove leading ['
+    .replace(/'\]$/, "") // Remove trailing ']
+    .replace(/^\./, "")  // Remove leading .
+    .replace(/\['/, "")  // Remove ['
+    .replace(/'\]/, ""); // Remove ']
+
+  // Extract field path after last [*]
+  const afterLastWildcard = path.substring(lastWildcardIndex + 3);
+
+  // Parse field name
+  // Handle formats: .priority, ['priority']
+  let fieldName = afterLastWildcard
+    .replace(/^\['/, "")  // Remove leading ['
+    .replace(/'\]$/, "")  // Remove trailing ']
+    .replace(/^\./, "");  // Remove leading .
+
+  return {
+    parentArrayPath,
+    nestedArrayName,
+    fieldName,
+  };
+}
+
+/**
  * Suggests mappings between source and target JSON
  */
 export function suggestMappings(
@@ -284,19 +336,25 @@ export function transformJson(
               }
             }
 
-            // Extract nested array field name from target path
-            const targetNestedArrayPath = currentRuleTargetPath.substring(
-              firstWildcardIndex + 3,
-              currentRuleTargetPath.lastIndexOf("[*]")
-            ).replace(/^\['/, "").replace(/'\]$/, "");
+            // Extract target path segments using helper function
+            const targetSegments = extractJoinPathSegments(currentRuleTargetPath);
+            if (!targetSegments) {
+              continue; // Invalid target path format
+            }
 
-            // Extract field paths for nested mapping
-            const sourceFieldPathForJoin = currentRuleSourcePath.substring(
+            const targetNestedArrayPath = targetSegments.nestedArrayName;
+            const targetFieldPathForJoin = `['${targetSegments.fieldName}']`;
+
+            // Extract source field path (source only has 1 wildcard)
+            const sourceAfterWildcard = currentRuleSourcePath.substring(
               currentRuleSourcePath.indexOf("[*]") + 3
             );
-            const targetFieldPathForJoin = currentRuleTargetPath.substring(
-              currentRuleTargetPath.lastIndexOf("[*]") + 3
-            );
+            // Clean up the path - handle both .field and ['field'] formats
+            const sourceFieldName = sourceAfterWildcard
+              .replace(/^\['/, "")
+              .replace(/'\]$/, "")
+              .replace(/^\./, "");
+            const sourceFieldPathForJoin = `['${sourceFieldName}']`;
 
             // Process each source item and find matching target parent
             for (const sourceItem of sourceArray) {

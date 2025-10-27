@@ -263,11 +263,23 @@ export const MappingTable: React.FC<MappingTableProps> = ({
                   {jsonPathToReadablePath(rule.sourcePath)}
                 </td>
                 <td className="px-4 py-3 font-mono text-xs">
-                  {rule.targetPath ? (
-                    jsonPathToReadablePath(rule.targetPath)
-                  ) : (
-                    <span className="text-gray-500 italic">Not mapped</span>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    <span>
+                      {rule.targetPath ? (
+                        jsonPathToReadablePath(rule.targetPath)
+                      ) : (
+                        <span className="text-gray-500 italic">Not mapped</span>
+                      )}
+                    </span>
+                    {rule.joinCondition && (
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                        title={`Join: ${rule.joinCondition.sourceKey} ${rule.joinCondition.matchType || "equals"} ${rule.joinCondition.targetKey}`}
+                      >
+                        JOIN
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   {rule.transformationType === "none" ? (

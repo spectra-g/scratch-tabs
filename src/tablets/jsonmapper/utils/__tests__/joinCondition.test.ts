@@ -358,6 +358,82 @@ describe("transformJson - Join Condition", () => {
     });
   });
 
+  describe("Path format compatibility", () => {
+    it("should handle dot notation paths correctly", () => {
+      const sourceJson = {
+        conflicts: [
+          { productId: "p1", priority: 10, reason: "Stock issue" },
+          { productId: "p2", priority: 5, reason: "Delivery delay" },
+        ],
+        products: [
+          { id: "p1", name: "Gadget", conflicts: [] },
+          { id: "p2", name: "Tool", conflicts: [] },
+        ],
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.conflicts[*].priority",
+          targetPath: "$.products[*].conflicts[*].priority",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "number",
+          targetDataType: "number",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals",
+          },
+        },
+        {
+          id: "2",
+          sourcePath: "$.conflicts[*].reason",
+          targetPath: "$.products[*].conflicts[*].reason",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals",
+          },
+        },
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Should create proper nested structure, not malformed keys
+      expect(result.products[0].conflicts).toBeDefined();
+      expect(Array.isArray(result.products[0].conflicts)).toBe(true);
+
+      // Check that keys are properly formed
+      const product1Conflicts = result.products[0].conflicts;
+      if (product1Conflicts.length > 0) {
+        const firstConflict = product1Conflicts[0];
+        // Should NOT have malformed keys like "conflicts'][*]['priority"
+        expect(Object.keys(firstConflict).some(k => k.includes("']"))).toBe(false);
+        expect(Object.keys(firstConflict).some(k => k.includes("['"))).toBe(false);
+      }
+
+      // Verify correct mapping
+      expect(result.products[0].conflicts).toHaveLength(2);
+      expect(result.products[0].conflicts[0]).toMatchObject({ priority: 10 });
+      expect(result.products[0].conflicts[1]).toMatchObject({ reason: "Stock issue" });
+
+      expect(result.products[1].conflicts).toHaveLength(2);
+      expect(result.products[1].conflicts[0]).toMatchObject({ priority: 5 });
+      expect(result.products[1].conflicts[1]).toMatchObject({ reason: "Delivery delay" });
+    });
+  });
+
   describe("Performance optimization", () => {
     it("should handle large arrays efficiently with Map lookup", () => {
       // Create large arrays to test O(n+m) performance

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Editor } from "@monaco-editor/react";
 import { X, Save } from "lucide-react";
-import { MappingRule, TransformationType } from "../types";
+import { MappingRule, TransformationType, JoinCondition, JoinMatchType } from "../types";
 import {
   jsonPathToReadablePath,
   readablePathToJsonPath,
@@ -39,12 +39,69 @@ export const TransformationRuleEditor: React.FC<
     {},
   );
 
+  // Join condition state
+  const [useJoinCondition, setUseJoinCondition] = useState(!!rule.joinCondition);
+  const [joinSourceKey, setJoinSourceKey] = useState(rule.joinCondition?.sourceKey || "");
+  const [joinTargetKey, setJoinTargetKey] = useState(rule.joinCondition?.targetKey || "");
+  const [joinMatchType, setJoinMatchType] = useState<JoinMatchType>(rule.joinCondition?.matchType || "equals");
+
   // Preserve builtin state when switching modes
   const [savedBuiltinState, setSavedBuiltinState] = useState<{
     selectedBuiltin: string;
     builtinParams: { [key: string]: string };
     transformation: string;
   }>({ selectedBuiltin: "", builtinParams: {}, transformation: "" });
+
+  // Extract available keys from source and target array items for join condition
+  const availableSourceKeys = useMemo(() => {
+    if (!sourceJson || !sourcePath) return [];
+    try {
+      const sourceData = JSON.parse(sourceJson);
+      const jsonPath = readablePathToJsonPath(sourcePath);
+
+      // Extract the array path (everything before the last [*])
+      const arrayMatch = jsonPath.match(/^(.*\[\*\])/);
+      if (!arrayMatch) return [];
+
+      const arrayPath = arrayMatch[1];
+      const arrayValue = getValueByPath(sourceData, arrayPath);
+
+      if (!Array.isArray(arrayValue) || arrayValue.length === 0) return [];
+
+      // Get keys from first item
+      const firstItem = arrayValue[0];
+      if (typeof firstItem !== "object" || firstItem === null) return [];
+
+      return Object.keys(firstItem).sort();
+    } catch (error) {
+      return [];
+    }
+  }, [sourceJson, sourcePath]);
+
+  const availableTargetKeys = useMemo(() => {
+    if (!targetJson || !targetPath) return [];
+    try {
+      const targetData = JSON.parse(targetJson);
+      const jsonPath = readablePathToJsonPath(targetPath);
+
+      // Extract the parent array path (first [*] only)
+      const arrayMatch = jsonPath.match(/^(.*?\[\*\])/);
+      if (!arrayMatch) return [];
+
+      const arrayPath = arrayMatch[1];
+      const arrayValue = getValueByPath(targetData, arrayPath);
+
+      if (!Array.isArray(arrayValue) || arrayValue.length === 0) return [];
+
+      // Get keys from first item
+      const firstItem = arrayValue[0];
+      if (typeof firstItem !== "object" || firstItem === null) return [];
+
+      return Object.keys(firstItem).sort();
+    } catch (error) {
+      return [];
+    }
+  }, [targetJson, targetPath]);
 
   // Load source and target values when the component mounts
   useEffect(() => {
@@ -553,6 +610,16 @@ export const TransformationRuleEditor: React.FC<
         ? readablePathToJsonPath(targetPath)
         : "";
 
+      // Build join condition if enabled and valid
+      let joinCondition: JoinCondition | undefined;
+      if (useJoinCondition && joinSourceKey && joinTargetKey) {
+        joinCondition = {
+          sourceKey: joinSourceKey,
+          targetKey: joinTargetKey,
+          matchType: joinMatchType,
+        };
+      }
+
       onSave({
         ...rule,
         sourcePath: normalizedSourcePath,
@@ -560,6 +627,7 @@ export const TransformationRuleEditor: React.FC<
         transformationType,
         transformation,
         isUserDefined: true,
+        joinCondition,
       });
     } catch (error) {
       console.error("Error saving rule:", error);
@@ -775,6 +843,115 @@ export const TransformationRuleEditor: React.FC<
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Join Condition */}
+            <div className="bg-gray-900/30 border border-gray-700/50 rounded-lg p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <input
+                  type="checkbox"
+                  id="useJoinCondition"
+                  checked={useJoinCondition}
+                  onChange={(e) => setUseJoinCondition(e.target.checked)}
+                  className="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label
+                  htmlFor="useJoinCondition"
+                  className="text-sm font-medium text-gray-300 cursor-pointer"
+                >
+                  Use Join Condition
+                </label>
+                <span className="text-xs text-gray-500">
+                  (For array-to-nested-array mappings)
+                </span>
+              </div>
+
+              {useJoinCondition && (
+                <div className="space-y-3 ml-6 mt-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Source Join Key
+                      </label>
+                      <select
+                        value={joinSourceKey}
+                        onChange={(e) => setJoinSourceKey(e.target.value)}
+                        className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                        disabled={availableSourceKeys.length === 0}
+                      >
+                        <option value="">
+                          {availableSourceKeys.length === 0
+                            ? "No keys available"
+                            : "Select key..."}
+                        </option>
+                        {availableSourceKeys.map((key) => (
+                          <option key={key} value={key}>
+                            {key}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Field in source array item
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Target Join Key
+                      </label>
+                      <select
+                        value={joinTargetKey}
+                        onChange={(e) => setJoinTargetKey(e.target.value)}
+                        className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                        disabled={availableTargetKeys.length === 0}
+                      >
+                        <option value="">
+                          {availableTargetKeys.length === 0
+                            ? "No keys available"
+                            : "Select key..."}
+                        </option>
+                        {availableTargetKeys.map((key) => (
+                          <option key={key} value={key}>
+                            {key}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Field in target parent array item
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Match Type
+                      </label>
+                      <select
+                        value={joinMatchType}
+                        onChange={(e) => setJoinMatchType(e.target.value as JoinMatchType)}
+                        className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                      >
+                        <option value="equals">Equals</option>
+                        <option value="contains">Contains</option>
+                        <option value="startsWith">Starts With</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        How to match keys
+                      </p>
+                    </div>
+                  </div>
+
+                  {joinSourceKey && joinTargetKey && (
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-2 text-xs text-blue-300">
+                      <strong>Join condition:</strong> Match source items where{" "}
+                      <code className="bg-blue-500/20 px-1 rounded">{joinSourceKey}</code>{" "}
+                      {joinMatchType === "equals" && "equals"}
+                      {joinMatchType === "contains" && "contains"}
+                      {joinMatchType === "startsWith" && "starts with"}{" "}
+                      <code className="bg-blue-500/20 px-1 rounded">{joinTargetKey}</code>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Transformation */}
