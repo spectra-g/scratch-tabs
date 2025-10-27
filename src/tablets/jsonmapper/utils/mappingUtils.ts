@@ -301,6 +301,25 @@ export function transformJson(
           continue;
         }
 
+        /**
+         * Handle empty source arrays - preserve empty arrays in target
+         * This ensures that mappings like promotions[*] -> promotions[*] will create
+         * an empty array in the target when the source is empty, maintaining structure.
+         *
+         * Exception: Skip for join conditions with nested targets (e.g., conflicts[*] -> products[*].conflicts[*])
+         * as these require special handling to not overwrite existing nested structures.
+         */
+        const hasJoinWithNestedTarget = rule.joinCondition &&
+          (currentRuleTargetPath.match(/\[\*\]/g) || []).length >= 2;
+
+        if (sourceArray.length === 0 && !hasJoinWithNestedTarget) {
+          const existingTargetArray = getValueByPath(outputObject, targetContainerPath);
+          if (!existingTargetArray || !Array.isArray(existingTargetArray)) {
+            setValueByPath(outputObject, targetContainerPath, []);
+          }
+          continue;
+        }
+
         // Case 2a: Array-to-nested-array with join condition
         if (rule.joinCondition) {
 
@@ -512,10 +531,33 @@ export function transformJson(
           }
         }
 
-        // Get or create target array (but don't pre-fill with empty objects)
+        // Get or create target array
         let targetArray = getValueByPath(outputObject, targetContainerPath);
         if (!targetArray || !Array.isArray(targetArray)) {
-          targetArray = [];
+          /**
+           * Determine if we need to preserve parent object structure from source.
+           * Only deep clone when:
+           * 1. Same container (source path == target path)
+           * 2. AND target field has nested structure beyond first level
+           *
+           * Example needing structure:
+           *   products[*].weights.uoms → needs weights object to exist
+           *
+           * Example NOT needing structure:
+           *   conflicts[*].depositCharge → just needs conflicts array
+           */
+          const fieldPathWithoutLeadingDot = targetFieldPath.replace(/^\./, "").replace(/^\['/, "");
+          const hasNestedStructure = fieldPathWithoutLeadingDot.includes(".") ||
+                                     fieldPathWithoutLeadingDot.includes("']['");
+          const needsParentStructure = sourceContainerPath === targetContainerPath && hasNestedStructure;
+
+          if (needsParentStructure) {
+            // Deep clone the source array to preserve parent structure
+            targetArray = JSON.parse(JSON.stringify(sourceArray));
+          } else {
+            // Create empty array
+            targetArray = [];
+          }
           setValueByPath(outputObject, targetContainerPath, targetArray);
         } else {
           // IMPORTANT: Get a fresh reference from outputObject to ensure we're modifying the actual array
@@ -600,6 +642,24 @@ export function transformJson(
                   }
                 }
 
+                /**
+                 * Apply transformation to nested array values.
+                 * This supports transformations on nested-to-nested array mappings.
+                 */
+                let transformedNestedValue = nestedSourceValue;
+                if (
+                  direction === "sourceToTarget" &&
+                  currentRuleTransformationType !== "none" &&
+                  nestedSourceValue !== undefined
+                ) {
+                  transformedNestedValue = applyTransformation(
+                    nestedSourceValue,
+                    currentRuleTransformation,
+                    currentRuleTransformationType,
+                    sourceJson,
+                  );
+                }
+
                 // Get or create nested target object at this index
                 if (!targetArray[i][firstTargetComponent][j]) {
                   targetArray[i][firstTargetComponent][j] = {};
@@ -607,11 +667,11 @@ export function transformJson(
                 const targetNestedItem = targetArray[i][firstTargetComponent][j];
 
                 // Set the field value on the nested object
-                if (lastTargetComponent && nestedSourceValue !== undefined) {
-                  targetNestedItem[lastTargetComponent] = nestedSourceValue;
-                } else if (!lastTargetComponent && nestedSourceValue !== undefined) {
+                if (lastTargetComponent && transformedNestedValue !== undefined) {
+                  targetNestedItem[lastTargetComponent] = transformedNestedValue;
+                } else if (!lastTargetComponent && transformedNestedValue !== undefined) {
                   // If no last component, replace the entire item
-                  targetArray[i][firstTargetComponent][j] = nestedSourceValue;
+                  targetArray[i][firstTargetComponent][j] = transformedNestedValue;
                 }
               }
             } else {
@@ -689,25 +749,63 @@ export function transformJson(
         for (let i = 0; i < sourceArray.length; i++) {
           const sourceItem = sourceArray[i];
 
-          // Extract the correct field value from the source item
+          /**
+           * Extract the correct field value from the source item.
+           * Supports nested array wildcards in field paths (e.g., ".weights.uoms[*]")
+           * to allow copying entire nested arrays.
+           */
           let sourceValue;
           if (sourceFieldPath) {
-            // For nested paths, extract the specific field
-            const pathParts = sourceFieldPath
-              .replace(/^\['/, "")    // Remove leading ['
-              .replace(/'\]$/, "")    // Remove trailing ']
-              .replace(/^\./, "")     // Remove leading dot (for dot notation like .field)
-              .split(/'\]\['|'\.'|'\]\.|\./)  // Split on bracket/quote/dot separators
+            // Check if field path contains nested array wildcard
+            if (sourceFieldPath.includes("[*]")) {
+              /**
+               * Handle nested array wildcard in source field path.
+               * Example: products[*].weights.uoms[*]
+               * Extracts the entire uoms array: ["C62", "KG"]
+               */
+              const fieldContainerPath = sourceFieldPath.substring(0, sourceFieldPath.indexOf("[*]"));
 
-            // Navigate to the field
-            sourceValue = sourceItem;
-            for (const segment of pathParts) {
-              if (!segment) continue;  // Skip empty segments
-              if (!sourceValue || typeof sourceValue !== "object") {
-                sourceValue = undefined;
-                break;
+              // Navigate to the array container
+              const pathParts = fieldContainerPath
+                .replace(/^\['/, "")
+                .replace(/'\]$/, "")
+                .replace(/^\./, "")
+                .split(/'\]\['|'\.'|'\]\.|\./)
+                .filter(s => s);
+
+              let arrayContainer = sourceItem;
+              for (const segment of pathParts) {
+                if (!arrayContainer || typeof arrayContainer !== "object") {
+                  arrayContainer = undefined;
+                  break;
+                }
+                arrayContainer = arrayContainer[segment];
               }
-              sourceValue = sourceValue[segment];
+
+              // If we found an array, use it as the source value
+              if (Array.isArray(arrayContainer)) {
+                sourceValue = arrayContainer;
+              } else {
+                sourceValue = undefined;
+              }
+            } else {
+              // Standard field extraction (no nested array)
+              const pathParts = sourceFieldPath
+                .replace(/^\['/, "")    // Remove leading ['
+                .replace(/'\]$/, "")    // Remove trailing ']
+                .replace(/^\./, "")     // Remove leading dot (for dot notation like .field)
+                .split(/'\]\['|'\.'|'\]\.|\./)  // Split on bracket/quote/dot separators
+
+              // Navigate to the field
+              sourceValue = sourceItem;
+              for (const segment of pathParts) {
+                if (!segment) continue;  // Skip empty segments
+                if (!sourceValue || typeof sourceValue !== "object") {
+                  sourceValue = undefined;
+                  break;
+                }
+                sourceValue = sourceValue[segment];
+              }
             }
           } else {
             sourceValue = sourceItem;
@@ -717,18 +815,35 @@ export function transformJson(
             continue;
           }
 
-          // Apply transformation if needed
+          /**
+           * Apply transformation if needed.
+           * For arrays (from nested array wildcards), applies transformation to each element.
+           * Example: toUpperCase() on ["a", "b"] produces ["A", "B"]
+           */
           let transformedValue = sourceValue;
           if (
             direction === "sourceToTarget" &&
             currentRuleTransformationType !== "none"
           ) {
-            transformedValue = applyTransformation(
-              sourceValue,
-              currentRuleTransformation,
-              currentRuleTransformationType,
-              sourceJson,
-            );
+            if (Array.isArray(sourceValue)) {
+              // Apply transformation to each array element
+              transformedValue = sourceValue.map((element) =>
+                applyTransformation(
+                  element,
+                  currentRuleTransformation,
+                  currentRuleTransformationType,
+                  sourceJson,
+                )
+              );
+            } else {
+              // Apply transformation to single value
+              transformedValue = applyTransformation(
+                sourceValue,
+                currentRuleTransformation,
+                currentRuleTransformationType,
+                sourceJson,
+              );
+            }
           }
 
           // Get the existing target item (or create if it doesn't exist and we have a value)
@@ -738,31 +853,73 @@ export function transformJson(
           }
           let targetItem = targetArray[i];
 
-          // Process field mapping
+          /**
+           * Process field mapping to target.
+           * Supports nested array wildcards in target path (e.g., ".weights.uoms[*]")
+           */
           if (targetFieldPath) {
-            // Parse the target field path
-            const pathParts = targetFieldPath
-              .replace(/^\['/, "")    // Remove leading ['
-              .replace(/'\]$/, "")    // Remove trailing ']
-              .replace(/^\./, "")     // Remove leading dot (for dot notation like .field)
-              .split(/'\]\['|'\.'|'\]\.|\./)  // Split on bracket/quote/dot separators
-              .filter(segment => segment);  // Remove empty segments
+            if (targetFieldPath.includes("[*]")) {
+              /**
+               * Handle nested array wildcard in target field path.
+               * Example: products[*].weights.uoms[*]
+               * Assigns the entire array to the target nested location.
+               */
+              const fieldContainerPath = targetFieldPath.substring(0, targetFieldPath.indexOf("[*]"));
 
-            // Build the nested structure
-            let current = targetItem;
-            for (let j = 0; j < pathParts.length - 1; j++) {
-              const segment = pathParts[j];
+              // Parse the field container path
+              const pathParts = fieldContainerPath
+                .replace(/^\['/, "")
+                .replace(/'\]$/, "")
+                .replace(/^\./, "")
+                .split(/'\]\['|'\.'|'\]\.|\./)
+                .filter(segment => segment);
 
-              if (!current[segment]) {
-                current[segment] = {};
+              // Build the nested structure up to the array
+              let current = targetItem;
+              for (let j = 0; j < pathParts.length - 1; j++) {
+                const segment = pathParts[j];
+                if (!current[segment]) {
+                  current[segment] = {};
+                }
+                current = current[segment];
               }
-              current = current[segment];
-            }
 
-            // Set the value on the last segment
-            const lastSegment = pathParts[pathParts.length - 1];
-            if (lastSegment) {
-              current[lastSegment] = transformedValue;
+              // Set the array value on the last segment
+              const lastSegment = pathParts[pathParts.length - 1];
+              if (lastSegment) {
+                // If transformed value is an array, assign it directly
+                // Otherwise wrap it in an array
+                if (Array.isArray(transformedValue)) {
+                  current[lastSegment] = transformedValue;
+                } else if (transformedValue !== undefined) {
+                  current[lastSegment] = [transformedValue];
+                }
+              }
+            } else {
+              // Standard field path (no nested array)
+              const pathParts = targetFieldPath
+                .replace(/^\['/, "")    // Remove leading ['
+                .replace(/'\]$/, "")    // Remove trailing ']
+                .replace(/^\./, "")     // Remove leading dot (for dot notation like .field)
+                .split(/'\]\['|'\.'|'\]\.|\./)  // Split on bracket/quote/dot separators
+                .filter(segment => segment);  // Remove empty segments
+
+              // Build the nested structure
+              let current = targetItem;
+              for (let j = 0; j < pathParts.length - 1; j++) {
+                const segment = pathParts[j];
+
+                if (!current[segment]) {
+                  current[segment] = {};
+                }
+                current = current[segment];
+              }
+
+              // Set the value on the last segment
+              const lastSegment = pathParts[pathParts.length - 1];
+              if (lastSegment) {
+                current[lastSegment] = transformedValue;
+              }
             }
           } else {
             // If no field path, we're replacing the entire item

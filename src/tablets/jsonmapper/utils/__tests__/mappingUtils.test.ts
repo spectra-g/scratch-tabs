@@ -1110,4 +1110,295 @@ describe("transformJson", () => {
       });
     });
   });
+
+  describe("Nested array wildcard in field paths", () => {
+    it("should handle nested array wildcard in field path (uoms example)", () => {
+      const sourceJson = {
+        products: [
+          {
+            weights: {
+              per: "per01",
+              price: "123",
+              uoms: ["C62", "KG"]
+            }
+          },
+          {
+            weights: {
+              per: "per02",
+              price: "456",
+              uoms: ["LB"]
+            }
+          }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.products[*].weights.uoms[*]",
+        targetPath: "$.products[*].weights.uoms[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.products).toHaveLength(2);
+      expect(result.products[0].weights.uoms).toEqual(["C62", "KG"]);
+      expect(result.products[1].weights.uoms).toEqual(["LB"]);
+    });
+
+    it("should handle nested array wildcard with dot notation", () => {
+      const sourceJson = {
+        items: [
+          { tags: ["tag1", "tag2", "tag3"] },
+          { tags: ["tag4"] }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.items[*].tags[*]",
+        targetPath: "$.items[*].tags[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].tags).toEqual(["tag1", "tag2", "tag3"]);
+      expect(result.items[1].tags).toEqual(["tag4"]);
+    });
+
+    it("should handle empty nested arrays", () => {
+      const sourceJson = {
+        products: [
+          { weights: { uoms: [] } },
+          { weights: { uoms: ["KG"] } }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.products[*].weights.uoms[*]",
+        targetPath: "$.products[*].weights.uoms[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.products[0].weights.uoms).toEqual([]);
+      expect(result.products[1].weights.uoms).toEqual(["KG"]);
+    });
+
+    it("should handle nested array wildcard with bracket notation", () => {
+      const sourceJson = {
+        data: [
+          { values: [1, 2, 3] },
+          { values: [4, 5] }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$['data'][*]['values'][*]",
+        targetPath: "$['data'][*]['values'][*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "number",
+        targetDataType: "number",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.data[0].values).toEqual([1, 2, 3]);
+      expect(result.data[1].values).toEqual([4, 5]);
+    });
+
+    it("should handle nested array wildcard with transformation", () => {
+      const sourceJson = {
+        items: [
+          { codes: ["a", "b"] },
+          { codes: ["c"] }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.items[*].codes[*]",
+        targetPath: "$.items[*].codes[*]",
+        transformationType: "builtin",
+        transformation: "toUpperCase()",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.items[0].codes).toEqual(["A", "B"]);
+      expect(result.items[1].codes).toEqual(["C"]);
+    });
+
+    it("should handle deeply nested array wildcards", () => {
+      const sourceJson = {
+        level1: [
+          {
+            level2: {
+              level3: {
+                items: ["a", "b"]
+              }
+            }
+          }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.level1[*].level2.level3.items[*]",
+        targetPath: "$.level1[*].level2.level3.items[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.level1[0].level2.level3.items).toEqual(["a", "b"]);
+    });
+  });
+
+  describe("Empty array handling", () => {
+    it("should create empty target array when source array is empty", () => {
+      const sourceJson = {
+        promotions: [],
+        searchTags: []
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.promotions[*].name",
+          targetPath: "$.promotions[*].name",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: true,
+        },
+        {
+          id: "2",
+          sourcePath: "$.searchTags[*]",
+          targetPath: "$.searchTags[*]",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "string",
+          targetDataType: "string",
+          status: "mapped",
+          confidence: 1.0,
+          isUserDefined: true,
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Empty arrays should be created in target
+      expect(result.promotions).toBeDefined();
+      expect(Array.isArray(result.promotions)).toBe(true);
+      expect(result.promotions).toEqual([]);
+
+      expect(result.searchTags).toBeDefined();
+      expect(Array.isArray(result.searchTags)).toBe(true);
+      expect(result.searchTags).toEqual([]);
+    });
+
+    it("should create empty nested target array when source nested array is empty", () => {
+      const sourceJson = {
+        products: [
+          {
+            id: "p1",
+            tags: []
+          }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.products[*].tags[*]",
+        targetPath: "$.products[*].tags[*]",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      expect(result.products).toBeDefined();
+      expect(result.products).toHaveLength(1);
+      expect(result.products[0].tags).toBeDefined();
+      expect(Array.isArray(result.products[0].tags)).toBe(true);
+      expect(result.products[0].tags).toEqual([]);
+    });
+
+    it("should not overwrite existing non-empty target array with empty source array", () => {
+      const sourceJson = {
+        items: []
+      };
+
+      const outputWithExisting = {
+        items: [{ id: "existing" }]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.items[*].id",
+        targetPath: "$.items[*].id",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "string",
+        targetDataType: "string",
+        status: "mapped",
+        confidence: 1.0,
+        isUserDefined: true,
+      };
+
+      // Pass outputWithExisting as the initial output
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      // Should create empty array since source is empty
+      expect(result.items).toBeDefined();
+      expect(result.items).toEqual([]);
+    });
+  });
 });
