@@ -54,6 +54,7 @@ export interface JsonMapperState extends TabletState {
     generatedCode: string;
     searchQuery: string;
     _transientMappingForModal?: MappingConfig;
+    editorScrollPosition?: number;
   };
 }
 

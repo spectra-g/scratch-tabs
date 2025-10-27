@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Editor } from "@monaco-editor/react";
 import {
   ArrowLeft,
@@ -35,6 +35,9 @@ interface MappingEditorProps {
   onTest: (mapping: MappingConfig) => void;
   onGenerateCode: (mapping: MappingConfig) => void;
   onBatchTransform: (mapping: MappingConfig) => void;
+  onMappingChange?: (mapping: MappingConfig) => void;
+  scrollPosition?: number;
+  onScrollPositionChange?: (position: number) => void;
 }
 
 export const MappingEditor: React.FC<MappingEditorProps> = ({
@@ -45,6 +48,9 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   onTest,
   onGenerateCode,
   onBatchTransform,
+  onMappingChange,
+  scrollPosition = 0,
+  onScrollPositionChange,
 }) => {
   const [name, setName] = useState(mapping.name);
   const [description, setDescription] = useState(mapping.description);
@@ -59,6 +65,51 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   );
   const [sourceCopied, setSourceCopied] = useState(false);
   const [targetCopied, setTargetCopied] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Sync local state changes back to parent (prevents data loss on tab switch)
+  useEffect(() => {
+    if (!onMappingChange) return;
+
+    const updatedMapping: MappingConfig = {
+      ...mapping,
+      name,
+      description,
+      sourceJson,
+      targetJson,
+      rules,
+      updatedAt: Date.now(),
+    };
+    onMappingChange(updatedMapping);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, description, sourceJson, targetJson, rules, onMappingChange]);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (scrollContainerRef.current && scrollPosition) {
+      scrollContainerRef.current.scrollTop = scrollPosition;
+    }
+  }, [scrollPosition]);
+
+  // Save scroll position on scroll with debouncing
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onScrollPositionChange) return;
+
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        onScrollPositionChange(container.scrollTop);
+      }, 100); // Debounce scroll position updates
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      clearTimeout(scrollTimeout);
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [onScrollPositionChange]);
 
   // Validate JSON when it changes
   useEffect(() => {
@@ -643,7 +694,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4 custom-scrollbar">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto p-4 custom-scrollbar">
         <div className="space-y-6">
           {/* Mapping Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

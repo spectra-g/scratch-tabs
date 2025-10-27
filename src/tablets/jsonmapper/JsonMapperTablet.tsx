@@ -31,6 +31,7 @@ export const JsonMapperTablet: Tablet = {
         selectedDirection: "sourceToTarget",
         generatedCode: "",
         searchQuery: "",
+        editorScrollPosition: 0,
       },
     };
   },
@@ -139,6 +140,29 @@ export const JsonMapperTablet: Tablet = {
       setShowBatchTransform(true);
     };
 
+    const handleMappingChange = (updatedMapping: MappingConfig) => {
+      // Continuously update the mapping in state as user makes changes
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          mappings: state.data.mappings.map((m) =>
+            m.id === updatedMapping.id ? updatedMapping : m,
+          ),
+        },
+      });
+    };
+
+    const handleScrollPositionChange = (position: number) => {
+      onChange({
+        ...state,
+        data: {
+          ...state.data,
+          editorScrollPosition: position,
+        },
+      });
+    };
+
     const handleSaveMapping = (updatedMapping: MappingConfig) => {
       onChange({
         ...state,
@@ -150,6 +174,7 @@ export const JsonMapperTablet: Tablet = {
           activeMappingId: null,
           isEditingMapping: false,
           isCreatingMapping: false,
+          editorScrollPosition: 0,
         },
       });
     };
@@ -166,6 +191,7 @@ export const JsonMapperTablet: Tablet = {
             ),
             activeMappingId: null,
             isCreatingMapping: false,
+            editorScrollPosition: 0,
           },
         });
       } else {
@@ -176,6 +202,7 @@ export const JsonMapperTablet: Tablet = {
             ...state.data,
             activeMappingId: null,
             isEditingMapping: false,
+            editorScrollPosition: 0,
           },
         });
       }
@@ -248,6 +275,9 @@ export const JsonMapperTablet: Tablet = {
                 isNew={state.data.isCreatingMapping}
                 onSave={handleSaveMapping}
                 onCancel={handleCancelEdit}
+                onMappingChange={handleMappingChange}
+                scrollPosition={state.data.editorScrollPosition}
+                onScrollPositionChange={handleScrollPositionChange}
                 onTest={(mappingInProgress) => {
                   onChange({
                     ...state,
