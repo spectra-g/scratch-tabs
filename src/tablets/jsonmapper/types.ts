@@ -12,6 +12,13 @@ export type DataType =
   | "unknown";
 export type TransformationType = "none" | "builtin" | "custom";
 export type TargetLanguage = "javascript" | "typescript" | "python" | "java";
+export type JoinMatchType = "equals" | "contains" | "startsWith";
+
+export interface JoinCondition {
+  sourceKey: string;        // Field in source array item (e.g., "productId")
+  targetKey: string;        // Field in target array item (e.g., "id")
+  matchType?: JoinMatchType; // Default: "equals"
+}
 
 export interface MappingRule {
   id: string;
@@ -24,6 +31,7 @@ export interface MappingRule {
   status: MappingStatus;
   confidence: number; // 0-1, for auto-suggested mappings
   isUserDefined: boolean;
+  joinCondition?: JoinCondition; // For array-to-nested-array mappings with filtering
 }
 
 export interface MappingConfig {

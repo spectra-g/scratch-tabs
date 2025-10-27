@@ -142,6 +142,20 @@ export const JsonMapperTablet: Tablet = {
 
     const handleMappingChange = (updatedMapping: MappingConfig) => {
       // Continuously update the mapping in state as user makes changes
+      // Only update if the mapping actually changed
+      const currentMapping = state.data.mappings.find(m => m.id === updatedMapping.id);
+      if (!currentMapping) return;
+
+      // Deep comparison to prevent unnecessary updates
+      const hasChanged =
+        currentMapping.name !== updatedMapping.name ||
+        currentMapping.description !== updatedMapping.description ||
+        currentMapping.sourceJson !== updatedMapping.sourceJson ||
+        currentMapping.targetJson !== updatedMapping.targetJson ||
+        currentMapping.rules.length !== updatedMapping.rules.length;
+
+      if (!hasChanged) return;
+
       onChange({
         ...state,
         data: {
@@ -154,6 +168,9 @@ export const JsonMapperTablet: Tablet = {
     };
 
     const handleScrollPositionChange = (position: number) => {
+      // Only update if position actually changed
+      if (state.data.editorScrollPosition === position) return;
+
       onChange({
         ...state,
         data: {

@@ -247,6 +247,182 @@ export function transformJson(
         const sourceArray = getValueByPath(sourceJson, sourceContainerPath);
         if (!Array.isArray(sourceArray)) continue;
 
+        // Case 2a: Array-to-nested-array with join condition
+        if (rule.joinCondition) {
+          // Count wildcards to detect nested array mapping
+          const targetWildcardCount = (currentRuleTargetPath.match(/\[\*\]/g) || []).length;
+
+          if (targetWildcardCount >= 2) {
+            // Extract target parent array path (first [*])
+            const firstWildcardIndex = currentRuleTargetPath.indexOf("[*]");
+            const targetParentPath = currentRuleTargetPath.substring(0, firstWildcardIndex);
+
+            // Get target parent array from output, or copy from source if available
+            let targetParentArray = getValueByPath(outputObject, targetParentPath);
+            if (!Array.isArray(targetParentArray)) {
+              // Try to get it from source
+              const targetFromSource = getValueByPath(sourceJson, targetParentPath);
+              if (Array.isArray(targetFromSource)) {
+                // Deep clone to avoid modifying source
+                targetParentArray = JSON.parse(JSON.stringify(targetFromSource));
+                setValueByPath(outputObject, targetParentPath, targetParentArray);
+              } else {
+                continue; // Skip if target parent array doesn't exist anywhere
+              }
+            }
+
+            // Create Map for O(1) lookup: targetKey -> targetParentItem
+            const targetMap = new Map<any, any>();
+            const matchType = rule.joinCondition.matchType || "equals";
+
+            for (const targetParentItem of targetParentArray) {
+              if (targetParentItem && typeof targetParentItem === "object") {
+                const targetKeyValue = targetParentItem[rule.joinCondition.targetKey];
+                if (targetKeyValue !== undefined && targetKeyValue !== null) {
+                  targetMap.set(targetKeyValue, targetParentItem);
+                }
+              }
+            }
+
+            // Extract nested array field name from target path
+            const targetNestedArrayPath = currentRuleTargetPath.substring(
+              firstWildcardIndex + 3,
+              currentRuleTargetPath.lastIndexOf("[*]")
+            ).replace(/^\['/, "").replace(/'\]$/, "");
+
+            // Extract field paths for nested mapping
+            const sourceFieldPathForJoin = currentRuleSourcePath.substring(
+              currentRuleSourcePath.indexOf("[*]") + 3
+            );
+            const targetFieldPathForJoin = currentRuleTargetPath.substring(
+              currentRuleTargetPath.lastIndexOf("[*]") + 3
+            );
+
+            // Process each source item and find matching target parent
+            for (const sourceItem of sourceArray) {
+              if (!sourceItem || typeof sourceItem !== "object") continue;
+
+              // Get join key from source item
+              const sourceKeyValue = sourceItem[rule.joinCondition.sourceKey];
+              if (sourceKeyValue === undefined || sourceKeyValue === null) continue;
+
+              // Find matching target parent using Map (O(1) lookup)
+              let matchingTargetParent: any = null;
+
+              if (matchType === "equals") {
+                matchingTargetParent = targetMap.get(sourceKeyValue);
+              } else if (matchType === "contains" || matchType === "startsWith") {
+                // For non-equals matches, fallback to linear search
+                for (const targetParentItem of targetParentArray) {
+                  if (targetParentItem && typeof targetParentItem === "object") {
+                    const targetKeyValue = targetParentItem[rule.joinCondition.targetKey];
+                    if (targetKeyValue !== undefined && targetKeyValue !== null) {
+                      const sourceStr = String(sourceKeyValue);
+                      const targetStr = String(targetKeyValue);
+                      if (matchType === "contains" && targetStr.includes(sourceStr)) {
+                        matchingTargetParent = targetParentItem;
+                        break;
+                      } else if (matchType === "startsWith" && targetStr.startsWith(sourceStr)) {
+                        matchingTargetParent = targetParentItem;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+
+              if (!matchingTargetParent) {
+                // No match found - skip (left join behavior)
+                continue;
+              }
+
+              // Ensure nested array exists in target parent
+              if (!matchingTargetParent[targetNestedArrayPath]) {
+                matchingTargetParent[targetNestedArrayPath] = [];
+              }
+
+              const targetNestedArray = matchingTargetParent[targetNestedArrayPath];
+
+              // Extract source value
+              let sourceValue;
+              if (sourceFieldPathForJoin) {
+                const pathParts = sourceFieldPathForJoin
+                  .replace(/^\['/, "")
+                  .replace(/'\]$/, "")
+                  .split(/'\]\['|'\.'|'\]\./);
+
+                sourceValue = sourceItem;
+                for (const segment of pathParts) {
+                  if (!sourceValue || typeof sourceValue !== "object") {
+                    sourceValue = undefined;
+                    break;
+                  }
+                  sourceValue = sourceValue[segment];
+                }
+              } else {
+                sourceValue = sourceItem;
+              }
+
+              if (sourceValue === undefined) continue;
+
+              // Apply transformation
+              let transformedValue = sourceValue;
+              if (
+                direction === "sourceToTarget" &&
+                currentRuleTransformationType !== "none"
+              ) {
+                transformedValue = applyTransformation(
+                  sourceValue,
+                  currentRuleTransformation,
+                  currentRuleTransformationType,
+                  sourceJson,
+                );
+              }
+
+              // Create target nested item
+              let targetNestedItem: any = {};
+
+              if (targetFieldPathForJoin) {
+                // Map to specific field in nested item
+                const pathParts = targetFieldPathForJoin
+                  .replace(/^\['/, "")
+                  .replace(/'\]$/, "")
+                  .split(/'\]\['|'\.'|'\]\./);
+
+                let current = targetNestedItem;
+                for (let j = 0; j < pathParts.length - 1; j++) {
+                  const segment = pathParts[j];
+                  if (!segment) continue;
+                  if (!current[segment]) {
+                    current[segment] = {};
+                  }
+                  current = current[segment];
+                }
+
+                const lastSegment = pathParts[pathParts.length - 1];
+                if (lastSegment) {
+                  current[lastSegment] = transformedValue;
+                }
+              } else {
+                // Map entire item
+                if (typeof transformedValue === "object" && !Array.isArray(transformedValue)) {
+                  targetNestedItem = transformedValue;
+                } else {
+                  targetNestedItem = transformedValue;
+                }
+              }
+
+              // Append to nested array
+              targetNestedArray.push(targetNestedItem);
+            }
+
+            // Update modified target parent array
+            setValueByPath(outputObject, targetParentPath, targetParentArray);
+
+            continue;
+          }
+        }
+
         // Get or create target array
         let targetArray = getValueByPath(outputObject, targetContainerPath);
         if (!targetArray || !Array.isArray(targetArray)) {

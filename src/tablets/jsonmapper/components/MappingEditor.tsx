@@ -66,6 +66,8 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const [sourceCopied, setSourceCopied] = useState(false);
   const [targetCopied, setTargetCopied] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSyncedStateRef = useRef<string>("");
 
   // Sync local state changes back to parent (prevents data loss on tab switch)
   useEffect(() => {
@@ -78,11 +80,39 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       sourceJson,
       targetJson,
       rules,
-      updatedAt: Date.now(),
+      updatedAt: mapping.updatedAt,
     };
-    onMappingChange(updatedMapping);
+
+    // Create a stable serialized version for comparison
+    const currentState = JSON.stringify({
+      name,
+      description,
+      sourceJson,
+      targetJson,
+      rulesLength: rules.length,
+      rulesHash: rules.map(r => r.id + r.sourcePath + r.targetPath).join(',')
+    });
+
+    // Only sync if state actually changed
+    if (currentState === lastSyncedStateRef.current) return;
+
+    // Debounce updates to prevent rapid successive calls
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
+    syncTimeoutRef.current = setTimeout(() => {
+      lastSyncedStateRef.current = currentState;
+      onMappingChange(updatedMapping);
+    }, 300); // 300ms debounce
+
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, description, sourceJson, targetJson, rules, onMappingChange]);
+  }, [name, description, sourceJson, targetJson, rules]);
 
   // Restore scroll position on mount
   useEffect(() => {
