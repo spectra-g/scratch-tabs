@@ -539,17 +539,25 @@ export function transformJson(
            * Only deep clone when:
            * 1. Same container (source path == target path)
            * 2. AND target field has nested structure beyond first level
+           * 3. AND either:
+           *    a) No nested arrays in field path, OR
+           *    b) Nested array is at the END of the path (not followed by more segments)
            *
            * Example needing structure:
-           *   products[*].weights.uoms → needs weights object to exist
+           *   products[*].weights.uoms[*] → needs weights object to exist
            *
            * Example NOT needing structure:
            *   conflicts[*].depositCharge → just needs conflicts array
+           *   products[*].promotions[*].prom → nested array with fields after, build incrementally
            */
           const fieldPathWithoutLeadingDot = targetFieldPath.replace(/^\./, "").replace(/^\['/, "");
           const hasNestedStructure = fieldPathWithoutLeadingDot.includes(".") ||
                                      fieldPathWithoutLeadingDot.includes("']['");
-          const needsParentStructure = sourceContainerPath === targetContainerPath && hasNestedStructure;
+          const hasNestedArrayInFieldPath = targetFieldPath.includes("[*]");
+          const nestedArrayAtEnd = targetFieldPath.endsWith("[*]");
+          const needsParentStructure = sourceContainerPath === targetContainerPath &&
+                                       hasNestedStructure &&
+                                       (!hasNestedArrayInFieldPath || nestedArrayAtEnd);
 
           if (needsParentStructure) {
             // Deep clone the source array to preserve parent structure
