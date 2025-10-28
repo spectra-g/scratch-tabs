@@ -1400,5 +1400,77 @@ describe("transformJson", () => {
       expect(result.items).toBeDefined();
       expect(result.items).toEqual([]);
     });
+
+    it("should preserve empty nested arrays without deep cloning unmapped fields", () => {
+      // Bug fix: When mapping nested arrays where inner array is empty,
+      // should NOT deep clone entire parent structure (which includes unmapped fields)
+      const sourceJson = {
+        searchTags: [],
+        conflicts: [
+          {
+            depositCharge: "12",
+            productId: "p1",
+            priority: 10,
+            reason: "Stock issue"
+          },
+          {
+            productId: "p2",
+            priority: 5,
+            reason: "Delivery delay"
+          }
+        ],
+        criteria: {
+          filters: [
+            {
+              filters: [
+                {
+                  filterTag: {
+                    id: "ft01",
+                    group: "g01"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        products: [
+          {
+            promotions: [],
+            weights: {
+              per: "per01",
+              price: "123",
+              uoms: ["C62"]
+            }
+          }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.products[*].promotions[*].prom",
+        targetPath: "$.products[*].promotions[*].prom",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "unknown",
+        targetDataType: "unknown",
+        status: "unmapped",
+        confidence: 0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      // Should ONLY include products with promotions array, NOT weights or other unmapped fields
+      expect(result).toEqual({
+        products: [
+          {
+            promotions: []
+          }
+        ]
+      });
+
+      // Explicitly verify weights was NOT included
+      expect(result.products[0].weights).toBeUndefined();
+    });
   });
 });
