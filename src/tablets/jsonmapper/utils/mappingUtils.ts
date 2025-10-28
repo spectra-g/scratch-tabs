@@ -621,10 +621,39 @@ export function transformJson(
                 targetArray[i] = {};
               }
 
-              // Initialize the container for nested objects if it doesn't exist
-              if (!targetArray[i][firstTargetComponent]) {
-                targetArray[i][firstTargetComponent] = [];
+              // Extract full path before [*] and parse segments
+              const pathBeforeWildcard = targetPathParts[0]
+                .replace(/^\./, "")
+                .replace(/^\['/, "")
+                .replace(/'\]$/, "");
+              const segments = pathBeforeWildcard.split(/\.|\['/).map(s => s.replace(/'\]$/, "")).filter(s => s);
+
+              // Navigate/create intermediate objects up to the array container
+              let nestedArrayContainer = targetArray[i];
+              for (let k = 0; k < segments.length - 1; k++) {
+                const segment = segments[k];
+                if (!nestedArrayContainer[segment]) {
+                  nestedArrayContainer[segment] = {};
+                }
+                nestedArrayContainer = nestedArrayContainer[segment];
               }
+
+              const finalSegment = segments[segments.length - 1];
+
+              // Handle empty source nested arrays
+              if (sourceNestedArray.length === 0) {
+                if (finalSegment) {
+                  nestedArrayContainer[finalSegment] = [];
+                }
+                continue;
+              }
+
+              // Initialize the array at the correct nested location for non-empty arrays
+              if (finalSegment && !nestedArrayContainer[finalSegment]) {
+                nestedArrayContainer[finalSegment] = [];
+              }
+
+              const targetNestedArray = finalSegment ? nestedArrayContainer[finalSegment] : nestedArrayContainer;
 
               // Transform each value in the source nested array into an object in the target
               for (let j = 0; j < sourceNestedArray.length; j++) {
@@ -669,17 +698,17 @@ export function transformJson(
                 }
 
                 // Get or create nested target object at this index
-                if (!targetArray[i][firstTargetComponent][j]) {
-                  targetArray[i][firstTargetComponent][j] = {};
+                if (!targetNestedArray[j]) {
+                  targetNestedArray[j] = {};
                 }
-                const targetNestedItem = targetArray[i][firstTargetComponent][j];
+                const targetNestedItem = targetNestedArray[j];
 
                 // Set the field value on the nested object
                 if (lastTargetComponent && transformedNestedValue !== undefined) {
                   targetNestedItem[lastTargetComponent] = transformedNestedValue;
                 } else if (!lastTargetComponent && transformedNestedValue !== undefined) {
                   // If no last component, replace the entire item
-                  targetArray[i][firstTargetComponent][j] = transformedNestedValue;
+                  targetNestedArray[j] = transformedNestedValue;
                 }
               }
             } else {

@@ -1472,5 +1472,170 @@ describe("transformJson", () => {
       // Explicitly verify weights was NOT included
       expect(result.products[0].weights).toBeUndefined();
     });
+
+    it("should preserve empty nested arrays when mapping to different nested location with intermediate objects", () => {
+      // Bug fix: When mapping products[*].promotions[*] to products[*].pricing.promotions[*]
+      // with intermediate object "pricing", empty array should be created at correct nested location
+      const sourceJson = {
+        searchTags: [],
+        conflicts: [
+          {
+            depositCharge: "12",
+            productId: "p1",
+            priority: 10,
+            reason: "Stock issue"
+          },
+          {
+            productId: "p2",
+            priority: 5,
+            reason: "Delivery delay"
+          }
+        ],
+        criteria: {
+          filters: [
+            {
+              filters: [
+                {
+                  filterTag: {
+                    id: "ft01",
+                    group: "g01"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        products: [
+          {
+            promotions: [],
+            weights: {
+              per: "per01",
+              price: "123",
+              uoms: ["C62"]
+            }
+          }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.products[*].promotions[*].prom",
+        targetPath: "$.products[*].pricing.promotions[*].prom",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "unknown",
+        targetDataType: "unknown",
+        status: "unmapped",
+        confidence: 0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      // Should create nested structure: products[0].pricing.promotions = []
+      expect(result).toEqual({
+        products: [
+          {
+            pricing: {
+              promotions: []
+            }
+          }
+        ]
+      });
+
+      // Verify correct nested structure
+      expect(result.products[0].pricing).toBeDefined();
+      expect(result.products[0].pricing.promotions).toBeDefined();
+      expect(Array.isArray(result.products[0].pricing.promotions)).toBe(true);
+      expect(result.products[0].pricing.promotions).toEqual([]);
+
+      // Explicitly verify weights and other unmapped fields are NOT included
+      expect(result.products[0].weights).toBeUndefined();
+    });
+
+    it("should handle non-empty nested arrays when mapping to different nested location with intermediate objects", () => {
+      // Bug fix: When mapping products[*].promotions[*] to products[*].pricing.promotions[*]
+      // with non-empty source array, should create array at correct nested location
+      const sourceJson = {
+        searchTags: [],
+        conflicts: [
+          {
+            depositCharge: "12",
+            productId: "p1",
+            priority: 10,
+            reason: "Stock issue"
+          },
+          {
+            productId: "p2",
+            priority: 5,
+            reason: "Delivery delay"
+          }
+        ],
+        criteria: {
+          filters: [
+            {
+              filters: [
+                {
+                  filterTag: {
+                    id: "ft01",
+                    group: "g01"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        products: [
+          {
+            promotions: [{ prom: "123" }],
+            weights: {
+              per: "per01",
+              price: "123",
+              uoms: ["C62"]
+            }
+          }
+        ]
+      };
+
+      const rule: MappingRule = {
+        id: "1",
+        sourcePath: "$.products[*].promotions[*].prom",
+        targetPath: "$.products[*].pricing.promotions[*].prom",
+        transformationType: "none",
+        transformation: "",
+        sourceDataType: "unknown",
+        targetDataType: "unknown",
+        status: "unmapped",
+        confidence: 0,
+        isUserDefined: true,
+      };
+
+      const result = transformJson(sourceJson, [rule], "sourceToTarget");
+
+      // Should create nested structure: products[0].pricing.promotions = [{ prom: "123" }]
+      expect(result).toEqual({
+        products: [
+          {
+            pricing: {
+              promotions: [
+                {
+                  prom: "123"
+                }
+              ]
+            }
+          }
+        ]
+      });
+
+      // Verify correct nested structure
+      expect(result.products[0].pricing).toBeDefined();
+      expect(result.products[0].pricing.promotions).toBeDefined();
+      expect(Array.isArray(result.products[0].pricing.promotions)).toBe(true);
+      expect(result.products[0].pricing.promotions).toHaveLength(1);
+      expect(result.products[0].pricing.promotions[0].prom).toBe("123");
+
+      // Explicitly verify weights and other unmapped fields are NOT included
+      expect(result.products[0].weights).toBeUndefined();
+    });
   });
 });
