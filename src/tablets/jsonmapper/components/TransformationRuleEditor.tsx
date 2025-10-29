@@ -59,8 +59,8 @@ export const TransformationRuleEditor: React.FC<
       const sourceData = JSON.parse(sourceJson);
       const jsonPath = readablePathToJsonPath(sourcePath);
 
-      // Extract the array path (everything before the last [*])
-      const arrayMatch = jsonPath.match(/^(.*\[\*\])/);
+      // Extract the array path (first [*] only - for join conditions)
+      const arrayMatch = jsonPath.match(/^(.*?\[\*\])/);
       if (!arrayMatch) return [];
 
       const arrayPath = arrayMatch[1];

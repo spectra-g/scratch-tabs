@@ -1637,5 +1637,242 @@ describe("transformJson", () => {
       // Explicitly verify weights and other unmapped fields are NOT included
       expect(result.products[0].weights).toBeUndefined();
     });
+
+    it("should map nested object fields (messages.reason) in join conditions - user bug report", () => {
+      // User bug report: messages.reason rule exists but doesn't appear in output
+      const sourceJson = {
+        products: [
+          {
+            id: "12-34-56"
+          }
+        ],
+        conflicts: [
+          {
+            productId: "12-34-56",
+            priority: 10,
+            actions: [
+              "act01",
+              "act02"
+            ],
+            messages: {
+              reason: "res01",
+              dismissal: "No"
+            }
+          },
+          {
+            productId: "22-44-66",
+            priority: 13,
+            actions: [
+              "act03",
+              "act04"
+            ],
+            messages: {
+              reason: "res02",
+              dismissal: "Yes"
+            }
+          }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "7b081d98-ac9e-4b9a-aaa4-fa6b9ce158fd",
+          sourcePath: "$.conflicts[*].actions",
+          targetPath: "$.products[*].conflicts[*].actions",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals"
+          }
+        },
+        {
+          id: "dc6dea73-cd5c-446b-86ef-3e53d8c3a2ff",
+          sourcePath: "$.conflicts[*].messages.reason",
+          targetPath: "$.products[*].conflicts[*].messages.reason",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals"
+          }
+        },
+        {
+          id: "6bce08b4-eac1-4004-ac4a-ec986b4b21ee",
+          sourcePath: "$.conflicts[*].priority",
+          targetPath: "$.products[*].conflicts[*].priority",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals"
+          }
+        },
+        {
+          id: "d4537f8c-d10a-4aeb-9649-c64e9c39ec0b",
+          sourcePath: "$.products[*].id",
+          targetPath: "$.products[*].id",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Expected output should include messages.reason but currently it doesn't appear
+      expect(result).toEqual({
+        products: [
+          {
+            id: "12-34-56",
+            conflicts: [
+              {
+                priority: 10,
+                actions: [
+                  "act01",
+                  "act02"
+                ],
+                messages: {
+                  reason: "res01"
+                  // dismissal should NOT be included (no rule for it)
+                }
+              }
+            ]
+          }
+        ]
+      });
+
+      // Verify messages object exists
+      expect(result.products[0].conflicts[0].messages).toBeDefined();
+      // Verify reason field exists
+      expect(result.products[0].conflicts[0].messages.reason).toBe("res01");
+      // Verify dismissal is NOT included
+      expect(result.products[0].conflicts[0].messages.dismissal).toBeUndefined();
+    });
+
+    it("should map nested array items with [*][*] notation - user bug report #2", () => {
+      // User bug: conflicts[*].actions works, but conflicts[*].actions[*] doesn't appear in output
+      const sourceJson = {
+        products: [
+          {
+            id: "12-34-56"
+          }
+        ],
+        conflicts: [
+          {
+            productId: "12-34-56",
+            priority: 10,
+            actions: [
+              "act01",
+              "act02"
+            ]
+          },
+          {
+            productId: "22-44-66",
+            priority: 13,
+            actions: [
+              "act03",
+              "act04"
+            ]
+          }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.conflicts[*].actions[*]",  // Nested array wildcard
+          targetPath: "$.products[*].conflicts[*].actions[*]",  // Nested array wildcard
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals"
+          }
+        },
+        {
+          id: "2",
+          sourcePath: "$.conflicts[*].priority",
+          targetPath: "$.products[*].conflicts[*].priority",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true,
+          joinCondition: {
+            sourceKey: "productId",
+            targetKey: "id",
+            matchType: "equals"
+          }
+        },
+        {
+          id: "3",
+          sourcePath: "$.products[*].id",
+          targetPath: "$.products[*].id",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Expected: actions array should be populated with nested wildcard
+      expect(result).toEqual({
+        products: [
+          {
+            id: "12-34-56",
+            conflicts: [
+              {
+                priority: 10,
+                actions: [
+                  "act01",
+                  "act02"
+                ]
+              }
+            ]
+          }
+        ]
+      });
+
+      // Verify actions array exists and has correct items
+      expect(result.products[0].conflicts[0].actions).toBeDefined();
+      expect(Array.isArray(result.products[0].conflicts[0].actions)).toBe(true);
+      expect(result.products[0].conflicts[0].actions).toEqual(["act01", "act02"]);
+    });
   });
 });

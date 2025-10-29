@@ -16,8 +16,41 @@ import {
 } from "./jsonUtils";
 
 /**
- * Helper to extract path segments for join condition mapping
- * Handles both dot notation ($.array[*].field) and bracket notation ($['array'][*]['field'])
+ * Cleans a path segment by removing JSONPath notation characters
+ * Handles formats like: .field, ['field'], .actions[*]
+ * @param pathSegment - The path segment to clean
+ * @param removeTrailingWildcard - Whether to remove trailing [*]
+ * @returns Cleaned path segment
+ */
+function cleanPathSegment(pathSegment: string, removeTrailingWildcard = false): string {
+  let cleaned = pathSegment
+    .replace(/^\['/, "")  // Remove leading ['
+    .replace(/'\]$/, "")  // Remove trailing ']
+    .replace(/^\./, "")   // Remove leading .
+    .replace(/\['/, "")   // Remove ['
+    .replace(/'\]/, "");  // Remove ']
+
+  if (removeTrailingWildcard) {
+    cleaned = cleaned.replace(/\[\*\]$/, ""); // Remove trailing [*] if present
+  }
+
+  return cleaned;
+}
+
+/**
+ * Extracts path segments for join condition mapping with nested arrays
+ *
+ * For paths with 2+ wildcards (e.g., $.products[*].conflicts[*].priority),
+ * this extracts:
+ * - Parent array: "products" (before first [*])
+ * - Nested array: "conflicts" (between first and second [*])
+ * - Field: "priority" (after second [*])
+ *
+ * Handles paths with 3+ wildcards (e.g., $.products[*].conflicts[*].actions[*])
+ * by treating everything after the second [*] as the field path.
+ *
+ * @param path - JSONPath with at least 2 wildcards
+ * @returns Object with parentArrayPath, nestedArrayName, and fieldName, or null if invalid
  */
 function extractJoinPathSegments(path: string) {
   // Find all [*] positions
@@ -33,32 +66,18 @@ function extractJoinPathSegments(path: string) {
   }
 
   const firstWildcardIndex = wildcards[0];
-  const lastWildcardIndex = wildcards[wildcards.length - 1];
+  const secondWildcardIndex = wildcards[1];
 
   // Extract parent array path (everything before first [*])
   const parentArrayPath = path.substring(0, firstWildcardIndex);
 
-  // Extract nested array path (between first [*] and last [*])
-  const betweenWildcards = path.substring(firstWildcardIndex + 3, lastWildcardIndex);
+  // Extract nested array name (between first [*] and second [*])
+  const betweenFirstAndSecond = path.substring(firstWildcardIndex + 3, secondWildcardIndex);
+  const nestedArrayName = cleanPathSegment(betweenFirstAndSecond);
 
-  // Parse nested array name from betweenWildcards
-  // Handle formats: .conflicts, ['conflicts'], .['conflicts']
-  let nestedArrayName = betweenWildcards
-    .replace(/^\['/, "") // Remove leading ['
-    .replace(/'\]$/, "") // Remove trailing ']
-    .replace(/^\./, "")  // Remove leading .
-    .replace(/\['/, "")  // Remove ['
-    .replace(/'\]/, ""); // Remove ']
-
-  // Extract field path after last [*]
-  const afterLastWildcard = path.substring(lastWildcardIndex + 3);
-
-  // Parse field name
-  // Handle formats: .priority, ['priority']
-  let fieldName = afterLastWildcard
-    .replace(/^\['/, "")  // Remove leading ['
-    .replace(/'\]$/, "")  // Remove trailing ']
-    .replace(/^\./, "");  // Remove leading .
+  // Extract field path (everything after second [*])
+  const afterSecondWildcard = path.substring(secondWildcardIndex + 3);
+  const fieldName = cleanPathSegment(afterSecondWildcard, true);
 
   return {
     parentArrayPath,
@@ -367,15 +386,11 @@ export function transformJson(
             const targetNestedArrayPath = targetSegments.nestedArrayName;
             const targetFieldPathForJoin = `['${targetSegments.fieldName}']`;
 
-            // Extract source field path (source only has 1 wildcard)
+            // Extract source field path (may have additional wildcards like actions[*])
             const sourceAfterWildcard = currentRuleSourcePath.substring(
               currentRuleSourcePath.indexOf("[*]") + 3
             );
-            // Clean up the path - handle both .field and ['field'] formats
-            const sourceFieldName = sourceAfterWildcard
-              .replace(/^\['/, "")
-              .replace(/'\]$/, "")
-              .replace(/^\./, "");
+            const sourceFieldName = cleanPathSegment(sourceAfterWildcard, true);
             const sourceFieldPathForJoin = `['${sourceFieldName}']`;
 
             // Track which source items have been mapped to which nested array indices
@@ -446,7 +461,7 @@ export function transformJson(
                 const pathParts = sourceFieldPathForJoin
                   .replace(/^\['/, "")
                   .replace(/'\]$/, "")
-                  .split(/'\]\['|'\.'|'\]\./);
+                  .split(/'\]\['|'\.'|'\]\.|\./);
 
                 sourceValue = sourceItem;
                 for (const segment of pathParts) {
@@ -497,7 +512,7 @@ export function transformJson(
                 const pathParts = targetFieldPathForJoin
                   .replace(/^\['/, "")
                   .replace(/'\]$/, "")
-                  .split(/'\]\['|'\.'|'\]\./);
+                  .split(/'\]\['|'\.'|'\]\.|\./);
 
                 let current = targetNestedItem;
                 for (let j = 0; j < pathParts.length - 1; j++) {
