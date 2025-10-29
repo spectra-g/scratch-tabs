@@ -87,6 +87,21 @@ function extractJoinPathSegments(path: string) {
 }
 
 /**
+ * Parses a nested field path into individual segments
+ * Handles both dot notation (.field.subfield) and bracket notation (['field']['subfield'])
+ * @param fieldPath - The field path to parse (e.g., ".discount.percent" or "['discount']['percent']")
+ * @returns Array of field segments (e.g., ['discount', 'percent'])
+ */
+function parseNestedFieldPath(fieldPath: string): string[] {
+  return fieldPath
+    .replace(/^\['/, "")
+    .replace(/'\]$/, "")
+    .replace(/^\./, "")
+    .split(/'\]\['|'\.'|'\]\.|\./)
+    .filter(s => s);
+}
+
+/**
  * Suggests mappings between source and target JSON
  */
 export function suggestMappings(
@@ -615,10 +630,6 @@ export function transformJson(
             ? (firstTargetMatch[1] || firstTargetMatch[2] || firstTargetMatch[3])
             : "";
 
-          // Get the last component (like 'value' or 'priority')
-          const lastTargetMatch = targetPathParts[1]?.match(/^\['([^']+)'\]|\.\['([^']+)'\]|\.([^.\[]+)/);
-          const lastTargetComponent = lastTargetMatch ? (lastTargetMatch[1] || lastTargetMatch[2] || lastTargetMatch[3]) : "";
-
           // Process each array item
           for (let i = 0; i < sourceArray.length; i++) {
             const sourceItem = sourceArray[i];
@@ -719,10 +730,27 @@ export function transformJson(
                 const targetNestedItem = targetNestedArray[j];
 
                 // Set the field value on the nested object
-                if (lastTargetComponent && transformedNestedValue !== undefined) {
-                  targetNestedItem[lastTargetComponent] = transformedNestedValue;
-                } else if (!lastTargetComponent && transformedNestedValue !== undefined) {
-                  // If no last component, replace the entire item
+                // Parse full nested path (e.g., .discount.percent → ['discount', 'percent'])
+                if (targetPathParts[1] && transformedNestedValue !== undefined) {
+                  const nestedParts = parseNestedFieldPath(targetPathParts[1]);
+
+                  // Navigate to nested field, creating objects as needed
+                  let current = targetNestedItem;
+                  for (let k = 0; k < nestedParts.length - 1; k++) {
+                    const segment = nestedParts[k];
+                    if (!current[segment]) {
+                      current[segment] = {};
+                    }
+                    current = current[segment];
+                  }
+
+                  // Set the final field value
+                  const finalSegment = nestedParts[nestedParts.length - 1];
+                  if (finalSegment) {
+                    current[finalSegment] = transformedNestedValue;
+                  }
+                } else if (!targetPathParts[1] && transformedNestedValue !== undefined) {
+                  // If no path after wildcard, replace the entire item
                   targetNestedArray[j] = transformedNestedValue;
                 }
               }
@@ -784,9 +812,27 @@ export function transformJson(
               const targetNestedItem = targetArray[i][firstTargetComponent][0];
 
               // Set the field value
-              if (lastTargetComponent) {
-                targetNestedItem[lastTargetComponent] = transformedValue;
+              // Parse full nested path to support multi-level nesting (e.g., .discount.percent)
+              if (targetPathParts[1]) {
+                const nestedParts = parseNestedFieldPath(targetPathParts[1]);
+
+                // Navigate to nested field, creating objects as needed
+                let current = targetNestedItem;
+                for (let k = 0; k < nestedParts.length - 1; k++) {
+                  const segment = nestedParts[k];
+                  if (!current[segment]) {
+                    current[segment] = {};
+                  }
+                  current = current[segment];
+                }
+
+                // Set the final field value
+                const finalSegment = nestedParts[nestedParts.length - 1];
+                if (finalSegment) {
+                  current[finalSegment] = transformedValue;
+                }
               } else {
+                // No field path after wildcard, replace the entire item
                 targetArray[i][firstTargetComponent][0] = transformedValue;
               }
             }
@@ -812,10 +858,12 @@ export function transformJson(
             if (sourceFieldPath.includes("[*]")) {
               /**
                * Handle nested array wildcard in source field path.
-               * Example: products[*].weights.uoms[*]
-               * Extracts the entire uoms array: ["C62", "KG"]
+               * Example: products[*].weights.uoms[*] → extracts entire uoms array: ["C62", "KG"]
+               * Example: products[*].promotions[*].discount.percent → extracts percent from each promotion: [6.0, 10.0]
                */
-              const fieldContainerPath = sourceFieldPath.substring(0, sourceFieldPath.indexOf("[*]"));
+              const wildcardIndex = sourceFieldPath.indexOf("[*]");
+              const fieldContainerPath = sourceFieldPath.substring(0, wildcardIndex);
+              const afterWildcard = sourceFieldPath.substring(wildcardIndex + 3); // Everything after [*]
 
               // Navigate to the array container
               const pathParts = fieldContainerPath
@@ -834,9 +882,32 @@ export function transformJson(
                 arrayContainer = arrayContainer[segment];
               }
 
-              // If we found an array, use it as the source value
+              // If we found an array, process it
               if (Array.isArray(arrayContainer)) {
-                sourceValue = arrayContainer;
+                if (afterWildcard) {
+                  // Extract field from each array item
+                  const afterParts = afterWildcard
+                    .replace(/^\['/, "")
+                    .replace(/'\]$/, "")
+                    .replace(/^\./, "")
+                    .split(/'\]\['|'\.'|'\]\.|\./)
+                    .filter(s => s);
+
+                  sourceValue = arrayContainer.map(item => {
+                    let value = item;
+                    for (const segment of afterParts) {
+                      if (!value || typeof value !== "object") {
+                        value = undefined;
+                        break;
+                      }
+                      value = value[segment];
+                    }
+                    return value;
+                  });
+                } else {
+                  // No field after wildcard, return entire array
+                  sourceValue = arrayContainer;
+                }
               } else {
                 sourceValue = undefined;
               }
@@ -913,10 +984,12 @@ export function transformJson(
             if (targetFieldPath.includes("[*]")) {
               /**
                * Handle nested array wildcard in target field path.
-               * Example: products[*].weights.uoms[*]
-               * Assigns the entire array to the target nested location.
+               * Example: products[*].weights.uoms[*] → sets entire array
+               * Example: products[*].pricing.promotions[*].discount.percent → sets percent in each promotion
                */
-              const fieldContainerPath = targetFieldPath.substring(0, targetFieldPath.indexOf("[*]"));
+              const wildcardIndex = targetFieldPath.indexOf("[*]");
+              const fieldContainerPath = targetFieldPath.substring(0, wildcardIndex);
+              const afterWildcard = targetFieldPath.substring(wildcardIndex + 3);
 
               // Parse the field container path
               const pathParts = fieldContainerPath
@@ -936,15 +1009,50 @@ export function transformJson(
                 current = current[segment];
               }
 
-              // Set the array value on the last segment
+              // Get or create the nested array
               const lastSegment = pathParts[pathParts.length - 1];
               if (lastSegment) {
-                // If transformed value is an array, assign it directly
-                // Otherwise wrap it in an array
-                if (Array.isArray(transformedValue)) {
-                  current[lastSegment] = transformedValue;
-                } else if (transformedValue !== undefined) {
-                  current[lastSegment] = [transformedValue];
+                if (afterWildcard) {
+                  // Field after wildcard: set field in each array item
+                  if (!Array.isArray(current[lastSegment])) {
+                    current[lastSegment] = [];
+                  }
+
+                  const targetNestedArray = current[lastSegment];
+                  const afterParts = parseNestedFieldPath(afterWildcard);
+
+                  // transformedValue should be an array of values to set
+                  if (Array.isArray(transformedValue)) {
+                    transformedValue.forEach((value, idx) => {
+                      // Ensure nested array item exists
+                      if (!targetNestedArray[idx]) {
+                        targetNestedArray[idx] = {};
+                      }
+
+                      // Navigate to nested field in the array item
+                      let nestedCurrent = targetNestedArray[idx];
+                      for (let k = 0; k < afterParts.length - 1; k++) {
+                        const segment = afterParts[k];
+                        if (!nestedCurrent[segment]) {
+                          nestedCurrent[segment] = {};
+                        }
+                        nestedCurrent = nestedCurrent[segment];
+                      }
+
+                      // Set the value
+                      const nestedLastSegment = afterParts[afterParts.length - 1];
+                      if (nestedLastSegment) {
+                        nestedCurrent[nestedLastSegment] = value;
+                      }
+                    });
+                  }
+                } else {
+                  // No field after wildcard: set entire array
+                  if (Array.isArray(transformedValue)) {
+                    current[lastSegment] = transformedValue;
+                  } else if (transformedValue !== undefined) {
+                    current[lastSegment] = [transformedValue];
+                  }
                 }
               }
             } else {

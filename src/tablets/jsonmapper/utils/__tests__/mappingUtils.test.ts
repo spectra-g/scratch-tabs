@@ -1874,5 +1874,76 @@ describe("transformJson", () => {
       expect(Array.isArray(result.products[0].conflicts[0].actions)).toBe(true);
       expect(result.products[0].conflicts[0].actions).toEqual(["act01", "act02"]);
     });
+
+    it("should preserve nested object structure with nested array wildcards - user bug report #3", () => {
+      // User bug: discount.percent maps but loses the object structure, becomes just the value
+      const sourceJson = {
+        products: [
+          {
+            id: "12-34-56",
+            promotions: [
+              {
+                discount: {
+                  type: "TOTAL_PRICE",
+                  percent: 6.0
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      const rules: MappingRule[] = [
+        {
+          id: "1",
+          sourcePath: "$.products[*].promotions[*].discount.percent",
+          targetPath: "$.products[*].pricing.promotions[*].discount.percent",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true
+        },
+        {
+          id: "2",
+          sourcePath: "$.products[*].promotions[*].discount.type",
+          targetPath: "$.products[*].pricing.promotions[*].discount.type",
+          transformationType: "none",
+          transformation: "",
+          sourceDataType: "unknown",
+          targetDataType: "unknown",
+          status: "unmapped",
+          confidence: 0,
+          isUserDefined: true
+        }
+      ];
+
+      const result = transformJson(sourceJson, rules, "sourceToTarget");
+
+      // Expected: discount should be an object with both type and percent
+      expect(result).toEqual({
+        products: [
+          {
+            pricing: {
+              promotions: [
+                {
+                  discount: {
+                    type: "TOTAL_PRICE",
+                    percent: 6.0
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      });
+
+      // Verify discount is an object, not just a value
+      expect(typeof result.products[0].pricing.promotions[0].discount).toBe("object");
+      expect(result.products[0].pricing.promotions[0].discount.type).toBe("TOTAL_PRICE");
+      expect(result.products[0].pricing.promotions[0].discount.percent).toBe(6.0);
+    });
   });
 });
