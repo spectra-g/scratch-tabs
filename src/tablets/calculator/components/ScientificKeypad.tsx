@@ -16,8 +16,33 @@ interface ScientificKeypadProps {
 }
 
 export const ScientificKeypad: React.FC<ScientificKeypadProps> = ({ engine }) => {
+  const [showInverse, setShowInverse] = React.useState(false);
+
+  const handleInverseToggle = () => {
+    setShowInverse((prev) => !prev);
+  };
+
+  const handleSmartBracket = () => {
+    const unclosedCount = engine.getUnclosedBracketCount();
+    const expression = engine.data.expression;
+    const lastChar = expression[expression.length - 1];
+
+    // Insert closing bracket if:
+    // 1. There are unclosed brackets
+    // 2. Last character is a number or closing bracket (makes sense to close)
+    const shouldClose = unclosedCount > 0 &&
+                       lastChar &&
+                       (lastChar.match(/[0-9.)]/));
+
+    engine.handleInput(shouldClose ? ")" : "(");
+  };
+
+  const unclosedBrackets = engine.getUnclosedBracketCount();
+  const bracketLabel = unclosedBrackets > 0 ? `)${unclosedBrackets > 1 ? unclosedBrackets : ""}` : "(";
+
   return (
     <div className="grid grid-cols-5 gap-2 flex-grow text-sm">
+      {/* Row 1: Top controls */}
       <CalculatorButton
         value="AC"
         onClick={engine.handleClear}
@@ -29,14 +54,14 @@ export const ScientificKeypad: React.FC<ScientificKeypadProps> = ({ engine }) =>
         variant="action"
       />
       <CalculatorButton
-        value={<Parentheses size={16} />}
-        onClick={() => engine.handleInput("()")}
+        value={bracketLabel}
+        onClick={handleSmartBracket}
         variant="operator"
       />
       <CalculatorButton
-        value="%"
-        onClick={() => engine.handleInput("%")}
-        variant="operator"
+        value="INV"
+        onClick={handleInverseToggle}
+        variant={showInverse ? "equals" : "action"}
       />
       <CalculatorButton
         value={<Divide size={16} />}
@@ -44,9 +69,10 @@ export const ScientificKeypad: React.FC<ScientificKeypadProps> = ({ engine }) =>
         variant="operator"
       />
 
+      {/* Row 2: First function row */}
       <CalculatorButton
-        value="sin"
-        onClick={() => engine.handleInput("sin(")}
+        value={showInverse ? "asin" : "sin"}
+        onClick={() => engine.handleInput(showInverse ? "asin(" : "sin(")}
         variant="action"
       />
       <CalculatorButton
@@ -67,9 +93,10 @@ export const ScientificKeypad: React.FC<ScientificKeypadProps> = ({ engine }) =>
         variant="operator"
       />
 
+      {/* Row 3: Second function row */}
       <CalculatorButton
-        value="cos"
-        onClick={() => engine.handleInput("cos(")}
+        value={showInverse ? "acos" : "cos"}
+        onClick={() => engine.handleInput(showInverse ? "acos(" : "cos(")}
         variant="action"
       />
       <CalculatorButton
@@ -90,9 +117,10 @@ export const ScientificKeypad: React.FC<ScientificKeypadProps> = ({ engine }) =>
         variant="operator"
       />
 
+      {/* Row 4: Third function row */}
       <CalculatorButton
-        value="tan"
-        onClick={() => engine.handleInput("tan(")}
+        value={showInverse ? "atan" : "tan"}
+        onClick={() => engine.handleInput(showInverse ? "atan(" : "tan(")}
         variant="action"
       />
       <CalculatorButton
@@ -113,14 +141,15 @@ export const ScientificKeypad: React.FC<ScientificKeypadProps> = ({ engine }) =>
         variant="operator"
       />
 
+      {/* Row 5: Fourth function row */}
       <CalculatorButton
-        value="√"
-        onClick={() => engine.handleInput("sqrt(")}
+        value={showInverse ? "x^y" : "x²"}
+        onClick={() => engine.handleInput(showInverse ? "^" : "^2")}
         variant="action"
       />
       <CalculatorButton
-        value="x²"
-        onClick={() => engine.handleInput("^2")}
+        value={showInverse ? "ln" : "log"}
+        onClick={() => engine.handleInput(showInverse ? "log(" : "log10(")}
         variant="action"
       />
       <CalculatorButton
@@ -135,6 +164,33 @@ export const ScientificKeypad: React.FC<ScientificKeypadProps> = ({ engine }) =>
         value={<Equal size={18} />}
         onClick={engine.handleEquals}
         variant="equals"
+      />
+
+      {/* Row 6: Additional functions */}
+      <CalculatorButton
+        value="√"
+        onClick={() => engine.handleInput("sqrt(")}
+        variant="action"
+      />
+      <CalculatorButton
+        value="abs"
+        onClick={() => engine.handleInput("abs(")}
+        variant="action"
+      />
+      <CalculatorButton
+        value="π"
+        onClick={() => engine.handleInput("pi")}
+        variant="action"
+      />
+      <CalculatorButton
+        value="e"
+        onClick={() => engine.handleInput("e")}
+        variant="action"
+      />
+      <CalculatorButton
+        value="!"
+        onClick={() => engine.handleInput("!")}
+        variant="action"
       />
     </div>
   );

@@ -813,7 +813,7 @@ describe("useCalculatorEngine", () => {
 
   describe("handleNotesChange", () => {
     it("should update notes", () => {
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(initialData, mockOnChange)
       );
 
@@ -825,6 +825,636 @@ describe("useCalculatorEngine", () => {
         ...initialData,
         notes: "Test notes",
       });
+    });
+  });
+
+  describe("scientific functions", () => {
+    describe("trigonometric functions", () => {
+      it("should evaluate sin function", () => {
+        const testData = { ...initialData, expression: "sin(0)", display: "sin(0)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "0",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate cos function", () => {
+        const testData = { ...initialData, expression: "cos(0)", display: "cos(0)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "1",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate tan function", () => {
+        const testData = { ...initialData, expression: "tan(0)", display: "tan(0)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "0",
+            isResultDisplayed: true,
+          })
+        );
+      });
+    });
+
+    describe("inverse trigonometric functions", () => {
+      it("should evaluate asin function", () => {
+        const testData = { ...initialData, expression: "asin(0)", display: "asin(0)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "0",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate acos function", () => {
+        const testData = { ...initialData, expression: "acos(1)", display: "acos(1)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "0",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate atan function", () => {
+        const testData = { ...initialData, expression: "atan(0)", display: "atan(0)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "0",
+            isResultDisplayed: true,
+          })
+        );
+      });
+    });
+
+    describe("logarithmic functions", () => {
+      it("should evaluate log10 (base 10)", () => {
+        const testData = { ...initialData, expression: "log10(100)", display: "log10(100)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "2",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate log (natural log)", () => {
+        const testData = { ...initialData, expression: "log(e)", display: "log(e)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "1",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate log with base 2", () => {
+        const testData = { ...initialData, expression: "log(8, 2)", display: "log(8, 2)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "3",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate log2 (base 2)", () => {
+        const testData = { ...initialData, expression: "log2(16)", display: "log2(16)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "4",
+            isResultDisplayed: true,
+          })
+        );
+      });
+    });
+
+    describe("power and root functions", () => {
+      it("should evaluate square (x^2)", () => {
+        const testData = { ...initialData, expression: "5^2", display: "5^2" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "25",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate power (x^y)", () => {
+        const testData = { ...initialData, expression: "2^10", display: "2^10" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "1024",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate sqrt function", () => {
+        const testData = { ...initialData, expression: "sqrt(16)", display: "sqrt(16)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "4",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate cube root", () => {
+        const testData = { ...initialData, expression: "8^(1/3)", display: "8^(1/3)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "2",
+            isResultDisplayed: true,
+          })
+        );
+      });
+    });
+
+    describe("absolute value", () => {
+      it("should evaluate abs of positive number", () => {
+        const testData = { ...initialData, expression: "abs(5)", display: "abs(5)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "5",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate abs of negative number", () => {
+        const testData = { ...initialData, expression: "abs(-5)", display: "abs(-5)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "5",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate abs of zero", () => {
+        const testData = { ...initialData, expression: "abs(0)", display: "abs(0)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "0",
+            isResultDisplayed: true,
+          })
+        );
+      });
+    });
+
+    describe("factorial", () => {
+      it("should evaluate factorial of 5", () => {
+        const testData = { ...initialData, expression: "5!", display: "5!" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "120",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate factorial of 0", () => {
+        const testData = { ...initialData, expression: "0!", display: "0!" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "1",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate factorial of 10", () => {
+        const testData = { ...initialData, expression: "10!", display: "10!" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "3628800",
+            isResultDisplayed: true,
+          })
+        );
+      });
+    });
+
+    describe("constants", () => {
+      it("should evaluate pi constant", () => {
+        const testData = { ...initialData, expression: "pi", display: "pi" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(parseFloat(call.display)).toBeCloseTo(3.141592653589793, 10);
+      });
+
+      it("should evaluate e constant", () => {
+        const testData = { ...initialData, expression: "e", display: "e" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(parseFloat(call.display)).toBeCloseTo(2.718281828459045, 10);
+      });
+
+      it("should use pi in calculations", () => {
+        const testData = { ...initialData, expression: "2*pi", display: "2*pi" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(parseFloat(call.display)).toBeCloseTo(6.283185307179586, 10);
+      });
+
+      it("should use e in calculations", () => {
+        const testData = { ...initialData, expression: "e^2", display: "e^2" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(parseFloat(call.display)).toBeCloseTo(7.3890560989306495, 10);
+      });
+    });
+
+    describe("complex expressions", () => {
+      it("should evaluate expression with multiple functions", () => {
+        const testData = { ...initialData, expression: "sin(pi/2)", display: "sin(pi/2)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(parseFloat(call.display)).toBeCloseTo(1, 10);
+      });
+
+      it("should evaluate nested functions", () => {
+        const testData = { ...initialData, expression: "sqrt(abs(-16))", display: "sqrt(abs(-16))" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "4",
+            isResultDisplayed: true,
+          })
+        );
+      });
+
+      it("should evaluate logarithm with power", () => {
+        const testData = { ...initialData, expression: "log10(10^3)", display: "log10(10^3)" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(parseFloat(call.display)).toBeCloseTo(3, 10);
+      });
+
+      it("should evaluate factorial in expression", () => {
+        const testData = { ...initialData, expression: "3!+2!", display: "3!+2!" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            display: "8",
+            isResultDisplayed: true,
+          })
+        );
+      });
+    });
+  });
+
+  describe("smart bracket handling", () => {
+    it("should return zero unclosed brackets for balanced expression", () => {
+      const testData = { ...initialData, expression: "(1+2)", display: "(1+2)" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      expect(result.current.getUnclosedBracketCount()).toBe(0);
+    });
+
+    it("should count one unclosed bracket", () => {
+      const testData = { ...initialData, expression: "sin(5", display: "sin(5" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      expect(result.current.getUnclosedBracketCount()).toBe(1);
+    });
+
+    it("should count multiple unclosed brackets", () => {
+      const testData = { ...initialData, expression: "((1+2", display: "((1+2" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      expect(result.current.getUnclosedBracketCount()).toBe(2);
+    });
+
+    it("should auto-close brackets on equals", () => {
+      const testData = { ...initialData, expression: "sin(5+3", display: "sin(5+3" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleEquals();
+      });
+
+      // Should have evaluated "sin(5+3)" which is sin(8)
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.isResultDisplayed).toBe(true);
+      expect(call.history[0].expression).toBe("sin(5+3)");
+    });
+
+    it("should auto-close multiple brackets on equals", () => {
+      const testData = { ...initialData, expression: "((2+3)+(4+5", display: "((2+3)+(4+5" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleEquals();
+      });
+
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.isResultDisplayed).toBe(true);
+      expect(call.display).toBe("14");
+      expect(call.history[0].expression).toBe("((2+3)+(4+5))");
+    });
+
+    it("should handle nested function brackets", () => {
+      const testData = { ...initialData, expression: "sqrt(abs(-16", display: "sqrt(abs(-16" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleEquals();
+      });
+
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.isResultDisplayed).toBe(true);
+      expect(call.display).toBe("4");
+      expect(call.history[0].expression).toBe("sqrt(abs(-16))");
+    });
+
+    it("should not affect expressions with balanced brackets", () => {
+      const testData = { ...initialData, expression: "sin(pi/2)", display: "sin(pi/2)" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleEquals();
+      });
+
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.isResultDisplayed).toBe(true);
+      expect(call.history[0].expression).toBe("sin(pi/2)");
+    });
+
+    it("should handle complex expressions with mixed brackets", () => {
+      const testData = { ...initialData, expression: "2*(3+sin(0", display: "2*(3+sin(0" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleEquals();
+      });
+
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.isResultDisplayed).toBe(true);
+      expect(call.display).toBe("6");
+      expect(call.history[0].expression).toBe("2*(3+sin(0))");
+    });
+
+    it("should return zero for more closing than opening brackets", () => {
+      const testData = { ...initialData, expression: "1+2))", display: "1+2))" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      expect(result.current.getUnclosedBracketCount()).toBe(0);
+    });
+
+    it("should handle empty expression", () => {
+      const testData = { ...initialData, expression: "0", display: "0" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      expect(result.current.getUnclosedBracketCount()).toBe(0);
     });
   });
 });

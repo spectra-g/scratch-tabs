@@ -19,6 +19,7 @@ const mockEngine: CalculatorEngine = {
   handleBaseChange: jest.fn(),
   handleHistoryClick: jest.fn(),
   handleNotesChange: jest.fn(),
+  getUnclosedBracketCount: jest.fn(() => 0),
 };
 
 describe("useKeyboardHandler", () => {

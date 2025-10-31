@@ -55,6 +55,28 @@ const hasDecimalPoint = (numberStr: string): boolean => {
   return numberStr.includes(".");
 };
 
+/**
+ * Counts the number of unclosed opening brackets in an expression.
+ * Returns the difference between opening and closing brackets.
+ */
+const countUnclosedBrackets = (expression: string): number => {
+  let count = 0;
+  for (const char of expression) {
+    if (char === "(") count++;
+    if (char === ")") count--;
+  }
+  return Math.max(0, count); // Never return negative
+};
+
+/**
+ * Auto-closes any unclosed brackets in an expression.
+ * Example: "sin(5+3" -> "sin(5+3)"
+ */
+const autoCloseBrackets = (expression: string): string => {
+  const unclosed = countUnclosedBrackets(expression);
+  return expression + ")".repeat(unclosed);
+};
+
 // --- State Interface ---
 export type CalculatorMode = "standard" | "scientific" | "programmer";
 
@@ -85,6 +107,7 @@ export interface CalculatorEngine {
   handleBaseChange: (base: "HEX" | "DEC" | "OCT" | "BIN") => void;
   handleHistoryClick: (entry: HistoryEntry) => void;
   handleNotesChange: (notes: string) => void;
+  getUnclosedBracketCount: () => number;
 }
 
 
@@ -199,10 +222,12 @@ export const useCalculatorEngine = (
   const handleEquals = useCallback(() => {
     if (initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY) return;
     try {
-      const result = evaluate(initialData.expression);
+      // Auto-close any unclosed brackets before evaluation
+      const closedExpression = autoCloseBrackets(initialData.expression);
+      const result = evaluate(closedExpression);
       const formattedResult = formatDisplay(result);
       const newHistoryEntry: HistoryEntry = {
-        expression: initialData.expression,
+        expression: closedExpression,
         result: formattedResult,
         mode: initialData.mode,
         base: initialData.base,
@@ -269,6 +294,10 @@ export const useCalculatorEngine = (
     [updateData],
   );
 
+  const getUnclosedBracketCount = useCallback(() => {
+    return countUnclosedBrackets(initialData.expression);
+  }, [initialData.expression]);
+
   return {
     data: initialData,
     handleInput,
@@ -279,5 +308,6 @@ export const useCalculatorEngine = (
     handleBaseChange,
     handleHistoryClick,
     handleNotesChange,
+    getUnclosedBracketCount,
   };
 };
