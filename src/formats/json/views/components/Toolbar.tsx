@@ -3,7 +3,7 @@ import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, Wand2, Copy, Chec
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { formatJson, applyEditToEditor } from "../../actions/jsonOperations";
 import { useJsonModals } from "../../hooks/useJsonModals";
-import { autoFixJson, formatFixedJson, sanitizeJson } from "../../actions/jsonAutoFix";
+import { autoFixJson, formatFixedJson } from "../../actions/jsonAutoFix";
 import { CompareDropdown } from "./CompareDropdown";
 import { useTabsStore } from "../../../../stores/tabsStore";
 import { useWorkspaceStore } from "../../../../stores/workspaceStore";
@@ -81,19 +81,26 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     }
   };
 
-  const handleSanitize = () => {
+  const handleFixJson = () => {
     if (!editor) return;
 
     const content = editor.getValue();
-    const result = sanitizeJson(content);
+    const result = autoFixJson(content);
 
-    if (result.success && result.sanitizedContent) {
-      applyEditToEditor(editor, result.sanitizedContent, "sanitize");
+    if (result.success && result.fixedContent) {
+      try {
+        const formatted = formatFixedJson(result.fixedContent);
+        applyEditToEditor(editor, formatted, "fix-json");
+      } catch (error) {
+        console.error("Failed to format fixed JSON:", error);
+        // Still apply the fix even if formatting fails
+        applyEditToEditor(editor, result.fixedContent, "fix-json");
+      }
     } else {
-      console.warn("Sanitization encountered issues:", result.error);
-      // Even if not fully successful, apply the sanitized version
-      if (result.sanitizedContent) {
-        applyEditToEditor(editor, result.sanitizedContent, "sanitize");
+      console.warn("Fix JSON failed:", result.error);
+      // Apply partially fixed content if available
+      if (result.fixedContent) {
+        applyEditToEditor(editor, result.fixedContent, "fix-json");
       }
     }
   };
@@ -271,12 +278,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <span className="text-sm">Format</span>
         </button>
         <button
-          onClick={handleSanitize}
+          onClick={handleFixJson}
           className="flex items-center space-x-1 px-3 py-1 bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
-          title="Sanitize JSON - Escape control characters like null bytes"
+          title="Fix JSON - Auto-fix common errors including control characters, missing quotes, commas, and brackets"
         >
           <Sparkles size={14} />
-          <span className="text-sm">Sanitize</span>
+          <span className="text-sm">Fix JSON</span>
         </button>
         <CompareDropdown
           recentJsonTabs={recentJsonTabs}

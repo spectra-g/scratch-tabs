@@ -21,6 +21,8 @@ const mockEngine: CalculatorEngine = {
   handleBaseChange: jest.fn(),
   handleHistoryClick: jest.fn(),
   handleNotesChange: jest.fn(),
+  getUnclosedBracketCount: jest.fn(() => 0),
+  setExpression: jest.fn(),
 };
 
 describe("StandardKeypad", () => {

@@ -99,7 +99,11 @@ export const StandardKeypad: React.FC<StandardKeypadProps> = ({ engine }) => {
         onClick={() => engine.handleInput(".")}
       />
       <CalculatorButton
-        value={<Equal size={20} />}
+        value={
+          <div className="flex items-center justify-center w-full">
+            <Equal size={20} />
+          </div>
+        }
         onClick={engine.handleEquals}
         variant="equals"
       />
