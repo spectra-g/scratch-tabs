@@ -49,6 +49,10 @@ export const useCalculatorEngine = (
     [initialData, onChange],
   );
 
+  const isOperatorChar = (char: string): boolean => {
+    return ["+", "-", "*", "/", "%"].includes(char);
+  };
+
   const handleInput = useCallback(
     (input: string) => {
       // Don't add operators to an error state
@@ -82,6 +86,26 @@ export const useCalculatorEngine = (
         initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY
           ? ""
           : initialData.expression;
+
+      // Handle operator correction
+      if (isOperatorChar(input) && currentExpression.length > 0) {
+        const lastChar = currentExpression[currentExpression.length - 1];
+        const isLastCharOperator = isOperatorChar(lastChar);
+
+        if (isLastCharOperator) {
+          // Special case: Allow minus after any operator for negative numbers (e.g., "5 * -3")
+          if (input === "-" && lastChar !== "-") {
+            const newExpression = currentExpression + input;
+            updateData({ expression: newExpression, display: newExpression, isResultDisplayed: false });
+            return;
+          }
+
+          // Replace the last operator with the new one (e.g., "5 * *" becomes "5 * ")
+          const newExpression = currentExpression.slice(0, -1) + input;
+          updateData({ expression: newExpression, display: newExpression, isResultDisplayed: false });
+          return;
+        }
+      }
 
       const newExpression = currentExpression + input;
       updateData({ expression: newExpression, display: newExpression, isResultDisplayed: false });

@@ -167,6 +167,152 @@ describe("useCalculatorEngine", () => {
         isResultDisplayed: false,
       });
     });
+
+    describe("operator correction", () => {
+      it("should replace consecutive same operators", () => {
+        const testData = { ...initialData, expression: "5*", display: "5*" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("*");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "5*",
+          display: "5*",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should replace different consecutive operators", () => {
+        const testData = { ...initialData, expression: "5*", display: "5*" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("+");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "5+",
+          display: "5+",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should allow minus after operator for negative numbers", () => {
+        const testData = { ...initialData, expression: "5*", display: "5*" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("-");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "5*-",
+          display: "5*-",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should not allow double minus", () => {
+        const testData = { ...initialData, expression: "5-", display: "5-" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("-");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "5-",
+          display: "5-",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should handle operator correction with division", () => {
+        const testData = { ...initialData, expression: "10/", display: "10/" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("*");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "10*",
+          display: "10*",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should handle operator correction with modulo", () => {
+        const testData = { ...initialData, expression: "10%", display: "10%" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("+");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "10+",
+          display: "10+",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should allow negative number after addition", () => {
+        const testData = { ...initialData, expression: "5+", display: "5+" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("-");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "5+-",
+          display: "5+-",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should allow negative number after division", () => {
+        const testData = { ...initialData, expression: "10/", display: "10/" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("-");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "10/-",
+          display: "10/-",
+          isResultDisplayed: false,
+        });
+      });
+    });
   });
 
   describe("handleClear", () => {
