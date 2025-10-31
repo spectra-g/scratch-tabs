@@ -53,8 +53,8 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({
       style={{ outline: "none" }}
       data-calculator-id={tabletId}
     >
-      <div className="w-full md:w-8/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-gray-700/50">
-        <div className="flex items-center justify-between mb-4 px-2">
+      <div className="w-full md:w-8/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-gray-700/50 overflow-y-auto custom-scrollbar">
+        <div className="flex items-center justify-between mb-4 px-2 flex-shrink-0">
           <div className="flex items-center space-x-2">
             <Calculator className="text-gray-400" size={20} />
             <h2 className="text-lg font-semibold text-gray-100">Calculator</h2>
@@ -62,8 +62,12 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({
           <ModeSelector engine={engine} currentMode={data.mode} />
         </div>
 
-        <CalculatorDisplay expression={data.expression} display={data.display} />
-        {renderKeypad()}
+        <div className="flex-shrink-0">
+          <CalculatorDisplay expression={data.expression} display={data.display} />
+        </div>
+        <div className="flex-1 min-h-0">
+          {renderKeypad()}
+        </div>
       </div>
       
       <div className="w-full md:w-4/12 p-4 flex flex-col">

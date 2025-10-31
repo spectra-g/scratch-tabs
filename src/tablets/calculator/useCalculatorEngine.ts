@@ -109,6 +109,7 @@ export interface CalculatorEngine {
   handleHistoryClick: (entry: HistoryEntry) => void;
   handleNotesChange: (notes: string) => void;
   getUnclosedBracketCount: () => number;
+  setExpression: (expression: string) => void;
 }
 
 
@@ -317,6 +318,17 @@ export const useCalculatorEngine = (
     return countUnclosedBrackets(initialData.expression);
   }, [initialData.expression]);
 
+  const setExpression = useCallback(
+    (expression: string) => {
+      updateData({
+        expression,
+        display: expression,
+        isResultDisplayed: false,
+      });
+    },
+    [updateData],
+  );
+
   return {
     data: initialData,
     handleInput,
@@ -328,5 +340,6 @@ export const useCalculatorEngine = (
     handleHistoryClick,
     handleNotesChange,
     getUnclosedBracketCount,
+    setExpression,
   };
 };

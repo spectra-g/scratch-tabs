@@ -1777,4 +1777,66 @@ describe("useCalculatorEngine", () => {
       });
     });
   });
+
+  describe("setExpression", () => {
+    it("should directly set the expression and display", () => {
+      const testData = { ...initialData, expression: "5+3", display: "5+3" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.setExpression("42");
+      });
+
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.expression).toBe("42");
+      expect(call.display).toBe("42");
+      expect(call.isResultDisplayed).toBe(false);
+    });
+
+    it("should replace current expression with new value", () => {
+      const testData = { ...initialData, expression: "7", display: "7" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.setExpression("3");
+      });
+
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.expression).toBe("3");
+      expect(call.display).toBe("3");
+    });
+
+    it("should work with complex expressions", () => {
+      const testData = { ...initialData, expression: "100", display: "100" };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.setExpression("FF & A");
+      });
+
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.expression).toBe("FF & A");
+      expect(call.display).toBe("FF & A");
+    });
+
+    it("should clear isResultDisplayed flag", () => {
+      const testData = { ...initialData, expression: "8", display: "8", isResultDisplayed: true };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.setExpression("15");
+      });
+
+      const call = mockOnChange.mock.calls[0][0];
+      expect(call.isResultDisplayed).toBe(false);
+    });
+  });
 });
