@@ -161,7 +161,11 @@ export const ScientificKeypad: React.FC<ScientificKeypadProps> = ({ engine }) =>
         onClick={() => engine.handleInput(".")}
       />
       <CalculatorButton
-        value={<Equal size={18} />}
+        value={
+          <div className="flex items-center justify-center w-full">
+            <Equal size={18} />
+          </div>
+        }
         onClick={engine.handleEquals}
         variant="equals"
       />

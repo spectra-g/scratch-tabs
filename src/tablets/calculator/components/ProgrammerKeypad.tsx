@@ -2,6 +2,7 @@ import React from "react";
 import { Equal, Binary } from "lucide-react";
 import { CalculatorButton } from "./CalculatorButton";
 import { CalculatorEngine } from "../useCalculatorEngine";
+import { LiveBaseConverter } from "./LiveBaseConverter";
 
 interface ProgrammerKeypadProps {
   engine: CalculatorEngine;
@@ -11,7 +12,12 @@ export const ProgrammerKeypad: React.FC<ProgrammerKeypadProps> = ({ engine }) =>
   const { data } = engine;
 
   return (
-    <div className="grid grid-cols-5 gap-2 flex-grow text-sm">
+    <div className="flex flex-col gap-3">
+      {/* Live Base Converter */}
+      <LiveBaseConverter expression={data.expression} currentBase={data.base} />
+
+      {/* Keypad */}
+      <div className="grid grid-cols-5 gap-2 flex-grow text-sm">
       <CalculatorButton
         value="AC"
         onClick={engine.handleClear}
@@ -101,35 +107,47 @@ export const ProgrammerKeypad: React.FC<ProgrammerKeypadProps> = ({ engine }) =>
         onClick={() => engine.handleInput("3")}
       />
 
-      <div className="col-span-3 grid grid-cols-3 gap-2">
-        <CalculatorButton
-          value={<Binary size={16} />}
-          onClick={() => engine.handleBaseChange("BIN")}
-          variant="mode"
-          isActive={data.base === "BIN"}
-        />
-        <CalculatorButton
-          value="OCT"
-          onClick={() => engine.handleBaseChange("OCT")}
-          variant="mode"
-          isActive={data.base === "OCT"}
-        />
-        <CalculatorButton
-          value="HEX"
-          onClick={() => engine.handleBaseChange("HEX")}
-          variant="mode"
-          isActive={data.base === "HEX"}
-        />
-      </div>
+      <CalculatorButton
+        value="HEX"
+        onClick={() => engine.handleBaseChange("HEX")}
+        variant="mode"
+        isActive={data.base === "HEX"}
+      />
+      <CalculatorButton
+        value="DEC"
+        onClick={() => engine.handleBaseChange("DEC")}
+        variant="mode"
+        isActive={data.base === "DEC"}
+      />
+      <CalculatorButton
+        value="OCT"
+        onClick={() => engine.handleBaseChange("OCT")}
+        variant="mode"
+        isActive={data.base === "OCT"}
+      />
+      <CalculatorButton
+        value={<Binary size={16} />}
+        onClick={() => engine.handleBaseChange("BIN")}
+        variant="mode"
+        isActive={data.base === "BIN"}
+      />
       <CalculatorButton
         value="0"
         onClick={() => engine.handleInput("0")}
       />
-      <CalculatorButton
-        value={<Equal size={18} />}
-        onClick={engine.handleEquals}
-        variant="equals"
-      />
+
+      <div className="col-span-5 grid grid-cols-1">
+        <CalculatorButton
+          value={
+            <div className="flex items-center justify-center w-full">
+              <Equal size={18} />
+            </div>
+          }
+          onClick={engine.handleEquals}
+          variant="equals"
+        />
+      </div>
+      </div>
     </div>
   );
 };
