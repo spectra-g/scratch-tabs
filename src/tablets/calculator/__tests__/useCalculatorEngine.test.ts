@@ -168,6 +168,191 @@ describe("useCalculatorEngine", () => {
       });
     });
 
+    describe("decimal point logic", () => {
+      it("should allow first decimal point in a number", () => {
+        const testData = { ...initialData, expression: "3", display: "3" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "3.",
+          display: "3.",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should prevent second decimal point in same number", () => {
+        const testData = { ...initialData, expression: "3.14", display: "3.14" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).not.toHaveBeenCalled();
+      });
+
+      it("should allow decimal point after operator", () => {
+        const testData = { ...initialData, expression: "3.14+", display: "3.14+" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "3.14+.",
+          display: "3.14+.",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should allow decimal point in second number after subtraction", () => {
+        const testData = { ...initialData, expression: "10.5-2", display: "10.5-2" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "10.5-2.",
+          display: "10.5-2.",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should allow decimal point in negative number", () => {
+        const testData = { ...initialData, expression: "5*-3", display: "5*-3" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "5*-3.",
+          display: "5*-3.",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should prevent second decimal in negative number", () => {
+        const testData = { ...initialData, expression: "5*-3.14", display: "5*-3.14" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).not.toHaveBeenCalled();
+      });
+
+      it("should allow decimal point after multiplication", () => {
+        const testData = { ...initialData, expression: "2.5*", display: "2.5*" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "2.5*.",
+          display: "2.5*.",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should allow decimal point after division", () => {
+        const testData = { ...initialData, expression: "10/", display: "10/" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "10/.",
+          display: "10/.",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should allow decimal point at start of expression", () => {
+        const testData = { ...initialData, expression: "0", display: "0" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: ".",
+          display: ".",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should handle multiple numbers with decimals correctly", () => {
+        const testData = { ...initialData, expression: "3.14+2.71", display: "3.14+2.71" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).not.toHaveBeenCalled();
+      });
+
+      it("should allow decimal after modulo operator", () => {
+        const testData = { ...initialData, expression: "10%", display: "10%" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput(".");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "10%.",
+          display: "10%.",
+          isResultDisplayed: false,
+        });
+      });
+    });
+
     describe("operator correction", () => {
       it("should replace consecutive same operators", () => {
         const testData = { ...initialData, expression: "5*", display: "5*" };

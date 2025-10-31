@@ -23,6 +23,38 @@ const shouldReplaceOperator = (input: string, lastChar: string): boolean => {
   return isArithmeticOperator(input) && isArithmeticOperator(lastChar);
 };
 
+/**
+ * Extracts the current number being typed from the expression.
+ * Returns everything after the last operator or the entire expression if no operator.
+ * Examples:
+ * - "123" -> "123"
+ * - "5+3.14" -> "3.14"
+ * - "10*-2.5" -> "-2.5"
+ */
+const getCurrentNumber = (expression: string): string => {
+  if (!expression) return "";
+
+  // Find the last operator position
+  let lastOperatorIndex = -1;
+  for (let i = expression.length - 1; i >= 0; i--) {
+    const char = expression[i];
+    if (isArithmeticOperator(char)) {
+      // Handle negative numbers: check if minus is part of a negative number
+      if (char === "-" && i > 0 && isArithmeticOperator(expression[i - 1])) {
+        continue; // This minus is part of a negative number, keep looking
+      }
+      lastOperatorIndex = i;
+      break;
+    }
+  }
+
+  return expression.slice(lastOperatorIndex + 1);
+};
+
+const hasDecimalPoint = (numberStr: string): boolean => {
+  return numberStr.includes(".");
+};
+
 // --- State Interface ---
 export type CalculatorMode = "standard" | "scientific" | "programmer";
 
@@ -102,6 +134,14 @@ export const useCalculatorEngine = (
         initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY
           ? ""
           : initialData.expression;
+
+      // Prevent multiple decimal points in a single number
+      if (input === ".") {
+        const currentNumber = getCurrentNumber(currentExpression);
+        if (hasDecimalPoint(currentNumber)) {
+          return; // Already has a decimal point, don't add another
+        }
+      }
 
       // Handle operator correction for consecutive operators
       if (isArithmeticOperator(input) && currentExpression.length > 0) {
