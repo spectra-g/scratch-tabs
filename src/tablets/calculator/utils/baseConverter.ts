@@ -172,3 +172,76 @@ export const extractCurrentNumber = (expression: string): string => {
   const number = match[0].replace(/^[\+\-\*\/\%\(\)]/, "");
   return number || "0";
 };
+
+/**
+ * Prepares an expression for evaluation in programmer mode
+ * Converts numbers from the current base to decimal and replaces bitwise operators
+ *
+ * @param expression - The expression to prepare (e.g., "FF & A" in HEX mode)
+ * @param base - The current number base
+ * @returns The expression ready for mathjs evaluation (e.g., "255 & 10")
+ *
+ * @example
+ * prepareExpressionForEval("FF & A", "HEX") // Returns "255 & 10"
+ * prepareExpressionForEval("~5", "DEC") // Returns "bitNot(5)"
+ * prepareExpressionForEval("5 ^ 3", "DEC") // Returns "bitXor(5, 3)"
+ */
+export const prepareExpressionForEval = (
+  expression: string,
+  base: BaseType
+): string => {
+  if (!expression || expression === "0") return "0";
+
+  // Bitwise operators that need special handling
+  const BITWISE_OPS = {
+    " & ": " & ",     // AND - works as-is
+    " | ": " | ",     // OR - works as-is
+    " ^ ": "§XOR§",   // XOR - needs to be replaced (temporary marker)
+    "~": "§NOT§",     // NOT - needs to be replaced (temporary marker)
+  };
+
+  // Step 1: Mark XOR and NOT operators with temporary markers
+  let prepared = expression;
+  prepared = prepared.replace(/\s\^\s/g, BITWISE_OPS[" ^ "]);
+  prepared = prepared.replace(/~/g, BITWISE_OPS["~"]);
+
+  // Step 2: Extract all tokens (numbers, operators, parentheses, functions)
+  // Match: hex digits, decimal digits, operators, parentheses, function names, whitespace
+  const tokenRegex = /([A-Fa-f0-9]+|[\+\-\*\/\%\(\)\&\|\s]|§[A-Z]+§)/g;
+  const tokens = prepared.match(tokenRegex) || [];
+
+  // Step 3: Convert numbers from current base to decimal
+  const converted = tokens.map((token) => {
+    // Skip operators, parentheses, whitespace, and markers
+    if (
+      /^[\+\-\*\/\%\(\)\&\|\s§]/.test(token) ||
+      token === "" ||
+      token.includes("§")
+    ) {
+      return token;
+    }
+
+    // Check if it's a valid number in the current base
+    if (isValidNumber(token, base)) {
+      const decimal = toDecimal(token, base);
+      return decimal !== null ? decimal.toString() : token;
+    }
+
+    return token;
+  });
+
+  let result = converted.join("");
+
+  // Step 4: Replace temporary markers with mathjs functions
+  // Handle NOT: §NOT§5 -> bitNot(5)
+  // Need to find what comes after NOT
+  result = result.replace(/§NOT§\s*(\d+)/g, "bitNot($1)");
+  result = result.replace(/§NOT§\s*\(/g, "bitNot(");
+
+  // Handle XOR: 5§XOR§3 -> bitXor(5, 3)
+  // This is tricky because we need to find the operands on both sides
+  // Use a regex that captures the left operand, marker, and right operand
+  result = result.replace(/(\d+)\s*§XOR§\s*(\d+)/g, "bitXor($1, $2)");
+
+  return result;
+};

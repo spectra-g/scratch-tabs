@@ -1457,4 +1457,324 @@ describe("useCalculatorEngine", () => {
       expect(result.current.getUnclosedBracketCount()).toBe(0);
     });
   });
+
+  describe("Programmer Mode - Bitwise Operations", () => {
+    describe("AND operation", () => {
+      it("should perform AND in DEC mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, expression: "5 & 3", display: "5 & 3" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("1"); // 5 & 3 = 1 (101 & 011 = 001)
+      });
+
+      it("should perform AND in HEX mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "HEX" as const, expression: "FF & A", display: "FF & A" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("A"); // 255 & 10 = 10 (0xA)
+      });
+
+      it("should perform AND in BIN mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "BIN" as const, expression: "1010 & 1100", display: "1010 & 1100" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("1000"); // 10 & 12 = 8 (0b1000)
+      });
+
+      it("should perform AND in OCT mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "OCT" as const, expression: "77 & 17", display: "77 & 17" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("17"); // 63 & 15 = 15 (017)
+      });
+    });
+
+    describe("OR operation", () => {
+      it("should perform OR in DEC mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, expression: "5 | 3", display: "5 | 3" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("7"); // 5 | 3 = 7 (101 | 011 = 111)
+      });
+
+      it("should perform OR in HEX mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "HEX" as const, expression: "F0 | 0F", display: "F0 | 0F" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("FF"); // 240 | 15 = 255 (0xFF)
+      });
+
+      it("should perform OR in BIN mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "BIN" as const, expression: "1010 | 1100", display: "1010 | 1100" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("1110"); // 10 | 12 = 14 (0b1110)
+      });
+    });
+
+    describe("XOR operation", () => {
+      it("should perform XOR in DEC mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, expression: "5 ^ 3", display: "5 ^ 3" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("6"); // 5 ^ 3 = 6 (101 ^ 011 = 110)
+      });
+
+      it("should perform XOR in HEX mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "HEX" as const, expression: "FF ^ A", display: "FF ^ A" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("F5"); // 255 ^ 10 = 245 (0xF5)
+      });
+
+      it("should perform XOR in BIN mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "BIN" as const, expression: "1010 ^ 1100", display: "1010 ^ 1100" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("110"); // 10 ^ 12 = 6 (0b110)
+      });
+    });
+
+    describe("NOT operation", () => {
+      it("should perform NOT in DEC mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, expression: "~5", display: "~5" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("-6"); // ~5 = -6 (two's complement)
+      });
+
+      it("should perform NOT in HEX mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "HEX" as const, expression: "~FF", display: "~FF" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("-100"); // ~255 = -256 (0x-100)
+      });
+
+      it("should perform NOT in BIN mode", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "BIN" as const, expression: "~1010", display: "~1010" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("-1011"); // ~10 = -11 (0b-1011)
+      });
+    });
+
+    describe("Combined bitwise operations", () => {
+      it("should handle AND and OR", () => {
+        const testData = { ...initialData, mode: "programmer" as const, expression: "5 & 3 | 2", display: "5 & 3 | 2" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("3"); // (5 & 3) | 2 = 1 | 2 = 3
+      });
+
+      it("should handle XOR and AND", () => {
+        const testData = { ...initialData, mode: "programmer" as const, expression: "5 ^ 3 & 7", display: "5 ^ 3 & 7" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("6"); // (5 ^ 3) & 7 = 6 & 7 = 6
+      });
+
+      it("should handle NOT with AND", () => {
+        const testData = { ...initialData, mode: "programmer" as const, expression: "~5 & 3", display: "~5 & 3" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("2"); // ~5 & 3 = -6 & 3 = 2
+      });
+
+      it("should handle complex hex expression", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "HEX" as const, expression: "DEAD & BEEF | CAFE", display: "DEAD & BEEF | CAFE" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        // DEAD & BEEF = 0x9EAD, 0x9EAD | 0xCAFE = 0xDEFF
+        expect(call.display).toBe("DEFF");
+      });
+    });
+
+    describe("Edge cases", () => {
+      it("should handle zero with bitwise operations", () => {
+        const testData = { ...initialData, mode: "programmer" as const, expression: "0 & 5", display: "0 & 5" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("0");
+      });
+
+      it("should handle all ones with AND", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "HEX" as const, expression: "FF & FF", display: "FF & FF" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[0][0];
+        expect(call.isResultDisplayed).toBe(true);
+        expect(call.display).toBe("FF");
+      });
+
+      it("should handle switching bases and evaluating", () => {
+        const testData = { ...initialData, mode: "programmer" as const, base: "BIN" as const, expression: "1111", display: "1111" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        // Switch to DEC
+        act(() => {
+          result.current.handleBaseChange("DEC");
+        });
+
+        // Now evaluate in DEC (but expression was typed in BIN, so it should still work as DEC now)
+        act(() => {
+          result.current.handleEquals();
+        });
+
+        const call = mockOnChange.mock.calls[mockOnChange.mock.calls.length - 1][0];
+        expect(call.isResultDisplayed).toBe(true);
+      });
+    });
+  });
 });

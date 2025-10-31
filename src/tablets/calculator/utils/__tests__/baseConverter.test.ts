@@ -9,6 +9,7 @@ import {
   formatBinary,
   formatHex,
   extractCurrentNumber,
+  prepareExpressionForEval,
 } from "../baseConverter";
 
 describe("baseConverter", () => {
@@ -297,6 +298,146 @@ describe("baseConverter", () => {
     it("should handle parentheses", () => {
       expect(extractCurrentNumber("(10+5")).toBe("5");
       expect(extractCurrentNumber("10*(2")).toBe("2");
+    });
+  });
+
+  describe("prepareExpressionForEval", () => {
+    describe("Decimal (DEC) mode", () => {
+      it("should handle AND operation", () => {
+        expect(prepareExpressionForEval("5 & 3", "DEC")).toBe("5 & 3");
+        expect(prepareExpressionForEval("255 & 15", "DEC")).toBe("255 & 15");
+        expect(prepareExpressionForEval("12 & 8", "DEC")).toBe("12 & 8");
+      });
+
+      it("should handle OR operation", () => {
+        expect(prepareExpressionForEval("5 | 3", "DEC")).toBe("5 | 3");
+        expect(prepareExpressionForEval("255 | 15", "DEC")).toBe("255 | 15");
+        expect(prepareExpressionForEval("12 | 8", "DEC")).toBe("12 | 8");
+      });
+
+      it("should handle XOR operation", () => {
+        expect(prepareExpressionForEval("5 ^ 3", "DEC")).toBe("bitXor(5, 3)");
+        expect(prepareExpressionForEval("255 ^ 15", "DEC")).toBe("bitXor(255, 15)");
+        expect(prepareExpressionForEval("12 ^ 8", "DEC")).toBe("bitXor(12, 8)");
+      });
+
+      it("should handle NOT operation", () => {
+        expect(prepareExpressionForEval("~5", "DEC")).toBe("bitNot(5)");
+        expect(prepareExpressionForEval("~255", "DEC")).toBe("bitNot(255)");
+        expect(prepareExpressionForEval("~0", "DEC")).toBe("bitNot(0)");
+      });
+
+      it("should handle combined operations", () => {
+        expect(prepareExpressionForEval("5 & 3 | 2", "DEC")).toBe("5 & 3 | 2");
+        expect(prepareExpressionForEval("5 ^ 3 & 7", "DEC")).toBe("bitXor(5, 3) & 7");
+        expect(prepareExpressionForEval("~5 & 3", "DEC")).toBe("bitNot(5) & 3");
+      });
+    });
+
+    describe("Hexadecimal (HEX) mode", () => {
+      it("should convert hex numbers and handle AND", () => {
+        expect(prepareExpressionForEval("FF & A", "HEX")).toBe("255 & 10");
+        expect(prepareExpressionForEval("F0 & 0F", "HEX")).toBe("240 & 15");
+        expect(prepareExpressionForEval("DEAD & BEEF", "HEX")).toBe("57005 & 48879");
+      });
+
+      it("should convert hex numbers and handle OR", () => {
+        expect(prepareExpressionForEval("FF | A", "HEX")).toBe("255 | 10");
+        expect(prepareExpressionForEval("F0 | 0F", "HEX")).toBe("240 | 15");
+        expect(prepareExpressionForEval("AB | CD", "HEX")).toBe("171 | 205");
+      });
+
+      it("should convert hex numbers and handle XOR", () => {
+        expect(prepareExpressionForEval("FF ^ A", "HEX")).toBe("bitXor(255, 10)");
+        expect(prepareExpressionForEval("F0 ^ 0F", "HEX")).toBe("bitXor(240, 15)");
+        expect(prepareExpressionForEval("AB ^ CD", "HEX")).toBe("bitXor(171, 205)");
+      });
+
+      it("should convert hex numbers and handle NOT", () => {
+        expect(prepareExpressionForEval("~FF", "HEX")).toBe("bitNot(255)");
+        expect(prepareExpressionForEval("~A", "HEX")).toBe("bitNot(10)");
+        expect(prepareExpressionForEval("~DEAD", "HEX")).toBe("bitNot(57005)");
+      });
+
+      it("should handle combined hex operations", () => {
+        expect(prepareExpressionForEval("FF & A | 5", "HEX")).toBe("255 & 10 | 5");
+        expect(prepareExpressionForEval("A ^ B & C", "HEX")).toBe("bitXor(10, 11) & 12");
+      });
+    });
+
+    describe("Binary (BIN) mode", () => {
+      it("should convert binary numbers and handle AND", () => {
+        expect(prepareExpressionForEval("1010 & 1100", "BIN")).toBe("10 & 12");
+        expect(prepareExpressionForEval("11111111 & 00001111", "BIN")).toBe("255 & 15");
+        expect(prepareExpressionForEval("101 & 11", "BIN")).toBe("5 & 3");
+      });
+
+      it("should convert binary numbers and handle OR", () => {
+        expect(prepareExpressionForEval("1010 | 1100", "BIN")).toBe("10 | 12");
+        expect(prepareExpressionForEval("11111111 | 00001111", "BIN")).toBe("255 | 15");
+        expect(prepareExpressionForEval("101 | 11", "BIN")).toBe("5 | 3");
+      });
+
+      it("should convert binary numbers and handle XOR", () => {
+        expect(prepareExpressionForEval("1010 ^ 1100", "BIN")).toBe("bitXor(10, 12)");
+        expect(prepareExpressionForEval("11111111 ^ 00001111", "BIN")).toBe("bitXor(255, 15)");
+        expect(prepareExpressionForEval("101 ^ 11", "BIN")).toBe("bitXor(5, 3)");
+      });
+
+      it("should convert binary numbers and handle NOT", () => {
+        expect(prepareExpressionForEval("~1010", "BIN")).toBe("bitNot(10)");
+        expect(prepareExpressionForEval("~11111111", "BIN")).toBe("bitNot(255)");
+        expect(prepareExpressionForEval("~101", "BIN")).toBe("bitNot(5)");
+      });
+    });
+
+    describe("Octal (OCT) mode", () => {
+      it("should convert octal numbers and handle AND", () => {
+        expect(prepareExpressionForEval("77 & 17", "OCT")).toBe("63 & 15");
+        expect(prepareExpressionForEval("377 & 17", "OCT")).toBe("255 & 15");
+        expect(prepareExpressionForEval("12 & 10", "OCT")).toBe("10 & 8");
+      });
+
+      it("should convert octal numbers and handle OR", () => {
+        expect(prepareExpressionForEval("77 | 17", "OCT")).toBe("63 | 15");
+        expect(prepareExpressionForEval("377 | 17", "OCT")).toBe("255 | 15");
+        expect(prepareExpressionForEval("12 | 10", "OCT")).toBe("10 | 8");
+      });
+
+      it("should convert octal numbers and handle XOR", () => {
+        expect(prepareExpressionForEval("77 ^ 17", "OCT")).toBe("bitXor(63, 15)");
+        expect(prepareExpressionForEval("377 ^ 17", "OCT")).toBe("bitXor(255, 15)");
+        expect(prepareExpressionForEval("12 ^ 10", "OCT")).toBe("bitXor(10, 8)");
+      });
+
+      it("should convert octal numbers and handle NOT", () => {
+        expect(prepareExpressionForEval("~77", "OCT")).toBe("bitNot(63)");
+        expect(prepareExpressionForEval("~377", "OCT")).toBe("bitNot(255)");
+        expect(prepareExpressionForEval("~12", "OCT")).toBe("bitNot(10)");
+      });
+    });
+
+    describe("Edge cases", () => {
+      it("should handle empty expression", () => {
+        expect(prepareExpressionForEval("", "DEC")).toBe("0");
+        expect(prepareExpressionForEval("0", "DEC")).toBe("0");
+      });
+
+      it("should handle single number", () => {
+        expect(prepareExpressionForEval("5", "DEC")).toBe("5");
+        expect(prepareExpressionForEval("FF", "HEX")).toBe("255");
+        expect(prepareExpressionForEval("1010", "BIN")).toBe("10");
+      });
+
+      it("should handle parentheses with bitwise operations", () => {
+        expect(prepareExpressionForEval("(5 & 3)", "DEC")).toBe("(5 & 3)");
+        expect(prepareExpressionForEval("(FF & A)", "HEX")).toBe("(255 & 10)");
+      });
+
+      it("should handle multiple spaces", () => {
+        expect(prepareExpressionForEval("5  &  3", "DEC")).toBe("5  &  3");
+        expect(prepareExpressionForEval("5  ^  3", "DEC")).toBe("bitXor(5, 3)");
+      });
     });
   });
 });

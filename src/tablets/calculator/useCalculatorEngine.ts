@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { evaluate } from "mathjs";
 import { formatDisplay } from "./utils/formatters";
 import { CALCULATOR_CONSTANTS } from "./constants";
+import { prepareExpressionForEval, fromDecimal, type BaseType } from "./utils/baseConverter";
 
 // --- Constants ---
 const ARITHMETIC_OPERATORS = ["+", "-", "*", "/", "%"] as const;
@@ -224,8 +225,26 @@ export const useCalculatorEngine = (
     try {
       // Auto-close any unclosed brackets before evaluation
       const closedExpression = autoCloseBrackets(initialData.expression);
-      const result = evaluate(closedExpression);
-      const formattedResult = formatDisplay(result);
+
+      let expressionToEval = closedExpression;
+
+      // For programmer mode, prepare expression with base conversion and bitwise operators
+      if (initialData.mode === "programmer") {
+        expressionToEval = prepareExpressionForEval(closedExpression, initialData.base);
+      }
+
+      const result = evaluate(expressionToEval);
+
+      // For programmer mode, convert result back to current base
+      let formattedResult: string;
+      if (initialData.mode === "programmer") {
+        // Ensure result is an integer for bitwise operations
+        const intResult = Math.floor(Number(result));
+        formattedResult = fromDecimal(intResult, initialData.base);
+      } else {
+        formattedResult = formatDisplay(result);
+      }
+
       const newHistoryEntry: HistoryEntry = {
         expression: closedExpression,
         result: formattedResult,
