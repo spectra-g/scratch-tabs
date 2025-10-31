@@ -5,6 +5,24 @@ import { evaluate } from "mathjs";
 import { formatDisplay } from "./utils/formatters";
 import { CALCULATOR_CONSTANTS } from "./constants";
 
+// --- Constants ---
+const ARITHMETIC_OPERATORS = ["+", "-", "*", "/", "%"] as const;
+const PARENTHESES = ["(", ")"] as const;
+const ALL_OPERATORS = [...ARITHMETIC_OPERATORS, ...PARENTHESES] as const;
+
+// --- Helper Functions ---
+const isArithmeticOperator = (char: string): boolean => {
+  return ARITHMETIC_OPERATORS.includes(char as typeof ARITHMETIC_OPERATORS[number]);
+};
+
+const shouldAllowNegativeNumber = (input: string, lastChar: string): boolean => {
+  return input === "-" && lastChar !== "-";
+};
+
+const shouldReplaceOperator = (input: string, lastChar: string): boolean => {
+  return isArithmeticOperator(input) && isArithmeticOperator(lastChar);
+};
+
 // --- State Interface ---
 export type CalculatorMode = "standard" | "scientific" | "programmer";
 
@@ -49,36 +67,34 @@ export const useCalculatorEngine = (
     [initialData, onChange],
   );
 
-  const isOperatorChar = (char: string): boolean => {
-    return ["+", "-", "*", "/", "%"].includes(char);
-  };
-
   const handleInput = useCallback(
     (input: string) => {
       // Don't add operators to an error state
-      if (initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY && isNaN(Number(input))) return;
+      if (initialData.display === CALCULATOR_CONSTANTS.ERROR_DISPLAY && isNaN(Number(input))) {
+        return;
+      }
 
-      const isOperator = ["+", "-", "*", "/", "%", "(", ")"].includes(input);
+      const isOperator = ALL_OPERATORS.includes(input as typeof ALL_OPERATORS[number]);
 
-      // If a result is on screen, handle next input specially
+      // Handle post-calculation input
       if (initialData.isResultDisplayed) {
         if (!isOperator) {
-          // User is starting a new calculation with a number
+          // Start new calculation with a number
           updateData({
             expression: input,
             display: input,
             isResultDisplayed: false,
           });
           return;
-        } else {
-          // User is chaining a calculation
-          updateData({
-            expression: initialData.display + input,
-            display: initialData.display + input,
-            isResultDisplayed: false,
-          });
-          return;
         }
+
+        // Chain calculation with operator
+        updateData({
+          expression: initialData.display + input,
+          display: initialData.display + input,
+          isResultDisplayed: false,
+        });
+        return;
       }
 
       const currentExpression =
@@ -87,26 +103,32 @@ export const useCalculatorEngine = (
           ? ""
           : initialData.expression;
 
-      // Handle operator correction
-      if (isOperatorChar(input) && currentExpression.length > 0) {
+      // Handle operator correction for consecutive operators
+      if (isArithmeticOperator(input) && currentExpression.length > 0) {
         const lastChar = currentExpression[currentExpression.length - 1];
-        const isLastCharOperator = isOperatorChar(lastChar);
 
-        if (isLastCharOperator) {
-          // Special case: Allow minus after any operator for negative numbers (e.g., "5 * -3")
-          if (input === "-" && lastChar !== "-") {
-            const newExpression = currentExpression + input;
-            updateData({ expression: newExpression, display: newExpression, isResultDisplayed: false });
+        if (shouldReplaceOperator(input, lastChar)) {
+          // Allow negative numbers: "5 * -3"
+          if (shouldAllowNegativeNumber(input, lastChar)) {
+            updateData({
+              expression: currentExpression + input,
+              display: currentExpression + input,
+              isResultDisplayed: false,
+            });
             return;
           }
 
-          // Replace the last operator with the new one (e.g., "5 * *" becomes "5 * ")
-          const newExpression = currentExpression.slice(0, -1) + input;
-          updateData({ expression: newExpression, display: newExpression, isResultDisplayed: false });
+          // Replace consecutive operators: "5 * *" becomes "5 *"
+          updateData({
+            expression: currentExpression.slice(0, -1) + input,
+            display: currentExpression.slice(0, -1) + input,
+            isResultDisplayed: false,
+          });
           return;
         }
       }
 
+      // Append input to expression
       const newExpression = currentExpression + input;
       updateData({ expression: newExpression, display: newExpression, isResultDisplayed: false });
     },
