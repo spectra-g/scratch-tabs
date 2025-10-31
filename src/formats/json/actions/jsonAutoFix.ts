@@ -12,7 +12,22 @@ export interface AutoFixResult {
 }
 
 /**
- * Attempts to automatically fix common JSON syntax errors
+ * Sanitizes JSON content by escaping control characters.
+ * This is a preliminary step for the auto-fixer.
+ */
+function sanitizeControlCharacters(content: string): string {
+  // Replace control characters (0x00-0x1F except whitespace) with Unicode escapes
+  // Preserve: tab (0x09), line feed (0x0A), carriage return (0x0D)
+  return content.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, (char) => {
+    const code = char.charCodeAt(0);
+    return `\\u${code.toString(16).padStart(4, '0')}`;
+  });
+}
+
+/**
+ * Attempts to automatically fix common JSON syntax errors.
+ * This is the primary function to be called for comprehensive JSON fixing.
+ * It combines control character sanitization with structural fixes.
  */
 export function autoFixJson(content: string): AutoFixResult {
   if (!content.trim()) {
@@ -22,15 +37,22 @@ export function autoFixJson(content: string): AutoFixResult {
   try {
     // First check if it's already valid JSON
     JSON.parse(content);
-    return { success: true, fixedContent: content };
-  } catch (error) {
+    return { success: true, fixedContent: content, error: "JSON is already valid" };
+  } catch (initialError) {
     // Try to fix common issues
     let fixedContent = content;
 
-    // Fix 1: Replace single quotes with double quotes
-    fixedContent = fixedContent.replace(/'/g, '"');
-    
+    // --- Start Fixing ---
+
+    // Preliminary Fix: Sanitize problematic control characters first
+    fixedContent = sanitizeControlCharacters(fixedContent);
+
+    // Fix 1: Replace single quotes with double quotes (only for keys and values)
+    // More careful regex to avoid replacing single quotes inside strings
+    fixedContent = fixedContent.replace(/'([^']*)'/g, '"$1"');
+
     // Fix 2: Add missing commas between object properties
+    // IMPORTANT: Do this BEFORE quoting property names, as the regex expects unquoted names
     // Handle quoted strings followed by property names
     fixedContent = fixedContent.replace(/("\s*)\n(\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1,\n$2$3:');
     fixedContent = fixedContent.replace(/("\s*)\n(\s*)"/g, '$1,\n$2"');
@@ -38,40 +60,45 @@ export function autoFixJson(content: string): AutoFixResult {
     fixedContent = fixedContent.replace(/(]\s*)\n(\s*)"/g, '$1,\n$2"');
     fixedContent = fixedContent.replace(/([0-9]\s*)\n(\s*)"/g, '$1,\n$2"');
     fixedContent = fixedContent.replace(/(true|false|null)(\s*)\n(\s*)"/g, '$1,$2\n$3"');
-    
-    // Fix 3: Add missing quotes around property names - do this after comma fixing
+
+    // Fix 3: Add missing quotes around property names
     // Handle property names after opening braces or commas with any whitespace
     fixedContent = fixedContent.replace(/([{,][\s\n]*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
-    
+
     // Fix 4: Add missing commas in arrays
     fixedContent = fixedContent.replace(/("\s*)\n(\s*)\{/g, '$1,\n$2{');
     fixedContent = fixedContent.replace(/(}\s*)\n(\s*)\{/g, '$1,\n$2{');
     fixedContent = fixedContent.replace(/([0-9]\s*)\n(\s*)\{/g, '$1,\n$2{');
     fixedContent = fixedContent.replace(/(true|false|null)(\s*)\n(\s*)\{/g, '$1,$2\n$3{');
-    
-    // Fix 5: Remove trailing commas
+
+    // Fix 5: Remove trailing commas from objects and arrays
     fixedContent = fixedContent.replace(/,(\s*[}\]])/g, '$1');
-    
-    // Fix 6: Add missing closing braces/brackets (simple heuristic)
+
+    // Fix 6: Better handling of missing commas in complex structures
+    fixedContent = fixedContent.replace(/("\s*)\n(\s*)("[^"]*")/g, '$1,\n$2$3');
+    fixedContent = fixedContent.replace(/(}\s*)\n(\s*)("[^"]*")/g, '$1,\n$2$3');
+    fixedContent = fixedContent.replace(/(]\s*)\n(\s*)("[^"]*")/g, '$1,\n$2$3');
+
+    // Fix 7: Add missing closing braces/brackets (simple heuristic)
     const openBraces = (fixedContent.match(/\{/g) || []).length;
     const closeBraces = (fixedContent.match(/\}/g) || []).length;
     const openBrackets = (fixedContent.match(/\[/g) || []).length;
     const closeBrackets = (fixedContent.match(/\]/g) || []).length;
-    
+
     // Add missing closing braces
     for (let i = 0; i < openBraces - closeBraces; i++) {
       fixedContent += '\n}';
     }
-    
+
     // Add missing closing brackets
     for (let i = 0; i < openBrackets - closeBrackets; i++) {
       fixedContent += '\n]';
     }
-    
-    // Fix 7: Basic handling of undefined values (convert to null)
+
+    // Fix 8: Basic handling of undefined values (convert to null)
     fixedContent = fixedContent.replace(/:\s*undefined\s*([,}\]])/g, ': null$1');
-    
-    // Fix 8: Handle missing quotes around string values (basic heuristic)
+
+    // Fix 9: Handle missing quotes around string values (basic heuristic)
     fixedContent = fixedContent.replace(/:\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*([,}\]])/g, (match, value, end) => {
       // Don't quote if it looks like a boolean, null, or number
       if (value === 'true' || value === 'false' || value === 'null' || /^\d+(\.\d+)?$/.test(value)) {
@@ -79,21 +106,15 @@ export function autoFixJson(content: string): AutoFixResult {
       }
       return `: "${value}"${end}`;
     });
-    
-    // Fix 9: Better handling of missing commas in complex structures
-    // Fix newlines without commas in nested objects
-    fixedContent = fixedContent.replace(/("\s*)\n(\s*)("[^"]*")/g, '$1,\n$2$3');
-    fixedContent = fixedContent.replace(/(}\s*)\n(\s*)("[^"]*")/g, '$1,\n$2$3');
-    fixedContent = fixedContent.replace(/(]\s*)\n(\s*)("[^"]*")/g, '$1,\n$2$3');
-    
+
+    // --- Verification ---
     try {
       // Test if our fixes worked
       JSON.parse(fixedContent);
       return { success: true, fixedContent };
     } catch (stillError) {
-      // If we still can't parse it, try more aggressive fixes
+      // If we still can't parse it, try one last aggressive extraction
       try {
-        // Try to extract what looks like a valid JSON structure
         const jsonMatch = fixedContent.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
         if (jsonMatch) {
           const extracted = jsonMatch[0];
@@ -103,11 +124,12 @@ export function autoFixJson(content: string): AutoFixResult {
       } catch {
         // Still failed
       }
-      
-      return { 
-        success: false, 
-        fixedContent: fixedContent,
-        error: `Could not auto-fix JSON: ${stillError instanceof Error ? stillError.message : 'Unknown error'}`
+
+      const errorMessage = stillError instanceof Error ? stillError.message : String(stillError);
+      return {
+        success: false,
+        fixedContent: fixedContent, // Return the partially fixed content for inspection
+        error: `Could not auto-fix JSON. Last error: ${errorMessage}`
       };
     }
   }
