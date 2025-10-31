@@ -34,7 +34,7 @@ describe("useCalculatorEngine", () => {
 
   describe("handleInput", () => {
     it("should handle numeric input", () => {
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(initialData, mockOnChange)
       );
 
@@ -46,12 +46,13 @@ describe("useCalculatorEngine", () => {
         ...initialData,
         expression: "5",
         display: "5",
+        isResultDisplayed: false,
       });
     });
 
     it("should handle operator input", () => {
       const testData = { ...initialData, expression: "5", display: "5" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
@@ -63,6 +64,7 @@ describe("useCalculatorEngine", () => {
         ...testData,
         expression: "5+",
         display: "5+",
+        isResultDisplayed: false,
       });
     });
 
@@ -81,7 +83,7 @@ describe("useCalculatorEngine", () => {
 
     it("should allow numeric input on error state", () => {
       const errorData = { ...initialData, display: "Error" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(errorData, mockOnChange)
       );
 
@@ -93,6 +95,76 @@ describe("useCalculatorEngine", () => {
         ...errorData,
         expression: "5",
         display: "5",
+        isResultDisplayed: false,
+      });
+    });
+
+    it("should start new calculation when number pressed after equals", () => {
+      const testData = {
+        ...initialData,
+        expression: "4",
+        display: "4",
+        isResultDisplayed: true,
+      };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleInput("3");
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith({
+        ...testData,
+        expression: "3",
+        display: "3",
+        isResultDisplayed: false,
+      });
+    });
+
+    it("should chain calculation when operator pressed after equals", () => {
+      const testData = {
+        ...initialData,
+        expression: "4",
+        display: "4",
+        isResultDisplayed: true,
+      };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleInput("*");
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith({
+        ...testData,
+        expression: "4*",
+        display: "4*",
+        isResultDisplayed: false,
+      });
+    });
+
+    it("should chain calculation with multiple operators after equals", () => {
+      const testData = {
+        ...initialData,
+        expression: "10",
+        display: "10",
+        isResultDisplayed: true,
+      };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleInput("+");
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith({
+        ...testData,
+        expression: "10+",
+        display: "10+",
+        isResultDisplayed: false,
       });
     });
   });
@@ -100,7 +172,7 @@ describe("useCalculatorEngine", () => {
   describe("handleClear", () => {
     it("should reset to default state", () => {
       const testData = { ...initialData, expression: "123", display: "123" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
@@ -112,6 +184,30 @@ describe("useCalculatorEngine", () => {
         ...testData,
         expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
         display: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
+        isResultDisplayed: false,
+      });
+    });
+
+    it("should reset isResultDisplayed flag", () => {
+      const testData = {
+        ...initialData,
+        expression: "4",
+        display: "4",
+        isResultDisplayed: true,
+      };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleClear();
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith({
+        ...testData,
+        expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
+        display: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
+        isResultDisplayed: false,
       });
     });
   });
@@ -119,7 +215,7 @@ describe("useCalculatorEngine", () => {
   describe("handleBackspace", () => {
     it("should remove last character", () => {
       const testData = { ...initialData, expression: "123", display: "123" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
@@ -131,12 +227,13 @@ describe("useCalculatorEngine", () => {
         ...testData,
         expression: "12",
         display: "12",
+        isResultDisplayed: false,
       });
     });
 
     it("should reset to default when expression has one character", () => {
       const testData = { ...initialData, expression: "5", display: "5" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
@@ -148,12 +245,13 @@ describe("useCalculatorEngine", () => {
         ...testData,
         expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
         display: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
+        isResultDisplayed: false,
       });
     });
 
     it("should reset to default when in error state", () => {
       const errorData = { ...initialData, expression: "123", display: "Error" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(errorData, mockOnChange)
       );
 
@@ -165,6 +263,30 @@ describe("useCalculatorEngine", () => {
         ...errorData,
         expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
         display: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
+        isResultDisplayed: false,
+      });
+    });
+
+    it("should reset isResultDisplayed flag", () => {
+      const testData = {
+        ...initialData,
+        expression: "42",
+        display: "42",
+        isResultDisplayed: true,
+      };
+      const { result } = renderHook(() =>
+        useCalculatorEngine(testData, mockOnChange)
+      );
+
+      act(() => {
+        result.current.handleBackspace();
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith({
+        ...testData,
+        expression: "4",
+        display: "4",
+        isResultDisplayed: false,
       });
     });
   });
@@ -172,7 +294,7 @@ describe("useCalculatorEngine", () => {
   describe("handleEquals", () => {
     it("should evaluate simple arithmetic", () => {
       const testData = { ...initialData, expression: "2+3", display: "2+3" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
@@ -185,12 +307,13 @@ describe("useCalculatorEngine", () => {
         expression: "5",
         display: "5",
         history: [{ expression: "2+3", result: "5", mode: "standard", base: "DEC" }],
+        isResultDisplayed: true,
       });
     });
 
     it("should handle division by zero", () => {
       const testData = { ...initialData, expression: "5/0", display: "5/0" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
@@ -203,12 +326,13 @@ describe("useCalculatorEngine", () => {
         expression: "Infinity",
         display: "Infinity",
         history: [{ expression: "5/0", result: "Infinity", mode: "standard", base: "DEC" }],
+        isResultDisplayed: true,
       });
     });
 
     it("should handle invalid expressions", () => {
       const testData = { ...initialData, expression: "2/0*", display: "2/0*" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
@@ -220,6 +344,7 @@ describe("useCalculatorEngine", () => {
         ...testData,
         expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
         display: CALCULATOR_CONSTANTS.ERROR_DISPLAY,
+        isResultDisplayed: true,
       });
     });
 
@@ -266,7 +391,7 @@ describe("useCalculatorEngine", () => {
   describe("handleModeChange", () => {
     it("should change mode and reset display", () => {
       const testData = { ...initialData, expression: "123", display: "123" };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
@@ -279,6 +404,7 @@ describe("useCalculatorEngine", () => {
         mode: "scientific",
         expression: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
         display: CALCULATOR_CONSTANTS.DEFAULT_DISPLAY,
+        isResultDisplayed: false,
       });
     });
   });
@@ -302,13 +428,13 @@ describe("useCalculatorEngine", () => {
 
   describe("handleHistoryClick", () => {
     it("should load expression from history and restore mode", () => {
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(initialData, mockOnChange)
       );
 
-      const historyEntry: HistoryEntry = { 
-        expression: "sin(30)", 
-        result: "0.5", 
+      const historyEntry: HistoryEntry = {
+        expression: "sin(30)",
+        result: "0.5",
         mode: "scientific",
         base: "DEC"
       };
@@ -323,18 +449,19 @@ describe("useCalculatorEngine", () => {
         display: "sin(30)",
         mode: "scientific",
         base: "DEC",
+        isResultDisplayed: false,
       });
     });
 
     it("should use default base when history entry has no base", () => {
       const testData = { ...initialData, base: "HEX" as const };
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCalculatorEngine(testData, mockOnChange)
       );
 
-      const historyEntry: HistoryEntry = { 
-        expression: "2+3", 
-        result: "5", 
+      const historyEntry: HistoryEntry = {
+        expression: "2+3",
+        result: "5",
         mode: "standard"
       };
 
@@ -348,6 +475,7 @@ describe("useCalculatorEngine", () => {
         display: "2+3",
         mode: "standard",
         base: "HEX", // Should fallback to current base
+        isResultDisplayed: false,
       });
     });
   });
