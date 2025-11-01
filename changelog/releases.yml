@@ -3,8 +3,29 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.7.0"
+  - version: "1.8.0"
     type: "latest"  # latest, beta, alpha
+    draft: false
+    date: "2025-11-01"
+    headline: "🔧 Calculator enhancements, JSON Mapper joins, and smart fixes"
+    description: "Major calculator upgrade with bit manipulation tools, powerful JSON Mapper joins, and intelligent JSON auto-fix capabilities"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Calculator Bit Toggler:** Interactive bit manipulation tool in programmer mode for binary operations"
+          - "**Calculator Live Base Converter:** Real-time conversion between decimal, binary, octal, and hexadecimal"
+          - "**JSON Auto-Fix:** Intelligent JSON repair tool that automatically fixes common syntax errors"
+          - "**JSON Mapper Joins:** Join on matching identifiers when mapping array items"
+      - name: "🔧 Improvements"
+        changes:
+          - "**JSON Mapper:** Specify naming patterns on mapped files"
+          - "**Calculator:** Less opportunity to enter incorrect calculator syntax"
+      - name: "🐛 Fixed"
+        changes:
+          - "General bug fixes to JSON Mapper"
+
+  - version: "1.7.0"
+    type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-10-24"
     headline: "✂️ Split tabs, JSON improvements, and bug fixes"
