@@ -133,11 +133,11 @@ export const useRichTextEditor = ({
           if (pendingImageCursorOffset !== null) {
             // Insert at the calculated cursor position
             const doc = state.doc;
-            let prosemirrorPosition = Math.min(pendingImageCursorOffset + 1, doc.content.size); // +1 to account for dateCreated node
-            
+            let prosemirrorPosition = Math.min(pendingImageCursorOffset, doc.content.size);
+
             // Ensure position is valid and within bounds
             prosemirrorPosition = Math.max(1, Math.min(prosemirrorPosition, doc.content.size));
-            
+
             tr = state.tr.insert(prosemirrorPosition, imageNode);
           } else {
             // Fallback to current selection if no cursor offset

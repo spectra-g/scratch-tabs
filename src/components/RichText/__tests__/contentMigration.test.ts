@@ -10,16 +10,10 @@ describe('Content Migration Utils', () => {
   describe('migrateTextToRich', () => {
     it('should create empty rich content for empty text', () => {
       const result = migrateTextToRich('', mockDateCreated);
-      
+
       expect(result.richContent).toEqual({
         type: 'doc',
         content: [
-          {
-            type: 'dateCreated',
-            attrs: {
-              dateCreated: mockDateCreated,
-            },
-          },
           {
             type: 'paragraph',
             content: [],
@@ -31,9 +25,9 @@ describe('Content Migration Utils', () => {
 
     it('should convert single line text to paragraph', () => {
       const result = migrateTextToRich('Hello world', mockDateCreated);
-      
-      expect(result.richContent.content).toHaveLength(2);
-      expect(result.richContent.content[1]).toEqual({
+
+      expect(result.richContent.content).toHaveLength(1);
+      expect(result.richContent.content[0]).toEqual({
         type: 'paragraph',
         content: [
           {
@@ -48,19 +42,19 @@ describe('Content Migration Utils', () => {
     it('should convert multiple paragraphs', () => {
       const text = 'First paragraph\n\nSecond paragraph\n\nThird paragraph';
       const result = migrateTextToRich(text, mockDateCreated);
-      
-      expect(result.richContent.content).toHaveLength(4); // dateCreated + 3 paragraphs
-      expect(result.richContent.content[1].content[0].text).toBe('First paragraph');
-      expect(result.richContent.content[2].content[0].text).toBe('Second paragraph');
-      expect(result.richContent.content[3].content[0].text).toBe('Third paragraph');
+
+      expect(result.richContent.content).toHaveLength(3); // 3 paragraphs
+      expect(result.richContent.content[0].content[0].text).toBe('First paragraph');
+      expect(result.richContent.content[1].content[0].text).toBe('Second paragraph');
+      expect(result.richContent.content[2].content[0].text).toBe('Third paragraph');
     });
 
     it('should handle line breaks within paragraphs', () => {
       const text = 'Line 1\nLine 2\nLine 3';
       const result = migrateTextToRich(text, mockDateCreated);
-      
-      expect(result.richContent.content).toHaveLength(2); // dateCreated + 1 paragraph
-      const paragraphContent = result.richContent.content[1].content;
+
+      expect(result.richContent.content).toHaveLength(1); // 1 paragraph
+      const paragraphContent = result.richContent.content[0].content;
       
       expect(paragraphContent).toHaveLength(5); // text, hardBreak, text, hardBreak, text
       expect(paragraphContent[0].text).toBe('Line 1');
@@ -83,10 +77,6 @@ describe('Content Migration Utils', () => {
         type: 'doc',
         content: [
           {
-            type: 'dateCreated',
-            attrs: { dateCreated: mockDateCreated },
-          },
-          {
             type: 'paragraph',
             content: [
               { type: 'text', text: 'Hello world' },
@@ -94,7 +84,7 @@ describe('Content Migration Utils', () => {
           },
         ],
       };
-      
+
       const result = migrateRichToText(richContent);
       expect(result).toBe('Hello world');
     });
