@@ -8,6 +8,7 @@ import { LinkBubbleMenu } from './components/LinkBubbleMenu';
 import { TableContextMenu, Position } from './components/TableContextMenu';
 import { UpgradeConfirmationModal } from './components/UpgradeConfirmationModal';
 import { ImportCodeModal } from './components/ImportCodeModal';
+import { DateCreatedHeader } from './components/DateCreatedHeader';
 import { Tab } from '../../types';
 import { useClipboardStore } from '../../stores/clipboardStore';
 
@@ -40,7 +41,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editor = useRichTextEditor({
     initialContent: tab.richContent,
     onUpdate: onContentChange,
-    dateCreated: tab.dateCreated,
     onTableContextMenu: handleTableContextMenu,
   });
 
@@ -94,7 +94,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   return (
     <>
-      <div 
+      <div
         ref={editorContainerRef}
         className={`rich-text-editor h-full w-full flex flex-col relative ${getBackgroundTextureClass()} ${className}`}
       >
@@ -108,23 +108,26 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
         {/* Toolbar - Conditional rendering */}
         <div className="flex-shrink-0 border-b border-gray-700 bg-gray-900 z-20">
-          <RichTextToolbar 
-            editor={editor} 
-            activeTab={tab} 
+          <RichTextToolbar
+            editor={editor}
+            activeTab={tab}
             onImportCode={() => setShowImportModal(true)}
           />
         </div>
 
+        {/* Date Created Header - Outside of TipTap editor for simplicity */}
+        <DateCreatedHeader dateCreated={tab.dateCreated} />
+
         {/* Editor Container - Content below toolbar (parent handles scrolling) */}
-        <div 
+        <div
           className="flex-1 overflow-y-auto custom-scrollbar"
           style={{ minHeight: '0' }}
         >
-          <EditorContent 
-            editor={editor} 
+          <EditorContent
+            editor={editor}
             className="h-full"
           />
-          
+
           {/* Link Bubble Menu */}
           <LinkBubbleMenu editor={editor} />
         </div>

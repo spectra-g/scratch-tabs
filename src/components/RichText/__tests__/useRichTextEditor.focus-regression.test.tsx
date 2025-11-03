@@ -1,11 +1,12 @@
 /**
  * Focused regression test for editor focus loss issue
- * 
+ *
  * This test protects against the specific regression where typing in the rich text editor
  * would lose focus after each keystroke due to editor recreation from incorrect dependencies.
- * 
+ *
  * Issue: useEditor dependencies included 'initialContent' and useEffect cleanup had 'editor'
- * Fix: Only 'dateCreated' should be in useEditor deps, cleanup should have empty deps
+ * Fix: useEditor deps should be empty array, cleanup should have empty deps
+ * Note: DateCreated is now external to editor, so no longer needs to be in deps
  */
 import { renderHook } from '@testing-library/react';
 import { useRichTextEditor } from '../hooks/useRichTextEditor';
@@ -41,22 +42,22 @@ describe('useRichTextEditor Focus Regression Test', () => {
     jest.clearAllMocks();
   });
 
-  it('should only depend on dateCreated to prevent focus loss during typing', () => {
+  it('should have empty dependency array to prevent focus loss during typing', () => {
     // This is the core regression test - ensures dependency array is correct
     const props = {
       initialContent: { content: 'test' },
       onUpdate: jest.fn(),
-      dateCreated: 1234567890,
     };
-    
+
     renderHook(() => useRichTextEditor(props));
-    
+
     // Verify useEditor was called with correct dependencies
     const [config, deps] = mockUseEditor.mock.calls[0];
-    
-    // CRITICAL: Only dateCreated should be in dependencies
+
+    // CRITICAL: Dependencies should be empty array
     // Including initialContent or other changing values causes editor recreation
-    expect(deps).toEqual([1234567890]);
+    // DateCreated is now external, so not needed in deps
+    expect(deps).toEqual([]);
     expect(deps).not.toContain(props.initialContent);
     expect(deps).not.toContain(props.onUpdate);
   });
@@ -67,7 +68,6 @@ describe('useRichTextEditor Focus Regression Test', () => {
       useRichTextEditor({
         initialContent: { content: 'test' },
         onUpdate: jest.fn(),
-        dateCreated: Date.now(),
       })
     );
 

@@ -29,7 +29,3 @@ export interface RichTextToolbarProps {
   activeTab: Tab;
   onImportCode?: () => void;
 }
-
-export interface DateCreatedNodeProps {
-  dateCreated: number;
-}

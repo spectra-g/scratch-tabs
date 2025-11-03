@@ -2,32 +2,28 @@ import { useEditor } from '@tiptap/react';
 import { useEffect } from 'react';
 import { tiptapExtensions } from '../extensions';
 import { useClipboardStore } from '../../../stores/clipboardStore';
+import { autoMigrateDateCreatedNode } from '../utils/migrateDateCreatedNode';
 
 export interface UseRichTextEditorProps {
   initialContent?: any;
   onUpdate: (content: any) => void;
-  dateCreated: number;
   onTableContextMenu?: (event: MouseEvent) => void;
 }
 
 export const useRichTextEditor = ({
   initialContent,
   onUpdate,
-  dateCreated,
   onTableContextMenu,
 }: UseRichTextEditorProps) => {
+  // Migrate legacy dateCreated nodes from old documents
+  const migratedContent = initialContent ? autoMigrateDateCreatedNode(initialContent) : undefined;
+
   const editor = useEditor({
     // Use the centralized extensions array
     extensions: tiptapExtensions,
-    content: initialContent || {
+    content: migratedContent || {
       type: 'doc',
       content: [
-        {
-          type: 'dateCreated',
-          attrs: {
-            dateCreated,
-          },
-        },
         {
           type: 'paragraph',
           content: [],
@@ -109,7 +105,7 @@ export const useRichTextEditor = ({
         },
       },
     },
-  }, [dateCreated]);
+  }, []);
 
   // Handle pending image data after editor is stable
   useEffect(() => {
