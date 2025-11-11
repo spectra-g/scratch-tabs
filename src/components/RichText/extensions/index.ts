@@ -20,7 +20,7 @@ import css from 'highlight.js/lib/languages/css';
 import markdown from 'highlight.js/lib/languages/markdown';
 import bash from 'highlight.js/lib/languages/bash'; // Shell support
 import python from 'highlight.js/lib/languages/python';
-import { DateCreatedNode } from './DateCreatedNode';
+// DateCreatedNode removed - now rendered as external React component
 import { SearchExtension } from './SearchExtension';
 import { CodeBlockTabExtension } from './CodeBlockTabExtension';
 import { SmartCodeBlockToggle } from './SmartCodeBlockToggle';
@@ -140,7 +140,6 @@ export const tiptapExtensions = [
       class: 'text-blue-400 hover:text-blue-300 underline',
     },
   }),
-  DateCreatedNode,
   SearchExtension,
   CodeBlockTabExtension,
   SmartCodeBlockToggle,

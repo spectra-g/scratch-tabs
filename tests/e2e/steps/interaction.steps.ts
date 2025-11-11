@@ -127,7 +127,7 @@ When('I generate a 1.5MB JSON file and set it to clipboard', async function() {
 });
 
 When('I type the following markdown content into the editor:', async function(content) {
-  await this.editor.typeMarkdownContent(content);
+  await this.editor.typeInEditor(content);
 });
 
 When('I type {string} into the editor', async function(text) {

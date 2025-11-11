@@ -11,7 +11,7 @@ import { ModeSelector } from "./components/ModeSelector";
 import { StandardKeypad } from "./components/StandardKeypad";
 import { ScientificKeypad } from "./components/ScientificKeypad";
 import { ProgrammerKeypad } from "./components/ProgrammerKeypad";
-
+import { humanizeExpressionHybrid } from "./utils/formatters";
 
 interface CalculatorUIProps {
   engine: CalculatorEngine;
@@ -27,23 +27,21 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({
 
   useKeyboardHandler(engine, tabletId);
 
-  // Effect to set initial focus ONCE on mount
   useEffect(() => {
     calculatorRef.current?.focus();
   }, []);
 
   const renderKeypad = () => {
     switch (data.mode) {
-      case "standard":
-        return <StandardKeypad engine={engine} />;
-      case "scientific":
-        return <ScientificKeypad engine={engine} />;
-      case "programmer":
-        return <ProgrammerKeypad engine={engine} />;
-      default:
-        return <StandardKeypad engine={engine} />;
+      case "standard": return <StandardKeypad engine={engine} />;
+      case "scientific": return <ScientificKeypad engine={engine} />;
+      case "programmer": return <ProgrammerKeypad engine={engine} />;
+      default: return <StandardKeypad engine={engine} />;
     }
   };
+
+  const shouldShowHumanized = data.mode === 'standard' || data.mode === 'scientific';
+  const hybridHumanized = shouldShowHumanized ? humanizeExpressionHybrid(data.expression) : "";
 
   return (
     <div
@@ -63,13 +61,23 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({
         </div>
 
         <div className="flex-shrink-0">
-          <CalculatorDisplay expression={data.expression} display={data.display} />
+          <CalculatorDisplay
+            expression={data.expression}
+            display={data.display}
+            mode={data.mode}
+          />
         </div>
+
+        {/* New dedicated space for the detailed humanized text */}
+        <div className="h-12 flex items-center justify-center text-center p-2 mb-4 text-gray-400 text-sm italic flex-shrink-0">
+          <span>{hybridHumanized}</span>
+        </div>
+
         <div className="flex-1 min-h-0">
           {renderKeypad()}
         </div>
       </div>
-      
+
       <div className="w-full md:w-4/12 p-4 flex flex-col">
         <CalculatorHistory engine={engine} />
         <CalculatorNotes engine={engine} tabletId={tabletId} />

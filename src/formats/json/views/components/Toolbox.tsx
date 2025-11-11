@@ -96,6 +96,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const {
     openCodeGenerationModal,
     openSchemaValidationModal,
+    openExtractDataModal,
   } = useJsonModals();
 
   const executeTransformation = (transformFn: (content: string) => string) => {
@@ -274,13 +275,13 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     try {
       const content = editor.getValue();
       const extractedJsons = extractJsonFromContent(content);
-      
+
       if (extractedJsons.length === 0) {
         // No JSON found - could show a toast/notification
         console.log("No JSON found in content");
         return;
       }
-      
+
       if (extractedJsons.length === 1) {
         // Single JSON found - replace current content
         applyEditToEditor(editor, extractedJsons[0], "extract-json");
@@ -298,13 +299,19 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           lastModified: now,
           workspaceId: "", // Will be set by the tab system
         }));
-        
+
         // Create tabs for each extracted JSON
         tabs.forEach(tab => addTab(tab));
       }
     } catch (error) {
       console.error("Failed to extract JSON:", error);
     }
+  };
+
+  const handleExtractData = () => {
+    if (!editor) return;
+    const content = editor.getValue();
+    openExtractDataModal(content, addTab);
   };
 
   return (
@@ -353,8 +360,19 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         </ActionButton>
       </AccordionSection>
 
+      {/* Data Extraction */}
+      <AccordionSection
+        title="Data Extraction"
+        isExpanded={expandedSection === "Data Extraction"}
+        onToggle={() => setExpandedSection(expandedSection === "Data Extraction" ? "" : "Data Extraction")}
+      >
+        <ActionButton onClick={handleExtractData}>
+          Extract Values...
+        </ActionButton>
+      </AccordionSection>
+
       {/* Code Generation */}
-      <AccordionSection 
+      <AccordionSection
         title="Code Generation"
         isExpanded={expandedSection === "Code Generation"}
         onToggle={() => setExpandedSection(expandedSection === "Code Generation" ? "" : "Code Generation")}

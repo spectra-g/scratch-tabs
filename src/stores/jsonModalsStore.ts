@@ -8,6 +8,7 @@ interface ModalState {
     | "treeView"
     | "schemaValidation"
     | "structureComparison"
+    | "extractData"
     | null;
   props?: any;
 }
@@ -22,6 +23,7 @@ interface JsonModalsStore {
   openTreeViewModal: (json: any) => void;
   openSchemaValidationModal: (json: any) => void;
   openStructureComparisonModal: (sourceJson: string) => void;
+  openExtractDataModal: (jsonString: string, addTab: (tab: Tab) => void) => void;
   closeModal: () => void;
 }
 
@@ -80,6 +82,18 @@ export const useJsonModalsStore = create<JsonModalsStore>((set) => ({
         type: "structureComparison",
         props: {
           sourceJson,
+          onClose: () => set({ modalState: { type: null } }),
+        },
+      },
+    }),
+
+  openExtractDataModal: (jsonString: string, addTab: (tab: Tab) => void) =>
+    set({
+      modalState: {
+        type: "extractData",
+        props: {
+          jsonString,
+          addTab,
           onClose: () => set({ modalState: { type: null } }),
         },
       },

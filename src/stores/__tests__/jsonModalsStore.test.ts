@@ -178,6 +178,33 @@ describe("JsonModalsStore", () => {
     });
   });
 
+  describe("Extract Data Modal", () => {
+    it("should open extract data modal with correct props", () => {
+      const jsonString = '{"users": [{"id": 1, "name": "Alice"}]}';
+      const mockAddTab = jest.fn();
+
+      useJsonModalsStore.getState().openExtractDataModal(jsonString, mockAddTab);
+
+      const state = useJsonModalsStore.getState();
+      expect(state.modalState.type).toBe("extractData");
+      expect(state.modalState.props.jsonString).toBe(jsonString);
+      expect(state.modalState.props.addTab).toBe(mockAddTab);
+      expect(typeof state.modalState.props.onClose).toBe("function");
+    });
+
+    it("should provide working onClose function for extract data modal", () => {
+      const jsonString = '{"test": "value"}';
+      const mockAddTab = jest.fn();
+
+      useJsonModalsStore.getState().openExtractDataModal(jsonString, mockAddTab);
+      expect(useJsonModalsStore.getState().modalState.type).toBe("extractData");
+
+      // Call onClose
+      useJsonModalsStore.getState().modalState.props.onClose();
+      expect(useJsonModalsStore.getState().modalState.type).toBeNull();
+    });
+  });
+
   describe("Close Modal", () => {
     it("should close any open modal", () => {
       // Open a modal first
@@ -252,6 +279,7 @@ describe("JsonModalsStore", () => {
       expect(store1.openStructureComparisonModal).toBe(
         store2.openStructureComparisonModal,
       );
+      expect(store1.openExtractDataModal).toBe(store2.openExtractDataModal);
       expect(store1.closeModal).toBe(store2.closeModal);
     });
   });

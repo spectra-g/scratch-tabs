@@ -23,19 +23,21 @@ This module implements a TipTap-based rich text editor that transforms the exist
 - `components/UpgradeConfirmationModal.tsx` - Modal for plain-to-rich conversion
 - `components/ImportCodeModal.tsx` - Modal for importing code from other tabs
 - `components/BlockContextMenu.tsx` - Contextual actions for content blocks
+- `components/DateCreatedHeader.tsx` - Date display header (external to editor)
 
 #### Extensions
-- `extensions/DateCreatedNode.tsx` - Non-editable date display at top
-- `extensions/BlockWrapper.tsx` - Wrapper for block-level contextual actions
 - `extensions/SearchExtension.ts` - Custom search implementation
+- `extensions/CodeBlockTabExtension.ts` - Tab key handling in code blocks
+- `extensions/SmartCodeBlockToggle.ts` - Smart code block formatting
 
 #### Services & Utils
 - `services/RichTextService.ts` - Business logic for rich text operations
 - `utils/contentMigration.ts` - Utilities for converting between text and rich formats
+- `utils/migrateDateCreatedNode.ts` - Migration utility for legacy dateCreated nodes
 
 ### Features Implemented
 
-1. **Date Created Display** - Shows creation date at top of rich text documents
+1. **Date Created Display** - Shows creation date as external header above editor (non-editable, cannot be deleted)
 2. **Full-Page Canvas** - Editor takes full height/width with unlimited scrolling
 3. **Simple Toolbar** - Bubble menu with bold, italic, lists, tables, links
 4. **Dark Mode Integration** - Seamless integration with existing dark theme

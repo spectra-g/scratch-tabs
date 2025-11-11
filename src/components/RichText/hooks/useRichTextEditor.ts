@@ -2,32 +2,28 @@ import { useEditor } from '@tiptap/react';
 import { useEffect } from 'react';
 import { tiptapExtensions } from '../extensions';
 import { useClipboardStore } from '../../../stores/clipboardStore';
+import { autoMigrateDateCreatedNode } from '../utils/migrateDateCreatedNode';
 
 export interface UseRichTextEditorProps {
   initialContent?: any;
   onUpdate: (content: any) => void;
-  dateCreated: number;
   onTableContextMenu?: (event: MouseEvent) => void;
 }
 
 export const useRichTextEditor = ({
   initialContent,
   onUpdate,
-  dateCreated,
   onTableContextMenu,
 }: UseRichTextEditorProps) => {
+  // Migrate legacy dateCreated nodes from old documents
+  const migratedContent = initialContent ? autoMigrateDateCreatedNode(initialContent) : undefined;
+
   const editor = useEditor({
     // Use the centralized extensions array
     extensions: tiptapExtensions,
-    content: initialContent || {
+    content: migratedContent || {
       type: 'doc',
       content: [
-        {
-          type: 'dateCreated',
-          attrs: {
-            dateCreated,
-          },
-        },
         {
           type: 'paragraph',
           content: [],
@@ -109,7 +105,7 @@ export const useRichTextEditor = ({
         },
       },
     },
-  }, [dateCreated]);
+  }, []);
 
   // Handle pending image data after editor is stable
   useEffect(() => {
@@ -137,11 +133,11 @@ export const useRichTextEditor = ({
           if (pendingImageCursorOffset !== null) {
             // Insert at the calculated cursor position
             const doc = state.doc;
-            let prosemirrorPosition = Math.min(pendingImageCursorOffset + 1, doc.content.size); // +1 to account for dateCreated node
-            
+            let prosemirrorPosition = Math.min(pendingImageCursorOffset, doc.content.size);
+
             // Ensure position is valid and within bounds
             prosemirrorPosition = Math.max(1, Math.min(prosemirrorPosition, doc.content.size));
-            
+
             tr = state.tr.insert(prosemirrorPosition, imageNode);
           } else {
             // Fallback to current selection if no cursor offset

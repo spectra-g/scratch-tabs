@@ -38,12 +38,6 @@ export const migrateTextToRich = (
         type: 'doc',
         content: [
           {
-            type: 'dateCreated',
-            attrs: {
-              dateCreated,
-            },
-          },
-          {
             type: 'paragraph',
             content: [],
           },
@@ -54,15 +48,8 @@ export const migrateTextToRich = (
 
   // Split content into paragraphs
   const paragraphs = plainTextContent.split('\n\n').filter(p => p.trim());
-  
-  const content: any[] = [
-    {
-      type: 'dateCreated',
-      attrs: {
-        dateCreated,
-      },
-    },
-  ];
+
+  const content: any[] = [];
 
   // Convert each paragraph
   paragraphs.forEach(paragraph => {
@@ -143,11 +130,7 @@ export const migrateRichToText = (richContent: any): string => {
     if (node.type === 'hardBreak') {
       return '\n';
     }
-    
-    if (node.type === 'dateCreated') {
-      return ''; // Skip date created node when converting back to text
-    }
-    
+
     if (node.content) {
       return node.content.map(extractText).join('');
     }

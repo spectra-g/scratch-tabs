@@ -14,6 +14,7 @@ Feature: JSON Smart View Tab Management
         "user": "John",
         "age": 30,
         "city": "New York"
+      }
       """
     Then the status bar language should be "JSON"
     When I click the Smart View button
@@ -26,6 +27,7 @@ Feature: JSON Smart View Tab Management
         "product": "iPhone",
         "price": 999,
         "available": true
+      }
       """
     Then the status bar language should be "JSON"
     When I click the Smart View button
@@ -42,7 +44,7 @@ Feature: JSON Smart View Tab Management
     When I click the icon for "New tab"
     And I type the following content into the active editor:
       """
-      {"category": "electronics", "item": "laptop"
+      {"category": "electronics", "item": "laptop"}
       """
     Then the status bar language should be "JSON"
     When I click the Smart View button
@@ -51,7 +53,7 @@ Feature: JSON Smart View Tab Management
     When I click the icon for "New tab"
     And I type the following content into the active editor:
       """
-      {"category": "books", "item": "novel"
+      {"category": "books", "item": "novel"}
       """
     Then the status bar language should be "JSON"
     When I click the Smart View button
@@ -68,7 +70,7 @@ Feature: JSON Smart View Tab Management
     When I click the icon for "New tab"
     And I type the following content into the active editor:
       """
-      {"original": "data", "version": 1
+      {"original": "data", "version": 1}
       """
     Then the status bar language should be "JSON"
     When I click the Smart View button
@@ -104,6 +106,8 @@ Feature: JSON Smart View Tab Management
             "dataDir": "/var/lib/myapp/data",
             "logDir": "/var/log/myapp",
             "tempDir": "/tmp/myapp"
+        }
+      }
       """
     Then the status bar language should be "JSON"
     When I click the Smart View button

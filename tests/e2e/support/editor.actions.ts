@@ -1,14 +1,14 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect, JSHandle } from '@playwright/test';
 
 export class EditorActions {
   constructor(private page: Page) {}
 
-  private getActiveEditorLocator(side?: 'left' | 'right') {
-    if (side) {
-      return this.page.locator(`[data-editor-pane-side="${side}"] .monaco-editor textarea`);
-    }
-    return this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-  }
+//   private getActiveEditorLocator(side?: 'left' | 'right') {
+//     if (side) {
+//       return this.page.locator(`[data-editor-pane-side="${side}"] .monaco-editor textarea`);
+//     }
+//     return this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
+//   }
 
   private getEditorContainerLocator(side?: 'left' | 'right') {
     if (side) {
@@ -17,97 +17,110 @@ export class EditorActions {
     return this.page.locator('[data-editor-pane-side="left"] .monaco-editor');
   }
 
-  async typeInEditor(content: string) {
-    const editorLocator = this.getActiveEditorLocator();
-    await editorLocator.fill(content);
-  }
-
-  async rightClickEditor() {
-    const editorContainer = this.getEditorContainerLocator();
-    await editorContainer.click({ button: 'right' });
-  }
-
-  async doubleClickEditor() {
-    const editorContainer = this.getEditorContainerLocator();
-    await editorContainer.dblclick();
-  }
-
-  async clickInEditor() {
-    const editorContainer = this.getEditorContainerLocator();
-    await editorContainer.click();
-  }
-
-  async focusEditor() {
-    const editorLocator = this.getActiveEditorLocator();
-    await editorLocator.focus();
-  }
-
-  async typeText(text: string, side?: 'left' | 'right') {
-    const editorLocator = this.getActiveEditorLocator(side);
-    await editorLocator.focus();
-    await editorLocator.type(text);
-  }
-
-  async typeMarkdownContent(content: string) {
-    const editorLocator = this.getActiveEditorLocator();
-    await editorLocator.focus();
-    await editorLocator.fill(content);
-  }
-
-  async pressCtrlZ() {
-    // Ensure editor is focused before pressing Ctrl+Z
-    const editorLocator = this.getActiveEditorLocator();
-    await editorLocator.focus();
-    // Directly trigger Monaco's undo command as a fallback
-    await this.page.evaluate(() => {
-      const win = window as any;
-      if (win.monaco && win.monaco.editor && win.monaco.editor.getEditors) {
-        const editors = win.monaco.editor.getEditors();
-        if (editors && editors.length > 0) {
-          editors[0].trigger('keyboard', 'undo', null);
-        }
-      }
+  private async waitForMonacoEditorAPI(side: 'left' | 'right' = 'left') {
+    const editorIndex = side === 'right' ? 1 : 0;
+    await this.page.waitForFunction((index) => {
+      const editors = (window as any).monaco?.editor?.getEditors();
+      return editors && editors.length > index && editors[index].getModel();
+    }, editorIndex, {
+      polling: 100,
+    }).catch(e => {
+      throw new Error(`Timed out waiting for Monaco Editor API. Side: ${side}. Error: ${e.message}`);
     });
   }
 
-  // Helper method to get Monaco editor content
-async getMonacoEditorContent(): Promise<string> {
-  const editorLocator = this.getActiveEditorLocator();
-  await expect(editorLocator).toBeVisible();
+  async typeInEditor(content: string) {
+    const editorInstance = await this.getVisibleEditorInstance();
 
-  // Wait until Monaco editor (or fallback textarea) has non-empty content
-  await this.page.waitForFunction(() => {
-    const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
-    if (editor && (window as any).monaco) {
-      const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) =>
-        e.getDomNode() === editor
-      );
-      if (editorInstance) {
-        const value = editorInstance.getValue();
-        return value && value.trim().length > 0;
+    await editorInstance?.evaluate((editor, text) => {
+      const model = editor.getModel();
+      if (model) {
+        const fullRange = model.getFullModelRange();
+        model.pushEditOperations([], [{ range: fullRange, text }], () => null);
+        editor.pushUndoStop();
       }
-    }
+    }, content);
+  }
 
-    const textarea = document.querySelector('[data-editor-pane-side="left"] .monaco-editor textarea') as HTMLTextAreaElement;
-    return textarea && textarea.value.trim().length > 0;
-  });
+  async rightClickEditor() {
+    const editorInstance = await this.getVisibleEditorInstance();
+    const domNodeHandle = await editorInstance?.getProperty('domNode');
+    await domNodeHandle?.asElement()?.click({ button: 'right' });
+  }
 
-  // After content is confirmed to exist, return it
-  return await this.page.evaluate(() => {
-    const editor = document.querySelector('[data-editor-pane-side="left"] .monaco-editor');
-    if (editor && (window as any).monaco) {
-      const editorInstance = (window as any).monaco.editor.getEditors().find((e: any) =>
-        e.getDomNode() === editor
-      );
-      if (editorInstance) {
-        return editorInstance.getValue();
+  async doubleClickEditor() {
+    const editorInstance = await this.getVisibleEditorInstance();
+    const domNodeHandle = await editorInstance?.getProperty('domNode');
+    await domNodeHandle?.asElement()?.dblclick();
+  }
+
+  async clickInEditor() {
+    const editorInstance = await this.getVisibleEditorInstance();
+    const domNodeHandle = await editorInstance?.getProperty('domNode');
+    await domNodeHandle?.asElement()?.click();
+  }
+
+  async focusEditor() {
+    const editorInstance = await this.getVisibleEditorInstance();
+    await editorInstance?.evaluate(editor => editor.focus());
+  }
+
+  async typeText(text: string, side?: 'left' | 'right') {
+    const editorInstance = await this.getVisibleEditorInstance(side);
+
+    await editorInstance?.evaluate((editor, newText) => {
+      const model = editor.getModel();
+      const position = editor.getPosition();
+      if (model && position) {
+        model.pushEditOperations(
+          [],
+          [{ range: new (window as any).monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column), text: newText }],
+          () => null
+        );
+        editor.pushUndoStop();
       }
-    }
+    }, text);
+  }
 
-    const textarea = document.querySelector('[data-editor-pane-side="left"] .monaco-editor textarea') as HTMLTextAreaElement;
-    return textarea ? textarea.value : '';
-  });
-}
+  async getMonacoEditorContent(): Promise<string> {
+    const editorInstance = await this.getVisibleEditorInstance();
+    const content = await editorInstance?.evaluate((editor) => editor.getValue());
+    return content || '';
+  }
+
+  private async getVisibleEditorInstance(side?: 'left' | 'right'): Promise<JSHandle | null> {
+    await this.waitForMonacoEditorAPI(side || 'left');
+    return this.page.evaluateHandle((sideParam) => {
+      const editors = (window as any).monaco?.editor?.getEditors();
+      if (!editors) return null;
+
+      // If side is specified, find the editor for that specific side
+      if (sideParam) {
+        const editorPaneSelector = `[data-editor-pane-side="${sideParam}"]`;
+        const editorPane = document.querySelector(editorPaneSelector);
+        if (editorPane) {
+          return editors.find((editor: any) => {
+            const domNode = editor.getDomNode();
+            return domNode && editorPane.contains(domNode);
+          });
+        }
+      }
+
+      // Fallback: find any visible editor
+      return editors.find((editor: any) => {
+        const domNode = editor.getDomNode();
+        return domNode && !!(domNode.offsetWidth || domNode.offsetHeight || domNode.getClientRects().length);
+      });
+    }, side);
+  }
+
+  async pressCtrlZ() {
+    const editorInstance = await this.getVisibleEditorInstance();
+    await editorInstance?.evaluate(editor => {
+      editor.getModel()?.undo();
+    });
+  }
+
   async expectEditorContentToEqual(expectedContent: string) {
     const actualContent = await this.getMonacoEditorContent();
     
@@ -323,10 +336,8 @@ async getMonacoEditorContent(): Promise<string> {
 
   async expectEditorToBeEmpty() {
     const content = await this.getMonacoEditorContent();
-    const trimmedContent = content.trim();
-    
-    if (trimmedContent !== '') {
-      throw new Error(`Expected editor to be empty, but got: "${trimmedContent}"`);
+    if (content.trim() !== '') {
+      throw new Error(`Expected editor to be empty, but got: "${content}"`);
     }
   }
 
@@ -336,48 +347,35 @@ async getMonacoEditorContent(): Promise<string> {
   }
 
   async clickAtLine(lineNumber: number) {
-    // Click at a specific line in the Monaco editor
-    await this.page.evaluate((line) => {
-      const editor = (window as any).monaco?.editor?.getEditors()?.[0];
-      if (editor) {
-        // Set cursor position to the beginning of the specified line
-        editor.setPosition({ lineNumber: line, column: 1 });
-        editor.focus();
-      }
+    const editorInstance = await this.getVisibleEditorInstance();
+    await editorInstance?.evaluate((editor, line) => {
+      editor.setPosition({ lineNumber: line, column: 1 });
+      editor.focus();
     }, lineNumber);
   }
 
   async expectCursorAtLine(expectedLine: number) {
-    // Check if cursor is at the expected line
-    const actualLine = await this.page.evaluate(() => {
-      const editor = (window as any).monaco?.editor?.getEditors()?.[0];
-      if (editor) {
-        const position = editor.getPosition();
-        return position?.lineNumber || 1;
-      }
-      return 1;
-    });
-
-    if (actualLine !== expectedLine) {
-      throw new Error(`Expected cursor at line ${expectedLine}, but found at line ${actualLine}`);
-    }
+    await expect.poll(async () => {
+      const editorInstance = await this.getVisibleEditorInstance();
+      return editorInstance?.evaluate(editor => editor.getPosition()?.lineNumber);
+    }, {
+      message: `Expected cursor to be at line ${expectedLine}, but it was not.`,
+    }).toBe(expectedLine);
   }
 
-  async waitForEditorFocus(side: 'left' | 'right') {
-    // Wait for the editor on the specified side to be focused and ready for input
-    const editorLocator = this.getActiveEditorLocator(side);
-    await expect(editorLocator).toBeVisible();
-    await editorLocator.focus();
-    
-    // Wait for Monaco editor to show focus by looking for the "view-overlays focused" class
-    await this.page.waitForFunction((sideParam) => {
-      const editorPane = document.querySelector(`[data-editor-pane-side="${sideParam}"]`);
-      if (!editorPane) return false;
-
-      console.log('checking for focus');
-      const focusedOverlay = editorPane.querySelector('.view-overlays.focused');
-      console.log('found focus: ' + focusedOverlay);
-      return focusedOverlay !== null;
-    }, side);
-  }
+//   async waitForEditorFocus(side: 'left' | 'right') {
+//     // Wait for the editor on the specified side to be focused and ready for input
+//     const editorLocator = this.getActiveEditorLocator(side);
+//     await expect(editorLocator).toBeVisible();
+//     await editorLocator.focus();
+//
+//     // Wait for Monaco editor to show focus by looking for the "view-overlays focused" class
+//     await this.page.waitForFunction((sideParam) => {
+//       const editorPane = document.querySelector(`[data-editor-pane-side="${sideParam}"]`);
+//       if (!editorPane) return false;
+//
+//       const focusedOverlay = editorPane.querySelector('.view-overlays.focused');
+//       return focusedOverlay !== null;
+//     }, side);
+//   }
 } 
