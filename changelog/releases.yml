@@ -3,8 +3,25 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.8.0"
+  - version: "1.9.0"
     type: "latest"  # latest, beta, alpha
+    draft: false
+    date: "2025-11-11"
+    headline: "🎯 JSON Data Extraction and Calculator improvements"
+    description: "New powerful JSON data extraction tool with filtering, enhanced calculator readability, and critical bug fixes"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**JSON Data Extraction:** Extract and filter values from JSON arrays with live preview, supporting nested paths, comparison operators (==, !=, >, <, >=, <=), and export to new tabs"
+          - "**Calculator Human Readable Output:** Display calculation results in plain language for better comprehension"
+      - name: "🐛 Fixed"
+        changes:
+          - "Rich text editor: Date created header now properly isolated from document content"
+          - "Calculator: Various calculation and operator handling bug fixes"
+          - "Editor: Blank editor issue after applying transformations"
+
+  - version: "1.8.0"
+    type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-11-01"
     headline: "🔧 Calculator enhancements, JSON Mapper joins, and smart fixes"
