@@ -7,11 +7,12 @@ Feature: Tab Management
       """
       {
         "hello": "world"
+      }
       """
     Then the active editor content should be:
       """
       {
-            "hello": "world"
+        "hello": "world"
       }
       """
     And the tab with title "Scratch 1" should be active 

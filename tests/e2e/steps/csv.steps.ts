@@ -128,8 +128,7 @@ CsvWhen('I make changes to the CSV data in table view', async function() {
 });
 
 CsvThen('the active editor content should reflect the changes made in table view', async function() {
-  const editor = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-  const content = await editor.inputValue();
+  const content = await this.editor.getMonacoEditorContent();
   
   expect(content).not.toBe('');
   expect(content).toContain('ID,Name,Age,City');
@@ -163,9 +162,8 @@ CsvThen('the table structure should update accordingly', async function() {
 });
 
 CsvThen('the active editor content should include the new column', async function() {
-  const editor = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-  const content = await editor.inputValue();
-  
+  const content = await this.editor.getMonacoEditorContent();
+
   const lines = content.split('\n');
   const headerLine = lines[0];
   const columnCount = headerLine.split(',').length;
@@ -198,8 +196,7 @@ CsvThen('special characters should be handled properly', async function() {
 });
 
 CsvThen('the active editor content should maintain the original formatting and quotes', async function() {
-  const editor = this.page.locator('[data-editor-pane-side="left"] .monaco-editor textarea');
-  const content = await editor.inputValue();
+  const content = await this.editor.getMonacoEditorContent();
   
   expect(content).toContain('"Product","Price","Description"');
   expect(content).toContain('HP laptop with "quotes"');

@@ -1,5 +1,6 @@
 Feature: Workspace Switching
 
+  @bug10
   Scenario: Create and switch workspaces with tab isolation
     Given I am on the homepage
     When I click the icon for "New tab"

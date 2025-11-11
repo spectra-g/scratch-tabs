@@ -352,7 +352,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   }, [navigateToPath]);
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-gray-200">
+    <div className="flex flex-col h-full bg-gray-900 text-gray-200" data-testid="json-smart-view-container">
       {/* Toolbar */}
       <Toolbar
         isValid={isValid}
