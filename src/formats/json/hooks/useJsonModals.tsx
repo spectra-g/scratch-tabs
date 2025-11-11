@@ -5,6 +5,7 @@ import { CodeGenerationModal } from "../components/modals/CodeGenerationModal";
 import { JsonTreeViewModalWrapper } from "../components/modals/JsonTreeViewModalWrapper";
 import { SchemaValidationModal } from "../components/modals/SchemaValidationModal";
 import { JsonStructureComparisonModal } from "../components/modals/JsonStructureComparisonModal";
+import { ExtractDataModal } from "../components/modals/ExtractDataModal";
 
 export const useJsonModals = () => {
   const {
@@ -14,6 +15,7 @@ export const useJsonModals = () => {
     openTreeViewModal,
     openSchemaValidationModal,
     openStructureComparisonModal,
+    openExtractDataModal,
     closeModal,
   } = useJsonModalsStore();
 
@@ -29,6 +31,8 @@ export const useJsonModals = () => {
         return <SchemaValidationModal {...modalState.props} />;
       case "structureComparison":
         return <JsonStructureComparisonModal {...modalState.props} />;
+      case "extractData":
+        return <ExtractDataModal {...modalState.props} />;
       default:
         return null;
     }
@@ -40,6 +44,7 @@ export const useJsonModals = () => {
     openTreeViewModal,
     openSchemaValidationModal,
     openStructureComparisonModal,
+    openExtractDataModal,
     renderModal,
     closeModal,
   };
