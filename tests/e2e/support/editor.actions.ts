@@ -65,8 +65,8 @@ export class EditorActions {
     await editorInstance?.evaluate(editor => editor.focus());
   }
 
-  async typeText(text: string) {
-    const editorInstance = await this.getVisibleEditorInstance();
+  async typeText(text: string, side?: 'left' | 'right') {
+    const editorInstance = await this.getVisibleEditorInstance(side);
 
     await editorInstance?.evaluate((editor, newText) => {
       const model = editor.getModel();
@@ -88,17 +88,30 @@ export class EditorActions {
     return content || '';
   }
 
-  private async getVisibleEditorInstance(): Promise<JSHandle | null> {
-    await this.waitForMonacoEditorAPI();
-    return this.page.evaluateHandle(() => {
+  private async getVisibleEditorInstance(side?: 'left' | 'right'): Promise<JSHandle | null> {
+    await this.waitForMonacoEditorAPI(side || 'left');
+    return this.page.evaluateHandle((sideParam) => {
       const editors = (window as any).monaco?.editor?.getEditors();
       if (!editors) return null;
 
+      // If side is specified, find the editor for that specific side
+      if (sideParam) {
+        const editorPaneSelector = `[data-editor-pane-side="${sideParam}"]`;
+        const editorPane = document.querySelector(editorPaneSelector);
+        if (editorPane) {
+          return editors.find((editor: any) => {
+            const domNode = editor.getDomNode();
+            return domNode && editorPane.contains(domNode);
+          });
+        }
+      }
+
+      // Fallback: find any visible editor
       return editors.find((editor: any) => {
         const domNode = editor.getDomNode();
         return domNode && !!(domNode.offsetWidth || domNode.offsetHeight || domNode.getClientRects().length);
       });
-    });
+    }, side);
   }
 
   async pressCtrlZ() {

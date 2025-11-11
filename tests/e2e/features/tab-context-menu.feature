@@ -102,7 +102,6 @@ Feature: Tab context menu
     And the diff modal left side should contain "Original content in first tab"
     And the diff modal right side should contain "Modified content in second tab"
 
-    @bug10
   Scenario: Compare with other side in split view
     When I click the icon for "New tab"
     Then the "Scratch 1" tab should be active
