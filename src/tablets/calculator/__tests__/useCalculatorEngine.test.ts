@@ -498,6 +498,102 @@ describe("useCalculatorEngine", () => {
         });
       });
     });
+
+    describe("auto-evaluation on operator press", () => {
+      it("should auto-evaluate when operator pressed after complete expression", () => {
+        const testData = { ...initialData, expression: "10/2", display: "10/2" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("/");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "5/",
+          display: "5/",
+          history: [{ expression: "10/2", result: "5", mode: "standard", base: "DEC" }],
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should auto-evaluate with addition then multiply", () => {
+        const testData = { ...initialData, expression: "3+4", display: "3+4" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("*");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "7*",
+          display: "7*",
+          history: [{ expression: "3+4", result: "7", mode: "standard", base: "DEC" }],
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should auto-evaluate with multiplication then subtract", () => {
+        const testData = { ...initialData, expression: "5*3", display: "5*3" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("-");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "15-",
+          display: "15-",
+          history: [{ expression: "5*3", result: "15", mode: "standard", base: "DEC" }],
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should not auto-evaluate when operator at end (incomplete expression)", () => {
+        const testData = { ...initialData, expression: "10/", display: "10/" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("*");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "10*",
+          display: "10*",
+          isResultDisplayed: false,
+        });
+      });
+
+      it("should handle negative numbers in expression before auto-eval", () => {
+        const testData = { ...initialData, expression: "10*-2", display: "10*-2" };
+        const { result } = renderHook(() =>
+          useCalculatorEngine(testData, mockOnChange)
+        );
+
+        act(() => {
+          result.current.handleInput("+");
+        });
+
+        expect(mockOnChange).toHaveBeenCalledWith({
+          ...testData,
+          expression: "-20+",
+          display: "-20+",
+          history: [{ expression: "10*-2", result: "-20", mode: "standard", base: "DEC" }],
+          isResultDisplayed: false,
+        });
+      });
+    });
   });
 
   describe("handleClear", () => {

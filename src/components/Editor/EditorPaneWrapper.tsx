@@ -130,14 +130,15 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const handleBatchToolsApply = useCallback((content: string) => {
     if (!activeTabId) return;
 
-    // Update tab content directly
+    // Update tab content in store
     updateTabState(activeTabId, {
       content,
       lastModified: Date.now(),
     });
 
-    // Invalidate the model so it gets recreated with the new content
-    modelManager.invalidateModel(activeTabId);
+    // Update the model directly without disposing it (prevents blank editor)
+    // The replaceModelContentWithUndo method preserves undo stack and updates the model in place
+    modelManager.replaceModelContentWithUndo(activeTabId, content);
   }, [activeTabId, updateTabState]);
   // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;

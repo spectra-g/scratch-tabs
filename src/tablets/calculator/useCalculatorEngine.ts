@@ -57,6 +57,48 @@ const hasDecimalPoint = (numberStr: string): boolean => {
 };
 
 /**
+ * Checks if the expression has a complete pending operation (operand operator operand).
+ * Returns true if we have a complete expression that can be evaluated.
+ * Examples:
+ * - "10/2" -> true (can be evaluated)
+ * - "10/" -> false (incomplete, missing second operand)
+ * - "10*-2" -> true (can be evaluated, has negative number)
+ * - "5+-" -> false (incomplete, negative sign at end)
+ */
+const hasCompletePendingOperation = (expression: string): boolean => {
+  if (!expression || expression.length === 0) return false;
+
+  // Find if there's an operator in the expression
+  let operatorIndex = -1;
+
+  for (let i = expression.length - 1; i >= 0; i--) {
+    const char = expression[i];
+    if (isArithmeticOperator(char)) {
+      // Handle negative numbers: check if minus is part of a negative number
+      if (char === "-" && i > 0 && isArithmeticOperator(expression[i - 1])) {
+        continue; // This minus is part of a negative number, keep looking
+      }
+      operatorIndex = i;
+      break;
+    }
+  }
+
+  if (operatorIndex === -1) return false; // No operator found
+
+  // Check if there's a second operand after the operator
+  const secondOperand = expression.slice(operatorIndex + 1);
+
+  // Empty second operand means incomplete
+  if (secondOperand.length === 0) return false;
+
+  // If second operand ends with an operator, it's incomplete
+  const lastChar = secondOperand[secondOperand.length - 1];
+  if (isArithmeticOperator(lastChar)) return false;
+
+  return true;
+};
+
+/**
  * Counts the number of unclosed opening brackets in an expression.
  * Returns the difference between opening and closing brackets.
  */
@@ -168,6 +210,52 @@ export const useCalculatorEngine = (
         }
       }
 
+      // Auto-evaluate when operator is pressed after a complete expression
+      // This mimics standard calculator behavior (e.g., "10/2" then "/" -> shows "5/")
+      if (isArithmeticOperator(input) && hasCompletePendingOperation(currentExpression)) {
+        try {
+          // Auto-close any unclosed brackets before evaluation
+          const closedExpression = autoCloseBrackets(currentExpression);
+
+          let expressionToEval = closedExpression;
+
+          // For programmer mode, prepare expression with base conversion
+          if (initialData.mode === "programmer") {
+            expressionToEval = prepareExpressionForEval(closedExpression, initialData.base);
+          }
+
+          const result = evaluate(expressionToEval);
+
+          // For programmer mode, convert result back to current base
+          let formattedResult: string;
+          if (initialData.mode === "programmer") {
+            const intResult = Math.floor(Number(result));
+            formattedResult = fromDecimal(intResult, initialData.base);
+          } else {
+            formattedResult = formatDisplay(result);
+          }
+
+          const newHistoryEntry: HistoryEntry = {
+            expression: closedExpression,
+            result: formattedResult,
+            mode: initialData.mode,
+            base: initialData.base,
+          };
+
+          // Use the result as the new expression with the operator appended
+          updateData({
+            expression: formattedResult + input,
+            display: formattedResult + input,
+            history: [newHistoryEntry, ...initialData.history].slice(0, CALCULATOR_CONSTANTS.HISTORY_LIMIT),
+            isResultDisplayed: false,
+          });
+          return;
+        } catch (error) {
+          // If evaluation fails, just append the operator normally
+          // This handles edge cases gracefully
+        }
+      }
+
       // Handle operator correction for consecutive operators
       if (isArithmeticOperator(input) && currentExpression.length > 0) {
         const lastChar = currentExpression[currentExpression.length - 1];
@@ -197,7 +285,7 @@ export const useCalculatorEngine = (
       const newExpression = currentExpression + input;
       updateData({ expression: newExpression, display: newExpression, isResultDisplayed: false });
     },
-    [initialData.expression, initialData.display, initialData.isResultDisplayed, updateData],
+    [initialData.expression, initialData.display, initialData.isResultDisplayed, initialData.mode, initialData.base, initialData.history, updateData],
   );
 
   const handleClear = useCallback(() => {
