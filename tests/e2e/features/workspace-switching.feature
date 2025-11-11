@@ -1,6 +1,5 @@
 Feature: Workspace Switching
 
-  @bug10
   Scenario: Create and switch workspaces with tab isolation
     Given I am on the homepage
     When I click the icon for "New tab"
@@ -31,6 +30,7 @@ Feature: Workspace Switching
       This is content from New Workspace
       Different data that should only exist in this workspace
       """
+    And I click the "Scratch 2" tab
     And I double-click on the active tab
     And I type "New Workspace Tab" in the rename input
     And I press Enter to confirm rename
