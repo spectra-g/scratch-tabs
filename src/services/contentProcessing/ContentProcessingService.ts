@@ -1,11 +1,12 @@
 import { ContentProcessingEngine } from './ContentProcessingEngine';
 import { JsonContentProcessor } from './processors/JsonContentProcessor';
 import { LanguageDetectorAdapter } from './adapters/LanguageDetectorAdapter';
-import { 
-  ContentProcessingResult, 
-  ContentProcessingContext 
+import {
+  ContentProcessingResult,
+  ContentProcessingContext
 } from './types';
 import { JsonLogContentProcessor } from "./processors/JsonLogContentProcessor";
+import { CsvContentProcessor } from './processors/CsvContentProcessor';
 
 /**
  * Main service for content processing that manages the engine and provides
@@ -26,13 +27,13 @@ export class ContentProcessingService {
     // Register language detector
     this.engine.registerDetector(new LanguageDetectorAdapter());
     this.engine.registerProcessor(new JsonLogContentProcessor());
-    
+
     // Register content processors
     this.engine.registerProcessor(new JsonContentProcessor());
-    
+    this.engine.registerProcessor(new CsvContentProcessor());
+
     // Future processors can be added here:
     // this.engine.registerProcessor(new XmlContentProcessor());
-    // this.engine.registerProcessor(new CsvContentProcessor());
     // this.engine.registerProcessor(new SqlContentProcessor());
   }
 

@@ -40,7 +40,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onContentChange: _onContentChange, // Passed to maintain interface compatibility, handled by Monaco events
   tabId,
 }) => {
-  const { openStructureComparisonModal } = useJsonModals();
+  const { openStructureComparisonModal, openEqualityCheckModal } = useJsonModals();
   const { tabs } = useTabsStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { openDiffModalWithContent } = useDiffModalStore();
@@ -109,6 +109,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     if (!editor) return;
     const content = editor.getValue();
     openStructureComparisonModal(content);
+  };
+
+  const handleEqualityCheck = () => {
+    if (!editor) return;
+    const content = editor.getValue();
+    openEqualityCheckModal(content);
   };
 
   /**
@@ -290,6 +296,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onCompareWithClipboard={handleCompareWithClipboard}
           onCompareWithTab={handleCompareWithTab}
           onCompareStructure={handleCompareStructures}
+          onEqualityCheck={handleEqualityCheck}
         />
       </div>
     </div>

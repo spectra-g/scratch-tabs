@@ -16,7 +16,7 @@ export const useJsonConversions = (
   editor: monaco.editor.IStandaloneCodeEditor | null,
   addTab: (tab: Tab) => void,
 ) => {
-  const { openCodeGenerationModal, openTreeViewModal } = useJsonModals();
+  const { openCodeGenerationModal, openTreeViewModal, openCsvExportOptionsModal } = useJsonModals();
 
   const handleToJava = useCallback(() => {
     if (!editor) return;
@@ -142,26 +142,12 @@ export const useJsonConversions = (
     if (!editor) return;
     try {
       const content = editor.getValue();
-
-      const json = JSON.parse(content);
-
-      const result = convertToCsv(json);
-      if ("error" in result) {
-        throw new Error(result.error);
-      }
-
-      const tab = {
-        id: crypto.randomUUID(),
-        title: "Converted CSV",
-        content: result.csv,
-        language: "plaintext",
-      };
-
-      openCodeGenerationModal([tab], addTab);
+      // Open the CSV export options modal instead of directly generating
+      openCsvExportOptionsModal(content);
     } catch (error) {
-      console.error("Failed to convert to CSV:", error);
+      console.error("Failed to open CSV export modal:", error);
     }
-  }, [editor, openCodeGenerationModal, addTab]);
+  }, [editor, openCsvExportOptionsModal]);
 
   const handleToYaml = useCallback(() => {
     if (!editor) return;

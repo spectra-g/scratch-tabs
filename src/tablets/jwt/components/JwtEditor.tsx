@@ -493,11 +493,9 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
       <div className="pt-2">
         <Alert variant="warning" title="Security Warning">
           <div className="flex items-center">
-            <AlertTriangle size={18} className="mr-2 flex-shrink-0" />
             <span>
-              Be careful when using private keys or secrets. All operations are
-              performed client-side, but it's best practice to use test keys
-              only.
+              Keys are stored in your browser's local storage and are not sent to any server.
+              However, it's best practice to delete these from the JWT tablet after use.
             </span>
           </div>
         </Alert>

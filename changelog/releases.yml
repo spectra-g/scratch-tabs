@@ -3,8 +3,27 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
+  - version: "1.10.0"
+    type: "latest"
+    draft: false
+    date: "2025-11-12"
+    headline: "🚀 JSON & CSV Features"
+    description: "Major enhancements with intelligent JSON equality checking, professional CSV export with configurable strategies, and smart TSV/CSV detection and processing"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**JSON Deep Equality Checker:** Order-insensitive JSON comparison using canonical hashing, with intelligent array analysis reporting matched, missing, and extra items"
+          - "**JSON to CSV Export:** Intelligent JSON-to-CSV conversion with three strategies: expandFirst (recommended), expandAll (Cartesian product), and stringify (legacy)"
+          - "**CSV Paste Cleaner:** Automatically detects and converts literal \\t escape sequences to actual tab characters on paste"
+          - "**CSV Auto-Delimiter Detection:** Smart View automatically detects tab, comma, semicolon, or pipe delimiters for proper table rendering"
+      - name: "🔧 Improvements"
+        changes:
+          - "**CSV Export:** Nested objects automatically flattened with dot notation (e.g., user.name → user.name column)"
+          - "**CSV Export:** Proper CSV escaping for quotes, delimiters, and newlines"
+          - "**JWT Tablet:** Improved security messaging - clearer explanation of local storage and best practices"
+
   - version: "1.9.0"
-    type: "latest"  # latest, beta, alpha
+    type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-11-11"
     headline: "🎯 JSON Data Extraction and Calculator improvements"
