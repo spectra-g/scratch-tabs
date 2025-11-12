@@ -1,201 +1,206 @@
-interface CsvOptions {
-  delimiter: "," | "\t";
+/**
+ * World-Class CSV Export for JSON Data
+ *
+ * Features:
+ * - Intelligent flattening of nested objects
+ * - Configurable array expansion strategies
+ * - Handles complex, real-world JSON structures
+ * - Produces flat, filterable CSV tables
+ */
+
+export interface CsvOptions {
+  delimiter: string; // "," or actual tab character
   includeHeaders: boolean;
+  arrayExpansion: "expandFirst" | "expandAll" | "stringify";
 }
 
-// Helper function to recursively flatten the JSON structure
-// MODIFIED: Handles nested arrays by creating multiple rows, placing array values under the original array key name.
-const flattenJsonArray = (
-  arr: any[],
-  parentPathKey: string = "", // The key name of the array itself (e.g., "hobbies")
-  parentData: Record<string, any> = {}, // Data from levels above the array's parent object
-): Record<string, any>[] => {
-  const result: Record<string, any>[] = [];
-
-  arr.forEach((item, index) => {
-    // If the item within the array is itself an object or array, we need to handle it.
-    if (typeof item === "object" && item !== null) {
-      // Option 1: Flatten nested objects/arrays within the array under the parentPathKey
-      // This creates paths like "hobbies.propertyName" or "hobbies[0].nestedProp"
-      // which might not be desired if you want ONLY the primitive values in the 'hobbies' column.
-
-      // Option 2 (Simpler for the desired output): Treat nested structures within the array
-      // by serializing them or skipping them if only primitives are expected in the target column.
-      // Let's serialize for now, similar to flattenJsonObject.
-      const rowData = { ...parentData, [parentPathKey]: JSON.stringify(item) };
-      result.push(rowData);
-    } else {
-      // Item is a primitive value (string, number, boolean, null)
-      // Assign this primitive value directly to the parentPathKey column.
-      const rowData = { ...parentData, [parentPathKey]: item };
-      result.push(rowData);
-    }
-  });
-
-  // Handle case where the input array was empty but had parent context
-  if (arr.length === 0 && Object.keys(parentData).length > 0 && parentPathKey) {
-    // Add a row with parent data, but the array's column is empty
-    result.push({ ...parentData, [parentPathKey]: undefined });
-  } else if (
-    arr.length === 0 &&
-    Object.keys(parentData).length > 0 &&
-    !parentPathKey
-  ) {
-    // If the top-level array was empty
-    result.push(parentData);
-  }
-
-  return result;
+const DEFAULT_OPTIONS: CsvOptions = {
+  delimiter: ",",
+  includeHeaders: true,
+  arrayExpansion: "expandFirst",
 };
 
-// Helper to flatten a single object, identifying arrays for expansion
-const flattenObjectAndExpandArrays = (
-  obj: Record<string, any>,
-  parentPath: string = "",
-  baseData: Record<string, any> = {}, // Accumulates non-array data for duplication
-): Record<string, any>[] => {
-  let currentLevelData: Record<string, any> = { ...baseData };
-  const arraysToExpand: { key: string; pathKey: string; value: any[] }[] = [];
-
-  Object.entries(obj).forEach(([key, value]) => {
-    const currentPath = parentPath ? `${parentPath}.${key}` : key;
-
-    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-      // Flatten nested objects directly into the current level data
-      const flattenedSubObject = flattenJsonObject(value, currentPath); // Use simple flatten for sub-objects
-      currentLevelData = { ...currentLevelData, ...flattenedSubObject };
-    } else if (Array.isArray(value)) {
-      // Identify arrays to expand later, passing the *original key* as the target column name
-      arraysToExpand.push({ key: key, pathKey: currentPath, value: value });
-    } else {
-      // Add primitive values
-      currentLevelData[currentPath] = value;
-    }
-  });
-
-  // If no arrays to expand, return the single flattened row
-  if (arraysToExpand.length === 0) {
-    return [currentLevelData];
+/**
+ * Recursively flattens a JSON object and expands its arrays into multiple rows.
+ * This is the core of the smart CSV generation.
+ *
+ * @param data - The JSON object or value to process
+ * @param options - Configuration options for flattening
+ * @returns An array of flat objects, where each object represents a CSV row
+ */
+function flattenAndExpand(
+  data: any,
+  options: CsvOptions
+): Record<string, any>[] {
+  if (typeof data !== "object" || data === null) {
+    return [{ value: data }];
   }
 
-  // If arrays exist, expand them recursively
-  let expandedRows = [currentLevelData]; // Start with the non-array data
+  // If the top-level item is an array, process each element
+  if (Array.isArray(data)) {
+    return data.flatMap((item) => flattenAndExpand(item, options));
+  }
 
-  arraysToExpand.forEach(({ key, pathKey, value }) => {
-    const nextExpandedRows: Record<string, any>[] = [];
-    expandedRows.forEach((rowToExpand) => {
-      // For each current row, flatten the nested array using the *original key* ('hobbies')
-      // Pass the current row data as the parentData for duplication
-      const flattenedNested = flattenJsonArray(value, key, rowToExpand); // Use original key here!
+  // It's an object. Separate simple values from arrays
+  const baseObject: Record<string, any> = {};
+  const arraysToExpand: { key: string; values: any[] }[] = [];
 
-      // If the nested array was empty, keep the parent row but clear the array key value
-      if (flattenedNested.length === 0) {
-        // Ensure the key exists even if the array was empty
-        if (!rowToExpand.hasOwnProperty(key)) {
-          rowToExpand[key] = undefined;
-        }
-        nextExpandedRows.push(rowToExpand);
-      } else {
-        nextExpandedRows.push(...flattenedNested);
+  for (const [key, value] of Object.entries(data)) {
+    if (Array.isArray(value) && options.arrayExpansion !== "stringify") {
+      arraysToExpand.push({ key, values: value });
+    } else if (
+      typeof value === "object" &&
+      value !== null &&
+      !Array.isArray(value)
+    ) {
+      // Nested object: flatten its keys into the base object
+      const flatSubObject = flattenAndExpand(value, options)[0] || {};
+      for (const [subKey, subValue] of Object.entries(flatSubObject)) {
+        baseObject[`${key}.${subKey}`] = subValue;
       }
-    });
-    expandedRows = nextExpandedRows; // Update the set of rows for the next array
-  });
-
-  return expandedRows;
-};
-
-// --- flattenJsonObject (Simplified - only handles nested objects, not array expansion) ---
-// This is used for objects nested *within* other objects or arrays being processed.
-const flattenJsonObject = (
-  obj: Record<string, any>,
-  parentPath: string = "",
-): Record<string, any> => {
-  let result: Record<string, any> = {};
-  Object.entries(obj).forEach(([key, value]) => {
-    const currentPath = parentPath ? `${parentPath}.${key}` : key;
-    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-      result = { ...result, ...flattenJsonObject(value, currentPath) };
     } else {
-      // Serialize arrays or keep primitives within nested objects
-      result[currentPath] = Array.isArray(value)
-        ? JSON.stringify(value)
-        : value;
+      // Primitive value or array to stringify
+      baseObject[key] = Array.isArray(value) ? JSON.stringify(value) : value;
     }
-  });
-  return result;
-};
+  }
 
+  // If no arrays to expand, we just have one row
+  if (arraysToExpand.length === 0) {
+    return [baseObject];
+  }
+
+  // --- Handle Array Expansion ---
+
+  let rows: Record<string, any>[] = [baseObject];
+
+  // Determine which arrays to expand based on strategy
+  const arraysToProcess =
+    options.arrayExpansion === "expandFirst"
+      ? arraysToExpand.slice(0, 1)
+      : arraysToExpand;
+
+  for (const { key, values } of arraysToProcess) {
+    const nextRows: Record<string, any>[] = [];
+
+    if (values.length === 0) {
+      // If an array is empty, just add the key with an empty value
+      rows.forEach((row) => {
+        row[key] = "";
+      });
+      continue;
+    }
+
+    // For each existing row, create new rows for each item in the current array
+    for (const currentRow of rows) {
+      for (const item of values) {
+        const flatItem = flattenAndExpand(item, options)[0] || {};
+        const newRow = { ...currentRow };
+
+        // If the item is a primitive, just use the array key
+        if (Object.keys(flatItem).length === 1 && flatItem.value !== undefined) {
+          newRow[key] = flatItem.value;
+        } else {
+          // If the item is an object, prefix its keys with the array key
+          for (const [itemKey, itemValue] of Object.entries(flatItem)) {
+            newRow[`${key}.${itemKey}`] = itemValue;
+          }
+        }
+
+        nextRows.push(newRow);
+      }
+    }
+    rows = nextRows;
+  }
+
+  // If we only expanded the first array, stringify the rest
+  if (
+    options.arrayExpansion === "expandFirst" &&
+    arraysToExpand.length > 1
+  ) {
+    for (const { key, values } of arraysToExpand.slice(1)) {
+      rows.forEach((row) => {
+        row[key] = JSON.stringify(values);
+      });
+    }
+  }
+
+  return rows;
+}
+
+/**
+ * Escapes a value for CSV format.
+ * Handles delimiters, quotes, and newlines.
+ */
+function escapeCsvValue(value: any, delimiter: string): string {
+  if (value === null || value === undefined) return "";
+
+  const str = String(value);
+
+  // If value contains delimiter, quotes, or newlines, wrap in quotes
+  if (str.includes(delimiter) || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+
+  return str;
+}
+
+/**
+ * Converts JSON to CSV with intelligent flattening and configurable array handling.
+ *
+ * @param jsonString - JSON string or parsed JSON object
+ * @param options - Configuration options for CSV generation
+ * @returns Object with csv string or error message
+ */
 export function convertToCsv(
-  json: any,
-  options: CsvOptions = { delimiter: ",", includeHeaders: true },
-): { csv: string } | { error: string } {
-  let topLevelArray: any[];
-
-  if (!Array.isArray(json)) {
-    if (typeof json === "object" && json !== null) {
-      topLevelArray = [json]; // Wrap single object
-    } else {
-      return { error: "Input must be an array or a single object" };
-    }
-  } else {
-    topLevelArray = json;
-  }
-
-  if (topLevelArray.length === 0) {
-    return { csv: options.includeHeaders ? "" : "" };
-  }
+  jsonString: string | any,
+  options: Partial<CsvOptions> = {}
+): { csv: string; error: null } | { csv: ""; error: string } {
+  const finalOptions: CsvOptions = { ...DEFAULT_OPTIONS, ...options };
 
   try {
-    // Flatten each top-level object, handling array expansion within them
-    const flattenedData: Record<string, any>[] = [];
-    topLevelArray.forEach((obj) => {
-      if (typeof obj === "object" && obj !== null) {
-        flattenedData.push(...flattenObjectAndExpandArrays(obj));
-      } else {
-        // Handle top-level array containing primitives if needed
-        flattenedData.push({ value: obj }); // Assign to a default 'value' key
-      }
-    });
+    // Parse if string, otherwise use as-is
+    const json =
+      typeof jsonString === "string" ? JSON.parse(jsonString) : jsonString;
 
-    if (flattenedData.length === 0) {
-      return { csv: options.includeHeaders ? "" : "" };
+    // Flatten and expand the data
+    const flatData = flattenAndExpand(json, finalOptions);
+
+    if (flatData.length === 0) {
+      return { csv: "", error: null };
     }
 
-    // Dynamically get all unique headers
+    // Collect all unique headers from all generated rows
     const headersSet = new Set<string>();
-    flattenedData.forEach((obj) => {
-      Object.keys(obj).forEach((key) => headersSet.add(key));
+    flatData.forEach((row) => {
+      Object.keys(row).forEach((key) => headersSet.add(key));
     });
     const headers = Array.from(headersSet).sort();
 
-    const escapeCsvValue = (value: any): string => {
-      if (value === null || value === undefined) return "";
-      const str = String(value);
-      if (
-        str.includes(options.delimiter) ||
-        str.includes('"') ||
-        str.includes("\n")
-      ) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    };
+    const csvRows: string[] = [];
 
-    const rows: string[] = [];
-
-    if (options.includeHeaders && headers.length > 0) {
-      rows.push(headers.map(escapeCsvValue).join(options.delimiter));
+    // Add headers if requested
+    if (finalOptions.includeHeaders) {
+      csvRows.push(
+        headers
+          .map((h) => escapeCsvValue(h, finalOptions.delimiter))
+          .join(finalOptions.delimiter)
+      );
     }
 
-    flattenedData.forEach((obj) => {
-      const row = headers.map((header) => escapeCsvValue(obj[header]));
-      rows.push(row.join(options.delimiter));
+    // Add data rows
+    flatData.forEach((row) => {
+      const rowValues = headers.map((header) =>
+        escapeCsvValue(row[header], finalOptions.delimiter)
+      );
+      csvRows.push(rowValues.join(finalOptions.delimiter));
     });
 
-    return { csv: rows.join("\n") };
+    return { csv: csvRows.join("\n"), error: null };
   } catch (error: any) {
     console.error("Error during CSV conversion:", error);
-    return { error: `Conversion failed: ${error.message || "Unknown error"}` };
+    return {
+      csv: "",
+      error: `Conversion failed: ${error.message || "Unknown error"}`,
+    };
   }
 }

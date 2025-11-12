@@ -65,7 +65,30 @@ export const useCsvData = (
   onContentChange: (newContent: string) => void,
   options: UseCsvDataOptions = {},
 ): UseCsvDataReturn => {
-  const { delimiter = ",", hasHeader = true, skipEmptyLines = true } = options;
+  const { delimiter: providedDelimiter, hasHeader = true, skipEmptyLines = true } = options;
+
+  // Auto-detect delimiter if not provided
+  const delimiter = useMemo(() => {
+    if (providedDelimiter) return providedDelimiter;
+
+    // Auto-detect from content
+    const firstLine = content.split('\n')[0] || '';
+    const tabCount = (firstLine.match(/\t/g) || []).length;
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const semicolonCount = (firstLine.match(/;/g) || []).length;
+    const pipeCount = (firstLine.match(/\|/g) || []).length;
+
+    // Find delimiter with highest count
+    const counts = [
+      { delimiter: '\t', count: tabCount },
+      { delimiter: ',', count: commaCount },
+      { delimiter: ';', count: semicolonCount },
+      { delimiter: '|', count: pipeCount },
+    ];
+
+    const detected = counts.reduce((max, curr) => curr.count > max.count ? curr : max);
+    return detected.count > 0 ? detected.delimiter : ',';
+  }, [content, providedDelimiter]);
 
   // Core state
   const [csvState, setCsvState] = useState<CsvState>({ data: [], columns: [] });

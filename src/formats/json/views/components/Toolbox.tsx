@@ -97,6 +97,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     openCodeGenerationModal,
     openSchemaValidationModal,
     openExtractDataModal,
+    openCsvExportOptionsModal,
   } = useJsonModals();
 
   const executeTransformation = (transformFn: (content: string) => string) => {
@@ -192,19 +193,8 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
       switch (format) {
         case "csv":
-          import("../../utils/generateCsv").then(({ convertToCsv }) => {
-            const result = convertToCsv(json);
-            if ("error" in result) {
-              throw new Error(result.error);
-            }
-            const tab = {
-              id: crypto.randomUUID(),
-              title: "Converted CSV",
-              content: result.csv,
-              language: "csv",
-            };
-            openCodeGenerationModal([tab], addTab);
-          });
+          // Open CSV export options modal instead of direct conversion
+          openCsvExportOptionsModal(content);
           break;
         case "yaml":
           import("../../utils/generateYaml").then(({ convertToYaml }) => {

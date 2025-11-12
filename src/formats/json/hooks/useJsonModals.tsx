@@ -6,6 +6,8 @@ import { JsonTreeViewModalWrapper } from "../components/modals/JsonTreeViewModal
 import { SchemaValidationModal } from "../components/modals/SchemaValidationModal";
 import { JsonStructureComparisonModal } from "../components/modals/JsonStructureComparisonModal";
 import { ExtractDataModal } from "../components/modals/ExtractDataModal";
+import { JsonEqualityCheckModal } from "../components/modals/JsonEqualityCheckModal";
+import { CsvExportOptionsModal } from "../components/modals/CsvExportOptionsModal";
 
 export const useJsonModals = () => {
   const {
@@ -16,6 +18,8 @@ export const useJsonModals = () => {
     openSchemaValidationModal,
     openStructureComparisonModal,
     openExtractDataModal,
+    openEqualityCheckModal,
+    openCsvExportOptionsModal,
     closeModal,
   } = useJsonModalsStore();
 
@@ -33,6 +37,10 @@ export const useJsonModals = () => {
         return <JsonStructureComparisonModal {...modalState.props} />;
       case "extractData":
         return <ExtractDataModal {...modalState.props} />;
+      case "equalityCheck":
+        return <JsonEqualityCheckModal {...modalState.props} />;
+      case "csvExportOptions":
+        return <CsvExportOptionsModal {...modalState.props} />;
       default:
         return null;
     }
@@ -45,6 +53,8 @@ export const useJsonModals = () => {
     openSchemaValidationModal,
     openStructureComparisonModal,
     openExtractDataModal,
+    openEqualityCheckModal,
+    openCsvExportOptionsModal,
     renderModal,
     closeModal,
   };

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Clipboard, FileJson, GitCompare } from "lucide-react";
+import { ChevronDown, Clipboard, FileJson, GitCompare, CheckCheck } from "lucide-react";
 import { Tab } from "../../../../types";
 
 interface CompareDropdownProps {
@@ -7,6 +7,7 @@ interface CompareDropdownProps {
   onCompareWithClipboard: () => void;
   onCompareWithTab: (tabId: string) => void;
   onCompareStructure: () => void;
+  onEqualityCheck: () => void;
 }
 
 export const CompareDropdown: React.FC<CompareDropdownProps> = ({
@@ -14,6 +15,7 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
   onCompareWithClipboard,
   onCompareWithTab,
   onCompareStructure,
+  onEqualityCheck,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -84,7 +86,7 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
             </div>
           )}
 
-          {/* Compare Structure - Fixed at bottom */}
+          {/* Compare Structure & Equality Check - Fixed at bottom */}
           <div className="py-1 border-t border-gray-700">
             <button
               onClick={() => handleOptionClick(onCompareStructure)}
@@ -92,6 +94,13 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
             >
               <GitCompare size={16} className="text-purple-400" />
               <span>Compare Structure</span>
+            </button>
+            <button
+              onClick={() => handleOptionClick(onEqualityCheck)}
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+            >
+              <CheckCheck size={16} className="text-teal-400" />
+              <span>Deep Equality Check</span>
             </button>
           </div>
         </div>

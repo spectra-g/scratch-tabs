@@ -107,16 +107,6 @@ export const KeyInput: React.FC<KeyInputProps> = ({
           </button>
         )}
       </div>
-
-      {isPrivate && (
-        <div className="text-yellow-400 text-xs flex items-center">
-          <AlertTriangle size={12} className="mr-1" />
-          <span>Warning: Be careful when pasting private keys or secrets</span>
-        </div>
-      )}
     </div>
   );
 };
-
-// Import AlertTriangle for the warning message
-import { AlertTriangle } from "lucide-react";
