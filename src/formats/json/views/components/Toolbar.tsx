@@ -114,7 +114,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const handleEqualityCheck = () => {
     if (!editor) return;
     const content = editor.getValue();
-    openEqualityCheckModal(content);
+    openEqualityCheckModal(content, tabId);
   };
 
   /**

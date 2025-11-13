@@ -6,11 +6,19 @@ import {
   EqualityResult,
   DifferenceDetail,
 } from "../../utils/jsonDeepEquality";
-import { CheckCircle2, XCircle, Info } from "lucide-react";
+import { CheckCircle2, XCircle, Info, GitCompare, ArrowLeft } from "lucide-react";
 import { useDebounce } from "../../../../hooks/useDebounce";
+import { MonacoDiffViewer } from "../../../../components/MonacoDiffViewer";
+import { prepareArrayPairForDiff } from "../../utils/arrayDiffPreparation";
+import { LoadFromTabDropdown } from "./LoadFromTabDropdown";
+import { useTabsStore } from "../../../../stores/tabsStore";
+import { useWorkspaceStore } from "../../../../stores/workspaceStore";
+import { getRecentJsonTabs } from "../../../../utils/jsonTabHelpers";
+import { modelManager } from "../../../../services/modelManager";
 
 interface JsonEqualityCheckModalProps {
   sourceJson: string;
+  sourceTabId: string; // ID of the current tab (for filtering)
   onClose: () => void;
 }
 
@@ -38,8 +46,12 @@ const ValuePreview: React.FC<{ value: any }> = ({ value }) => {
 /**
  * Component to display a single difference with rich formatting.
  * Shows path, type, message, and side-by-side value comparison.
+ * For array mismatches, provides a "Show Diff" button to view detailed comparison.
  */
-const DifferenceItem: React.FC<{ diff: DifferenceDetail }> = ({ diff }) => (
+const DifferenceItem: React.FC<{
+  diff: DifferenceDetail;
+  onShowDiff: (diff: DifferenceDetail) => void;
+}> = ({ diff, onShowDiff }) => (
   <div className="mb-4 pb-4 border-b border-gray-700/60 last:border-b-0 last:mb-0 last:pb-0">
     {/* Header: Path and Type */}
     <div className="flex items-center justify-between mb-2">
@@ -63,9 +75,21 @@ const DifferenceItem: React.FC<{ diff: DifferenceDetail }> = ({ diff }) => (
         <ValuePreview value={diff.leftValue} />
       </div>
       <div>
-        <span className="font-semibold text-gray-400 block mb-1">
-          Target Value:
-        </span>
+        <div className="flex items-center justify-between mb-1">
+          <span className="font-semibold text-gray-400">Target Value:</span>
+          {diff.type === "ARRAY_CONTENT_MISMATCH" &&
+            Array.isArray(diff.leftValue) &&
+            Array.isArray(diff.rightValue) && (
+              <button
+                onClick={() => onShowDiff(diff)}
+                className="flex items-center space-x-1 px-2 py-1 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded transition-colors"
+                title="Show side-by-side diff with smart sorting"
+              >
+                <GitCompare size={14} />
+                <span>Show Diff</span>
+              </button>
+            )}
+        </div>
         <ValuePreview value={diff.rightValue} />
       </div>
     </div>
@@ -82,14 +106,51 @@ const DifferenceItem: React.FC<{ diff: DifferenceDetail }> = ({ diff }) => (
  */
 export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
   sourceJson,
+  sourceTabId,
   onClose,
 }) => {
   const [targetJson, setTargetJson] = useState("");
   const [result, setResult] = useState<EqualityResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeDiff, setActiveDiff] = useState<DifferenceDetail | null>(null);
+
+  // Get tabs and workspace for "Load from" dropdown
+  const { tabs } = useTabsStore();
+  const { activeWorkspaceId } = useWorkspaceStore();
+  const recentJsonTabs = getRecentJsonTabs(
+    tabs,
+    sourceTabId,
+    activeWorkspaceId || ""
+  );
 
   // Debounce to avoid excessive computation while typing
   const debouncedTargetJson = useDebounce(targetJson, 400);
+
+  // Handler to show diff view
+  const handleShowDiff = (diff: DifferenceDetail) => {
+    setActiveDiff(diff);
+  };
+
+  // Handler to close diff view and return to summary
+  const handleCloseDiff = () => {
+    setActiveDiff(null);
+  };
+
+  // Handler to load content from another tab
+  const handleLoadFromTab = (tabId: string) => {
+    const selectedTab = tabs.find((tab) => tab.id === tabId);
+    if (!selectedTab) return;
+
+    // Get content from modelManager or tab store
+    let content = modelManager.getContent(tabId);
+    if (!content && selectedTab.content) {
+      content = selectedTab.content;
+    }
+
+    if (content) {
+      setTargetJson(content);
+    }
+  };
 
   // Run comparison when target JSON changes
   useEffect(() => {
@@ -119,9 +180,10 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
       maxWidthClass="max-w-7xl"
       maxHeightClass="max-h-[95vh]"
     >
-      <div className="flex flex-col h-full">
-        {/* Top Section: Editors */}
-        <div className="flex-1 grid grid-cols-2 gap-4 p-4 min-h-[45vh]">
+      <div className={`flex flex-col ${activeDiff ? 'h-[85vh]' : ''}`}>
+        {/* Top Section: Editors (hidden when showing diff) */}
+        {!activeDiff && (
+          <div className="flex-1 grid grid-cols-2 gap-4 p-4 min-h-[45vh]">
           {/* Source Editor (Read-only) */}
           <div className="flex flex-col min-h-0">
             <h3 className="text-sm font-medium text-gray-300 mb-2">
@@ -147,9 +209,15 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
 
           {/* Target Editor (Editable) */}
           <div className="flex flex-col min-h-0">
-            <h3 className="text-sm font-medium text-gray-300 mb-2">
-              Target JSON (To Compare)
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-gray-300">
+                Target JSON (To Compare)
+              </h3>
+              <LoadFromTabDropdown
+                recentJsonTabs={recentJsonTabs}
+                onLoadFromTab={handleLoadFromTab}
+              />
+            </div>
             <div className="flex-1 border border-gray-700/50 rounded-lg overflow-hidden min-h-0">
               <Editor
                 height="100%"
@@ -168,15 +236,85 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
             </div>
           </div>
         </div>
+        )}
 
-        {/* Bottom Section: Results */}
-        <div className="flex-none p-4 border-t border-gray-700/60 min-h-[250px] max-h-[45vh] flex flex-col bg-gray-800/30">
-          <h3 className="text-sm font-medium text-gray-300 mb-3 flex-none">
-            Comparison Result
-          </h3>
+        {/* Bottom Section: Results or Diff View */}
+        <div
+          className={`flex flex-col bg-gray-800/30 ${
+            activeDiff
+              ? "flex-1 min-h-0 border-t border-gray-700/60"
+              : "flex-none p-4 border-t border-gray-700/60 min-h-[250px] max-h-[45vh]"
+          }`}
+        >
+          {activeDiff ? (
+            // Diff View Mode
+            <>
+              {/* Diff Header */}
+              <div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/60">
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleCloseDiff}
+                    className="flex items-center space-x-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+                    title="Return to comparison summary"
+                  >
+                    <ArrowLeft size={16} />
+                    <span>Back to Summary</span>
+                  </button>
+                  <div className="border-l border-gray-700/60 pl-3">
+                    <h3 className="text-sm font-medium text-gray-300">
+                      Array Difference at:{" "}
+                      <code className="bg-gray-700/50 px-2 py-1 rounded text-xs">
+                        {activeDiff.path}
+                      </code>
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Smart-sorted for easier comparison (objects keys sorted,
+                      array elements sorted by content)
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-          {/* Scrollable Results Area */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-800/50 p-4 rounded-lg">
+              {/* Diff Viewer Content */}
+              <div className="flex-1 min-h-0 border-x border-b border-gray-700/50">
+                {(() => {
+                  const prepared = prepareArrayPairForDiff(
+                    activeDiff.leftValue,
+                    activeDiff.rightValue,
+                  );
+
+                  if ("error" in prepared) {
+                    return (
+                      <div className="flex items-center justify-center h-full text-red-400">
+                        <div className="text-center">
+                          <XCircle size={24} className="mx-auto mb-2" />
+                          <p className="text-sm">{prepared.error}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <MonacoDiffViewer
+                      leftContent={prepared.leftContent}
+                      rightContent={prepared.rightContent}
+                      language="json"
+                      leftLabel="Source (Sorted)"
+                      rightLabel="Target (Sorted)"
+                    />
+                  );
+                })()}
+              </div>
+            </>
+          ) : (
+            // Summary View Mode
+            <>
+              <h3 className="text-sm font-medium text-gray-300 mb-3 flex-none">
+                Comparison Result
+              </h3>
+
+              {/* Scrollable Results Area */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-800/50 p-4 rounded-lg">
             {/* Error State */}
             {error && (
               <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-red-300">
@@ -240,21 +378,27 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
                 {/* Difference List */}
                 <div>
                   {result.differences.map((diff, index) => (
-                    <DifferenceItem key={index} diff={diff} />
+                    <DifferenceItem
+                      key={index}
+                      diff={diff}
+                      onShowDiff={handleShowDiff}
+                    />
                   ))}
                 </div>
               </div>
             )}
-          </div>
+              </div>
 
-          {/* Info Footer */}
-          <div className="flex-none pt-3 mt-3 border-t border-gray-700/50">
-            <div className="text-xs text-gray-500">
-              <span className="font-medium">Note:</span> Comparison is
-              order-insensitive for both object keys and array elements. Arrays
-              are treated as multisets (duplicates are preserved).
-            </div>
-          </div>
+              {/* Info Footer */}
+              <div className="flex-none pt-3 mt-3 border-t border-gray-700/50">
+                <div className="text-xs text-gray-500">
+                  <span className="font-medium">Note:</span> Comparison is
+                  order-insensitive for both object keys and array elements.
+                  Arrays are treated as multisets (duplicates are preserved).
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </BaseModal>
