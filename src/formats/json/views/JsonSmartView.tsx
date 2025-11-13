@@ -148,8 +148,9 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   // Get diff modal state
   const diffModalState = useDiffModalStore();
 
-  // Get query panel state
-  const { isQueryPanelOpen } = useQueryPanelStore();
+  // Get query panel state for this specific tab
+  const { getStateForTab, setPanelSizes } = useQueryPanelStore();
+  const { isOpen: isQueryPanelOpen, panelSizes } = getStateForTab(tabId);
   
   // Get addBackgroundTab function from root store for background tab creation
   const { addBackgroundTab: rootAddBackgroundTab } = useRootStore();
@@ -375,9 +376,13 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       />
 
       {/* Main Content Area with Query Panel */}
-      <PanelGroup direction="vertical" className="flex-1">
+      <PanelGroup
+        direction="vertical"
+        className="flex-1"
+        onLayout={(sizes: number[]) => setPanelSizes(tabId, sizes)}
+      >
         {/* Main Content Panel */}
-        <Panel defaultSize={isQueryPanelOpen ? 70 : 100} minSize={30}>
+        <Panel defaultSize={panelSizes[0]} minSize={30}>
           <div className="flex h-full">
             {/* Navigator Panel */}
             <div className="hidden lg:flex w-80 border-r border-gray-700 flex-col">
@@ -469,8 +474,8 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         {isQueryPanelOpen && (
           <>
             <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-blue-500 transition-colors cursor-row-resize" />
-            <Panel defaultSize={30} minSize={20} maxSize={60}>
-              <QueryPanel content={content} addTab={addTab} />
+            <Panel defaultSize={panelSizes[1]} minSize={20} maxSize={60}>
+              <QueryPanel content={content} addTab={addTab} tabId={tabId} />
             </Panel>
           </>
         )}

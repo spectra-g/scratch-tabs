@@ -31,18 +31,31 @@ const mockUseQueryPanelStore = useQueryPanelStore as jest.MockedFunction<typeof 
 
 describe('QueryPanel', () => {
   const mockAddTab = jest.fn();
-  const mockCloseQueryPanel = jest.fn();
+  const mockClosePanel = jest.fn();
+  const mockGetStateForTab = jest.fn();
+  const mockSetQuery = jest.fn();
   const sampleContent = JSON.stringify({ foo: 'bar', items: [1, 2, 3] });
+  const testTabId = 'test-tab-id';
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock store
+    // Mock store - default state
+    mockGetStateForTab.mockReturnValue({
+      isOpen: true,
+      query: '',
+      panelSizes: [70, 30],
+    });
+
     mockUseQueryPanelStore.mockReturnValue({
-      isQueryPanelOpen: true,
-      toggleQueryPanel: jest.fn(),
-      openQueryPanel: jest.fn(),
-      closeQueryPanel: mockCloseQueryPanel,
+      panels: {},
+      getStateForTab: mockGetStateForTab,
+      togglePanel: jest.fn(),
+      openPanel: jest.fn(),
+      closePanel: mockClosePanel,
+      setQuery: mockSetQuery,
+      setPanelSizes: jest.fn(),
+      removePanelState: jest.fn(),
     });
 
     // Mock clipboard API
@@ -56,7 +69,7 @@ describe('QueryPanel', () => {
   it('should render the panel with header and editors', () => {
     mockUseJmespath.mockReturnValue({ results: null, error: null });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     expect(screen.getByText('JSON Query (JMESPath)')).toBeInTheDocument();
     expect(screen.getByText('Copy Results')).toBeInTheDocument();
@@ -71,7 +84,7 @@ describe('QueryPanel', () => {
       error: null,
     });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const editors = screen.getAllByTestId('monaco-editor');
     expect(editors.length).toBeGreaterThan(0);
@@ -84,20 +97,21 @@ describe('QueryPanel', () => {
       error: mockError,
     });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     expect(screen.getByText('Error:')).toBeInTheDocument();
   });
 
-  it('should call closeQueryPanel when close button is clicked', () => {
+  it('should call closePanel when close button is clicked', () => {
     mockUseJmespath.mockReturnValue({ results: null, error: null });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const closeButton = screen.getByTitle('Close Query Panel');
     fireEvent.click(closeButton);
 
-    expect(mockCloseQueryPanel).toHaveBeenCalledTimes(1);
+    expect(mockClosePanel).toHaveBeenCalledTimes(1);
+    expect(mockClosePanel).toHaveBeenCalledWith(testTabId);
   });
 
   it('should copy results to clipboard when Copy button is clicked', async () => {
@@ -107,7 +121,7 @@ describe('QueryPanel', () => {
       error: null,
     });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const copyButton = screen.getByTitle('Copy Results');
     fireEvent.click(copyButton);
@@ -125,7 +139,7 @@ describe('QueryPanel', () => {
   it('should not copy when results are empty', async () => {
     mockUseJmespath.mockReturnValue({ results: null, error: null });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const copyButton = screen.getByTitle('Copy Results');
     expect(copyButton).toBeDisabled();
@@ -142,7 +156,7 @@ describe('QueryPanel', () => {
       error: null,
     });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const exportButton = screen.getByTitle('Export to New Tab');
     fireEvent.click(exportButton);
@@ -158,7 +172,7 @@ describe('QueryPanel', () => {
   it('should not export when results are empty', () => {
     mockUseJmespath.mockReturnValue({ results: null, error: null });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const exportButton = screen.getByTitle('Export to New Tab');
     expect(exportButton).toBeDisabled();
@@ -175,7 +189,7 @@ describe('QueryPanel', () => {
       error: mockError,
     });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const copyButton = screen.getByTitle('Copy Results');
     fireEvent.click(copyButton);
@@ -189,7 +203,7 @@ describe('QueryPanel', () => {
     // No results
     mockUseJmespath.mockReturnValue({ results: null, error: null });
     const { rerender, unmount } = render(
-      <QueryPanel content={sampleContent} addTab={mockAddTab} />
+      <QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />
     );
 
     expect(screen.getByText('Results (enter a query above):')).toBeInTheDocument();
@@ -200,7 +214,7 @@ describe('QueryPanel', () => {
       results: null,
       error: 'Test error',
     });
-    const { unmount: unmount2 } = render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    const { unmount: unmount2 } = render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     expect(screen.getByText('Error:')).toBeInTheDocument();
     unmount2();
@@ -210,7 +224,7 @@ describe('QueryPanel', () => {
       results: { data: 'test' },
       error: null,
     });
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     expect(screen.getByText('Results:')).toBeInTheDocument();
   });
@@ -221,7 +235,7 @@ describe('QueryPanel', () => {
       error: null,
     });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     // Should format primitive as JSON
     const editors = screen.getAllByTestId('monaco-editor');
@@ -234,7 +248,7 @@ describe('QueryPanel', () => {
       error: null,
     });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const editors = screen.getAllByTestId('monaco-editor');
     expect(editors.length).toBeGreaterThan(0);
@@ -249,7 +263,7 @@ describe('QueryPanel', () => {
       error: null,
     });
 
-    render(<QueryPanel content={sampleContent} addTab={mockAddTab} />);
+    render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
     const copyButton = screen.getByTitle('Copy Results');
     fireEvent.click(copyButton);

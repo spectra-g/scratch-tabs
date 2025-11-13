@@ -8,16 +8,17 @@ import { Tab } from '../../../../types';
 interface QueryPanelProps {
   content: string;
   addTab: (tab: Tab) => void;
+  tabId: string; // Receive tabId as a prop
 }
 
 // Constants
 const COPY_FEEDBACK_DURATION_MS = 2000;
 const DEFAULT_QUERY_EDITOR_HEIGHT = 80;
 
-export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab }) => {
-  const [query, setQuery] = useState('');
+export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }) => {
   const [isCopied, setIsCopied] = useState(false);
-  const { closeQueryPanel } = useQueryPanelStore();
+  const { getStateForTab, setQuery: setQueryInStore, closePanel } = useQueryPanelStore();
+  const { query } = getStateForTab(tabId);
 
   // Execute JMESPath query with debouncing
   const { results, error } = useJmespath(content, query);
@@ -112,7 +113,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab }) => {
             <span>Export to Tab</span>
           </button>
           <button
-            onClick={closeQueryPanel}
+            onClick={() => closePanel(tabId)}
             className="p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
             title="Close Query Panel"
           >
@@ -132,7 +133,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab }) => {
             language="plaintext"
             theme="vs-dark"
             value={query}
-            onChange={(value) => setQuery(value || '')}
+            onChange={(value) => setQueryInStore(tabId, value || '')}
             options={{
               minimap: { enabled: false },
               fontSize: 13,

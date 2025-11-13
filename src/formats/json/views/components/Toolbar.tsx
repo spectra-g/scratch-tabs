@@ -45,7 +45,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const { tabs } = useTabsStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { openDiffModalWithContent } = useDiffModalStore();
-  const { isQueryPanelOpen, toggleQueryPanel } = useQueryPanelStore();
+  const { getStateForTab, togglePanel } = useQueryPanelStore();
+  const { isOpen: isQueryPanelOpen } = getStateForTab(tabId);
   const [isCopied, setIsCopied] = useState(false);
 
   // Get all JSON tabs from current workspace
@@ -267,7 +268,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* Primary Actions */}
         <button
-          onClick={toggleQueryPanel}
+          onClick={() => togglePanel(tabId)}
           className={`flex items-center space-x-1 px-3 py-1 rounded transition-colors ${
             isQueryPanelOpen
               ? "bg-blue-500/30 text-blue-300"

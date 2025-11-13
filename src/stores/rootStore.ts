@@ -12,6 +12,7 @@ import { detectFormat, isAmbiguousFormat } from "../formats";
 import { StorageProviderFactory } from "../db";
 import { broadcastManager } from "./broadcastStore";
 import { modelManager } from "../services/modelManager";
+import { useQueryPanelStore } from "../formats/json/stores/useQueryPanelStore";
 
 // The RootStore now primarily holds ACTIONS that coordinate other stores.
 // It does NOT hold mirrored state like `tabs` or `splitView`.
@@ -253,6 +254,9 @@ export const useRootStore = create<RootStore>((set, get) => {
       if (!tabToRemove) return;
 
       modelManager.dispose(id);
+
+      // Clean up query panel state for JSON tabs
+      useQueryPanelStore.getState().removePanelState(id);
 
       useSplitViewStore.getState().removeTabFromSide(id);
       useTabsStore.getState().removeTab(id);
