@@ -13,6 +13,7 @@ export default {
     "^remark-gfm$": "<rootDir>/src/__mocks__/remark-gfm.js",
     "^jsonpath-plus$": "<rootDir>/src/__mocks__/jsonpath-plus.js",
     "^lowlight$": "<rootDir>/src/__mocks__/lowlight.ts",
+    "^react-resizable-panels$": "<rootDir>/src/__mocks__/react-resizable-panels.tsx",
     "^.*tablets/dynamicRegistry$": "<rootDir>/src/tablets/__mocks__/dynamicRegistry.ts",
     "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js"
   },

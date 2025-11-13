@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, Wand2, Copy, Check, Sparkles } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, RotateCw, WrapText, Wand2, Copy, Check, Sparkles, Database } from "lucide-react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { formatJson, applyEditToEditor } from "../../actions/jsonOperations";
 import { useJsonModals } from "../../hooks/useJsonModals";
@@ -9,6 +9,7 @@ import { useTabsStore } from "../../../../stores/tabsStore";
 import { useWorkspaceStore } from "../../../../stores/workspaceStore";
 import { useDiffModalStore } from "../../../../stores/diffModalStore";
 import { getRecentJsonTabs, isValidJson } from "../../../../utils/jsonTabHelpers";
+import { useQueryPanelStore } from "../../stores/useQueryPanelStore";
 
 interface ToolbarProps {
   isValid: boolean;
@@ -44,6 +45,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const { tabs } = useTabsStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { openDiffModalWithContent } = useDiffModalStore();
+  const { isQueryPanelOpen, toggleQueryPanel } = useQueryPanelStore();
   const [isCopied, setIsCopied] = useState(false);
 
   // Get all JSON tabs from current workspace
@@ -265,10 +267,22 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* Primary Actions */}
         <button
+          onClick={toggleQueryPanel}
+          className={`flex items-center space-x-1 px-3 py-1 rounded transition-colors ${
+            isQueryPanelOpen
+              ? "bg-blue-500/30 text-blue-300"
+              : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
+          }`}
+          title="Toggle JMESPath Query Panel"
+        >
+          <Database size={14} />
+          <span className="text-sm">Query</span>
+        </button>
+        <button
           onClick={handleCopy}
           className={`p-2 rounded transition-colors ${
-            isCopied 
-              ? "bg-green-500/20 text-green-400" 
+            isCopied
+              ? "bg-green-500/20 text-green-400"
               : "hover:bg-gray-700 text-gray-300"
           }`}
           title={isCopied ? "Copied!" : "Copy JSON"}

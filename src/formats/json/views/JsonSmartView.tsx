@@ -1,11 +1,13 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Editor } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { SmartViewProps } from "../../../views/registry";
 import { Toolbar } from "./components/Toolbar";
 import { Navigator } from "./components/Navigator";
 import { Toolbox } from "./components/Toolbox";
 import { Insights } from "./components/Insights";
+import { QueryPanel } from "./components/QueryPanel";
 import { validateJson } from "../validation";
 import { useJsonModals } from "../hooks/useJsonModals";
 import { useRootStore } from "../../../stores";
@@ -13,6 +15,7 @@ import { Tab } from "../../../types";
 import { useActiveEditorStore } from "../../../stores/activeEditorStore";
 import { useDiffModalStore } from "../../../stores/diffModalStore";
 import { ContentDiffModal } from "../../../components/ContentDiffModal";
+import { useQueryPanelStore } from "../stores/useQueryPanelStore";
 
 /**
  * Represents the boundaries of a JSON container (object or array)
@@ -144,6 +147,9 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
 
   // Get diff modal state
   const diffModalState = useDiffModalStore();
+
+  // Get query panel state
+  const { isQueryPanelOpen } = useQueryPanelStore();
   
   // Get addBackgroundTab function from root store for background tab creation
   const { addBackgroundTab: rootAddBackgroundTab } = useRootStore();
@@ -368,92 +374,107 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         tabId={tabId}
       />
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 min-h-0">
-        {/* Navigator Panel */}
-        <div className="hidden lg:flex w-80 border-r border-gray-700 flex-col">
-          <div className="p-3 border-b border-gray-700">
-            <h3 className="text-sm font-medium text-gray-300">Navigator</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <Navigator
-              content={content}
-              onNodeSelect={handleNodeSelect}
-            />
-          </div>
-        </div>
-
-        {/* Editor Panel */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="p-3 border-b border-gray-700">
-            <h3 className="text-sm font-medium text-gray-300">Editor</h3>
-          </div>
-          <div className="flex-1">
-            <Editor
-              key={`json-editor-${tabId}-${side}`}
-              height="100%"
-              language="json"
-              theme="vs-dark"
-              onMount={handleEditorMount}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                wordWrap: "on",
-                automaticLayout: true,
-                copyWithSyntaxHighlighting: false,
-                scrollBeyondLastLine: true,
-                formatOnPaste: true,
-                formatOnType: true,
-                find: {
-                  addExtraSpaceOnTop: false,
-                },
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Right Panel - Toolbox & Insights */}
-        <div className="hidden lg:flex w-52 border-l border-gray-700 flex-col">
-          {/* Tab Headers */}
-          <div className="flex border-b border-gray-700">
-            <button
-              onClick={() => setActiveRightTab('toolbox')}
-              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                activeRightTab === 'toolbox'
-                  ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
-              }`}
-            >
-              Toolbox
-            </button>
-            <button
-              onClick={() => setActiveRightTab('insights')}
-              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                activeRightTab === 'insights'
-                  ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
-              }`}
-            >
-              Insights
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="flex-1 overflow-hidden">
-            {activeRightTab === 'toolbox' ? (
-              <div className="h-full overflow-y-auto custom-scrollbar">
-                <Toolbox
-                  editor={editor}
-                  onContentChange={onContentChange}
-                  addTab={addTab}
+      {/* Main Content Area with Query Panel */}
+      <PanelGroup direction="vertical" className="flex-1">
+        {/* Main Content Panel */}
+        <Panel defaultSize={isQueryPanelOpen ? 70 : 100} minSize={30}>
+          <div className="flex h-full">
+            {/* Navigator Panel */}
+            <div className="hidden lg:flex w-80 border-r border-gray-700 flex-col">
+              <div className="p-3 border-b border-gray-700">
+                <h3 className="text-sm font-medium text-gray-300">Navigator</h3>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <Navigator
+                  content={content}
+                  onNodeSelect={handleNodeSelect}
                 />
               </div>
-            ) : (
-              <Insights content={content} addTab={addTab} />
-            )}
+            </div>
+
+            {/* Editor Panel */}
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="p-3 border-b border-gray-700">
+                <h3 className="text-sm font-medium text-gray-300">Editor</h3>
+              </div>
+              <div className="flex-1">
+                <Editor
+                  key={`json-editor-${tabId}-${side}`}
+                  height="100%"
+                  language="json"
+                  theme="vs-dark"
+                  onMount={handleEditorMount}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    wordWrap: "on",
+                    automaticLayout: true,
+                    copyWithSyntaxHighlighting: false,
+                    scrollBeyondLastLine: true,
+                    formatOnPaste: true,
+                    formatOnType: true,
+                    find: {
+                      addExtraSpaceOnTop: false,
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Right Panel - Toolbox & Insights */}
+            <div className="hidden lg:flex w-52 border-l border-gray-700 flex-col">
+              {/* Tab Headers */}
+              <div className="flex border-b border-gray-700">
+                <button
+                  onClick={() => setActiveRightTab('toolbox')}
+                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                    activeRightTab === 'toolbox'
+                      ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
+                  }`}
+                >
+                  Toolbox
+                </button>
+                <button
+                  onClick={() => setActiveRightTab('insights')}
+                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                    activeRightTab === 'insights'
+                      ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
+                  }`}
+                >
+                  Insights
+                </button>
+              </div>
+
+              {/* Tab Content */}
+              <div className="flex-1 overflow-hidden">
+                {activeRightTab === 'toolbox' ? (
+                  <div className="h-full overflow-y-auto custom-scrollbar">
+                    <Toolbox
+                      editor={editor}
+                      onContentChange={onContentChange}
+                      addTab={addTab}
+                    />
+                  </div>
+                ) : (
+                  <Insights content={content} addTab={addTab} />
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </Panel>
+
+        {/* Query Panel (Conditionally Rendered) */}
+        {isQueryPanelOpen && (
+          <>
+            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-blue-500 transition-colors cursor-row-resize" />
+            <Panel defaultSize={30} minSize={20} maxSize={60}>
+              <QueryPanel content={content} addTab={addTab} />
+            </Panel>
+          </>
+        )}
+      </PanelGroup>
 
       {/* Render modals */}
       {renderModal()}
