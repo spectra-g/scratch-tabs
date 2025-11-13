@@ -7,7 +7,6 @@ describe("MaskedCell", () => {
   const mockOnStartEdit = jest.fn();
   const mockOnChange = jest.fn();
   const mockOnEditingChange = jest.fn();
-  const mockOnToggleMask = jest.fn();
   const mockOnRightClick = jest.fn();
 
   beforeEach(() => {
@@ -24,7 +23,6 @@ describe("MaskedCell", () => {
     onStartEdit: mockOnStartEdit,
     onChange: mockOnChange,
     onEditingChange: mockOnEditingChange,
-    onToggleMask: mockOnToggleMask,
   };
 
   describe("Basic Rendering", () => {
@@ -127,41 +125,40 @@ describe("MaskedCell", () => {
   });
 
   describe("Masking Functionality", () => {
-    it("should show mask toggle button", () => {
-      render(<MaskedCell {...defaultProps} />);
-      
-      // Should show eye/eye-off icon for masking
-      expect(screen.getByTitle("Unmask column")).toBeInTheDocument();
-    });
+    it("should temporarily unmask on hover", () => {
+      render(<MaskedCell {...defaultProps} isMasked={true} />);
 
-    it("should call onToggleMask when mask button is clicked", () => {
-      render(<MaskedCell {...defaultProps} />);
-      
-      const maskButton = screen.getByTitle("Unmask column");
-      fireEvent.click(maskButton);
-      
-      expect(mockOnToggleMask).toHaveBeenCalledTimes(1);
-    });
+      const cellContent = screen.getByText("Sensitive Data");
+      const cell = screen.getByTitle(/click to select/i);
 
-    it("should show different mask button text based on mask state", () => {
-      const { rerender } = render(<MaskedCell {...defaultProps} isMasked={true} />);
-      
-      expect(screen.getByTitle("Unmask column")).toBeInTheDocument();
-      
-      rerender(<MaskedCell {...defaultProps} isMasked={false} />);
-      
-      expect(screen.getByTitle("Mask column")).toBeInTheDocument();
+      // Initially blurred
+      expect(cellContent).toHaveClass("blur-[3px]", "hover:blur-none");
+
+      // Hover to reveal - the blur class should be removed
+      fireEvent.mouseEnter(cell);
+      // After hover, blur is removed but hover:blur-none remains
+      expect(cellContent).not.toHaveClass("blur-[3px]");
+      expect(cellContent).toHaveClass("text-gray-200");
+
+      // Leave to re-blur
+      fireEvent.mouseLeave(cell);
+      expect(cellContent).toHaveClass("blur-[3px]", "hover:blur-none");
     });
   });
 
   describe("Interaction", () => {
     it("should call onSelect when clicked", () => {
+      jest.useFakeTimers();
       render(<MaskedCell {...defaultProps} />);
-      
+
       const cell = screen.getByTitle(/click to select/i);
       fireEvent.click(cell);
-      
+
+      // Wait for the click timer (250ms)
+      jest.advanceTimersByTime(250);
+
       expect(mockOnSelect).toHaveBeenCalledTimes(1);
+      jest.useRealTimers();
     });
 
     it("should call onRightClick when right-clicked", () => {
@@ -175,12 +172,11 @@ describe("MaskedCell", () => {
 
     it("should show action buttons on mouse enter", () => {
       render(<MaskedCell {...defaultProps} />);
-      
+
       const cell = screen.getByTitle(/click to select/i);
       fireEvent.mouseEnter(cell);
-      
-      // Should show mask toggle, copy, and edit buttons
-      expect(screen.getByTitle("Unmask column")).toBeInTheDocument();
+
+      // Should show copy and edit buttons (mask toggle removed from cell level)
       expect(screen.getByTitle("Copy cell value")).toBeInTheDocument();
       expect(screen.getByTitle("Edit cell")).toBeInTheDocument();
     });

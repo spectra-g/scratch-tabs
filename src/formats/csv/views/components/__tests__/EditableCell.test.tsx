@@ -134,12 +134,17 @@ describe("EditableCell", () => {
 
   describe("Interaction", () => {
     it("should call onSelect when clicked", () => {
+      jest.useFakeTimers();
       render(<EditableCell {...defaultProps} />);
-      
+
       const cell = screen.getByTitle(/click to select/i);
       fireEvent.click(cell);
-      
+
+      // Wait for the click timer (250ms)
+      jest.advanceTimersByTime(250);
+
       expect(mockOnSelect).toHaveBeenCalledTimes(1);
+      jest.useRealTimers();
     });
 
     it("should call onRightClick when right-clicked", () => {
