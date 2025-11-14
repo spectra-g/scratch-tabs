@@ -26,7 +26,7 @@ interface JsonModalsStore {
   openSchemaValidationModal: (json: any) => void;
   openStructureComparisonModal: (sourceJson: string) => void;
   openExtractDataModal: (jsonString: string, addTab: (tab: Tab) => void) => void;
-  openEqualityCheckModal: (sourceJson: string) => void;
+  openEqualityCheckModal: (sourceJson: string, sourceTabId: string) => void;
   openCsvExportOptionsModal: (jsonString: string) => void;
   closeModal: () => void;
 }
@@ -103,12 +103,13 @@ export const useJsonModalsStore = create<JsonModalsStore>((set) => ({
       },
     }),
 
-  openEqualityCheckModal: (sourceJson: string) =>
+  openEqualityCheckModal: (sourceJson: string, sourceTabId: string) =>
     set({
       modalState: {
         type: "equalityCheck",
         props: {
           sourceJson,
+          sourceTabId,
           onClose: () => set({ modalState: { type: null } }),
         },
       },

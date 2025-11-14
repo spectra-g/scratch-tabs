@@ -3,8 +3,26 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.10.0"
+  - version: "1.11.0"
     type: "latest"
+    draft: false
+    date: "2025-11-14"
+    headline: "🔍 JSON Query Panel & Navigation"
+    description: "Powerful JMESPath query panel for JSON filtering and transformation, structure-aware navigation, and enhanced CSV editing capabilities"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**JSON Query Panel:** Interactive JMESPath query tool with live results preview, contextual sample queries generated from actual JSON structure, and built-in JMESPath guide with syntax examples"
+          - "**Structure-Aware JSON Navigation:** Navigator tree clicks now reliably jump to exact locations in JSON using AST parsing (json-source-map), handling nested keys, missing properties, and edge cases correctly"
+          - "**CSV Cell Actions:** Clear cell contents, copy cell values, and view full cell values in a modal for large data"
+      - name: "🔧 Improvements"
+        changes:
+          - "**JSON Navigator:** Full horizontal scrolling for long values instead of ellipsis truncation"
+          - "**JSON Navigator:** Dynamic height adjustment using ResizeObserver for optimal space utilization"
+          - "**JSON Equality Checker:** Enhanced array mismatch reporting with detailed diff information"
+
+  - version: "1.10.0"
+    type: "release"
     draft: false
     date: "2025-11-12"
     headline: "🚀 JSON & CSV Features"

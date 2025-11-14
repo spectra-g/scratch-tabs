@@ -23,6 +23,7 @@ export interface UseCsvDataReturn {
 
   // Data manipulation
   updateCell: (rowId: string, columnId: string, value: string) => void;
+  updateCells: (updates: Array<{rowId: string, columnId: string, value: string}>) => void;
   addRow: (index?: number) => void;
   deleteRow: (rowId: string) => void;
   deleteRows: (rowIds: string[]) => void;
@@ -291,6 +292,42 @@ export const useCsvData = (
               newCells[columnIndex] = { value, isValid: true };
               return { ...row, cells: newCells };
             }
+          }
+          return row;
+        }),
+      };
+      setCsvState(newState);
+      saveToHistory(newState);
+      syncToContent(newState);
+    },
+    [csvState, saveToHistory, syncToContent],
+  );
+
+  // Batch update multiple cells at once (avoids stale closure issues)
+  const updateCells = useCallback(
+    (updates: Array<{rowId: string, columnId: string, value: string}>) => {
+      // Create a map of updates for quick lookup
+      const updateMap = new Map<string, Map<string, string>>();
+      updates.forEach(({rowId, columnId, value}) => {
+        if (!updateMap.has(rowId)) {
+          updateMap.set(rowId, new Map());
+        }
+        updateMap.get(rowId)!.set(columnId, value);
+      });
+
+      const newState = {
+        ...csvState,
+        data: csvState.data.map((row) => {
+          const rowUpdates = updateMap.get(row.id);
+          if (rowUpdates) {
+            const newCells = row.cells.map((cell, cellIndex) => {
+              const column = csvState.columns[cellIndex];
+              if (column && rowUpdates.has(column.id)) {
+                return { value: rowUpdates.get(column.id)!, isValid: true };
+              }
+              return cell;
+            });
+            return { ...row, cells: newCells };
           }
           return row;
         }),
@@ -782,6 +819,7 @@ export const useCsvData = (
 
     // Data manipulation
     updateCell,
+    updateCells,
     addRow,
     deleteRow,
     deleteRows,

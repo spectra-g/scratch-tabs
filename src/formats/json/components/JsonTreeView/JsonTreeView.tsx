@@ -346,6 +346,22 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
   const { activeWorkspaceId } = useWorkspaceStore();
   const { splitView } = useSplitViewStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(500);
+
+  // Measure container height for dynamic list sizing
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerHeight(entry.contentRect.height);
+      }
+    });
+
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   // Memoize parsed JSON
   const parsedJson = useMemo(() => {
@@ -657,7 +673,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
 
       return (
         <div
-          style={{ ...style, paddingLeft: `${indent}px` }}
+          style={{ ...style, paddingLeft: `${indent}px`, minWidth: '100%', width: 'max-content' }}
           className={`flex items-center py-0.5 px-2 group cursor-pointer text-xs ${isSelected ? "bg-blue-900/30" : "hover:bg-gray-800/60"}`}
           data-testid={`json-node-${node.path}`}
           onClick={() => {
@@ -692,20 +708,20 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
             ) : null}
           </div>
           <span
-            className="text-blue-400 mr-1 whitespace-nowrap"
+            className="text-blue-400 mr-1 whitespace-nowrap flex-shrink-0"
             title={`${node.path} (key: ${String(displayKey)})`}
             data-testid={`json-node-key-${node.path}`}
           >
             {typeof displayKey === "string" ? `"${displayKey}"` : displayKey}:
           </span>
           <span
-            className="ml-1 truncate"
+            className="ml-1 whitespace-nowrap"
             title={typeof node.value === "string" ? node.value : undefined}
           >
             {valueDisplay}
           </span>
           <div
-            className={`ml-auto flex items-center space-x-1 pl-2 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+            className={`ml-2 flex items-center space-x-1 pl-2 flex-shrink-0 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
           >
             <button
               onClick={(e) => {
@@ -958,14 +974,15 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       </div>
 
       {/* Tree View Area */}
-      <div className="flex-1 overflow-hidden bg-gray-900/80">
+      <div className="flex-1 overflow-auto bg-gray-900/80 custom-scrollbar" style={{ height: '100%' }}>
         <List
           className="custom-scrollbar"
           ref={listRef}
-          height={500}
+          height={containerHeight - 100} // Dynamic height: container minus header/footer
           itemCount={filteredNodes.length}
           itemSize={26}
           width="100%"
+          style={{ overflow: 'visible' }}
           itemKey={(index) => filteredNodes[index]?.path ?? index}
         >
           {NodeRenderer}

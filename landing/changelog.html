@@ -232,16 +232,45 @@
         <div class="max-w-4xl mx-auto">
           
           
-          <!-- Version 1.10.0 -->
+          <!-- Version 1.11.0 -->
           <div class="changelog-entry latest">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
               <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-2xl font-bold text-white">v1.10.0</h2>
+                <h2 class="text-2xl font-bold text-white">v1.11.0</h2>
                 <span class="badge latest">Latest</span>
+              </div>
+              <span class="text-gray-400 text-sm">November 14, 2025</span>
+            </div>
+            <h3 class="text-lg font-semibold text-blue-400 mb-4">🔍 JSON Query Panel & Navigation</h3>
+            <div class="changelog-content text-gray-300">
+              <p class="mb-4">Powerful JMESPath query panel for JSON filtering and transformation, structure-aware navigation, and enhanced CSV editing capabilities</p>
+              
+              <h4 class="text-white">✨ New Features</h4>
+              <ul class="list-disc">
+                <li><strong>JSON Query Panel:</strong> Interactive JMESPath query tool with live results preview, contextual sample queries generated from actual JSON structure, and built-in JMESPath guide with syntax examples</li>
+                <li><strong>Structure-Aware JSON Navigation:</strong> Navigator tree clicks now reliably jump to exact locations in JSON using AST parsing (json-source-map), handling nested keys, missing properties, and edge cases correctly</li>
+                <li><strong>CSV Cell Actions:</strong> Clear cell contents, copy cell values, and view full cell values in a modal for large data</li>
+              </ul>
+              
+              <h4 class="text-white">🔧 Improvements</h4>
+              <ul class="list-disc">
+                <li><strong>JSON Navigator:</strong> Full horizontal scrolling for long values instead of ellipsis truncation</li>
+                <li><strong>JSON Navigator:</strong> Dynamic height adjustment using ResizeObserver for optimal space utilization</li>
+                <li><strong>JSON Equality Checker:</strong> Enhanced array mismatch reporting with detailed diff information</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Version 1.10.0 -->
+          <div class="changelog-entry release">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div class="flex items-center gap-3 mb-2 sm:mb-0">
+                <h2 class="text-xl font-bold text-white">v1.10.0</h2>
+                <span class="badge release">Release</span>
               </div>
               <span class="text-gray-400 text-sm">November 12, 2025</span>
             </div>
-            <h3 class="text-lg font-semibold text-blue-400 mb-4">🚀 JSON & CSV Features</h3>
+            <h3 class="text-lg font-semibold text-gray-300 mb-4">🚀 JSON & CSV Features</h3>
             <div class="changelog-content text-gray-300">
               <p class="mb-4">Major enhancements with intelligent JSON equality checking, professional CSV export with configurable strategies, and smart TSV/CSV detection and processing</p>
               
@@ -507,43 +536,6 @@
               <h4 class="text-white">🐛 Fixed</h4>
               <ul class="list-disc">
                 <li>JSON Smart View replicating content across multiple tabs</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.1.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.1.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">August 11, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🎉 Curl command builder</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Smart View for Curl commands and various other bug fixes</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>Smart View for Curl:</strong> A feature rich Curl command builder</li>
-              </ul>
-              
-              <h4 class="text-white">🔧 Technical Highlights</h4>
-              <ul class="list-disc">
-                <li>Improved JSON, Csv and R auto detection algorithms</li>
-                <li>Search JSON by path OR content</li>
-                <li>Fix broken JSON option</li>
-                <li>Search formats (Github request #2)</li>
-                <li>CTRL+Click for tab close without confirmation (Github request #2)</li>
-                <li>Middle mouse click for tab close without confirmation (Github request #2)</li>
-                <li>Larger clickable area for close button (Github request #2)</li>
-              </ul>
-              
-              <h4 class="text-white">🐛 Fixed</h4>
-              <ul class="list-disc">
-                <li>JSON Smart View replicating content across multiple tabs</li>
-                <li>Do not kebab-case already kebab-cased JSON property</li>
               </ul>
             </div>
           </div>

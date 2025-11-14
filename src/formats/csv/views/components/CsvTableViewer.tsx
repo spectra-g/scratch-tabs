@@ -102,6 +102,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     diagnostics,
     isValid,
     updateCell,
+    updateCells,
     addRow,
     deleteRow,
     deleteRows,
@@ -266,16 +267,87 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   // Handle shift right action
   const handleShiftRight = useCallback(() => {
     if (!canShiftRight()) return;
-    
+
     const cellIdentifiers = getShiftRightCellIdentifiers(selectedCells);
-    
+
     // Execute the shift right operation
     insertAndShift(cellIdentifiers);
-    
+
     // Close context menu and clear selection
     setContextMenu(null);
     setSelectedCells(new Set());
   }, [canShiftRight, selectedCells, insertAndShift]);
+
+  // Handle copy selected cells
+  const handleCopySelectedCells = useCallback(async () => {
+    if (selectedCells.size === 0) return;
+
+    // Extract cell values in a structured format
+    const cellsData: Array<{ rowId: string; columnId: string; value: string; rowIndex: number; colIndex: number }> = [];
+
+    selectedCells.forEach(cellKey => {
+      const { rowId, columnId } = parseCellKey(cellKey);
+      const row = data.find(r => r.id === rowId);
+      const colIndex = columns.findIndex(c => c.id === columnId);
+      const rowIndex = data.findIndex(r => r.id === rowId);
+
+      if (row && colIndex !== -1) {
+        const cellValue = row.cells[colIndex]?.value || '';
+        cellsData.push({ rowId, columnId, value: cellValue, rowIndex, colIndex });
+      }
+    });
+
+    // Sort by row then column for consistent output
+    cellsData.sort((a, b) => {
+      if (a.rowIndex !== b.rowIndex) return a.rowIndex - b.rowIndex;
+      return a.colIndex - b.colIndex;
+    });
+
+    // Format as tab-separated values (TSV) for better Excel/spreadsheet compatibility
+    let copyText = '';
+    let currentRowIndex = cellsData[0]?.rowIndex;
+
+    cellsData.forEach((cell, index) => {
+      if (index > 0) {
+        // New row
+        if (cell.rowIndex !== currentRowIndex) {
+          copyText += '\n';
+          currentRowIndex = cell.rowIndex;
+        } else {
+          // Same row, add tab
+          copyText += '\t';
+        }
+      }
+      copyText += cell.value;
+    });
+
+    try {
+      await navigator.clipboard.writeText(copyText);
+      // Optional: Show success feedback
+    } catch (err) {
+      console.error('Failed to copy cells:', err);
+    }
+
+    setContextMenu(null);
+  }, [selectedCells, data, columns]);
+
+  // Handle clear selected cells
+  const handleClearSelectedCells = useCallback(() => {
+    const cellsToClear = Array.from(selectedCells);
+    if (cellsToClear.length === 0) return;
+
+    // Prepare batch update - clear all selected cells to empty string
+    const updates = cellsToClear.map(cellKey => {
+      const { rowId, columnId } = parseCellKey(cellKey);
+      return { rowId, columnId, value: '' };
+    });
+
+    // Apply all updates at once (avoids stale closure issues)
+    updateCells(updates);
+
+    setContextMenu(null);
+    setSelectedCells(new Set());
+  }, [selectedCells, updateCells]);
 
   // Close context menu when clicking outside
   useEffect(() => {
@@ -576,7 +648,6 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                       setEditingCellTrigger(null);
                     }
                   }}
-                  onToggleMask={() => toggleColumnMask(column.id)}
                 />
               );
             }
@@ -1134,6 +1205,23 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             }}
           >
             <div className="py-1">
+              <button
+                onClick={handleCopySelectedCells}
+                className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-gray-200 hover:bg-gray-700"
+                title="Copy selected cells"
+              >
+                <Copy size={14} className="mr-2" />
+                <span>Copy ({selectedCells.size} cell{selectedCells.size !== 1 ? 's' : ''})</span>
+              </button>
+              <button
+                onClick={handleClearSelectedCells}
+                className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-gray-200 hover:bg-gray-700"
+                title="Clear selected cells"
+              >
+                <Minus size={14} className="mr-2" />
+                <span>Clear ({selectedCells.size} cell{selectedCells.size !== 1 ? 's' : ''})</span>
+              </button>
+              <div className="border-t border-gray-700 my-1" />
               <button
                 onClick={handleShiftRight}
                 disabled={!canShiftRight()}
