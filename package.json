@@ -56,6 +56,7 @@
     "jmespath": "^0.16.0",
     "jose": "^5.2.3",
     "js-yaml": "^4.1.0",
+    "json-source-map": "^0.6.1",
     "jsonpath-plus": "^10.3.0",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",

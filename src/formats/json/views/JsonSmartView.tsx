@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Editor } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { parse as parseWithSourceMap } from "json-source-map";
 import { SmartViewProps } from "../../../views/registry";
 import { Toolbar } from "./components/Toolbar";
 import { Navigator } from "./components/Navigator";
@@ -18,111 +19,19 @@ import { ContentDiffModal } from "../../../components/ContentDiffModal";
 import { useQueryPanelStore } from "../stores/useQueryPanelStore";
 
 /**
- * Represents the boundaries of a JSON container (object or array)
+ * Converts a dot-notation path (e.g., "users[1].name") to a JSON Pointer (e.g., "/users/1/name")
+ * JSON Pointers use "/" as separator and are used by json-source-map
  */
-interface ScopeBoundary {
-  startLine: number;
-  endLine: number;
-}
+const pathToJsonPointer = (path: string): string => {
+  if (!path || !path.trim()) return '';
 
-// Constants for navigation configuration
-const NAVIGATION_CONFIG = {
-  FALLBACK_RANGE_BEFORE: 10,
-  FALLBACK_RANGE_AFTER: 50,
-} as const;
+  // Replace array brackets with dots, then split on dots
+  // "users[1].name" -> "users.1.name" -> ["users", "1", "name"]
+  const normalized = path.trim().replace(/\[/g, '.').replace(/\]/g, '');
+  const parts = normalized.split('.').filter(Boolean).map(part => part.trim());
 
-const JSON_DELIMITERS = {
-  OBJECT_START: '{',
-  OBJECT_END: '}',
-  ARRAY_START: '[',
-  ARRAY_END: ']',
-} as const;
-
-/**
- * Finds the scope boundaries of a JSON container starting from the given line
- * Supports both objects {} and arrays []
- */
-const findJsonContainerScope = (
-  model: monaco.editor.ITextModel,
-  startLine: number
-): ScopeBoundary | null => {
-  let braceCount = 0;
-  let bracketCount = 0;
-  let foundStart = false;
-  let startLineActual = startLine;
-  let isObjectScope = false;
-  let isArrayScope = false;
-
-  for (let lineNum = startLine; lineNum <= model.getLineCount(); lineNum++) {
-    const lineContent = model.getLineContent(lineNum);
-
-    for (const char of lineContent) {
-      switch (char) {
-        case JSON_DELIMITERS.OBJECT_START:
-          if (!foundStart) {
-            foundStart = true;
-            startLineActual = lineNum;
-            isObjectScope = true;
-          }
-          braceCount++;
-          break;
-
-        case JSON_DELIMITERS.OBJECT_END:
-          braceCount--;
-          if (foundStart && isObjectScope && braceCount === 0) {
-            return { startLine: startLineActual, endLine: lineNum };
-          }
-          break;
-
-        case JSON_DELIMITERS.ARRAY_START:
-          if (!foundStart) {
-            foundStart = true;
-            startLineActual = lineNum;
-            isArrayScope = true;
-          }
-          bracketCount++;
-          break;
-
-        case JSON_DELIMITERS.ARRAY_END:
-          bracketCount--;
-          if (foundStart && isArrayScope && bracketCount === 0) {
-            return { startLine: startLineActual, endLine: lineNum };
-          }
-          break;
-      }
-    }
-  }
-
-  return null;
-};
-
-/**
- * Determines if a path part is a numeric array index
- */
-const isArrayIndex = (part: string): boolean => /^\d+$/.test(part);
-
-/**
- * Parses a JSON path into individual parts
- */
-const parseJsonPath = (path: string): string[] => {
-  return path.split(/[.\[\]]+/).filter(Boolean);
-};
-
-/**
- * Creates a fallback search scope around a given line
- */
-const createFallbackScope = (
-  model: monaco.editor.ITextModel,
-  targetLine: number
-): monaco.Range => {
-  const fallbackStart = Math.max(1, targetLine - NAVIGATION_CONFIG.FALLBACK_RANGE_BEFORE);
-  const fallbackEnd = Math.min(model.getLineCount(), targetLine + NAVIGATION_CONFIG.FALLBACK_RANGE_AFTER);
-
-  return new monaco.Range(
-    fallbackStart, 1,
-    fallbackEnd,
-    model.getLineMaxColumn(fallbackEnd)
-  );
+  // Convert to JSON Pointer format: "/users/1/name"
+  return '/' + parts.join('/');
 };
 
 export const JsonSmartView: React.FC<SmartViewProps> = ({
@@ -259,8 +168,8 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   }, [editor, canRedo]);
 
   /**
-   * Navigates to a specific JSON path using iterative descent with array index awareness
-   * @param path - JSON path (e.g., "data.items[1].name")
+   * Navigates to a specific JSON path using structure-aware parsing with json-source-map
+   * @param path - JSON path in dot notation (e.g., "data.items[1].name")
    */
   const navigateToPath = useCallback((path: string) => {
     if (!editor || !path.trim()) return;
@@ -268,83 +177,59 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
     const model = editor.getModel();
     if (!model) return;
 
-    const pathParts = parseJsonPath(path);
+    try {
+      const content = model.getValue();
 
-    // Early exit conditions
-    if (pathParts.length === 0) return;
-    const finalKey = pathParts[pathParts.length - 1];
-    if (isArrayIndex(finalKey)) return; // Don't navigate to pure numeric indices
+      // Parse JSON with source map to get exact line/column positions
+      const { pointers } = parseWithSourceMap(content);
 
-    // Initialize search scope to entire document
-    let currentSearchScope = new monaco.Range(
-      1, 1,
-      model.getLineCount(),
-      model.getLineMaxColumn(model.getLineCount())
-    );
+      // Convert dot notation path to JSON Pointer format
+      const jsonPointer = pathToJsonPointer(path);
 
-    let lastSuccessfulMatch: monaco.editor.FindMatch | null = null;
+      // Look up the exact position in the source map
+      const location = pointers[jsonPointer];
 
-    // Iteratively search for each key in the path
-    for (let i = 0; i < pathParts.length; i++) {
-      const part = pathParts[i];
+      if (location && location.key) {
+        // Navigate to the key position (property name)
+        const targetLine = location.key.line + 1; // Convert 0-indexed to 1-indexed
+        const targetColumn = location.key.column + 1;
 
-      // Skip numeric parts (array indices) - they're applied to the next search
-      if (isArrayIndex(part)) {
-        continue;
-      }
-
-      // Search for the current key within the current scope
-      const quotedKey = `"${part}"`;
-      const matches = model.findMatches(
-        quotedKey,
-        currentSearchScope,
-        false, false, null, false
-      ) || [];
-
-      if (matches.length === 0) break;
-
-      // Determine target match (considering array indices from previous part)
-      const prevPartIndex = i - 1;
-      const arrayIndex = prevPartIndex >= 0 && isArrayIndex(pathParts[prevPartIndex])
-        ? parseInt(pathParts[prevPartIndex], 10)
-        : null;
-
-      let targetMatch: monaco.editor.FindMatch;
-      if (arrayIndex !== null && arrayIndex < matches.length) {
-        targetMatch = matches[arrayIndex];
-      } else if (arrayIndex !== null) {
-        break; // Array index out of bounds
-      } else {
-        targetMatch = matches[0];
-      }
-
-      lastSuccessfulMatch = targetMatch;
-
-      // Check if there are more non-numeric parts to process
-      const hasMoreKeys = pathParts.slice(i + 1).some(p => !isArrayIndex(p));
-      if (!hasMoreKeys) break;
-
-      // Narrow search scope for next iteration
-      const containerScope = findJsonContainerScope(model, targetMatch.range.startLineNumber);
-      if (containerScope) {
-        currentSearchScope = new monaco.Range(
-          containerScope.startLine, 1,
-          containerScope.endLine,
-          model.getLineMaxColumn(containerScope.endLine)
+        // Create selection range from key start to value end
+        const range = new monaco.Range(
+          targetLine,
+          targetColumn,
+          location.valueEnd.line + 1,
+          location.valueEnd.column + 1
         );
-      } else {
-        currentSearchScope = createFallbackScope(model, targetMatch.range.startLineNumber);
-      }
-    }
 
-    // Navigate to the final match if found
-    if (lastSuccessfulMatch) {
-      editor.setPosition({
-        lineNumber: lastSuccessfulMatch.range.startLineNumber,
-        column: lastSuccessfulMatch.range.startColumn
-      });
-      editor.revealLineInCenter(lastSuccessfulMatch.range.startLineNumber);
-      editor.setSelection(lastSuccessfulMatch.range);
+        editor.setPosition({ lineNumber: targetLine, column: targetColumn });
+        editor.revealLineInCenter(targetLine);
+        editor.setSelection(range);
+        editor.focus();
+      } else {
+        // If no key (e.g., root or array item), use value position
+        if (location && location.value) {
+          const targetLine = location.value.line + 1;
+          const targetColumn = location.value.column + 1;
+
+          const range = new monaco.Range(
+            targetLine,
+            targetColumn,
+            location.valueEnd.line + 1,
+            location.valueEnd.column + 1
+          );
+
+          editor.setPosition({ lineNumber: targetLine, column: targetColumn });
+          editor.revealLineInCenter(targetLine);
+          editor.setSelection(range);
+          editor.focus();
+        } else {
+          console.warn(`Path not found in JSON structure: ${path} (pointer: ${jsonPointer})`);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to navigate to path:", error);
+      // Silently fail - invalid JSON or parsing error
     }
   }, [editor]);
 
