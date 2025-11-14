@@ -382,7 +382,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         onLayout={(sizes: number[]) => setPanelSizes(tabId, sizes)}
       >
         {/* Main Content Panel */}
-        <Panel defaultSize={panelSizes[0]} minSize={30}>
+        <Panel minSize={30}>
           <div className="flex h-full">
             {/* Navigator Panel */}
             <div className="hidden lg:flex w-80 border-r border-gray-700 flex-col">
@@ -474,7 +474,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         {isQueryPanelOpen && (
           <>
             <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-blue-500 transition-colors cursor-row-resize" />
-            <Panel defaultSize={panelSizes[1]} minSize={20} maxSize={60}>
+            <Panel defaultSize={50} minSize={45} maxSize={70}>
               <QueryPanel content={content} addTab={addTab} tabId={tabId} />
             </Panel>
           </>

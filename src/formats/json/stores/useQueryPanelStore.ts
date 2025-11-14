@@ -28,7 +28,7 @@ interface QueryPanelStore {
 const defaultPanelState: QueryPanelState = {
   isOpen: false,
   query: '',
-  panelSizes: [70, 30], // Default layout
+  panelSizes: [70, 30], // Will be overridden by actual layout; keeping for reference
 };
 
 export const useQueryPanelStore = create<QueryPanelStore>((set, get) => ({
