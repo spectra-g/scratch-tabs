@@ -67,6 +67,33 @@ describe('JsonContentProcessor', () => {
       const result = processor.canProcess(content, contextNonJson);
       expect(result).toBe(false);
     });
+
+    it('should return false for stringified JSON when currentLanguage is plaintext (Bug Fix Test)', () => {
+      // This test validates the fix for Bug 1:
+      // When pasting stringified JSON, if the old language is passed instead of detected language,
+      // the processor should reject it
+      const stringifiedJson = '"{\\"name\\":\\"John\\",\\"age\\":30}"';
+      const contextWithPlaintext = {
+        ...mockContext,
+        currentLanguage: 'plaintext', // Simulates passing old language instead of detected 'json'
+        isFromPaste: true
+      };
+      const result = processor.canProcess(stringifiedJson, contextWithPlaintext);
+      expect(result).toBe(false); // Should reject because language is not 'json'
+    });
+
+    it('should return true for stringified JSON when currentLanguage is json (Bug Fix Test)', () => {
+      // This test validates the fix for Bug 1:
+      // When the newly detected language 'json' is passed, processor should accept it
+      const stringifiedJson = '"{\\"name\\":\\"John\\",\\"age\\":30}"';
+      const contextWithJson = {
+        ...mockContext,
+        currentLanguage: 'json', // Correct: uses newly detected language
+        isFromPaste: true
+      };
+      const result = processor.canProcess(stringifiedJson, contextWithJson);
+      expect(result).toBe(true); // Should accept because language is 'json'
+    });
   });
 
   describe('process', () => {
