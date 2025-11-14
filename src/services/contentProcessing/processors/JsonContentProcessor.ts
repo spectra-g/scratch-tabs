@@ -21,7 +21,7 @@ export class JsonContentProcessor implements ContentProcessor {
    */
   canProcess(content: string, context: ContentProcessingContext): boolean {
     const trimmed = content.trim();
-    
+
     // Only process if:
     // 1. Content is from paste or likely from clipboard
     // 2. Language is detected as JSON (trust language detection completely)

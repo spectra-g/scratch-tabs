@@ -26,6 +26,7 @@
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <script type="application/ld+json">
     {
@@ -81,54 +82,191 @@
       /* Offset for sticky header */
     }
 
+    /* ===== PART 1: Global Styles & Animated Background ===== */
     body {
-      font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+      font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
         Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
         "Segoe UI Symbol";
-      background-color: #111827;
-      color: #d1d5db;
+      background-color: #0D0C1D;
+      color: #F5F5F5;
+      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+      position: relative;
+      min-height: 100vh;
     }
 
+    /* Animated gradient background - Teal bottom-right glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(ellipse 120% 100% at 100% 100%, rgba(0, 160, 180, 0.6) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 80% at 100% 50%, rgba(0, 140, 160, 0.4) 0%, transparent 45%),
+        radial-gradient(ellipse 150% 40% at 50% 100%, rgba(0, 120, 140, 0.3) 0%, transparent 40%),
+        linear-gradient(90deg, rgba(0, 10, 20, 1) 0%, rgba(0, 20, 30, 0.8) 60%, transparent 100%);
+      filter: blur(60px);
+      z-index: -1;
+      animation: diagonalShift 20s ease-in-out infinite;
+    }
+
+    @keyframes diagonalShift {
+      0%, 100% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
+      20% {
+        transform: translate(8%, -6%) scale(1.08) rotate(2.5deg);
+      }
+      35% {
+        transform: translate(-5%, 9%) scale(0.92) rotate(-2deg);
+      }
+      55% {
+        transform: translate(12%, -3%) scale(1.12) rotate(-3.5deg);
+      }
+      70% {
+        transform: translate(-6%, 7%) scale(1.18) rotate(1deg);
+      }
+      85% {
+        transform: translate(4%, -4%) scale(0.95) rotate(2.8deg);
+      }
+    }
+
+    @keyframes moveGradient {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      33% {
+        transform: translate(30%, -30%) rotate(120deg);
+      }
+      66% {
+        transform: translate(-20%, 20%) rotate(240deg);
+      }
+      100% {
+        transform: translate(0, 0) rotate(360deg);
+      }
+    }
+
+    /* ===== PART 2: Header / Navigation Bar ===== */
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(15, 15, 30, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 1000;
+    }
+
+    header nav a {
+      transition: all 0.3s ease;
+    }
+
+    header nav a:hover {
+      opacity: 1;
+      color: #FFFFFF;
+    }
+
+    /* ===== PART 3: Hero Section Glassmorphism ===== */
     .hero-gradient {
-      background: linear-gradient(180deg,
-          rgba(31, 41, 55, 0.9) 0%,
-          #111827 100%);
+      background: transparent;
+      padding-top: 3rem;
+      padding-bottom: 3rem;
     }
 
+    .hero-content-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 48px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .hero-content-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ===== PART 4: Feature Cards with Glassmorphism ===== */
     .feature-card,
     .tablet-card,
     .value-prop-card {
-      background-color: #1f2937;
-      border: 1px solid #374151;
-      transition:
-        transform 0.3s ease,
-        box-shadow 0.3s ease;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
     }
 
     .feature-card:hover,
     .tablet-card:hover,
     .value-prop-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      border-color: rgba(60, 170, 240, 0.8);
+      box-shadow: 0 0 25px rgba(30, 150, 220, 0.4);
     }
 
+    /* ===== PART 5: Second Hero Section (Full-Width Panel) ===== */
+    #chaos-to-clarity {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 80px 0;
+    }
+
+    /* ===== PART 6: Buttons with Glassmorphism ===== */
     .primary-button {
-      background-color: #2563eb;
-      color: white;
+      background: transparent;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 2px solid rgba(30, 150, 220, 0.8);
+      color: rgba(60, 170, 240, 1);
+      font-weight: 600;
+      transition: all 0.3s ease;
     }
 
     .primary-button:hover {
-      background-color: #1d4ed8;
+      background-color: rgba(20, 80, 140, 0.9);
+      color: #FFFFFF;
+      border-color: rgba(60, 170, 240, 1);
+      box-shadow: 0 0 25px rgba(30, 150, 220, 0.6);
+      transform: scale(1.05);
+    }
+
+    /* Secondary button style */
+    .secondary-button {
+      background: transparent;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: #F5F5F5;
+      transition: all 0.3s ease;
+    }
+
+    .secondary-button:hover {
+      border-color: rgba(60, 170, 240, 0.8);
+      color: rgba(60, 170, 240, 1);
+      box-shadow: 0 0 15px rgba(30, 150, 220, 0.3);
     }
 
     .section-title {
-      color: #f3f4f6;
+      color: #FFFFFF;
+      text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     .icon-placeholder {
-      background-color: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
+      background: rgba(20, 80, 140, 0.2);
+      color: rgba(60, 170, 240, 1);
       width: 3rem;
       height: 3rem;
       border-radius: 9999px;
@@ -136,6 +274,7 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 1rem;
+      border: 1px solid rgba(30, 150, 220, 0.4);
     }
 
     .icon-shield,
@@ -151,24 +290,75 @@
       stroke-linejoin: round;
     }
 
+    /* Updated glow animation for buttons */
     @keyframes pulse-glow {
-
-      0%,
-      100% {
-        box-shadow:
-          0 0 5px #2563eb,
-          0 0 10px #2563eb;
+      0%, 100% {
+        box-shadow: 0 0 15px rgba(30, 150, 220, 0.5);
       }
-
       50% {
-        box-shadow:
-          0 0 15px #3b82f6,
-          0 0 25px #3b82f6;
+        box-shadow: 0 0 30px rgba(60, 170, 240, 0.7);
       }
     }
 
     .cta-button-glow {
       animation: pulse-glow 2.5s infinite ease-in-out;
+    }
+
+    /* Logo styling */
+    .logo-size {
+      width: 22px;
+      height: 22px;
+      filter: brightness(0) invert(1); /* Make logo white */
+    }
+
+    /* Video container glassmorphism */
+    .desktop-video-container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    @media (min-width: 768px) {
+      .desktop-video-container {
+        position: relative;
+        min-height: 480px;
+      }
+    }
+
+    /* Tag styling with glassmorphism */
+    .tag-item {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      padding: 0.25rem 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .tag-item:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: #00FFFF;
+    }
+
+    /* Footer styling */
+    footer {
+      background: rgba(15, 15, 30, 0.4);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Privacy section glassmorphism card */
+    .privacy-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      max-width: 800px;
+      margin: 0 auto;
     }
 
     /* Mobile-friendly code blocks */
@@ -184,15 +374,6 @@
       white-space: pre-wrap;
     }
 
-    /* Ensure code containers don't overflow on mobile */
-    .bg-gray-800 pre,
-    .bg-gray-900 pre {
-      max-width: 100%;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
     /* Mobile-specific adjustments */
     @media (max-width: 768px) {
       pre {
@@ -200,40 +381,10 @@
         line-height: 1.4;
       }
 
-      .bg-gray-800,
-      .bg-gray-900 {
-        padding: 0.75rem;
+      .hero-content-card {
+        padding: 32px 24px;
       }
     }
-
-    /* JSON Syntax Highlighting */
-    .json-highlight .json-key {
-      color: #9cdcfe;
-    }
-
-    .json-highlight .json-string {
-      color: #ce9178;
-    }
-
-    .json-highlight .json-number {
-      color: #b5cea8;
-    }
-
-    .json-highlight .json-boolean {
-      color: #569cd6;
-    }
-
-    .logo-size {
-      width: 22px;
-      height: 22px;
-    }
-
-    @media (min-width: 768px) {
-    .desktop-video-container {
-      position: relative;
-      min-height: 480px;
-    }
-  }
   </style>
 </head>
 
@@ -321,23 +472,23 @@
 
 <section id="hero" class="hero-gradient pt-8 pb-16 md:pt-20 md:pb-20">
   <div class="container mx-auto px-6 text-center">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-4xl mx-auto hero-content-card">
       <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight">
-        The Fastest Way from <span class="text-blue-400">Clipboard to Clarity.</span>
+        The Fastest Way from <span style="color: rgba(60, 170, 240, 1);">Clipboard to Clarity.</span>
       </h1>
-      <p class="text-base sm:text-lg md:text-xl text-gray-300 mt-6 max-w-3xl mx-auto">
+      <p class="text-base sm:text-lg md:text-xl mt-6 max-w-3xl mx-auto" style="color: #F5F5F5;">
         Stop untangling stringified JSON, single-line logs, or messy stack traces. Just paste your data, and Scratch Tabs instantly cleans, formats, and transforms it into a powerful, interactive view. 100% private and offline-first.
       </p>
+      <a href="https://app.scratchtabs.com" target="_blank"
+         class="primary-button mt-8 text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block cta-button-glow">Launch App</a>
+      <p class="text-sm mt-6" style="color: rgba(255, 255, 255, 0.6);">
+        No registration required. Instant access.
+      </p>
     </div>
-    <a href="https://app.scratchtabs.com" target="_blank"
-       class="primary-button mt-8 text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105 cta-button-glow">Launch App</a>
-    <p class="text-sm text-gray-500 mt-6">
-      No registration required. Instant access.
-    </p>
   </div>
 </section>
 
-<section id="chaos-to-clarity" class="py-8 bg-gray-900">
+<section id="chaos-to-clarity" class="py-8">
     <div class="container mx-auto px-6">
         <div class="desktop-video-container max-w-6xl mx-auto rounded-lg border border-gray-700 shadow-2xl overflow-hidden">
 
@@ -347,7 +498,7 @@
                         loop
                         muted
                         playsinline
-                        class="w-full h-full object-cover"
+                        class="w-full h-full object-cover object-top"
                         poster="https://scratchtabs.b-cdn.net/demo-json-opt.png"
                 >
                     <source src="https://scratchtabs.b-cdn.net/demo-json-opt.mp4" type="video/mp4" />
@@ -444,7 +595,7 @@
   </div>
 </section>
 
-<section id="toolkit-summary" class="py-16 bg-gray-800/20">
+<section id="toolkit-summary" class="py-16">
   <div class="container mx-auto px-6 text-center">
     <h2 class="section-title text-3xl md:text-4xl font-bold text-center mb-4">
       A Complete Developer Arsenal, Built-in
@@ -453,48 +604,50 @@
       Scratch Tabs is equipped with over 25 specialized 'Tablets' to handle any task. From a full-featured <strong>JWT Toolkit</strong> and <strong>REST Client</strong> to a visual <strong>JSON Mapper</strong> and <strong>Diagram Editor</strong>, your entire workflow is covered. No installation required.
     </p>
     <a href="tablets.html"
-       class="text-gray-300 hover:text-white border border-gray-600 hover:border-white text-lg font-bold py-3 px-8 rounded-lg transition-colors duration-150">
+       class="secondary-button text-lg font-bold py-3 px-8 rounded-lg">
       Explore All 25+ Tools
     </a>
   </div>
 </section>
 
-<section id="privacy" class="py-16 bg-gray-800">
-  <div class="container mx-auto px-6 text-center">
-    <div class="icon-placeholder">
-      <svg class="icon-shield" viewBox="0 0 24 24">
-        <use href="#icon-shield"></use>
-      </svg>
+<section id="privacy" class="py-16">
+  <div class="container mx-auto px-6">
+    <div class="privacy-card text-center">
+      <div class="icon-placeholder">
+        <svg class="icon-shield" viewBox="0 0 24 24">
+          <use href="#icon-shield"></use>
+        </svg>
+      </div>
+      <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">
+        Your Data, Never Ours, Never Theirs.
+      </h2>
+      <p class="text-lg mb-8" style="color: #F5F5F5;">
+        We fundamentally believe your data is yours alone. Scratch Tabs
+        operates entirely within your browser.
+      </p>
+      <ul class="space-y-2 max-w-md mx-auto text-left text-sm" style="color: rgba(255, 255, 255, 0.8);">
+        <li class="flex items-start">
+          <span class="mr-2" style="color: rgba(60, 170, 240, 1);">✓</span> No server-side
+          processing. Everything happens locally.
+        </li>
+        <li class="flex items-start">
+          <span class="mr-2" style="color: rgba(60, 170, 240, 1);">✓</span> No user accounts or
+          registration required.
+        </li>
+        <li class="flex items-start">
+          <span class="mr-2" style="color: rgba(60, 170, 240, 1);">✓</span> No tracking, no
+          analytics, no cookies.
+        </li>
+        <li class="flex items-start">
+          <span class="mr-2" style="color: rgba(60, 170, 240, 1);">✓</span> Your data is stored only
+          in your browser's local storage.
+        </li>
+        <li class="flex items-start">
+          <span class="mr-2" style="color: rgba(60, 170, 240, 1);">✓</span> Free and open to use,
+          forever.
+        </li>
+      </ul>
     </div>
-    <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">
-      Your Data, Never Ours, Never Theirs.
-    </h2>
-    <p class="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-      We fundamentally believe your data is yours alone. Scratch Tabs
-      operates entirely within your browser.
-    </p>
-    <ul class="text-gray-400 space-y-2 max-w-md mx-auto text-left text-sm">
-      <li class="flex items-start">
-        <span class="text-green-400 mr-2">✓</span> No server-side
-        processing. Everything happens locally.
-      </li>
-      <li class="flex items-start">
-        <span class="text-green-400 mr-2">✓</span> No user accounts or
-        registration required.
-      </li>
-      <li class="flex items-start">
-        <span class="text-green-400 mr-2">✓</span> No tracking, no
-        analytics, no cookies.
-      </li>
-      <li class="flex items-start">
-        <span class="text-green-400 mr-2">✓</span> Your data is stored only
-        in your browser's local storage.
-      </li>
-      <li class="flex items-start">
-        <span class="text-green-400 mr-2">✓</span> Free and open to use,
-        forever.
-      </li>
-    </ul>
   </div>
 </section>
 
@@ -513,7 +666,7 @@
          class="primary-button text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105 cta-button-glow">Launch
         App Now</a>
       <a href="features.html"
-         class="text-gray-400 hover:text-white border border-gray-600 hover:border-white text-xl font-bold py-4 px-10 rounded-lg transition-colors duration-150">See
+         class="secondary-button text-xl font-bold py-4 px-10 rounded-lg">See
         All Features</a>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-2 gap-x-4 text-sm text-gray-500 max-w-3xl mx-auto">
