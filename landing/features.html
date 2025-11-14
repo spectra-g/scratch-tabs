@@ -28,6 +28,7 @@
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Structured Data for SEO -->
   <script type="application/ld+json">
@@ -75,40 +76,124 @@
   <style>
     html {
       scroll-padding-top: 5rem;
-      /* Offset for sticky header */
     }
 
+    /* Glassmorphism Redesign Styles */
     body {
-      font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-        Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-        "Segoe UI Symbol";
-      background-color: #111827;
-      color: #d1d5db;
+      font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0D0C1D;
+      color: #F5F5F5;
+      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+      position: relative;
+      min-height: 100vh;
+    }
+
+    /* Animated gradient background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(ellipse 120% 100% at 100% 100%, rgba(0, 160, 180, 0.6) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 80% at 100% 50%, rgba(0, 140, 160, 0.4) 0%, transparent 45%),
+        radial-gradient(ellipse 150% 40% at 50% 100%, rgba(0, 120, 140, 0.3) 0%, transparent 40%),
+        linear-gradient(90deg, rgba(0, 10, 20, 1) 0%, rgba(0, 20, 30, 0.8) 60%, transparent 100%);
+      filter: blur(60px);
+      z-index: -1;
+      animation: diagonalShift 20s ease-in-out infinite;
+    }
+
+    @keyframes diagonalShift {
+      0%, 100% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
+      20% {
+        transform: translate(8%, -6%) scale(1.08) rotate(2.5deg);
+      }
+      35% {
+        transform: translate(-5%, 9%) scale(0.92) rotate(-2deg);
+      }
+      55% {
+        transform: translate(12%, -3%) scale(1.12) rotate(-3.5deg);
+      }
+      70% {
+        transform: translate(-6%, 7%) scale(1.18) rotate(1deg);
+      }
+      85% {
+        transform: translate(4%, -4%) scale(0.95) rotate(2.8deg);
+      }
+    }
+
+    /* Header glassmorphism */
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(15, 15, 30, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 1000;
+    }
+
+    header nav a {
+      transition: all 0.3s ease;
+    }
+
+    header nav a:hover {
+      opacity: 1;
+      color: #FFFFFF;
+    }
+
+    /* Buttons */
+    .primary-button {
+      background: transparent;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 2px solid rgba(30, 150, 220, 0.8);
+      color: rgba(60, 170, 240, 1);
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .primary-button:hover {
+      background-color: rgba(20, 80, 140, 0.9);
+      color: #FFFFFF;
+      border-color: rgba(60, 170, 240, 1);
+      box-shadow: 0 0 25px rgba(30, 150, 220, 0.6);
+      transform: scale(1.05);
     }
 
     .section-title {
-      color: #f3f4f6;
+      color: #FFFFFF;
+      text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     .feature-card,
     .tablet-category-card {
-      background-color: #1f2937;
-      border: 1px solid #374151;
-      transition:
-        transform 0.3s ease,
-        box-shadow 0.3s ease;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
     }
 
     .feature-card:hover,
     .tablet-category-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      border-color: rgba(0, 160, 180, 0.8);
+      box-shadow: 0 0 25px rgba(0, 140, 160, 0.4);
     }
 
     .icon-placeholder {
-      background-color: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
+      background: rgba(0, 100, 115, 0.2);
+      color: rgba(100, 220, 230, 1);
       width: 3rem;
       height: 3rem;
       border-radius: 0.5rem;
@@ -117,6 +202,7 @@
       justify-content: center;
       margin-bottom: 1rem;
       flex-shrink: 0;
+      border: 1px solid rgba(0, 140, 160, 0.4);
     }
 
     .icon-tool {
@@ -132,12 +218,13 @@
     .logo-size {
       width: 22px;
       height: 22px;
+      filter: brightness(0) invert(1);
     }
   </style>
 </head>
 
 <body class="antialiased">
-<header class="py-4 px-6 sticky top-0 z-50 bg-gray-900 border-b border-gray-700/50">
+<header class="py-4 px-6">
   <div class="container mx-auto flex justify-between items-center">
     <a href="index.html" class="flex items-center space-x-2">
       <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
@@ -152,7 +239,7 @@
     </nav>
     <div class="flex items-center space-x-2">
       <a href="https://app.scratchtabs.com" target="_blank"
-         class="bg-blue-600 hover:bg-blue-700 text-sm font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out text-white">
+         class="primary-button text-sm font-medium py-2 px-4 rounded-md">
         Launch App
       </a>
       <button id="mobile-menu-button" class="md:hidden p-2 text-gray-300 hover:text-white">
