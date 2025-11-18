@@ -84,10 +84,10 @@ export class ContentProcessingService {
     }
   ): ContentProcessingContext {
     // Determine if this is likely from clipboard based on context
-    const isLikelyFromClipboard = additionalFlags?.isFromClipboardImport || 
+    const isLikelyFromClipboard = additionalFlags?.isFromClipboardImport ||
       additionalFlags?.isLikelyFromClipboard ||
-      (!isFromPaste && 
-       previousContent.trim() === '' && 
+      (!isFromPaste &&
+       previousContent.trim() === '' &&
        additionalFlags?.isInitialContent); // Restore original auto-detection logic
 
     return {
@@ -101,6 +101,47 @@ export class ContentProcessingService {
         isInitialContent: additionalFlags?.isInitialContent || false,
         ...additionalFlags
       }
+    };
+  }
+
+  /**
+   * Process clipboard content for comparison scenarios (e.g., diff modal)
+   * This is a lightweight version that doesn't require a real tab context.
+   *
+   * Use case: When comparing clipboard content in diff modal, we want to apply
+   * the same content processing (unstringify JSON, format, etc.) without creating a tab.
+   *
+   * @param clipboardContent - Raw clipboard content
+   * @param detectedLanguage - Optional pre-detected language (will auto-detect if not provided)
+   * @returns Processed content and final language
+   */
+  async processClipboardForComparison(
+    clipboardContent: string,
+    detectedLanguage?: string
+  ): Promise<{ content: string; language: string }> {
+    // Detect language if not provided
+    const language = detectedLanguage || this.detectLanguage(clipboardContent);
+
+    // Create a minimal context for clipboard comparison
+    // Use a temporary ID since we don't have a real tab
+    const context = this.createContext(
+      `clipboard-comparison-${Date.now()}`, // Temporary ID
+      language,
+      false, // Not language locked
+      false, // Not from paste (it's from clipboard)
+      '', // No previous content
+      {
+        isFromClipboardImport: true, // Explicitly mark as clipboard import
+        isLikelyFromClipboard: true
+      }
+    );
+
+    // Process the content through the pipeline
+    const result = await this.processContent(clipboardContent, context);
+
+    return {
+      content: result.content,
+      language: result.language || language
     };
   }
 }

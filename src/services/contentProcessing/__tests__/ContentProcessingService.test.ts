@@ -247,4 +247,191 @@ describe('ContentProcessingService', () => {
       expect(result.content).toBe('["item1", "item2"]'); // Unstringified but not formatted
     });
   });
+
+  describe('processClipboardForComparison', () => {
+    describe('JSON content processing', () => {
+      it('should process stringified JSON from clipboard', async () => {
+        const stringifiedJson = '"{\\"name\\":\\"John\\",\\"age\\":30}"';
+
+        const result = await service.processClipboardForComparison(stringifiedJson, 'json');
+
+        expect(result.content).toBe('{"name":"John","age":30}'); // Unstringified
+        expect(result.language).toBe('json');
+      });
+
+      it('should handle already-formatted JSON', async () => {
+        const formattedJson = '{\n  "name": "John",\n  "age": 30\n}';
+
+        const result = await service.processClipboardForComparison(formattedJson, 'json');
+
+        expect(result.content).toBe(formattedJson); // Unchanged
+        expect(result.language).toBe('json');
+      });
+
+      it('should handle compact JSON', async () => {
+        const compactJson = '{"name":"John","age":30,"city":"NYC"}';
+
+        const result = await service.processClipboardForComparison(compactJson, 'json');
+
+        expect(result.content).toBe(compactJson); // No processing needed
+        expect(result.language).toBe('json');
+      });
+
+      it('should handle double-stringified JSON', async () => {
+        const doubleStringified = '"{\\"user\\":{\\"name\\":\\"Alice\\",\\"id\\":123}}"';
+
+        const result = await service.processClipboardForComparison(doubleStringified, 'json');
+
+        expect(result.content).toBe('{"user":{"name":"Alice","id":123}}'); // Unstringified
+        expect(result.language).toBe('json');
+      });
+
+      it('should handle JSON arrays', async () => {
+        const stringifiedArray = '"[\\"item1\\",\\"item2\\",\\"item3\\"]"';
+
+        const result = await service.processClipboardForComparison(stringifiedArray, 'json');
+
+        expect(result.content).toBe('["item1","item2","item3"]'); // Unstringified
+        expect(result.language).toBe('json');
+      });
+    });
+
+    describe('language detection', () => {
+      it('should auto-detect JSON when no language provided', async () => {
+        const jsonContent = '{"test": "value"}';
+
+        const result = await service.processClipboardForComparison(jsonContent);
+
+        expect(result.language).toBe('json');
+      });
+
+      it('should auto-detect plaintext when no language provided', async () => {
+        const textContent = 'This is just plain text content';
+
+        const result = await service.processClipboardForComparison(textContent);
+
+        expect(result.language).toBe('plaintext');
+        expect(result.content).toBe(textContent); // Unchanged
+      });
+
+      it('should auto-detect JavaScript', async () => {
+        const jsContent = 'function test() { return "hello"; }';
+
+        const result = await service.processClipboardForComparison(jsContent);
+
+        expect(result.language).toBe('javascript');
+      });
+
+      it('should use provided language instead of auto-detecting', async () => {
+        const content = '{"test": "value"}';
+
+        const result = await service.processClipboardForComparison(content, 'json');
+
+        expect(result.language).toBe('json');
+      });
+    });
+
+    describe('non-JSON content', () => {
+      it('should pass through plaintext unchanged', async () => {
+        const textContent = 'This is plain text that should not be processed';
+
+        const result = await service.processClipboardForComparison(textContent, 'plaintext');
+
+        expect(result.content).toBe(textContent);
+        expect(result.language).toBe('plaintext');
+      });
+
+      it('should pass through JavaScript code unchanged', async () => {
+        const jsCode = 'const x = 42;\nconsole.log(x);';
+
+        const result = await service.processClipboardForComparison(jsCode, 'javascript');
+
+        expect(result.content).toBe(jsCode);
+        expect(result.language).toBe('javascript');
+      });
+
+      it('should pass through CSV content unchanged', async () => {
+        const csvContent = 'name,age,city\nJohn,30,NYC\nJane,25,LA';
+
+        const result = await service.processClipboardForComparison(csvContent, 'csv');
+
+        expect(result.content).toBe(csvContent);
+        expect(result.language).toBe('csv');
+      });
+    });
+
+    describe('edge cases', () => {
+      it('should handle empty clipboard content', async () => {
+        const emptyContent = '';
+
+        const result = await service.processClipboardForComparison(emptyContent);
+
+        expect(result.content).toBe('');
+        expect(result.language).toBe('plaintext'); // Default to plaintext
+      });
+
+      it('should handle whitespace-only content', async () => {
+        const whitespaceContent = '   \n\n   ';
+
+        const result = await service.processClipboardForComparison(whitespaceContent);
+
+        expect(result.content).toBe(whitespaceContent);
+      });
+
+      it('should handle very long JSON content', async () => {
+        const largeObject = { data: Array(1000).fill({ id: 1, name: "test" }) };
+        const stringified = JSON.stringify(JSON.stringify(largeObject));
+
+        const result = await service.processClipboardForComparison(stringified, 'json');
+
+        expect(result.content).toBeDefined();
+        expect(result.language).toBe('json');
+        // Content should be unstringified
+        expect(result.content).not.toContain('\\"');
+      });
+
+      it('should handle special characters in JSON', async () => {
+        const jsonWithSpecialChars = '"{\\"text\\":\\"Hello\\\\nWorld\\\\t!\\",\\"emoji\\":\\"😀\\"}"';
+
+        const result = await service.processClipboardForComparison(jsonWithSpecialChars, 'json');
+
+        expect(result.content).toContain('Hello\\nWorld\\t!'); // Unstringified but escape sequences preserved
+        expect(result.language).toBe('json');
+      });
+    });
+
+    describe('comparison scenario integration', () => {
+      it('should match tab right-click compare behavior', async () => {
+        // Simulate the tab right-click "Compare with clipboard" flow
+        const clipboardContent = '"{\\"key\\":\\"value\\",\\"number\\":42}"';
+
+        const result = await service.processClipboardForComparison(clipboardContent, 'json');
+
+        // Should process the same way as tab creation
+        expect(result.content).toBe('{"key":"value","number":42}');
+        expect(result.language).toBe('json');
+      });
+
+      it('should match JSON smart view compare behavior', async () => {
+        // Simulate the JSON smart view "Compare -> With Clipboard" flow
+        const clipboardContent = '"{\\"user\\":{\\"name\\":\\"Alice\\",\\"roles\\":[\\"admin\\",\\"user\\"]}}"';
+
+        const result = await service.processClipboardForComparison(clipboardContent, 'json');
+
+        // Should unstringify for proper diff comparison
+        expect(result.content).toBe('{"user":{"name":"Alice","roles":["admin","user"]}}');
+        expect(result.language).toBe('json');
+      });
+
+      it('should handle invalid JSON gracefully', async () => {
+        const invalidJson = 'invalid json content {';
+
+        const result = await service.processClipboardForComparison(invalidJson, 'json');
+
+        // Invalid JSON should pass through unchanged
+        expect(result.content).toBe('invalid json content {');
+        expect(result.language).toBe('json');
+      });
+    });
+  });
 });

@@ -10,6 +10,7 @@ import { useWorkspaceStore } from "../../../../stores/workspaceStore";
 import { useDiffModalStore } from "../../../../stores/diffModalStore";
 import { getRecentJsonTabs, isValidJson } from "../../../../utils/jsonTabHelpers";
 import { useQueryPanelStore } from "../../stores/useQueryPanelStore";
+import { contentProcessingService } from "../../../../services/contentProcessing";
 
 interface ToolbarProps {
   isValid: boolean;
@@ -158,7 +159,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         return;
       }
 
-      openComparisonDiff(clipboardContent, "Clipboard JSON");
+      // Process clipboard content through content processing pipeline
+      // This handles unstringifying double-escaped JSON, formatting, etc.
+      const { content: processedContent } = await contentProcessingService.processClipboardForComparison(
+        clipboardContent,
+        'json' // Pre-detect as JSON since we validated it
+      );
+
+      openComparisonDiff(processedContent, "Clipboard JSON");
     } catch (error) {
       console.error("Failed to compare with clipboard:", error);
       // TODO: Show toast notification

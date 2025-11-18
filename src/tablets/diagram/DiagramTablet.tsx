@@ -249,10 +249,15 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
         }, 'image/png');
       };
 
-      // Convert SVG to data URL
-      const svgBlob = new Blob([renderedSvg], { type: 'image/svg+xml' });
-      const svgUrl = URL.createObjectURL(svgBlob);
-      img.src = svgUrl;
+      img.onerror = () => {
+        showCopyFeedback('Export failed');
+      };
+
+      // Convert SVG to data URL to avoid CORS/tainting issues
+      // Using base64 encoding ensures the image can be drawn to canvas without tainting it
+      const svgBase64 = btoa(unescape(encodeURIComponent(renderedSvg)));
+      const dataUrl = `data:image/svg+xml;base64,${svgBase64}`;
+      img.src = dataUrl;
     } catch (error) {
       showCopyFeedback('Export failed');
     }

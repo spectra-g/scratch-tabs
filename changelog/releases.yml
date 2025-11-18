@@ -3,8 +3,20 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.11.0"
+  - version: "1.11.1"
     type: "latest"
+    draft: false
+    date: "2025-11-18"
+    headline: "🐛 Bug Fixes"
+    description: "Fixed clipboard content processing in JSON comparison workflows and Mermaid diagram PNG export"
+    categories:
+      - name: "🐛 Fixed"
+        changes:
+          - "**JSON Compare with Clipboard:** Clipboard content now properly processed through content pipeline when comparing - stringified JSON is automatically unstringified and formatted in diff modal for accurate side-by-side comparison"
+          - "**Mermaid Diagram PNG Export:** Fixed SecurityError canvas tainting issue preventing PNG export by converting SVG to base64 data URL instead of blob URL"
+
+  - version: "1.11.0"
+    type: "release"
     draft: false
     date: "2025-11-14"
     headline: "🔍 JSON Query Panel & Navigation"
