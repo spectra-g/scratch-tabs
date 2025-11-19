@@ -2,10 +2,11 @@ import React, { Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { initializeFormatProviders } from "./formats";
 import { broadcastManager } from "./stores/broadcastStore";
+import { useThemeStore } from "./stores/themeStore";
 import DragDropOverlay from "./components/DragDropOverlay";
 
 // Initialize language providers once when the app loads
-  initializeFormatProviders();
+initializeFormatProviders();
 
 const MainLayout = React.lazy(() => import("./components/Layout/MainLayout"));
 // const OGWelcomeScreen = React.lazy(() => import('./components/Welcome/OGWelcomeScreen').then(module => ({ default: module.OGWelcomeScreen })));
@@ -20,6 +21,7 @@ const AppLoadingFallback = () => (
 function App() {
   useEffect(() => {
     broadcastManager.initialize();
+    useThemeStore.getState().initializeTheme();
 
     return () => {
       // Optional: broadcastManager.cleanup(); if you want to close the channel

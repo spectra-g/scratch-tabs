@@ -13,7 +13,7 @@ export {
   EyeOff,
   Info,
   Clock,
-  
+
   // Actions
   Edit,
   Edit2,
@@ -30,12 +30,12 @@ export {
   SkipForward,
   Undo2,
   Redo2,
-  
+
   // Text Formatting
   Bold,
   Italic,
   Quote,
-  
+
   // Navigation
   ChevronDown,
   ChevronRight,
@@ -47,7 +47,7 @@ export {
   ArrowDown,
   ArrowRightLeft,
   ArrowUpDown,
-  
+
   // Status
   AlertTriangle,
   AlertCircle,
@@ -57,7 +57,7 @@ export {
   Circle,
   Loader2,
   Loader,
-  
+
   // Features
   Brain,
   Tablet,
@@ -83,7 +83,7 @@ export {
   Folder,
   FolderOpen,
   FolderPlus,
-  
+
   // UI Elements
   Grid,
   List,
@@ -98,7 +98,7 @@ export {
   Square,
   Disc,
   PlayCircle,
-  
+
   // Data & Charts
   BarChart,
   BarChart3,
@@ -109,7 +109,7 @@ export {
   Sigma,
   Equal,
   Binary,
-  
+
   // Content
   ImageIcon,
   Palette,
@@ -125,13 +125,13 @@ export {
   Mail,
   Users,
   Bot,
-  
+
   // Security & Validation
   Shield,
   ShieldCheck,
   ShieldX,
   ShieldAlert,
-  
+
   // Tools
   Wand as MagicWand,
   Sliders,
@@ -144,16 +144,16 @@ export {
   AlignLeft,
   Eraser,
   Scissors,
-  
+
   // Feedback
   XCircle,
-  
+
   // Misc
   Bug,
   Coffee,
   ExternalLink,
   RefreshCw,
-  
+
   // Additional icons found in codebase
   DivideIcon,
   Archive,
@@ -177,6 +177,8 @@ export {
   Heart,
   ShoppingCart,
   Sparkles,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 // Export types separately

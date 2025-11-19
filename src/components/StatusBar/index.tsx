@@ -22,6 +22,7 @@ import { RichTextControls } from "./RichTextControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import type { PopupMenuItem } from "./types";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
+import { ThemeToggle } from "../ThemeToggle";
 
 interface StatusBarProps {
   activeTab: Tab;
@@ -76,10 +77,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   isInSmartView = false,
 }) => {
   // GET EDITOR FROM THE STORE
-  const editor = useActiveEditorStore((state) => 
+  const editor = useActiveEditorStore((state) =>
     side === 'left' ? state.activeLeftEditor : state.activeRightEditor
   );
-  
+
   // Get real-time cursor position from editor
   const realTimeCursorPosition = useCursorPosition(editor);
 
@@ -140,13 +141,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     if (module.getStatusBarItems) {
       return module.getStatusBarItems().sort((a, b) => a.priority - b.priority);
     }
-    
+
     // Legacy fallback for formats not yet updated
     const LegacyStatusItem = getFormatStatusItem(activeTab.language);
     if (LegacyStatusItem) {
       return [{ id: 'legacy-status', component: LegacyStatusItem, priority: 10 }];
     }
-    
+
     return [];
   }, [activeTab?.language, activeTab?.id]);
 
@@ -174,7 +175,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       .sort((a, b) => a.name.localeCompare(b.name));
 
     // Only get potential matches when popup is open to avoid redundant detection calls
-    const potentialMatches = showLanguagePopup 
+    const potentialMatches = showLanguagePopup
       ? getPotentialFormatMatches(getTabContentForLanguageDetection(activeTab))
       : [];
     const isLocked = activeTab.languageLocked;
@@ -390,27 +391,27 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           </>
         )}
       </div>
-      
+
       {/* Right side: New organized pattern with dividers */}
       <div className="flex items-center space-x-3">
         {/* Group 1: Font Size */}
         <div className="flex items-center">
           {!activeTab?.isRich && (
-            <FontSizeControls 
-              editor={editor} 
-              isTablet={activeTab?.isTablet || false} 
+            <FontSizeControls
+              editor={editor}
+              isTablet={activeTab?.isTablet || false}
               activeTabId={activeTab?.id || null}
             />
           )}
-          
+
           {!activeTab?.isTablet && !isInSmartView && (
             <RichTextControls activeTab={activeTab} />
           )}
         </div>
-        
+
         {/* Divider 1 - only show if Group 2 has content */}
         {showAIIcon && <div className="w-px h-4 bg-gray-600"></div>}
-        
+
         {/* Group 2: Search and Init AI */}
         {showAIIcon && (
           <div className="flex items-center space-x-2">
@@ -424,23 +425,25 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             <AIStatusIcon />
           </div>
         )}
-        
+
         {/* Divider 2 - show if Group 2 OR Group 3 has content */}
         {(showAIIcon || !isMobile) && <div className="w-px h-4 bg-gray-600"></div>}
-        
+
         {/* Group 3: Macro controls (Record, Stop, Play, Play to End) + Status */}
         {!isMobile && (
           <div className="flex items-center">
             <Macro editor={editor} />
           </div>
         )}
-        
+
         {/* Divider 3 - only show if both Macro and Group 4 are visible */}
         {!isMobile && showAIIcon && <div className="w-px h-4 bg-gray-600"></div>}
-        
-        {/* Group 4: Support */}
+
+        {/* Group 4: Support & Theme */}
         {showAIIcon && (
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
+            <div className="w-px h-4 bg-gray-600"></div>
             <button
               onClick={() =>
                 window.open("https://ko-fi.com/scratchtabs", "_blank")
