@@ -22,7 +22,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
       <button
         ref={newTabButtonRef}
         onClick={() => handleNewTab(side === "right")}
-        className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+        className="px-2 py-1 text-themed-secondary bg-themed-hover flex items-center h-8"
         title="New tab"
         data-testid="icon-new-tab"
         data-side={side}
@@ -31,7 +31,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
       </button>
       <button
         onClick={() => handleNewTabFromPaste(side === "right")}
-        className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+        className="px-2 py-1 text-themed-secondary bg-themed-hover flex items-center h-8"
         title="New tab with contents from clipboard"
         data-testid="icon-new-tab-from-clipboard"
         data-side={side}
@@ -41,7 +41,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
       <button
         ref={tabletButtonRef}
         onClick={onShowTabletSelector}
-        className="px-2 py-1 hover:bg-gray-700 flex items-center h-8"
+        className="px-2 py-1 text-themed-secondary bg-themed-hover flex items-center h-8"
         title="New tablet"
         data-testid="icon-new-tablet"
         data-side={side}

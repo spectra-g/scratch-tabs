@@ -100,13 +100,13 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({
     <BaseModal title="Summary" onClose={onClose} maxWidthClass="max-w-4xl">
       <div className="p-2 min-h-[250px] flex flex-col">
         {/* Experimental feature notice */}
-        <div className="mb-3 px-3 py-2 bg-blue-900/30 border border-blue-500/30 rounded-md text-xs text-blue-200">
+        <div className="mb-3 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-500/30 rounded-md text-xs text-blue-800 dark:text-blue-200">
           <span className="font-semibold">Experimental Feature:</span> This AI
           summary is processed entirely in your browser. No content is sent to
           any servers - your data remains private and local.
         </div>
 
-        <div className="flex-1 overflow-auto custom-scrollbar bg-gray-900/30 rounded-md p-4 flex items-center justify-center border border-gray-700/50 shadow-inner">
+        <div className="flex-1 overflow-auto custom-scrollbar bg-themed-secondary rounded-md p-4 flex items-center justify-center border border-themed shadow-inner">
           {showThinking && !currentError && (
             <div className="flex items-center justify-center space-x-1 text-blue-400">
               <div className="text-shimmer p-1">
@@ -115,17 +115,17 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({
             </div>
           )}
           {currentError && (
-            <div className="text-center text-red-300 p-4 bg-red-900/80 rounded border border-red-500/40 shadow-lg">
-              <p className="font-semibold text-red-200 mb-1">
+            <div className="text-center text-red-800 dark:text-red-300 p-4 bg-red-50 dark:bg-red-900/80 rounded border border-red-200 dark:border-red-500/40 shadow-lg">
+              <p className="font-semibold text-red-900 dark:text-red-200 mb-1">
                 Summarization Error
               </p>
               <p className="text-sm">{currentError}</p>
             </div>
           )}
           {!showThinking && !currentError && (
-            <div className="relative prose prose-sm prose-invert max-w-none text-gray-200 whitespace-pre-wrap leading-relaxed p-2 bg-gray-800/30 rounded-md border border-gray-600/20">
+            <div className="relative prose prose-sm dark:prose-invert max-w-none text-themed whitespace-pre-wrap leading-relaxed p-2 bg-themed rounded-md border border-themed">
               {localSummary || (
-                <span className="text-gray-500 italic">
+                <span className="text-themed-muted italic">
                   Summary could not be generated or is empty.
                 </span>
               )}

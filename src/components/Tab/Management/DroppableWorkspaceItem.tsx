@@ -40,8 +40,8 @@ export const DroppableWorkspaceItem: React.FC<DroppableWorkspaceItemProps> = ({
     <div
       ref={setNodeRef}
       data-workspace-id={workspace.id}
-      className={`relative flex items-center justify-between px-3 py-1.5 cursor-pointer 
-        ${isActive ? "bg-blue-500/20" : "hover:bg-gray-700/50"} 
+      className={`relative flex items-center justify-between px-3 py-1.5 cursor-pointer
+        ${isActive ? "bg-blue-500/10" : "hover:bg-themed-hover"}
         ${isOver ? "bg-green-500/40 ring-2 ring-inset ring-green-500" : ""}`}
       onClick={(e) => onSelect(workspace.id, e)}
       style={{
@@ -52,14 +52,14 @@ export const DroppableWorkspaceItem: React.FC<DroppableWorkspaceItemProps> = ({
       <div className="flex items-center relative z-10">
         <Folder
           size={16}
-          className={`mr-2 ${isActive ? "text-blue-400" : "text-gray-400"}`}
+          className={`mr-2 ${isActive ? "text-blue-500" : "icon-themed"}`}
         />
         <span
-          className={`text-sm ${isActive ? "text-blue-300" : "text-gray-100"}`}
+          className={`text-sm ${isActive ? "text-blue-500" : "text-themed"}`}
         >
           {workspace.name}
         </span>
-        <span className="ml-2 text-xs text-gray-400">
+        <span className="ml-2 text-xs text-themed-muted">
           ({workspace.tabCount === -1 ? "..." : workspace.tabCount})
         </span>
       </div>
@@ -70,7 +70,7 @@ export const DroppableWorkspaceItem: React.FC<DroppableWorkspaceItemProps> = ({
             e.stopPropagation();
             onRename();
           }}
-          className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded"
+          className="p-1 icon-themed icon-themed-hover hover:bg-themed-hover rounded"
           title="Rename workspace"
         >
           <Edit size={14} />
@@ -80,7 +80,7 @@ export const DroppableWorkspaceItem: React.FC<DroppableWorkspaceItemProps> = ({
             e.stopPropagation();
             onDelete();
           }}
-          className="p-1 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded"
+          className="p-1 icon-themed hover:text-red-400 hover:bg-themed-hover rounded"
           title="Delete workspace"
         >
           <Trash2 size={14} />

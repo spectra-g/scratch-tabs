@@ -158,7 +158,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     const hasTextContent = tab.content && tab.content.trim() !== "";
     const hasRichContent = RichTextService.hasContent(tab.richContent);
     const hasAnyContent = hasTextContent || hasRichContent;
-    
+
     if (!shouldBypassConfirmation && (hasAnyContent || tab.isTablet)) {
       // Get the position of the close button for positioning the confirmation dialog
       const rect = e.currentTarget.getBoundingClientRect();
@@ -285,13 +285,12 @@ export const SortableTab: React.FC<SortableTabProps> = ({
       <div
         ref={setRefs}
         className={`tab-item group relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
-                    ${
-                      isActive
-                        ? "bg-gray-600/90 text-gray-100 border-b-2 border-blue-400 shadow-sm"
-                        : "text-gray-300 hover:text-gray-100 hover:bg-gray-700/40 border-b-2 border-transparent"
-                    }
+                    ${isActive
+            ? "bg-white dark:bg-gray-600/90 text-slate-900 dark:text-gray-100 border-b-2 border-blue-500 shadow-sm"
+            : "bg-transparent dark:bg-transparent text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-100 dark:hover:bg-gray-700/40 border-b-2 border-transparent"
+          }
                     ${isDragging && !tab.isPinned ? "bg-blue-500/90 text-white shadow-md scale-105" : ""}
-                    border-r-2 border-r-gray-700/90 backdrop-blur-sm`}
+                    border-r border-r-slate-300 dark:border-r-gray-700/90 backdrop-blur-sm`}
         style={style}
         data-testid={`tab-${tab.title}`}
         data-side={side}
@@ -317,11 +316,10 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         {tab.isPinned && (
           <Pin
             size={11}
-            className={`flex-shrink-0 mr-1.5 drop-shadow-sm ${
-              isActive
-                ? "text-gray-100"
-                : "text-gray-300 group-hover:text-gray-100"
-            }`}
+            className={`flex-shrink-0 mr-1.5 drop-shadow-sm ${isActive
+              ? "text-slate-900 dark:text-gray-100"
+              : "text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-gray-100"
+              }`}
           />
         )}
 
@@ -344,7 +342,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
             onBlur={onEditSubmit}
             onKeyDown={handleKeyDown}
             onClick={(e) => e.stopPropagation()}
-            className="absolute top-0 left-0 h-full bg-gray-600 text-gray-200 px-2 py-0.5 rounded outline-none text-xs border border-blue-500 shadow-lg"
+            className="absolute top-0 left-0 h-full bg-gray-600 dark:bg-gray-600 text-gray-200 dark:text-gray-200 px-2 py-0.5 rounded outline-none text-xs border border-blue-500 shadow-lg"
             style={{
               minWidth: EDITING_INPUT_MIN_WIDTH,
               width: `${Math.max(150, (editingTitle.length + 5) * 8)}px`, // Dynamic width based on content
@@ -358,7 +356,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
 
         {!isEditing && showCloseButton && (
           <button
-            className="flex-shrink-0 hover:bg-gray-600/80 rounded-sm transition-all duration-150 hover:text-red-300 ml-1 -mr-2 px-1 py-1"
+            className="flex-shrink-0 hover:bg-gray-600/80 dark:hover:bg-gray-600/80 rounded-sm transition-all duration-150 hover:text-red-300 dark:hover:text-red-300 ml-1 -mr-2 px-1 py-1"
             onClick={handleCloseClick}
             onMouseDown={(e) => {
               // Handle CTRL+click immediately on mousedown to prevent context menu

@@ -47,28 +47,28 @@ export const ImportCodeModal: React.FC<ImportCodeModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-      <div className="bg-gray-850 p-6 rounded-lg shadow-2xl max-w-md w-full border border-gray-700">
+      <div className="bg-themed p-6 rounded-lg shadow-2xl max-w-md w-full border border-themed">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <Code size={24} className="text-blue-400 mr-3" />
-            <h3 className="text-lg font-semibold text-white">Import content from tab</h3>
+            <Code size={24} className="text-blue-500 mr-3" />
+            <h3 className="text-lg font-semibold text-themed">Import content from tab</h3>
           </div>
           <button
             onClick={handleClose}
-            className="p-1 hover:bg-gray-700 rounded transition-colors"
+            className="p-1 hover:bg-themed-hover rounded transition-colors"
           >
-            <X size={20} className="text-gray-400" />
+            <X size={20} className="icon-themed" />
           </button>
         </div>
-        
-        <p className="text-gray-300 mb-4">
+
+        <p className="text-themed-secondary mb-4">
           Select a tab to import its content as a code block:
         </p>
 
         {availableTabs.length === 0 ? (
           <div className="text-center py-8">
-            <Code size={48} className="text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-500">No tabs available for import</p>
+            <Code size={48} className="text-themed-muted mx-auto mb-4" />
+            <p className="text-themed-muted">No tabs available for import</p>
           </div>
         ) : (
           <>
@@ -77,20 +77,19 @@ export const ImportCodeModal: React.FC<ImportCodeModalProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setSelectedTabId(tab.id)}
-                  className={`w-full text-left p-3 rounded-md border transition-colors ${
-                    selectedTabId === tab.id
+                  className={`w-full text-left p-3 rounded-md border transition-colors ${selectedTabId === tab.id
                       ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
-                  }`}
+                      : 'border-themed hover:border-themed-light hover:bg-themed-hover'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium text-gray-200">{tab.title}</div>
-                      <div className="text-xs text-gray-400 capitalize">
+                      <div className="font-medium text-themed">{tab.title}</div>
+                      <div className="text-xs text-themed-muted capitalize">
                         {tab.language}
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-themed-muted">
                       {(tab.content?.length || 0)} chars
                     </div>
                   </div>
@@ -101,14 +100,14 @@ export const ImportCodeModal: React.FC<ImportCodeModalProps> = ({
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleClose}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                className="px-4 py-2 text-sm text-themed-muted hover:text-themed transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleImport}
                 disabled={!selectedTabId || isImporting}
-                className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md transition-colors"
+                className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white rounded-md transition-colors"
               >
                 {isImporting ? 'Importing...' : 'Import Code'}
               </button>

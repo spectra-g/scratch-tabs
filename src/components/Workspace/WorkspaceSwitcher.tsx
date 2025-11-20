@@ -126,7 +126,7 @@ export const WorkspaceSwitcher: React.FC = () => {
     try {
       await deleteWorkspace(id);
       setShowContextMenu(null);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handleSwitchWorkspace = async (id: string) => {
@@ -157,18 +157,18 @@ export const WorkspaceSwitcher: React.FC = () => {
       <button
         ref={buttonRef}
         onClick={toggleDropdown}
-        className="h-full px-2 hover:bg-gray-700/50 rounded-md transition-colors flex items-center space-x-2"
+        className="h-full px-2 bg-themed-hover rounded-md transition-colors flex items-center space-x-2"
         title="Switch Workspace"
         data-testid="workspace-switcher"
         aria-label={currentWorkspaceName}
       >
-        <Folders size={16} className="text-gray-400" />
+        <Folders size={16} className="icon-themed" />
       </button>
 
       {isOpen && (
         <div
           ref={containerRef}
-          className="fixed w-64 bg-gray-800/95 backdrop-blur border border-gray-700/50 rounded-lg shadow-2xl overflow-hidden flex flex-col"
+          className="fixed w-64 bg-themed border border-themed rounded-lg shadow-2xl overflow-hidden flex flex-col"
           style={{
             top: buttonRef.current
               ? buttonRef.current.getBoundingClientRect().bottom + 4
@@ -180,8 +180,8 @@ export const WorkspaceSwitcher: React.FC = () => {
           }}
         >
           {/* Header */}
-          <div className="px-3 py-2 border-b border-gray-700/50 flex-shrink-0">
-            <h3 className="text-sm font-medium text-gray-200">Workspaces</h3>
+          <div className="px-3 py-2 border-b border-themed flex-shrink-0">
+            <h3 className="text-sm font-medium text-themed">Workspaces</h3>
           </div>
 
           {/* Workspace List - Scrollable */}
@@ -190,9 +190,8 @@ export const WorkspaceSwitcher: React.FC = () => {
               {workspaces.map((workspace) => (
                 <div
                   key={workspace.id}
-                  className={`group relative flex items-center justify-between px-3 py-2 hover:bg-gray-700/50 transition-colors cursor-pointer ${
-                    workspace.id === activeWorkspaceId ? "bg-gray-700/30" : ""
-                  }`}
+                  className={`group relative flex items-center justify-between px-3 py-2 bg-themed-hover transition-colors cursor-pointer ${workspace.id === activeWorkspaceId ? "bg-themed-secondary" : ""
+                    }`}
                   onClick={() => handleSwitchWorkspace(workspace.id)}
                 >
                   {editingId === workspace.id ? (
@@ -210,16 +209,16 @@ export const WorkspaceSwitcher: React.FC = () => {
                         }
                       }}
                       onBlur={() => handleRenameWorkspace(workspace.id)}
-                      className="flex-1 bg-gray-900/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200"
+                      className="flex-1 bg-themed-secondary border border-themed rounded px-2 py-1 text-sm text-themed"
                       autoFocus
                       onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
                     <>
-                      <span className="flex-1 text-left text-sm text-gray-200 truncate">
+                      <span className="flex-1 text-left text-sm text-themed truncate">
                         {workspace.name}{" "}
                         {typeof tabCounts[workspace.id] === "number" ? (
-                          <span className="text-gray-400">
+                          <span className="text-themed-muted">
                             ({tabCounts[workspace.id]})
                           </span>
                         ) : null}
@@ -234,7 +233,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                             y: rect.top,
                           });
                         }}
-                        className="p-1 text-gray-400 hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="p-1 text-themed-muted hover:text-themed opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <MoreHorizontal size={14} />
                       </button>
@@ -248,7 +247,7 @@ export const WorkspaceSwitcher: React.FC = () => {
           {/* Bottom Actions - Always Visible */}
           <div className="flex-shrink-0">
             {/* Create New Workspace */}
-            <div className="px-3 py-2 border-t border-gray-700/50">
+            <div className="px-3 py-2 border-t border-themed">
               {isCreating ? (
                 <div className="space-y-2">
                   <input
@@ -263,7 +262,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                       }
                     }}
                     placeholder="Workspace name"
-                    className="w-full bg-gray-900/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200"
+                    className="w-full bg-themed-secondary border border-themed rounded px-2 py-1 text-sm text-themed"
                     autoFocus
                   />
                   <div className="flex items-center justify-end space-x-2">
@@ -272,7 +271,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                         setIsCreating(false);
                         setNewWorkspaceName("");
                       }}
-                      className="px-3 py-1 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                      className="px-3 py-1 text-sm text-themed-muted hover:text-themed transition-colors"
                     >
                       Cancel
                     </button>
@@ -291,7 +290,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                     e.stopPropagation();
                     setIsCreating(true);
                   }}
-                  className="w-full text-left text-sm text-gray-400 hover:text-gray-200 flex items-center space-x-2"
+                  className="w-full text-left text-sm text-themed-muted hover:text-themed flex items-center space-x-2"
                 >
                   <Plus size={14} />
                   <span>New workspace</span>
@@ -300,13 +299,13 @@ export const WorkspaceSwitcher: React.FC = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="px-1 py-1 border-t border-gray-700/50">
+            <div className="px-1 py-1 border-t border-themed">
               <button
                 onClick={() => {
                   openTabManagementModal();
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
+                className="w-full text-left px-3 py-2 text-sm text-themed-secondary bg-themed-hover flex items-center space-x-2 transition-colors rounded-md"
               >
                 <ListTodo size={14} />
                 <span>Manage Tabs...</span>
@@ -316,7 +315,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                   setIsExportModalOpen(true);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
+                className="w-full text-left px-3 py-2 text-sm text-themed-secondary bg-themed-hover flex items-center space-x-2 transition-colors rounded-md"
               >
                 <Download size={14} />
                 <span>Export Workspaces...</span>
@@ -326,7 +325,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                   openImportModal();
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors rounded-md"
+                className="w-full text-left px-3 py-2 text-sm text-themed-secondary bg-themed-hover flex items-center space-x-2 transition-colors rounded-md"
               >
                 <Upload size={14} />
                 <span>Import Workspaces...</span>
@@ -340,7 +339,7 @@ export const WorkspaceSwitcher: React.FC = () => {
       {showContextMenu && (
         <div
           ref={contextMenuRef}
-          className="fixed bg-gray-800/95 backdrop-blur border border-gray-700/50 rounded-lg shadow-xl py-1 min-w-[120px]"
+          className="fixed bg-themed border border-themed rounded-lg shadow-xl py-1 min-w-[120px]"
           style={{
             top: showContextMenu.y,
             right: window.innerWidth - showContextMenu.x,
@@ -356,7 +355,7 @@ export const WorkspaceSwitcher: React.FC = () => {
               );
               setShowContextMenu(null);
             }}
-            className="w-full text-left px-3 py-1.5 text-sm text-gray-200 hover:bg-gray-700/50 flex items-center space-x-2"
+            className="w-full text-left px-3 py-1.5 text-sm text-themed bg-themed-hover flex items-center space-x-2"
           >
             <Pencil size={14} />
             <span>Rename</span>
@@ -366,7 +365,7 @@ export const WorkspaceSwitcher: React.FC = () => {
               e.stopPropagation();
               handleDeleteWorkspace(showContextMenu.id);
             }}
-            className="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-gray-700/50 flex items-center space-x-2"
+            className="w-full text-left px-3 py-1.5 text-sm text-red-400 bg-themed-hover flex items-center space-x-2"
           >
             <Trash2 size={14} />
             <span>Delete</span>

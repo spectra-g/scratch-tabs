@@ -28,7 +28,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [currentLinkUrl, setCurrentLinkUrl] = useState('');
   const [currentLinkText, setCurrentLinkText] = useState('');
-  const [lastSelection, setLastSelection] = useState<{from: number, to: number} | null>(null);
+  const [lastSelection, setLastSelection] = useState<{ from: number, to: number } | null>(null);
   const [, forceUpdate] = useState({});
   const { updateTabState } = useRootStore();
 
@@ -42,7 +42,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       if (from !== to) {
         setLastSelection({ from, to });
       }
-      
+
       forceUpdate({});
     };
 
@@ -62,7 +62,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
     const currentLink = editor.getAttributes('link');
     if (currentLink.href) {
       setCurrentLinkUrl(currentLink.href);
-      
+
       const result = extractLinkTextForEditing(editor, currentLink.href);
       setCurrentLinkText(result.text);
       setShowLinkModal(true);
@@ -70,11 +70,11 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
     } else {
       setCurrentLinkUrl('');
     }
-    
+
     // Get the current selected text for the link text field
     const { from, to } = editor.state.selection;
     let selectedText = editor.state.doc.textBetween(from, to);
-    
+
     // If no text is selected, try to select the word at cursor position
     if (!selectedText) {
       // Try to use the last stored selection first
@@ -85,31 +85,31 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         try {
           const { state } = editor;
           const { $from } = state.selection;
-          
+
           // Find word boundaries around the cursor
           const textNode = $from.parent;
           const offset = $from.parentOffset;
           const text = textNode.textContent || '';
-          
+
           if (text) {
             // Find the start and end of the word at cursor position
             let start = offset;
             let end = offset;
-            
+
             // Move start backward to find word start
             while (start > 0 && /\w/.test(text[start - 1])) {
               start--;
             }
-            
+
             // Move end forward to find word end  
             while (end < text.length && /\w/.test(text[end])) {
               end++;
             }
-            
+
             if (start < end) {
               // We found a word, get the text
               selectedText = text.substring(start, end);
-              
+
               // Store this as our selection for later use
               const wordStart = $from.pos - offset + start;
               const wordEnd = $from.pos - offset + end;
@@ -121,7 +121,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         }
       }
     }
-    
+
     setCurrentLinkText(selectedText || '');
     setShowLinkModal(true);
   };
@@ -131,7 +131,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       if (text) {
         // If text is provided, we need to handle different scenarios
         const { from, to } = editor.state.selection;
-        
+
         if (lastSelection) {
           // We have a stored selection from when the user clicked on a word - use it
           editor.chain()
@@ -197,18 +197,17 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       onClick={onClick}
       title={title}
       data-testid={testId}
-      className={`p-2 rounded transition-colors ${
-        isActive
-          ? 'bg-blue-600 text-white'
-          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-      }`}
+      className={`p-2 rounded transition-colors ${isActive
+        ? 'bg-blue-600 text-white'
+        : 'text-themed-secondary bg-themed-hover'
+        }`}
     >
       {children}
     </button>
   );
 
   return (
-    <div className="flex items-center space-x-1 bg-gray-800 p-2">
+    <div className="flex items-center space-x-1 bg-themed-secondary p-2 border-b border-themed">
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         isActive={editor.isActive('heading', { level: 1 })}
@@ -236,7 +235,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         H3
       </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-600 mx-1" />
+      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
 
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -300,29 +299,29 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
                 if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
                   return 'json';
                 }
-                
+
                 if (text.includes('{') && text.includes('}') && (text.includes('":') || text.includes('" :'))) {
                   return 'json';
                 }
-                
+
                 // JavaScript detection
                 if (text.includes('function ') || text.includes('const ') || text.includes('let ') || text.includes('var ')) {
                   return 'javascript';
                 }
-                
+
                 // Python detection  
                 if (text.includes('def ') || text.includes('import ') || text.includes('print(')) {
                   return 'python';
                 }
-                
+
                 // XML/HTML detection
                 if (text.includes('<') && text.includes('>')) {
                   return 'xml';
                 }
-                
+
                 return 'javascript'; // Default
               };
-              
+
               const language = detectLanguage(selectedText);
 
               (editor.commands as any).toggleCodeBlockSmart({ language });
@@ -339,7 +338,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         <FileCode size={16} />
       </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-600 mx-1" />
+      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
 
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -377,7 +376,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         <Minus size={16} />
       </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-600 mx-1" />
+      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
 
       <ToolbarButton
         onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
@@ -397,7 +396,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         <Link size={16} />
       </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-600 mx-1" />
+      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
 
       {onImportCode && (
         <ToolbarButton

@@ -30,7 +30,7 @@ import { getTabsInVisualOrder } from "../../utils/diffModalHelpers";
 const MainLayout: React.FC = () => {
   // Update document title with workspace name
   useDocumentTitle();
-  
+
   // FIX: Use selective subscription for tab count only
   const tabCount = useTabsStore((state) => state.tabs.length);
 
@@ -75,7 +75,7 @@ const MainLayout: React.FC = () => {
   );
 
   const [isAppInitialized, setIsAppInitialized] = useState(false);
-  
+
   // State for keyboard shortcut confirmation dialog
   const [keyboardCloseConfirmation, setKeyboardCloseConfirmation] = useState<{
     isOpen: boolean;
@@ -129,7 +129,7 @@ const MainLayout: React.FC = () => {
       // Use getState to ensure we always get the latest version of the saveState function
       // and prevent issues with stale closures.
       await usePersistenceStore.getState().saveState();
-      
+
       // Update test indicator after save completes
       updateSaveIndicator();
     }, 2500); // Save every 2.5 seconds
@@ -177,8 +177,8 @@ const MainLayout: React.FC = () => {
       const isRightSide = explicitSide
         ? explicitSide === "right"
         : currentSplitView.rightTabs.includes(
-            currentSplitView.activeRightTabId || "",
-          );
+          currentSplitView.activeRightTabId || "",
+        );
       const history = isRightSide
         ? (currentSplitView as any).rightTabHistory
         : (currentSplitView as any).leftTabHistory;
@@ -296,21 +296,21 @@ const MainLayout: React.FC = () => {
       if (event.ctrlKey && !event.metaKey && event.key === 'w') {
         event.preventDefault();
         event.stopPropagation();
-        
+
         // Determine which tab should be closed based on active side
-        const targetTabId = splitView?.activeSide === 'left' 
-          ? splitView?.activeLeftTabId 
+        const targetTabId = splitView?.activeSide === 'left'
+          ? splitView?.activeLeftTabId
           : splitView?.activeRightTabId;
-          
+
         if (targetTabId) {
           // Get tabs data only when needed, without subscribing
           const tabs = useTabsStore.getState().tabs;
           const activeTab = tabs.find(tab => tab.id === targetTabId);
-          
+
           if (activeTab) {
             // Check if confirmation is needed (same logic as SortableTab)
             const needsConfirmation = (activeTab.content && activeTab.content.trim() !== "") || activeTab.isTablet;
-            
+
             if (needsConfirmation) {
               setKeyboardCloseConfirmation({
                 isOpen: true,
@@ -394,7 +394,7 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900 text-white">
+    <div className="h-screen flex flex-col bg-themed text-themed">
       <div
         ref={containerRef}
         className="flex w-full h-full min-w-0 overflow-hidden"
@@ -465,7 +465,7 @@ const MainLayout: React.FC = () => {
       )}
       {isSearchOpen && <SearchModal />}
       <AIModelManagementModal />
-      
+
       {keyboardCloseConfirmation && (
         <ConfirmationDialog
           isOpen={keyboardCloseConfirmation.isOpen}
@@ -476,7 +476,7 @@ const MainLayout: React.FC = () => {
           positionType="above"
         />
       )}
-      
+
       <TestFields />
     </div>
   );

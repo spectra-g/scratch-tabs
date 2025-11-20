@@ -60,32 +60,32 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
         try {
           // Try multiple selectors for search highlights
           let searchHighlight = editor.view.dom.querySelector('.search-result') ||
-                               editor.view.dom.querySelector('[data-search-result]') ||
-                               editor.view.dom.querySelector('.search-result-current') ||
-                               editor.view.dom.querySelector('.ProseMirror-search-result') ||
-                               editor.view.dom.querySelector('mark[data-type="search"]') ||
-                               editor.view.dom.querySelector('span[data-decoration-type="search"]') ||
-                               editor.view.dom.querySelector('.search-and-replace-result') ||
-                               editor.view.dom.querySelector('.searchAndReplace-result') ||
-                               editor.view.dom.querySelector('mark') ||
-                               editor.view.dom.querySelector('span[style*="background"]') ||
-                               editor.view.dom.querySelector('[class*="search"]') ||
-                               editor.view.dom.querySelector('[class*="highlight"]');
-          
+            editor.view.dom.querySelector('[data-search-result]') ||
+            editor.view.dom.querySelector('.search-result-current') ||
+            editor.view.dom.querySelector('.ProseMirror-search-result') ||
+            editor.view.dom.querySelector('mark[data-type="search"]') ||
+            editor.view.dom.querySelector('span[data-decoration-type="search"]') ||
+            editor.view.dom.querySelector('.search-and-replace-result') ||
+            editor.view.dom.querySelector('.searchAndReplace-result') ||
+            editor.view.dom.querySelector('mark') ||
+            editor.view.dom.querySelector('span[style*="background"]') ||
+            editor.view.dom.querySelector('[class*="search"]') ||
+            editor.view.dom.querySelector('[class*="highlight"]');
+
           if (searchHighlight) {
             // If we found a highlighted result, scroll to it carefully to avoid moving the toolbar
             const editorElement = editor.view.dom;
             const scrollContainer = editorElement.closest('.overflow-y-auto');
-            
+
             if (scrollContainer) {
               // Manual scroll calculation to avoid scrollIntoView affecting the toolbar
               const containerRect = scrollContainer.getBoundingClientRect();
               const highlightRect = searchHighlight.getBoundingClientRect();
-              
+
               // Calculate the position relative to the scroll container
               const relativeTop = highlightRect.top - containerRect.top + scrollContainer.scrollTop;
               const targetScroll = relativeTop - containerRect.height / 2;
-              
+
               scrollContainer.scrollTo({
                 top: Math.max(0, targetScroll),
                 behavior: 'smooth'
@@ -108,7 +108,7 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
             if (currentResult && typeof currentResult.from === 'number') {
               // Get coordinates of the search result position
               const coords = editor.view.coordsAtPos(currentResult.from);
-              
+
               // Find the scrollable container
               let scrollContainer = editor.view.dom.closest('.overflow-y-auto');
               if (!scrollContainer) {
@@ -127,18 +127,18 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
                   parent = parent.parentElement;
                 }
               }
-              
+
               if (scrollContainer && coords) {
                 const containerRect = scrollContainer.getBoundingClientRect();
                 const scrollTop = scrollContainer.scrollTop;
-                
+
                 // Calculate relative position
                 const resultTop = coords.top - containerRect.top + scrollTop;
                 const containerHeight = containerRect.height;
-                
+
                 // Center the result
                 const targetScrollTop = resultTop - containerHeight / 2;
-                
+
                 scrollContainer.scrollTo({
                   top: Math.max(0, targetScrollTop),
                   behavior: 'smooth'
@@ -150,26 +150,26 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
 
           // Final fallback: try different scrolling approaches
           const { from } = editor.state.selection;
-          
+
           // Skip built-in scrolling methods as they may affect the toolbar
           // Go directly to manual coordinate calculation for better control
 
           // Manual coordinate calculation with strict container targeting
           const coords = editor.view.coordsAtPos(from);
-          
+
           if (coords) {
             // Find ONLY the editor content scrollable container (not the whole editor)
             const editorElement = editor.view.dom;
-            
+
             // Look specifically for the editor content container with overflow-y-auto
             // The structure is: editor container (.flex-1.overflow-y-auto) contains EditorContent
             let scrollContainer = editorElement.closest('.flex-1.overflow-y-auto') ||
-                                editorElement.closest('.overflow-y-auto.custom-scrollbar') ||
-                                editorElement.closest('.overflow-y-auto');
+              editorElement.closest('.overflow-y-auto.custom-scrollbar') ||
+              editorElement.closest('.overflow-y-auto');
 
             if (scrollContainer) {
               const containerRect = scrollContainer.getBoundingClientRect();
-              
+
               // Calculate position relative to the scroll container
               const relativeTop = coords.top - containerRect.top + scrollContainer.scrollTop;
               const targetScroll = relativeTop - containerRect.height / 2;
@@ -181,7 +181,7 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
             }
             // Removed the window scroll fallback to prevent toolbar issues
           }
-          
+
         } catch (error) {
           console.warn('Could not scroll to search result:', error);
         }
@@ -234,35 +234,32 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
       {/* Search Icon Button */}
       <button
         onClick={isVisible ? handleClose : onOpen}
-        className={`px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-md shadow-lg transition-all duration-300 ease-out ${
-          isVisible ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
-        }`}
+        className={`px-2 py-1 bg-themed bg-themed-hover border border-themed-light rounded-md shadow-lg transition-all duration-300 ease-out ${isVisible ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
+          }`}
         title="Search (Ctrl+F)"
         style={{ height: '36px' }}
       >
-        <Search size={14} className="text-gray-400" />
+        <Search size={14} className="icon-themed" />
       </button>
 
       {/* Search Bar - slides out from the search icon position */}
-      <div 
-        className={`absolute right-0 flex items-center bg-gray-800 border border-gray-600 rounded-md shadow-lg transition-all duration-300 ease-out overflow-hidden ${
-          isVisible 
-            ? 'opacity-100 translate-x-0' 
-            : 'opacity-0 translate-x-4 pointer-events-none'
-        }`}
+      <div
+        className={`absolute right-0 flex items-center bg-themed border border-themed-light rounded-md shadow-lg transition-all duration-300 ease-out overflow-hidden ${isVisible
+          ? 'opacity-100 translate-x-0'
+          : 'opacity-0 translate-x-4 pointer-events-none'
+          }`}
         style={{
           width: isVisible ? '360px' : '36px', // 36px matches the button width
           height: '36px', // Further reduced height for better spacing
         }}
       >
-        <div 
-          className={`flex items-center px-2.5 py-1 w-full transition-opacity duration-200 ${
-            isVisible ? 'opacity-100' : 'opacity-0'
-          }`}
+        <div
+          className={`flex items-center px-2.5 py-1 w-full transition-opacity duration-200 ${isVisible ? 'opacity-100' : 'opacity-0'
+            }`}
           data-testid={isVisible ? 'inline-search-bar' : undefined}
         >
-          <Search size={14} className="text-gray-400 mr-2 flex-shrink-0" />
-          
+          <Search size={14} className="icon-themed mr-2 flex-shrink-0" />
+
           <input
             ref={inputRef}
             type="text"
@@ -270,36 +267,36 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
             onChange={(e) => handleSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search in document..."
-            className="flex-1 bg-transparent text-xs text-gray-200 placeholder-gray-500 outline-none min-w-0"
+            className="flex-1 bg-transparent text-xs text-themed placeholder-gray-500 outline-none min-w-0"
           />
-          
+
           {totalMatches > 0 && (
             <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
-              <span className="text-[10px] text-gray-400 whitespace-nowrap">
+              <span className="text-[10px] text-themed-tertiary whitespace-nowrap">
                 {currentIndex} of {totalMatches}
               </span>
-              
+
               <button
                 onClick={handlePrevious}
-                className="p-1 hover:bg-gray-700 rounded transition-colors"
+                className="p-1 bg-themed-hover rounded transition-colors"
                 title="Previous match"
               >
                 <ChevronUp size={14} />
               </button>
-              
+
               <button
                 onClick={handleNext}
-                className="p-1 hover:bg-gray-700 rounded transition-colors"
+                className="p-1 bg-themed-hover rounded transition-colors"
                 title="Next match"
               >
                 <ChevronDown size={14} />
               </button>
             </div>
           )}
-          
+
           <button
             onClick={handleClose}
-            className="p-1 hover:bg-gray-700 rounded transition-colors ml-2 flex-shrink-0"
+            className="p-1 bg-themed-hover rounded transition-colors ml-2 flex-shrink-0"
             title="Close search"
           >
             <X size={14} />

@@ -37,13 +37,13 @@ const ConfigSection: React.FC<ConfigSectionProps> = ({
     <div className="mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+        className="flex items-center justify-between w-full p-3 bg-themed-secondary hover:bg-themed-hover rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-themed"
       >
-        <span className="text-base font-medium text-gray-200">{title}</span>
+        <span className="text-base font-medium text-themed">{title}</span>
         {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-themed-muted" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-themed-muted" />
         )}
       </button>
       {isExpanded && <div className="mt-2 space-y-3 px-3">{children}</div>}
@@ -69,14 +69,14 @@ const Checkbox: React.FC<CheckboxProps> = ({
       type="checkbox"
       checked={checked}
       onChange={(e) => onChange(e.target.checked)}
-      className="mt-0.5 w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors"
+      className="mt-0.5 w-4 h-4 text-blue-600 bg-themed-secondary border-themed-light rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-themed transition-colors"
     />
     <div>
-      <span className="text-sm text-gray-300 group-hover:text-gray-200 transition-colors">
+      <span className="text-sm text-themed-secondary group-hover:text-themed transition-colors">
         {label}
       </span>
       {description && (
-        <p className="text-xs text-gray-400 mt-1">{description}</p>
+        <p className="text-xs text-themed-muted mt-1">{description}</p>
       )}
     </div>
   </label>
@@ -98,7 +98,7 @@ const TextInput: React.FC<TextInputProps> = ({
   description,
 }) => (
   <div>
-    <label className="block text-xs font-medium text-gray-300 mb-1">
+    <label className="block text-xs font-medium text-themed-secondary mb-1">
       {label}
     </label>
     <input
@@ -106,9 +106,9 @@ const TextInput: React.FC<TextInputProps> = ({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-500 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors"
+      className="w-full px-3 py-2 bg-themed-secondary border border-themed-light rounded text-sm text-themed placeholder-themed-muted hover:bg-themed-hover focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-themed focus:border-transparent transition-colors"
     />
-    {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+    {description && <p className="text-xs text-themed-muted mt-1">{description}</p>}
   </div>
 );
 
@@ -130,7 +130,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   description,
 }) => (
   <div>
-    <label className="block text-xs font-medium text-gray-300 mb-1">
+    <label className="block text-xs font-medium text-themed-secondary mb-1">
       {label}
     </label>
     <input
@@ -139,9 +139,9 @@ const NumberInput: React.FC<NumberInputProps> = ({
       onChange={(e) => onChange(parseInt(e.target.value) || 0)}
       min={min}
       max={max}
-      className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors"
+      className="w-full px-3 py-2 bg-themed-secondary border border-themed-light rounded text-sm text-themed hover:bg-themed-hover focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-themed focus:border-transparent transition-colors"
     />
-    {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+    {description && <p className="text-xs text-themed-muted mt-1">{description}</p>}
   </div>
 );
 
@@ -161,25 +161,25 @@ const Select: React.FC<SelectProps> = ({
   description,
 }) => (
   <div>
-    <label className="block text-xs font-medium text-gray-300 mb-1">
+    <label className="block text-xs font-medium text-themed-secondary mb-1">
       {label}
     </label>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors cursor-pointer"
+      className="w-full px-3 py-2 bg-themed-secondary border border-themed-light rounded text-sm text-themed hover:bg-themed-hover focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-themed focus:border-transparent transition-colors cursor-pointer"
     >
       {options.map((option) => (
         <option
           key={option.value}
           value={option.value}
-          className="bg-gray-700 text-gray-200"
+          className="bg-themed-secondary text-themed"
         >
           {option.label}
         </option>
       ))}
     </select>
-    {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+    {description && <p className="text-xs text-themed-muted mt-1">{description}</p>}
   </div>
 );
 
@@ -967,7 +967,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
               />
 
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-2">
+                <label className="block text-xs font-medium text-themed-secondary mb-2">
                   Built-in sensitive patterns
                 </label>
                 <div className="space-y-2">
@@ -1095,7 +1095,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">
+                <label className="block text-xs font-medium text-themed-secondary mb-1">
                   Custom patterns
                 </label>
                 <div className="space-y-2">
@@ -1121,7 +1121,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                               ? "Use * and ? wildcards"
                               : "Enter regex pattern"
                         }
-                        className="flex-1 px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-500 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors"
+                        className="flex-1 px-3 py-2 bg-themed-secondary border border-themed-light rounded text-sm text-themed placeholder-themed-muted hover:bg-themed-hover focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-themed focus:border-transparent transition-colors"
                       />
                       <button
                         onClick={() => {
@@ -1150,12 +1150,12 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                         },
                       });
                     }}
-                    className="w-full px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded text-sm transition-colors"
+                    className="w-full px-3 py-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 rounded text-sm transition-colors"
                   >
                     + Add custom pattern
                   </button>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-themed-muted mt-1">
                   {config.redaction.patternType === "exact"
                     ? "Patterns will match exactly as typed"
                     : config.redaction.patternType === "wildcard"
@@ -1312,7 +1312,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
           {config.javascriptSnippet && (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1">
+                <label className="block text-xs font-medium text-themed-secondary mb-1">
                   JavaScript Code
                 </label>
                 <textarea
@@ -1321,22 +1321,22 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                     onChange({ javascriptSnippet: e.target.value })
                   }
                   placeholder="return lines.filter(line => line.length > 10).join('\\n');"
-                  className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-500 hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:border-transparent transition-colors font-mono"
+                  className="w-full px-3 py-2 bg-themed-secondary border border-themed-light rounded text-sm text-themed placeholder-themed-muted hover:bg-themed-hover focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-themed focus:border-transparent transition-colors font-mono"
                   rows={4}
                 />
-                <div className="mt-1 text-xs text-gray-400">
+                <div className="mt-1 text-xs text-themed-muted">
                   <p className="mb-1">Available variables:</p>
-                  <ul className="list-disc list-inside space-y-0.5 text-gray-500">
+                  <ul className="list-disc list-inside space-y-0.5 text-themed-muted">
                     <li>
-                      <code className="text-blue-400">text</code> - full text
+                      <code className="text-blue-500">text</code> - full text
                       content
                     </li>
                     <li>
-                      <code className="text-blue-400">lines</code> - array of
+                      <code className="text-blue-500">lines</code> - array of
                       lines
                     </li>
                     <li>
-                      <code className="text-blue-400">selection</code> -
+                      <code className="text-blue-500">selection</code> -
                       selected text
                     </li>
                   </ul>

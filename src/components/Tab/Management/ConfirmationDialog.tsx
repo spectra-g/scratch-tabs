@@ -29,16 +29,16 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60]">
-      <div className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 border border-gray-700" data-testid="confirmation-dialog">
+      <div className="bg-themed rounded-lg shadow-xl max-w-md w-full p-6 border border-themed" data-testid="confirmation-dialog">
         <h3 className="font-semibold text-red-300 mb-1 flex items-center">
           <AlertTriangle size={18} className="mr-2" />
           {title}
         </h3>
-        <p className="text-gray-300 mb-6">{message}</p>
+        <p className="text-themed-secondary mb-6">{message}</p>
         <div className="flex justify-end space-x-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-md transition-colors"
+            className="px-4 py-2 bg-themed-secondary hover:bg-themed-hover text-themed rounded-md transition-colors"
           >
             {cancelText}
           </button>

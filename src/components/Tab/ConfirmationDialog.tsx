@@ -39,27 +39,27 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   // Otherwise, center on screen (default behavior)
   const dialogStyle = position
     ? {
-        position: "fixed" as const,
-        top: `${position.y}px`,
-        left: `${position.x}px`,
-        transform:
-          positionType === "above"
-            ? "translate(-50%, -100%)" // Position above and centered on the trigger point
-            : "translate(-50%, 0%)", // Position below and centered on the trigger point
-        zIndex: 50,
-      }
+      position: "fixed" as const,
+      top: `${position.y}px`,
+      left: `${position.x}px`,
+      transform:
+        positionType === "above"
+          ? "translate(-50%, -100%)" // Position above and centered on the trigger point
+          : "translate(-50%, 0%)", // Position below and centered on the trigger point
+      zIndex: 50,
+    }
     : {};
 
   const backdropStyle = position
     ? {
-        position: "fixed" as const,
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
-        zIndex: 49,
-      }
+      position: "fixed" as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.6)",
+      zIndex: 49,
+    }
     : {};
 
   return (
@@ -82,24 +82,24 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         onClick={position ? undefined : onCancel}
       >
         <div
-          className="bg-gray-850 p-4 rounded-lg shadow-2xl max-w-md w-full border border-gray-700/50"
+          className="bg-themed p-4 rounded-lg shadow-2xl max-w-md w-full border border-themed"
           style={dialogStyle}
           onClick={handleModalContentClick}
           data-testid="confirmation-dialog"
         >
-          <p className="text-white mb-6 font-medium">{message}</p>
+          <p className="text-themed mb-6 font-medium">{message}</p>
           <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={handleCancelClick}
-              className="px-3 py-1.5 text-sm text-blue-500 bg-transparent hover:bg-blue-500/10 rounded-md transition-colors"
+              className="px-3 py-1.5 text-sm text-blue-600 dark:text-blue-500 bg-transparent hover:bg-blue-500/10 rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirmClick}
-              className="px-3 py-1.5 text-sm bg-gray-850 hover:bg-gray-700 rounded-md transition-colors text-gray-200"
+              className="px-3 py-1.5 text-sm bg-themed-secondary hover:bg-themed-hover rounded-md transition-colors text-themed"
             >
               {confirmButtonText}
             </button>

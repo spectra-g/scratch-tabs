@@ -327,7 +327,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         <div
           ref={languageLabelRef}
           onClick={handleOpenLanguagePopup} // Always open popup on click
-          className="flex items-center cursor-pointer hover:bg-gray-700/50 px-1.5 py-0.5 rounded transition-colors"
+          className="flex items-center cursor-pointer bg-themed-hover px-1.5 py-0.5 rounded transition-colors"
           title="Change language"
         >
           <span className="capitalize" data-testid="status-language">{displayLabel}</span>
@@ -354,7 +354,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-3 py-0.5 bg-gray-800 text-gray-300 text-xs" data-testid="status-bar">
+    <div className="flex items-center justify-between px-3 py-0.5 bg-themed-tertiary text-themed-secondary text-xs border-t border-themed" data-testid="status-bar">
       {/* Left side: Language/Position info */}
       <div className="flex items-center space-x-4">
         {activeTab && (
@@ -366,7 +366,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
               </span>
             )}
             {!activeTab.isTablet && !activeTab.isRich && (
-              <div className="w-px h-4 bg-gray-600"></div>
+              <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
             )}
             {/* Only show language/format info when NOT in rich text mode */}
             {!activeTab.isRich && (
@@ -410,14 +410,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         </div>
 
         {/* Divider 1 - only show if Group 2 has content */}
-        {showAIIcon && <div className="w-px h-4 bg-gray-600"></div>}
+        {showAIIcon && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>}
 
         {/* Group 2: Search and Init AI */}
         {showAIIcon && (
           <div className="flex items-center space-x-2">
             <button
               onClick={() => toggleSearch()}
-              className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+              className="p-0.5 bg-themed-hover rounded transition-colors"
               title="Find in Tabs (Ctrl+Shift+F)"
             >
               <Search size={14} />
@@ -427,7 +427,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         )}
 
         {/* Divider 2 - show if Group 2 OR Group 3 has content */}
-        {(showAIIcon || !isMobile) && <div className="w-px h-4 bg-gray-600"></div>}
+        {(showAIIcon || !isMobile) && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>}
 
         {/* Group 3: Macro controls (Record, Stop, Play, Play to End) + Status */}
         {!isMobile && (
@@ -437,18 +437,18 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         )}
 
         {/* Divider 3 - only show if both Macro and Group 4 are visible */}
-        {!isMobile && showAIIcon && <div className="w-px h-4 bg-gray-600"></div>}
+        {!isMobile && showAIIcon && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>}
 
         {/* Group 4: Support & Theme */}
         {showAIIcon && (
           <div className="flex items-center space-x-2">
             <ThemeToggle />
-            <div className="w-px h-4 bg-gray-600"></div>
+            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
             <button
               onClick={() =>
                 window.open("https://ko-fi.com/scratchtabs", "_blank")
               }
-              className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+              className="p-0.5 bg-themed-hover rounded transition-colors"
               title="Support on Ko-fi"
             >
               <Coffee size={14} />

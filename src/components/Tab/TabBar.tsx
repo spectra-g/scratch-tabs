@@ -606,7 +606,7 @@ export const TabBar: React.FC<TabBarProps> = ({
 
   const handleTabClose = (tabId: string) => {
     removeTab(tabId);
-    
+
     if (hoveredTabId === tabId) {
       setTooltipVisible(false);
       clearTooltipTimers();
@@ -619,7 +619,7 @@ export const TabBar: React.FC<TabBarProps> = ({
     <>
       <div
         ref={tabBarRef}
-        className="flex bg-gray-800 text-gray-300 w-full h-8 overflow-hidden"
+        className="flex bg-themed-tertiary text-themed-tertiary w-full h-8 overflow-hidden"
         onMouseEnter={handleTabBarMouseEnter}
         onMouseLeave={handleTabBarMouseLeave}
         key={tabsKey}

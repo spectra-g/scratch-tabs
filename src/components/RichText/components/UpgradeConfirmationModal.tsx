@@ -16,33 +16,33 @@ export const UpgradeConfirmationModal: React.FC<UpgradeConfirmationModalProps> =
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-      <div className="bg-gray-850 p-6 rounded-lg shadow-2xl max-w-md w-full border border-gray-700" data-testid="rich-text-upgrade-modal">
+      <div className="bg-themed p-6 rounded-lg shadow-2xl max-w-md w-full border border-themed" data-testid="rich-text-upgrade-modal">
         <div className="flex items-center mb-4">
-          <ImageIcon size={24} className="text-blue-400 mr-3" />
-          <h3 className="text-lg font-semibold text-white">Convert to Rich Text?</h3>
+          <ImageIcon size={24} className="text-blue-500 mr-3" />
+          <h3 className="text-lg font-semibold text-themed">Convert to Rich Text?</h3>
         </div>
-        
-        <p className="text-gray-300 mb-6 leading-relaxed">
+
+        <p className="text-themed-secondary mb-6 leading-relaxed">
           It looks like you've pasted an image. Would you like to convert this tab to a rich text note to display it properly?
         </p>
-        
-        <div className="bg-gray-800 p-3 rounded-md mb-6">
-          <div className="flex items-center text-sm text-gray-400 mb-2">
+
+        <div className="bg-themed-secondary p-3 rounded-md mb-6">
+          <div className="flex items-center text-sm text-themed-muted mb-2">
             <FileText size={16} className="mr-2" />
             <span>Rich text notes support:</span>
           </div>
-          <ul className="text-xs text-gray-500 space-y-1 ml-6">
+          <ul className="text-xs text-themed-muted space-y-1 ml-6">
             <li>• Images and media</li>
             <li>• Formatted text (bold, italic, lists)</li>
             <li>• Tables and code blocks</li>
             <li>• Background textures</li>
           </ul>
         </div>
-        
+
         <div className="flex justify-end space-x-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+            className="px-4 py-2 text-sm text-themed-muted hover:text-themed transition-colors"
           >
             Keep as Text
           </button>

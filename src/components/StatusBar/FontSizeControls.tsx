@@ -105,8 +105,8 @@ export const FontSizeControls: React.FC<FontSizeControlsProps> = ({
         className="flex items-center space-x-1 px-2 py-1 hover:bg-gray-700/50 rounded transition-colors group"
         title="Font Size"
       >
-        <Type size={12} className="text-gray-400 group-hover:text-gray-300" />
-        <span className="text-xs font-mono text-gray-300">{currentFontSize}</span>
+        <Type size={12} className="text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-gray-300" />
+        <span className="text-xs font-mono text-slate-700 dark:text-gray-300">{currentFontSize}</span>
       </button>
 
       {/* Dropdown Menu */}
