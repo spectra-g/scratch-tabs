@@ -80,7 +80,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Link text (leave empty to use URL)"
-            className="w-full px-3 py-2 bg-themed-secondary border border-themed rounded-md text-themed placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 input-themed rounded-md placeholder:text-themed-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -95,7 +95,7 @@ export const LinkModal: React.FC<LinkModalProps> = ({
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="https://example.com"
-            className="w-full px-3 py-2 bg-themed-secondary border border-themed rounded-md text-themed placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 input-themed rounded-md placeholder:text-themed-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 

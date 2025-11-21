@@ -148,7 +148,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
         tabIndex={-1}
       >
         {/* Top Controls */}
-        <div className="flex-none p-3 border-b border-themed space-y-3">
+        <div className="flex-none p-3 border-b border-themed bg-themed-secondary space-y-3">
           {/* Search Input & History */}
           <div className="flex items-center space-x-2 relative">
             <Search
@@ -161,7 +161,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
               value={query}
               onChange={handleQueryChange}
               placeholder="Search..."
-              className="w-full bg-themed-secondary border border-themed rounded-md pl-10 pr-2 py-1.5 text-themed focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50"
+              className="w-full input-themed rounded-md pl-10 pr-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {searchHistory.length > 0 && (
               <button
@@ -243,7 +243,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
                 value={titleFilter}
                 onChange={(e) => setTitleFilter(e.target.value)}
                 placeholder="e.g. My Tab, *Todo*"
-                className="flex-grow bg-themed-secondary border border-themed rounded px-2 py-0.5 text-xs text-themed focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50"
+                className="flex-grow input-themed rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -280,7 +280,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
                         onChange={(e) =>
                           handleLangCheckboxChange(lang.id, e.target.checked)
                         }
-                        className="h-3 w-3 rounded border-themed text-blue-500 focus:ring-blue-600/50 bg-themed-secondary accent-blue-500"
+                        className="h-3 w-3 rounded border-themed text-blue-500 focus:ring-blue-600/50 bg-white dark:bg-gray-900 accent-blue-500"
                       />
                       <span className="text-xs text-themed">{lang.name}</span>
                     </label>
@@ -295,7 +295,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
               <select
                 value={scope}
                 onChange={(e) => setScope(e.target.value as any)}
-                className="bg-themed-secondary border border-themed rounded px-2 py-0.5 text-xs text-themed focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50"
+                className="input-themed rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="activeWorkspace">Active Workspace</option>
                 <option value="allWorkspaces">All Workspaces</option>

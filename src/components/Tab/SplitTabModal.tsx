@@ -333,7 +333,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                     onChange={(e) =>
                       setConfig({ ...config, delimiter: e.target.value })
                     }
-                    className="w-full px-3 py-2 bg-themed-secondary border border-themed rounded text-sm text-themed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter delimiter"
                   />
                 </div>
@@ -416,7 +416,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                         skipFirstMatches: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 bg-themed-secondary border border-themed rounded text-sm text-themed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0"
                   />
                   <p className="mt-1 text-xs text-themed-muted">
@@ -442,7 +442,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                       linesPerTab: parseInt(e.target.value) || 1,
                     })
                   }
-                  className="w-full px-3 py-2 bg-themed-secondary border border-themed rounded text-sm text-themed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             )}
@@ -480,7 +480,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                           headerLines: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full mt-2 px-3 py-2 bg-themed-secondary border border-themed rounded text-sm text-themed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-2 px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Number of header lines"
                     />
                   )}
@@ -512,7 +512,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                           footerLines: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full mt-2 px-3 py-2 bg-themed-secondary border border-themed rounded text-sm text-themed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-2 px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Number of footer lines"
                     />
                   )}
@@ -536,7 +536,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                   onChange={(e) =>
                     setConfig({ ...config, titlePattern: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-themed-secondary border border-themed rounded text-sm text-themed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="{title} - Part {n}"
                 />
                 <p className="mt-1 text-xs text-themed-muted">

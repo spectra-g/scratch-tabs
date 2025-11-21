@@ -107,7 +107,7 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({
       >
         <div ref={modalContentRef} className="flex h-[70vh]">
           {/* Left sidebar - Workspaces */}
-          <div className="w-64 border-r border-themed flex flex-col">
+          <div className="w-64 border-r border-themed bg-themed-secondary flex flex-col">
             <div className="p-3 border-b border-themed">
               <h3 className="text-sm font-medium text-themed-secondary mb-2">
                 Workspaces

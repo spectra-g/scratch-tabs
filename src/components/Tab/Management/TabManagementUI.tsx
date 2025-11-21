@@ -87,7 +87,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
   activeWorkspaceTabs,
   activeWorkspaceId,
 }) => (
-  <div className="p-3 border-b border-themed">
+  <div className="p-3 border-b border-themed bg-themed-secondary">
     <div className="flex flex-wrap gap-3">
       {/* Search */}
       <div className="relative flex-grow max-w-md">
@@ -96,7 +96,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search tabs..."
-          className="w-full bg-themed-secondary border border-themed rounded-md pl-9 pr-3 py-1.5 text-sm text-themed"
+          className="w-full input-themed rounded-md pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <Search
           size={16}
@@ -112,7 +112,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
             const selectedLang = e.target.value;
             setLanguageFilter(selectedLang ? [selectedLang] : []);
           }}
-          className="bg-themed-secondary border border-themed rounded-md px-3 py-1.5 text-sm text-themed appearance-none pr-8"
+          className="input-themed rounded-md px-3 py-1.5 text-sm appearance-none pr-8"
         >
           <option value="">All Languages</option>
           {availableLanguages.map((lang: string) => (
@@ -134,7 +134,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
         <select
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value as SortOption)}
-          className="bg-themed-secondary border border-themed rounded-md px-3 py-1.5 text-sm text-themed appearance-none pr-8"
+          className="input-themed rounded-md px-3 py-1.5 text-sm appearance-none pr-8"
         >
           <option value={SORT_OPTIONS.CURRENT}>Current</option>
           <option value={SORT_OPTIONS.TITLE_ASC}>Title A-Z</option>
@@ -167,7 +167,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
         <select
           value={groupOption}
           onChange={(e) => setGroupOption(e.target.value as GroupOption)}
-          className="bg-themed-secondary border border-themed rounded-md px-3 py-1.5 text-sm text-themed appearance-none pr-8"
+          className="input-themed rounded-md px-3 py-1.5 text-sm appearance-none pr-8"
         >
           <option value={GROUP_OPTIONS.NONE}>No Grouping</option>
           <option value={GROUP_OPTIONS.LANGUAGE}>Group by Language</option>
@@ -385,7 +385,7 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({
       value={workspaceName}
       onChange={(e) => setWorkspaceName(e.target.value)}
       placeholder="Workspace name"
-      className="w-full bg-themed-secondary border border-themed rounded px-2 py-1 text-sm text-themed mb-2"
+      className="w-full input-themed rounded px-2 py-1 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
       autoFocus
     />
     <div className="flex justify-end space-x-2">

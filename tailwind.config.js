@@ -28,11 +28,11 @@ export default {
         },
         // Sidebars, modals - off-white to separate from main content
         '.bg-themed-secondary': {
-          '@apply bg-slate-50 dark:bg-gray-700': {},
+          '@apply bg-slate-100 dark:bg-gray-800': {},
         },
         // Tab bar, secondary surfaces - needs more contrast
         '.bg-themed-tertiary': {
-          '@apply bg-slate-200 dark:bg-gray-800': {},
+          '@apply bg-slate-200 dark:bg-gray-900': {},
         },
 
         // --- BORDERS ---
@@ -65,6 +65,12 @@ export default {
         },
         '.icon-themed-hover': {
           '@apply hover:text-slate-900 dark:hover:text-gray-300': {},
+        },
+
+        // --- INPUTS ---
+        // Input fields should stand out against secondary backgrounds
+        '.input-themed': {
+          '@apply bg-white dark:bg-gray-900 border border-themed text-themed placeholder:text-themed-muted': {},
         },
       });
     },
