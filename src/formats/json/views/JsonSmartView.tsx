@@ -272,7 +272,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         <Panel minSize={30}>
           <div className="flex h-full">
             {/* Navigator Panel */}
-            <div className="hidden lg:flex w-80 border-r border-base flex-col bg-surface-highlight">
+            <div className="hidden lg:flex w-96 border-r border-base flex-col bg-surface-secondary">
               <div className="p-3 border-b border-base">
                 <h3 className="text-sm font-medium text-secondary">Navigator</h3>
               </div>
@@ -286,7 +286,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
 
             {/* Editor Panel */}
             <div className="flex-1 flex flex-col min-w-0 bg-surface">
-              <div className="p-3 border-b border-base">
+              <div className="p-3 border-b border-base bg-surface-secondary">
                 <h3 className="text-sm font-medium text-secondary">Editor</h3>
               </div>
               <div className="flex-1">
@@ -314,7 +314,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
             </div>
 
             {/* Right Panel - Toolbox & Insights */}
-            <div className="hidden lg:flex w-52 border-l border-base flex-col bg-surface-highlight">
+            <div className="hidden lg:flex w-52 border-l border-base flex-col bg-surface-secondary">
               {/* Tab Headers */}
               <div className="flex border-b border-base">
                 <button

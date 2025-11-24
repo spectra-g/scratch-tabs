@@ -974,7 +974,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       </div>
 
       {/* Tree View Area */}
-      <div className="flex-1 overflow-auto bg-canvas custom-scrollbar" style={{ height: '100%' }}>
+      <div className="flex-1 overflow-auto custom-scrollbar" style={{ height: '100%' }}>
         <List
           className="custom-scrollbar"
           ref={listRef}

@@ -201,7 +201,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   }, [editor]);
 
   return (
-    <div className="flex items-center justify-between p-3 border-b border-base bg-surface-highlight">
+    <div className="flex items-center justify-between p-3 border-b border-base bg-surface-raised">
       {/* Left Section: Validation Status */}
       <div className="flex items-center space-x-3">
         <div className="flex items-center space-x-2">
@@ -276,6 +276,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* Primary Actions */}
         <button
+          onClick={handleCopy}
+          className={`p-2 rounded transition-colors border ${
+            isCopied
+              ? "bg-success-subtle text-success border-success"
+              : "bg-element hover:bg-element-hover text-secondary border-transparent"
+          }`}
+          title={isCopied ? "Copied!" : "Copy JSON"}
+        >
+          {isCopied ? <Check size={16} /> : <Copy size={16} />}
+        </button>
+        <button
           onClick={() => togglePanel(tabId)}
           className={`flex items-center space-x-1 px-3 py-1 rounded transition-colors ${
             isQueryPanelOpen
@@ -286,17 +297,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         >
           <Database size={14} />
           <span className="text-sm">Query</span>
-        </button>
-        <button
-          onClick={handleCopy}
-          className={`p-2 rounded transition-colors ${
-            isCopied
-              ? "bg-success-subtle text-success"
-              : "hover:bg-element-hover text-secondary"
-          }`}
-          title={isCopied ? "Copied!" : "Copy JSON"}
-        >
-          {isCopied ? <Check size={16} /> : <Copy size={16} />}
         </button>
         <button
           onClick={handleFormat}

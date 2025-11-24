@@ -6,7 +6,7 @@ export default {
     extend: {
       colors: {
         gray: {
-          850: "#1f2937", // Example: Between gray-800 and gray-900
+          850: "#1a202c", // Between gray-800 (#1f2937) and gray-900 (#111827)
         },
       },
     },
@@ -18,14 +18,23 @@ export default {
     function ({ addUtilities }) {
       addUtilities({
         // 1. SURFACES (The Containers)
+        // Hierarchy: Toolbar (most gray/dark) → Sidebars (medium) → Content (white/lightest)
+        // Light mode: slate-200 → slate-100 → white
+        // Dark mode:  gray-900  → gray-850  → gray-800
         '.bg-canvas': {
           '@apply bg-white dark:bg-gray-950': {}, // The body background
         },
         '.bg-surface': {
-          '@apply bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800': {}, // Cards, Modals
+          '@apply bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700': {}, // Main content areas (lightest)
+        },
+        '.bg-surface-secondary': {
+          '@apply bg-slate-100 dark:bg-gray-850': {}, // Secondary panels (Sidebars/Headers) - Medium
+        },
+        '.bg-surface-raised': {
+          '@apply bg-slate-200 dark:bg-gray-900': {}, // Top-level chrome (Toolbar) - Most contrast
         },
         '.bg-surface-highlight': {
-          '@apply bg-slate-100 dark:bg-gray-800': {}, // Sidebar, Header
+          '@apply bg-slate-100 dark:bg-gray-800': {}, // Legacy - same as surface now
         },
 
         // 2. ELEMENTS (The things inside containers)
