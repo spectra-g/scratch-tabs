@@ -281,7 +281,7 @@ export const WelcomeScreen: React.FC = () => {
               alt="Scratch Tabs Logo"
               className="w-7 h-7 mr-4 flex-shrink-0"
             />
-            <h1 className="text-3xl font-light text-gray-100">Scratch Tabs</h1>
+            <h1 className="text-3xl font-light text-main">Scratch Tabs</h1>
           </div>
           <p className="text-muted text-sm mt-2">Version 1.11.1</p>
         </div>
@@ -334,7 +334,7 @@ export const WelcomeScreen: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-gray-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-muted text-xs opacity-0 group-hover:opacity-100 transition-opacity">
                     Click to try
                   </div>
                 </button>

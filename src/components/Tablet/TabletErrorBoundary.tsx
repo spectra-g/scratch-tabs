@@ -98,7 +98,7 @@ The tablet should render normally without breaking the entire application.
       const githubUrl = this.generateGitHubIssueUrl();
 
       return (
-        <div className="h-full bg-surface text-gray-100 p-6 overflow-y-auto custom-scrollbar">
+        <div className="h-full bg-surface text-main p-6 overflow-y-auto custom-scrollbar">
           <div className="max-w-2xl mx-auto flex flex-col justify-center min-h-full">
             <div className="flex items-center gap-3 mb-6">
               <AlertTriangle className="text-danger" size={32} />
@@ -135,7 +135,7 @@ The tablet should render normally without breaking the entire application.
                     <RefreshCw size={18} />
                     <div className="text-left">
                       <div className="font-medium">Try Again</div>
-                      <div className="text-sm text-blue-200">
+                      <div className="text-sm text-info">
                         Attempt to reload this tablet
                       </div>
                     </div>

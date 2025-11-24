@@ -51,7 +51,7 @@ export const OGWelcomeScreen: React.FC = () => {
         </div>
 
         {/* Code Snippet Preview (stylized) */}
-        <div className="w-full max-w-lg bg-gray-950 rounded-lg shadow-lg p-4 mb-12 border border-base">
+        <div className="w-full max-w-lg bg-surface rounded-lg shadow-lg p-4 mb-12 border border-base">
           <div className="flex items-center mb-2">
             <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
             <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
