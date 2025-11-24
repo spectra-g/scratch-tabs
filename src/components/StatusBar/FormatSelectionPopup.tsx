@@ -58,7 +58,7 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
   return (
     <div
       ref={popupRef}
-      className="absolute z-50 bg-themed border border-themed rounded shadow-lg overflow-hidden custom-scrollbar"
+      className="absolute z-50 bg-surface border border-base rounded shadow-lg overflow-hidden custom-scrollbar"
       style={{
         bottom: "28px",
         left: "0px",
@@ -67,14 +67,14 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
         overflowY: "auto",
       }}
     >
-      <div className="px-3 py-2 border-b border-themed">
+      <div className="px-3 py-2 border-b border-base">
         <input
           ref={inputRef}
           type="text"
           placeholder="Search formats..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-transparent text-xs text-themed-secondary placeholder-gray-500 border-none outline-none"
+          className="w-full bg-transparent text-xs text-secondary placeholder-gray-500 border-none outline-none"
         />
       </div>
       <div className="py-1">
@@ -83,14 +83,14 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
             return (
               <div
                 key={item.id}
-                className="border-t border-themed my-1 mx-2"
+                className="border-t border-base my-1 mx-2"
               ></div>
             );
           }
           return (
             <button
               key={item.id}
-              className="w-full text-left px-3 py-1.5 bg-themed-hover text-xs text-themed transition-colors block"
+              className="w-full text-left px-3 py-1.5 bg-themed-hover text-xs text-main transition-colors block"
               onClick={() => handleSelectFormat(item.id)}
               title={`Select ${item.name}`}
             >
@@ -100,13 +100,13 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
         })}
 
         {filteredFormats.length === 0 && searchTerm.trim() && (
-          <div className="px-3 py-2 text-xs text-themed-muted italic">
+          <div className="px-3 py-2 text-xs text-muted italic">
             No formats found
           </div>
         )}
 
         {formats.length === 0 && (
-          <div className="px-3 py-2 text-xs text-themed-muted italic">
+          <div className="px-3 py-2 text-xs text-muted italic">
             No formats available
           </div>
         )}

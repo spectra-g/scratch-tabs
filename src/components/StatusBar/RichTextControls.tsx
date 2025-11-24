@@ -22,12 +22,12 @@ export const RichTextControls: React.FC<RichTextControlsProps> = ({
   return (
     <button
       onClick={handleToggleRichMode}
-      className="flex items-center space-x-1 px-2 py-1 hover:bg-gray-700/50 rounded transition-colors group"
+      className="flex items-center space-x-1 px-2 py-1 hover:bg-element/50 rounded transition-colors group"
       title={activeTab.isRich ? 'Switch to Plain Text' : 'Switch to Rich Text'}
       data-testid="rich-text-toggle"
     >
-      <FileText size={12} className="text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-gray-300" />
-      <span className="text-xs text-slate-700 dark:text-gray-300">
+      <FileText size={12} className="text-slate-600 dark:text-muted group-hover:text-slate-900 dark:group-hover:text-secondary" />
+      <span className="text-xs text-slate-700 dark:text-secondary">
         {activeTab.isRich ? 'Rich' : 'Text'}
       </span>
     </button>

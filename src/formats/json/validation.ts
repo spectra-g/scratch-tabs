@@ -1,5 +1,3 @@
-import { JsonFormatDetector } from "../json";
-
 /**
  * Interface for JSON validation result
  */
@@ -31,8 +29,6 @@ export function validateJson(content: string): JsonValidationResult {
  * Register JSON validation provider with Monaco
  */
 export function registerJsonValidationProvider(monaco: any) {
-  const jsonDetector = new JsonFormatDetector();
-
   // Add validation markers to the editor
   monaco.languages.registerDocumentFormattingEditProvider("json", {
     provideDocumentFormattingEdits(model: any) {
