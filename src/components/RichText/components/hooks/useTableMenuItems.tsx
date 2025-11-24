@@ -99,7 +99,7 @@ export const useTableMenuItems = ({ editor, onAction }: UseTableMenuItemsProps):
       label: (
         <div className="flex justify-between items-center w-full">
           <span>{item.label as string}</span>
-          <span className="text-gray-400 text-xs ml-4">{shortcut}</span>
+          <span className="text-muted text-xs ml-4">{shortcut}</span>
         </div>
       ) as any
     };

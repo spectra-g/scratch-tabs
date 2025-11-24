@@ -137,7 +137,7 @@ export const tiptapExtensions = [
   Link.configure({
     openOnClick: false,
     HTMLAttributes: {
-      class: 'text-blue-400 hover:text-blue-300 underline',
+      class: 'text-info hover:text-info-hover underline',
     },
   }),
   SearchExtension,

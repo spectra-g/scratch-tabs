@@ -198,8 +198,8 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       title={title}
       data-testid={testId}
       className={`p-2 rounded transition-colors ${isActive
-        ? 'bg-blue-600 text-white'
-        : 'text-themed-secondary bg-themed-hover'
+        ? 'bg-primary text-white'
+        : 'text-secondary bg-element-hover'
         }`}
     >
       {children}
@@ -207,7 +207,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
   );
 
   return (
-    <div className="flex items-center space-x-1 bg-themed-secondary p-2 border-b border-themed">
+    <div className="flex items-center space-x-1 bg-surface-highlight p-2 border-b border-base">
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         isActive={editor.isActive('heading', { level: 1 })}
@@ -235,7 +235,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         H3
       </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 bg-element mx-1" />
 
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -338,7 +338,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         <FileCode size={16} />
       </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 bg-gray-300 dark:bg-element mx-1" />
 
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -376,7 +376,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         <Minus size={16} />
       </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 bg-gray-300 dark:bg-element mx-1" />
 
       <ToolbarButton
         onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
@@ -396,7 +396,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
         <Link size={16} />
       </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 bg-gray-300 dark:bg-element mx-1" />
 
       {onImportCode && (
         <ToolbarButton

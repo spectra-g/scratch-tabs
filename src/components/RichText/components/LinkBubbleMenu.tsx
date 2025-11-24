@@ -166,7 +166,7 @@ export const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
     <>
       <div
         ref={menuRef}
-        className="absolute z-30 flex items-center bg-gray-800 border border-gray-600 rounded-lg shadow-lg overflow-hidden"
+        className="absolute z-30 flex items-center bg-surface border border-base rounded-lg shadow-lg overflow-hidden"
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,
@@ -174,27 +174,27 @@ export const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
       >
         <button
           onClick={handleEditLink}
-          className="px-3 py-2 hover:bg-gray-700 transition-colors text-gray-300 hover:text-white"
+          className="px-3 py-2 hover:bg-element transition-colors text-secondary hover:text-white"
           title="Edit Link"
         >
           <Edit3 size={14} />
         </button>
         
-        <div className="w-px h-6 bg-gray-600" />
+        <div className="w-px h-6 bg-element" />
         
         <button
           onClick={handleOpenLink}
-          className="px-3 py-2 hover:bg-gray-700 transition-colors text-gray-300 hover:text-white"
+          className="px-3 py-2 hover:bg-element transition-colors text-secondary hover:text-white"
           title="Open Link"
         >
           <ExternalLink size={14} />
         </button>
         
-        <div className="w-px h-6 bg-gray-600" />
+        <div className="w-px h-6 bg-element" />
         
         <button
           onClick={handleUnlink}
-          className="px-3 py-2 hover:bg-gray-700 transition-colors text-gray-300 hover:text-white"
+          className="px-3 py-2 hover:bg-element transition-colors text-secondary hover:text-white"
           title="Remove Link"
         >
           <X size={14} />

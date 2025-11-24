@@ -234,7 +234,7 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
       {/* Search Icon Button */}
       <button
         onClick={isVisible ? handleClose : onOpen}
-        className={`px-2 py-1 bg-themed bg-themed-hover border border-themed-light rounded-md shadow-lg transition-all duration-300 ease-out ${isVisible ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
+        className={`px-2 py-1 bg-surface bg-element-hover border border-base rounded-md shadow-lg transition-all duration-300 ease-out ${isVisible ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'
           }`}
         title="Search (Ctrl+F)"
         style={{ height: '36px' }}
@@ -244,7 +244,7 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
 
       {/* Search Bar - slides out from the search icon position */}
       <div
-        className={`absolute right-0 flex items-center bg-themed border border-themed-light rounded-md shadow-lg transition-all duration-300 ease-out overflow-hidden ${isVisible
+        className={`absolute right-0 flex items-center bg-surface border border-base rounded-md shadow-lg transition-all duration-300 ease-out overflow-hidden ${isVisible
           ? 'opacity-100 translate-x-0'
           : 'opacity-0 translate-x-4 pointer-events-none'
           }`}
@@ -267,18 +267,18 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
             onChange={(e) => handleSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search in document..."
-            className="flex-1 bg-transparent text-xs text-themed placeholder-gray-500 outline-none min-w-0"
+            className="flex-1 bg-transparent text-xs text-main placeholder-muted outline-none min-w-0"
           />
 
           {totalMatches > 0 && (
             <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
-              <span className="text-[10px] text-themed-tertiary whitespace-nowrap">
+              <span className="text-[10px] text-muted whitespace-nowrap">
                 {currentIndex} of {totalMatches}
               </span>
 
               <button
                 onClick={handlePrevious}
-                className="p-1 bg-themed-hover rounded transition-colors"
+                className="p-1 bg-element-hover rounded transition-colors"
                 title="Previous match"
               >
                 <ChevronUp size={14} />
@@ -286,7 +286,7 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
 
               <button
                 onClick={handleNext}
-                className="p-1 bg-themed-hover rounded transition-colors"
+                className="p-1 bg-element-hover rounded transition-colors"
                 title="Next match"
               >
                 <ChevronDown size={14} />
@@ -296,7 +296,7 @@ export const InlineSearchBar: React.FC<InlineSearchBarProps> = ({
 
           <button
             onClick={handleClose}
-            className="p-1 bg-themed-hover rounded transition-colors ml-2 flex-shrink-0"
+            className="p-1 bg-element-hover rounded transition-colors ml-2 flex-shrink-0"
             title="Close search"
           >
             <X size={14} />

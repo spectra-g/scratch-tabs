@@ -27,8 +27,8 @@ export const PreviewDivider: React.FC<PreviewDividerProps> = ({
         "group",
         isPreviewEnabled ? "cursor-col-resize" : "cursor-default",
         {
-          "bg-blue-500": isDragging,
-          "bg-gray-700 group-hover:bg-blue-500": !isDragging,
+          "bg-primary": isDragging,
+          "bg-element group-hover:bg-primary": !isDragging,
         },
         "transition-colors duration-100 ease-in-out",
       )}
@@ -49,7 +49,7 @@ export const PreviewDivider: React.FC<PreviewDividerProps> = ({
             className={clsx(
               "w-0.5 h-4",
               "rounded-full",
-              isDragging ? "bg-white" : "bg-gray-400 group-hover:bg-white",
+              isDragging ? "bg-white" : "bg-muted group-hover:bg-white",
             )}
           ></div>
         </div>
