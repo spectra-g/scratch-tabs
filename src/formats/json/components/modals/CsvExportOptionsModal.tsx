@@ -3,6 +3,7 @@ import { BaseModal } from "./BaseModal";
 import { CsvOptions, convertToCsv } from "../../utils/generateCsv";
 import { Editor } from "@monaco-editor/react";
 import { Download, Copy, Check, Info } from "lucide-react";
+import { useThemeStore } from "../../../../stores/themeStore";
 
 interface CsvExportOptionsModalProps {
   jsonString: string;
@@ -17,6 +18,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
   jsonString,
   onClose,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [options, setOptions] = useState<CsvOptions>({
     delimiter: ",",
     includeHeaders: true,
@@ -84,14 +86,14 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
       <div className="flex flex-col p-4 space-y-4" style={{ height: "80vh" }}>
         {/* Options Panel */}
         <div className="flex-none">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">
+          <h3 className="text-sm font-medium text-themed-secondary mb-3">
             Export Configuration
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700/60">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-themed-secondary rounded-lg border border-themed">
             {/* Array Expansion Strategy */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-themed-secondary mb-2">
                 Array Expansion Strategy
               </label>
               <select
@@ -102,7 +104,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
                     arrayExpansion: e.target.value as any,
                   })
                 }
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="expandFirst">
                   Expand First Array Only (Recommended)
@@ -126,7 +128,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
 
             {/* Delimiter */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-themed-secondary mb-2">
                 Delimiter
               </label>
               <select
@@ -137,7 +139,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
                     delimiter: e.target.value === "tab" ? "\t" : ","
                   })
                 }
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="comma">Comma (,)</option>
                 <option value="tab">Tab</option>
@@ -146,7 +148,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
 
             {/* Include Headers */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-themed-secondary mb-2">
                 Include Headers
               </label>
               <div className="flex items-center h-[38px]">
@@ -156,9 +158,9 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
                   onChange={(e) =>
                     setOptions({ ...options, includeHeaders: e.target.checked })
                   }
-                  className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 bg-themed border-themed rounded focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-300">
+                <span className="ml-2 text-sm text-themed-secondary">
                   Add header row
                 </span>
               </div>
@@ -169,10 +171,10 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
         {/* Preview Panel */}
         <div className="flex-1 flex flex-col" style={{ minHeight: "500px" }}>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-300">
+            <h3 className="text-sm font-medium text-themed-secondary">
               CSV Preview
               {csv && !error && (
-                <span className="ml-2 text-xs text-gray-500">
+                <span className="ml-2 text-xs text-themed-muted">
                   ({csv.split("\n").length} rows)
                 </span>
               )}
@@ -181,7 +183,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
               <button
                 onClick={handleCopy}
                 disabled={!csv || !!error}
-                className="flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-gray-300 hover:text-gray-100 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-themed-secondary bg-themed-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Copy to clipboard"
               >
                 {isCopied ? (
@@ -208,12 +210,12 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 border border-gray-700/50 rounded-lg overflow-hidden" style={{ minHeight: "450px" }}>
+          <div className="flex-1 border border-themed rounded-lg overflow-hidden" style={{ minHeight: "450px" }}>
             <Editor
               height="100%"
               language="csv"
               value={error ? `# Error: ${error}` : csv}
-              theme="vs-dark"
+              theme={isDarkMode ? "vs-dark" : "vs"}
               options={{
                 readOnly: true,
                 minimap: { enabled: false },
@@ -227,8 +229,8 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
         </div>
 
         {/* Info Footer */}
-        <div className="flex-none pt-3 border-t border-gray-700/50">
-          <div className="text-xs text-gray-500">
+        <div className="flex-none pt-3 border-t border-themed">
+          <div className="text-xs text-themed-tertiary">
             <span className="font-medium">Tip:</span> The export intelligently
             flattens nested objects (e.g., user.name → user.name column). Arrays
             create multiple rows with duplicated parent data, making the CSV

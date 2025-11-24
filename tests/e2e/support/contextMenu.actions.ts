@@ -9,7 +9,7 @@ export class ContextMenuActions {
 
   async selectFromContextMenu(menuItem: string) {
     // Wait for context menu to appear - look for the custom context menu div
-    await this.page.waitForSelector('.bg-gray-700.border.border-gray-600.rounded.shadow-lg.z-50.py-1', { state: 'visible' });
+    await this.page.waitForSelector('.bg-themed.border.border-themed.rounded.shadow-lg.z-50.py-1', { state: 'visible' });
     
     // Use exact text match to avoid confusion between "Download" and "Download all tabs"
     const menuItemElement = this.page.getByRole('button', { name: menuItem, exact: true });
@@ -38,12 +38,12 @@ export class ContextMenuActions {
   }
 
   async expectContextMenuIsVisible() {
-    const contextMenu = this.page.locator('.bg-gray-700.border.border-gray-600.rounded.shadow-lg.z-50.py-1');
+    const contextMenu = this.page.locator('.bg-themed.border.border-themed.rounded.shadow-lg.z-50.py-1');
     await expect(contextMenu).toBeVisible();
   }
 
   async expectContextMenuIsNotVisible() {
-    const contextMenu = this.page.locator('.bg-gray-700.border.border-gray-600.rounded.shadow-lg.z-50.py-1');
+    const contextMenu = this.page.locator('.bg-themed.border.border-themed.rounded.shadow-lg.z-50.py-1');
     await expect(contextMenu).not.toBeVisible();
   }
 

@@ -47,7 +47,7 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
       {/* Compare Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1 px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors"
+        className="flex items-center space-x-1 px-3 py-1 bg-themed-tertiary text-themed-secondary rounded hover:bg-slate-300 dark:hover:bg-gray-600 transition-colors"
         title="Compare options"
       >
         <GitCompare size={14} />
@@ -57,12 +57,12 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded shadow-lg z-50 max-h-96 flex flex-col">
+        <div className="absolute right-0 mt-2 w-64 bg-themed border border-themed rounded shadow-lg z-50 max-h-96 flex flex-col">
           {/* Compare with Clipboard - Fixed at top */}
-          <div className="py-1 border-b border-gray-700">
+          <div className="py-1 border-b border-themed">
             <button
               onClick={() => handleOptionClick(onCompareWithClipboard)}
-              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-themed-secondary bg-themed-hover transition-colors"
             >
               <Clipboard size={16} className="text-blue-400" />
               <span>With clipboard</span>
@@ -76,7 +76,7 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => handleOptionClick(() => onCompareWithTab(tab.id))}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-themed-secondary bg-themed-hover transition-colors"
                   title={`Compare with ${tab.title}`}
                 >
                   <FileJson size={16} className="text-green-400 flex-shrink-0" />
@@ -87,17 +87,17 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
           )}
 
           {/* Compare Structure & Equality Check - Fixed at bottom */}
-          <div className="py-1 border-t border-gray-700">
+          <div className="py-1 border-t border-themed">
             <button
               onClick={() => handleOptionClick(onCompareStructure)}
-              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-themed-secondary bg-themed-hover transition-colors"
             >
               <GitCompare size={16} className="text-purple-400" />
               <span>Compare Structure</span>
             </button>
             <button
               onClick={() => handleOptionClick(onEqualityCheck)}
-              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-themed-secondary bg-themed-hover transition-colors"
             >
               <CheckCheck size={16} className="text-teal-400" />
               <span>Deep Equality Check</span>

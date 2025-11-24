@@ -18,21 +18,21 @@ export default {
     function ({ addUtilities }) {
       addUtilities({
         // --- BACKGROUNDS ---
-        // Main content area (editor, active tab)
+        // Main canvas (Editor, Cards) - Pure White
         '.bg-themed': {
-          '@apply bg-white dark:bg-gray-800': {},
+          '@apply bg-white dark:bg-gray-900': {},
         },
         // Hover states need to be visible
         '.bg-themed-hover': {
-          '@apply hover:bg-slate-100 dark:hover:bg-gray-700': {},
+          '@apply hover:bg-slate-200 dark:hover:bg-gray-700': {},
         },
-        // Sidebars, modals - off-white to separate from main content
+        // Chrome (Sidebars, Modals, Headers) - Distinct Gray
         '.bg-themed-secondary': {
           '@apply bg-slate-100 dark:bg-gray-800': {},
         },
-        // Tab bar, secondary surfaces - needs more contrast
+        // Inputs, Active Items - Darker Gray
         '.bg-themed-tertiary': {
-          '@apply bg-slate-200 dark:bg-gray-900': {},
+          '@apply bg-slate-200 dark:bg-gray-700': {},
         },
 
         // --- BORDERS ---
@@ -68,9 +68,9 @@ export default {
         },
 
         // --- INPUTS ---
-        // Input fields should stand out against secondary backgrounds
+        // Standardize inputs to avoid the "ghost input" look
         '.input-themed': {
-          '@apply bg-white dark:bg-gray-900 border border-themed text-themed placeholder:text-themed-muted': {},
+          '@apply bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-600 text-slate-900 dark:text-gray-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent': {},
         },
       });
     },

@@ -42,16 +42,16 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   onToggle,
 }) => {
   return (
-    <div className="border-b border-gray-700/50">
+    <div className="border-b border-themed">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"
+        className="w-full flex items-center justify-between p-3 bg-themed-hover transition-colors"
       >
-        <span className="text-xs font-medium text-gray-300">{title}</span>
+        <span className="text-xs font-medium text-themed-secondary">{title}</span>
         {isExpanded ? (
-          <ChevronDown size={16} className="text-gray-400" />
+          <ChevronDown size={16} className="icon-themed" />
         ) : (
-          <ChevronRight size={16} className="text-gray-400" />
+          <ChevronRight size={16} className="icon-themed" />
         )}
       </button>
       {isExpanded && (
@@ -79,8 +79,8 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     disabled={disabled}
     className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
       disabled
-        ? "text-gray-500 cursor-not-allowed"
-        : "text-gray-300 hover:bg-gray-700/50 hover:text-gray-200"
+        ? "text-themed-muted cursor-not-allowed"
+        : "text-themed-secondary bg-themed-hover"
     }`}
   >
     {children}

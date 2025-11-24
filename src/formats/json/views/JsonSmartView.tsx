@@ -17,6 +17,7 @@ import { useActiveEditorStore } from "../../../stores/activeEditorStore";
 import { useDiffModalStore } from "../../../stores/diffModalStore";
 import { ContentDiffModal } from "../../../components/ContentDiffModal";
 import { useQueryPanelStore } from "../stores/useQueryPanelStore";
+import { useThemeStore } from "../../../stores/themeStore";
 
 /**
  * Converts a dot-notation path (e.g., "users[1].name") to a JSON Pointer (e.g., "/users/1/name")
@@ -42,6 +43,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   side,
 }) => {
   const { setActiveEditor } = useActiveEditorStore();
+  const { isDarkMode } = useThemeStore();
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [canUndo, setCanUndo] = useState(false);
@@ -244,7 +246,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   }, [navigateToPath]);
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-gray-200" data-testid="json-smart-view-container">
+    <div className="flex flex-col h-full bg-themed text-themed" data-testid="json-smart-view-container">
       {/* Toolbar */}
       <Toolbar
         isValid={isValid}
@@ -270,9 +272,9 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         <Panel minSize={30}>
           <div className="flex h-full">
             {/* Navigator Panel */}
-            <div className="hidden lg:flex w-80 border-r border-gray-700 flex-col">
-              <div className="p-3 border-b border-gray-700">
-                <h3 className="text-sm font-medium text-gray-300">Navigator</h3>
+            <div className="hidden lg:flex w-80 border-r border-themed flex-col bg-themed-secondary">
+              <div className="p-3 border-b border-themed">
+                <h3 className="text-sm font-medium text-themed-secondary">Navigator</h3>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <Navigator
@@ -283,16 +285,16 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
             </div>
 
             {/* Editor Panel */}
-            <div className="flex-1 flex flex-col min-w-0">
-              <div className="p-3 border-b border-gray-700">
-                <h3 className="text-sm font-medium text-gray-300">Editor</h3>
+            <div className="flex-1 flex flex-col min-w-0 bg-themed">
+              <div className="p-3 border-b border-themed">
+                <h3 className="text-sm font-medium text-themed-secondary">Editor</h3>
               </div>
               <div className="flex-1">
                 <Editor
                   key={`json-editor-${tabId}-${side}`}
                   height="100%"
                   language="json"
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   onMount={handleEditorMount}
                   options={{
                     minimap: { enabled: false },
@@ -312,15 +314,15 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
             </div>
 
             {/* Right Panel - Toolbox & Insights */}
-            <div className="hidden lg:flex w-52 border-l border-gray-700 flex-col">
+            <div className="hidden lg:flex w-52 border-l border-themed flex-col bg-themed-secondary">
               {/* Tab Headers */}
-              <div className="flex border-b border-gray-700">
+              <div className="flex border-b border-themed">
                 <button
                   onClick={() => setActiveRightTab('toolbox')}
                   className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                     activeRightTab === 'toolbox'
                       ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
-                      : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
+                      : 'text-themed-tertiary hover:text-themed bg-themed-hover'
                   }`}
                 >
                   Toolbox
@@ -330,7 +332,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                   className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                     activeRightTab === 'insights'
                       ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
-                      : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/30'
+                      : 'text-themed-tertiary hover:text-themed bg-themed-hover'
                   }`}
                 >
                   Insights
@@ -358,7 +360,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         {/* Query Panel (Conditionally Rendered) */}
         {isQueryPanelOpen && (
           <>
-            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-blue-500 transition-colors cursor-row-resize" />
+            <PanelResizeHandle className="h-1 bg-themed-tertiary hover:bg-blue-500 transition-colors cursor-row-resize" />
             <Panel defaultSize={50} minSize={45} maxSize={70}>
               <QueryPanel content={content} addTab={addTab} tabId={tabId} />
             </Panel>

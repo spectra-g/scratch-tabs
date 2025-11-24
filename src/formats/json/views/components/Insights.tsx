@@ -21,9 +21,9 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
 
   if (!stats) {
     return (
-      <div className="p-4 text-center text-gray-400">
+      <div className="p-4 text-center text-themed-tertiary">
         <div className="mb-2">
-          <BarChart3 size={24} className="mx-auto mb-2 text-gray-500" />
+          <BarChart3 size={24} className="mx-auto mb-2 text-themed-muted" />
         </div>
         <p className="text-xs">No valid JSON to analyze</p>
       </div>
@@ -185,16 +185,16 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
   return (
     <div className="h-full overflow-y-auto custom-scrollbar">
       {/* Overall Stats */}
-      <div className="p-3 border-b border-gray-700/50">
+      <div className="p-3 border-b border-themed">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
             <Hash size={14} className="mr-2 text-blue-400" />
-            <h4 className="text-xs font-medium text-gray-200">Overall Statistics</h4>
+            <h4 className="text-xs font-medium text-themed">Overall Statistics</h4>
           </div>
           {addTab && (
             <button
               onClick={generateMarkdownReport}
-              className="p-1 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded transition-colors"
+              className="p-1 icon-themed hover:text-blue-400 hover:bg-blue-500/10 rounded transition-colors"
               title="Export insights as Markdown report"
             >
               <FileText size={12} />
@@ -202,30 +202,30 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
           )}
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="bg-gray-800/50 p-2 rounded">
-            <div className="text-gray-400">Total Keys</div>
-            <div className="text-gray-200 font-mono">{formatNumber(stats.overallStats.totalKeys)}</div>
+          <div className="bg-themed-secondary p-2 rounded">
+            <div className="text-themed-tertiary">Total Keys</div>
+            <div className="text-themed font-mono">{formatNumber(stats.overallStats.totalKeys)}</div>
           </div>
-          <div className="bg-gray-800/50 p-2 rounded">
-            <div className="text-gray-400">Max Depth</div>
-            <div className="text-gray-200 font-mono">{stats.overallStats.maxDepth}</div>
+          <div className="bg-themed-secondary p-2 rounded">
+            <div className="text-themed-tertiary">Max Depth</div>
+            <div className="text-themed font-mono">{stats.overallStats.maxDepth}</div>
           </div>
-          <div className="bg-gray-800/50 p-2 rounded">
-            <div className="text-gray-400">File Size</div>
-            <div className="text-gray-200 font-mono">{formatBytes(stats.overallStats.objectSizeKB)}</div>
+          <div className="bg-themed-secondary p-2 rounded">
+            <div className="text-themed-tertiary">File Size</div>
+            <div className="text-themed font-mono">{formatBytes(stats.overallStats.objectSizeKB)}</div>
           </div>
-          <div className="bg-gray-800/50 p-2 rounded">
-            <div className="text-gray-400">Total Nodes</div>
-            <div className="text-gray-200 font-mono">{formatNumber(stats.overallStats.totalNodes)}</div>
+          <div className="bg-themed-secondary p-2 rounded">
+            <div className="text-themed-tertiary">Total Nodes</div>
+            <div className="text-themed font-mono">{formatNumber(stats.overallStats.totalNodes)}</div>
           </div>
         </div>
       </div>
 
       {/* Value Analysis */}
-      <div className="p-3 border-b border-gray-700/50">
+      <div className="p-3 border-b border-themed">
         <div className="flex items-center mb-2">
           <Type size={14} className="mr-2 text-green-400" />
-          <h4 className="text-xs font-medium text-gray-200">Data Types</h4>
+          <h4 className="text-xs font-medium text-themed">Data Types</h4>
         </div>
         <div className="space-y-1">
           {Object.entries(stats.valueAnalysis)
@@ -245,9 +245,9 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
                         '#6b7280'
                     }}
                   />
-                  <span className="text-gray-300 capitalize">{type}</span>
+                  <span className="text-themed-secondary capitalize">{type}</span>
                 </div>
-                <div className="text-gray-400">
+                <div className="text-themed-tertiary">
                   {data.percentage.toFixed(1)}% ({formatNumber(data.count)})
                 </div>
               </div>
@@ -257,10 +257,10 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
 
       {/* Key Analysis */}
       {Object.keys(stats.keyAnalysis).length > 0 && (
-        <div className="p-3 border-b border-gray-700/50">
+        <div className="p-3 border-b border-themed">
           <div className="flex items-center mb-2">
             <Layers size={14} className="mr-2 text-purple-400" />
-            <h4 className="text-xs font-medium text-gray-200">Top Keys</h4>
+            <h4 className="text-xs font-medium text-themed">Top Keys</h4>
           </div>
           <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
             {Object.entries(stats.keyAnalysis)
@@ -268,10 +268,10 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
               .slice(0, 10)
               .map(([key, count]) => (
                 <div key={key} className="flex items-center justify-between text-xs pr-2">
-                  <span className="text-gray-300 font-mono truncate mr-3" title={key}>
+                  <span className="text-themed-secondary font-mono truncate mr-3" title={key}>
                     {key.length > 15 ? `${key.substring(0, 15)}...` : key}
                   </span>
-                  <span className="text-gray-400 flex-shrink-0">{count}</span>
+                  <span className="text-themed-tertiary flex-shrink-0">{count}</span>
                 </div>
               ))}
           </div>
@@ -280,23 +280,23 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
 
       {/* Array Stats */}
       {stats.arrayStats.totalArrays > 0 && (
-        <div className="p-3 border-b border-gray-700/50">
+        <div className="p-3 border-b border-themed">
           <div className="flex items-center mb-2">
             <ArrowUpDown size={14} className="mr-2 text-orange-400" />
-            <h4 className="text-xs font-medium text-gray-200">Arrays</h4>
+            <h4 className="text-xs font-medium text-themed">Arrays</h4>
           </div>
           <div className="grid grid-cols-3 gap-1 text-xs mb-2">
-            <div className="bg-gray-800/50 p-1.5 rounded text-center">
-              <div className="text-gray-400">Count</div>
-              <div className="text-gray-200 font-mono">{stats.arrayStats.totalArrays}</div>
+            <div className="bg-themed-tertiary p-1.5 rounded text-center">
+              <div className="text-themed-tertiary">Count</div>
+              <div className="text-themed font-mono">{stats.arrayStats.totalArrays}</div>
             </div>
-            <div className="bg-gray-800/50 p-1.5 rounded text-center">
-              <div className="text-gray-400">Avg Length</div>
-              <div className="text-gray-200 font-mono">{stats.arrayStats.lengths.average.toFixed(1)}</div>
+            <div className="bg-themed-tertiary p-1.5 rounded text-center">
+              <div className="text-themed-tertiary">Avg Length</div>
+              <div className="text-themed font-mono">{stats.arrayStats.lengths.average.toFixed(1)}</div>
             </div>
-            <div className="bg-gray-800/50 p-1.5 rounded text-center">
-              <div className="text-gray-400">Max Length</div>
-              <div className="text-gray-200 font-mono">{stats.arrayStats.lengths.max}</div>
+            <div className="bg-themed-tertiary p-1.5 rounded text-center">
+              <div className="text-themed-tertiary">Max Length</div>
+              <div className="text-themed font-mono">{stats.arrayStats.lengths.max}</div>
             </div>
           </div>
           {stats.arrayStats.arrayDetails.length > 0 && (
@@ -306,10 +306,10 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
                 .slice(0, 5)
                 .map((arr, index) => (
                   <div key={index} className="flex items-center justify-between text-xs pr-2">
-                    <span className="text-gray-300 font-mono truncate mr-3" title={arr.path}>
+                    <span className="text-themed-secondary font-mono truncate mr-3" title={arr.path}>
                       {arr.path.length > 12 ? `...${arr.path.substring(arr.path.length - 12)}` : arr.path}
                     </span>
-                    <div className="text-gray-400 flex-shrink-0">
+                    <div className="text-themed-tertiary flex-shrink-0">
                       {arr.length} [{arr.elementTypes.join(', ')}]
                     </div>
                   </div>
@@ -321,30 +321,30 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
 
       {/* String Stats */}
       {stats.stringStats.totalStrings > 0 && (
-        <div className="p-3 border-b border-gray-700/50">
+        <div className="p-3 border-b border-themed">
           <div className="flex items-center mb-2">
             <TrendingUp size={14} className="mr-2 text-cyan-400" />
-            <h4 className="text-xs font-medium text-gray-200">Strings</h4>
+            <h4 className="text-xs font-medium text-themed">Strings</h4>
           </div>
           <div className="grid grid-cols-3 gap-1 text-xs mb-2">
-            <div className="bg-gray-800/50 p-1.5 rounded text-center">
-              <div className="text-gray-400">Count</div>
-              <div className="text-gray-200 font-mono">{formatNumber(stats.stringStats.totalStrings)}</div>
+            <div className="bg-themed-tertiary p-1.5 rounded text-center">
+              <div className="text-themed-tertiary">Count</div>
+              <div className="text-themed font-mono">{formatNumber(stats.stringStats.totalStrings)}</div>
             </div>
-            <div className="bg-gray-800/50 p-1.5 rounded text-center">
-              <div className="text-gray-400">Avg Length</div>
-              <div className="text-gray-200 font-mono">{stats.stringStats.lengths.average.toFixed(0)}</div>
+            <div className="bg-themed-tertiary p-1.5 rounded text-center">
+              <div className="text-themed-tertiary">Avg Length</div>
+              <div className="text-themed font-mono">{stats.stringStats.lengths.average.toFixed(0)}</div>
             </div>
-            <div className="bg-gray-800/50 p-1.5 rounded text-center">
-              <div className="text-gray-400">Max Length</div>
-              <div className="text-gray-200 font-mono">{stats.stringStats.lengths.max}</div>
+            <div className="bg-themed-tertiary p-1.5 rounded text-center">
+              <div className="text-themed-tertiary">Max Length</div>
+              <div className="text-themed font-mono">{stats.stringStats.lengths.max}</div>
             </div>
           </div>
           {stats.stringStats.examples.longest && (
             <div className="space-y-1">
               <div className="text-xs">
-                <div className="text-gray-400 mb-1">Longest:</div>
-                <div className="bg-gray-800/50 p-1.5 rounded text-gray-300 font-mono text-xs break-all">
+                <div className="text-themed-tertiary mb-1">Longest:</div>
+                <div className="bg-themed-tertiary p-1.5 rounded text-themed-secondary font-mono text-xs break-all">
                   {stats.stringStats.examples.longest.length > 100 
                     ? `${stats.stringStats.examples.longest.substring(0, 100)}...`
                     : stats.stringStats.examples.longest
@@ -361,40 +361,40 @@ export const Insights: React.FC<InsightsProps> = ({ content, addTab }) => {
         <div className="p-3">
           <div className="flex items-center mb-2">
             <Hash size={14} className="mr-2 text-yellow-400" />
-            <h4 className="text-xs font-medium text-gray-200">Numbers</h4>
+            <h4 className="text-xs font-medium text-themed">Numbers</h4>
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="bg-gray-800/50 p-2 rounded">
-              <div className="text-gray-400">Integers</div>
-              <div 
-                className="text-gray-200 font-mono truncate cursor-help" 
+            <div className="bg-themed-tertiary p-2 rounded">
+              <div className="text-themed-tertiary">Integers</div>
+              <div
+                className="text-themed font-mono truncate cursor-help"
                 title={stats.numberStats.integers.toString()}
               >
                 {formatNumber(stats.numberStats.integers)}
               </div>
             </div>
-            <div className="bg-gray-800/50 p-2 rounded">
-              <div className="text-gray-400">Floats</div>
-              <div 
-                className="text-gray-200 font-mono truncate cursor-help" 
+            <div className="bg-themed-tertiary p-2 rounded">
+              <div className="text-themed-tertiary">Floats</div>
+              <div
+                className="text-themed font-mono truncate cursor-help"
                 title={stats.numberStats.floats.toString()}
               >
                 {formatNumber(stats.numberStats.floats)}
               </div>
             </div>
-            <div className="bg-gray-800/50 p-2 rounded">
-              <div className="text-gray-400">Min Value</div>
-              <div 
-                className="text-gray-200 font-mono truncate cursor-help" 
+            <div className="bg-themed-tertiary p-2 rounded">
+              <div className="text-themed-tertiary">Min Value</div>
+              <div
+                className="text-themed font-mono truncate cursor-help"
                 title={formatNumberValue(stats.numberStats.range.min).full}
               >
                 {formatNumberValue(stats.numberStats.range.min).display}
               </div>
             </div>
-            <div className="bg-gray-800/50 p-2 rounded">
-              <div className="text-gray-400">Max Value</div>
-              <div 
-                className="text-gray-200 font-mono truncate cursor-help" 
+            <div className="bg-themed-tertiary p-2 rounded">
+              <div className="text-themed-tertiary">Max Value</div>
+              <div
+                className="text-themed font-mono truncate cursor-help"
                 title={formatNumberValue(stats.numberStats.range.max).full}
               >
                 {formatNumberValue(stats.numberStats.range.max).display}

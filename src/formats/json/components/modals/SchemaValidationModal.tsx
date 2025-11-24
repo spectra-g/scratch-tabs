@@ -3,6 +3,7 @@ import { BaseModal } from "./BaseModal";
 import { Editor } from "@monaco-editor/react";
 import { validateJsonSchema } from "../../utils/jsonSchema";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { useThemeStore } from "../../../../stores/themeStore";
 
 interface SchemaValidationModalProps {
   json: any;
@@ -13,6 +14,7 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
   json,
   onClose,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [schema, setSchema] = useState("");
   const [validationResult, setValidationResult] = useState<{
     valid: boolean;
@@ -40,13 +42,13 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
             {/* Schema Editor */}
             <div>
               <h3 className="text-sm font-medium text-gray-300 mb-2">Schema</h3>
-              <div className="h-64 border border-gray-700/50 rounded-lg overflow-hidden">
+              <div className="h-64 border border-themed/50 rounded-lg overflow-hidden">
                 <Editor
                   height="100%"
                   language="json"
                   value={schema}
                   onChange={(value) => setSchema(value || "")}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
@@ -62,12 +64,12 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
               <h3 className="text-sm font-medium text-gray-300 mb-2">
                 JSON Data
               </h3>
-              <div className="h-64 border border-gray-700/50 rounded-lg overflow-hidden">
+              <div className="h-64 border border-themed/50 rounded-lg overflow-hidden">
                 <Editor
                   height="100%"
                   language="json"
                   value={JSON.stringify(json, null, 2)}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     readOnly: true,
                     minimap: { enabled: false },

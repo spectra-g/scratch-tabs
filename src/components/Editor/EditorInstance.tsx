@@ -433,7 +433,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
   // Update Monaco theme when app theme changes
   useEffect(() => {
-    if (editorRef.current && monacoRef.current) {
+    if (editorRef.current && monacoRef.current && monacoRef.current.editor?.setTheme) {
       const theme = isDarkMode ? 'vs-dark' : 'vs';
       monacoRef.current.editor.setTheme(theme);
     }

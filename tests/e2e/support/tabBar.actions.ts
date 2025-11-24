@@ -53,7 +53,7 @@ export class TabBarActions {
 
   async selectTablet(tabletName: string) {
     // Wait for the tablet selector modal to appear - use the actual CSS classes from the component
-    const tabletSelector = this.page.locator('.bg-gray-800.border.border-gray-700.rounded-lg');
+    const tabletSelector = this.page.locator('.bg-themed.border.border-themed.rounded-lg');
     await expect(tabletSelector).toBeVisible();
     
     // Click on the tablet with the specified name - use exact text matching to avoid conflicts

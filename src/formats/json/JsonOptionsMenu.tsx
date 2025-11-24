@@ -44,7 +44,7 @@ export const JsonOptionsMenu: React.FC<JsonOptionsMenuProps> = ({ editor }) => {
       <div className="relative">
         <button
           onClick={toggleMenu}
-          className="p-0.5 hover:bg-gray-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-0.5 bg-themed-hover rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="JSON Options"
           disabled={isDisabled} // Disable if no editor
         >
@@ -54,7 +54,7 @@ export const JsonOptionsMenu: React.FC<JsonOptionsMenuProps> = ({ editor }) => {
         {isOpen && (
           <div
             ref={menuRef}
-            className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg z-50 py-1 custom-scrollbar"
+            className="absolute bg-themed-secondary border border-themed rounded shadow-lg z-50 py-1 custom-scrollbar"
             style={{
               bottom: "28px",
               left: "0px",
@@ -65,7 +65,7 @@ export const JsonOptionsMenu: React.FC<JsonOptionsMenuProps> = ({ editor }) => {
             onContextMenu={(e) => e.preventDefault()}
           >
             {menuConfig.length === 0 && (
-              <div className="px-3 py-1.5 text-xs text-gray-400 italic">
+              <div className="px-3 py-1.5 text-xs text-themed-tertiary italic">
                 Loading...
               </div>
             )}
@@ -75,7 +75,7 @@ export const JsonOptionsMenu: React.FC<JsonOptionsMenuProps> = ({ editor }) => {
                 return (
                   <div
                     key={item.id}
-                    className="border-t border-gray-600 my-1 mx-1"
+                    className="border-t border-themed my-1 mx-1"
                   ></div>
                 );
               }

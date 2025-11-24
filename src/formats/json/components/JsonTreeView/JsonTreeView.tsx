@@ -654,16 +654,16 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
           );
           break;
         case "null":
-          valueDisplay = <span className="text-gray-500 italic">null</span>;
+          valueDisplay = <span className="text-themed-muted italic">null</span>;
           break;
         case "object":
           valueDisplay = (
-            <span className="text-gray-400">{`{...} (${node.childCount ?? 0})`}</span>
+            <span className="text-themed-tertiary">{`{...} (${node.childCount ?? 0})`}</span>
           );
           break;
         case "array":
           valueDisplay = (
-            <span className="text-gray-400">{`[...] (${node.childCount ?? 0})`}</span>
+            <span className="text-themed-tertiary">{`[...] (${node.childCount ?? 0})`}</span>
           );
           break;
         default:
@@ -674,7 +674,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       return (
         <div
           style={{ ...style, paddingLeft: `${indent}px`, minWidth: '100%', width: 'max-content' }}
-          className={`flex items-center py-0.5 px-2 group cursor-pointer text-xs ${isSelected ? "bg-blue-900/30" : "hover:bg-gray-800/60"}`}
+          className={`flex items-center py-0.5 px-2 group cursor-pointer text-xs ${isSelected ? "bg-blue-900/30 dark:bg-blue-900/30" : "bg-themed-hover"}`}
           data-testid={`json-node-${node.path}`}
           onClick={() => {
             setSelectedPath(node.path);
@@ -696,7 +696,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                   e.stopPropagation();
                   toggleNode(node.path);
                 }}
-                className="text-gray-500 hover:text-gray-300"
+                className="icon-themed icon-themed-hover"
                 aria-label={node.isExpanded ? "Collapse" : "Expand"}
               >
                 {node.isExpanded ? (
@@ -728,7 +728,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                 e.stopPropagation();
                 copyToClipboard(node.path, "path");
               }}
-              className="p-0.5 text-gray-500 hover:text-sky-400 hover:bg-gray-700/50 rounded"
+              className="p-0.5 icon-themed hover:text-sky-400 bg-themed-hover rounded"
               title={`Copy Path: ${node.path}`}
             >
               <svg
@@ -751,7 +751,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                 e.stopPropagation();
                 copyToClipboard(valueStringForCopy, "value");
               }}
-              className="p-0.5 text-gray-500 hover:text-green-400 hover:bg-gray-700/50 rounded"
+              className="p-0.5 icon-themed hover:text-green-400 bg-themed-hover rounded"
               title="Copy Value"
             >
               <Copy size={14} />
@@ -761,7 +761,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                 e.stopPropagation();
                 handleOpenInNewTab(valueStringForCopy, node.path);
               }}
-              className={`p-0.5 rounded transition-colors ${openedItemId === node.path ? "text-green-400" : "text-gray-500 hover:text-blue-400 hover:bg-gray-700/50"}`}
+              className={`p-0.5 rounded transition-colors ${openedItemId === node.path ? "text-green-400" : "icon-themed hover:text-blue-400 bg-themed-hover"}`}
               title="Open in New Tab"
             >
               {openedItemId === node.path ? (
@@ -798,7 +798,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
 
   if (parseError) {
     return (
-      <div className="flex flex-col h-full bg-gray-900 text-gray-200 p-4">
+      <div className="flex flex-col h-full bg-themed text-themed p-4">
         <h3 className="text-red-500 font-semibold mb-2">Error Parsing JSON</h3>
         <pre className="text-red-400 text-sm bg-red-900/20 p-2 rounded overflow-auto custom-scrollbar">
           {parseError}
@@ -809,7 +809,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
 
   if (!rootNodeData) {
     return (
-      <div className="flex flex-col h-full bg-gray-900 text-gray-400 p-4 items-center justify-center">
+      <div className="flex flex-col h-full bg-themed text-themed-tertiary p-4 items-center justify-center">
         Empty or invalid JSON data
       </div>
     );
@@ -819,23 +819,23 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
     <div
       ref={containerRef}
       data-testid="json-tree-view"
-      className="flex flex-col h-full bg-gray-900 text-gray-200 overflow-hidden"
+      className="flex flex-col h-full bg-themed text-themed overflow-hidden"
     >
       {/* Header */}
-      <div className="flex-none border-b border-gray-700/50">
+      <div className="flex-none border-b border-themed">
         {/* Search Input Row */}
         <div className="flex items-center p-2 gap-2">
           {/* Combined Input */}
           <div className="flex-1 min-w-[200px] flex items-center relative">
             {searchMode === "keyValue" ? (
               <Search
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-themed-muted"
                 size={16}
                 pointerEvents="none"
               />
             ) : (
               <Route
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-themed-muted"
                 size={16}
                 pointerEvents="none"
               />
@@ -849,7 +849,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                   ? "Search keys/values..."
                   : "Evaluate path (e.g., users[0].name)"
               }
-              className="bg-gray-800/50 border border-gray-700/50 text-gray-200 pl-8 pr-2 py-1 rounded focus:outline-none focus:border-blue-600/70 focus:ring-1 focus:ring-blue-600/50 w-full text-sm"
+              className="input-themed pl-8 pr-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm placeholder:text-themed-muted"
               aria-label={
                 searchMode === "keyValue"
                   ? "Search JSON Tree"
@@ -863,9 +863,9 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
             <button
               onClick={() => setShowSettings(!showSettings)}
               className={`p-1.5 rounded transition-colors ${
-                showSettings 
-                  ? "text-blue-400 bg-blue-500/20" 
-                  : "text-gray-400 hover:text-gray-100 hover:bg-gray-700/50"
+                showSettings
+                  ? "text-blue-400 bg-blue-500/20"
+                  : "icon-themed icon-themed-hover bg-themed-hover"
               }`}
               title="Search Settings"
             >
@@ -873,21 +873,21 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
             </button>
             <button
               onClick={() => toggleAllNodes(true)}
-              className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
+              className="p-1.5 icon-themed icon-themed-hover bg-themed-hover rounded"
               title="Expand All"
             >
               <ChevronsDown size={16} />
             </button>
             <button
               onClick={() => toggleAllNodes(false)}
-              className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
+              className="p-1.5 icon-themed icon-themed-hover bg-themed-hover rounded"
               title="Collapse All"
             >
               <ChevronsUp size={16} />
             </button>
             <button
               onClick={copyAllVisiblePaths}
-              className="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-gray-700/50 rounded"
+              className="p-1.5 icon-themed icon-themed-hover bg-themed-hover rounded"
               title="Copy All Visible Paths"
             >
               <Copy size={16} />
@@ -900,10 +900,10 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                   className="fixed inset-0 z-30"
                   onClick={() => setShowSettings(false)}
                 />
-                <div className="absolute top-full right-12 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px] p-3">
+                <div className="absolute top-full right-12 mt-1 bg-themed border border-themed rounded-lg shadow-xl z-40 min-w-[200px] p-3">
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-themed-secondary mb-2">
                         Search Mode
                       </label>
                       <div className="flex gap-2">
@@ -915,7 +915,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                           className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
                             searchMode === "keyValue"
                               ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                              : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+                              : "bg-themed-secondary text-themed-secondary border border-themed bg-themed-hover"
                           }`}
                         >
                           Key/Value
@@ -928,7 +928,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                           className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
                             searchMode === "path"
                               ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                              : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+                              : "bg-themed-secondary text-themed-secondary border border-themed bg-themed-hover"
                           }`}
                         >
                           Path
@@ -938,7 +938,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
 
                     {searchMode === "keyValue" && (
                       <div>
-                        <label className="block text-xs font-medium text-gray-300 mb-2">
+                        <label className="block text-xs font-medium text-themed-secondary mb-2">
                           Show Results
                         </label>
                         <div className="flex gap-2">
@@ -947,7 +947,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                             className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
                               searchExpansion === "matched"
                                 ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                                : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+                                : "bg-themed-tertiary text-themed-secondary border border-themed-light hover:bg-slate-300 dark:hover:bg-slate-300 dark:hover:bg-gray-600"
                             }`}
                           >
                             Matched
@@ -957,7 +957,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                             className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
                               searchExpansion === "children"
                                 ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                                : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+                                : "bg-themed-tertiary text-themed-secondary border border-themed-light hover:bg-slate-300 dark:hover:bg-slate-300 dark:hover:bg-gray-600"
                             }`}
                           >
                             Contents
@@ -974,7 +974,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       </div>
 
       {/* Tree View Area */}
-      <div className="flex-1 overflow-auto bg-gray-900/80 custom-scrollbar" style={{ height: '100%' }}>
+      <div className="flex-1 overflow-auto bg-themed/80 custom-scrollbar" style={{ height: '100%' }}>
         <List
           className="custom-scrollbar"
           ref={listRef}
@@ -990,7 +990,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       </div>
 
       {/* Footer: Status or Selected Path */}
-      <div className="flex-none p-1.5 border-t border-gray-700/50 text-gray-400 text-xs bg-gray-800/50 truncate flex items-center justify-between min-h-[28px]">
+      <div className="flex-none p-1.5 border-t border-themed/50 text-themed-tertiary text-xs bg-themed-secondary/50 truncate flex items-center justify-between min-h-[28px]">
         {/* Display evaluation status/error OR selected path */}
         <span
           className={`truncate ${evaluationStatus && (evaluationStatus.startsWith("Error") || evaluationStatus.startsWith("Path segment") || evaluationStatus.startsWith("Cannot access") || evaluationStatus.includes("not found")) ? "text-red-400" : evaluationStatus ? "text-green-400" : ""}`}
@@ -1009,7 +1009,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
               e.stopPropagation();
               copyToClipboard(selectedPath, "path");
             }}
-            className="ml-2 p-0.5 text-gray-500 hover:text-sky-400 hover:bg-gray-700/50 rounded inline-flex align-middle flex-shrink-0"
+            className="ml-2 p-0.5 text-themed-muted hover:text-sky-400 hover:bg-themed-tertiary/50 rounded inline-flex align-middle flex-shrink-0"
             title={`Copy Path: ${selectedPath}`}
           >
             <svg

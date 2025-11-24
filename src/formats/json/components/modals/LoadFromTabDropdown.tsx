@@ -48,7 +48,7 @@ export const LoadFromTabDropdown: React.FC<LoadFromTabDropdownProps> = ({
       {/* Load From Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1 px-2 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors text-xs"
+        className="flex items-center space-x-1 px-2 py-1 bg-themed-tertiary text-themed-secondary rounded hover:bg-slate-300 dark:hover:bg-gray-600 transition-colors text-xs"
         title="Load JSON from another tab"
       >
         <Upload size={12} />
@@ -61,14 +61,14 @@ export const LoadFromTabDropdown: React.FC<LoadFromTabDropdownProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded shadow-lg z-50 max-h-80 overflow-hidden flex flex-col">
+        <div className="absolute right-0 mt-2 w-56 bg-themed border border-themed rounded shadow-lg z-50 max-h-80 overflow-hidden flex flex-col">
           {recentJsonTabs.length > 0 ? (
             <div className="overflow-y-auto custom-scrollbar">
               {recentJsonTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => handleTabSelect(tab.id)}
-                  className="w-full flex items-center space-x-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center space-x-2 px-3 py-2 text-xs text-themed-secondary bg-themed-hover transition-colors"
                   title={`Load from ${tab.title}`}
                 >
                   <FileJson size={14} className="text-green-400 flex-shrink-0" />
@@ -77,7 +77,7 @@ export const LoadFromTabDropdown: React.FC<LoadFromTabDropdownProps> = ({
               ))}
             </div>
           ) : (
-            <div className="px-3 py-4 text-xs text-gray-400 text-center">
+            <div className="px-3 py-4 text-xs text-themed-tertiary text-center">
               No other JSON tabs available
             </div>
           )}
