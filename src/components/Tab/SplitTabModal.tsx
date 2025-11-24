@@ -272,15 +272,15 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-themed rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden border border-themed">
+      <div className="bg-surface rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden border border-base">
         {/* Header */}
-        <div className="flex-none flex items-center justify-between p-4 border-b border-themed bg-themed-secondary">
-          <h2 className="text-lg font-medium text-themed">
+        <div className="flex-none flex items-center justify-between p-4 border-b border-base bg-surface-highlight">
+          <h2 className="text-lg font-medium text-main">
             Split Tab: {tab.title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 text-themed-muted hover:text-themed hover:bg-themed-hover rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-1.5 text-muted hover:text-main hover:bg-element-hover rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-info"
             aria-label="Close modal"
           >
             <X size={20} />
@@ -290,14 +290,14 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
         {/* Body - Two Pane Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Pane - Configuration */}
-          <div className="w-1/3 border-r border-themed overflow-y-auto custom-scrollbar p-4 space-y-4">
+          <div className="w-1/3 border-r border-base overflow-y-auto custom-scrollbar p-4 space-y-4">
             {/* Split Method */}
             <div>
-              <label className="block text-sm font-medium text-themed-secondary mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Split Method
               </label>
               <div className="space-y-2">
-                <label className="flex items-center text-sm text-themed-secondary">
+                <label className="flex items-center text-sm text-secondary">
                   <input
                     type="radio"
                     checked={config.method === "delimiter"}
@@ -308,7 +308,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                   />
                   By Delimiter (Text or Regex)
                 </label>
-                <label className="flex items-center text-sm text-themed-secondary">
+                <label className="flex items-center text-sm text-secondary">
                   <input
                     type="radio"
                     checked={config.method === "lines"}
@@ -324,7 +324,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
             {config.method === "delimiter" && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-themed-secondary mb-2">
+                  <label className="block text-sm font-medium text-secondary mb-2">
                     Delimiter
                   </label>
                   <input
@@ -333,13 +333,13 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                     onChange={(e) =>
                       setConfig({ ...config, delimiter: e.target.value })
                     }
-                    className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                     placeholder="Enter delimiter"
                   />
                 </div>
 
                 <div>
-                  <label className="flex items-center text-sm text-themed-secondary">
+                  <label className="flex items-center text-sm text-secondary">
                     <input
                       type="checkbox"
                       checked={config.useRegex}
@@ -353,11 +353,11 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-themed-secondary mb-2">
+                  <label className="block text-sm font-medium text-secondary mb-2">
                     Delimiter Handling
                   </label>
                   <div className="space-y-2">
-                    <label className="flex items-center text-sm text-themed-secondary">
+                    <label className="flex items-center text-sm text-secondary">
                       <input
                         type="radio"
                         checked={config.delimiterHandling === "discard"}
@@ -371,7 +371,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                       />
                       Discard delimiter
                     </label>
-                    <label className="flex items-center text-sm text-themed-secondary">
+                    <label className="flex items-center text-sm text-secondary">
                       <input
                         type="radio"
                         checked={config.delimiterHandling === "keepPrevious"}
@@ -385,7 +385,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                       />
                       Keep delimiter at the end of the previous tab
                     </label>
-                    <label className="flex items-center text-sm text-themed-secondary">
+                    <label className="flex items-center text-sm text-secondary">
                       <input
                         type="radio"
                         checked={config.delimiterHandling === "keepNext"}
@@ -403,7 +403,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-themed-secondary mb-2">
+                  <label className="block text-sm font-medium text-secondary mb-2">
                     Skip first N matches
                   </label>
                   <input
@@ -416,10 +416,10 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                         skipFirstMatches: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                     placeholder="0"
                   />
-                  <p className="mt-1 text-xs text-themed-muted">
+                  <p className="mt-1 text-xs text-muted">
                     Skip the first N delimiter matches. Useful for keeping header sections together.
                   </p>
                 </div>
@@ -429,7 +429,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
             {/* Line Count Options */}
             {config.method === "lines" && (
               <div>
-                <label className="block text-sm font-medium text-themed-secondary mb-2">
+                <label className="block text-sm font-medium text-secondary mb-2">
                   Lines per new tab
                 </label>
                 <input
@@ -442,20 +442,20 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                       linesPerTab: parseInt(e.target.value) || 1,
                     })
                   }
-                  className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                 />
               </div>
             )}
 
             {/* Header/Footer Replication */}
-            <div className="border-t border-themed pt-4">
-              <h3 className="text-sm font-medium text-themed-secondary mb-3">
+            <div className="border-t border-base pt-4">
+              <h3 className="text-sm font-medium text-secondary mb-3">
                 Header/Footer Replication
               </h3>
 
               <div className="space-y-3">
                 <div>
-                  <label className="flex items-center text-sm text-themed-secondary">
+                  <label className="flex items-center text-sm text-secondary">
                     <input
                       type="checkbox"
                       checked={config.replicateHeader}
@@ -480,14 +480,14 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                           headerLines: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full mt-2 px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-2 px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                       placeholder="Number of header lines"
                     />
                   )}
                 </div>
 
                 <div>
-                  <label className="flex items-center text-sm text-gray-300">
+                  <label className="flex items-center text-sm text-secondary">
                     <input
                       type="checkbox"
                       checked={config.replicateFooter}
@@ -512,7 +512,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                           footerLines: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full mt-2 px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-2 px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                       placeholder="Number of footer lines"
                     />
                   )}
@@ -521,13 +521,13 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
             </div>
 
             {/* Output Options */}
-            <div className="border-t border-themed pt-4">
-              <h3 className="text-sm font-medium text-themed-secondary mb-3">
+            <div className="border-t border-base pt-4">
+              <h3 className="text-sm font-medium text-secondary mb-3">
                 Output Options
               </h3>
 
               <div>
-                <label className="block text-sm font-medium text-themed-secondary mb-2">
+                <label className="block text-sm font-medium text-secondary mb-2">
                   Title Pattern
                 </label>
                 <input
@@ -536,16 +536,16 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                   onChange={(e) =>
                     setConfig({ ...config, titlePattern: e.target.value })
                   }
-                  className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   placeholder="{title} - Part {n}"
                 />
-                <p className="mt-1 text-xs text-themed-muted">
+                <p className="mt-1 text-xs text-muted">
                   Use {"{title}"} for original title and {"{n}"} for part number
                 </p>
               </div>
 
               <div className="mt-3">
-                <label className="flex items-center text-sm text-themed-secondary">
+                <label className="flex items-center text-sm text-secondary">
                   <input
                     type="checkbox"
                     checked={config.keepOriginal}
@@ -563,8 +563,8 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
           {/* Right Pane - Live Preview */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Preview Header */}
-            <div className="flex-none p-4 border-b border-themed bg-themed-secondary">
-              <h3 className="text-sm font-medium text-themed-secondary mb-2">
+            <div className="flex-none p-4 border-b border-base bg-surface-highlight">
+              <h3 className="text-sm font-medium text-secondary mb-2">
                 Live Preview ({splitResults.length} tab
                 {splitResults.length !== 1 ? "s" : ""})
               </h3>
@@ -572,7 +572,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
               {/* Tab List */}
               <div className="flex flex-wrap gap-2">
                 {splitResults.length === 0 ? (
-                  <p className="text-sm text-themed-muted italic">
+                  <p className="text-sm text-muted italic">
                     Configure split options to see preview
                   </p>
                 ) : (
@@ -581,8 +581,8 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                       key={index}
                       onClick={() => setSelectedPreviewIndex(index)}
                       className={`px-3 py-1.5 rounded text-sm transition-colors ${selectedPreviewIndex === index
-                        ? "bg-blue-600 text-white"
-                        : "bg-themed-tertiary text-themed-secondary hover:bg-themed-hover"
+                        ? "bg-primary text-white"
+                        : "bg-element text-secondary hover:bg-element-hover"
                         }`}
                     >
                       {result.title}
@@ -614,8 +614,8 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
         </div>
 
         {/* Footer - Actions */}
-        <div className="flex-none flex items-center justify-between p-4 border-t border-themed bg-themed-secondary">
-          <div className="text-sm text-themed-muted">
+        <div className="flex-none flex items-center justify-between p-4 border-t border-base bg-surface-highlight">
+          <div className="text-sm text-muted">
             {splitResults.length > 0 && (
               <>
                 Will create {splitResults.length} new tab
@@ -627,14 +627,14 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-themed-tertiary hover:bg-themed-hover text-themed rounded text-sm transition-colors"
+              className="px-4 py-2 bg-element hover:bg-element-hover text-main rounded text-sm transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleApplySplit}
               disabled={splitResults.length === 0}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Apply Split
             </button>

@@ -155,15 +155,15 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
         <button
           key={tab.id}
           onClick={() => toggleTab(tab.id)}
-          className="w-full flex items-center space-x-3 px-3 py-1 hover:bg-themed-hover rounded-md transition-colors text-left"
+          className="w-full flex items-center space-x-3 px-3 py-1 hover:bg-element-hover rounded-md transition-colors text-left"
         >
           {selectedTabs.has(tab.id) ? (
-            <CheckCircle2 size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <CheckCircle2 size={16} className="text-info flex-shrink-0" />
           ) : (
-            <Circle size={16} className="text-themed-muted flex-shrink-0" />
+            <Circle size={16} className="text-muted flex-shrink-0" />
           )}
-          <span className="flex-1 truncate min-w-0 text-themed">{tab.title}</span>
-          <span className="text-xs text-themed-muted flex-shrink-0">
+          <span className="flex-1 truncate min-w-0 text-main">{tab.title}</span>
+          <span className="text-xs text-muted flex-shrink-0">
             .
             {formatRegistry.getById(tab.language)?.getFileExtension() ||
               "txt"}
@@ -179,7 +179,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={selectAll}
-            className="px-3 py-1 bg-themed-secondary hover:bg-themed-hover rounded-md text-sm transition-colors text-themed"
+            className="px-3 py-1 bg-element hover:bg-element-hover rounded-md text-sm transition-colors text-main"
           >
             Select All
           </button>
@@ -187,7 +187,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
             <>
               <button
                 onClick={selectLeftSide}
-                className="px-3 py-1 bg-themed-secondary hover:bg-themed-hover rounded-md text-sm transition-colors text-themed"
+                className="px-3 py-1 bg-element hover:bg-element-hover rounded-md text-sm transition-colors text-main"
               >
                 Select Left Side
               </button>
@@ -214,13 +214,13 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <h3 className="text-sm font-medium text-themed-secondary mb-2">
+                <h3 className="text-sm font-medium text-secondary mb-2">
                   Left Side
                 </h3>
                 <TabList tabs={leftTabs} />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-themed-secondary mb-2">
+                <h3 className="text-sm font-medium text-secondary mb-2">
                   Right Side
                 </h3>
                 <TabList tabs={rightTabs} />
@@ -233,7 +233,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({ onClose }) => {
           <button
             onClick={downloadFiles}
             disabled={selectedTabs.size === 0 || isDownloading}
-            className="flex items-center space-x-2 px-4 py-1.5 text-sm bg-themed-secondary hover:bg-themed-hover rounded-md text-themed transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 px-4 py-1.5 text-sm bg-element hover:bg-element-hover rounded-md text-main transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={16} />
             <span>
