@@ -57,7 +57,7 @@ const SearchResultItem: React.FC<SearchResultItemProps> = React.memo(
     return (
       <div
         ref={itemRef}
-        className={`border-b border-themed cursor-pointer p-2 ${isSelected ? "bg-blue-900/20 dark:bg-blue-900/40" : "hover:bg-themed-hover"}`}
+        className={`border-b border-base cursor-pointer p-2 ${isSelected ? "bg-info/10" : "hover:bg-element-hover"}`}
         onClick={onSelect}
         onDoubleClick={() => onDoubleClick(result)}
         role="button"
@@ -67,19 +67,19 @@ const SearchResultItem: React.FC<SearchResultItemProps> = React.memo(
         <div className="flex justify-between items-start text-xs">
           {/* Left: Highlighted Line */}
           <div className="flex-1 font-mono mr-4 overflow-hidden">
-            <span className="text-themed-muted mr-2">{result.lineNumber}:</span>
+            <span className="text-muted mr-2">{result.lineNumber}:</span>
             <span
-              className="text-themed whitespace-pre"
+              className="text-main whitespace-pre"
               dangerouslySetInnerHTML={{ __html: highlightedLine }}
             />
           </div>
           {/* Right: File Info */}
           <div
-            className="text-themed-tertiary text-right flex-shrink-0 max-w-[40%]"
+            className="text-muted text-right flex-shrink-0 max-w-[40%]"
             title={result.tabTitle}
           >
             <span className="truncate block">{result.tabTitle}</span>
-            <span className="text-themed-muted"> ({result.language})</span>
+            <span className="text-muted"> ({result.language})</span>
           </div>
         </div>
       </div>
@@ -148,11 +148,11 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
         tabIndex={-1}
       >
         {/* Top Controls */}
-        <div className="flex-none p-3 border-b border-themed bg-themed-secondary space-y-3">
+        <div className="flex-none p-3 border-b border-base bg-surface-highlight space-y-3">
           {/* Search Input & History */}
           <div className="flex items-center space-x-2 relative">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-themed-muted"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
               size={18}
             />
             <input
@@ -161,12 +161,12 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
               value={query}
               onChange={handleQueryChange}
               placeholder="Search..."
-              className="w-full input-themed rounded-md pl-10 pr-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-element text-main border border-base rounded-md pl-10 pr-2 py-1.5 focus:outline-none focus:ring-2 focus:border-focus"
             />
             {searchHistory.length > 0 && (
               <button
                 onClick={() => setShowHistory(!showHistory)}
-                className="p-1.5 text-themed-tertiary hover:text-themed hover:bg-themed-hover rounded"
+                className="p-1.5 text-muted hover:text-main hover:bg-element-hover rounded"
                 title="Search History"
               >
                 <History size={16} />
@@ -176,10 +176,10 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
             {showHistory && searchHistory.length > 0 && (
               <div
                 ref={historyRef}
-                className="absolute top-full right-0 mt-1 w-64 bg-themed border border-themed rounded-md shadow-lg z-50 max-h-48 overflow-y-auto custom-scrollbar"
+                className="absolute top-full right-0 mt-1 w-64 bg-surface border border-base rounded-md shadow-lg z-50 max-h-48 overflow-y-auto custom-scrollbar"
               >
-                <div className="flex justify-between items-center p-1 border-b border-themed">
-                  <span className="text-xs text-themed-muted px-2">
+                <div className="flex justify-between items-center p-1 border-b border-base">
+                  <span className="text-xs text-muted px-2">
                     Recent Searches
                   </span>
                   <button
@@ -188,7 +188,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
                       clearHistory();
                       setShowHistory(false);
                     }}
-                    className="p-1 text-themed-muted hover:text-red-400 rounded"
+                    className="p-1 text-muted hover:text-red-400 rounded"
                     title="Clear History"
                   >
                     <Trash2 size={12} />
@@ -198,7 +198,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
                   <button
                     key={index}
                     onClick={() => handleHistoryClick(histQuery)}
-                    className="block w-full text-left px-3 py-1.5 text-sm text-themed hover:bg-themed-hover truncate"
+                    className="block w-full text-left px-3 py-1.5 text-sm text-main hover:bg-element-hover truncate"
                   >
                     {histQuery}
                   </button>
@@ -215,14 +215,14 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
                 onClick={() =>
                   setOptions({ caseSensitive: !options.caseSensitive })
                 }
-                className={`p-1 rounded ${options.caseSensitive ? "bg-blue-500/30 text-blue-500 dark:text-blue-300" : "bg-themed-secondary text-themed-muted hover:bg-themed-hover"}`}
+                className={`p-1 rounded ${options.caseSensitive ? "bg-info/30 text-info" : "bg-surface-highlight text-muted hover:bg-element-hover"}`}
                 title="Case Sensitive"
               >
                 <CaseSensitive size={16} />
               </button>
               <button
                 onClick={() => setOptions({ wholeWord: !options.wholeWord })}
-                className={`p-1 rounded ${options.wholeWord ? "bg-blue-500/30 text-blue-500 dark:text-blue-300" : "bg-themed-secondary text-themed-muted hover:bg-themed-hover"}`}
+                className={`p-1 rounded ${options.wholeWord ? "bg-info/30 text-info" : "bg-surface-highlight text-muted hover:bg-element-hover"}`}
                 title="Whole Word"
               >
                 <WholeWord size={16} />
@@ -233,7 +233,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
             <div className="flex items-center space-x-2 flex-1 min-w-[150px]">
               <label
                 htmlFor="titleFilter"
-                className="text-sm text-themed-muted flex-shrink-0"
+                className="text-sm text-muted flex-shrink-0"
               >
                 Tab title:
               </label>
@@ -243,7 +243,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
                 value={titleFilter}
                 onChange={(e) => setTitleFilter(e.target.value)}
                 placeholder="e.g. My Tab, *Todo*"
-                className="flex-grow input-themed rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-grow bg-element text-main border border-base rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:border-focus"
               />
             </div>
 
@@ -251,7 +251,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
             <div className="relative">
               <button
                 onClick={() => setShowLangFilter(!showLangFilter)}
-                className="flex items-center space-x-1 px-2 py-0.5 bg-themed-secondary border border-themed rounded text-xs text-themed bg-themed-hover"
+                className="flex items-center space-x-1 px-2 py-0.5 bg-surface-highlight border border-base rounded text-xs text-main hover:bg-element-hover"
               >
                 <ListFilter size={12} />
                 <span>Languages ({languageFilter.length || "All"})</span>
@@ -260,19 +260,19 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
               {showLangFilter && (
                 <div
                   ref={langFilterRef}
-                  className="absolute top-full left-0 mt-1 w-56 bg-themed border border-themed rounded-md shadow-lg z-50 max-h-60 overflow-y-auto custom-scrollbar py-1"
+                  className="absolute top-full left-0 mt-1 w-56 bg-surface border border-base rounded-md shadow-lg z-50 max-h-60 overflow-y-auto custom-scrollbar py-1"
                 >
                   <button
                     onClick={() => setLanguageFilter([])} // Clear all
-                    className="block w-full text-left px-3 py-1 text-xs text-themed-muted bg-themed-hover italic"
+                    className="block w-full text-left px-3 py-1 text-xs text-muted hover:bg-element-hover italic"
                   >
                     (All Languages)
                   </button>
-                  <div className="border-t border-themed my-1"></div>
+                  <div className="border-t border-base my-1"></div>
                   {languages.map((lang) => (
                     <label
                       key={lang.id}
-                      className="flex items-center space-x-2 px-3 py-1 hover:bg-themed-hover cursor-pointer"
+                      className="flex items-center space-x-2 px-3 py-1 hover:bg-element-hover cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -280,9 +280,9 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
                         onChange={(e) =>
                           handleLangCheckboxChange(lang.id, e.target.checked)
                         }
-                        className="h-3 w-3 rounded border-themed text-blue-500 focus:ring-blue-600/50 bg-white dark:bg-gray-900 accent-blue-500"
+                        className="h-3 w-3 rounded border-base text-info focus:ring-info/50 bg-input accent-info"
                       />
-                      <span className="text-xs text-themed">{lang.name}</span>
+                      <span className="text-xs text-main">{lang.name}</span>
                     </label>
                   ))}
                 </div>
@@ -291,11 +291,11 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
 
             {/* Scope Selector */}
             <div className="flex items-center space-x-2">
-              <label className="text-sm text-themed-muted">Scope:</label>
+              <label className="text-sm text-muted">Scope:</label>
               <select
                 value={scope}
                 onChange={(e) => setScope(e.target.value as any)}
-                className="input-themed rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-element text-main border border-base rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:border-focus"
               >
                 <option value="activeWorkspace">Active Workspace</option>
                 <option value="allWorkspaces">All Workspaces</option>
@@ -309,10 +309,10 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
           {/* Results List Container */}
           <div
             ref={resultsContainerRef}
-            className="w-1/2 border-r border-themed flex flex-col overflow-y-auto custom-scrollbar"
+            className="w-1/2 border-r border-base flex flex-col overflow-y-auto custom-scrollbar"
           >
             {isLoading ? (
-              <div className="flex items-center justify-center h-full text-themed-muted">
+              <div className="flex items-center justify-center h-full text-muted">
                 <Loader2 size={24} className="animate-spin mr-2" /> Searching...
               </div>
             ) : error ? (
@@ -337,7 +337,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
                 ))}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-themed-muted">
+              <div className="flex items-center justify-center h-full text-muted">
                 {statusMessage}
               </div>
             )}
@@ -353,7 +353,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
         </div>
 
         {/* Footer Status */}
-        <div className="flex-none p-2 border-t border-themed text-xs text-themed-muted">
+        <div className="flex-none p-2 border-t border-base text-xs text-muted">
           {statusMessage}
         </div>
       </div>

@@ -95,7 +95,7 @@ export const SearchPreviewPane: React.FC<SearchPreviewPaneProps> = ({
                 range: new currentMonaco.Range(lineNumber, 1, lineNumber, 1),
                 options: {
                   isWholeLine: true,
-                  className: "search-highlight-line bg-blue-900/20 dark:bg-blue-900/40",
+                  className: "search-highlight-line bg-info/10",
                   overviewRuler: {
                     color: "rgba(0, 122, 204, 0.7)",
                     position: currentMonaco.editor.OverviewRulerLane.Center,
