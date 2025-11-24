@@ -24,14 +24,14 @@ export const BaseModal: React.FC<BaseModalProps> = ({
       {/* --- Modal Container --- */}
       {/* Slightly lighter dark bg, refined border, larger shadow, constrained width/height */}
       <div
-        className={`bg-themed rounded-lg shadow-xl w-full ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-themed`}
+        className={`bg-surface rounded-lg shadow-xl w-full ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-base`}
       >
         {/* --- Modal Header --- */}
-        <div className="flex-none flex items-center justify-between p-3 border-b border-themed bg-themed-secondary">
-          <h2 className="text-lg font-medium text-themed">{title}</h2>
+        <div className="flex-none flex items-center justify-between p-3 border-b border-base bg-surface-highlight">
+          <h2 className="text-lg font-medium text-main">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 icon-themed icon-themed-hover bg-themed-hover rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-1.5 text-secondary hover:text-main bg-element-hover rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Close modal"
           >
             <X size={20} />

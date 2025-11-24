@@ -59,7 +59,7 @@ export const FormatSelector: React.FC<FormatSelectorProps> = ({
     finalOrderedList.map((format) => (
       <button
         key={format.id}
-        className="w-full text-left px-3 py-1.5 bg-themed-hover text-xs text-themed block" // Added 'block' for potential layout consistency
+        className="w-full text-left px-3 py-1.5 bg-element-hover text-xs text-main block" // Added 'block' for potential layout consistency
         onClick={() => onSelect(format.id)}
         title={`Select ${format.name}`} // Add a title for usability
       >

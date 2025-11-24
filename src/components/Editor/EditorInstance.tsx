@@ -649,9 +649,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
 
   return (
-    <div className="flex flex-col h-full w-full bg-themed">
+    <div className="flex flex-col h-full w-full bg-surface">
       <div
-        className="flex-grow relative overflow-hidden border-l border-themed"
+        className="flex-grow relative overflow-hidden border-l border-base"
         ref={editorContainerRef}
         data-testid="monaco-editor-container"
       >

@@ -17,60 +17,89 @@ export default {
     // Custom theme utilities plugin
     function ({ addUtilities }) {
       addUtilities({
-        // --- BACKGROUNDS ---
-        // Main canvas (Editor, Cards) - Pure White
-        '.bg-themed': {
-          '@apply bg-white dark:bg-gray-900': {},
+        // 1. SURFACES (The Containers)
+        '.bg-canvas': {
+          '@apply bg-white dark:bg-gray-950': {}, // The body background
         },
-        // Hover states need to be visible
-        '.bg-themed-hover': {
+        '.bg-surface': {
+          '@apply bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800': {}, // Cards, Modals
+        },
+        '.bg-surface-highlight': {
+          '@apply bg-slate-100 dark:bg-gray-800': {}, // Sidebar, Header
+        },
+
+        // 2. ELEMENTS (The things inside containers)
+        '.bg-element': {
+          '@apply bg-slate-100 dark:bg-gray-800 border-slate-200 dark:border-gray-700': {}, // Inputs, Secondary areas
+        },
+        '.bg-element-hover': {
           '@apply hover:bg-slate-200 dark:hover:bg-gray-700': {},
         },
-        // Chrome (Sidebars, Modals, Headers) - Distinct Gray
-        '.bg-themed-secondary': {
-          '@apply bg-slate-100 dark:bg-gray-800': {},
-        },
-        // Inputs, Active Items - Darker Gray
-        '.bg-themed-tertiary': {
-          '@apply bg-slate-200 dark:bg-gray-700': {},
+        '.bg-element-active': {
+          '@apply bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400': {}, // Active Tabs
         },
 
-        // --- BORDERS ---
-        // Light mode needs darker borders to be visible
-        '.border-themed': {
-          '@apply border-slate-300 dark:border-gray-700': {},
+        // 3. ACTIONS (Buttons)
+        '.bg-primary': {
+          '@apply bg-blue-600 hover:bg-blue-700 text-white': {},
         },
-        '.border-themed-light': {
-          '@apply border-slate-200 dark:border-gray-600': {},
+        '.bg-danger': {
+          '@apply bg-red-600 hover:bg-red-700 text-white': {},
         },
 
-        // --- TEXT ---
-        // Avoid pure black - use slate-900 for softer contrast
-        '.text-themed': {
-          '@apply text-slate-900 dark:text-gray-200': {},
+        // 4. STATUS (Badges & Alerts)
+        // Note: We use opacity in dark mode to keep text readable
+        '.bg-danger-subtle': {
+          '@apply bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200 border border-red-200 dark:border-red-800': {},
         },
-        '.text-themed-secondary': {
-          '@apply text-slate-600 dark:text-gray-300': {},
+        '.bg-success-subtle': {
+          '@apply bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200 border border-green-200 dark:border-green-800': {},
         },
-        '.text-themed-tertiary': {
-          '@apply text-slate-500 dark:text-gray-400': {},
+        '.bg-warning-subtle': {
+          '@apply bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800': {},
         },
-        '.text-themed-muted': {
+
+        // 5. TEXT
+        '.text-main': {
+          '@apply text-slate-900 dark:text-gray-100': {},
+        },
+        '.text-secondary': {
+          '@apply text-slate-600 dark:text-gray-400': {},
+        },
+        '.text-muted': {
           '@apply text-slate-400 dark:text-gray-500': {},
         },
-
-        // --- ICONS ---
-        '.icon-themed': {
-          '@apply text-slate-500 dark:text-gray-400': {},
+        '.text-info': {
+          '@apply text-blue-600 dark:text-blue-400': {},
         },
-        '.icon-themed-hover': {
-          '@apply hover:text-slate-900 dark:hover:text-gray-300': {},
+        '.text-success': {
+          '@apply text-green-600 dark:text-green-400': {},
+        },
+        '.text-warning': {
+          '@apply text-yellow-600 dark:text-yellow-400': {},
+        },
+        '.text-danger': {
+          '@apply text-red-600 dark:text-red-400': {},
         },
 
-        // --- INPUTS ---
-        // Standardize inputs to avoid the "ghost input" look
-        '.input-themed': {
-          '@apply bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-600 text-slate-900 dark:text-gray-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent': {},
+        // 6. BORDERS
+        '.border-base': {
+          '@apply border-slate-200 dark:border-gray-700': {},
+        },
+        '.border-focus': {
+          '@apply border-blue-500 dark:border-blue-400': {},
+        },
+        '.border-info': {
+          '@apply border-blue-200 dark:border-blue-800': {},
+        },
+        '.border-success': {
+          '@apply border-green-200 dark:border-green-800': {},
+        },
+        '.border-warning': {
+          '@apply border-yellow-200 dark:border-yellow-800': {},
+        },
+        '.border-danger': {
+          '@apply border-red-200 dark:border-red-800': {},
         },
       });
     },

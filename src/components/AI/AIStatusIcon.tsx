@@ -73,30 +73,30 @@ export const AIStatusIcon: React.FC = () => {
   };
 
   // Determine icon color, animation, and title based on state
-  let iconColor = "text-blue-400"; // Default to blue for not ready states
-  let hoverColor = "hover:text-blue-300";
+  let iconColor = "text-main"; // Default to main for not ready states
+  let hoverColor = "hover:text-secondary";
   let animationClass = "";
   let title = "Open AI Model Management";
 
   if (isReady && isCodegenReady) {
     // Both models ready - use same color as nearby icons
-    iconColor = "text-gray-300";
-    hoverColor = "hover:text-gray-200";
+    iconColor = "text-muted";
+    hoverColor = "hover:text-main";
     title = "AI Ready - Click to manage models";
   } else if (error || codegenError) {
-    iconColor = "text-blue-400"; // Blue for error states instead of red
-    hoverColor = "hover:text-blue-300";
+    iconColor = "text-main"; // Blue for error states instead of red
+    hoverColor = "hover:text-secondary";
     title = "AI Error - Click to manage models";
   } else if (isLoading || isCodegenLoading) {
     // Check both loading states for pulse
-    iconColor = "text-blue-400";
-    hoverColor = "hover:text-blue-300";
+    iconColor = "text-main";
+    hoverColor = "hover:text-secondary";
     animationClass = "animate-pulse"; // Pulse when either model is loading
     title = "AI Downloading - Click to view progress";
   } else if (isReady && !isCodegenReady) {
     // Summary ready, codegen not ready
-    iconColor = "text-blue-400"; // Blue for partial readiness instead of yellow
-    hoverColor = "hover:text-blue-300";
+    iconColor = "text-main"; // Blue for partial readiness instead of yellow
+    hoverColor = "hover:text-secondary";
     title = "AI Partially Ready - Click to manage models";
   }
   // All other states use blue as default

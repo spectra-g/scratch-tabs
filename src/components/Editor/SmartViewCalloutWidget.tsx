@@ -38,30 +38,30 @@ export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.95 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex items-center justify-between p-2 bg-gray-800 border border-blue-500/30 text-blue-200 rounded-lg shadow-lg max-w-sm"
+      className="flex items-center justify-between p-2 bg-surface border border-info/30 text-info rounded-lg shadow-lg max-w-sm"
       style={{
         position: 'relative',
         zIndex: 1000,
       }}
     >
       <div className="flex items-center space-x-3">
-        <Sparkles size={18} className="text-blue-400 flex-shrink-0" />
+        <Sparkles size={18} className="text-info flex-shrink-0" />
         <div className="text-sm" data-testid="smart-view-callout-message">
-          Smart View for <span className="font-semibold text-white">{formatName}</span> is available.
+          Smart View for <span className="font-semibold text-main">{formatName}</span> is available.
         </div>
       </div>
       <div className="flex items-center space-x-1 ml-3">
         <button
           data-testid="smart-view-callout-switch"
           onClick={onSwitch}
-          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
+          className="px-3 py-1 bg-primary hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
         >
           Switch
         </button>
         <button
           data-testid="smart-view-callout-dismiss"
           onClick={onDismiss}
-          className="p-1 text-gray-400 hover:text-white hover:bg-blue-800/50 rounded"
+          className="p-1 text-muted hover:text-main hover:bg-element-hover rounded"
           title="Dismiss"
         >
           <X size={14} />

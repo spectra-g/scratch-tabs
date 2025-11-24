@@ -82,24 +82,24 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         onClick={position ? undefined : onCancel}
       >
         <div
-          className="bg-themed p-4 rounded-lg shadow-2xl max-w-md w-full border border-themed"
+          className="bg-surface p-4 rounded-lg shadow-2xl max-w-md w-full border border-base"
           style={dialogStyle}
           onClick={handleModalContentClick}
           data-testid="confirmation-dialog"
         >
-          <p className="text-themed mb-6 font-medium">{message}</p>
+          <p className="text-main mb-6 font-medium">{message}</p>
           <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={handleCancelClick}
-              className="px-3 py-1.5 text-sm text-blue-600 dark:text-blue-500 bg-transparent hover:bg-blue-500/10 rounded-md transition-colors"
+              className="px-3 py-1.5 text-sm text-info bg-transparent hover:bg-info/10 rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirmClick}
-              className="px-3 py-1.5 text-sm bg-themed-secondary hover:bg-themed-hover rounded-md transition-colors text-themed"
+              className="px-3 py-1.5 text-sm bg-element hover:bg-element-hover rounded-md transition-colors text-main"
             >
               {confirmButtonText}
             </button>

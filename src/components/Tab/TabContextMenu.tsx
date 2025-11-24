@@ -84,7 +84,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
       {(!splitModalProps || !splitModalProps.isOpen) && (
         <div
           ref={menuRef}
-          className="absolute bg-themed border border-themed rounded shadow-lg z-50 py-1"
+          className="absolute bg-surface border border-base rounded shadow-lg z-50 py-1"
           style={{
             top: `${position.y}px`,
             left: `${position.x}px`,
@@ -97,7 +97,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
               return (
                 <div
                   key={item.id}
-                  className="border-t border-themed my-1 mx-1"
+                  className="border-t border-base my-1 mx-1"
                 ></div>
               );
             }

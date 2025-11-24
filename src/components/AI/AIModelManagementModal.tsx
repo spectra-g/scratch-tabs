@@ -95,19 +95,19 @@ export const AIModelManagementModal: React.FC = () => {
     return (
       <div className="mb-4">
         <div className="mb-2">
-          <span className="text-sm font-medium text-themed-secondary">{modelName}</span>
+          <span className="text-sm font-medium text-secondary">{modelName}</span>
         </div>
         {visibleFiles.length > 0 && (
           <div className="space-y-2">
             {visibleFiles.map((file) => (
               <div key={file.file} className="flex items-center space-x-2">
-                <div className="flex-grow bg-themed-tertiary rounded-full h-1.5 overflow-hidden">
+                <div className="flex-grow bg-element rounded-full h-1.5 overflow-hidden">
                   <div
                     className="bg-blue-500 h-1.5 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${file.percent || 0}%` }}
                   />
                 </div>
-                <span className="text-xs text-themed-muted min-w-[35px]">
+                <span className="text-xs text-muted min-w-[35px]">
                   {file.percent !== undefined ? `${file.percent}%` : ""}
                 </span>
               </div>
@@ -127,7 +127,7 @@ export const AIModelManagementModal: React.FC = () => {
     isModelLoading: boolean,
   ) => {
     let status = "Not Downloaded";
-    let icon = <Download size={16} className="icon-themed" />;
+    let icon = <Download size={16} className="text-secondary" />;
 
     if (isModelReady) {
       status = "Ready";
@@ -138,16 +138,16 @@ export const AIModelManagementModal: React.FC = () => {
     }
 
     return (
-      <div className="border border-themed rounded-lg p-4 mb-3">
+      <div className="bg-surface border border-base rounded-lg p-4 mb-3">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
-            <h4 className="font-medium text-themed mb-1">{modelName}</h4>
-            <p className="text-sm text-themed-secondary mb-2">{description}</p>
-            <p className="text-xs text-themed-muted">Download Size: {size}</p>
+            <h4 className="font-medium text-main mb-1">{modelName}</h4>
+            <p className="text-sm text-secondary mb-2">{description}</p>
+            <p className="text-xs text-muted">Download Size: {size}</p>
           </div>
           <div className="flex items-center space-x-2 ml-4">
             {icon}
-            <span className="text-sm text-themed-secondary">{status}</span>
+            <span className="text-sm text-secondary">{status}</span>
           </div>
         </div>
       </div>
@@ -179,11 +179,11 @@ export const AIModelManagementModal: React.FC = () => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <Brain size={48} className="text-blue-500 dark:text-blue-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-themed mb-2">
+              <Brain size={48} className="text-main mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-main mb-2">
                 Activate In-Browser AI Features
               </h2>
-              <p className="text-themed-secondary mb-6">
+              <p className="text-secondary mb-6">
                 Our AI tools run entirely in your browser. To enable them, you
                 need to download the necessary models. This is a one-time
                 download, and afterward, all AI processing happens locally and
@@ -191,36 +191,36 @@ export const AIModelManagementModal: React.FC = () => {
               </p>
             </div>
 
-            <div className="bg-themed-secondary rounded-lg p-4 space-y-3">
+            <div className="bg-surface rounded-lg p-4 space-y-3">
               <div className="flex items-center space-x-3">
-                <Shield size={20} className="text-green-500 dark:text-green-400" />
+                <Shield size={20} className="text-main" />
                 <div>
-                  <span className="text-green-600 dark:text-green-400 font-medium">
+                  <span className="text-main font-medium">
                     100% Private:
                   </span>
-                  <span className="text-themed-secondary ml-2">
+                  <span className="text-secondary ml-2">
                     Your data never leaves your computer.
                   </span>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <Wifi size={20} className="text-blue-500 dark:text-blue-400" />
+                <Wifi size={20} className="text-main" />
                 <div>
-                  <span className="text-blue-600 dark:text-blue-400 font-medium">
+                  <span className="text-main font-medium">
                     Works Offline:
                   </span>
-                  <span className="text-themed-secondary ml-2">
+                  <span className="text-secondary ml-2">
                     Once downloaded, no internet connection is required.
                   </span>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <Clock size={20} className="text-yellow-500 dark:text-yellow-400" />
+                <Clock size={20} className="text-main" />
                 <div>
-                  <span className="text-yellow-600 dark:text-yellow-400 font-medium">
+                  <span className="text-main font-medium">
                     One-Time Setup:
                   </span>
-                  <span className="text-themed-secondary ml-2">
+                  <span className="text-secondary ml-2">
                     Models are cached by your browser for future use.
                   </span>
                 </div>
@@ -228,7 +228,7 @@ export const AIModelManagementModal: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-lg font-medium text-themed">
+              <h3 className="text-lg font-medium text-main">
                 Available Models
               </h3>
               {renderModelStatus(
@@ -264,12 +264,12 @@ export const AIModelManagementModal: React.FC = () => {
             <div className="text-center">
               <Loader2
                 size={48}
-                className="text-blue-500 dark:text-blue-400 mx-auto mb-4 animate-spin"
+                className="text-main mx-auto mb-4 animate-spin"
               />
-              <h2 className="text-xl font-semibold text-themed mb-2">
+              <h2 className="text-xl font-semibold text-main mb-2">
                 Downloading AI Models...
               </h2>
-              <p className="text-themed-secondary">
+              <p className="text-secondary">
                 Please wait while we download the required models. This may take
                 a few minutes.
               </p>
@@ -292,7 +292,7 @@ export const AIModelManagementModal: React.FC = () => {
                 )}
             </div>
 
-            <div className="text-center text-sm text-themed-muted">
+            <div className="text-center text-sm text-muted">
               You can close this modal - the download will continue in the
               background.
             </div>
@@ -303,11 +303,11 @@ export const AIModelManagementModal: React.FC = () => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <CheckCircle size={48} className="text-green-500 dark:text-green-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-themed mb-2">
+              <CheckCircle size={48} className="text-main mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-main mb-2">
                 AI Features are Ready!
               </h2>
-              <p className="text-themed-secondary mb-6">
+              <p className="text-secondary mb-6">
                 You can now use AI features, such as right-clicking on selected
                 content to get a summary
                 {ENABLE_CODEGEN_WORKER ? " or generate code" : ""}.
@@ -334,7 +334,7 @@ export const AIModelManagementModal: React.FC = () => {
 
             <button
               onClick={closeAIModelManagementModal}
-              className="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-themed font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full bg-element hover:bg-element-hover text-main font-medium py-3 px-4 rounded-lg transition-colors"
             >
               Close
             </button>
@@ -345,11 +345,11 @@ export const AIModelManagementModal: React.FC = () => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <AlertCircle size={48} className="text-red-500 dark:text-red-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-themed mb-2">
+              <AlertCircle size={48} className="text-main mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-main mb-2">
                 An Error Occurred
               </h2>
-              <div className="text-red-800 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <div className="text-main text-sm bg-element border border-base rounded-lg p-3">
                 {error || (ENABLE_CODEGEN_WORKER && codegenError)}
               </div>
             </div>

@@ -68,16 +68,16 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
       <div className="grid grid-cols-2 gap-4 h-full max-h-full">
         {/* Original */}
         <div className="flex flex-col h-full max-h-full min-h-0">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-themed flex-shrink-0">
-            <h3 className="text-sm font-medium text-themed-secondary">Original</h3>
-            <span className="text-xs text-themed-muted">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-base flex-shrink-0">
+            <h3 className="text-sm font-medium text-secondary">Original</h3>
+            <span className="text-xs text-muted">
               {originalContent.split("\n").length} lines • {originalContent.length} chars
             </span>
           </div>
-          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-themed rounded border border-themed custom-scrollbar">
-            <pre className="p-3 text-sm text-themed-secondary whitespace-pre-wrap break-words">
+          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-element rounded border border-base custom-scrollbar">
+            <pre className="p-3 text-sm text-main whitespace-pre-wrap break-words">
               {originalContent || (
-                <span className="text-themed-muted italic">No content</span>
+                <span className="text-muted italic">No content</span>
               )}
             </pre>
           </div>
@@ -85,24 +85,24 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
 
         {/* Transformed */}
         <div className="flex flex-col h-full max-h-full min-h-0">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-themed flex-shrink-0">
-            <h3 className="text-sm font-medium text-themed-secondary">Transformed</h3>
-            <span className="text-xs text-themed-muted">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-base flex-shrink-0">
+            <h3 className="text-sm font-medium text-secondary">Transformed</h3>
+            <span className="text-xs text-muted">
               {transformedContent.split("\n").length} lines • {transformedContent.length} chars
             </span>
           </div>
-          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-themed rounded border border-themed custom-scrollbar">
+          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-element rounded border border-base custom-scrollbar">
             {isProcessing ? (
               <div className="flex items-center justify-center h-full min-h-[200px]">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                <span className="ml-2 text-themed-muted">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <span className="ml-2 text-muted">
                   Processing transformations...
                 </span>
               </div>
             ) : (
-              <pre className="p-3 text-sm text-themed-secondary whitespace-pre-wrap break-words">
+              <pre className="p-3 text-sm text-main whitespace-pre-wrap break-words">
                 {transformedContent || (
-                  <span className="text-themed-muted italic">No content</span>
+                  <span className="text-muted italic">No content</span>
                 )}
               </pre>
             )}
@@ -116,8 +116,8 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
   if (isProcessing) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-400">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <span className="ml-2 text-muted">
           Processing transformations...
         </span>
       </div>
@@ -126,28 +126,27 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2 pb-2 border-b border-themed flex-shrink-0">
-        <h3 className="text-sm font-medium text-themed-secondary">Unified Diff</h3>
-        <span className="text-xs text-themed-muted">
+      <div className="flex items-center justify-between mb-2 pb-2 border-b border-base flex-shrink-0">
+        <h3 className="text-sm font-medium text-secondary">Unified Diff</h3>
+        <span className="text-xs text-muted">
           {diff?.length || 0} changes
         </span>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-themed rounded border border-themed custom-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-element rounded border border-base custom-scrollbar">
         {diff && diff.length > 0 ? (
           <div className="text-sm min-h-full">
             {diff.map((line, index) => (
               <div
                 key={index}
-                className={`px-3 py-1 flex ${
-                  line.type === "added"
-                    ? "bg-green-900/30 text-green-300"
-                    : line.type === "removed"
-                      ? "bg-red-900/30 text-red-300"
-                      : "text-themed-secondary"
-                }`}
+                className={`px-3 py-1 flex ${line.type === "added"
+                  ? "bg-success-subtle"
+                  : line.type === "removed"
+                    ? "bg-danger-subtle"
+                    : "text-main"
+                  }`}
               >
-                <span className="w-8 flex-shrink-0 text-themed-muted text-right mr-3">
+                <span className="w-8 flex-shrink-0 text-muted text-right mr-3">
                   {line.lineNumber}
                 </span>
                 <span className="w-4 flex-shrink-0 text-center">
@@ -164,7 +163,7 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
             ))}
           </div>
         ) : (
-          <div className="p-3 text-center text-themed-muted italic min-h-[200px] flex items-center justify-center">
+          <div className="p-3 text-center text-muted italic min-h-[200px] flex items-center justify-center">
             No changes detected
           </div>
         )}
