@@ -35,9 +35,9 @@ export const DiffViewer: React.FC<SmartViewProps> = ({
   // Filter files based on search
   const filteredFiles = useMemo(() => {
     if (!fileFilter) return parsedDiff.files;
-    
+
     const filterLower = fileFilter.toLowerCase();
-    return parsedDiff.files.filter(file => 
+    return parsedDiff.files.filter(file =>
       file.fileName.toLowerCase().includes(filterLower) ||
       file.originalPath.toLowerCase().includes(filterLower) ||
       file.newPath.toLowerCase().includes(filterLower)
@@ -86,12 +86,12 @@ export const DiffViewer: React.FC<SmartViewProps> = ({
         ...parsedDiff,
         files: filteredFiles
       };
-      
+
       const reconstructed = reconstructDiff(filteredDiff, {
         hideWhitespaceChanges,
         includeHunk: (hunk) => !collapsedHunks.has(hunk.id)
       });
-      
+
       await navigator.clipboard.writeText(reconstructed);
     } catch (error) {
       console.error('Failed to copy diff:', error);
@@ -100,7 +100,7 @@ export const DiffViewer: React.FC<SmartViewProps> = ({
 
   if (!content.trim()) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900 text-gray-400">
+      <div className="flex items-center justify-center h-full bg-canvas text-secondary">
         <p>No diff content to display</p>
       </div>
     );
@@ -108,7 +108,7 @@ export const DiffViewer: React.FC<SmartViewProps> = ({
 
   if (parsedDiff.files.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900 text-gray-400">
+      <div className="flex items-center justify-center h-full bg-canvas text-secondary">
         <div className="text-center">
           <p className="mb-2">No valid diff found</p>
           <p className="text-sm">Make sure the content is a valid unified diff format</p>
@@ -118,7 +118,7 @@ export const DiffViewer: React.FC<SmartViewProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-gray-200" data-testid="diff-viewer">
+    <div className="flex flex-col h-full bg-canvas text-main" data-testid="diff-viewer">
       {/* Toolbar */}
       <DiffToolbar
         viewMode={viewMode}
@@ -135,7 +135,7 @@ export const DiffViewer: React.FC<SmartViewProps> = ({
       {/* Main content */}
       <div className="flex flex-1 min-h-0">
         {/* File Navigator */}
-        <div className="w-80 border-r border-gray-700 flex flex-col">
+        <div className="w-80 border-r border-base flex flex-col">
           <FileNavigator
             files={filteredFiles}
             selectedFileId={selectedFileId}
@@ -162,7 +162,7 @@ export const DiffViewer: React.FC<SmartViewProps> = ({
               />
             )
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
+            <div className="flex items-center justify-center h-full text-secondary">
               <p>Select a file to view its changes</p>
             </div>
           )}

@@ -48,8 +48,8 @@ export const SideBySideDiffView: React.FC<SideBySideDiffViewProps> = ({
       // Process lines into side-by-side pairs
       let leftLineNumber = hunk.originalStartLine;
       let rightLineNumber = hunk.newStartLine;
-      
-      const filteredLines = hideWhitespaceChanges 
+
+      const filteredLines = hideWhitespaceChanges
         ? hunk.lines.filter(line => !line.isWhitespaceOnly)
         : hunk.lines;
 
@@ -114,7 +114,7 @@ export const SideBySideDiffView: React.FC<SideBySideDiffViewProps> = ({
 
   if (file.isBinary) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-secondary">
         <div className="text-center">
           <p className="mb-2">Binary file</p>
           <p className="text-sm">Cannot display binary file changes</p>
@@ -126,12 +126,12 @@ export const SideBySideDiffView: React.FC<SideBySideDiffViewProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Column headers */}
-      <div className="flex-none border-b border-gray-700 bg-gray-800">
+      <div className="flex-none border-b border-base bg-surface-highlight">
         <div className="grid grid-cols-2 h-10">
-          <div className="flex items-center justify-center border-r border-gray-700 text-sm font-medium text-gray-300">
+          <div className="flex items-center justify-center border-r border-base text-sm font-medium text-main">
             Original ({file.originalPath})
           </div>
-          <div className="flex items-center justify-center text-sm font-medium text-gray-300">
+          <div className="flex items-center justify-center text-sm font-medium text-main">
             Modified ({file.newPath})
           </div>
         </div>
@@ -201,10 +201,10 @@ const VirtualRow: React.FC<{
       }}
     >
       {item.type === 'hunk-header' ? (
-        <div className="flex items-center px-3 py-2 bg-gray-800 border-b border-gray-700">
+        <div className="flex items-center px-3 py-2 bg-surface-highlight border-b border-base">
           <button
             onClick={() => onToggleHunk(item.hunkId)}
-            className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+            className="flex items-center space-x-2 text-info hover:text-info/80 transition-colors"
           >
             {collapsedHunks.has(item.hunkId) ? (
               <ChevronRight size={16} />
@@ -215,25 +215,23 @@ const VirtualRow: React.FC<{
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 border-b border-gray-700/30">
+        <div className="grid grid-cols-2 border-b border-base/30">
           {/* Left side (original) */}
-          <div className={`flex border-r border-gray-700 ${
-            item.leftLine?.type === 'deletion' ? 'bg-red-500/10' : ''
-          }`}>
+          <div className={`flex border-r border-base ${item.leftLine?.type === 'deletion' ? 'bg-danger-subtle' : ''
+            }`}>
             {item.leftLine && (
               <>
-                <div className="w-12 flex-shrink-0 text-center text-gray-500 text-xs py-1 border-r border-gray-700/50">
+                <div className="w-12 flex-shrink-0 text-center text-muted text-xs py-1 border-r border-base/50">
                   {item.leftLineNumber}
                 </div>
                 <div className="flex-1 px-3 py-1 group relative">
-                  <span className={`${
-                    item.leftLine.type === 'deletion' ? 'text-red-200' : 'text-gray-300'
-                  }`}>
+                  <span className={`${item.leftLine.type === 'deletion' ? 'text-danger' : 'text-secondary'
+                    }`}>
                     {item.leftLine.content}
                   </span>
                   <button
                     onClick={() => handleCopyLine(item.leftLine!.content)}
-                    className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-700 rounded transition-all"
+                    className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:bg-element-hover rounded transition-all"
                     title="Copy line"
                   >
                     <Copy size={12} />
@@ -244,23 +242,21 @@ const VirtualRow: React.FC<{
           </div>
 
           {/* Right side (modified) */}
-          <div className={`flex ${
-            item.rightLine?.type === 'addition' ? 'bg-green-500/10' : ''
-          }`}>
+          <div className={`flex ${item.rightLine?.type === 'addition' ? 'bg-success-subtle' : ''
+            }`}>
             {item.rightLine && (
               <>
-                <div className="w-12 flex-shrink-0 text-center text-gray-500 text-xs py-1 border-r border-gray-700/50">
+                <div className="w-12 flex-shrink-0 text-center text-muted text-xs py-1 border-r border-base/50">
                   {item.rightLineNumber}
                 </div>
                 <div className="flex-1 px-3 py-1 group relative">
-                  <span className={`${
-                    item.rightLine.type === 'addition' ? 'text-green-200' : 'text-gray-300'
-                  }`}>
+                  <span className={`${item.rightLine.type === 'addition' ? 'text-success' : 'text-secondary'
+                    }`}>
                     {item.rightLine.content}
                   </span>
                   <button
                     onClick={() => handleCopyLine(item.rightLine!.content)}
-                    className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-700 rounded transition-all"
+                    className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:bg-element-hover rounded transition-all"
                     title="Copy line"
                   >
                     <Copy size={12} />

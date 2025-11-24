@@ -25,16 +25,16 @@ export const FileNavigator: React.FC<FileNavigatorProps> = ({
   });
 
   const getFileIcon = (file: FileDiff) => {
-    if (file.isBinary) return <Binary size={16} className="text-purple-400" />;
-    if (file.isNewFile) return <Plus size={16} className="text-green-400" />;
-    if (file.isDeletedFile) return <Minus size={16} className="text-red-400" />;
-    if (file.isRename) return <RotateCcw size={16} className="text-blue-400" />;
-    return <FileText size={16} className="text-gray-400" />;
+    if (file.isBinary) return <Binary size={16} className="text-primary" />;
+    if (file.isNewFile) return <Plus size={16} className="text-success" />;
+    if (file.isDeletedFile) return <Minus size={16} className="text-danger" />;
+    if (file.isRename) return <RotateCcw size={16} className="text-info" />;
+    return <FileText size={16} className="text-secondary" />;
   };
 
   if (files.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-secondary">
         <p>No files to display</p>
       </div>
     );
@@ -43,8 +43,8 @@ export const FileNavigator: React.FC<FileNavigatorProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-3 border-b border-gray-700">
-        <h3 className="text-sm font-medium text-gray-300">
+      <div className="p-3 border-b border-base">
+        <h3 className="text-sm font-medium text-main">
           Changed Files ({files.length})
         </h3>
       </div>
@@ -65,7 +65,7 @@ export const FileNavigator: React.FC<FileNavigatorProps> = ({
           {rowVirtualizer.getVirtualItems().map((virtualItem) => {
             const file = files[virtualItem.index];
             const isSelected = selectedFileId === file.id;
-            
+
             return (
               <div
                 key={virtualItem.key}
@@ -80,9 +80,8 @@ export const FileNavigator: React.FC<FileNavigatorProps> = ({
               >
                 <button
                   onClick={() => onFileSelect(file.id)}
-                  className={`w-full p-3 text-left border-b border-gray-700/50 hover:bg-gray-800/50 transition-colors ${
-                    isSelected ? 'bg-blue-500/20 border-blue-500/50' : ''
-                  }`}
+                  className={`w-full p-3 text-left border-b border-base/50 hover:bg-element-hover transition-colors ${isSelected ? 'bg-element-active border-focus/50' : ''
+                    }`}
                   data-testid="file-item"
                 >
                   <div className="flex items-start space-x-3">
@@ -94,7 +93,7 @@ export const FileNavigator: React.FC<FileNavigatorProps> = ({
                     {/* File info */}
                     <div className="flex-1 min-w-0">
                       {/* File name */}
-                      <div className="font-mono text-sm text-gray-200 truncate">
+                      <div className="font-mono text-sm text-main truncate">
                         {getFileDisplayName(file)}
                       </div>
 
@@ -103,14 +102,14 @@ export const FileNavigator: React.FC<FileNavigatorProps> = ({
                         <span className={`text-xs px-2 py-0.5 rounded font-medium ${getFileStatusColor(file)}`}>
                           {getFileStatusBadge(file)}
                         </span>
-                        
+
                         {!file.isBinary && (
-                          <div className="flex items-center space-x-2 text-xs text-gray-400">
+                          <div className="flex items-center space-x-2 text-xs text-secondary">
                             {file.stats.additions > 0 && (
-                              <span className="text-green-400">+{file.stats.additions}</span>
+                              <span className="text-success">+{file.stats.additions}</span>
                             )}
                             {file.stats.deletions > 0 && (
-                              <span className="text-red-400">-{file.stats.deletions}</span>
+                              <span className="text-danger">-{file.stats.deletions}</span>
                             )}
                           </div>
                         )}

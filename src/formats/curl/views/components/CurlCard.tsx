@@ -33,7 +33,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
   const [copyFeedback, setCopyFeedback] = useState<'idle' | 'success'>('idle');
   const [deleteFeedback, setDeleteFeedback] = useState<'idle' | 'confirm' | 'success' | 'error'>('idle');
   const [duplicateFeedback, setDuplicateFeedback] = useState<'idle' | 'success' | 'error'>('idle');
-  
+
   // Copy curl command to clipboard
   const handleCopyCommand = async () => {
     try {
@@ -44,7 +44,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
       console.error('Failed to copy curl command:', error);
     }
   };
-  
+
   // Handle delete with confirmation
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -76,15 +76,14 @@ export const CurlCard: React.FC<CurlCardProps> = ({
       setTimeout(() => setDuplicateFeedback('idle'), 2000);
     }
   };
-  // Get method color
   const getMethodColor = (method: string) => {
     switch (method.toUpperCase()) {
-      case 'GET': return 'text-green-400 bg-green-500/20';
-      case 'POST': return 'text-blue-400 bg-blue-500/20';
-      case 'PUT': return 'text-yellow-400 bg-yellow-500/20';
-      case 'DELETE': return 'text-red-400 bg-red-500/20';
-      case 'PATCH': return 'text-purple-400 bg-purple-500/20';
-      default: return 'text-gray-400 bg-gray-500/20';
+      case 'GET': return 'text-success bg-success/20';
+      case 'POST': return 'text-info bg-info/20';
+      case 'PUT': return 'text-warning bg-warning/20';
+      case 'DELETE': return 'text-danger bg-danger/20';
+      case 'PATCH': return 'text-primary bg-primary/20';
+      default: return 'text-secondary bg-element';
     }
   };
 
@@ -100,16 +99,15 @@ export const CurlCard: React.FC<CurlCardProps> = ({
   return (
     <motion.div
       layout
-      className={`border rounded-lg overflow-hidden transition-all duration-200 ${
-        isExpanded 
-          ? 'border-blue-500 bg-gray-800/80 shadow-lg shadow-blue-500/10' 
-          : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800/70'
-      }`}
+      className={`border rounded-lg overflow-hidden transition-all duration-200 ${isExpanded
+          ? 'border-info bg-surface shadow-lg shadow-info/10'
+          : 'border-base bg-surface/50 hover:border-base/70 hover:bg-surface/70'
+        }`}
       data-testid="curl-card"
     >
       {/* Card header - always visible */}
       <div
-        className={`p-4 cursor-pointer ${isExpanded ? '' : 'hover:bg-gray-700/30'}`}
+        className={`p-4 cursor-pointer ${isExpanded ? '' : 'hover:bg-element-hover'}`}
         onClick={onClick}
       >
         <div className="flex items-center justify-between">
@@ -117,12 +115,12 @@ export const CurlCard: React.FC<CurlCardProps> = ({
             {/* Expand/collapse icon */}
             <button
               onClick={onClick}
-              className="p-1 hover:bg-gray-700 rounded transition-colors"
+              className="p-1 hover:bg-element-hover rounded transition-colors"
             >
               {isExpanded ? (
-                <ChevronDown size={16} className="text-gray-400" />
+                <ChevronDown size={16} className="text-secondary" />
               ) : (
-                <ChevronRight size={16} className="text-gray-400" />
+                <ChevronRight size={16} className="text-secondary" />
               )}
             </button>
 
@@ -134,12 +132,12 @@ export const CurlCard: React.FC<CurlCardProps> = ({
             {/* URL */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2">
-                <Globe size={14} className="text-gray-500 flex-shrink-0" />
-                <span className="text-gray-300 truncate" title={request.url}>
+                <Globe size={14} className="text-muted flex-shrink-0" />
+                <span className="text-main truncate" title={request.url}>
                   {getDomain(request.url)}
                 </span>
               </div>
-              <div className="text-xs text-gray-500 truncate mt-0.5" title={request.url}>
+              <div className="text-xs text-muted truncate mt-0.5" title={request.url}>
                 {request.url}
               </div>
             </div>
@@ -148,7 +146,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
           {/* Quick stats and actions */}
           <div className="flex items-center space-x-4">
             {/* Quick stats */}
-            <div className="flex items-center space-x-4 text-xs text-gray-500">
+            <div className="flex items-center space-x-4 text-xs text-muted">
               {request.headers.length > 0 && (
                 <span>{request.headers.length} headers</span>
               )}
@@ -159,20 +157,19 @@ export const CurlCard: React.FC<CurlCardProps> = ({
                 <span>{request.otherOptions.length} options</span>
               )}
             </div>
-            
+
             {/* Action buttons */}
             <div className="flex items-center space-x-1">
               {/* Duplicate button */}
               {onDuplicate && (
                 <button
                   onClick={handleDuplicate}
-                  className={`p-1 rounded transition-colors ${
-                    duplicateFeedback === 'success'
-                      ? 'bg-green-500/20 text-green-400'
+                  className={`p-1 rounded transition-colors ${duplicateFeedback === 'success'
+                      ? 'bg-success/20 text-success'
                       : duplicateFeedback === 'error'
-                      ? 'bg-red-500/20 text-red-400'
-                      : 'text-gray-500 hover:text-blue-400 hover:bg-blue-500/20'
-                  }`}
+                        ? 'bg-danger/20 text-danger'
+                        : 'text-muted hover:text-info hover:bg-info/20'
+                    }`}
                   title="Duplicate this request"
                 >
                   {duplicateFeedback === 'success' ? (
@@ -184,20 +181,19 @@ export const CurlCard: React.FC<CurlCardProps> = ({
                   )}
                 </button>
               )}
-              
+
               {/* Delete button */}
               {onDelete && (
                 <button
                   onClick={handleDelete}
-                  className={`p-1 rounded transition-colors ${
-                    deleteFeedback === 'confirm'
-                      ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                  className={`p-1 rounded transition-colors ${deleteFeedback === 'confirm'
+                      ? 'bg-danger/20 text-danger hover:bg-danger/30'
                       : deleteFeedback === 'success'
-                      ? 'bg-green-500/20 text-green-400'
-                      : deleteFeedback === 'error'
-                      ? 'bg-red-500/20 text-red-400'
-                      : 'text-gray-500 hover:text-red-400 hover:bg-red-500/20'
-                  }`}
+                        ? 'bg-success/20 text-success'
+                        : deleteFeedback === 'error'
+                          ? 'bg-danger/20 text-danger'
+                          : 'text-muted hover:text-danger hover:bg-danger/20'
+                    }`}
                   title={deleteFeedback === 'confirm' ? 'Click again to confirm delete' : 'Delete this request'}
                 >
                   {deleteFeedback === 'confirm' ? (
@@ -224,20 +220,20 @@ export const CurlCard: React.FC<CurlCardProps> = ({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="border-t border-gray-700"
+            className="border-t border-base"
           >
             <div className="p-4">
               {/* Action buttons */}
               <div className="flex items-center justify-between mb-4">
                 {request.url && request.url.trim() && (
                   <div className="flex items-center space-x-2">
-                    <Clock size={14} className="text-gray-500" />
-                    <span className="text-xs text-gray-500">Ready to execute</span>
+                    <Clock size={14} className="text-muted" />
+                    <span className="text-xs text-muted">Ready to execute</span>
                   </div>
                 )}
                 <button
                   onClick={onOpenInRestClient}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors"
                 >
                   <ExternalLink size={16} />
                   <span>Open in Rest Client</span>
@@ -245,19 +241,18 @@ export const CurlCard: React.FC<CurlCardProps> = ({
               </div>
 
               {/* Live curl command preview */}
-              <div className="mb-6 p-4 bg-gray-900 border border-gray-700 rounded-lg">
+              <div className="mb-6 p-4 bg-canvas border border-base rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
-                    <Code size={16} className="text-blue-400" />
-                    <h4 className="text-sm font-medium text-gray-200">Generated Curl Command</h4>
+                    <Code size={16} className="text-info" />
+                    <h4 className="text-sm font-medium text-main">Generated Curl Command</h4>
                   </div>
                   <button
                     onClick={handleCopyCommand}
-                    className={`flex items-center space-x-1 px-3 py-1 rounded border transition-colors ${
-                      copyFeedback === 'success'
-                        ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-600'
-                    }`}
+                    className={`flex items-center space-x-1 px-3 py-1 rounded border transition-colors ${copyFeedback === 'success'
+                        ? 'bg-success/20 text-success border-success/30'
+                        : 'bg-element hover:bg-element-hover text-main border-base'
+                      }`}
                     title="Copy to clipboard"
                   >
                     {copyFeedback === 'success' ? (
@@ -270,7 +265,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
                     </span>
                   </button>
                 </div>
-                <pre className="text-xs text-gray-300 font-mono overflow-x-auto custom-scrollbar p-3 bg-gray-950 rounded border border-gray-800">
+                <pre className="text-xs text-main font-mono overflow-x-auto custom-scrollbar p-3 bg-canvas rounded border border-base">
                   {generatedCurlCommand}
                 </pre>
               </div>
