@@ -69,9 +69,9 @@ export const ExportWorkspacesModal: React.FC<ExportWorkspacesModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-themed p-6 rounded-lg shadow-2xl w-full max-w-lg border border-themed max-h-[80vh] flex flex-col">
+      <div className="bg-surface p-6 rounded-lg shadow-2xl w-full max-w-lg border border-base max-h-[80vh] flex flex-col">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-themed">
+          <h2 className="text-xl font-semibold text-main">
             Export Workspaces
           </h2>
           <button
@@ -86,18 +86,18 @@ export const ExportWorkspacesModal: React.FC<ExportWorkspacesModalProps> = ({
           <div className="space-x-2">
             <button
               onClick={handleSelectAll}
-              className="px-3 py-1.5 text-xs bg-themed-secondary hover:bg-themed-hover rounded-md text-themed transition-colors"
+              className="px-3 py-1.5 text-xs bg-surface-highlight hover:bg-element-hover rounded-md text-main transition-colors"
             >
               Select All
             </button>
             <button
               onClick={handleDeselectAll}
-              className="px-3 py-1.5 text-xs bg-themed-secondary hover:bg-themed-hover rounded-md text-themed transition-colors"
+              className="px-3 py-1.5 text-xs bg-surface-highlight hover:bg-element-hover rounded-md text-main transition-colors"
             >
               Deselect All
             </button>
           </div>
-          <span className="text-sm text-themed-muted">
+          <span className="text-sm text-muted">
             {selectedIds.size} of {workspaces.length} selected
           </span>
         </div>
@@ -105,7 +105,7 @@ export const ExportWorkspacesModal: React.FC<ExportWorkspacesModalProps> = ({
         {isLoading &&
           workspaces.length > 0 &&
           Object.keys(tabCounts).length === 0 && (
-            <p className="text-center text-themed-secondary py-4">
+            <p className="text-center text-secondary py-4">
               Loading tab counts...
             </p>
           )}
@@ -116,23 +116,23 @@ export const ExportWorkspacesModal: React.FC<ExportWorkspacesModalProps> = ({
               key={ws.id}
               onClick={() => handleToggleSelect(ws.id)}
               className={`flex items-center p-3 rounded-md cursor-pointer transition-colors
-                ${selectedIds.has(ws.id) ? "bg-blue-500/10" : "bg-themed-secondary hover:bg-themed-hover"}`}
+                ${selectedIds.has(ws.id) ? "bg-primary/10" : "bg-surface-highlight hover:bg-element-hover"}`}
             >
               {selectedIds.has(ws.id) ? (
                 <CheckSquare
                   size={20}
-                  className="mr-3 text-blue-500 flex-shrink-0"
+                  className="mr-3 text-info flex-shrink-0"
                 />
               ) : (
                 <Square
                   size={20}
-                  className="mr-3 text-themed-muted flex-shrink-0"
+                  className="mr-3 text-muted flex-shrink-0"
                 />
               )}
-              <span className="text-themed truncate flex-grow">
+              <span className="text-main truncate flex-grow">
                 {ws.name}
               </span>
-              <span className="text-xs text-themed-muted ml-2 flex-shrink-0">
+              <span className="text-xs text-muted ml-2 flex-shrink-0">
                 (
                 {tabCounts[ws.id] !== undefined
                   ? `${tabCounts[ws.id]} tab${tabCounts[ws.id] === 1 ? "" : "s"}`
@@ -142,23 +142,23 @@ export const ExportWorkspacesModal: React.FC<ExportWorkspacesModalProps> = ({
             </div>
           ))}
           {workspaces.length === 0 && (
-            <p className="text-center text-themed-muted py-4">
+            <p className="text-center text-muted py-4">
               No workspaces found.
             </p>
           )}
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4 border-t border-themed">
+        <div className="flex justify-end space-x-3 pt-4 border-t border-base">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-themed-secondary bg-transparent hover:bg-themed-hover rounded-md transition-colors"
+            className="px-4 py-2 text-sm text-secondary bg-transparent hover:bg-element-hover rounded-md transition-colors"
             disabled={isLoading}
           >
             Cancel
           </button>
           <button
             onClick={handleExport}
-            className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-primary hover:bg-primary-hover text-white rounded-md transition-colors disabled:opacity-50"
             disabled={isLoading || selectedIds.size === 0}
           >
             {isLoading

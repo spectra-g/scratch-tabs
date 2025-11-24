@@ -235,9 +235,9 @@ export const WelcomeScreen: React.FC = () => {
   ];
 
   return (
-    <div className="h-full w-full flex flex-col bg-gray-900">
+    <div className="h-full w-full flex flex-col bg-surface">
       {/* Tab Actions Bar */}
-      <div className="flex justify-end bg-gray-800 h-8">
+      <div className="flex justify-end bg-surface h-8">
         <TabActions
           onShowTabletSelector={() => {
             // Center the tablet selector on the screen for welcome screen
@@ -268,7 +268,7 @@ export const WelcomeScreen: React.FC = () => {
       {/* Welcome Content */}
       <div
         ref={welcomeRef}
-        className="flex-1 flex flex-col items-center justify-center text-gray-400 cursor-pointer relative outline-none px-8"
+        className="flex-1 flex flex-col items-center justify-center text-muted cursor-pointer relative outline-none px-8"
         onDoubleClick={handleDoubleClick}
         onPaste={handlePaste}
         tabIndex={-1}
@@ -283,7 +283,7 @@ export const WelcomeScreen: React.FC = () => {
             />
             <h1 className="text-3xl font-light text-gray-100">Scratch Tabs</h1>
           </div>
-          <p className="text-gray-400 text-sm mt-2">Version 1.11.1</p>
+          <p className="text-muted text-sm mt-2">Version 1.11.1</p>
         </div>
 
         {/* Actions Grid */}
@@ -295,17 +295,17 @@ export const WelcomeScreen: React.FC = () => {
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg border border-transparent text-left w-full"
+                    className="flex items-center justify-between p-4 bg-surface/30 rounded-lg border border-transparent text-left w-full"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-gray-700/50 rounded-md">
-                        <action.icon size={18} className="text-gray-400" />
+                      <div className="p-2 bg-element/50 rounded-md">
+                        <action.icon size={18} className="text-muted" />
                       </div>
                       <div className="flex-1">
-                        <div className="text-gray-200 font-medium text-sm mb-1">
+                        <div className="text-main font-medium text-sm mb-1">
                           {action.title}
                         </div>
-                        <div className="text-gray-500 text-xs">
+                        <div className="text-muted text-xs">
                           {action.action}
                         </div>
                       </div>
@@ -319,17 +319,17 @@ export const WelcomeScreen: React.FC = () => {
                 <button
                   key={index}
                   onClick={action.onClick}
-                  className="group flex items-center justify-between p-4 bg-gray-800/30 hover:bg-gray-800/50 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-700/50 text-left w-full"
+                  className="group flex items-center justify-between p-4 bg-surface/30 hover:bg-surface/50 rounded-lg transition-all duration-200 border border-transparent hover:border-base/50 text-left w-full"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gray-700/50 rounded-md group-hover:bg-gray-700/70 transition-colors">
-                      <action.icon size={18} className="text-gray-400" />
+                    <div className="p-2 bg-element/50 rounded-md group-hover:bg-element/70 transition-colors">
+                      <action.icon size={18} className="text-muted" />
                     </div>
                     <div className="flex-1">
-                      <div className="text-gray-200 font-medium text-sm mb-1">
+                      <div className="text-main font-medium text-sm mb-1">
                         {action.title}
                       </div>
-                      <div className="text-gray-500 text-xs">
+                      <div className="text-muted text-xs">
                         {action.action}
                       </div>
                     </div>
