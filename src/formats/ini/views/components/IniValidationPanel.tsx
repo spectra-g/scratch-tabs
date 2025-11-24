@@ -17,10 +17,9 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
   const warningIssues = issues.filter(issue => issue.type === 'warning');
 
   const handleCopyIssue = async (issue: IniValidationIssue) => {
-    const issueText = `${issue.type.toUpperCase()}: ${issue.message}${
-      issue.suggestion ? `\nSuggestion: ${issue.suggestion}` : ''
-    }`;
-    
+    const issueText = `${issue.type.toUpperCase()}: ${issue.message}${issue.suggestion ? `\nSuggestion: ${issue.suggestion}` : ''
+      }`;
+
     try {
       await navigator.clipboard.writeText(issueText);
     } catch {
@@ -40,18 +39,18 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
   }
 
   return (
-    <div className="flex-none border-b border-gray-700 bg-gray-800/50 max-h-64 overflow-hidden">
+    <div className="flex-none border-b border-base bg-surface/50 max-h-64 overflow-hidden">
       <div className="p-3">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-200 flex items-center space-x-2">
-            <AlertTriangle size={16} className={errorIssues.length > 0 ? "text-red-400" : "text-yellow-400"} />
+          <h3 className="text-sm font-medium text-main flex items-center space-x-2">
+            <AlertTriangle size={16} className={errorIssues.length > 0 ? "text-danger" : "text-warning"} />
             <span>
               Validation Issues ({errorIssues.length} errors, {warningIssues.length} warnings)
             </span>
           </h3>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-gray-700 text-gray-400"
+            className="p-1 rounded hover:bg-element-hover text-secondary"
             title="Close validation panel"
           >
             <X size={14} />
@@ -63,17 +62,17 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
           {errorIssues.map((issue, index) => (
             <div
               key={`error-${index}`}
-              className="bg-red-500/10 border border-red-500/30 rounded-lg p-3"
+              className="bg-danger/10 border border-danger/30 rounded-lg p-3"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <AlertTriangle size={14} className="text-red-400 flex-shrink-0" />
-                    <span className="text-sm font-medium text-red-400">Error</span>
+                    <AlertTriangle size={14} className="text-danger flex-shrink-0" />
+                    <span className="text-sm font-medium text-danger">Error</span>
                   </div>
-                  <p className="text-sm text-gray-200 mb-1">{issue.message}</p>
+                  <p className="text-sm text-main mb-1">{issue.message}</p>
                   {issue.suggestion && (
-                    <p className="text-xs text-gray-400 italic">
+                    <p className="text-xs text-secondary italic">
                       Suggestion: {issue.suggestion}
                     </p>
                   )}
@@ -81,7 +80,7 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
                 <div className="flex items-center space-x-1 ml-2">
                   <button
                     onClick={() => handleCopyIssue(issue)}
-                    className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                    className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                     title="Copy issue details"
                   >
                     <Copy size={12} />
@@ -89,7 +88,7 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
                   {issue.sectionId && (
                     <button
                       onClick={() => handleGoToIssue(issue)}
-                      className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                      className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                       title="Go to section"
                     >
                       <ExternalLink size={12} />
@@ -104,17 +103,17 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
           {warningIssues.map((issue, index) => (
             <div
               key={`warning-${index}`}
-              className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3"
+              className="bg-warning/10 border border-warning/30 rounded-lg p-3"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <AlertTriangle size={14} className="text-yellow-400 flex-shrink-0" />
-                    <span className="text-sm font-medium text-yellow-400">Warning</span>
+                    <AlertTriangle size={14} className="text-warning flex-shrink-0" />
+                    <span className="text-sm font-medium text-warning">Warning</span>
                   </div>
-                  <p className="text-sm text-gray-200 mb-1">{issue.message}</p>
+                  <p className="text-sm text-main mb-1">{issue.message}</p>
                   {issue.suggestion && (
-                    <p className="text-xs text-gray-400 italic">
+                    <p className="text-xs text-secondary italic">
                       Suggestion: {issue.suggestion}
                     </p>
                   )}
@@ -122,7 +121,7 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
                 <div className="flex items-center space-x-1 ml-2">
                   <button
                     onClick={() => handleCopyIssue(issue)}
-                    className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                    className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                     title="Copy issue details"
                   >
                     <Copy size={12} />
@@ -130,7 +129,7 @@ export const IniValidationPanel: React.FC<IniValidationPanelProps> = ({
                   {issue.sectionId && (
                     <button
                       onClick={() => handleGoToIssue(issue)}
-                      className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                      className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                       title="Go to section"
                     >
                       <ExternalLink size={12} />

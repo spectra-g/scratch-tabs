@@ -26,14 +26,14 @@ const HtmlPreview: React.FC<HtmlPreviewProps> = ({ content }) => {
 
   if (!content.trim()) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-secondary">
         <p>No HTML content to preview</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full bg-white">
+    <div className="h-full w-full bg-canvas">
       <iframe
         ref={iframeRef}
         className="w-full h-full border-0"

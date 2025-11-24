@@ -85,7 +85,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
   // Create table columns
   const tableColumns = useMemo<ColumnDef<LogEntry, any>[]>(() => {
     const visibleColumns = columns.filter(col => col.isVisible);
-    
+
     return [
       // Line number column
       columnHelper.display({
@@ -93,12 +93,12 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
         header: "#",
         size: 60,
         cell: ({ row }) => (
-          <div className="flex h-full items-center justify-center font-mono text-gray-400 text-xs">
+          <div className="flex h-full items-center justify-center font-mono text-secondary text-xs">
             {row.original.lineNumber}
           </div>
         ),
       }),
-      
+
       // Data columns
       ...visibleColumns.map((column) =>
         columnHelper.accessor(
@@ -118,7 +118,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
                   <div className="flex items-center h-full px-2">
                     <button
                       onClick={(e) => handleNestedObjectClick(value, e, entryId, columnKey)}
-                      className="flex items-center space-x-1 text-blue-400 hover:text-blue-300 transition-colors"
+                      className="flex items-center space-x-1 text-primary hover:text-primary/80 transition-colors"
                       title="Click to inspect nested data"
                     >
                       <ChevronRight size={12} />
@@ -153,7 +153,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
                   }}
                   onChange={(newValue) => {
                     setEditingCellTrigger(null);
-                    
+
                     // Try to parse as appropriate type
                     let parsedValue: any = newValue;
                     if (newValue === "null") {
@@ -165,7 +165,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
                     } else if (!isNaN(Number(newValue)) && newValue.trim() !== "") {
                       parsedValue = Number(newValue);
                     }
-                    
+
                     updateEntry(entryId, columnKey, parsedValue);
                   }}
                   onEditingChange={(isEditing) => {
@@ -232,7 +232,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
         widths.push("60px");
         return;
       }
-      
+
       let maxWidth = column.name.length;
 
       for (let i = 0; i < sampleSize; i++) {
@@ -258,7 +258,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
         Math.max(minWidth, maxWidth * 8 + 24),
         maxWidthPx,
       );
-      
+
       // Use minmax() to define minimum pixel width but allow proportional growth
       // The fr unit is proportional to calculated width, so wider columns get more free space
       widths.push(`minmax(${calculatedWidth}px, ${calculatedWidth}fr)`);
@@ -273,7 +273,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (isAnyCellEditing) return;
-      
+
       if (!selectedCell) {
         if (filteredEntries.length > 0 && columns.length > 0) {
           const firstVisibleColumn = columns.find(col => col.isVisible);
@@ -348,23 +348,23 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900">
-        <div className="text-gray-400">Loading log data...</div>
+      <div className="flex items-center justify-center h-full bg-canvas">
+        <div className="text-secondary">Loading log data...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900">
-        <div className="text-red-400">Error: {error}</div>
+      <div className="flex items-center justify-center h-full bg-canvas">
+        <div className="text-danger">Error: {error}</div>
       </div>
     );
   }
 
   return (
     <div
-      className="flex flex-col h-full bg-gray-900 text-gray-200"
+      className="flex flex-col h-full bg-canvas text-main"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       data-testid="json-log-viewer"
@@ -391,7 +391,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
       >
         {/* Fixed Header */}
         <div
-          className="bg-gray-800 sticky top-0 z-10 border-b border-gray-700"
+          className="bg-surface sticky top-0 z-10 border-b border-base"
           style={{
             display: "grid",
             gridTemplateColumns,
@@ -402,14 +402,14 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
           {table.getHeaderGroups()[0]?.headers.map((header) => (
             <div
               key={header.id}
-              className="border-r border-gray-700 p-2 text-left font-medium text-gray-300 bg-gray-800 cursor-pointer hover:bg-gray-700/50"
+              className="border-r border-base p-2 text-left font-medium text-main bg-surface cursor-pointer hover:bg-element-hover"
               data-testid="log-column-header"
               onClick={() => header.column.toggleSorting()}
             >
               <div className="flex items-center space-x-1">
                 <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
                 {header.column.getIsSorted() && (
-                  <span className="text-blue-400">
+                  <span className="text-primary">
                     {header.column.getIsSorted() === "asc" ? "↑" : "↓"}
                   </span>
                 )}
@@ -433,7 +433,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
             return (
               <div
                 key={virtualRow.key}
-                className="absolute hover:bg-gray-800/50"
+                className="absolute hover:bg-element-hover"
                 style={{
                   height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
@@ -445,7 +445,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
                 data-testid="log-row"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <div key={cell.id} className="border-r border-b border-gray-700">
+                  <div key={cell.id} className="border-r border-b border-base">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </div>
                 ))}
@@ -473,19 +473,19 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
             onClick={closeNestedObjectPopover}
           />
           <div
-            className="fixed z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl max-w-2xl max-h-96 overflow-hidden"
+            className="fixed z-50 bg-surface border border-base rounded-lg shadow-2xl max-w-2xl max-h-96 overflow-hidden"
             style={{
               left: Math.min(nestedObjectPopover.position.x, window.innerWidth - 600),
               top: Math.min(nestedObjectPopover.position.y, window.innerHeight - 400),
             }}
           >
-            <div className="p-3 border-b border-gray-700 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-200">
+            <div className="p-3 border-b border-base flex items-center justify-between">
+              <h3 className="text-sm font-medium text-main">
                 {nestedObjectPopover.columnKey}
               </h3>
               <button
                 onClick={closeNestedObjectPopover}
-                className="text-gray-400 hover:text-gray-200"
+                className="text-secondary hover:text-main"
               >
                 ×
               </button>

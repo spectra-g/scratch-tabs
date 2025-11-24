@@ -248,9 +248,9 @@ port = 5432`;
 
     // Click the add section button in tree header (Plus icon)
     const addButtons = screen.getAllByTitle("Add new section");
-    const treeHeaderButton = addButtons.find(btn => btn.className.includes("text-gray-400"));
+    const treeHeaderButton = addButtons.find(btn => btn.className.includes("text-secondary"));
     expect(treeHeaderButton).toBeInTheDocument();
-    
+
     fireEvent.click(treeHeaderButton!);
 
     // Should show the add form in tree area
@@ -356,7 +356,7 @@ port = 5432`;
     // Expand database section first (if not auto-expanded)
     const databaseSection = screen.getByText("database");
     fireEvent.click(databaseSection);
-    
+
     // Now look for individual keys - they might be in the tree structure
     // This tests that clicking individual keys works for filtering
     const hostElement = screen.getAllByText("host")[0]; // Get first occurrence
@@ -385,7 +385,7 @@ port = 5432`;
     // Fill in the form
     const keyInput = screen.getByPlaceholderText("key_name");
     const valueInput = screen.getByPlaceholderText("value");
-    
+
     fireEvent.change(keyInput, { target: { value: "testkey" } });
     fireEvent.change(valueInput, { target: { value: "testvalue" } });
 
@@ -433,7 +433,7 @@ port = 5432`;
 
     // Click the add section button in tree header (Plus icon)
     const addButtons = screen.getAllByTitle("Add new section");
-    const treeHeaderButton = addButtons.find(btn => btn.className.includes("text-gray-400"));
+    const treeHeaderButton = addButtons.find(btn => btn.className.includes("text-secondary"));
     expect(treeHeaderButton).toBeInTheDocument();
     fireEvent.click(treeHeaderButton!);;
 
@@ -458,7 +458,7 @@ port = 5432`;
 
     // Click the add section button in tree header (Plus icon)
     const addButtons = screen.getAllByTitle("Add new section");
-    const treeHeaderButton = addButtons.find(btn => btn.className.includes("text-gray-400"));
+    const treeHeaderButton = addButtons.find(btn => btn.className.includes("text-secondary"));
     expect(treeHeaderButton).toBeInTheDocument();
     fireEvent.click(treeHeaderButton!);;
 
@@ -469,7 +469,7 @@ port = 5432`;
     // Type something and it should become enabled
     const input = screen.getByPlaceholderText("Section name");
     fireEvent.change(input, { target: { value: "test" } });
-    
+
     expect(addSectionButton).not.toBeDisabled();
   });
 
@@ -559,7 +559,7 @@ subkey = subvalue`;
 
     // Initially should show all properties
     expect(screen.getByText("7 properties")).toBeInTheDocument();
-    
+
     // Click on database section first to see its keys
     const databaseSection = screen.getByText("database");
     fireEvent.click(databaseSection);
@@ -576,13 +576,13 @@ subkey = subvalue`;
     if (hostElements.length > 0) {
       // Click on the first host element (should be in tree)
       fireEvent.click(hostElements[0]);
-      
+
       // Should show filtered by host
       expect(screen.getByText("(filtered by host)")).toBeInTheDocument();
-      
+
       // Should only show the host key-value pair now (not other database keys)
       expect(screen.getByText("localhost")).toBeInTheDocument();
-      
+
       // Other database keys should not be prominent (they might still exist in editor but filtered)
       // This tests that filtering is working at the data level
     }
@@ -602,18 +602,18 @@ subkey = subvalue`;
     // Click on database section
     const databaseSection = screen.getByText("database");
     fireEvent.click(databaseSection);
-    
+
     // Should show section name in filter
     expect(screen.getByText("(filtered by database)")).toBeInTheDocument();
-    
+
     // Click on a key within database
     const hostElements = screen.getAllByText("host");
     if (hostElements.length > 0) {
       fireEvent.click(hostElements[0]);
-      
+
       // Should show key name in filter  
       expect(screen.getByText("(filtered by host)")).toBeInTheDocument();
-      
+
       // Should NOT show database in filter anymore
       expect(screen.queryByText("(filtered by database)")).not.toBeInTheDocument();
     }
