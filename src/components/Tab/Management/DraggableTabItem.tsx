@@ -135,7 +135,7 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
       case "javascript":
         return "bg-yellow-500/20 text-yellow-300";
       case "typescript":
-        return "bg-blue-500/20 text-blue-300";
+        return "bg-primary/20 text-blue-300";
       case "json":
         return "bg-green-500/20 text-green-300";
       case "html":
@@ -145,7 +145,7 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
       case "markdown":
         return "bg-indigo-500/20 text-indigo-300";
       default:
-        return "bg-slate-500/20 dark:bg-gray-500/20 text-slate-300 dark:text-gray-300";
+        return "bg-slate-500/20 dark:bg-element/20 text-slate-300 dark:text-secondary";
     }
   };
 
@@ -168,10 +168,10 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
       {...attributes}
       {...listeners}
       className={`group flex items-center px-3 py-1.5 cursor-pointer
-                  ${isSelected ? "bg-blue-500/10" : "hover:bg-themed-hover"}
-                  ${isDropTargetOver && !isDragging ? "ring-1 ring-inset ring-blue-400 bg-blue-500/5" : ""}
+                  ${isSelected ? "bg-primary/10" : "hover:bg-element-hover"}
+                  ${isDropTargetOver && !isDragging ? "ring-1 ring-inset ring-blue-400 bg-primary/5" : ""}
                   ${isDragging && !isDraggingOverlay ? "opacity-50" : ""}
-                  ${isDraggingOverlay ? "bg-themed-secondary shadow-xl !opacity-100" : ""} {/* Ensure overlay item is opaque */}
+                  ${isDraggingOverlay ? "bg-surface-highlight shadow-xl !opacity-100" : ""} {/* Ensure overlay item is opaque */}
                 `}
       onClick={(e) => {
         if (!isEditing) onSelect(tab.id, e.ctrlKey || e.metaKey);
@@ -214,11 +214,11 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
               onKeyDown={handleKeyDown}
               onBlur={handleSave}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-themed-secondary border border-blue-500 rounded px-1 py-0.5 text-sm text-themed focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-surface-highlight border border-info rounded px-1 py-0.5 text-sm text-main focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           ) : (
             <span
-              className={`text-sm ${isSelected ? "text-blue-500" : "text-themed"}`}
+              className={`text-sm ${isSelected ? "text-info" : "text-main"}`}
             >
               {tab.title || "Untitled"}
             </span>
@@ -231,7 +231,7 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
                 e.stopPropagation();
                 onStartEdit(tab.id);
               }}
-              className="p-0.5 icon-themed hover:text-blue-500 hover:bg-blue-500/20 rounded"
+              className="p-0.5 icon-themed hover:text-info hover:bg-primary/20 rounded"
               title="Rename Tab"
             >
               <Edit size={12} />
@@ -245,7 +245,7 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
         </div>
 
         {/* Add a container for the timestamp and split view indicator */}
-        <div className="flex items-center ml-2 text-xs text-themed-muted flex-shrink-0">
+        <div className="flex items-center ml-2 text-xs text-muted flex-shrink-0">
           {/* Last modified timestamp */}
           <span className="mr-2">
             {getRelativeTimeString(tab.lastModified)}
@@ -256,7 +256,7 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
             <span
               className={`px-1.5 py-0.5 rounded ${
                 useSplitViewStore.getState().splitView.leftTabs.includes(tab.id)
-                  ? "bg-blue-500/10 text-blue-500"
+                  ? "bg-primary/10 text-info"
                   : "bg-purple-500/10 text-purple-500"
               }`}
             >

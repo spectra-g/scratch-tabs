@@ -43,22 +43,22 @@ export const TabGroup: React.FC<TabGroupProps> = ({
   });
 
   return (
-    <div className="border-b border-themed last:border-b-0">
+    <div className="border-b border-base last:border-b-0">
       <div
-        className="flex items-center px-3 py-2 bg-themed-secondary cursor-pointer"
+        className="flex items-center px-3 py-2 bg-surface-highlight cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <button className="mr-2 icon-themed icon-themed-hover">
           {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
-        <span className="text-sm font-medium text-themed-secondary">{title}</span>
-        <span className="ml-2 text-xs text-themed-muted">({tabs.length})</span>
+        <span className="text-sm font-medium text-secondary">{title}</span>
+        <span className="ml-2 text-xs text-muted">({tabs.length})</span>
       </div>
 
       {isExpanded && (
         <div
           ref={setDroppableNodeRefForGroup}
-          className={`${isGroupDropTargetOver ? "bg-blue-500/10 ring-1 ring-blue-400 rounded" : ""} py-1`}
+          className={`${isGroupDropTargetOver ? "bg-primary/10 ring-1 ring-blue-400 rounded" : ""} py-1`}
         >
           {tabs.map((tab) => (
             <DraggableTabItem
@@ -75,7 +75,7 @@ export const TabGroup: React.FC<TabGroupProps> = ({
             />
           ))}
           {tabs.length === 0 && (
-            <div className="h-8 flex items-center justify-center text-xs text-themed-muted italic">
+            <div className="h-8 flex items-center justify-center text-xs text-muted italic">
               Drop tabs here
             </div>
           )}

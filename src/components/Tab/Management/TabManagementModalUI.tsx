@@ -107,16 +107,16 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({
       >
         <div ref={modalContentRef} className="flex h-[70vh]">
           {/* Left sidebar - Workspaces */}
-          <div className="w-64 border-r border-themed bg-themed-secondary flex flex-col">
-            <div className="p-3 border-b border-themed">
-              <h3 className="text-sm font-medium text-themed-secondary mb-2">
+          <div className="w-64 border-r border-base bg-surface-highlight flex flex-col">
+            <div className="p-3 border-b border-base">
+              <h3 className="text-sm font-medium text-secondary mb-2">
                 Workspaces
               </h3>
 
               {/* Create workspace button */}
               <button
                 onClick={() => setIsCreatingWorkspace(true)}
-                className="w-full flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-500/10 text-blue-500 rounded-md hover:bg-blue-500/20 transition-colors text-sm"
+                className="w-full flex items-center justify-center space-x-1 px-3 py-1.5 bg-primary/10 text-info rounded-md hover:bg-primary/20 transition-colors text-sm"
               >
                 <FolderPlus size={14} />
                 <span>New Workspace</span>
