@@ -182,7 +182,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   // Helper function to update selectedCell when removing a cell from multi-selection
   const updateSelectedCellAfterRemoval = useCallback((removedCellKey: string) => {
     const remainingCells = Array.from(selectedCells).filter(key => key !== removedCellKey);
-    
+
     if (remainingCells.length > 0) {
       const firstRemaining = remainingCells[0];
       const { rowId: remainingRowId, columnId: remainingColumnId } = parseCellKey(firstRemaining);
@@ -195,7 +195,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   // Handle CTRL/CMD+Click multi-selection toggle
   const handleMultiSelectToggle = useCallback((cellKey: string, rowId: string, columnId: string) => {
     const wasSelected = selectedCells.has(cellKey);
-    
+
     setSelectedCells(prev => {
       const newSet = new Set(prev);
       if (wasSelected) {
@@ -205,7 +205,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       }
       return newSet;
     });
-    
+
     // Update selectedCell based on the action
     if (!wasSelected) {
       // Adding a cell: set it as the primary selected cell
@@ -225,13 +225,13 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   // Cell selection functions
   const handleCellSelect = useCallback((e: React.MouseEvent, rowId: string, columnId: string) => {
     const cellKey = createCellKey(rowId, columnId);
-    
+
     if (e.ctrlKey || e.metaKey) {
       handleMultiSelectToggle(cellKey, rowId, columnId);
     } else {
       handleSingleSelect(cellKey, rowId, columnId);
     }
-    
+
     setEditingCellTrigger(null);
   }, [handleMultiSelectToggle, handleSingleSelect]);
 
@@ -244,9 +244,9 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       rowId,
       columnId,
     });
-    
+
     const cellKey = createCellKey(rowId, columnId);
-    
+
     // If the right-clicked cell is not part of the current selection, 
     // make it the only selected cell
     if (!selectedCells.has(cellKey)) {
@@ -479,7 +479,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         header: "#",
         size: 50,
         cell: ({ row }) => (
-          <div className="flex h-full items-center justify-center font-mono text-gray-400">
+          <div className="flex h-full items-center justify-center font-mono text-secondary">
             {row.index + 1}
           </div>
         ),
@@ -491,7 +491,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             <div className="flex items-center justify-between min-w-0">
               {editingHeader === column.id ? (
                 <input
-                  className="bg-gray-800 text-white font-medium text-sm border-none outline-none flex-1 px-1 py-0.5 rounded"
+                  className="bg-element text-main font-medium text-sm border-none outline-none flex-1 px-1 py-0.5 rounded"
                   value={headerEditValue}
                   onChange={(e) => setHeaderEditValue(e.target.value)}
                   onBlur={() => {
@@ -511,7 +511,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
               ) : (
                 <div className="flex items-center space-x-2 flex-1">
                   <div
-                    className="flex-1 cursor-pointer hover:bg-gray-700/30 px-1 py-0.5 rounded"
+                    className="flex-1 cursor-pointer hover:bg-element-hover px-1 py-0.5 rounded"
                     onDoubleClick={() => {
                       setEditingHeader(column.id);
                       setHeaderEditValue(column.name);
@@ -522,7 +522,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   </div>
                   <button
                     onClick={() => tableColumn.toggleSorting()}
-                    className="p-1 hover:bg-gray-700/30 rounded"
+                    className="p-1 hover:bg-element-hover rounded"
                     title="Sort column"
                     data-testid="sort-column"
                   >
@@ -541,11 +541,10 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                 {isSensitiveHeader(column.name) && (
                   <button
                     onClick={() => toggleColumnMask(column.id)}
-                    className={`p-1 rounded hover:bg-gray-600 transition-all ${
-                      isColumnMasked(column.id)
-                        ? "text-blue-400"
-                        : "text-gray-400"
-                    }`}
+                    className={`p-1 rounded hover:bg-element-hover transition-all ${isColumnMasked(column.id)
+                        ? "text-info"
+                        : "text-secondary"
+                      }`}
                     title={
                       isColumnMasked(column.id)
                         ? "Unmask sensitive column"
@@ -595,7 +594,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
           ),
           cell: ({ row, getValue }) => {
             const isMasked = isColumnMasked(column.id);
-            
+
             // Since we need row and column indices for data attributes,
             // we'll add them as data attributes in the containing div in the virtualized render
 
@@ -802,7 +801,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
     setSearchMatches(matches);
     setSearchActiveIndex(matches.length > 0 ? 0 : 0);
-    
+
     // Auto-select the first match when search results change
     if (matches.length > 0) {
       const firstMatch = matches[0];
@@ -838,14 +837,14 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     if (searchMatches.length > 0) {
       const nextIndex = (searchActiveIndex + 1) % searchMatches.length;
       setSearchActiveIndex(nextIndex);
-      
+
       // Select the active match cell for better visibility
       const match = searchMatches[nextIndex];
       setSelectedCell({
         rowId: match.rowId,
         columnId: match.columnId,
       });
-      
+
       // Scroll to the active match
       rowVirtualizer.scrollToIndex(match.rowIndex, {
         align: "center",
@@ -858,14 +857,14 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     if (searchMatches.length > 0) {
       const prevIndex = searchActiveIndex === 0 ? searchMatches.length - 1 : searchActiveIndex - 1;
       setSearchActiveIndex(prevIndex);
-      
+
       // Select the active match cell for better visibility
       const match = searchMatches[prevIndex];
       setSelectedCell({
         rowId: match.rowId,
         columnId: match.columnId,
       });
-      
+
       // Scroll to the active match
       rowVirtualizer.scrollToIndex(match.rowIndex, {
         align: "center",
@@ -1008,23 +1007,23 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900">
-        <div className="text-gray-400">Loading CSV data...</div>
+      <div className="flex items-center justify-center h-full bg-canvas">
+        <div className="text-secondary">Loading CSV data...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900">
-        <div className="text-red-400">Error: {error}</div>
+      <div className="flex items-center justify-center h-full bg-canvas">
+        <div className="text-danger">Error: {error}</div>
       </div>
     );
   }
 
   return (
     <div
-      className="flex flex-col h-full bg-gray-900 text-gray-200"
+      className="flex flex-col h-full bg-canvas text-main"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       data-testid="csv-table-viewer"
@@ -1084,7 +1083,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       >
         {/* Fixed Header */}
         <div
-          className="bg-gray-800 sticky top-0 z-10 border-b border-gray-700"
+          className="bg-surface-highlight sticky top-0 z-10 border-b border-base"
           style={{
             display: "grid",
             gridTemplateColumns,
@@ -1095,7 +1094,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
           {table.getHeaderGroups()[0]?.headers.map((header) => (
             <div
               key={header.id}
-              className="border-r border-gray-700 p-2 text-left font-medium text-gray-300 bg-gray-800"
+              className="border-r border-base p-2 text-left font-medium text-main bg-surface-highlight"
               data-testid="column-header"
             >
               {flexRender(header.column.columnDef.header, header.getContext())}
@@ -1118,9 +1117,8 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             return (
               <div
                 key={virtualRow.key}
-                className={`absolute border-b border-gray-700 hover:bg-gray-800/50 ${
-                  isDuplicate ? "bg-yellow-500/10 border-yellow-500/30" : ""
-                }`}
+                className={`absolute border-b border-base hover:bg-element-hover ${isDuplicate ? "bg-warning/10 border-warning/30" : ""
+                  }`}
                 style={{
                   height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
@@ -1136,7 +1134,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   if (cellIndex >= row.getVisibleCells().length - 1) {
                     // This is the actions column, skip data attributes
                     return (
-                      <div key={cell.id} className="border-r border-gray-700">
+                      <div key={cell.id} className="border-r border-base">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </div>
                     );
@@ -1144,15 +1142,15 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   if (cellIndex === 0) {
                     // This is the row number column, skip data attributes
                     return (
-                      <div key={cell.id} className="border-r border-gray-700">
+                      <div key={cell.id} className="border-r border-base">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </div>
                     );
                   }
                   return (
-                    <div 
-                      key={cell.id} 
-                      className="border-r border-gray-700"
+                    <div
+                      key={cell.id}
+                      className="border-r border-base"
                       data-testid="csv-cell"
                       data-row={virtualRow.index.toString()}
                       data-col={actualColumnIndex.toString()}
@@ -1198,7 +1196,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             onClick={closeContextMenu}
           />
           <div
-            className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50 min-w-[200px]"
+            className="fixed bg-surface border border-base rounded-lg shadow-xl z-50 min-w-[200px]"
             style={{
               left: contextMenu.x,
               top: contextMenu.y,
@@ -1207,7 +1205,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             <div className="py-1">
               <button
                 onClick={handleCopySelectedCells}
-                className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-gray-200 hover:bg-gray-700"
+                className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-main hover:bg-element-hover"
                 title="Copy selected cells"
               >
                 <Copy size={14} className="mr-2" />
@@ -1215,21 +1213,20 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
               </button>
               <button
                 onClick={handleClearSelectedCells}
-                className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-gray-200 hover:bg-gray-700"
+                className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-main hover:bg-element-hover"
                 title="Clear selected cells"
               >
                 <Minus size={14} className="mr-2" />
                 <span>Clear ({selectedCells.size} cell{selectedCells.size !== 1 ? 's' : ''})</span>
               </button>
-              <div className="border-t border-gray-700 my-1" />
+              <div className="border-t border-base my-1" />
               <button
                 onClick={handleShiftRight}
                 disabled={!canShiftRight()}
-                className={`flex items-center w-full px-3 py-2 text-sm text-left transition-colors ${
-                  canShiftRight()
-                    ? 'text-gray-200 hover:bg-gray-700'
-                    : 'text-gray-500 cursor-not-allowed'
-                }`}
+                className={`flex items-center w-full px-3 py-2 text-sm text-left transition-colors ${canShiftRight()
+                    ? 'text-main hover:bg-element-hover'
+                    : 'text-muted cursor-not-allowed'
+                  }`}
                 title={
                   canShiftRight()
                     ? 'Insert empty cell and shift remaining cells right'

@@ -27,21 +27,21 @@ describe("EditableCell", () => {
   describe("Basic Rendering", () => {
     it("should render cell value", () => {
       render(<EditableCell {...defaultProps} />);
-      
+
       expect(screen.getByText("Test Value")).toBeInTheDocument();
     });
 
     it("should render empty cell placeholder", () => {
       render(<EditableCell {...defaultProps} value="" />);
-      
+
       expect(screen.getByText("Empty")).toBeInTheDocument();
     });
 
     it("should show invalid cell styling", () => {
       render(<EditableCell {...defaultProps} isValid={false} error="Invalid value" />);
-      
+
       const cell = screen.getByTitle("Invalid value");
-      expect(cell).toHaveClass("bg-red-900/20");
+      expect(cell).toHaveClass("bg-danger-subtle");
     });
   });
 
@@ -58,12 +58,12 @@ describe("EditableCell", () => {
 
       // Should have search match styling
       const cell = screen.getByTitle(/click to select/i).closest('div');
-      expect(cell).toHaveClass("bg-yellow-500/20", "ring-1", "ring-yellow-400");
+      expect(cell).toHaveClass("bg-warning/20", "ring-1", "ring-warning");
 
       // Should highlight the search term
       const highlightedText = screen.getByText("John");
       expect(highlightedText.tagName).toBe("MARK");
-      expect(highlightedText).toHaveClass("bg-yellow-400", "text-black");
+      expect(highlightedText).toHaveClass("bg-warning", "text-gray-900");
     });
 
     it("should show active search match styling", () => {
@@ -79,7 +79,7 @@ describe("EditableCell", () => {
 
       // Should have active search match styling (orange)
       const cell = screen.getByTitle(/click to select/i).closest('div');
-      expect(cell).toHaveClass("bg-orange-500/40", "ring-2", "ring-orange-400");
+      expect(cell).toHaveClass("bg-warning/40", "ring-2", "ring-warning");
     });
 
     it("should not highlight when not a search match", () => {
@@ -94,8 +94,8 @@ describe("EditableCell", () => {
 
       // Should not have search highlighting
       const cell = screen.getByTitle(/click to select/i).closest('div');
-      expect(cell).not.toHaveClass("bg-yellow-500/20");
-      expect(cell).not.toHaveClass("bg-orange-500/40");
+      expect(cell).not.toHaveClass("bg-warning/20");
+      expect(cell).not.toHaveClass("bg-warning/40");
     });
 
     it("should handle case-insensitive highlighting", () => {
@@ -149,19 +149,19 @@ describe("EditableCell", () => {
 
     it("should call onRightClick when right-clicked", () => {
       render(<EditableCell {...defaultProps} onRightClick={mockOnRightClick} />);
-      
+
       const cell = screen.getByTitle(/click to select/i);
       fireEvent.contextMenu(cell);
-      
+
       expect(mockOnRightClick).toHaveBeenCalledTimes(1);
     });
 
     it("should show hover actions on mouse enter", () => {
       render(<EditableCell {...defaultProps} />);
-      
+
       const cell = screen.getByTitle(/click to select/i);
       fireEvent.mouseEnter(cell);
-      
+
       // Edit and copy buttons should become visible
       expect(screen.getByTitle("Edit cell")).toBeInTheDocument();
       expect(screen.getByTitle("Copy cell value")).toBeInTheDocument();
@@ -171,9 +171,9 @@ describe("EditableCell", () => {
   describe("Selected State", () => {
     it("should show selected styling when isSelected is true", () => {
       render(<EditableCell {...defaultProps} isSelected={true} />);
-      
+
       const cell = screen.getByTitle(/click to select/i).closest('div');
-      expect(cell).toHaveClass("bg-blue-900/30", "ring-1", "ring-blue-500");
+      expect(cell).toHaveClass("bg-info/30", "ring-1", "ring-info");
     });
 
     it("should show combined active search match and selected styling", () => {
@@ -189,9 +189,9 @@ describe("EditableCell", () => {
 
       // Should show combined orange active search + selected styling
       const cell = screen.getByTitle(/click to select/i).closest('div');
-      expect(cell).toHaveClass("bg-orange-500/50", "ring-2", "ring-orange-400", "shadow-lg");
-      expect(cell).not.toHaveClass("bg-blue-900/30");
-      expect(cell).not.toHaveClass("bg-yellow-500/20");
+      expect(cell).toHaveClass("bg-warning/50", "ring-2", "ring-warning", "shadow-lg");
+      expect(cell).not.toHaveClass("bg-info/30");
+      expect(cell).not.toHaveClass("bg-warning/20");
     });
 
     it("should prioritize selected styling over regular search match styling", () => {
@@ -207,21 +207,21 @@ describe("EditableCell", () => {
 
       // Should show selected styling over regular search match
       const cell = screen.getByTitle(/click to select/i).closest('div');
-      expect(cell).toHaveClass("bg-blue-900/30", "ring-1", "ring-blue-500");
-      expect(cell).not.toHaveClass("bg-yellow-500/20");
+      expect(cell).toHaveClass("bg-info/30", "ring-1", "ring-info");
+      expect(cell).not.toHaveClass("bg-warning/20");
     });
   });
 
   describe("Editing Mode", () => {
     it("should enter editing mode when startEditing is true", () => {
       const { rerender } = render(<EditableCell {...defaultProps} />);
-      
+
       // Initially not in editing mode
       expect(screen.queryByDisplayValue("Test Value")).not.toBeInTheDocument();
-      
+
       // Enter editing mode
       rerender(<EditableCell {...defaultProps} startEditing={true} />);
-      
+
       // Should show input field
       expect(screen.getByDisplayValue("Test Value")).toBeInTheDocument();
       expect(mockOnEditingChange).toHaveBeenCalledWith(true);

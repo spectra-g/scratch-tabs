@@ -188,10 +188,10 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
 
     if (isEditing) {
       return (
-        <div className="h-full w-full flex items-center bg-gray-800">
+        <div className="h-full w-full flex items-center bg-surface">
           <input
             ref={inputRef}
-            className="w-full h-full bg-transparent border-none outline-none text-sm text-white px-2 focus:outline-none focus:ring-0"
+            className="w-full h-full bg-transparent border-none outline-none text-sm text-main px-2 focus:outline-none focus:ring-0"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -222,7 +222,7 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
         >
           <span
             ref={textRef}
-            className={`text-sm truncate flex-1 mr-2 select-none transition duration-150 ${shouldShowMasked ? "blur-[3px] hover:blur-none" : "text-gray-200"}`}
+            className={`text-sm truncate flex-1 mr-2 select-none transition duration-150 ${shouldShowMasked ? "blur-[3px] hover:blur-none" : "text-main"}`}
             title={shouldShowMasked ? "Hover to reveal" : undefined}
           >
             {value ? (
@@ -232,12 +232,12 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
                 value
               )
             ) : (
-              <span className="text-gray-500 italic">Empty</span>
+              <span className="text-muted italic">Empty</span>
             )}
           </span>
           <div className="flex items-center space-x-1 w-12 justify-end">
             <button
-              className={`p-1 rounded hover:bg-gray-600 transition-all ${
+              className={`p-1 rounded hover:bg-element-hover transition-all ${
                 isHovered || isSelected
                   ? "opacity-70 hover:opacity-100"
                   : "opacity-0"
@@ -248,7 +248,7 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
               <Copy size={12} />
             </button>
             <button
-              className={`p-1 rounded hover:bg-gray-600 transition-all ${
+              className={`p-1 rounded hover:bg-element-hover transition-all ${
                 isHovered || isSelected
                   ? "opacity-70 hover:opacity-100"
                   : "opacity-0"
