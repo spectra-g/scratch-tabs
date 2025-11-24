@@ -201,29 +201,29 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   }, [editor]);
 
   return (
-    <div className="flex items-center justify-between p-3 border-b border-themed bg-themed-secondary">
+    <div className="flex items-center justify-between p-3 border-b border-base bg-surface-highlight">
       {/* Left Section: Validation Status */}
       <div className="flex items-center space-x-3">
         <div className="flex items-center space-x-2">
           {isValid ? (
-            <CheckCircle2 size={16} className="text-green-400" />
+            <CheckCircle2 size={16} className="text-success" />
           ) : (
-            <XCircle size={16} className="text-red-400" />
+            <XCircle size={16} className="text-danger" />
           )}
-          <span className="text-sm text-themed">
+          <span className="text-sm text-main">
             {isValid ? "Valid JSON" : "Invalid JSON"}
           </span>
           {validationError && (
             <>
-              <span className="text-xs text-red-400 ml-2" title={validationError}>
-                {validationError.length > 50 
-                  ? `${validationError.substring(0, 50)}...` 
+              <span className="text-xs text-danger ml-2" title={validationError}>
+                {validationError.length > 50
+                  ? `${validationError.substring(0, 50)}...`
                   : validationError
                 }
               </span>
               <button
                 onClick={handleAutoFix}
-                className="p-1 rounded bg-themed-hover text-purple-400 hover:text-purple-300 transition-colors"
+                className="p-1 rounded hover:bg-element-hover text-info hover:text-main transition-colors"
                 title="Auto-fix JSON"
               >
                 <Wand2 size={14} />
@@ -240,7 +240,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           value={currentPath}
           onChange={(e) => onPathChange(e.target.value)}
           placeholder="Search in JSON (e.g., users[0].name)"
-          className="w-full px-3 py-1 input-themed rounded text-sm placeholder:text-themed-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-1 bg-element text-main border border-base rounded text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:border-focus"
         />
       </div>
 
@@ -252,8 +252,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           disabled={!canUndo}
           className={`p-2 rounded transition-colors ${
             canUndo
-              ? "bg-themed-hover text-themed-secondary"
-              : "text-themed-muted cursor-not-allowed"
+              ? "hover:bg-element-hover text-secondary"
+              : "text-muted cursor-not-allowed"
           }`}
           title="Undo"
         >
@@ -264,23 +264,23 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           disabled={!canRedo}
           className={`p-2 rounded transition-colors ${
             canRedo
-              ? "bg-themed-hover text-themed-secondary"
-              : "text-themed-muted cursor-not-allowed"
+              ? "hover:bg-element-hover text-secondary"
+              : "text-muted cursor-not-allowed"
           }`}
           title="Redo"
         >
           <RotateCw size={16} />
         </button>
 
-        <div className="w-px h-6 bg-themed-tertiary mx-2" />
+        <div className="w-px h-6 bg-base mx-2" />
 
         {/* Primary Actions */}
         <button
           onClick={() => togglePanel(tabId)}
           className={`flex items-center space-x-1 px-3 py-1 rounded transition-colors ${
             isQueryPanelOpen
-              ? "bg-blue-500/30 text-blue-300"
-              : "bg-themed-tertiary text-themed-secondary hover:bg-slate-300 dark:hover:bg-gray-600"
+              ? "bg-element-active text-info"
+              : "bg-info text-main hover:bg-info/80"
           }`}
           title="Toggle JMESPath Query Panel"
         >
@@ -291,8 +291,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onClick={handleCopy}
           className={`p-2 rounded transition-colors ${
             isCopied
-              ? "bg-green-500/20 text-green-400"
-              : "bg-themed-hover text-themed-secondary"
+              ? "bg-success-subtle text-success"
+              : "hover:bg-element-hover text-secondary"
           }`}
           title={isCopied ? "Copied!" : "Copy JSON"}
         >
@@ -300,7 +300,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </button>
         <button
           onClick={handleFormat}
-          className="flex items-center space-x-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
+          className="flex items-center space-x-1 px-3 py-1 bg-info text-main rounded hover:bg-info/80 transition-colors"
           title="Format JSON"
         >
           <WrapText size={14} />
@@ -308,7 +308,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </button>
         <button
           onClick={handleFixJson}
-          className="flex items-center space-x-1 px-3 py-1 bg-purple-500/20 text-purple-400 rounded hover:bg-purple-500/30 transition-colors"
+          className="flex items-center space-x-1 px-3 py-1 bg-info text-main rounded hover:bg-info/80 transition-colors"
           title="Fix JSON - Auto-fix common errors including control characters, missing quotes, commas, and brackets"
         >
           <Sparkles size={14} />

@@ -86,14 +86,14 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
       <div className="flex flex-col p-4 space-y-4" style={{ height: "80vh" }}>
         {/* Options Panel */}
         <div className="flex-none">
-          <h3 className="text-sm font-medium text-themed-secondary mb-3">
+          <h3 className="text-sm font-medium text-secondary mb-3">
             Export Configuration
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-themed-secondary rounded-lg border border-themed">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-element rounded-lg border border-base">
             {/* Array Expansion Strategy */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-themed-secondary mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Array Expansion Strategy
               </label>
               <select
@@ -104,7 +104,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
                     arrayExpansion: e.target.value as any,
                   })
                 }
-                className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-element text-main border border-base rounded text-sm focus:outline-none focus:ring-2 focus:border-focus"
               >
                 <option value="expandFirst">
                   Expand First Array Only (Recommended)
@@ -116,10 +116,10 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
               </select>
 
               {/* Strategy Description */}
-              <div className="mt-2 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
+              <div className="mt-2 p-3 bg-info-subtle border border-info rounded">
                 <div className="flex items-start">
-                  <Info size={16} className="mr-2 mt-0.5 text-blue-400 flex-shrink-0" />
-                  <p className="text-xs text-blue-300">
+                  <Info size={16} className="mr-2 mt-0.5 text-info flex-shrink-0" />
+                  <p className="text-xs text-info">
                     {getStrategyDescription(options.arrayExpansion)}
                   </p>
                 </div>
@@ -128,7 +128,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
 
             {/* Delimiter */}
             <div>
-              <label className="block text-sm font-medium text-themed-secondary mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Delimiter
               </label>
               <select
@@ -139,7 +139,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
                     delimiter: e.target.value === "tab" ? "\t" : ","
                   })
                 }
-                className="w-full px-3 py-2 input-themed rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-element text-main border border-base rounded text-sm focus:outline-none focus:ring-2 focus:border-focus"
               >
                 <option value="comma">Comma (,)</option>
                 <option value="tab">Tab</option>
@@ -148,7 +148,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
 
             {/* Include Headers */}
             <div>
-              <label className="block text-sm font-medium text-themed-secondary mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Include Headers
               </label>
               <div className="flex items-center h-[38px]">
@@ -158,9 +158,9 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
                   onChange={(e) =>
                     setOptions({ ...options, includeHeaders: e.target.checked })
                   }
-                  className="w-4 h-4 text-blue-600 bg-themed border-themed rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-primary bg-element border border-base rounded focus:ring-2 focus:border-focus"
                 />
-                <span className="ml-2 text-sm text-themed-secondary">
+                <span className="ml-2 text-sm text-secondary">
                   Add header row
                 </span>
               </div>
@@ -171,10 +171,10 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
         {/* Preview Panel */}
         <div className="flex-1 flex flex-col" style={{ minHeight: "500px" }}>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-themed-secondary">
+            <h3 className="text-sm font-medium text-secondary">
               CSV Preview
               {csv && !error && (
-                <span className="ml-2 text-xs text-themed-muted">
+                <span className="ml-2 text-xs text-muted">
                   ({csv.split("\n").length} rows)
                 </span>
               )}
@@ -183,12 +183,12 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
               <button
                 onClick={handleCopy}
                 disabled={!csv || !!error}
-                className="flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-themed-secondary bg-themed-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-secondary hover:bg-element-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Copy to clipboard"
               >
                 {isCopied ? (
                   <>
-                    <Check size={16} className="text-green-400" />
+                    <Check size={16} className="text-success" />
                     <span className="text-xs">Copied!</span>
                   </>
                 ) : (
@@ -201,7 +201,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
               <button
                 onClick={handleDownload}
                 disabled={!csv || !!error}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-primary text-main rounded-md hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Download CSV file"
               >
                 <Download size={16} />
@@ -210,7 +210,7 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 border border-themed rounded-lg overflow-hidden" style={{ minHeight: "450px" }}>
+          <div className="flex-1 border border-base rounded-lg overflow-hidden" style={{ minHeight: "450px" }}>
             <Editor
               height="100%"
               language="csv"
@@ -229,8 +229,8 @@ export const CsvExportOptionsModal: React.FC<CsvExportOptionsModalProps> = ({
         </div>
 
         {/* Info Footer */}
-        <div className="flex-none pt-3 border-t border-themed">
-          <div className="text-xs text-themed-tertiary">
+        <div className="flex-none pt-3 border-t border-base">
+          <div className="text-xs text-secondary">
             <span className="font-medium">Tip:</span> The export intelligently
             flattens nested objects (e.g., user.name → user.name column). Arrays
             create multiple rows with duplicated parent data, making the CSV

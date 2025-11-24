@@ -31,7 +31,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
           <h2 className="text-lg font-medium text-main">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 text-secondary hover:text-main bg-element-hover rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-1.5 text-secondary hover:text-main hover:bg-element-hover rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:border-focus"
             aria-label="Close modal"
           >
             <X size={20} />

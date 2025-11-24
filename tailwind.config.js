@@ -43,12 +43,18 @@ export default {
         '.bg-primary': {
           '@apply bg-blue-600 hover:bg-blue-700 text-white': {},
         },
+        '.bg-info': {
+          '@apply bg-cyan-600 hover:bg-cyan-700 text-white': {},
+        },
         '.bg-danger': {
           '@apply bg-red-600 hover:bg-red-700 text-white': {},
         },
 
         // 4. STATUS (Badges & Alerts)
         // Note: We use opacity in dark mode to keep text readable
+        '.bg-info-subtle': {
+          '@apply bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200 border border-cyan-200 dark:border-cyan-800': {},
+        },
         '.bg-danger-subtle': {
           '@apply bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200 border border-red-200 dark:border-red-800': {},
         },

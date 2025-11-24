@@ -110,11 +110,11 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
   }, [tabId, setQueryInStore]);
 
   return (
-    <div className="flex flex-col h-full bg-themed border-t border-themed">
+    <div className="flex flex-col h-full bg-surface border-t border-base">
       {/* Panel Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-themed bg-themed-secondary">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-base bg-surface-highlight">
         <div className="flex items-center space-x-2 relative">
-          <h3 className="text-sm font-medium text-themed-secondary">
+          <h3 className="text-sm font-medium text-secondary">
             JSON Query (JMESPath)
           </h3>
 
@@ -122,7 +122,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
           <div className="relative" ref={infoRef}>
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className="p-1 rounded bg-themed-hover icon-themed icon-themed-hover transition-colors"
+              className="p-1 rounded hover:bg-element-hover text-secondary hover:text-main transition-colors"
               title="Learn about JMESPath"
             >
               <Info size={14} />
@@ -130,45 +130,45 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
 
             {/* Info Panel */}
             {showInfo && (
-              <div className="absolute top-full left-0 mt-1 w-96 bg-themed border border-themed rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto custom-scrollbar">
+              <div className="absolute top-full left-0 mt-1 w-96 bg-surface border border-base rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto custom-scrollbar">
                 <div className="p-4">
-                  <h4 className="text-sm font-semibold text-themed mb-2">About JMESPath Query Tool</h4>
-                  <p className="text-xs text-themed-secondary mb-3">
+                  <h4 className="text-sm font-semibold text-main mb-2">About JMESPath Query Tool</h4>
+                  <p className="text-xs text-secondary mb-3">
                     JMESPath is a query language for JSON. Use it to extract, filter, and transform data from JSON documents.
                   </p>
 
                   <div className="space-y-3">
                     <div>
-                      <div className="text-xs font-medium text-themed mb-1">Basic Syntax:</div>
-                      <ul className="text-xs text-themed-tertiary space-y-1 ml-3">
-                        <li><code className="text-blue-400">[0]</code> - Get first array element</li>
-                        <li><code className="text-blue-400">[*]</code> - Get all array elements</li>
-                        <li><code className="text-blue-400">.property</code> - Access object property</li>
-                        <li><code className="text-blue-400">[*].name</code> - Project field from all items</li>
+                      <div className="text-xs font-medium text-main mb-1">Basic Syntax:</div>
+                      <ul className="text-xs text-secondary space-y-1 ml-3">
+                        <li><code className="text-info">[0]</code> - Get first array element</li>
+                        <li><code className="text-info">[*]</code> - Get all array elements</li>
+                        <li><code className="text-info">.property</code> - Access object property</li>
+                        <li><code className="text-info">[*].name</code> - Project field from all items</li>
                       </ul>
                     </div>
 
                     <div>
-                      <div className="text-xs font-medium text-themed mb-1">Filtering:</div>
-                      <ul className="text-xs text-themed-tertiary space-y-1 ml-3">
-                        <li><code className="text-blue-400">[?age &gt; `25`]</code> - Filter by numeric value</li>
-                        <li><code className="text-blue-400">[?active==`true`]</code> - Filter by boolean</li>
-                        <li><code className="text-blue-400">[?name==`'John'`]</code> - Filter by string</li>
+                      <div className="text-xs font-medium text-main mb-1">Filtering:</div>
+                      <ul className="text-xs text-secondary space-y-1 ml-3">
+                        <li><code className="text-info">[?age &gt; `25`]</code> - Filter by numeric value</li>
+                        <li><code className="text-info">[?active==`true`]</code> - Filter by boolean</li>
+                        <li><code className="text-info">[?name==`'John'`]</code> - Filter by string</li>
                       </ul>
                     </div>
 
                     <div>
-                      <div className="text-xs font-medium text-themed mb-1">Functions:</div>
-                      <ul className="text-xs text-themed-tertiary space-y-1 ml-3">
-                        <li><code className="text-blue-400">length(@)</code> - Count items</li>
-                        <li><code className="text-blue-400">keys(@)</code> - Get property names</li>
-                        <li><code className="text-blue-400">sort_by(@, &age)</code> - Sort by field</li>
+                      <div className="text-xs font-medium text-main mb-1">Functions:</div>
+                      <ul className="text-xs text-secondary space-y-1 ml-3">
+                        <li><code className="text-info">length(@)</code> - Count items</li>
+                        <li><code className="text-info">keys(@)</code> - Get property names</li>
+                        <li><code className="text-info">sort_by(@, &age)</code> - Sort by field</li>
                       </ul>
                     </div>
 
-                    <div className="pt-2 border-t border-themed">
-                      <p className="text-xs text-themed-tertiary">
-                        💡 Click <span className="font-medium text-themed-secondary">Samples</span> to see queries relevant to your current JSON data.
+                    <div className="pt-2 border-t border-base">
+                      <p className="text-xs text-secondary">
+                        💡 Click <span className="font-medium text-secondary">Samples</span> to see queries relevant to your current JSON data.
                       </p>
                     </div>
                   </div>
@@ -182,7 +182,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
           <div className="relative" ref={samplesRef}>
             <button
               onClick={() => setShowSamples(!showSamples)}
-              className="flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors bg-themed-hover text-themed-secondary"
+              className="flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors hover:bg-element-hover text-secondary"
               title="Sample Queries"
             >
               <BookOpen size={14} />
@@ -191,20 +191,20 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
 
             {/* Dropdown */}
             {showSamples && (
-              <div className="absolute top-full right-0 mt-1 w-80 bg-themed border border-themed rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto custom-scrollbar">
+              <div className="absolute top-full right-0 mt-1 w-80 bg-surface border border-base rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto custom-scrollbar">
                 <div className="p-2">
-                  <div className="text-xs text-themed-tertiary px-2 py-1 font-medium">
+                  <div className="text-xs text-secondary px-2 py-1 font-medium">
                     Sample Queries for Your Data
                   </div>
                   {sampleQueries.map((sample, index) => (
                     <button
                       key={index}
                       onClick={() => handleSelectSample(sample.query)}
-                      className="w-full text-left px-2 py-2 rounded bg-themed-hover transition-colors"
+                      className="w-full text-left px-2 py-2 rounded hover:bg-element-hover transition-colors"
                     >
-                      <div className="text-xs font-medium text-themed">{sample.label}</div>
-                      <div className="text-xs text-blue-400 font-mono mt-0.5">{sample.query}</div>
-                      <div className="text-xs text-themed-tertiary mt-0.5">{sample.description}</div>
+                      <div className="text-xs font-medium text-main">{sample.label}</div>
+                      <div className="text-xs text-info font-mono mt-0.5">{sample.query}</div>
+                      <div className="text-xs text-secondary mt-0.5">{sample.description}</div>
                     </button>
                   ))}
                 </div>
@@ -217,10 +217,10 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
             disabled={!formattedResults}
             className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
               isCopied
-                ? 'bg-green-500/20 text-green-400'
+                ? 'bg-success-subtle text-success'
                 : formattedResults
-                ? 'bg-themed-hover text-themed-secondary'
-                : 'text-themed-muted cursor-not-allowed'
+                ? 'hover:bg-element-hover text-secondary'
+                : 'text-muted cursor-not-allowed'
             }`}
             title={isCopied ? 'Copied!' : 'Copy Results'}
           >
@@ -232,8 +232,8 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
             disabled={!formattedResults}
             className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
               formattedResults
-                ? 'bg-themed-hover text-themed-secondary'
-                : 'text-themed-muted cursor-not-allowed'
+                ? 'hover:bg-element-hover text-secondary'
+                : 'text-muted cursor-not-allowed'
             }`}
             title="Export to New Tab"
           >
@@ -242,7 +242,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
           </button>
           <button
             onClick={() => closePanel(tabId)}
-            className="p-1 rounded bg-themed-hover icon-themed icon-themed-hover transition-colors"
+            className="p-1 rounded hover:bg-element-hover text-secondary hover:text-main transition-colors"
             title="Close Query Panel"
           >
             <X size={16} />
@@ -251,9 +251,9 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
       </div>
 
       {/* Query Editor */}
-      <div className="flex flex-col border-b border-themed">
-        <div className="px-3 py-1 bg-themed-secondary">
-          <span className="text-xs text-themed-tertiary">Query Expression:</span>
+      <div className="flex flex-col border-b border-base">
+        <div className="px-3 py-1 bg-surface-highlight">
+          <span className="text-xs text-secondary">Query Expression:</span>
         </div>
         <div style={{ height: `${DEFAULT_QUERY_EDITOR_HEIGHT}px` }}>
           <Editor
@@ -288,8 +288,8 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
 
       {/* Results Viewer */}
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="px-3 py-1 bg-themed-secondary border-b border-themed">
-          <span className="text-xs text-themed-tertiary">
+        <div className="px-3 py-1 bg-surface-highlight border-b border-base">
+          <span className="text-xs text-secondary">
             {error
               ? 'Error:'
               : results === null

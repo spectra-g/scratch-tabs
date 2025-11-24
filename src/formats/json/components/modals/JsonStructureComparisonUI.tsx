@@ -85,8 +85,8 @@ export const JsonStructureComparisonUI: React.FC<
     return (
       <div key={node.path}>
         <div
-          className={`flex items-center py-1 px-2 hover:bg-themed-tertiary/50 rounded cursor-pointer transition-colors ${
-            node.hasDiff ? "bg-red-900/20 border-l-2 border-red-500" : ""
+          className={`flex items-center py-1 px-2 hover:bg-element-hover rounded cursor-pointer transition-colors ${
+            node.hasDiff ? "bg-danger-subtle border-l-2 border-danger" : ""
           }`}
           style={{ paddingLeft: `${indent + 8}px` }}
           onClick={() => {
@@ -99,16 +99,16 @@ export const JsonStructureComparisonUI: React.FC<
         >
           {hasChildren ? (
             <button
-              className="p-1 hover:bg-slate-300 dark:hover:bg-gray-600/50 rounded transition-colors"
+              className="p-1 hover:bg-element-hover rounded transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 toggleNodeExpansion(node.path);
               }}
             >
               {isExpanded ? (
-                <ChevronDown size={14} className="text-themed-tertiary" />
+                <ChevronDown size={14} className="text-secondary" />
               ) : (
-                <ChevronRight size={14} className="text-themed-tertiary" />
+                <ChevronRight size={14} className="text-secondary" />
               )}
             </button>
           ) : (
@@ -116,14 +116,14 @@ export const JsonStructureComparisonUI: React.FC<
           )}
 
           <div className="flex items-center space-x-2 flex-1 min-w-0">
-            <span className="text-sm font-mono text-themed-secondary truncate">
+            <span className="text-sm font-mono text-secondary truncate">
               {node.name || "root"}
             </span>
 
             {node.hasDiff && (
               <div className="flex items-center space-x-1">
-                <AlertTriangle size={12} className="text-red-400" />
-                <span className="text-xs text-red-400">
+                <AlertTriangle size={12} className="text-danger" />
+                <span className="text-xs text-danger">
                   {node.diffType === "MISSING_KEY_LEFT" && "Missing in Source"}
                   {node.diffType === "MISSING_KEY_RIGHT" && "Missing in Target"}
                   {node.diffType === "TYPE_MISMATCH" && "Type Mismatch"}
@@ -134,7 +134,7 @@ export const JsonStructureComparisonUI: React.FC<
               </div>
             )}
 
-            <span className="text-xs text-themed-muted">
+            <span className="text-xs text-muted">
               {node.leftValueType &&
               node.rightValueType &&
               node.leftValueType !== node.rightValueType
@@ -156,12 +156,12 @@ export const JsonStructureComparisonUI: React.FC<
   return (
     <div className="flex flex-col h-full">
       {/* Options Panel */}
-      <div className="flex-none p-4 border-b border-themed/60">
+      <div className="flex-none p-4 border-b border-base">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setShowOptions(!showOptions)}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-themed-tertiary hover:bg-slate-300 dark:hover:bg-gray-600 rounded transition-colors"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-element hover:bg-element-hover rounded transition-colors"
             >
               <Settings size={14} />
               <span className="text-sm">Options</span>
@@ -171,14 +171,14 @@ export const JsonStructureComparisonUI: React.FC<
                 <ChevronRight size={14} />
               )}
             </button>
-            
+
             <div className="relative">
               <button
                 onClick={() => setShowInfo(!showInfo)}
                 className={`p-1.5 rounded transition-colors ${
-                  showInfo 
-                    ? "text-blue-400 bg-blue-500/20" 
-                    : "text-themed-tertiary hover:text-gray-100 hover:bg-themed-tertiary/50"
+                  showInfo
+                    ? "text-info bg-element-active"
+                    : "text-secondary hover:text-main hover:bg-element-hover"
                 }`}
                 title="About JSON Structure Comparison"
               >
@@ -191,16 +191,16 @@ export const JsonStructureComparisonUI: React.FC<
                     className="fixed inset-0 z-30"
                     onClick={() => setShowInfo(false)}
                   />
-                  <div className="absolute top-full left-0 mt-2 bg-themed-secondary border border-themed-light rounded-lg shadow-xl z-40 w-80 p-4">
-                    <h4 className="text-sm font-semibold text-themed mb-3">JSON Structure Comparison</h4>
-                    <div className="space-y-3 text-xs text-themed-secondary">
+                  <div className="absolute top-full left-0 mt-2 bg-surface border border-base rounded-lg shadow-xl z-40 w-80 p-4">
+                    <h4 className="text-sm font-semibold text-main mb-3">JSON Structure Comparison</h4>
+                    <div className="space-y-3 text-xs text-secondary">
                       <div>
-                        <p className="font-medium text-themed mb-1">What it does:</p>
+                        <p className="font-medium text-main mb-1">What it does:</p>
                         <p>Compares the structure of two JSON documents to identify differences in schema, data types, and hierarchy.</p>
                       </div>
-                      
+
                       <div>
-                        <p className="font-medium text-themed mb-1">Features:</p>
+                        <p className="font-medium text-main mb-1">Features:</p>
                         <ul className="list-disc list-inside space-y-1 ml-2">
                           <li>Deep structure analysis</li>
                           <li>Type mismatch detection</li>
@@ -209,18 +209,18 @@ export const JsonStructureComparisonUI: React.FC<
                           <li>Synchronized scrolling</li>
                         </ul>
                       </div>
-                      
+
                       <div>
-                        <p className="font-medium text-themed mb-1">Options:</p>
+                        <p className="font-medium text-main mb-1">Options:</p>
                         <ul className="list-disc list-inside space-y-1 ml-2">
                           <li><strong>Array Sample Count:</strong> How many array elements to analyze</li>
                           <li><strong>Strict Array Length:</strong> Enforce exact array length matching</li>
                           <li><strong>Case Sensitive Keys:</strong> Consider key case when comparing</li>
                         </ul>
                       </div>
-                      
+
                       <div>
-                        <p className="font-medium text-themed mb-1">Usage:</p>
+                        <p className="font-medium text-main mb-1">Usage:</p>
                         <p>Paste your comparison JSON in the right editor. Differences will appear in the tree view below with detailed explanations.</p>
                       </div>
                     </div>
@@ -234,14 +234,14 @@ export const JsonStructureComparisonUI: React.FC<
             <div className="flex items-center space-x-2">
               <button
                 onClick={onCopyReport}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-themed-tertiary hover:bg-slate-300 dark:hover:bg-gray-600 rounded transition-colors"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-element hover:bg-element-hover rounded transition-colors"
               >
                 <Copy size={14} />
                 <span className="text-sm">Copy Report</span>
               </button>
               <button
                 onClick={onDownloadReport}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-themed-tertiary hover:bg-slate-300 dark:hover:bg-gray-600 rounded transition-colors"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-element hover:bg-element-hover rounded transition-colors"
               >
                 <Download size={14} />
                 <span className="text-sm">Download JSON</span>
@@ -251,10 +251,10 @@ export const JsonStructureComparisonUI: React.FC<
         </div>
 
         {showOptions && (
-          <div className="mt-4 p-3 bg-themed-secondary/50 rounded border border-themed/60">
+          <div className="mt-4 p-3 bg-element rounded border border-base">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-themed-secondary mb-1">
+                <label className="block text-sm font-medium text-secondary mb-1">
                   Array Sample Count
                 </label>
                 <input
@@ -268,7 +268,7 @@ export const JsonStructureComparisonUI: React.FC<
                       arraySampleCount: parseInt(e.target.value) || 3,
                     })
                   }
-                  className="w-full px-2 py-1 bg-themed-tertiary border border-themed-light rounded text-sm text-themed"
+                  className="w-full px-2 py-1 bg-element border border-base rounded text-sm text-main"
                 />
               </div>
 
@@ -283,9 +283,9 @@ export const JsonStructureComparisonUI: React.FC<
                         strictArrayLength: e.target.checked,
                       })
                     }
-                    className="rounded border-themed-light bg-themed-tertiary text-blue-500 focus:ring-blue-500"
+                    className="rounded border-base bg-element text-primary focus:ring-2 focus:border-focus"
                   />
-                  <span className="text-sm text-themed-secondary">
+                  <span className="text-sm text-secondary">
                     Strict Array Length
                   </span>
                 </label>
@@ -302,9 +302,9 @@ export const JsonStructureComparisonUI: React.FC<
                         caseSensitiveKeys: e.target.checked,
                       })
                     }
-                    className="rounded border-themed-light bg-themed-tertiary text-blue-500 focus:ring-blue-500"
+                    className="rounded border-base bg-element text-primary focus:ring-2 focus:border-focus"
                   />
-                  <span className="text-sm text-themed-secondary">
+                  <span className="text-sm text-secondary">
                     Case Sensitive Keys
                   </span>
                 </label>
@@ -312,9 +312,9 @@ export const JsonStructureComparisonUI: React.FC<
             </div>
             {/* Array Comparison Strategy */}
             <div className="mt-6">
-              <label className="block text-sm font-medium text-themed-secondary mb-2 flex items-center">
+              <label className="block text-sm font-medium text-secondary mb-2 flex items-center">
                 Array Comparison Strategy
-                <span className="ml-2 text-themed-tertiary cursor-pointer group relative">
+                <span className="ml-2 text-secondary cursor-pointer group relative">
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
                     <circle
                       cx="12"
@@ -334,7 +334,7 @@ export const JsonStructureComparisonUI: React.FC<
                       i
                     </text>
                   </svg>
-                  <span className="absolute left-1/2 top-full z-10 w-80 -translate-x-1/2 mt-2 px-3 py-2 bg-themed text-xs text-themed rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="absolute left-1/2 top-full z-10 w-80 -translate-x-1/2 mt-2 px-3 py-2 bg-surface text-xs text-main rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <b>Strict:</b> Only compares the structure of the first
                     array element.
                     <br />
@@ -364,9 +364,9 @@ export const JsonStructureComparisonUI: React.FC<
                         arrayComparisonStrategy: "strict",
                       })
                     }
-                    className="accent-blue-500"
+                    className="text-primary focus:ring-2 focus:ring-primary"
                   />
-                  <span className="text-sm text-themed">
+                  <span className="text-sm text-main">
                     Strict (First Item)
                   </span>
                 </label>
@@ -382,9 +382,9 @@ export const JsonStructureComparisonUI: React.FC<
                         arrayComparisonStrategy: "union",
                       })
                     }
-                    className="accent-blue-500"
+                    className="text-primary focus:ring-2 focus:ring-primary"
                   />
-                  <span className="text-sm text-themed">
+                  <span className="text-sm text-main">
                     Union (Squash Items)
                   </span>
                 </label>
@@ -402,9 +402,9 @@ export const JsonStructureComparisonUI: React.FC<
                         arrayComparisonStrategy: "discriminator",
                       })
                     }
-                    className="accent-blue-500"
+                    className="text-primary focus:ring-2 focus:ring-primary"
                   />
-                  <span className="text-sm text-themed">
+                  <span className="text-sm text-main">
                     Discriminator (Group by Field)
                   </span>
                 </label>
@@ -419,7 +419,7 @@ export const JsonStructureComparisonUI: React.FC<
                         discriminatorField: e.target.value,
                       })
                     }
-                    className="ml-2 px-2 py-1 bg-themed-tertiary border border-themed-light rounded text-sm text-themed w-48"
+                    className="ml-2 px-2 py-1 bg-element border border-base rounded text-sm text-main w-48"
                   />
                 )}
               </div>
@@ -430,9 +430,9 @@ export const JsonStructureComparisonUI: React.FC<
                   type="checkbox"
                   checked={syncScroll}
                   onChange={(e) => onSyncScrollChange(e.target.checked)}
-                  className="rounded border-themed-light bg-themed-tertiary text-blue-500 focus:ring-blue-500"
+                  className="rounded border-base bg-element text-primary focus:ring-2 focus:border-focus"
                 />
-                <span className="text-sm text-themed-secondary">Sync Scroll</span>
+                <span className="text-sm text-secondary">Sync Scroll</span>
               </label>
             </div>
           </div>
@@ -442,9 +442,9 @@ export const JsonStructureComparisonUI: React.FC<
       {/* Editors Section */}
       <div className="flex-1 flex min-h-0">
         {/* Left Panel - Source JSON */}
-        <div className="flex-1 flex flex-col border-r border-themed/60">
-          <div className="flex-none p-2 bg-themed-secondary/50 border-b border-themed/60">
-            <h3 className="text-sm font-medium text-themed-secondary">
+        <div className="flex-1 flex flex-col border-r border-base">
+          <div className="flex-none p-2 bg-surface-highlight border-b border-base">
+            <h3 className="text-sm font-medium text-secondary">
               Source JSON (Read-only)
             </h3>
           </div>
@@ -470,8 +470,8 @@ export const JsonStructureComparisonUI: React.FC<
 
         {/* Right Panel - Target JSON */}
         <div className="flex-1 flex flex-col">
-          <div className="flex-none p-2 bg-themed-secondary/50 border-b border-themed/60">
-            <h3 className="text-sm font-medium text-themed-secondary">Target JSON</h3>
+          <div className="flex-none p-2 bg-surface-highlight border-b border-base">
+            <h3 className="text-sm font-medium text-secondary">Target JSON</h3>
           </div>
           <div className="h-[400px]">
             <Editor
@@ -496,26 +496,26 @@ export const JsonStructureComparisonUI: React.FC<
       </div>
 
       {/* Comparison Results Section */}
-      <div className="flex-none border-t border-themed/60">
+      <div className="flex-none border-t border-base">
         <div className="p-4">
           {/* Status Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               {isComparing ? (
                 <>
-                  <Loader2 size={20} className="text-blue-400 animate-spin" />
-                  <span className="text-lg font-medium text-themed-secondary">
+                  <Loader2 size={20} className="text-info animate-spin" />
+                  <span className="text-lg font-medium text-secondary">
                     Comparing...
                   </span>
                 </>
               ) : comparisonResult ? (
                 <>
                   {comparisonResult.matches ? (
-                    <CheckCircle2 size={20} className="text-green-400" />
+                    <CheckCircle2 size={20} className="text-success" />
                   ) : (
-                    <XCircle size={20} className="text-red-400" />
+                    <XCircle size={20} className="text-danger" />
                   )}
-                  <span className="text-lg font-medium text-themed-secondary">
+                  <span className="text-lg font-medium text-secondary">
                     {comparisonResult.matches
                       ? "Structures Match"
                       : "Structures Differ"}
@@ -523,8 +523,8 @@ export const JsonStructureComparisonUI: React.FC<
                 </>
               ) : (
                 <>
-                  <Info size={20} className="text-themed-tertiary" />
-                  <span className="text-lg font-medium text-themed-secondary">
+                  <Info size={20} className="text-secondary" />
+                  <span className="text-lg font-medium text-secondary">
                     Ready to Compare
                   </span>
                 </>
@@ -532,7 +532,7 @@ export const JsonStructureComparisonUI: React.FC<
             </div>
 
             {comparisonResult && (
-              <div className="text-sm text-themed-tertiary">
+              <div className="text-sm text-secondary">
                 {comparisonResult.summary.totalDifferences} difference
                 {comparisonResult.summary.totalDifferences !== 1 ? "s" : ""}
               </div>
@@ -541,7 +541,7 @@ export const JsonStructureComparisonUI: React.FC<
 
           {/* Error Display */}
           {error && (
-            <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded text-red-300 text-sm">
+            <div className="mb-4 p-3 bg-danger-subtle border border-danger rounded text-danger text-sm">
               {error}
             </div>
           )}
@@ -550,9 +550,9 @@ export const JsonStructureComparisonUI: React.FC<
           {comparisonResult && !comparisonResult.matches && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Tree View */}
-              <div className="bg-themed-secondary/30 rounded border border-themed/60">
-                <div className="p-3 border-b border-themed/60">
-                  <h4 className="text-sm font-medium text-themed-secondary">
+              <div className="bg-element rounded border border-base">
+                <div className="p-3 border-b border-base">
+                  <h4 className="text-sm font-medium text-secondary">
                     Structure Tree
                   </h4>
                 </div>
@@ -562,9 +562,9 @@ export const JsonStructureComparisonUI: React.FC<
               </div>
 
               {/* Detailed List */}
-              <div className="bg-themed-secondary/30 rounded border border-themed/60">
-                <div className="p-3 border-b border-themed/60">
-                  <h4 className="text-sm font-medium text-themed-secondary">
+              <div className="bg-element rounded border border-base">
+                <div className="p-3 border-b border-base">
+                  <h4 className="text-sm font-medium text-secondary">
                     Detailed Differences
                   </h4>
                 </div>
@@ -572,17 +572,17 @@ export const JsonStructureComparisonUI: React.FC<
                   {comparisonResult.diffList.map((diff, index) => (
                     <div
                       key={index}
-                      className="p-2 mb-2 bg-themed-tertiary/30 rounded border-l-2 border-red-500 cursor-pointer hover:bg-themed-tertiary/50 transition-colors"
+                      className="p-2 mb-2 bg-element rounded border-l-2 border-danger cursor-pointer hover:bg-element-hover transition-colors"
                       onClick={() => onNavigateToPath(diff.path)}
                     >
-                      <div className="text-sm font-mono text-themed-secondary mb-1">
+                      <div className="text-sm font-mono text-secondary mb-1">
                         {diff.path}
                       </div>
-                      <div className="text-xs text-themed-tertiary">
+                      <div className="text-xs text-secondary">
                         {diff.message}
                       </div>
                       {diff.leftValueType && diff.rightValueType && (
-                        <div className="text-xs text-themed-muted mt-1">
+                        <div className="text-xs text-muted mt-1">
                           Types: {diff.leftValueType} → {diff.rightValueType}
                         </div>
                       )}
@@ -596,39 +596,39 @@ export const JsonStructureComparisonUI: React.FC<
           {/* Summary Stats */}
           {comparisonResult && (
             <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-2 text-xs">
-              <div className="p-2 bg-themed-secondary/50 rounded text-center">
-                <div className="text-themed-tertiary">Total</div>
-                <div className="text-themed font-medium">
+              <div className="p-2 bg-element rounded text-center">
+                <div className="text-secondary">Total</div>
+                <div className="text-main font-medium">
                   {comparisonResult.summary.totalDifferences}
                 </div>
               </div>
-              <div className="p-2 bg-themed-secondary/50 rounded text-center">
-                <div className="text-themed-tertiary">Missing Left</div>
-                <div className="text-themed font-medium">
+              <div className="p-2 bg-element rounded text-center">
+                <div className="text-secondary">Missing Left</div>
+                <div className="text-main font-medium">
                   {comparisonResult.summary.missingKeysLeft}
                 </div>
               </div>
-              <div className="p-2 bg-themed-secondary/50 rounded text-center">
-                <div className="text-themed-tertiary">Missing Right</div>
-                <div className="text-themed font-medium">
+              <div className="p-2 bg-element rounded text-center">
+                <div className="text-secondary">Missing Right</div>
+                <div className="text-main font-medium">
                   {comparisonResult.summary.missingKeysRight}
                 </div>
               </div>
-              <div className="p-2 bg-themed-secondary/50 rounded text-center">
-                <div className="text-themed-tertiary">Type Mismatch</div>
-                <div className="text-themed font-medium">
+              <div className="p-2 bg-element rounded text-center">
+                <div className="text-secondary">Type Mismatch</div>
+                <div className="text-main font-medium">
                   {comparisonResult.summary.typeMismatches}
                 </div>
               </div>
-              <div className="p-2 bg-themed-secondary/50 rounded text-center">
-                <div className="text-themed-tertiary">Array Length</div>
-                <div className="text-themed font-medium">
+              <div className="p-2 bg-element rounded text-center">
+                <div className="text-secondary">Array Length</div>
+                <div className="text-main font-medium">
                   {comparisonResult.summary.arrayLengthMismatches}
                 </div>
               </div>
-              <div className="p-2 bg-themed-secondary/50 rounded text-center">
-                <div className="text-themed-tertiary">Polymorphic</div>
-                <div className="text-themed font-medium">
+              <div className="p-2 bg-element rounded text-center">
+                <div className="text-secondary">Polymorphic</div>
+                <div className="text-main font-medium">
                   {comparisonResult.summary.polymorphicArrays}
                 </div>
               </div>

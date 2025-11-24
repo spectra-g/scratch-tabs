@@ -246,7 +246,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   }, [navigateToPath]);
 
   return (
-    <div className="flex flex-col h-full bg-themed text-themed" data-testid="json-smart-view-container">
+    <div className="flex flex-col h-full bg-surface text-main" data-testid="json-smart-view-container">
       {/* Toolbar */}
       <Toolbar
         isValid={isValid}
@@ -272,9 +272,9 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         <Panel minSize={30}>
           <div className="flex h-full">
             {/* Navigator Panel */}
-            <div className="hidden lg:flex w-80 border-r border-themed flex-col bg-themed-secondary">
-              <div className="p-3 border-b border-themed">
-                <h3 className="text-sm font-medium text-themed-secondary">Navigator</h3>
+            <div className="hidden lg:flex w-80 border-r border-base flex-col bg-surface-highlight">
+              <div className="p-3 border-b border-base">
+                <h3 className="text-sm font-medium text-secondary">Navigator</h3>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <Navigator
@@ -285,9 +285,9 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
             </div>
 
             {/* Editor Panel */}
-            <div className="flex-1 flex flex-col min-w-0 bg-themed">
-              <div className="p-3 border-b border-themed">
-                <h3 className="text-sm font-medium text-themed-secondary">Editor</h3>
+            <div className="flex-1 flex flex-col min-w-0 bg-surface">
+              <div className="p-3 border-b border-base">
+                <h3 className="text-sm font-medium text-secondary">Editor</h3>
               </div>
               <div className="flex-1">
                 <Editor
@@ -314,15 +314,15 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
             </div>
 
             {/* Right Panel - Toolbox & Insights */}
-            <div className="hidden lg:flex w-52 border-l border-themed flex-col bg-themed-secondary">
+            <div className="hidden lg:flex w-52 border-l border-base flex-col bg-surface-highlight">
               {/* Tab Headers */}
-              <div className="flex border-b border-themed">
+              <div className="flex border-b border-base">
                 <button
                   onClick={() => setActiveRightTab('toolbox')}
                   className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                     activeRightTab === 'toolbox'
-                      ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
-                      : 'text-themed-tertiary hover:text-themed bg-themed-hover'
+                      ? 'text-info bg-info-subtle border-b-2 border-info'
+                      : 'text-muted hover:text-main hover:bg-element-hover'
                   }`}
                 >
                   Toolbox
@@ -331,8 +331,8 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                   onClick={() => setActiveRightTab('insights')}
                   className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                     activeRightTab === 'insights'
-                      ? 'text-blue-400 bg-blue-500/10 border-b-2 border-blue-400'
-                      : 'text-themed-tertiary hover:text-themed bg-themed-hover'
+                      ? 'text-info bg-info-subtle border-b-2 border-info'
+                      : 'text-muted hover:text-main hover:bg-element-hover'
                   }`}
                 >
                   Insights
@@ -360,7 +360,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         {/* Query Panel (Conditionally Rendered) */}
         {isQueryPanelOpen && (
           <>
-            <PanelResizeHandle className="h-1 bg-themed-tertiary hover:bg-blue-500 transition-colors cursor-row-resize" />
+            <PanelResizeHandle className="h-1 bg-element hover:bg-info transition-colors cursor-row-resize" />
             <Panel defaultSize={50} minSize={45} maxSize={70}>
               <QueryPanel content={content} addTab={addTab} tabId={tabId} />
             </Panel>

@@ -37,7 +37,7 @@ const ValuePreview: React.FC<{ value: any }> = ({ value }) => {
     <pre
       className={`p-2 rounded text-xs custom-scrollbar ${
         isShort ? "inline-block" : "max-h-24 overflow-auto"
-      } bg-themed/70 border border-themed/50`}
+      } bg-element border border-base`}
     >
       <code>{content}</code>
     </pre>
@@ -53,37 +53,37 @@ const DifferenceItem: React.FC<{
   diff: DifferenceDetail;
   onShowDiff: (diff: DifferenceDetail) => void;
 }> = ({ diff, onShowDiff }) => (
-  <div className="mb-4 pb-4 border-b border-themed/60 last:border-b-0 last:mb-0 last:pb-0">
+  <div className="mb-4 pb-4 border-b border-base last:border-b-0 last:mb-0 last:pb-0">
     {/* Header: Path and Type */}
     <div className="flex items-center justify-between mb-2">
-      <code className="text-sm text-themed-secondary bg-themed-tertiary/50 px-2 py-1 rounded">
+      <code className="text-sm text-secondary bg-element px-2 py-1 rounded">
         {diff.path}
       </code>
-      <span className="text-xs font-semibold text-red-400 px-2 py-1 bg-red-900/30 rounded-full">
+      <span className="text-xs font-semibold text-danger px-2 py-1 bg-danger-subtle rounded-full">
         {diff.type.replace(/_/g, " ")}
       </span>
     </div>
 
     {/* Message */}
-    <p className="text-sm text-themed-secondary mb-3">{diff.message}</p>
+    <p className="text-sm text-secondary mb-3">{diff.message}</p>
 
     {/* Value Comparison */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
       <div>
-        <span className="font-semibold text-themed-tertiary block mb-1">
+        <span className="font-semibold text-secondary block mb-1">
           Source Value:
         </span>
         <ValuePreview value={diff.leftValue} />
       </div>
       <div>
         <div className="flex items-center justify-between mb-1">
-          <span className="font-semibold text-themed-tertiary">Target Value:</span>
+          <span className="font-semibold text-secondary">Target Value:</span>
           {diff.type === "ARRAY_CONTENT_MISMATCH" &&
             Array.isArray(diff.leftValue) &&
             Array.isArray(diff.rightValue) && (
               <button
                 onClick={() => onShowDiff(diff)}
-                className="flex items-center space-x-1 px-2 py-1 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded transition-colors"
+                className="flex items-center space-x-1 px-2 py-1 text-xs text-info hover:text-main hover:bg-element-active rounded transition-colors"
                 title="Show side-by-side diff with smart sorting"
               >
                 <GitCompare size={14} />
@@ -188,10 +188,10 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
           <div className="flex-1 grid grid-cols-2 gap-4 p-4 min-h-[45vh]">
           {/* Source Editor (Read-only) */}
           <div className="flex flex-col min-h-0">
-            <h3 className="text-sm font-medium text-themed-secondary mb-2">
+            <h3 className="text-sm font-medium text-secondary mb-2">
               Source JSON (Current)
             </h3>
-            <div className="flex-1 border border-themed/50 rounded-lg overflow-hidden min-h-0">
+            <div className="flex-1 border border-base rounded-lg overflow-hidden min-h-0">
               <Editor
                 height="100%"
                 language="json"
@@ -212,7 +212,7 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
           {/* Target Editor (Editable) */}
           <div className="flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-themed-secondary">
+              <h3 className="text-sm font-medium text-secondary">
                 Target JSON (To Compare)
               </h3>
               <LoadFromTabDropdown
@@ -220,7 +220,7 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
                 onLoadFromTab={handleLoadFromTab}
               />
             </div>
-            <div className="flex-1 border border-themed/50 rounded-lg overflow-hidden min-h-0">
+            <div className="flex-1 border border-base rounded-lg overflow-hidden min-h-0">
               <Editor
                 height="100%"
                 language="json"
@@ -242,34 +242,34 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
 
         {/* Bottom Section: Results or Diff View */}
         <div
-          className={`flex flex-col bg-themed-secondary/30 ${
+          className={`flex flex-col bg-surface-highlight ${
             activeDiff
-              ? "flex-1 min-h-0 border-t border-themed/60"
-              : "flex-none p-4 border-t border-themed/60 min-h-[250px] max-h-[45vh]"
+              ? "flex-1 min-h-0 border-t border-base"
+              : "flex-none p-4 border-t border-base min-h-[250px] max-h-[45vh]"
           }`}
         >
           {activeDiff ? (
             // Diff View Mode
             <>
               {/* Diff Header */}
-              <div className="flex-none flex items-center justify-between p-3 border-b border-themed/60">
+              <div className="flex-none flex items-center justify-between p-3 border-b border-base">
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={handleCloseDiff}
-                    className="flex items-center space-x-2 px-3 py-1.5 bg-themed-tertiary hover:bg-slate-300 dark:hover:bg-gray-600 rounded text-sm transition-colors"
+                    className="flex items-center space-x-2 px-3 py-1.5 bg-element hover:bg-element-hover rounded text-sm transition-colors"
                     title="Return to comparison summary"
                   >
                     <ArrowLeft size={16} />
                     <span>Back to Summary</span>
                   </button>
-                  <div className="border-l border-themed/60 pl-3">
-                    <h3 className="text-sm font-medium text-themed-secondary">
+                  <div className="border-l border-base pl-3">
+                    <h3 className="text-sm font-medium text-secondary">
                       Array Difference at:{" "}
-                      <code className="bg-themed-tertiary/50 px-2 py-1 rounded text-xs">
+                      <code className="bg-element px-2 py-1 rounded text-xs">
                         {activeDiff.path}
                       </code>
                     </h3>
-                    <p className="text-xs text-themed-tertiary mt-0.5">
+                    <p className="text-xs text-secondary mt-0.5">
                       Smart-sorted for easier comparison (objects keys sorted,
                       array elements sorted by content)
                     </p>
@@ -278,7 +278,7 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
               </div>
 
               {/* Diff Viewer Content */}
-              <div className="flex-1 min-h-0 border-x border-b border-themed/50">
+              <div className="flex-1 min-h-0 border-x border-b border-base">
                 {(() => {
                   const prepared = prepareArrayPairForDiff(
                     activeDiff.leftValue,
@@ -287,7 +287,7 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
 
                   if ("error" in prepared) {
                     return (
-                      <div className="flex items-center justify-center h-full text-red-400">
+                      <div className="flex items-center justify-center h-full text-danger">
                         <div className="text-center">
                           <XCircle size={24} className="mx-auto mb-2" />
                           <p className="text-sm">{prepared.error}</p>
@@ -311,22 +311,22 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
           ) : (
             // Summary View Mode
             <>
-              <h3 className="text-sm font-medium text-themed-secondary mb-3 flex-none">
+              <h3 className="text-sm font-medium text-secondary mb-3 flex-none">
                 Comparison Result
               </h3>
 
               {/* Scrollable Results Area */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar bg-themed-secondary/50 p-4 rounded-lg">
+              <div className="flex-1 overflow-y-auto custom-scrollbar bg-element p-4 rounded-lg">
             {/* Error State */}
             {error && (
-              <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-red-300">
+              <div className="p-4 bg-danger-subtle border border-danger rounded-lg text-danger">
                 <div className="flex items-start">
                   <XCircle size={18} className="mr-3 mt-0.5 flex-shrink-0" />
                   <div>
                     <div className="font-medium text-sm mb-1">
                       Comparison Error
                     </div>
-                    <div className="text-xs text-red-400">{error}</div>
+                    <div className="text-xs text-danger">{error}</div>
                   </div>
                 </div>
               </div>
@@ -334,7 +334,7 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
 
             {/* Empty State */}
             {!error && !result && (
-              <div className="flex items-center justify-center h-full text-themed-tertiary">
+              <div className="flex items-center justify-center h-full text-secondary">
                 <Info size={18} className="mr-3" />
                 <span className="text-sm">
                   Paste or type JSON in the right panel to compare with the source.
@@ -346,11 +346,11 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
             {!error && result?.isEqual && (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <CheckCircle2 size={24} className="mx-auto mb-3 text-green-400" />
-                  <span className="font-medium text-lg text-green-300 block">
+                  <CheckCircle2 size={24} className="mx-auto mb-3 text-success" />
+                  <span className="font-medium text-lg text-success block">
                     The JSON objects are deeply equal
                   </span>
-                  <span className="text-xs text-green-400/70 mt-2 block">
+                  <span className="text-xs text-success mt-2 block">
                     Both objects have the same structure, keys, and values
                     (order-insensitive).
                   </span>
@@ -362,15 +362,15 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
             {!error && result && !result.isEqual && (
               <div>
                 {/* Summary Header */}
-                <div className="mb-4 p-3 bg-red-900/10 border border-red-500/30 rounded-lg">
+                <div className="mb-4 p-3 bg-danger-subtle border border-danger rounded-lg">
                   <div className="flex items-center">
-                    <XCircle size={18} className="mr-3 text-red-400" />
+                    <XCircle size={18} className="mr-3 text-danger" />
                     <div>
-                      <div className="text-sm font-medium text-red-300">
+                      <div className="text-sm font-medium text-danger">
                         Found {result.differences.length} difference
                         {result.differences.length !== 1 ? "s" : ""}
                       </div>
-                      <div className="text-xs text-red-400/70 mt-0.5">
+                      <div className="text-xs text-danger mt-0.5">
                         Arrays are compared order-insensitively as multisets
                       </div>
                     </div>
@@ -392,8 +392,8 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
               </div>
 
               {/* Info Footer */}
-              <div className="flex-none pt-3 mt-3 border-t border-themed/50">
-                <div className="text-xs text-themed-muted">
+              <div className="flex-none pt-3 mt-3 border-t border-base">
+                <div className="text-xs text-muted">
                   <span className="font-medium">Note:</span> Comparison is
                   order-insensitive for both object keys and array elements.
                   Arrays are treated as multisets (duplicates are preserved).

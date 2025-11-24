@@ -41,8 +41,8 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
           <div className="flex-1">
             {/* Schema Editor */}
             <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">Schema</h3>
-              <div className="h-64 border border-themed/50 rounded-lg overflow-hidden">
+              <h3 className="text-sm font-medium text-secondary mb-2">Schema</h3>
+              <div className="h-64 border border-base rounded-lg overflow-hidden">
                 <Editor
                   height="100%"
                   language="json"
@@ -61,10 +61,10 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
           <div className="flex-1">
             {/* JSON Preview */}
             <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">
+              <h3 className="text-sm font-medium text-secondary mb-2">
                 JSON Data
               </h3>
-              <div className="h-64 border border-themed/50 rounded-lg overflow-hidden">
+              <div className="h-64 border border-base rounded-lg overflow-hidden">
                 <Editor
                   height="100%"
                   language="json"
@@ -85,16 +85,16 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
         {/* Validation Results */}
         {validationResult && (
           <div
-            className={`p-2 rounded-lg ${validationResult.valid ? "bg-green-900/20" : "bg-red-900/20"}`}
+            className={`p-2 rounded-lg ${validationResult.valid ? "bg-success-subtle" : "bg-danger-subtle"}`}
           >
             <div className="flex items-center m-2">
               {validationResult.valid ? (
-                <CheckCircle2 className="text-green-400 mr-2" size={20} />
+                <CheckCircle2 className="text-success mr-2" size={20} />
               ) : (
-                <XCircle className="text-red-400 mr-2" size={20} />
+                <XCircle className="text-danger mr-2" size={20} />
               )}
               <h3
-                className={`font-medium ${validationResult.valid ? "text-green-400" : "text-red-400"}`}
+                className={`font-medium ${validationResult.valid ? "text-success" : "text-danger"}`}
               >
                 {validationResult.valid
                   ? "Validation Passed"
@@ -102,7 +102,7 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
               </h3>
             </div>
             {!validationResult.valid && validationResult.errors.length > 0 && (
-              <ul className="list-disc list-inside space-y-1 text-sm text-red-400 mt-2">
+              <ul className="list-disc list-inside space-y-1 text-sm text-danger mt-2">
                 {validationResult.errors.map((error, index) => (
                   <li key={index}>{error}</li>
                 ))}
@@ -115,7 +115,7 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
         <div className="flex justify-end space-x-2 p-2">
           <button
             onClick={handleValidate}
-            className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
+            className="px-4 py-2 bg-primary text-main rounded-md hover:bg-primary/80 transition-colors"
           >
             Validate
           </button>

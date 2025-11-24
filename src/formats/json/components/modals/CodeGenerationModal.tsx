@@ -95,7 +95,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
       <div className="flex flex-col h-[70vh]">
         <div className="flex flex-row justify-between">
           {/* Tabs */}
-          <div className="flex space-x-1 bg-themed-secondary p-2 rounded-t-lg">
+          <div className="flex space-x-1 bg-surface-highlight p-2 rounded-t-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -106,8 +106,8 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                   px-4 py-2 rounded-md text-sm font-medium transition-colors
                   ${
                     activeTabId === tab.id
-                      ? "bg-themed-tertiary text-themed"
-                      : "text-themed-tertiary bg-themed-hover"
+                      ? "bg-element text-main"
+                      : "text-secondary hover:bg-element-hover"
                   }
                 `}
               >
@@ -119,7 +119,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
             <div className="flex items-center justify-end space-x-2 px-4 py-2">
               <button
                 onClick={() => handleCopyContent(activeTab.id)}
-                className={`p-2 rounded-md transition-colors ${copiedTabId === activeTab.id ? "text-green-400" : "icon-themed icon-themed-hover bg-themed-hover"}`}
+                className={`p-2 rounded-md transition-colors ${copiedTabId === activeTab.id ? "text-success" : "text-secondary hover:text-main hover:bg-element-hover"}`}
                 title="Copy to clipboard"
               >
                 {copiedTabId === activeTab.id ? (
@@ -130,7 +130,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
               </button>
               <button
                 onClick={() => handleOpenInNewTab(activeTab)}
-                className={`p-2 rounded-md transition-colors ${openedTabId === activeTab.id ? "text-green-400" : "icon-themed icon-themed-hover bg-themed-hover"}`}
+                className={`p-2 rounded-md transition-colors ${openedTabId === activeTab.id ? "text-success" : "text-secondary hover:text-main hover:bg-element-hover"}`}
                 title="Open in new tab"
               >
                 {openedTabId === activeTab.id ? (
@@ -144,7 +144,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 bg-themed rounded-b-lg overflow-hidden">
+        <div className="flex-1 bg-surface rounded-b-lg overflow-hidden">
           {activeTab && (
             <div className="h-full flex flex-col">
               {/* Editor */}
