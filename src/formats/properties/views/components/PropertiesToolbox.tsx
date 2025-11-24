@@ -46,7 +46,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
   const [showCleaningMenu, setShowCleaningMenu] = useState(false);
   const [showConvertersMenu, setShowConvertersMenu] = useState(false);
 
-  const hasValidationIssues = 
+  const hasValidationIssues =
     validation.duplicateKeys.length > 0 ||
     validation.emptyValues.length > 0 ||
     validation.invalidKeys.length > 0;
@@ -54,7 +54,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
   const totalIssues = validation.duplicateKeys.length + validation.emptyValues.length + validation.invalidKeys.length;
 
   return (
-    <div className="flex-none border-b border-gray-700 p-3 bg-gray-800/30">
+    <div className="flex-none border-b border-base p-3 bg-surface/30">
       <div className="flex items-center justify-between">
         {/* Left side - Actions */}
         <div className="flex items-center space-x-2">
@@ -62,7 +62,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowSortingMenu(!showSortingMenu)}
-              className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 bg-element hover:bg-element-hover rounded text-sm transition-colors"
             >
               <ArrowUpDown size={14} />
               <span>Sort</span>
@@ -75,14 +75,14 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
                   className="fixed inset-0 z-30"
                   onClick={() => setShowSortingMenu(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px]">
+                <div className="absolute top-full left-0 mt-1 bg-surface border border-base rounded-lg shadow-xl z-40 min-w-[200px]">
                   <div className="py-1">
                     <button
                       onClick={() => {
                         onSortKeys();
                         setShowSortingMenu(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <ArrowUpDown size={14} />
                       <span>Sort Keys Alphabetically</span>
@@ -92,7 +92,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
                         onGroupByPrefix();
                         setShowSortingMenu(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <Layers size={14} />
                       <span>Group by Prefix</span>
@@ -107,7 +107,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowCleaningMenu(!showCleaningMenu)}
-              className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 bg-element hover:bg-element-hover rounded text-sm transition-colors"
             >
               <Eraser size={14} />
               <span>Clean</span>
@@ -120,14 +120,14 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
                   className="fixed inset-0 z-30"
                   onClick={() => setShowCleaningMenu(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px]">
+                <div className="absolute top-full left-0 mt-1 bg-surface border border-base rounded-lg shadow-xl z-40 min-w-[200px]">
                   <div className="py-1">
                     <button
                       onClick={() => {
                         onStripComments();
                         setShowCleaningMenu(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <MessageSquare size={14} />
                       <span>Strip All Comments</span>
@@ -137,18 +137,18 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
                         onNormalizeSpacing();
                         setShowCleaningMenu(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <AlignLeft size={14} />
                       <span>Normalize Spacing</span>
                     </button>
-                    <div className="border-t border-gray-700 my-1" />
+                    <div className="border-t border-base my-1" />
                     <button
                       onClick={() => {
                         onEnsureFinalNewline();
                         setShowCleaningMenu(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <FileDown size={14} />
                       <span>Ensure Final Newline</span>
@@ -158,7 +158,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
                         onRemoveFinalNewline();
                         setShowCleaningMenu(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <FileUp size={14} />
                       <span>Remove Final Newline</span>
@@ -173,7 +173,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowConvertersMenu(!showConvertersMenu)}
-              className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 bg-element hover:bg-element-hover rounded text-sm transition-colors"
             >
               <Code size={14} />
               <span>Convert</span>
@@ -186,33 +186,33 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
                   className="fixed inset-0 z-30"
                   onClick={() => setShowConvertersMenu(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[200px]">
+                <div className="absolute top-full left-0 mt-1 bg-surface border border-base rounded-lg shadow-xl z-40 min-w-[200px]">
                   <div className="py-1">
                     <button
                       onClick={() => {
                         onConvertToJson();
                         setShowConvertersMenu(false);
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <div className="flex items-center space-x-2">
-                        <Code size={14} className="text-blue-400" />
+                        <Code size={14} className="text-info" />
                         <span>Convert to JSON</span>
                       </div>
-                      <span className="text-xs text-gray-500">nested</span>
+                      <span className="text-xs text-muted">nested</span>
                     </button>
                     <button
                       onClick={() => {
                         onConvertToYaml();
                         setShowConvertersMenu(false);
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <div className="flex items-center space-x-2">
-                        <FileText size={14} className="text-purple-400" />
+                        <FileText size={14} className="text-primary" />
                         <span>Convert to YAML</span>
                       </div>
-                      <span className="text-xs text-gray-500">config.yaml</span>
+                      <span className="text-xs text-muted">config.yaml</span>
                     </button>
                   </div>
                 </div>
@@ -223,11 +223,10 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
           {/* Validation Button */}
           <button
             onClick={onToggleValidation}
-            className={`flex items-center space-x-2 px-3 py-2 rounded text-sm transition-colors ${
-              hasValidationIssues
-                ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
-                : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-            }`}
+            className={`flex items-center space-x-2 px-3 py-2 rounded text-sm transition-colors ${hasValidationIssues
+                ? "bg-warning/20 text-warning hover:bg-warning/30"
+                : "bg-success/20 text-success hover:bg-success/30"
+              }`}
           >
             {hasValidationIssues ? (
               <AlertTriangle size={14} />
@@ -243,7 +242,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
         </div>
 
         {/* Right side - Stats (similar to INI view) */}
-        <div className="flex items-center space-x-4 text-sm text-gray-400">
+        <div className="flex items-center space-x-4 text-sm text-secondary">
           <div className="flex items-center space-x-2">
             <span>{validation.duplicateKeys.length + validation.emptyValues.length + validation.invalidKeys.length > 0 ? totalIssues + ' issues' : 'No issues'}</span>
           </div>
