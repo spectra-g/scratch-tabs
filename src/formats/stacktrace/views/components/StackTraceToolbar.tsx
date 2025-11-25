@@ -43,7 +43,7 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
     setTimeout(() => setIsCopied(false), 2000);
   };
   return (
-    <div className="flex-none border-b border-base p-3 bg-surface/50">
+    <div className="flex-none border-b border-base p-3 bg-surface-secondary">
       {/* Top row: Main controls */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-4">
@@ -57,8 +57,8 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
           <button
             onClick={() => onToggleLibraryFrames(!hideLibraryFrames)}
             className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm transition-colors ${hideLibraryFrames
-                ? 'bg-primary/20 text-primary hover:bg-primary/30'
-                : 'bg-element text-main hover:bg-element-hover'
+              ? 'bg-primary/20 text-primary hover:bg-primary/30'
+              : 'bg-element text-main hover:bg-element-hover'
               }`}
             title={hideLibraryFrames ? 'Show library frames' : 'Hide library frames'}
           >
@@ -76,7 +76,7 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
               value={searchFilter}
               onChange={(e) => onSearchFilterChange(e.target.value)}
               placeholder="Filter frames..."
-              className="pl-10 pr-8 py-1.5 bg-element border border-base rounded text-sm text-main placeholder-muted focus:outline-none focus:border-focus w-64"
+              className="pl-10 pr-8 py-1.5 input-field rounded text-sm w-64"
             />
             {searchFilter && (
               <button
@@ -93,8 +93,8 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
         <button
           onClick={handleCopyClick}
           className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm transition-colors ${isCopied
-              ? "bg-success/20 text-success"
-              : "bg-element text-main hover:bg-element-hover"
+            ? "bg-success/20 text-success"
+            : "bg-element text-main hover:bg-element-hover"
             }`}
           title={isCopied ? "Copied!" : "Copy cleaned stack trace"}
         >

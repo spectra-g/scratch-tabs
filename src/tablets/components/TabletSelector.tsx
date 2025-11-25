@@ -138,15 +138,15 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   return (
     <div
       ref={selectorRef}
-      className="bg-themed border border-themed rounded-lg shadow-lg w-96 md:w-[600px] lg:w-[700px] max-h-96 md:max-h-[500px] lg:max-h-[600px] overflow-hidden"
+      className="bg-surface border-base rounded-lg shadow-lg w-96 md:w-[600px] lg:w-[700px] max-h-96 md:max-h-[500px] lg:max-h-[600px] overflow-hidden"
     >
       {/* Search Input */}
       {showSearch && (
-        <div className="p-3 border-b border-themed">
+        <div className="p-3 border-b border-base">
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 icon-themed"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary"
             />
             <input
               ref={searchInputRef}
@@ -154,7 +154,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
               placeholder="Search tablets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 bg-themed-secondary border border-themed-light rounded-md text-themed placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              className="w-full pl-10 pr-3 py-2 input-field rounded-md"
             />
           </div>
         </div>
@@ -166,24 +166,24 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
         className="max-h-80 md:max-h-[420px] lg:max-h-[520px] overflow-y-auto custom-scrollbar"
       >
         {isLoading ? (
-          <div className="p-4 text-center text-themed-muted">
+          <div className="p-4 text-center text-muted">
             Loading tablets...
           </div>
         ) : tablets.length === 0 ? (
-          <div className="p-4 text-center text-themed-muted">No tablets found</div>
+          <div className="p-4 text-center text-muted">No tablets found</div>
         ) : (
           tablets.map((tablet, index) => (
             <div
               key={tablet.id}
               className={`px-4 py-4 cursor-pointer transition-colors ${index === selectedIndex
                 ? "bg-blue-500/20 text-blue-600 dark:text-blue-200"
-                : "text-themed-secondary bg-themed-hover"
+                : "text-secondary hover:bg-element-hover"
                 }`}
               onClick={() => handleTabletSelect(tablet)}
             >
               <div className="flex flex-col">
                 <div className="font-medium text-base">{tablet.label}</div>
-                <div className="text-sm text-themed-muted mt-2">
+                <div className="text-sm text-muted mt-2">
                   {tablet.keywords.join(" • ")}
                 </div>
               </div>

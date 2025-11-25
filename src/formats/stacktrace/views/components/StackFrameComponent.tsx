@@ -51,7 +51,7 @@ export const StackFrameComponent: React.FC<StackFrameComponentProps> = ({
 
   return (
     <div
-      className={`group flex items-center px-3 py-2 border-b border-base/50 hover:bg-surface/50 transition-colors ${frame.isLibraryFrame ? 'opacity-60' : ''
+      className={`group flex items-center px-3 py-2 border-b border-base hover:bg-surface/50 transition-colors ${frame.isLibraryFrame ? 'opacity-60' : ''
         }`}
       data-testid="stack-frame"
     >

@@ -111,14 +111,14 @@ export const StackTraceViewer: React.FC<SmartViewProps> = ({
 
   if (!content.trim()) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas text-secondary">
+      <div className="flex items-center justify-center h-full bg-surface text-secondary">
         <p>No stack trace content to display</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-canvas text-main" data-testid="stack-trace-viewer">
+    <div className="flex flex-col h-full bg-surface text-main" data-testid="stack-trace-viewer">
       {/* Toolbar */}
       <StackTraceToolbar
         hideLibraryFrames={hideLibraryFrames}

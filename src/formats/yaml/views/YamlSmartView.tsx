@@ -310,7 +310,7 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
   const showFailsafeUI = state.error !== null;
 
   return (
-    <div className="flex flex-col h-full bg-canvas text-main" data-testid="yaml-smart-view">
+    <div className="flex flex-col h-full bg-surface text-main" data-testid="yaml-smart-view">
       {/* Error notification bar */}
       {showFailsafeUI && (
         <div className="flex items-center justify-between px-4 py-2 bg-danger-subtle border-b border-danger text-danger">

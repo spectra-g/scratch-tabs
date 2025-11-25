@@ -54,7 +54,7 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
   const totalIssues = validation.duplicateKeys.length + validation.emptyValues.length + validation.invalidKeys.length;
 
   return (
-    <div className="flex-none border-b border-base p-3 bg-surface/30">
+    <div className="flex-none border-b border-base p-3 bg-surface-secondary">
       <div className="flex items-center justify-between">
         {/* Left side - Actions */}
         <div className="flex items-center space-x-2">
@@ -224,8 +224,8 @@ export const PropertiesToolbox: React.FC<PropertiesToolboxProps> = ({
           <button
             onClick={onToggleValidation}
             className={`flex items-center space-x-2 px-3 py-2 rounded text-sm transition-colors ${hasValidationIssues
-                ? "bg-warning/20 text-warning hover:bg-warning/30"
-                : "bg-success/20 text-success hover:bg-success/30"
+              ? "bg-warning/20 text-warning hover:bg-warning/30"
+              : "bg-success/20 text-success hover:bg-success/30"
               }`}
           >
             {hasValidationIssues ? (

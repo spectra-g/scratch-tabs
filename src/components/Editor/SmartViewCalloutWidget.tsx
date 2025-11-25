@@ -54,7 +54,7 @@ export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
         <button
           data-testid="smart-view-callout-switch"
           onClick={onSwitch}
-          className="px-3 py-1 bg-primary hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
+          className="px-3 py-1 bg-primary text-xs font-medium rounded transition-colors"
         >
           Switch
         </button>

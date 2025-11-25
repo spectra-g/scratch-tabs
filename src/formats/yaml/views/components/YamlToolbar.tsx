@@ -44,7 +44,7 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
   hasError = false,
 }) => {
   return (
-    <div className="flex-none border-b border-base p-3 bg-surface-highlight">
+    <div className="flex-none border-b border-base p-3 bg-surface-secondary">
       <div className="flex items-center justify-between">
         {/* Left side: Search and view toggles */}
         <div className="flex items-center space-x-4">
@@ -58,8 +58,8 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
               placeholder={hasError ? "Search unavailable" : "Search structure..."}
               disabled={hasError}
               className={`pl-10 pr-8 py-1.5 border rounded text-sm focus:outline-none w-64 ${hasError
-                  ? "bg-element border-base text-muted placeholder-muted cursor-not-allowed"
-                  : "bg-element border-base text-main placeholder-secondary focus:border-focus"
+                ? "bg-element border-base text-muted placeholder-muted cursor-not-allowed"
+                : "bg-element border-base text-main placeholder-secondary focus:border-focus"
                 }`}
             />
             {searchQuery && !hasError && (
@@ -78,10 +78,10 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
               onClick={hasError ? undefined : onToggleComments}
               disabled={hasError}
               className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${hasError
-                  ? 'bg-element text-muted cursor-not-allowed'
-                  : showComments
-                    ? 'bg-primary/20 text-info'
-                    : 'bg-element text-secondary hover:bg-element-hover'
+                ? 'bg-element text-muted cursor-not-allowed'
+                : showComments
+                  ? 'bg-primary/20 text-info'
+                  : 'bg-element text-secondary hover:bg-element-hover'
                 }`}
               title={hasError ? 'Unavailable due to parse error' : showComments ? 'Hide comments' : 'Show comments'}
             >
@@ -93,10 +93,10 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
               onClick={hasError ? undefined : onTogglePaths}
               disabled={hasError}
               className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${hasError
-                  ? 'bg-element text-muted cursor-not-allowed'
-                  : showPaths
-                    ? 'bg-primary/20 text-info'
-                    : 'bg-element text-secondary hover:bg-element-hover'
+                ? 'bg-element text-muted cursor-not-allowed'
+                : showPaths
+                  ? 'bg-primary/20 text-info'
+                  : 'bg-element text-secondary hover:bg-element-hover'
                 }`}
               title={hasError ? 'Unavailable due to parse error' : showPaths ? 'Hide paths' : 'Show paths'}
             >
@@ -111,8 +111,8 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
               onClick={onUndo}
               disabled={!canUndo}
               className={`p-1.5 rounded transition-colors ${canUndo
-                  ? "hover:bg-element-hover text-main"
-                  : "text-muted cursor-not-allowed"
+                ? "hover:bg-element-hover text-main"
+                : "text-muted cursor-not-allowed"
                 }`}
               title="Undo"
             >
@@ -122,8 +122,8 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
               onClick={onRedo}
               disabled={!canRedo}
               className={`p-1.5 rounded transition-colors ${canRedo
-                  ? "hover:bg-element-hover text-main"
-                  : "text-muted cursor-not-allowed"
+                ? "hover:bg-element-hover text-main"
+                : "text-muted cursor-not-allowed"
                 }`}
               title="Redo"
             >

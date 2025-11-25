@@ -94,7 +94,7 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
   const hiddenColumns = columns.filter(col => !col.isVisible);
 
   return (
-    <div className="flex-none border-b border-base p-3 bg-surface/50">
+    <div className="flex-none border-b border-base p-3 bg-surface-secondary">
       {/* Top Row: Search and Log Levels */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-4">
@@ -126,8 +126,8 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
                 key={level.key}
                 onClick={() => handleLogLevelToggle(level.key)}
                 className={`px-2 py-1 rounded text-xs font-medium transition-colors ${filter.logLevels.has(level.key)
-                    ? level.color
-                    : "text-secondary bg-element/50 hover:bg-element"
+                  ? level.color
+                  : "text-secondary bg-element/50 hover:bg-element"
                   }`}
               >
                 {level.label}

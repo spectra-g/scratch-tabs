@@ -30,7 +30,7 @@ export const CurlDocumentHeader: React.FC<CurlDocumentHeaderProps> = ({
   };
 
   return (
-    <div className="border-b border-base bg-surface/50 p-4">
+    <div className="border-b border-base bg-surface-secondary p-4">
       <div className="flex items-center justify-between">
         {/* Document info */}
         <div className="flex items-center space-x-6">
@@ -69,8 +69,8 @@ export const CurlDocumentHeader: React.FC<CurlDocumentHeaderProps> = ({
           <button
             onClick={onToggleOptionsPalette}
             className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${showOptionsPalette
-                ? 'bg-primary text-white'
-                : 'bg-element text-main hover:bg-element-hover'
+              ? 'bg-primary text-white'
+              : 'bg-element text-main hover:bg-element-hover'
               }`}
             title="Toggle options palette"
           >

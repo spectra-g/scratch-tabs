@@ -64,7 +64,7 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas">
+      <div className="flex items-center justify-center h-full bg-surface">
         <div className="text-secondary">Loading properties...</div>
       </div>
     );
@@ -72,7 +72,7 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas">
+      <div className="flex items-center justify-center h-full bg-surface">
         <div className="text-danger">Error: {error}</div>
       </div>
     );
@@ -85,13 +85,13 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
 
   return (
     <div
-      className="flex h-full bg-canvas text-main"
+      className="flex h-full bg-surface text-main"
       data-testid="properties-smart-view"
       key={`properties-view-${tabId}-${side}`}
     >
       {/* Left Panel: Tree Navigation */}
       <div className="w-80 border-r border-base flex flex-col">
-        <div className="flex-none p-3 border-b border-base">
+        <div className="flex-none p-3 border-b border-base bg-surface-secondary">
           <h3 className="text-sm font-medium text-main mb-2">Property Hierarchy</h3>
           <div className="text-xs text-secondary">
             {filteredPairs.length} properties
@@ -118,8 +118,8 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
             <button
               onClick={() => setShowValidation(!showValidation)}
               className={`w-full text-xs px-2 py-1 rounded transition-colors ${showValidation
-                  ? "bg-warning/20 text-warning"
-                  : "bg-element text-main hover:bg-element-hover"
+                ? "bg-warning/20 text-warning"
+                : "bg-element text-main hover:bg-element-hover"
                 }`}
             >
               {validation.duplicateKeys.length + validation.emptyValues.length + validation.invalidKeys.length} Issues

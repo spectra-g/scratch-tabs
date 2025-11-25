@@ -135,7 +135,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas">
+      <div className="flex items-center justify-center h-full bg-surface">
         <div className="text-secondary">Loading INI data...</div>
       </div>
     );
@@ -143,7 +143,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas">
+      <div className="flex items-center justify-center h-full bg-surface">
         <div className="text-danger">Error: {error}</div>
       </div>
     );
@@ -155,13 +155,13 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
 
   return (
     <div
-      className="flex h-full bg-canvas text-main"
+      className="flex h-full bg-surface text-main"
       data-testid="ini-smart-view"
       key={`ini-view-${tabId}-${side}`}
     >
       {/* Left Panel: Tree Navigation */}
       <div className="w-80 border-r border-base flex flex-col">
-        <div className="flex-none p-3 border-b border-base">
+        <div className="flex-none p-3 border-b border-base bg-surface-secondary">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-main">INI Structure</h3>
             {(!selectedNodeId || selectedNodeId === 'root') && (

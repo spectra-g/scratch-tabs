@@ -542,8 +542,8 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                   <button
                     onClick={() => toggleColumnMask(column.id)}
                     className={`p-1 rounded hover:bg-element-hover transition-all ${isColumnMasked(column.id)
-                        ? "text-info"
-                        : "text-secondary"
+                      ? "text-info"
+                      : "text-secondary"
                       }`}
                     title={
                       isColumnMasked(column.id)
@@ -1007,7 +1007,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas">
+      <div className="flex items-center justify-center h-full bg-surface">
         <div className="text-secondary">Loading CSV data...</div>
       </div>
     );
@@ -1015,7 +1015,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas">
+      <div className="flex items-center justify-center h-full bg-surface">
         <div className="text-danger">Error: {error}</div>
       </div>
     );
@@ -1023,7 +1023,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
   return (
     <div
-      className="flex flex-col h-full bg-canvas text-main"
+      className="flex flex-col h-full bg-surface text-main"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       data-testid="csv-table-viewer"
@@ -1083,7 +1083,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       >
         {/* Fixed Header */}
         <div
-          className="bg-surface-highlight sticky top-0 z-10 border-b border-base"
+          className="bg-surface-secondary sticky top-0 z-10 border-b border-base"
           style={{
             display: "grid",
             gridTemplateColumns,
@@ -1094,7 +1094,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
           {table.getHeaderGroups()[0]?.headers.map((header) => (
             <div
               key={header.id}
-              className="border-r border-base p-2 text-left font-medium text-main bg-surface-highlight"
+              className="border-r border-base p-2 text-left font-medium text-main bg-surface-secondary"
               data-testid="column-header"
             >
               {flexRender(header.column.columnDef.header, header.getContext())}
@@ -1224,8 +1224,8 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                 onClick={handleShiftRight}
                 disabled={!canShiftRight()}
                 className={`flex items-center w-full px-3 py-2 text-sm text-left transition-colors ${canShiftRight()
-                    ? 'text-main hover:bg-element-hover'
-                    : 'text-muted cursor-not-allowed'
+                  ? 'text-main hover:bg-element-hover'
+                  : 'text-muted cursor-not-allowed'
                   }`}
                 title={
                   canShiftRight()

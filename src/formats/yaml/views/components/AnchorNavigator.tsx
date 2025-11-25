@@ -40,7 +40,7 @@ export const AnchorNavigator: React.FC<AnchorNavigatorProps> = ({
   }
 
   return (
-    <div className="flex-none border-t border-base bg-surface-highlight" data-testid="anchor-navigator">
+    <div className="flex-none border-t border-base bg-surface-secondary" data-testid="anchor-navigator">
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-base">
         <button

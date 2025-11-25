@@ -348,7 +348,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas">
+      <div className="flex items-center justify-center h-full bg-surface">
         <div className="text-secondary">Loading log data...</div>
       </div>
     );
@@ -356,7 +356,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas">
+      <div className="flex items-center justify-center h-full bg-surface">
         <div className="text-danger">Error: {error}</div>
       </div>
     );
@@ -364,7 +364,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
 
   return (
     <div
-      className="flex flex-col h-full bg-canvas text-main"
+      className="flex flex-col h-full bg-surface text-main"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       data-testid="json-log-viewer"
@@ -391,7 +391,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
       >
         {/* Fixed Header */}
         <div
-          className="bg-surface sticky top-0 z-10 border-b border-base"
+          className="bg-surface-secondary sticky top-0 z-10 border-b border-base"
           style={{
             display: "grid",
             gridTemplateColumns,
@@ -402,7 +402,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
           {table.getHeaderGroups()[0]?.headers.map((header) => (
             <div
               key={header.id}
-              className="border-r border-base p-2 text-left font-medium text-main bg-surface cursor-pointer hover:bg-element-hover"
+              className="border-r border-base p-2 text-left font-medium text-main bg-surface-secondary cursor-pointer hover:bg-element-hover"
               data-testid="log-column-header"
               onClick={() => header.column.toggleSorting()}
             >

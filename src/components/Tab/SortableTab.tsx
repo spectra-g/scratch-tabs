@@ -156,7 +156,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     // (tablets might not have traditional content but should still be confirmed)
     // BUT bypass confirmation if CTRL/Cmd+clicking
     const hasTextContent = tab.content && tab.content.trim() !== "";
-    const hasRichContent = RichTextService.hasContent(tab.richContent);
+    const hasRichContent = RichTextService.hasContent(tab.richContent || null);
     const hasAnyContent = hasTextContent || hasRichContent;
 
     if (!shouldBypassConfirmation && (hasAnyContent || tab.isTablet)) {
@@ -286,8 +286,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         ref={setRefs}
         className={`tab-item group relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
                     ${isActive
-            ? "bg-element-active text-main border-b-2 border-info shadow-sm"
-            : "bg-transparent text-secondary hover:text-main hover:bg-element-hover border-b-2 border-transparent"
+            ? "bg-element-active text-main shadow-sm"
+            : "bg-transparent text-secondary hover:text-main hover:bg-element-hover border-t-2 border-transparent"
           }
                     ${isDragging && !tab.isPinned ? "bg-primary/90 text-white shadow-md scale-105" : ""}
                     border-r border-base backdrop-blur-sm`}

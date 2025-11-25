@@ -127,7 +127,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   }, [onExportMarkdown]);
 
   return (
-    <div className="flex-none border-b border-base p-3 flex items-center justify-between">
+    <div className="flex-none border-b border-base p-3 flex items-center justify-between bg-surface-secondary">
       <div className="flex items-center space-x-2">
         {/* Undo/Redo */}
         <button

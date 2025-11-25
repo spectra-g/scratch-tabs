@@ -14,7 +14,7 @@ export const ErrorInfoDisplay: React.FC<ErrorInfoDisplayProps> = ({
   }
 
   return (
-    <div className="mb-4 p-4 bg-danger/10 border border-danger/30 rounded-lg">
+    <div className="mb-4 p-4 bg-red-600/10 border border-red-600/30 rounded-lg">
       <div className="flex items-start space-x-3">
         <AlertTriangle size={20} className="text-danger flex-shrink-0 mt-0.5" />
 

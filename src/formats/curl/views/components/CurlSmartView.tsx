@@ -167,7 +167,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
 
   if (!content.trim()) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas text-secondary">
+      <div className="flex items-center justify-center h-full bg-surface text-secondary">
         <div className="text-center">
           <Terminal size={48} className="mx-auto mb-4 text-muted" />
           <p className="text-lg mb-2">No Curl commands found</p>
@@ -186,7 +186,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
 
   if (curlBlocks.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-canvas text-secondary">
+      <div className="flex items-center justify-center h-full bg-surface text-secondary">
         <div className="text-center">
           <FileText size={48} className="mx-auto mb-4 text-muted" />
           <p className="text-lg mb-2">No valid Curl commands detected</p>
@@ -197,7 +197,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
   }
 
   return (
-    <div className="flex h-full bg-canvas text-main" data-testid="curl-smart-view">
+    <div className="flex h-full bg-surface text-main" data-testid="curl-smart-view">
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Document header */}
@@ -242,7 +242,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
             animate={{ width: 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-l border-base bg-surface/50 overflow-hidden"
+            className="border-l border-base bg-surface-secondary overflow-hidden"
           >
             <CurlOptionsPalette
               onAddOption={(option) => {
