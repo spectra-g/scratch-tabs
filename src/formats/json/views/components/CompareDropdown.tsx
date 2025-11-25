@@ -47,7 +47,7 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
       {/* Compare Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1 px-3 py-1 bg-info text-main rounded hover:bg-info/80 transition-colors"
+        className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-secondary rounded transition-colors"
         title="Compare options"
       >
         <GitCompare size={14} />

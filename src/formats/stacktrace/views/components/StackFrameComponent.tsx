@@ -14,7 +14,7 @@ export const StackFrameComponent: React.FC<StackFrameComponentProps> = ({
   // Handle copying file path and line for IDE navigation
   const handleCopyFileLocation = useCallback(async () => {
     if (!frame.filePath) return;
-    
+
     try {
       let locationText = frame.filePath;
       if (frame.lineNumber) {
@@ -41,23 +41,22 @@ export const StackFrameComponent: React.FC<StackFrameComponentProps> = ({
   // Get language-specific styling
   const getLanguageColor = (language: string) => {
     switch (language) {
-      case 'java': return 'text-orange-400';
-      case 'javascript': return 'text-yellow-400';
-      case 'python': return 'text-green-400';
-      case 'go': return 'text-blue-400';
-      default: return 'text-gray-400';
+      case 'java': return 'text-warning';
+      case 'javascript': return 'text-warning';
+      case 'python': return 'text-success';
+      case 'go': return 'text-info';
+      default: return 'text-secondary';
     }
   };
 
   return (
     <div
-      className={`group flex items-center px-3 py-2 border-b border-gray-700/50 hover:bg-gray-800/50 transition-colors ${
-        frame.isLibraryFrame ? 'opacity-60' : ''
-      }`}
+      className={`group flex items-center px-3 py-2 border-b border-base/50 hover:bg-surface/50 transition-colors ${frame.isLibraryFrame ? 'opacity-60' : ''
+        }`}
       data-testid="stack-frame"
     >
       {/* Frame index */}
-      <div className="w-8 text-xs text-gray-500 font-mono">
+      <div className="w-8 text-xs text-muted font-mono">
         {index + 1}
       </div>
 
@@ -69,7 +68,7 @@ export const StackFrameComponent: React.FC<StackFrameComponentProps> = ({
         <div className="flex items-center space-x-2">
           {/* Method/Function name */}
           {frame.methodName && (
-            <span className="font-mono text-sm text-gray-200 truncate">
+            <span className="font-mono text-sm text-main truncate">
               {frame.methodName}
             </span>
           )}
@@ -78,16 +77,16 @@ export const StackFrameComponent: React.FC<StackFrameComponentProps> = ({
           {frame.filePath && (
             <button
               onClick={handleCopyFileLocation}
-              className="flex items-center space-x-1 text-blue-400 hover:text-blue-300 transition-colors group/file"
+              className="flex items-center space-x-1 text-primary hover:text-primary/80 transition-colors group/file"
               title={`Copy ${frame.filePath}${frame.lineNumber ? `:${frame.lineNumber}` : ''} to clipboard`}
             >
               <span className="font-mono text-xs truncate">
                 {frame.filePath}
                 {frame.lineNumber && (
                   <>
-                    :<span className="text-green-400">{frame.lineNumber}</span>
+                    :<span className="text-success">{frame.lineNumber}</span>
                     {frame.columnNumber && (
-                      <>:<span className="text-green-300">{frame.columnNumber}</span></>
+                      <>:<span className="text-success/80">{frame.columnNumber}</span></>
                     )}
                   </>
                 )}
@@ -98,7 +97,7 @@ export const StackFrameComponent: React.FC<StackFrameComponentProps> = ({
 
           {/* Class name (for Java) */}
           {frame.className && frame.className !== frame.methodName && (
-            <span className="text-xs text-gray-400 truncate">
+            <span className="text-xs text-secondary truncate">
               in {frame.className}
             </span>
           )}
@@ -106,7 +105,7 @@ export const StackFrameComponent: React.FC<StackFrameComponentProps> = ({
 
         {/* Library frame indicator */}
         {frame.isLibraryFrame && (
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-muted mt-1">
             Library/System Frame
           </div>
         )}
@@ -116,7 +115,7 @@ export const StackFrameComponent: React.FC<StackFrameComponentProps> = ({
       <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={handleCopyFrame}
-          className="p-1 text-gray-400 hover:text-gray-200 rounded transition-colors"
+          className="p-1 text-secondary hover:text-main rounded transition-colors"
           title="Copy frame to clipboard"
         >
           <Copy size={14} />

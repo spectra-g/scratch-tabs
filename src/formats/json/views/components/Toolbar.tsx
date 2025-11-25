@@ -185,12 +185,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
   const handleCopy = useCallback(async () => {
     if (!editor) return;
-    
+
     try {
       const content = editor.getValue();
       await navigator.clipboard.writeText(content);
       setIsCopied(true);
-      
+
       // Reset the icon after feedback duration
       setTimeout(() => {
         setIsCopied(false);
@@ -250,11 +250,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         <button
           onClick={onUndo}
           disabled={!canUndo}
-          className={`p-2 rounded transition-colors ${
-            canUndo
-              ? "hover:bg-element-hover text-secondary"
-              : "text-muted cursor-not-allowed"
-          }`}
+          className={`p-2 rounded transition-colors ${canUndo
+            ? "hover:bg-element-hover text-secondary"
+            : "text-muted cursor-not-allowed"
+            }`}
           title="Undo"
         >
           <RotateCcw size={16} />
@@ -262,11 +261,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         <button
           onClick={onRedo}
           disabled={!canRedo}
-          className={`p-2 rounded transition-colors ${
-            canRedo
-              ? "hover:bg-element-hover text-secondary"
-              : "text-muted cursor-not-allowed"
-          }`}
+          className={`p-2 rounded transition-colors ${canRedo
+            ? "hover:bg-element-hover text-secondary"
+            : "text-muted cursor-not-allowed"
+            }`}
           title="Redo"
         >
           <RotateCw size={16} />
@@ -277,22 +275,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         {/* Primary Actions */}
         <button
           onClick={handleCopy}
-          className={`p-2 rounded transition-colors border ${
-            isCopied
-              ? "bg-success-subtle text-success border-success"
-              : "bg-element hover:bg-element-hover text-secondary border-transparent"
-          }`}
+          className={`p-2 rounded transition-colors border ${isCopied
+            ? "bg-success-subtle text-success border-success"
+            : "bg-element hover:bg-element-hover text-secondary border-transparent"
+            }`}
           title={isCopied ? "Copied!" : "Copy JSON"}
         >
           {isCopied ? <Check size={16} /> : <Copy size={16} />}
         </button>
         <button
           onClick={() => togglePanel(tabId)}
-          className={`flex items-center space-x-1 px-3 py-1 rounded transition-colors ${
-            isQueryPanelOpen
-              ? "bg-element-active text-info"
-              : "bg-info text-main hover:bg-info/80"
-          }`}
+          className={`flex items-center space-x-1 px-3 py-1 rounded transition-colors ${isQueryPanelOpen
+            ? "bg-primary/20 text-info"
+            : "bg-element hover:bg-element-hover text-secondary"
+            }`}
           title="Toggle JMESPath Query Panel"
         >
           <Database size={14} />
@@ -300,7 +296,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </button>
         <button
           onClick={handleFormat}
-          className="flex items-center space-x-1 px-3 py-1 bg-info text-main rounded hover:bg-info/80 transition-colors"
+          className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-secondary rounded transition-colors"
           title="Format JSON"
         >
           <WrapText size={14} />
@@ -308,7 +304,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </button>
         <button
           onClick={handleFixJson}
-          className="flex items-center space-x-1 px-3 py-1 bg-info text-main rounded hover:bg-info/80 transition-colors"
+          className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-secondary rounded transition-colors"
           title="Fix JSON - Auto-fix common errors including control characters, missing quotes, commas, and brackets"
         >
           <Sparkles size={14} />

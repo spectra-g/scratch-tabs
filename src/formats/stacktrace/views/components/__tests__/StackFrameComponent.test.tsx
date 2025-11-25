@@ -67,14 +67,14 @@ describe('StackFrameComponent', () => {
 
   it('should show language-specific color indicators', () => {
     const { rerender } = render(<StackFrameComponent frame={mockJavaFrame} index={0} />);
-    
-    // Java should have orange indicator
-    expect(document.querySelector('.text-orange-400')).toBeInTheDocument();
+
+    // Java should have warning indicator (was orange)
+    expect(document.querySelector('.text-warning')).toBeInTheDocument();
 
     rerender(<StackFrameComponent frame={mockJavaScriptFrame} index={0} />);
-    
-    // JavaScript should have yellow indicator
-    expect(document.querySelector('.text-yellow-400')).toBeInTheDocument();
+
+    // JavaScript should have warning indicator (was yellow)
+    expect(document.querySelector('.text-warning')).toBeInTheDocument();
   });
 
   it('should copy file location to clipboard when clicked', async () => {

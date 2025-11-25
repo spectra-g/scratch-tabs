@@ -40,12 +40,12 @@ export const AnchorNavigator: React.FC<AnchorNavigatorProps> = ({
   }
 
   return (
-    <div className="flex-none border-t border-gray-700 bg-gray-800/30" data-testid="anchor-navigator">
+    <div className="flex-none border-t border-base bg-surface-highlight" data-testid="anchor-navigator">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-700/50">
+      <div className="flex items-center justify-between p-3 border-b border-base">
         <button
           onClick={handleToggleExpanded}
-          className="flex items-center space-x-2 text-sm font-medium text-gray-300 hover:text-gray-100 transition-colors"
+          className="flex items-center space-x-2 text-sm font-medium text-main hover:text-main transition-colors"
         >
           <Anchor size={16} />
           <span>Anchors & Aliases ({anchorArray.length})</span>
@@ -60,13 +60,13 @@ export const AnchorNavigator: React.FC<AnchorNavigatorProps> = ({
             {anchorArray.map(([anchorName, anchorInfo]) => (
               <div
                 key={anchorName}
-                className="bg-gray-700/30 rounded-lg p-3 hover:bg-gray-700/50 transition-colors"
+                className="bg-element rounded-lg p-3 hover:bg-element-hover transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
                   {/* Anchor definition */}
                   <button
                     onClick={() => handleAnchorClick(anchorName)}
-                    className="flex items-center space-x-2 text-green-400 hover:text-green-300 transition-colors"
+                    className="flex items-center space-x-2 text-success hover:text-success/80 transition-colors"
                     title={`Go to anchor definition at line ${anchorInfo.definitionLine}`}
                   >
                     <Anchor size={14} />
@@ -76,7 +76,7 @@ export const AnchorNavigator: React.FC<AnchorNavigatorProps> = ({
                   {/* Copy button */}
                   <button
                     onClick={() => handleCopyAnchorName(anchorName)}
-                    className="p-1 text-gray-400 hover:text-gray-200 rounded transition-colors"
+                    className="p-1 text-secondary hover:text-main rounded transition-colors"
                     title="Copy anchor name"
                   >
                     <Copy size={12} />
@@ -85,17 +85,17 @@ export const AnchorNavigator: React.FC<AnchorNavigatorProps> = ({
 
                 {/* Usage count and aliases */}
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400">
+                  <span className="text-secondary">
                     Line {anchorInfo.definitionLine} • {anchorInfo.usages.length} usage{anchorInfo.usages.length !== 1 ? 's' : ''}
                   </span>
-                  
+
                   {anchorInfo.usages.length > 0 && (
                     <div className="flex items-center space-x-1">
                       {anchorInfo.usages.slice(0, 3).map((usage, index) => (
                         <button
                           key={index}
                           onClick={() => handleAliasClick(anchorName)}
-                          className="flex items-center space-x-1 text-blue-400 hover:text-blue-300 transition-colors"
+                          className="flex items-center space-x-1 text-info hover:text-info/80 transition-colors"
                           title={`Go to alias usage at line ${usage.line}`}
                         >
                           <Link size={10} />
@@ -103,14 +103,14 @@ export const AnchorNavigator: React.FC<AnchorNavigatorProps> = ({
                         </button>
                       ))}
                       {anchorInfo.usages.length > 3 && (
-                        <span className="text-gray-500">+{anchorInfo.usages.length - 3}</span>
+                        <span className="text-muted">+{anchorInfo.usages.length - 3}</span>
                       )}
                     </div>
                   )}
                 </div>
 
                 {/* Value preview */}
-                <div className="mt-2 text-xs text-gray-400 font-mono bg-gray-800/50 rounded p-2 max-h-20 overflow-y-auto">
+                <div className="mt-2 text-xs text-secondary font-mono bg-element rounded p-2 max-h-20 overflow-y-auto">
                   {JSON.stringify(anchorInfo.value, null, 2)}
                 </div>
               </div>

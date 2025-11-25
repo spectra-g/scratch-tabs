@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-  Search, 
-  X, 
-  Hash, 
+import {
+  Search,
+  X,
+  Hash,
   MessageSquare,
   FileText,
   CheckCircle,
@@ -44,29 +44,28 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
   hasError = false,
 }) => {
   return (
-    <div className="flex-none border-b border-gray-700 p-3 bg-gray-800/50">
+    <div className="flex-none border-b border-base p-3 bg-surface-highlight">
       <div className="flex items-center justify-between">
         {/* Left side: Search and view toggles */}
         <div className="flex items-center space-x-4">
           {/* Search input */}
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={hasError ? "Search unavailable" : "Search structure..."}
               disabled={hasError}
-              className={`pl-10 pr-8 py-1.5 border rounded text-sm focus:outline-none w-64 ${
-                hasError 
-                  ? "bg-gray-800 border-gray-600 text-gray-500 placeholder-gray-600 cursor-not-allowed"
-                  : "bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400 focus:border-blue-500"
-              }`}
+              className={`pl-10 pr-8 py-1.5 border rounded text-sm focus:outline-none w-64 ${hasError
+                  ? "bg-element border-base text-muted placeholder-muted cursor-not-allowed"
+                  : "bg-element border-base text-main placeholder-secondary focus:border-focus"
+                }`}
             />
             {searchQuery && !hasError && (
               <button
                 onClick={() => onSearchChange('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-main"
               >
                 <X size={14} />
               </button>
@@ -78,13 +77,12 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
             <button
               onClick={hasError ? undefined : onToggleComments}
               disabled={hasError}
-              className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                hasError 
-                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+              className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${hasError
+                  ? 'bg-element text-muted cursor-not-allowed'
                   : showComments
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-              }`}
+                    ? 'bg-primary/20 text-info'
+                    : 'bg-element text-secondary hover:bg-element-hover'
+                }`}
               title={hasError ? 'Unavailable due to parse error' : showComments ? 'Hide comments' : 'Show comments'}
             >
               <MessageSquare size={12} />
@@ -94,13 +92,12 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
             <button
               onClick={hasError ? undefined : onTogglePaths}
               disabled={hasError}
-              className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                hasError 
-                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+              className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${hasError
+                  ? 'bg-element text-muted cursor-not-allowed'
                   : showPaths
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-              }`}
+                    ? 'bg-primary/20 text-info'
+                    : 'bg-element text-secondary hover:bg-element-hover'
+                }`}
               title={hasError ? 'Unavailable due to parse error' : showPaths ? 'Hide paths' : 'Show paths'}
             >
               <Hash size={12} />
@@ -113,11 +110,10 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
             <button
               onClick={onUndo}
               disabled={!canUndo}
-              className={`p-1.5 rounded transition-colors ${
-                canUndo 
-                  ? "hover:bg-gray-700 text-gray-300" 
-                  : "text-gray-500 cursor-not-allowed"
-              }`}
+              className={`p-1.5 rounded transition-colors ${canUndo
+                  ? "hover:bg-element-hover text-main"
+                  : "text-muted cursor-not-allowed"
+                }`}
               title="Undo"
             >
               <RotateCcw size={14} />
@@ -125,11 +121,10 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
             <button
               onClick={onRedo}
               disabled={!canRedo}
-              className={`p-1.5 rounded transition-colors ${
-                canRedo 
-                  ? "hover:bg-gray-700 text-gray-300" 
-                  : "text-gray-500 cursor-not-allowed"
-              }`}
+              className={`p-1.5 rounded transition-colors ${canRedo
+                  ? "hover:bg-element-hover text-main"
+                  : "text-muted cursor-not-allowed"
+                }`}
               title="Redo"
             >
               <RotateCw size={14} />
@@ -138,7 +133,7 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
         </div>
 
         {/* Right side: Document info and status */}
-        <div className="flex items-center space-x-4 text-sm text-gray-400">
+        <div className="flex items-center space-x-4 text-sm text-secondary">
           {/* Document count */}
           {documentCount > 1 && (
             <div className="flex items-center space-x-1">
@@ -157,7 +152,7 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
 
           {/* Validation status */}
           <div className="flex items-center space-x-1">
-            <CheckCircle size={14} className="text-green-400" />
+            <CheckCircle size={14} className="text-success" />
             <span>Valid YAML</span>
           </div>
         </div>

@@ -14,16 +14,16 @@ export const ErrorInfoDisplay: React.FC<ErrorInfoDisplayProps> = ({
   }
 
   return (
-    <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+    <div className="mb-4 p-4 bg-danger/10 border border-danger/30 rounded-lg">
       <div className="flex items-start space-x-3">
-        <AlertTriangle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
-        
+        <AlertTriangle size={20} className="text-danger flex-shrink-0 mt-0.5" />
+
         <div className="flex-1 min-w-0">
           {/* Error type */}
           {errorInfo.errorType && (
             <div className="flex items-center space-x-2 mb-2">
-              <Bug size={16} className="text-red-400" />
-              <span className="font-mono text-red-300 font-medium">
+              <Bug size={16} className="text-danger" />
+              <span className="font-mono text-danger font-medium">
                 {errorInfo.errorType}
               </span>
             </div>
@@ -31,14 +31,14 @@ export const ErrorInfoDisplay: React.FC<ErrorInfoDisplayProps> = ({
 
           {/* Error message */}
           {errorInfo.errorMessage && (
-            <div className="text-gray-200 text-sm leading-relaxed">
+            <div className="text-main text-sm leading-relaxed">
               {errorInfo.errorMessage}
             </div>
           )}
 
           {/* Raw error line if no structured parsing */}
           {!errorInfo.errorType && !errorInfo.errorMessage && errorInfo.raw && (
-            <div className="text-gray-200 text-sm font-mono leading-relaxed">
+            <div className="text-main text-sm font-mono leading-relaxed">
               {errorInfo.raw}
             </div>
           )}
