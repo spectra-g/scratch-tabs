@@ -1,5 +1,3 @@
----
-
 ## Refactoring Instructions
 
 **Goal**: Standardize application styling using Semantic Design Tokens defined in `tailwind.config.js`.
