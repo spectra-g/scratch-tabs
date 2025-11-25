@@ -21,7 +21,7 @@ export default {
         // 1. SURFACES
         // Fix: Made secondary slightly darker (slate-100) to contrast with white surface
         '.bg-canvas': {
-          '@apply bg-slate-50 dark:bg-gray-950': {}, // Light mode canvas is now off-white, not pure white
+          '@apply bg-slate-50 dark:bg-gray-900': {}, // Light mode canvas is now off-white, not pure white
         },
         '.bg-surface': {
           '@apply bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 shadow-sm dark:shadow-none': {}, // Added shadow for depth
@@ -36,6 +36,12 @@ export default {
         '.bg-surface-raised': {
           '@apply bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800 shadow-sm z-10': {},
         },
+        '.bg-surface-glass': {
+          '@apply bg-slate-200/50 dark:bg-gray-800/30': {},
+        },
+        '.bg-surface-glass-hover': {
+          '@apply hover:bg-slate-200/70 dark:hover:bg-gray-800/50': {},
+        },
 
         // 2. ELEMENTS
         '.bg-element': {
@@ -44,7 +50,6 @@ export default {
         '.bg-element-hover': {
           '@apply hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors cursor-pointer': {},
         },
-        // Fix: Active tabs now look like "Physical Tabs" (White + Top Border) in light mode
         '.bg-element-active': {
           '@apply bg-white dark:bg-gray-700 text-slate-900 dark:text-blue-400 border-t-2 border-t-blue-500 dark:border-t-transparent shadow-sm': {},
         },
@@ -107,7 +112,6 @@ export default {
         },
 
         // 6. INPUTS (Standardized)
-        // Dedicated class for input fields with proper borders
         '.input-field': {
           '@apply bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 border border-slate-300 dark:border-gray-700 placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400': {},
         },

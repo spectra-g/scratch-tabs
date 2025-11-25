@@ -143,12 +143,12 @@ export const WelcomeScreen: React.FC = () => {
 
           const service = new ImportExportService();
           const importResult = await service.importWorkspaces(file);
-          
+
           if (importResult.errors.length > 0) {
             const errorMessage = importResult.errors.join("\n");
             alert(`Import encountered errors:\n${errorMessage}`);
           }
-          
+
           if (importResult.importedWorkspaces.length > 0) {
             const importedCount = importResult.importedWorkspaces.length;
             alert(`Successfully imported ${importedCount} workspace${importedCount === 1 ? "" : "s"}! Reloading page...`);
@@ -229,13 +229,13 @@ export const WelcomeScreen: React.FC = () => {
       icon: FolderOpen,
       title: "Drag a file",
       action: "Drop a file here to open",
-      onClick: () => {}, // Handled by drag and drop
+      onClick: () => { }, // Handled by drag and drop
       clickable: false,
     },
   ];
 
   return (
-    <div className="h-full w-full flex flex-col bg-surface">
+    <div className="h-full w-full flex flex-col bg-canvas">
       {/* Tab Actions Bar */}
       <div className="flex justify-end bg-surface h-8">
         <TabActions
@@ -295,10 +295,10 @@ export const WelcomeScreen: React.FC = () => {
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-surface/30 rounded-lg border border-transparent text-left w-full"
+                    className="flex items-center justify-between p-4 bg-surface-glass rounded-lg border border-transparent text-left w-full"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-element/50 rounded-md">
+                      <div className="p-2 bg-element border-none rounded-md">
                         <action.icon size={18} className="text-muted" />
                       </div>
                       <div className="flex-1">
@@ -319,10 +319,10 @@ export const WelcomeScreen: React.FC = () => {
                 <button
                   key={index}
                   onClick={action.onClick}
-                  className="group flex items-center justify-between p-4 bg-surface/30 hover:bg-surface/50 rounded-lg transition-all duration-200 border border-transparent hover:border-base/50 text-left w-full"
+                  className="group flex items-center justify-between p-4 bg-surface-glass bg-surface-glass-hover rounded-lg transition-all duration-200 border border-transparent hover:border-base text-left w-full"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-element/50 rounded-md group-hover:bg-element/70 transition-colors">
+                    <div className="p-2 bg-element border-none rounded-md group-hover:bg-element/70 transition-colors">
                       <action.icon size={18} className="text-muted" />
                     </div>
                     <div className="flex-1">
