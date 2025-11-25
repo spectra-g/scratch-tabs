@@ -133,7 +133,7 @@ describe('YamlSmartView', () => {
     // Note: Due to YAML library issues in Jest environment where anchors aren't parsed correctly,
     // this test verifies the basic structure renders without errors.
     // In a real environment with properly parsed anchors, the anchor navigator would be displayed.
-    
+
     render(
       <YamlSmartView
         content={yamlWithAnchors}
@@ -147,7 +147,7 @@ describe('YamlSmartView', () => {
     // Verify the main component renders successfully
     expect(screen.getByTestId('yaml-smart-view')).toBeInTheDocument();
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
-    
+
     // The anchor navigator would appear here if YAML parsing worked correctly in Jest
     // For now, just verify the component structure is intact
     expect(screen.getByText('Structure')).toBeInTheDocument();
@@ -185,7 +185,7 @@ describe('YamlSmartView', () => {
     fireEvent.click(pathsButton);
 
     // Button should show active state
-    expect(pathsButton.closest('button')).toHaveClass('bg-blue-500/20');
+    expect(pathsButton.closest('button')).toHaveClass('bg-primary/20');
   });
 
   it('should handle invalid YAML gracefully', () => {
@@ -207,14 +207,14 @@ invalid: yaml: content:
 
     // Check that the error notification bar is shown
     expect(screen.getByText('YAML Parse Error:')).toBeInTheDocument();
-    
+
     // Check that the tree view shows failsafe message
     expect(screen.getByText('Tree view unavailable')).toBeInTheDocument();
     expect(screen.getByText('Fix YAML syntax to see structure')).toBeInTheDocument();
-    
+
     // Check that search is disabled
     expect(screen.getByPlaceholderText('Search unavailable')).toBeDisabled();
-    
+
     // Check that the editor is still available (content should be visible)
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
   });
@@ -252,15 +252,15 @@ invalid: yaml: content:
 
     // Verify the editor is rendered
     expect(screen.getByTestId('yaml-smart-view')).toBeInTheDocument();
-    
+
     // The editor should register with the active editor store for cursor position tracking
     // and should call onContentChange when content is modified
     // (Full editor content sync testing requires a more complex Monaco editor mock)
-    
+
     // Verify that editor options are set correctly for editability
     const editor = screen.getByRole('textbox'); // Monaco editor renders as textbox
     expect(editor).toBeInTheDocument();
-    
+
     // At minimum, verify the component structure supports editing
     expect(mockOnContentChange).toHaveBeenCalledTimes(0); // Initially no changes
   });
@@ -279,10 +279,10 @@ invalid: yaml: content:
     // Check for undo and redo buttons
     const undoButton = screen.getByTitle('Undo');
     const redoButton = screen.getByTitle('Redo');
-    
+
     expect(undoButton).toBeInTheDocument();
     expect(redoButton).toBeInTheDocument();
-    
+
     // Initially should be disabled since no changes have been made
     expect(undoButton).toBeDisabled();
     expect(redoButton).toBeDisabled();

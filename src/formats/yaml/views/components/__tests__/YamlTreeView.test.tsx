@@ -152,10 +152,10 @@ describe('YamlTreeView', () => {
     // Should show path elements (they should be in gray text)
     const pathElements = screen.getAllByText('apiVersion');
     expect(pathElements.length).toBeGreaterThan(1); // Key name + path
-    
+
     // Check that at least one is in the path styling
-    const pathElement = pathElements.find(el => 
-      el.className.includes('text-xs') && el.className.includes('text-gray-500')
+    const pathElement = pathElements.find(el =>
+      el.className.includes('text-xs') && el.className.includes('text-muted')
     );
     expect(pathElement).toBeInTheDocument();
   });
@@ -189,7 +189,7 @@ describe('YamlTreeView', () => {
     );
 
     const selectedNode = screen.getByText('apiVersion').closest('[data-testid="yaml-tree-node"]');
-    expect(selectedNode).toHaveClass('bg-blue-500/20');
+    expect(selectedNode).toHaveClass('bg-primary/20');
   });
 
   it('should display appropriate type icons', () => {

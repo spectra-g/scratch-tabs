@@ -57,9 +57,9 @@ describe('DateCreatedHeader', () => {
 
       const header = screen.getByTestId('rich-text-date-created');
       expect(header).toHaveClass('text-xs');
-      expect(header).toHaveClass('text-gray-500');
+      expect(header).toHaveClass('text-muted');
       expect(header).toHaveClass('text-center');
-      expect(header).toHaveClass('border-gray-700');
+      expect(header).toHaveClass('border-base');
     });
   });
 
