@@ -90,7 +90,7 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
 
       {/* Identical Content Message */}
       {areContentsIdentical && (
-        <div className="bg-success/10 text-success text-sm px-4 py-1 text-center border-b border-base flex-shrink-0">
+        <div className="bg-success-subtle text-success text-sm px-4 py-1 text-center border-b border-base flex-shrink-0">
           Contents are identical.
         </div>
       )}
