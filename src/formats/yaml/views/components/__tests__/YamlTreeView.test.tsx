@@ -83,8 +83,6 @@ describe('YamlTreeView', () => {
       <YamlTreeView
         nodes={sampleNodes}
         selectedPath={null}
-        showPaths={false}
-        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -101,8 +99,6 @@ describe('YamlTreeView', () => {
       <YamlTreeView
         nodes={sampleNodes}
         selectedPath={null}
-        showPaths={false}
-        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -119,8 +115,6 @@ describe('YamlTreeView', () => {
       <YamlTreeView
         nodes={sampleNodes}
         selectedPath={null}
-        showPaths={false}
-        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -137,36 +131,11 @@ describe('YamlTreeView', () => {
     expect(screen.getByText('name')).toBeInTheDocument();
   });
 
-  it('should show paths when enabled', () => {
-    render(
-      <YamlTreeView
-        nodes={sampleNodes}
-        selectedPath={null}
-        showPaths={true}
-        showComments={false}
-        searchQuery=""
-        onNodeSelect={mockOnNodeSelect}
-      />
-    );
-
-    // Should show path elements (they should be in gray text)
-    const pathElements = screen.getAllByText('apiVersion');
-    expect(pathElements.length).toBeGreaterThan(1); // Key name + path
-
-    // Check that at least one is in the path styling
-    const pathElement = pathElements.find(el =>
-      el.className.includes('text-xs') && el.className.includes('text-muted')
-    );
-    expect(pathElement).toBeInTheDocument();
-  });
-
   it('should filter nodes based on search query', () => {
     render(
       <YamlTreeView
         nodes={sampleNodes}
         selectedPath={null}
-        showPaths={false}
-        showComments={false}
         searchQuery="api"
         onNodeSelect={mockOnNodeSelect}
       />
@@ -181,8 +150,6 @@ describe('YamlTreeView', () => {
       <YamlTreeView
         nodes={sampleNodes}
         selectedPath="apiVersion"
-        showPaths={false}
-        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -197,8 +164,6 @@ describe('YamlTreeView', () => {
       <YamlTreeView
         nodes={sampleNodes}
         selectedPath={null}
-        showPaths={false}
-        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -214,8 +179,6 @@ describe('YamlTreeView', () => {
       <YamlTreeView
         nodes={[]}
         selectedPath={null}
-        showPaths={false}
-        showComments={false}
         searchQuery=""
         onNodeSelect={mockOnNodeSelect}
       />
@@ -229,8 +192,6 @@ describe('YamlTreeView', () => {
       <YamlTreeView
         nodes={sampleNodes}
         selectedPath={null}
-        showPaths={false}
-        showComments={false}
         searchQuery="nonexistent"
         onNodeSelect={mockOnNodeSelect}
       />
@@ -239,57 +200,4 @@ describe('YamlTreeView', () => {
     expect(screen.getByText('No nodes match "nonexistent"')).toBeInTheDocument();
   });
 
-  it('should show comments when enabled', () => {
-    const nodesWithComments: YamlNode[] = [
-      {
-        id: 'test-1',
-        path: 'test',
-        key: 'test',
-        value: 'value',
-        type: 'string',
-        line: 1,
-        commentBefore: 'This is a comment',
-      },
-    ];
-
-    render(
-      <YamlTreeView
-        nodes={nodesWithComments}
-        selectedPath={null}
-        showPaths={false}
-        showComments={true}
-        searchQuery=""
-        onNodeSelect={mockOnNodeSelect}
-      />
-    );
-
-    expect(screen.getByText('# This is a comment')).toBeInTheDocument();
-  });
-
-  it('should hide comments when disabled', () => {
-    const nodesWithComments: YamlNode[] = [
-      {
-        id: 'test-1',
-        path: 'test',
-        key: 'test',
-        value: 'value',
-        type: 'string',
-        line: 1,
-        commentBefore: 'This is a comment',
-      },
-    ];
-
-    render(
-      <YamlTreeView
-        nodes={nodesWithComments}
-        selectedPath={null}
-        showPaths={false}
-        showComments={false}
-        searchQuery=""
-        onNodeSelect={mockOnNodeSelect}
-      />
-    );
-
-    expect(screen.queryByText('# This is a comment')).not.toBeInTheDocument();
-  });
 });
