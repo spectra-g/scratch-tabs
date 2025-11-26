@@ -110,7 +110,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
                   previewMode === "side-by-side" ? "unified" : "side-by-side",
                 )
               }
-              className="flex items-center space-x-1 px-3 py-1.5 bg-element hover:bg-element-hover rounded text-sm text-main transition-colors focus:outline-none focus:ring-2 focus:border-focus"
+              className="flex items-center space-x-1 px-3 py-1.5 bg-surface-highlight hover:bg-element-hover rounded text-sm text-main transition-colors focus:outline-none focus:ring-2 focus:border-focus"
               title={`Switch to ${previewMode === "side-by-side" ? "unified" : "side-by-side"} view`}
             >
               {previewMode === "side-by-side" ? (
@@ -126,7 +126,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
             {/* Reset Button */}
             <button
               onClick={handleReset}
-              className="flex items-center space-x-1 px-3 py-1.5 bg-element hover:bg-element-hover rounded text-sm text-main transition-colors focus:outline-none focus:ring-2 focus:border-focus"
+              className="flex items-center space-x-1 px-3 py-1.5 bg-surface-highlight hover:bg-element-hover rounded text-sm text-main transition-colors focus:outline-none focus:ring-2 focus:border-focus"
               title="Reset all transformations"
             >
               <RotateCcw className="w-4 h-4" />
@@ -148,7 +148,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
         {/* Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Configuration */}
-          <div className="w-80 bg-surface border-r border-base flex flex-col">
+          <div className="w-80 bg-surface-secondary border-r border-base flex flex-col">
             <div className="p-4 border-b border-base">
               <h3 className="text-lg font-medium text-main">
                 Transformations
@@ -165,7 +165,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
           </div>
 
           {/* Right Panel - Preview */}
-          <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex flex-col min-h-0 bg-surface-highlight">
             <div className="p-4 border-b border-base flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-main">Preview</h3>
@@ -198,8 +198,8 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-base bg-surface">
-          <div className="text-sm text-secondary">
+        <div className="flex items-center justify-between p-4 border-t border-base bg-surface-secondary">
+          <div className="text-sm text-main">
             {selectedText
               ? "Transformations will be applied to selected text"
               : "Transformations will be applied to entire content"}
@@ -208,7 +208,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-secondary hover:text-main bg-element hover:bg-element-hover rounded transition-colors focus:outline-none focus:ring-2 focus:border-focus"
+              className="px-4 py-2 text-secondary hover:text-main bg-surface-highlight hover:bg-element-hover rounded transition-colors focus:outline-none focus:ring-2 focus:border-focus"
             >
               Cancel
             </button>
@@ -219,7 +219,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
               className={`
                 flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
                 ${!hasChanges || isProcessing
-                  ? "bg-element text-muted cursor-not-allowed"
+                  ? "bg-surface-highlight text-muted cursor-not-allowed"
                   : "bg-primary text-white hover:bg-primary/90"
                 }
                 focus:outline-none focus:ring-2 focus:border-focus

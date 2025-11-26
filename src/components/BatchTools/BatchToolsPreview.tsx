@@ -69,12 +69,12 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
         {/* Original */}
         <div className="flex flex-col h-full max-h-full min-h-0">
           <div className="flex items-center justify-between mb-2 pb-2 border-b border-base flex-shrink-0">
-            <h3 className="text-sm font-medium text-secondary">Original</h3>
+            <h3 className="text-sm font-medium text-main">Original</h3>
             <span className="text-xs text-muted">
               {originalContent.split("\n").length} lines • {originalContent.length} chars
             </span>
           </div>
-          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-element rounded border border-base custom-scrollbar">
+          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-surface-secondary rounded border border-base custom-scrollbar">
             <pre className="p-3 text-sm text-main whitespace-pre-wrap break-words">
               {originalContent || (
                 <span className="text-muted italic">No content</span>
@@ -86,12 +86,12 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
         {/* Transformed */}
         <div className="flex flex-col h-full max-h-full min-h-0">
           <div className="flex items-center justify-between mb-2 pb-2 border-b border-base flex-shrink-0">
-            <h3 className="text-sm font-medium text-secondary">Transformed</h3>
+            <h3 className="text-sm font-medium text-main">Transformed</h3>
             <span className="text-xs text-muted">
               {transformedContent.split("\n").length} lines • {transformedContent.length} chars
             </span>
           </div>
-          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-element rounded border border-base custom-scrollbar">
+          <div className="flex-1 min-h-0 max-h-full overflow-auto bg-surface-secondary rounded border border-base custom-scrollbar">
             {isProcessing ? (
               <div className="flex items-center justify-center h-full min-h-[200px]">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -133,7 +133,7 @@ export const BatchToolsPreview: React.FC<BatchToolsPreviewProps> = ({
         </span>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-element rounded border border-base custom-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-surface-secondary rounded border border-base custom-scrollbar">
         {diff && diff.length > 0 ? (
           <div className="text-sm min-h-full">
             {diff.map((line, index) => (

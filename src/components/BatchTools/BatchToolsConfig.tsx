@@ -345,7 +345,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
       <ConfigSection
         title={
           <div className="flex items-center space-x-2">
-            <Sparkles className="w-4 h-4 text-primary" />
+            <Sparkles className="w-4 h-4 text-info" />
             <span>Whitespace & Cleanup</span>
           </div>
         }
@@ -392,7 +392,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
       <ConfigSection
         title={
           <div className="flex items-center space-x-2">
-            <SortAsc className="w-4 h-4 text-primary" />
+            <SortAsc className="w-4 h-4 text-success" />
             <span>Sorting & Line Order</span>
           </div>
         }
@@ -440,7 +440,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
       <ConfigSection
         title={
           <div className="flex items-center space-x-2">
-            <Type className="w-4 h-4 text-primary" />
+            <Type className="w-4 h-4 text-accent" />
             <span>Case Conversion</span>
           </div>
         }
@@ -473,7 +473,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
       <ConfigSection
         title={
           <div className="flex items-center space-x-2">
-            <Tag className="w-4 h-4 text-primary" />
+            <Tag className="w-4 h-4 text-warning" />
             <span>Prefix/Suffix & Numbering</span>
           </div>
         }
@@ -522,7 +522,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
       <ConfigSection
         title={
           <div className="flex items-center space-x-2">
-            <Link className="w-4 h-4 text-primary" />
+            <Link className="w-4 h-4 text-info" />
             <span>Join / Split Lines</span>
           </div>
         }
@@ -548,7 +548,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
       <ConfigSection
         title={
           <div className="flex items-center space-x-2">
-            <Settings className="w-4 h-4 text-primary" />
+            <Settings className="w-4 h-4 text-accent" />
             <span>Indentation</span>
           </div>
         }
@@ -617,7 +617,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
       <ConfigSection
         title={
           <div className="flex items-center space-x-2">
-            <Copy className="w-4 h-4 text-primary" />
+            <Copy className="w-4 h-4 text-success" />
             <span>Duplicate / Pad</span>
           </div>
         }
@@ -705,7 +705,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
       <ConfigSection
         title={
           <div className="flex items-center space-x-2">
-            <Search className="w-4 h-4 text-primary" />
+            <Search className="w-4 h-4 text-danger" />
             <span>Filtering & Selection</span>
           </div>
         }
