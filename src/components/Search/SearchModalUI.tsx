@@ -138,7 +138,8 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
     <BaseModal
       title="Find in Tabs"
       onClose={closeSearch}
-      maxWidthClass="max-w-6xl"
+      widthClass="w-[95vw]"
+      maxWidthClass="max-w-[1800px]"
       maxHeightClass="max-h-[93vh]"
     >
       {/* Main div listens for keydown */}

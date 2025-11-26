@@ -97,7 +97,8 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({
     <BaseModal
       title="Tab Management"
       onClose={handleBaseModalClose}
-      maxWidthClass="max-w-6xl"
+      widthClass="w-[95vw]"
+      maxWidthClass="max-w-[1600px]"
       maxHeightClass="max-h-[90vh]"
     >
       <DndContext

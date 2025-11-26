@@ -194,7 +194,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
         title={
           <div className="flex items-center space-x-2">
             <Search className="w-4 h-4 text-warning" />
-            <span>Apply When (Optional)</span>
+            <span>Apply When</span>
           </div>
         }
       >
@@ -349,7 +349,6 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
             <span>Whitespace & Cleanup</span>
           </div>
         }
-        defaultExpanded
       >
         <Checkbox
           label="Trim whitespace"

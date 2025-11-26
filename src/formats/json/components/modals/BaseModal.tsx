@@ -8,6 +8,8 @@ interface BaseModalProps {
   // Optional: Allow overriding max width/height for specific modals
   maxWidthClass?: string;
   maxHeightClass?: string;
+  // Optional: Responsive width class for viewport-based sizing
+  widthClass?: string;
 }
 
 export const BaseModal: React.FC<BaseModalProps> = ({
@@ -16,6 +18,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   children,
   maxWidthClass = "max-w-4xl", // Default max width
   maxHeightClass = "max-h-[85vh]", // Default max height
+  widthClass = "w-full", // Default viewport width
 }) => {
   return (
     // --- Backdrop ---
@@ -24,7 +27,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
       {/* --- Modal Container --- */}
       {/* Slightly lighter dark bg, refined border, larger shadow, constrained width/height */}
       <div
-        className={`bg-surface rounded-lg shadow-xl w-full ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-base`}
+        className={`bg-surface rounded-lg shadow-xl ${widthClass} ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-base`}
       >
         {/* --- Modal Header --- */}
         <div className="flex-none flex items-center justify-between p-3 border-b border-base bg-surface-highlight">

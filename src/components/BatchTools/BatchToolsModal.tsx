@@ -87,7 +87,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-surface rounded-lg shadow-2xl w-[95vw] h-[90vh] max-w-7xl flex flex-col border border-base">
+      <div className="bg-surface rounded-lg shadow-2xl w-[95vw] h-[90vh] max-w-[1800px] flex flex-col border border-base">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-base bg-surface-highlight">
           <div className="flex items-center space-x-3">

@@ -35,7 +35,12 @@ export const SchemaValidationModal: React.FC<SchemaValidationModalProps> = ({
   };
 
   return (
-    <BaseModal title="JSON Schema Validation" onClose={onClose}>
+    <BaseModal
+      title="JSON Schema Validation"
+      onClose={onClose}
+      widthClass="w-[90vw]"
+      maxWidthClass="max-w-[1600px]"
+    >
       <div className="space-y-4">
         <div className="flex flex-row p-2 space-x-4">
           <div className="flex-1">

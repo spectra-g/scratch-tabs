@@ -179,7 +179,8 @@ export const JsonEqualityCheckModal: React.FC<JsonEqualityCheckModalProps> = ({
     <BaseModal
       title="Deep JSON Equality Check"
       onClose={onClose}
-      maxWidthClass="max-w-7xl"
+      widthClass="w-[95vw]"
+      maxWidthClass="max-w-[1800px]"
       maxHeightClass="max-h-[95vh]"
     >
       <div className={`flex flex-col ${activeDiff ? 'h-[85vh]' : ''}`}>
