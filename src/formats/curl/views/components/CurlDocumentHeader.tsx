@@ -83,7 +83,7 @@ export const CurlDocumentHeader: React.FC<CurlDocumentHeaderProps> = ({
             className="flex items-center space-x-2 px-3 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors"
           >
             <Plus size={16} />
-            <span>Add Command</span>
+            <span>Add Curl</span>
           </button>
         </div>
       </div>

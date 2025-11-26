@@ -30,11 +30,10 @@ export const SmartViewButtons: React.FC<SmartViewButtonsProps> = ({
           <button
             key={view.id}
             onClick={() => setActiveView(tabId, isActive ? null : view.id)}
-            className={`flex items-center p-0.75 rounded transition-colors ${
-              isActive
+            className={`flex items-center p-0.75 rounded transition-colors ${isActive
                 ? "bg-primary text-white"
-                : "hover:bg-element text-secondary"
-            }`}
+                : "hover:bg-element-hover text-secondary"
+              }`}
             title={`${isActive ? "Close" : "Open"} ${view.label}`}
             data-testid="table-view-button"
           >

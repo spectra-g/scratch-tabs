@@ -26,11 +26,11 @@ interface JsonLogToolbarProps {
 }
 
 const LOG_LEVELS = [
-  { key: "error", label: "Error", color: "text-danger bg-danger/20" },
-  { key: "warn", label: "Warn", color: "text-warning bg-warning/20" },
-  { key: "info", label: "Info", color: "text-info bg-info/20" },
-  { key: "debug", label: "Debug", color: "text-success bg-success/20" },
-  { key: "trace", label: "Trace", color: "text-primary bg-primary/20" },
+  { key: "error", label: "Error", color: "text-red-600 dark:text-red-400 bg-red-600/20" },
+  { key: "warn", label: "Warn", color: "text-yellow-600 dark:text-yellow-400 bg-yellow-600/20" },
+  { key: "info", label: "Info", color: "text-blue-600 dark:text-blue-400 bg-blue-600/20" },
+  { key: "debug", label: "Debug", color: "text-green-600 dark:text-green-400 bg-green-600/20" },
+  { key: "trace", label: "Trace", color: "text-blue-600 dark:text-blue-400 bg-blue-600/20" },
 ];
 
 export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
@@ -125,7 +125,7 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
               <button
                 key={level.key}
                 onClick={() => handleLogLevelToggle(level.key)}
-                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${filter.logLevels.has(level.key)
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors focus:outline-none border border-transparent ${filter.logLevels.has(level.key)
                   ? level.color
                   : "text-secondary bg-element/50 hover:bg-element"
                   }`}

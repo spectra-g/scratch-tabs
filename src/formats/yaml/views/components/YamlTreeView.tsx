@@ -6,8 +6,6 @@ import { YamlNode } from '../../utils/yamlParser';
 interface YamlTreeViewProps {
   nodes: YamlNode[];
   selectedPath: string | null;
-  showPaths: boolean;
-  showComments: boolean;
   searchQuery: string;
   onNodeSelect: (path: string) => void;
 }
@@ -22,8 +20,6 @@ interface TreeItem {
 export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
   nodes,
   selectedPath,
-  showPaths,
-  showComments,
   searchQuery,
   onNodeSelect,
 }) => {
@@ -64,7 +60,7 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
   const rowVirtualizer = useVirtualizer({
     count: flattenedItems.length,
     getScrollElement: () => containerRef.current,
-    estimateSize: () => 32,
+    estimateSize: () => 36, // Reduced from 48 since we're using tooltips
     overscan: 10,
   });
 
@@ -171,77 +167,52 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
                 }}
               >
                 <div
-                  className={`flex items-center px-2 py-1 cursor-pointer hover:bg-element-hover transition-colors ${isSelected ? 'bg-primary/20 border-l-2 border-info' : ''
+                  className={`flex items-center px-3 py-2 cursor-pointer hover:bg-element-hover transition-colors ${isSelected ? 'bg-primary/20 border-l-2 border-info' : ''
                     }`}
-                  style={{ paddingLeft: `${depth * 16 + 8}px` }}
+                  style={{ paddingLeft: `${depth * 20 + 12}px` }}
                   onClick={() => handleNodeClick(node.path)}
                   data-testid="yaml-tree-node"
                 >
                   {/* Expand/collapse button */}
-                  <div className="w-4 flex justify-center">
+                  <div className="w-5 flex justify-center flex-shrink-0">
                     {hasChildren ? (
                       <button
                         onClick={(e) => handleToggleExpand(node.path, e)}
-                        className="text-secondary hover:text-main"
+                        className="text-secondary hover:text-main transition-colors"
                       >
                         {isExpanded ? (
-                          <ChevronDown size={12} />
+                          <ChevronDown size={14} />
                         ) : (
-                          <ChevronRight size={12} />
+                          <ChevronRight size={14} />
                         )}
                       </button>
                     ) : null}
                   </div>
 
                   {/* Type icon */}
-                  <div className="mr-2">
+                  <div className="mr-2.5 flex-shrink-0">
                     {getTypeIcon(node.type)}
                   </div>
 
                   {/* Node content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      {/* Key name */}
-                      <span className={`font-medium text-sm truncate ${node.isAnchor ? 'text-success' :
-                          node.isAlias ? 'text-info' :
-                            'text-main'
-                        }`}>
-                        {node.isAnchor && '&'}{node.key}
-                      </span>
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    {/* Key name */}
+                    <span className={`font-medium text-sm truncate ${node.isAnchor ? 'text-success' :
+                      node.isAlias ? 'text-info' :
+                        'text-main'
+                      }`}>
+                      {node.isAnchor && '&'}{node.key}
+                    </span>
 
-                      {/* Value preview */}
-                      <span className="text-xs text-secondary truncate">
-                        {formatValuePreview(node)}
-                      </span>
-                    </div>
-
-                    {/* Full path (if enabled) */}
-                    {showPaths && (
-                      <div className="text-xs text-muted truncate mt-0.5">
-                        {node.path}
-                      </div>
-                    )}
-
-                    {/* Comments (if enabled) */}
-                    {showComments && (node.commentBefore || node.comment) && (
-                      <div className="text-xs text-success mt-0.5">
-                        {node.commentBefore && (
-                          <div className="italic">
-                            # {node.commentBefore}
-                          </div>
-                        )}
-                        {node.comment && (
-                          <div className="italic">
-                            # {node.comment}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Value preview */}
+                    <span className="text-xs text-secondary truncate flex-shrink">
+                      {formatValuePreview(node)}
+                    </span>
                   </div>
 
                   {/* Anchor/alias indicator */}
                   {(node.isAnchor || node.isAlias) && (
-                    <div className={`text-xs px-1.5 py-0.5 rounded ${node.isAnchor ? 'bg-success/20 text-success' : 'bg-info/20 text-info'
+                    <div className={`text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${node.isAnchor ? 'bg-success/20 text-success' : 'bg-info/20 text-info'
                       }`}>
                       {node.isAnchor ? 'anchor' : 'alias'}
                     </div>

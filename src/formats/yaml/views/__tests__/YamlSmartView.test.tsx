@@ -109,8 +109,6 @@ describe('YamlSmartView', () => {
     );
 
     expect(screen.getByPlaceholderText('Search structure...')).toBeInTheDocument();
-    expect(screen.getByText('Comments')).toBeInTheDocument();
-    expect(screen.getByText('Paths')).toBeInTheDocument();
   });
 
   it('should handle multi-document YAML', () => {
@@ -170,7 +168,7 @@ describe('YamlSmartView', () => {
     expect(searchInput).toHaveValue('metadata');
   });
 
-  it('should toggle view options', () => {
+  it('should handle search functionality', () => {
     render(
       <YamlSmartView
         content={sampleYaml}
@@ -181,11 +179,10 @@ describe('YamlSmartView', () => {
       />
     );
 
-    const pathsButton = screen.getByText('Paths');
-    fireEvent.click(pathsButton);
+    const searchInput = screen.getByPlaceholderText('Search structure...');
+    fireEvent.change(searchInput, { target: { value: 'metadata' } });
 
-    // Button should show active state
-    expect(pathsButton.closest('button')).toHaveClass('bg-primary/20');
+    expect(searchInput).toHaveValue('metadata');
   });
 
   it('should handle invalid YAML gracefully', () => {

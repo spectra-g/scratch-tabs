@@ -72,7 +72,7 @@ export function parseYamlWithPositions(content: string): ParseResult {
       if (!doc) {
         throw new Error(`Document ${index + 1}: Document is null or undefined`);
       }
-      
+
       if (doc.errors && doc.errors.length > 0) {
         throw new Error(`Document ${index + 1}: ${doc.errors[0].message}`);
       }
@@ -83,9 +83,9 @@ export function parseYamlWithPositions(content: string): ParseResult {
       } catch (error) {
         throw new Error(`Document ${index + 1}: Failed to convert to JS - ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
-      
+
       const nodes: YamlNode[] = [];
-      
+
       // Extract anchors first by walking the document directly
       if (doc.contents) {
         try {
@@ -95,7 +95,7 @@ export function parseYamlWithPositions(content: string): ParseResult {
           console.warn(`Failed to extract anchors from document ${index + 1}:`, error);
         }
       }
-      
+
       // Extract position information and build node tree
       if (doc.contents) {
         try {
@@ -141,9 +141,9 @@ export function parseYamlWithPositions(content: string): ParseResult {
       } catch (jsError) {
         throw new Error(`Failed to convert document to JS: ${jsError instanceof Error ? jsError.message : 'Unknown error'}`);
       }
-      
+
       const nodes: YamlNode[] = [];
-      
+
       // Extract anchors first by walking the document directly
       if (doc.contents) {
         try {
@@ -153,7 +153,7 @@ export function parseYamlWithPositions(content: string): ParseResult {
           console.warn('Failed to extract anchors:', anchorError);
         }
       }
-      
+
       if (doc.contents) {
         try {
           buildNodeTreeFromContents(doc.contents, data, '', nodes, anchors, content);
@@ -173,13 +173,13 @@ export function parseYamlWithPositions(content: string): ParseResult {
 
       return { documents, anchors };
     } catch (fallbackError) {
-      const errorMessage = fallbackError instanceof Error 
-        ? fallbackError.message 
+      const errorMessage = fallbackError instanceof Error
+        ? fallbackError.message
         : 'Failed to parse YAML content';
-      
+
       // Also include the original error for better debugging
       const originalErrorMessage = error instanceof Error ? error.message : 'Unknown original error';
-      
+
       throw new Error(`${errorMessage} (Original error: ${originalErrorMessage})`);
     }
   }
@@ -259,7 +259,7 @@ function buildNodeTreeFromContents(
   content: string
 ): void {
   if (!contents || !contents.items) return;
-  
+
   // Process each item in the contents
   contents.items.forEach((item: any, index: number) => {
     if (item.key && item.value) {
@@ -274,10 +274,17 @@ function buildNodeTreeFromContents(
         const keyName = item.key.value || item.key.source || `item_${index}`;
         value = data[keyName];
       }
-      
-      const line = item.range ? getLineFromPos(content, item.range[0]) : 1;
+
+      // Try to get line from item range, fallback to key range
+      let line = 1;
+      if (item.range) {
+        line = getLineFromPos(content, item.range[0]);
+      } else if (item.key && item.key.range) {
+        line = getLineFromPos(content, item.key.range[0]);
+      }
+
       const endLine = item.range ? getLineFromPos(content, item.range[1]) : line;
-      
+
       const yamlNode: YamlNode = {
         id: `${path}-${index}`,
         path,
@@ -287,7 +294,7 @@ function buildNodeTreeFromContents(
         line,
         endLine,
       };
-      
+
       // Extract comments from the key node
       if (item.key && item.key.commentBefore) {
         yamlNode.commentBefore = item.key.commentBefore;
@@ -295,12 +302,12 @@ function buildNodeTreeFromContents(
       if (item.key && item.key.comment) {
         yamlNode.comment = item.key.comment;
       }
-      
+
       // Check for anchor definition - need to check the raw YAML structure
       if (item.value && (item.value as any).anchor) {
         yamlNode.isAnchor = true;
         yamlNode.anchorName = (item.value as any).anchor;
-        
+
         // Register anchor
         anchors.set((item.value as any).anchor, {
           name: (item.value as any).anchor,
@@ -310,19 +317,19 @@ function buildNodeTreeFromContents(
           usages: [],
         });
       }
-      
+
       // Check for alias reference
       if (item.value && item.value.type === 'ALIAS') {
         yamlNode.isAlias = true;
         yamlNode.aliasName = item.value.source;
-        
+
         // Register alias usage
         const anchorInfo = anchors.get(item.value.source);
         if (anchorInfo) {
           anchorInfo.usages.push({ line, path });
         }
       }
-      
+
       // Handle nested objects
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         yamlNode.children = [];
@@ -330,7 +337,7 @@ function buildNodeTreeFromContents(
         if (item.value && item.value.items) {
           buildNodeTreeFromContents(item.value, value, path, yamlNode.children, anchors, content);
         }
-        
+
         // Also check for aliases within the object's items
         if (item.value && item.value.items) {
           item.value.items.forEach((nestedItem: any) => {
@@ -347,22 +354,71 @@ function buildNodeTreeFromContents(
         }
       } else if (Array.isArray(value)) {
         yamlNode.children = [];
-        // Handle array items
-        value.forEach((arrayItem, arrayIndex) => {
-          const childPath = `${path}[${arrayIndex}]`;
-          const childNode: YamlNode = {
-            id: `${childPath}-${arrayIndex}`,
-            path: childPath,
-            key: `[${arrayIndex}]`,
-            value: arrayItem,
-            type: getValueType(arrayItem),
-            line: line, // Arrays items don't have individual line info in this context
-            endLine: endLine,
-          };
-          yamlNode.children.push(childNode);
-        });
+
+        // Use AST items if available to get correct line numbers
+        if (item.value && item.value.items) {
+          item.value.items.forEach((seqItem: any, arrayIndex: number) => {
+            const childPath = `${path}[${arrayIndex}]`;
+
+            // Get line from sequence item range
+            const itemLine = seqItem.range ? getLineFromPos(content, seqItem.range[0]) : line;
+            const itemEndLine = seqItem.range ? getLineFromPos(content, seqItem.range[1]) : itemLine;
+
+            // Get value
+            let itemValue;
+            try {
+              itemValue = seqItem.toJS ? seqItem.toJS() : (seqItem.value !== undefined ? seqItem.value : value[arrayIndex]);
+            } catch (e) {
+              itemValue = value[arrayIndex];
+            }
+
+            const childNode: YamlNode = {
+              id: `${childPath}-${arrayIndex}`,
+              path: childPath,
+              key: `[${arrayIndex}]`,
+              value: itemValue,
+              type: getValueType(itemValue),
+              line: itemLine,
+              endLine: itemEndLine,
+            };
+
+            // Handle nested structures in array
+            if (typeof itemValue === 'object' && itemValue !== null) {
+              childNode.children = [];
+              if (seqItem.items) {
+                // It's a nested map or sequence
+                // We need to handle the case where seqItem is a Map (has items which are pairs)
+                // or Seq (has items which are nodes)
+                if (seqItem.type === 'MAP' || (!seqItem.type && seqItem.items && seqItem.items[0] && seqItem.items[0].key)) {
+                  buildNodeTreeFromContents(seqItem, itemValue, childPath, childNode.children!, anchors, content);
+                } else if (seqItem.type === 'SEQ') {
+                  // Recursive call for nested sequence would be tricky with current function signature
+                  // falling back to buildNodeTree which handles generic nodes
+                  buildNodeTree(seqItem, childPath, childNode.children!, anchors, `[${arrayIndex}]`, content);
+                }
+              }
+            }
+
+            yamlNode.children!.push(childNode);
+          });
+        } else {
+          // Fallback to JS value iteration if AST items not available
+          value.forEach((arrayItem, arrayIndex) => {
+            const childPath = `${path}[${arrayIndex}]`;
+            const childNode: YamlNode = {
+              id: `${childPath}-${arrayIndex}`,
+              path: childPath,
+              key: `[${arrayIndex}]`,
+              value: arrayItem,
+              type: getValueType(arrayItem),
+              line: line, // Arrays items don't have individual line info in this context
+              endLine: endLine,
+            };
+            yamlNode.children!.push(childNode);
+          });
+        }
       }
-      
+
       nodes.push(yamlNode);
     }
   });
@@ -405,11 +461,11 @@ function buildNodeTree(
         if (item.key && item.value) {
           const key = item.key.value || item.key.source || `item_${index}`;
           const childPath = basePath ? `${basePath}.${key}` : key;
-          
+
           // Check for anchors and aliases
           const childNode = createNodeFromItem(item, childPath, key, anchors, content);
-          if (childNode) {
-            yamlNode.children!.push(childNode);
+          if (childNode && yamlNode.children) {
+            yamlNode.children.push(childNode);
           }
         }
       });
@@ -434,8 +490,8 @@ function buildNodeTree(
       node.items.forEach((item: any, index: number) => {
         const childPath = `${basePath}[${index}]`;
         const childNode = createNodeFromValue(item, childPath, `[${index}]`, anchors, content);
-        if (childNode) {
-          yamlNode.children!.push(childNode);
+        if (childNode && yamlNode.children) {
+          yamlNode.children.push(childNode);
         }
       });
     }
@@ -487,7 +543,7 @@ function createNodeFromValue(
   if (value.anchor) {
     isAnchor = true;
     anchorName = value.anchor;
-    
+
     // Register anchor
     anchors.set(anchorName, {
       name: anchorName,
@@ -504,7 +560,7 @@ function createNodeFromValue(
   if (value.type === 'ALIAS') {
     isAlias = true;
     aliasName = value.source;
-    
+
     // Register alias usage
     const anchorInfo = anchors.get(aliasName);
     if (anchorInfo) {
@@ -545,7 +601,7 @@ function createNodeFromValue(
   // Recursively process children for complex types
   if (value.type === 'MAP' || value.type === 'SEQ') {
     yamlNode.children = [];
-    buildNodeTree(value, path, yamlNode.children, anchors, key, content);
+    buildNodeTree(value, path, yamlNode.children!, anchors, key, content);
   }
 
   return yamlNode;
@@ -567,7 +623,7 @@ export function findNodeByPath(nodes: YamlNode[], targetPath: string): YamlNode 
     if (node.path === targetPath) {
       return node;
     }
-    
+
     if (node.children) {
       const childNode = findNodeByPath(node.children, targetPath);
       if (childNode) return childNode;
@@ -586,10 +642,10 @@ export function findNodePathByLine(nodes: YamlNode[], lineNumber: number): strin
       const childPath = findNodePathByLine(node.children, lineNumber);
       if (childPath) return childPath;
     }
-    
+
     // Then check if this node matches
-    if (node.line === lineNumber || 
-        (node.endLine && lineNumber >= node.line && lineNumber <= node.endLine)) {
+    if (node.line === lineNumber ||
+      (node.endLine && lineNumber >= node.line && lineNumber <= node.endLine)) {
       return node.path;
     }
   }

@@ -210,27 +210,24 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
 
         {/* Command cards */}
         <div className="flex-1 overflow-auto custom-scrollbar p-4 space-y-4">
-          <AnimatePresence>
-            {curlBlocks.map((block) => (
-              <motion.div
-                key={block.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <CurlCard
-                  request={block.request}
-                  isExpanded={activeCardId === block.id}
-                  onClick={() => setActiveCardId(activeCardId === block.id ? null : block.id)}
-                  onRequestChange={handleRequestChange}
-                  onOpenInRestClient={handleOpenInRestClient}
-                  onDelete={() => handleDeleteCommand(block.id)}
-                  onDuplicate={() => handleDuplicateCommand(block.id)}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {curlBlocks.map((block) => (
+            <motion.div
+              key={block.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <CurlCard
+                request={block.request}
+                isExpanded={activeCardId === block.id}
+                onClick={() => setActiveCardId(activeCardId === block.id ? null : block.id)}
+                onRequestChange={handleRequestChange}
+                onOpenInRestClient={handleOpenInRestClient}
+                onDelete={() => handleDeleteCommand(block.id)}
+                onDuplicate={() => handleDuplicateCommand(block.id)}
+              />
+            </motion.div>
+          ))}
         </div>
       </div>
 

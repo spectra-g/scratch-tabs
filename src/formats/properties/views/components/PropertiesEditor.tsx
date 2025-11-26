@@ -163,7 +163,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
 
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center space-x-1 px-3 py-1 bg-primary/20 text-primary rounded hover:bg-primary/30 transition-colors"
+          className="flex items-center space-x-1 px-3 py-1 bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-600/30 transition-colors"
         >
           <Plus size={14} />
           <span>Add Property</span>
@@ -206,7 +206,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
             <button
               onClick={handleAddPair}
               disabled={!newKey.trim()}
-              className="px-2 py-1 text-xs bg-primary/20 text-primary rounded hover:bg-primary/30 disabled:opacity-50"
+              className="px-2 py-1 text-xs bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-600/30 disabled:opacity-50"
             >
               Add
             </button>
@@ -243,8 +243,8 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                 <div
                   key={pair.id}
                   className={`border rounded-lg p-3 transition-colors ${hasIssues
-                      ? "border-warning/50 bg-warning/5"
-                      : "border-base bg-surface/30 hover:bg-surface/50"
+                    ? "border-warning/50 bg-warning/5"
+                    : "border-base bg-surface/30 hover:bg-surface/50"
                     }`}
                 >
                   {/* Key Row */}
@@ -263,7 +263,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                         />
                       ) : (
                         <span
-                          className="flex-1 font-mono text-sm text-primary cursor-pointer hover:bg-element-hover px-1 py-0.5 rounded"
+                          className="flex-1 font-mono text-sm text-info cursor-pointer hover:bg-element-hover px-1 py-0.5 rounded"
                           onClick={() => startEditing(pair.id, 'key', pair.key)}
                           title="Click to edit key"
                         >
@@ -325,8 +325,8 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                       <button
                         onClick={() => copyValue(pair.value, pair.id)}
                         className={`p-1 rounded transition-colors ${copiedValueId === pair.id
-                            ? "text-success bg-success/20"
-                            : "text-secondary hover:text-main hover:bg-element-hover"
+                          ? "text-success bg-success/20"
+                          : "text-secondary hover:text-main hover:bg-element-hover"
                           }`}
                         title={copiedValueId === pair.id ? "Copied!" : "Copy value"}
                       >

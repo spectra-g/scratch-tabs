@@ -76,7 +76,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           {node.isLeaf ? (
             <Key size={14} className="text-secondary" />
           ) : isExpanded ? (
-            <FolderOpen size={14} className="text-primary" />
+            <FolderOpen size={14} className="text-info" />
           ) : (
             <Folder size={14} className="text-secondary" />
           )}

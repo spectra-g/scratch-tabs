@@ -96,7 +96,7 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
           <div className="text-xs text-secondary">
             {filteredPairs.length} properties
             {selectedNodeId && selectedNodeId !== 'root' && (
-              <span className="ml-2 text-primary">
+              <span className="ml-2 text-info">
                 (filtered by {selectedNodeId})
               </span>
             )}

@@ -2,8 +2,6 @@ import React from 'react';
 import {
   Search,
   X,
-  Hash,
-  MessageSquare,
   FileText,
   CheckCircle,
   Braces,
@@ -13,11 +11,7 @@ import {
 import { YamlDocument, YamlNode } from '../../utils/yamlParser';
 
 interface YamlToolbarProps {
-  showComments: boolean;
-  showPaths: boolean;
   searchQuery: string;
-  onToggleComments: () => void;
-  onTogglePaths: () => void;
   onSearchChange: (query: string) => void;
   documentCount: number;
   activeDocument: YamlDocument | null;
@@ -29,11 +23,7 @@ interface YamlToolbarProps {
 }
 
 export const YamlToolbar: React.FC<YamlToolbarProps> = ({
-  showComments,
-  showPaths,
   searchQuery,
-  onToggleComments,
-  onTogglePaths,
   onSearchChange,
   documentCount,
   activeDocument,
@@ -72,41 +62,8 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
             )}
           </div>
 
-          {/* View toggles */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={hasError ? undefined : onToggleComments}
-              disabled={hasError}
-              className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${hasError
-                ? 'bg-element text-muted cursor-not-allowed'
-                : showComments
-                  ? 'bg-primary/20 text-info'
-                  : 'bg-element text-secondary hover:bg-element-hover'
-                }`}
-              title={hasError ? 'Unavailable due to parse error' : showComments ? 'Hide comments' : 'Show comments'}
-            >
-              <MessageSquare size={12} />
-              <span>Comments</span>
-            </button>
-
-            <button
-              onClick={hasError ? undefined : onTogglePaths}
-              disabled={hasError}
-              className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${hasError
-                ? 'bg-element text-muted cursor-not-allowed'
-                : showPaths
-                  ? 'bg-primary/20 text-info'
-                  : 'bg-element text-secondary hover:bg-element-hover'
-                }`}
-              title={hasError ? 'Unavailable due to parse error' : showPaths ? 'Hide paths' : 'Show paths'}
-            >
-              <Hash size={12} />
-              <span>Paths</span>
-            </button>
-          </div>
-
           {/* Undo/Redo buttons */}
-          <div className="flex items-center space-x-1 ml-2">
+          <div className="flex items-center space-x-1">
             <button
               onClick={onUndo}
               disabled={!canUndo}

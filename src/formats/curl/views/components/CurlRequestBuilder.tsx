@@ -122,7 +122,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
               <select
                 value={request.method}
                 onChange={(e) => handleMethodChange(e.target.value)}
-                className="w-full bg-element border border-base rounded-lg px-3 py-2 text-main focus:outline-none focus:border-focus"
+                className="w-full bg-surface-secondary border border-base rounded-lg px-3 py-2 text-main focus:outline-none focus:border-focus"
               >
                 {methods.map((method) => (
                   <option key={method} value={method}>
@@ -142,7 +142,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                 value={request.url}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://api.example.com/endpoint"
-                className="w-full bg-element border border-base rounded-lg px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
+                className="w-full bg-surface-secondary border border-base rounded-lg px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
               />
             </div>
           </div>
@@ -169,7 +169,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                     value={header.key}
                     onChange={(e) => handleHeaderChange(index, e.target.value, header.value)}
                     placeholder="Header name"
-                    className="flex-1 bg-element border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
+                    className="flex-1 bg-surface-secondary border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
                   />
                   <span className="text-muted">:</span>
                   <input
@@ -177,7 +177,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                     value={header.value}
                     onChange={(e) => handleHeaderChange(index, header.key, e.target.value)}
                     placeholder="Header value"
-                    className="flex-1 bg-element border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
+                    className="flex-1 bg-surface-secondary border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
                   />
                   <button
                     onClick={() => handleRemoveHeader(index)}
@@ -259,14 +259,14 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                     value={option.flag}
                     onChange={(e) => handleOptionChange(index, e.target.value, option.value)}
                     placeholder="--flag"
-                    className="w-32 bg-element border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
+                    className="w-32 bg-surface-secondary border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
                   />
                   <input
                     type="text"
                     value={option.value || ''}
                     onChange={(e) => handleOptionChange(index, option.flag, e.target.value)}
                     placeholder="value (optional)"
-                    className="flex-1 bg-element border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
+                    className="flex-1 bg-surface-secondary border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
                   />
                   <button
                     onClick={() => handleRemoveOption(index)}

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, ExternalLink, Globe, Clock, Code, Copy, Trash2, Check, X } from '../../../../components/Icons';
+import { ChevronDown, ChevronRight, ExternalLink, Globe, Clock, Code, Copy, Trash2, Check, X, Plus } from '../../../../components/Icons';
 import { CurlRequest } from '../../utils/parser';
 import { CurlRequestBuilder } from './CurlRequestBuilder';
 import { compileCurlCommand } from '../../utils/compiler';
@@ -47,6 +47,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
 
   // Handle delete with confirmation
   const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     if (deleteFeedback === 'idle') {
       setDeleteFeedback('confirm');
@@ -66,6 +67,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
 
   // Handle duplicate
   const handleDuplicate = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     if (onDuplicate) {
       onDuplicate();
@@ -100,8 +102,8 @@ export const CurlCard: React.FC<CurlCardProps> = ({
     <motion.div
       layout
       className={`border rounded-lg overflow-hidden transition-all duration-200 ${isExpanded
-          ? 'border-info bg-surface shadow-lg shadow-info/10'
-          : 'border-base bg-surface/50 hover:border-base/70 hover:bg-surface/70'
+        ? 'border-info bg-surface shadow-lg shadow-info/10'
+        : 'border-base bg-surface/50 hover:border-base/70 hover:bg-surface/70'
         }`}
       data-testid="curl-card"
     >
@@ -159,16 +161,17 @@ export const CurlCard: React.FC<CurlCardProps> = ({
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
               {/* Duplicate button */}
               {onDuplicate && (
                 <button
+                  type="button"
                   onClick={handleDuplicate}
                   className={`p-1 rounded transition-colors ${duplicateFeedback === 'success'
-                      ? 'bg-success/20 text-success'
-                      : duplicateFeedback === 'error'
-                        ? 'bg-danger/20 text-danger'
-                        : 'text-muted hover:text-info hover:bg-info/20'
+                    ? 'bg-success/20 text-success'
+                    : duplicateFeedback === 'error'
+                      ? 'bg-danger/20 text-danger'
+                      : 'text-muted hover:text-info hover:bg-info/20'
                     }`}
                   title="Duplicate this request"
                 >
@@ -177,7 +180,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
                   ) : duplicateFeedback === 'error' ? (
                     <X size={14} />
                   ) : (
-                    <Copy size={14} />
+                    <Plus size={14} />
                   )}
                 </button>
               )}
@@ -185,14 +188,15 @@ export const CurlCard: React.FC<CurlCardProps> = ({
               {/* Delete button */}
               {onDelete && (
                 <button
+                  type="button"
                   onClick={handleDelete}
                   className={`p-1 rounded transition-colors ${deleteFeedback === 'confirm'
-                      ? 'bg-danger/20 text-danger hover:bg-danger/30'
-                      : deleteFeedback === 'success'
-                        ? 'bg-success/20 text-success'
-                        : deleteFeedback === 'error'
-                          ? 'bg-danger/20 text-danger'
-                          : 'text-muted hover:text-danger hover:bg-danger/20'
+                    ? 'bg-danger/20 text-danger hover:bg-danger/30'
+                    : deleteFeedback === 'success'
+                      ? 'bg-success/20 text-success'
+                      : deleteFeedback === 'error'
+                        ? 'bg-danger/20 text-danger'
+                        : 'text-muted hover:text-danger hover:bg-danger/20'
                     }`}
                   title={deleteFeedback === 'confirm' ? 'Click again to confirm delete' : 'Delete this request'}
                 >
@@ -250,8 +254,8 @@ export const CurlCard: React.FC<CurlCardProps> = ({
                   <button
                     onClick={handleCopyCommand}
                     className={`flex items-center space-x-1 px-3 py-1 rounded border transition-colors ${copyFeedback === 'success'
-                        ? 'bg-success/20 text-success border-success/30'
-                        : 'bg-element hover:bg-element-hover text-main border-base'
+                      ? 'bg-success text-white border-transparent'
+                      : 'bg-element hover:bg-element-hover text-main border-base'
                       }`}
                     title="Copy to clipboard"
                   >

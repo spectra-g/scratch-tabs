@@ -228,7 +228,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
             {onAddSection && (
               <button
                 onClick={() => setShowAddSectionForm(!showAddSectionForm)}
-                className="flex items-center space-x-2 px-3 py-2 bg-success/20 text-success rounded hover:bg-success/30 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-green-600/20 text-green-600 dark:text-green-400 rounded hover:bg-green-600/30 transition-colors"
                 title="Add new section"
               >
                 <Plus size={14} />
@@ -239,7 +239,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
           {/* Add Section Form in All Sections Overview */}
           {showAddSectionForm && onAddSection && (
-            <div className="mt-4 p-4 bg-surface/50 rounded-lg border border-base/50">
+            <div className="mt-4 p-4 bg-surface-glass rounded-lg border border-slate-200/50 dark:border-gray-700/50">
               <div>
                 <label className="block text-xs text-secondary mb-1">Section Name</label>
                 <input
@@ -263,7 +263,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                 <button
                   onClick={handleAddSection}
                   disabled={!newSectionName.trim()}
-                  className="px-3 py-1 bg-success/20 text-success rounded text-sm hover:bg-success/30 disabled:opacity-50"
+                  className="px-3 py-1 bg-green-600/20 text-green-600 dark:text-green-400 rounded text-sm hover:bg-green-600/30 disabled:opacity-50"
                 >
                   Add Section
                 </button>
@@ -286,7 +286,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
             {sections.map(section => (
               <div
                 key={section.id}
-                className="bg-surface/50 rounded-lg p-4 border border-base/50"
+                className="bg-surface-glass rounded-lg p-4 border border-slate-200/50 dark:border-gray-700/50"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium text-main">
@@ -340,7 +340,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
           </div>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center space-x-2 px-3 py-2 bg-primary/20 text-primary rounded hover:bg-primary/30 transition-colors"
+            className="flex items-center space-x-2 px-3 py-2 bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-600/30 transition-colors"
             title="Add key-value pair"
           >
             <Plus size={14} />
@@ -350,7 +350,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
         {/* Add Key-Value Form */}
         {showAddForm && (
-          <div className="mt-4 p-4 bg-surface/50 rounded-lg border border-base/50">
+          <div className="mt-4 p-4 bg-surface-glass rounded-lg border border-slate-200/50 dark:border-gray-700/50">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs text-secondary mb-1">Key</label>
@@ -387,7 +387,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
               <button
                 onClick={handleAddKeyValue}
                 disabled={!newKey.trim()}
-                className="px-3 py-1 bg-primary/20 text-primary rounded text-sm hover:bg-primary/30 disabled:opacity-50"
+                className="px-3 py-1 bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded text-sm hover:bg-blue-600/30 disabled:opacity-50"
               >
                 Add
               </button>
@@ -426,11 +426,11 @@ export const IniEditor: React.FC<IniEditorProps> = ({
               return (
                 <div
                   key={line.id}
-                  className={`bg-surface/50 rounded-lg p-3 border transition-colors ${hasError
+                  className={`bg-surface-glass rounded-lg p-3 border transition-colors ${hasError
                     ? 'border-danger/50 bg-danger/5'
                     : hasWarning
                       ? 'border-warning/50 bg-warning/5'
-                      : 'border-base/50 hover:border-base/50'
+                      : 'border-slate-200/50 dark:border-gray-700/50 hover:border-slate-200/50 dark:hover:border-gray-700/50'
                     }`}
                 >
                   <div className="flex items-center space-x-3">
