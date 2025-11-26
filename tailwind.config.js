@@ -64,6 +64,9 @@ export default {
         '.text-muted': {
           '@apply text-slate-400 dark:text-gray-500': {},
         },
+        '.icon-themed': {
+          '@apply text-slate-600 dark:text-gray-300': {},
+        },
         '.text-info': {
           '@apply text-blue-600 dark:text-blue-400': {},
         },
@@ -89,6 +92,9 @@ export default {
         // 5. BUTTONS (Action buttons with semantic meaning)
         '.bg-primary': {
           '@apply bg-blue-600 hover:bg-blue-700 text-white': {},
+        },
+        '.bg-info': {
+          '@apply bg-blue-600 dark:bg-blue-400': {},
         },
         '.bg-danger': {
           '@apply bg-red-600 hover:bg-red-700 text-white': {},

@@ -77,7 +77,7 @@ export const TabTooltip: React.FC<TabTooltipProps> = ({
 
       {content.language && (
         <div className="bg-surface-highlight px-3 py-1 text-center border-t border-base">
-          <span className="text-secondary font-medium">{content.language}</span>
+          <span className="icon-themed font-medium">{content.language}</span>
         </div>
       )}
     </div>

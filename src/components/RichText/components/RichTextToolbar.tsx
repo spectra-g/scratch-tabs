@@ -199,7 +199,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
       data-testid={testId}
       className={`p-2 rounded transition-colors ${isActive
         ? 'bg-primary text-white'
-        : 'text-secondary bg-element-hover'
+        : 'icon-themed hover:bg-element-hover'
         }`}
     >
       {children}

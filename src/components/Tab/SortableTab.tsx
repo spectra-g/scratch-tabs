@@ -307,7 +307,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
       >
         {!tab.isTablet && lineCount > 0 && !isEditing && (
           <div
-            className="absolute left-0 bottom-0 h-0.5 bg-info/60 opacity-70 rounded-r-sm"
+            className="absolute left-0 bottom-0 h-0.5 bg-info opacity-70 rounded-r-sm z-10"
             style={{ width: `${relativeWidth}%` }}
             aria-hidden="true"
           />
