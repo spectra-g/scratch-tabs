@@ -24,6 +24,7 @@ import python from 'highlight.js/lib/languages/python';
 import { SearchExtension } from './SearchExtension';
 import { CodeBlockTabExtension } from './CodeBlockTabExtension';
 import { SmartCodeBlockToggle } from './SmartCodeBlockToggle';
+import { IndentListExtension } from './IndentListExtension';
 import 'prosemirror-view/style/prosemirror.css';
 import 'highlight.js/styles/github-dark.css'; // Add syntax highlighting theme
 
@@ -143,4 +144,5 @@ export const tiptapExtensions = [
   SearchExtension,
   CodeBlockTabExtension,
   SmartCodeBlockToggle,
+  IndentListExtension,
 ];
