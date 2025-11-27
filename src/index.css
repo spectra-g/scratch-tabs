@@ -61,6 +61,16 @@
     --link-color: 37 99 235; /* blue-600 */
     --link-hover: 29 78 216; /* blue-700 */
     --heading-color: 15 23 42; /* slate-900 */
+
+    /* Syntax Highlighting Colors (Light Mode - GitHub style) */
+    --syntax-comment: 87 96 106; /* gray-600 - comments and docs */
+    --syntax-keyword: 207 34 46; /* red-600 - keywords like const, function */
+    --syntax-string: 3 47 98; /* blue-900 - string literals */
+    --syntax-number: 0 92 197; /* blue-700 - numbers */
+    --syntax-function: 102 57 186; /* purple-700 - function names */
+    --syntax-variable: 227 98 9; /* orange-600 - variables */
+    --syntax-operator: 215 58 73; /* rose-600 - operators */
+    --syntax-punctuation: 36 41 47; /* gray-800 - brackets, commas */
   }
 
   .dark {
@@ -118,11 +128,21 @@
     --link-color: 96 165 250; /* blue-400 */
     --link-hover: 147 197 253; /* blue-300 */
     --heading-color: 249 250 251; /* gray-50 */
+
+    /* Syntax Highlighting Colors (Dark Mode - GitHub Dark style) */
+    --syntax-comment: 139 148 158; /* gray-500 - comments and docs */
+    --syntax-keyword: 255 123 114; /* red-400 - keywords like const, function */
+    --syntax-string: 165 214 255; /* blue-300 - string literals */
+    --syntax-number: 121 192 255; /* blue-400 - numbers */
+    --syntax-function: 210 168 255; /* purple-400 - function names */
+    --syntax-variable: 255 184 108; /* orange-400 - variables */
+    --syntax-operator: 255 117 127; /* rose-400 - operators */
+    --syntax-punctuation: 201 209 217; /* gray-400 - brackets, commas */
   }
 }
 
 /* Select and Option Theming */
-/* Force light mode styling for select dropdowns */
+/* Use native OS controls for best UX */
 select {
   color-scheme: light;
   -webkit-appearance: menulist;
@@ -131,18 +151,19 @@ select {
 }
 
 .dark select {
-  color-scheme: light; /* Keep dropdown light even in dark mode */
+  color-scheme: dark; /* Use dark OS controls in dark mode */
 }
 
-/* Ensure options have light backgrounds */
+/* Light mode options */
 select option {
   background-color: #ffffff !important;
   color: #0f172a !important; /* slate-900 */
 }
 
+/* Dark mode options - use dark backgrounds for better UX */
 .dark select option {
-  background-color: #ffffff !important; /* Force white even in dark mode */
-  color: #0f172a !important; /* slate-900 */
+  background-color: #1f2937 !important; /* gray-800 */
+  color: #f3f4f6 !important; /* gray-100 */
 }
 
 /* Additional browser-specific overrides */
@@ -353,6 +374,70 @@ select::-webkit-scrollbar-thumb:hover {
   font-size: inherit !important;
   font-family: inherit !important;
   border: none !important;
+}
+
+/* Syntax Highlighting - Using CSS Variables for Theme Support */
+.rich-text-editor .ProseMirror pre .hljs-comment,
+.rich-text-editor .ProseMirror pre .hljs-quote {
+  color: rgb(var(--syntax-comment));
+  font-style: italic;
+}
+
+.rich-text-editor .ProseMirror pre .hljs-keyword,
+.rich-text-editor .ProseMirror pre .hljs-selector-tag,
+.rich-text-editor .ProseMirror pre .hljs-subst {
+  color: rgb(var(--syntax-keyword));
+  font-weight: 600;
+}
+
+.rich-text-editor .ProseMirror pre .hljs-string,
+.rich-text-editor .ProseMirror pre .hljs-attr,
+.rich-text-editor .ProseMirror pre .hljs-regexp,
+.rich-text-editor .ProseMirror pre .hljs-template-tag {
+  color: rgb(var(--syntax-string));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-number,
+.rich-text-editor .ProseMirror pre .hljs-literal {
+  color: rgb(var(--syntax-number));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-title,
+.rich-text-editor .ProseMirror pre .hljs-title.function_,
+.rich-text-editor .ProseMirror pre .hljs-title.class_,
+.rich-text-editor .ProseMirror pre .hljs-function {
+  color: rgb(var(--syntax-function));
+  font-weight: 600;
+}
+
+.rich-text-editor .ProseMirror pre .hljs-variable,
+.rich-text-editor .ProseMirror pre .hljs-params,
+.rich-text-editor .ProseMirror pre .hljs-property {
+  color: rgb(var(--syntax-variable));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-operator,
+.rich-text-editor .ProseMirror pre .hljs-symbol {
+  color: rgb(var(--syntax-operator));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-punctuation,
+.rich-text-editor .ProseMirror pre .hljs-meta {
+  color: rgb(var(--syntax-punctuation));
+}
+
+/* Additional semantic highlights */
+.rich-text-editor .ProseMirror pre .hljs-built_in,
+.rich-text-editor .ProseMirror pre .hljs-class {
+  color: rgb(var(--syntax-function));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-tag {
+  color: rgb(var(--syntax-keyword));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-name {
+  color: rgb(var(--syntax-variable));
 }
 
 .rich-text-editor .ProseMirror ul,

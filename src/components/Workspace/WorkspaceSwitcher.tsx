@@ -157,7 +157,7 @@ export const WorkspaceSwitcher: React.FC = () => {
       <button
         ref={buttonRef}
         onClick={toggleDropdown}
-        className="h-full px-2 bg-element-hover rounded-md transition-colors flex items-center space-x-2"
+        className="h-full px-2 rounded-md transition-colors flex items-center space-x-2"
         title="Switch Workspace"
         data-testid="workspace-switcher"
         aria-label={currentWorkspaceName}
