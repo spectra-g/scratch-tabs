@@ -76,7 +76,7 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
               value={searchFilter}
               onChange={(e) => onSearchFilterChange(e.target.value)}
               placeholder="Filter frames..."
-              className="pl-10 pr-8 py-1.5 input-field rounded text-sm w-64"
+              className="pl-10 pr-8 py-1.5 input-themed rounded text-sm w-64"
             />
             {searchFilter && (
               <button

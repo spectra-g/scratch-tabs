@@ -90,7 +90,7 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
           return (
             <button
               key={item.id}
-              className="w-full text-left px-3 py-1.5 bg-themed-hover text-xs text-main transition-colors block"
+              className="w-full text-left px-3 py-1.5 hover:bg-element-hover text-xs text-main transition-colors block"
               onClick={() => handleSelectFormat(item.id)}
               title={`Select ${item.name}`}
             >

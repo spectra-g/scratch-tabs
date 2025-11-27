@@ -154,7 +154,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
               placeholder="Search tablets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 input-field rounded-md"
+              className="w-full pl-10 pr-3 py-2 input-themed rounded-md"
             />
           </div>
         </div>

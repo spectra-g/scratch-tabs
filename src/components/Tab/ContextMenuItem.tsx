@@ -87,7 +87,7 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
       onMouseLeave={handleMouseLeave}
     >
       <button
-        className="w-full text-left px-3 py-1.5 bg-element-hover flex items-center text-xs text-main disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full text-left px-3 py-1.5 hover:bg-element-hover flex items-center text-xs text-main disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         onClick={handleClick}
         disabled={item.disabled || (!item.action && !item.submenu)} // Added item.disabled check
         aria-haspopup={!!item.submenu} // Accessibility

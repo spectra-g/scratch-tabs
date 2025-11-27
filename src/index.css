@@ -7,45 +7,117 @@
 
 @layer base {
   :root {
-    /* Light Mode */
+    /* Light Mode - Legacy variables (keep for backwards compatibility) */
     --bg-primary: #ffffff;
     --bg-secondary: #f3f4f6;
-    /* gray-100 */
     --bg-tertiary: #e5e7eb;
-    /* gray-200 */
     --text-primary: #111827;
-    /* gray-900 */
     --text-secondary: #4b5563;
-    /* gray-600 */
-    --text-muted: #9ca3af;
-    /* gray-400 */
+    --text-muted: #64748b; /* slate-500 - improved contrast from gray-400 */
     --border-color: #e5e7eb;
-    /* gray-200 */
     --input-bg: #ffffff;
     --input-border: #d1d5db;
-    /* gray-300 */
+
+    /* Semantic Design Tokens - Surfaces */
+    --color-canvas: 248 250 252; /* slate-50 */
+    --color-surface: 255 255 255; /* white */
+    --color-surface-secondary: 241 245 249; /* slate-100 */
+    --color-surface-highlight: 226 232 240; /* slate-200 */
+    --color-surface-raised: 255 255 255; /* white */
+
+    /* Semantic Design Tokens - Elements */
+    --color-element: 255 255 255; /* white */
+    --color-element-hover: 241 245 249; /* slate-100 */
+    --color-element-active: 255 255 255; /* white */
+
+    /* Semantic Design Tokens - Text */
+    --color-text-main: 15 23 42; /* slate-900 */
+    --color-text-secondary: 71 85 105; /* slate-600 */
+    --color-text-muted: 100 116 139; /* slate-500 - better contrast than 400 */
+    --color-icon-themed: 71 85 105; /* slate-600 */
+
+    /* Semantic Design Tokens - Borders */
+    --color-border-base: 226 232 240; /* slate-200 */
+    --color-border-focus: 59 130 246; /* blue-500 */
+
+    /* Semantic Design Tokens - Status Colors */
+    --color-primary: 37 99 235; /* blue-600 */
+    --color-info: 37 99 235; /* blue-600 */
+    --color-success: 22 163 74; /* green-600 */
+    --color-warning: 202 138 4; /* yellow-600 */
+    --color-danger: 220 38 38; /* red-600 */
+
+    /* Rich Text Editor Colors */
+    --code-inline-bg: 241 245 249; /* slate-100 */
+    --code-inline-text: 202 138 4; /* yellow-600 */
+    --code-block-bg: 248 250 252; /* slate-50 */
+    --code-block-border: 226 232 240; /* slate-200 */
+    --code-block-text: 51 65 85; /* slate-700 */
+    --table-header-bg: 241 245 249; /* slate-100 */
+    --table-cell-bg: 255 255 255; /* white */
+    --table-border: 226 232 240; /* slate-200 */
+    --blockquote-border: 148 163 184; /* slate-400 */
+    --blockquote-text: 100 116 139; /* slate-500 */
+    --link-color: 37 99 235; /* blue-600 */
+    --link-hover: 29 78 216; /* blue-700 */
+    --heading-color: 15 23 42; /* slate-900 */
   }
 
   .dark {
-    /* Dark Mode */
+    /* Dark Mode - Legacy variables (keep for backwards compatibility) */
     --bg-primary: #111827;
-    /* gray-900 */
     --bg-secondary: #1f2937;
-    /* gray-800 */
     --bg-tertiary: #374151;
-    /* gray-700 */
     --text-primary: #f9fafb;
-    /* gray-50 */
     --text-secondary: #d1d5db;
-    /* gray-300 */
     --text-muted: #9ca3af;
-    /* gray-400 */
     --border-color: #374151;
-    /* gray-700 */
     --input-bg: #1f2937;
-    /* gray-800 */
     --input-border: #4b5563;
-    /* gray-600 */
+
+    /* Semantic Design Tokens - Surfaces */
+    --color-canvas: 17 24 39; /* gray-900 */
+    --color-surface: 31 41 55; /* gray-800 */
+    --color-surface-secondary: 26 32 44; /* gray-850 */
+    --color-surface-highlight: 31 41 55; /* gray-800 */
+    --color-surface-raised: 17 24 39; /* gray-900 */
+
+    /* Semantic Design Tokens - Elements */
+    --color-element: 31 41 55; /* gray-800 */
+    --color-element-hover: 55 65 81; /* gray-700 */
+    --color-element-active: 55 65 81; /* gray-700 */
+
+    /* Semantic Design Tokens - Text */
+    --color-text-main: 243 244 246; /* gray-100 */
+    --color-text-secondary: 156 163 175; /* gray-400 */
+    --color-text-muted: 107 114 128; /* gray-500 */
+    --color-icon-themed: 209 213 219; /* gray-300 */
+
+    /* Semantic Design Tokens - Borders */
+    --color-border-base: 55 65 81; /* gray-700 */
+    --color-border-focus: 59 130 246; /* blue-500 */
+
+    /* Semantic Design Tokens - Status Colors */
+    --color-primary: 37 99 235; /* blue-600 */
+    --color-info: 96 165 250; /* blue-400 */
+    --color-success: 74 222 128; /* green-400 */
+    --color-warning: 250 204 21; /* yellow-400 */
+    --color-danger: 248 113 113; /* red-400 */
+
+    /* Rich Text Editor Colors */
+    --code-inline-bg: 55 65 81; /* gray-700 */
+    --code-inline-text: 251 191 36; /* yellow-400 */
+    --code-block-bg: 31 41 55; /* gray-800 */
+    --code-block-border: 55 65 81; /* gray-700 */
+    --code-block-text: 209 213 219; /* gray-300 */
+    --table-header-bg: 31 41 55; /* gray-800 */
+    --table-cell-bg: 17 24 39; /* gray-900 */
+    --table-border: 55 65 81; /* gray-700 */
+    --blockquote-border: 107 114 128; /* gray-500 */
+    --blockquote-text: 156 163 175; /* gray-400 */
+    --link-color: 96 165 250; /* blue-400 */
+    --link-hover: 147 197 253; /* blue-300 */
+    --heading-color: 249 250 251; /* gray-50 */
   }
 }
 
@@ -154,8 +226,7 @@ select::-webkit-scrollbar-thumb:hover {
 .rich-text-editor .ProseMirror h4,
 .rich-text-editor .ProseMirror h5,
 .rich-text-editor .ProseMirror h6 {
-  color: #f9fafb;
-  /* text-gray-50 */
+  color: rgb(var(--heading-color));
   font-weight: 600;
   margin-top: 0.75rem !important;
   margin-bottom: 0.5rem !important;
@@ -208,8 +279,7 @@ select::-webkit-scrollbar-thumb:hover {
 }
 
 .rich-text-editor .ProseMirror strong {
-  color: #f9fafb;
-  /* text-gray-50 */
+  color: rgb(var(--heading-color));
   font-weight: 600;
 }
 
@@ -219,10 +289,8 @@ select::-webkit-scrollbar-thumb:hover {
 
 .rich-text-editor .ProseMirror code,
 .rich-text-editor .ProseMirror .inline-code {
-  background-color: #374151;
-  /* bg-gray-700 */
-  color: #fbbf24;
-  /* text-yellow-400 */
+  background-color: rgb(var(--code-inline-bg));
+  color: rgb(var(--code-inline-text));
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
@@ -241,18 +309,13 @@ select::-webkit-scrollbar-thumb:hover {
 
 /* Code block styles - each pre element gets full borders since each code block is one pre element */
 .rich-text-editor .ProseMirror pre {
-  background-color: #1f2937 !important;
-  /* bg-gray-800 */
-  border: 1px solid #374151 !important;
-  /* All borders for each code block */
+  background-color: rgb(var(--code-block-bg)) !important;
+  border: 1px solid rgb(var(--code-block-border)) !important;
   border-radius: 0.25rem !important;
-  /* Full border radius */
   padding: 1rem 1rem !important;
-  /* Added vertical padding for gap above/below content */
   overflow-x: auto !important;
   margin: 0 !important;
   line-height: 1.5 !important;
-  /* Better line spacing for code */
   font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', monospace !important;
   font-size: inherit !important;
   white-space: pre-wrap !important;
@@ -266,8 +329,7 @@ select::-webkit-scrollbar-thumb:hover {
 
 /* Default text color for code blocks without syntax highlighting */
 .rich-text-editor .ProseMirror pre {
-  color: #d1d5db;
-  /* text-gray-300 - no !important to allow syntax highlighting override */
+  color: rgb(var(--code-block-text));
 }
 
 
@@ -284,8 +346,7 @@ select::-webkit-scrollbar-thumb:hover {
 /* Clean up inner code elements */
 .rich-text-editor .ProseMirror pre code {
   background: none !important;
-  color: #d1d5db !important;
-  /* text-gray-300 */
+  color: rgb(var(--code-block-text)) !important;
   padding: 0 !important;
   margin: 0 !important;
   line-height: inherit !important;
@@ -318,24 +379,20 @@ select::-webkit-scrollbar-thumb:hover {
 }
 
 .rich-text-editor .ProseMirror blockquote {
-  border-left: 4px solid #6b7280;
-  /* border-gray-500 */
+  border-left: 4px solid rgb(var(--blockquote-border));
   padding-left: 1rem;
   margin: 1rem 0;
   font-style: italic;
-  color: #9ca3af;
-  /* text-gray-400 */
+  color: rgb(var(--blockquote-text));
 }
 
 .rich-text-editor .ProseMirror a {
-  color: #60a5fa;
-  /* text-blue-400 */
+  color: rgb(var(--link-color));
   text-decoration: underline;
 }
 
 .rich-text-editor .ProseMirror a:hover {
-  color: #93c5fd;
-  /* text-blue-300 */
+  color: rgb(var(--link-hover));
 }
 
 .rich-text-editor .ProseMirror table {
@@ -344,8 +401,7 @@ select::-webkit-scrollbar-thumb:hover {
   margin: 1rem 0;
   width: auto;
   table-layout: auto;
-  border: 1px solid #374151;
-  /* border-gray-700 */
+  border: 1px solid rgb(var(--table-border));
   border-radius: 0.375rem;
   min-width: 50%;
 }
@@ -355,39 +411,33 @@ select::-webkit-scrollbar-thumb:hover {
   padding: 0.375rem 0.75rem;
   text-align: left;
   border: none;
-  /* Start with no borders */
-  border-right: 1px solid #374151;
-  /* Right border for all */
-  border-bottom: 1px solid #374151;
-  /* Bottom border for all */
+  border-right: 1px solid rgb(var(--table-border));
+  border-bottom: 1px solid rgb(var(--table-border));
   min-width: 120px;
   width: auto;
 }
 
 .rich-text-editor .ProseMirror th {
-  background-color: #1f2937;
-  /* bg-gray-800 */
+  background-color: rgb(var(--table-header-bg));
   font-weight: 500;
-  color: #f3f4f6;
-  /* text-gray-100 */
+  color: rgb(var(--color-text-main));
   font-size: 0.875rem;
 }
 
 .rich-text-editor .ProseMirror td {
-  background-color: #111827;
-  /* bg-gray-900 */
+  background-color: rgb(var(--table-cell-bg));
 }
 
 /* First column gets left border */
 .rich-text-editor .ProseMirror th:first-child,
 .rich-text-editor .ProseMirror td:first-child {
-  border-left: 1px solid #374151;
+  border-left: 1px solid rgb(var(--table-border));
 }
 
 /* First row gets top border */
 .rich-text-editor .ProseMirror tr:first-child th,
 .rich-text-editor .ProseMirror tr:first-child td {
-  border-top: 1px solid #374151;
+  border-top: 1px solid rgb(var(--table-border));
 }
 
 /* Corner radius for edge cells */
