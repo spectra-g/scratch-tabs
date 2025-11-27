@@ -43,9 +43,9 @@ describe('useTableMenuItems', () => {
     );
 
     const menuItems = result.current;
-    
+
     // Should have all expected items plus separators
-    expect(menuItems.length).toBe(10); // 7 actions + 3 separators
+    expect(menuItems.length).toBe(11); // 8 actions + 3 separators
 
     // Check that items with shortcuts have the correct structure
     const addRowAbove = menuItems.find(item => item.id === 'addRowAbove');

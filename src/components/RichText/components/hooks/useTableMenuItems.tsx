@@ -8,8 +8,9 @@ import {
   ArrowRight,
   Minus,
   Trash2,
+  Copy,
 } from '../../../Icons';
-import { getOSShortcutText, SHORTCUTS, getTableContextFromEditor } from '../utils/tableContextMenuUtils';
+import { getOSShortcutText, SHORTCUTS, getTableContextFromEditor, copyTableToClipboard } from '../utils/tableContextMenuUtils';
 
 export interface UseTableMenuItemsProps {
   editor: Editor;
@@ -71,6 +72,12 @@ export const useTableMenuItems = ({ editor, onAction }: UseTableMenuItemsProps):
       isSeparator: true,
     },
     {
+      id: 'copyTable',
+      label: 'Copy table',
+      icon: Copy,
+      action: () => onAction(() => copyTableToClipboard(editor)),
+    },
+    {
       id: 'deleteTable',
       label: 'Delete table',
       icon: Trash2,
@@ -81,7 +88,7 @@ export const useTableMenuItems = ({ editor, onAction }: UseTableMenuItemsProps):
   // Add shortcuts to labels
   return baseMenuItems.map(item => {
     if (item.isSeparator) return item;
-    
+
     const shortcutMap: Record<string, string> = {
       addRowAbove: SHORTCUTS.ADD_ROW_ABOVE,
       addRowBelow: SHORTCUTS.ADD_ROW_BELOW,
@@ -93,7 +100,7 @@ export const useTableMenuItems = ({ editor, onAction }: UseTableMenuItemsProps):
     if (!baseShortcut) return item;
 
     const shortcut = getOSShortcutText(baseShortcut);
-    
+
     return {
       ...item,
       label: (
