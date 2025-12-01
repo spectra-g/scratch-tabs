@@ -286,7 +286,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         ref={setRefs}
         className={`tab-item group relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
                     ${isActive
-            ? "bg-element-active text-main shadow-sm"
+            ? "bg-element-active text-main shadow-sm border-t-2 border-transparent"
             : "bg-transparent text-secondary hover:text-main hover:bg-element-hover border-t-2 border-transparent"
           }
                     ${isDragging && !tab.isPinned ? "bg-primary/90 text-white shadow-md scale-105" : ""}

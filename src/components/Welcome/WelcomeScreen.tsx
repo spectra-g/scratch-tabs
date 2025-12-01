@@ -298,8 +298,8 @@ export const WelcomeScreen: React.FC = () => {
                     className="flex items-center justify-between p-4 bg-surface-glass/30 rounded-lg border border-transparent text-left w-full"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-element-active/70 border-none rounded-md">
-                        <action.icon size={18} className="text-muted" />
+                      <div className="p-2 bg-surface-secondary border-none rounded-md">
+                        <action.icon size={18} className="text-secondary" />
                       </div>
                       <div className="flex-1">
                         <div className="text-main font-medium text-sm mb-1">
@@ -322,8 +322,8 @@ export const WelcomeScreen: React.FC = () => {
                   className="group flex items-center justify-between p-4 bg-surface-glass/30 hover:bg-surface-glass/50 rounded-lg transition-all duration-200 border border-transparent hover:border-base text-left w-full"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-element-active/70 border-none rounded-md group-hover:bg-element/70 transition-colors">
-                      <action.icon size={18} className="text-muted" />
+                    <div className="p-2 bg-surface-secondary border-none rounded-md group-hover:bg-element/70 transition-colors">
+                      <action.icon size={18} className="text-secondary" />
                     </div>
                     <div className="flex-1">
                       <div className="text-main font-medium text-sm mb-1">

@@ -89,7 +89,7 @@ export const MacroUI: React.FC<MacroUIProps> = ({ editor, engine }) => {
 
   // --- Style Classes ---
   const commonButtonClass =
-    "rounded bg-element-hover disabled:opacity-50 disabled:hover:bg-transparent p-0.5 flex items-center justify-center"; // Ensure centering
+    "rounded hover:bg-element-hover disabled:opacity-50 disabled:hover:bg-transparent p-0.5 flex items-center justify-center"; // Ensure centering
   const activeRecordClass = "text-danger";
   const inactiveClass = "text-muted";
   const activeClass = "text-secondary";

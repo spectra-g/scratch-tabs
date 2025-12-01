@@ -83,17 +83,7 @@ export default {
           },
         },
 
-        '.bg-element-active': {
-          'background-color': 'rgb(var(--color-element-active))',
-          'color': '#0f172a', // slate-900
-          'border-top': '2px solid #3b82f6', // blue-500
-          'box-shadow': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        },
 
-        '.dark .bg-element-active': {
-          'color': '#60a5fa', // blue-400
-          'border-top-color': 'transparent',
-        },
 
         // ICON COLOR UTILITY (updated to use CSS variable)
         '.icon-themed': {

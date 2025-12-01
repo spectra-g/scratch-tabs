@@ -305,7 +305,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                   openTabManagementModal();
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-secondary bg-element-hover flex items-center space-x-2 transition-colors rounded-md"
+                className="w-full text-left px-3 py-2 text-sm text-main hover:bg-element-hover flex items-center space-x-2 transition-colors rounded-md"
               >
                 <ListTodo size={14} />
                 <span>Manage Tabs...</span>
@@ -315,7 +315,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                   setIsExportModalOpen(true);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-secondary bg-element-hover flex items-center space-x-2 transition-colors rounded-md"
+                className="w-full text-left px-3 py-2 text-sm text-main hover:bg-element-hover flex items-center space-x-2 transition-colors rounded-md"
               >
                 <Download size={14} />
                 <span>Export Workspaces...</span>
@@ -325,7 +325,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                   openImportModal();
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-secondary bg-element-hover flex items-center space-x-2 transition-colors rounded-md"
+                className="w-full text-left px-3 py-2 text-sm text-main hover:bg-element-hover flex items-center space-x-2 transition-colors rounded-md"
               >
                 <Upload size={14} />
                 <span>Import Workspaces...</span>

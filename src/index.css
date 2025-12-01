@@ -13,65 +13,106 @@
     --bg-tertiary: #e5e7eb;
     --text-primary: #111827;
     --text-secondary: #4b5563;
-    --text-muted: #64748b; /* slate-500 - improved contrast from gray-400 */
+    --text-muted: #64748b;
+    /* slate-500 - improved contrast from gray-400 */
     --border-color: #e5e7eb;
     --input-bg: #ffffff;
     --input-border: #d1d5db;
 
     /* Semantic Design Tokens - Surfaces */
-    --color-canvas: 248 250 252; /* slate-50 */
-    --color-surface: 255 255 255; /* white */
-    --color-surface-secondary: 241 245 249; /* slate-100 */
-    --color-surface-highlight: 226 232 240; /* slate-200 */
-    --color-surface-raised: 255 255 255; /* white */
-    --color-surface-glass: 226 232 240; 
+    --color-canvas: 248 250 252;
+    /* slate-50 */
+    --color-surface: 255 255 255;
+    /* white */
+    --color-surface-secondary: 241 245 249;
+    /* slate-100 */
+    --color-surface-highlight: 226 232 240;
+    /* slate-200 */
+    --color-surface-raised: 255 255 255;
+    /* white */
+    --color-surface-glass: 226 232 240;
 
     /* Semantic Design Tokens - Elements */
-    --color-element: 255 255 255; /* white */
-    --color-element-hover: 241 245 249; /* slate-100 */
-    --color-element-active: 255 255 255; /* white */
+    --color-element: 255 255 255;
+    /* white */
+    --color-element-hover: 241 245 249;
+    /* slate-100 */
+    --color-element-active: 255 255 255;
+    /* white */
 
     /* Semantic Design Tokens - Text */
-    --color-text-main: 15 23 42; /* slate-900 */
-    --color-text-secondary: 71 85 105; /* slate-600 */
-    --color-text-muted: 100 116 139; /* slate-500 - better contrast than 400 */
-    --color-icon-themed: 71 85 105; /* slate-600 */
+    --color-text-main: 15 23 42;
+    /* slate-900 */
+    --color-text-secondary: 71 85 105;
+    /* slate-600 */
+    --color-text-muted: 100 116 139;
+    /* slate-500 - better contrast than 400 */
+    --color-icon-themed: 71 85 105;
+    /* slate-600 */
 
     /* Semantic Design Tokens - Borders */
-    --color-border-base: 226 232 240; /* slate-200 */
-    --color-border-focus: 59 130 246; /* blue-500 */
+    --color-border-base: 226 232 240;
+    /* slate-200 */
+    --color-border-focus: 59 130 246;
+    /* blue-500 */
 
     /* Semantic Design Tokens - Status Colors */
-    --color-primary: 37 99 235; /* blue-600 */
-    --color-info: 37 99 235; /* blue-600 */
-    --color-success: 22 163 74; /* green-600 */
-    --color-warning: 202 138 4; /* yellow-600 */
-    --color-danger: 220 38 38; /* red-600 */
+    --color-primary: 37 99 235;
+    /* blue-600 */
+    --color-info: 37 99 235;
+    /* blue-600 */
+    --color-success: 22 163 74;
+    /* green-600 */
+    --color-warning: 202 138 4;
+    /* yellow-600 */
+    --color-danger: 220 38 38;
+    /* red-600 */
 
     /* Rich Text Editor Colors */
-    --code-inline-bg: 241 245 249; /* slate-100 */
-    --code-inline-text: 202 138 4; /* yellow-600 */
-    --code-block-bg: 248 250 252; /* slate-50 */
-    --code-block-border: 226 232 240; /* slate-200 */
-    --code-block-text: 51 65 85; /* slate-700 */
-    --table-header-bg: 241 245 249; /* slate-100 */
-    --table-cell-bg: 255 255 255; /* white */
-    --table-border: 226 232 240; /* slate-200 */
-    --blockquote-border: 148 163 184; /* slate-400 */
-    --blockquote-text: 100 116 139; /* slate-500 */
-    --link-color: 37 99 235; /* blue-600 */
-    --link-hover: 29 78 216; /* blue-700 */
-    --heading-color: 15 23 42; /* slate-900 */
+    --code-inline-bg: 241 245 249;
+    /* slate-100 */
+    --code-inline-text: 202 138 4;
+    /* yellow-600 */
+    --code-block-bg: 248 250 252;
+    /* slate-50 */
+    --code-block-border: 226 232 240;
+    /* slate-200 */
+    --code-block-text: 51 65 85;
+    /* slate-700 */
+    --table-header-bg: 241 245 249;
+    /* slate-100 */
+    --table-cell-bg: 255 255 255;
+    /* white */
+    --table-border: 226 232 240;
+    /* slate-200 */
+    --blockquote-border: 148 163 184;
+    /* slate-400 */
+    --blockquote-text: 100 116 139;
+    /* slate-500 */
+    --link-color: 37 99 235;
+    /* blue-600 */
+    --link-hover: 29 78 216;
+    /* blue-700 */
+    --heading-color: 15 23 42;
+    /* slate-900 */
 
     /* Syntax Highlighting Colors (Light Mode - GitHub style) */
-    --syntax-comment: 87 96 106; /* gray-600 - comments and docs */
-    --syntax-keyword: 207 34 46; /* red-600 - keywords like const, function */
-    --syntax-string: 3 47 98; /* blue-900 - string literals */
-    --syntax-number: 0 92 197; /* blue-700 - numbers */
-    --syntax-function: 102 57 186; /* purple-700 - function names */
-    --syntax-variable: 227 98 9; /* orange-600 - variables */
-    --syntax-operator: 215 58 73; /* rose-600 - operators */
-    --syntax-punctuation: 36 41 47; /* gray-800 - brackets, commas */
+    --syntax-comment: 87 96 106;
+    /* gray-600 - comments and docs */
+    --syntax-keyword: 207 34 46;
+    /* red-600 - keywords like const, function */
+    --syntax-string: 3 47 98;
+    /* blue-900 - string literals */
+    --syntax-number: 0 92 197;
+    /* blue-700 - numbers */
+    --syntax-function: 102 57 186;
+    /* purple-700 - function names */
+    --syntax-variable: 227 98 9;
+    /* orange-600 - variables */
+    --syntax-operator: 215 58 73;
+    /* rose-600 - operators */
+    --syntax-punctuation: 36 41 47;
+    /* gray-800 - brackets, commas */
   }
 
   .dark {
@@ -87,59 +128,100 @@
     --input-border: #4b5563;
 
     /* Semantic Design Tokens - Surfaces */
-    --color-canvas: 17 24 39; /* gray-900 */
-    --color-surface: 31 41 55; /* gray-800 */
-    --color-surface-secondary: 26 32 44; /* gray-850 */
-    --color-surface-highlight: 31 41 55; /* gray-800 */
-    --color-surface-raised: 17 24 39; /* gray-900 */
-    --color-surface-glass: 31 41 55; /* gray-800 */
+    --color-canvas: 17 24 39;
+    /* gray-900 */
+    --color-surface: 31 41 55;
+    /* gray-800 */
+    --color-surface-secondary: 26 32 44;
+    /* gray-850 */
+    --color-surface-highlight: 31 41 55;
+    /* gray-800 */
+    --color-surface-raised: 17 24 39;
+    /* gray-900 */
+    --color-surface-glass: 31 41 55;
+    /* gray-800 */
 
     /* Semantic Design Tokens - Elements */
-    --color-element: 31 41 55; /* gray-800 */
-    --color-element-hover: 55 65 81; /* gray-700 */
-    --color-element-active: 55 65 81; /* gray-700 */
+    --color-element: 31 41 55;
+    /* gray-800 */
+    --color-element-hover: 55 65 81;
+    /* gray-700 */
+    --color-element-active: 75 85 99;
+    /* gray-600 */
 
     /* Semantic Design Tokens - Text */
-    --color-text-main: 243 244 246; /* gray-100 */
-    --color-text-secondary: 156 163 175; /* gray-400 */
-    --color-text-muted: 107 114 128; /* gray-500 */
-    --color-icon-themed: 209 213 219; /* gray-300 */
+    --color-text-main: 243 244 246;
+    /* gray-100 */
+    --color-text-secondary: 156 163 175;
+    /* gray-400 */
+    --color-text-muted: 107 114 128;
+    /* gray-500 */
+    --color-icon-themed: 209 213 219;
+    /* gray-300 */
 
     /* Semantic Design Tokens - Borders */
-    --color-border-base: 55 65 81; /* gray-700 */
-    --color-border-focus: 59 130 246; /* blue-500 */
+    --color-border-base: 55 65 81;
+    /* gray-700 */
+    --color-border-focus: 59 130 246;
+    /* blue-500 */
 
     /* Semantic Design Tokens - Status Colors */
-    --color-primary: 37 99 235; /* blue-600 */
-    --color-info: 96 165 250; /* blue-400 */
-    --color-success: 74 222 128; /* green-400 */
-    --color-warning: 250 204 21; /* yellow-400 */
-    --color-danger: 248 113 113; /* red-400 */
+    --color-primary: 37 99 235;
+    /* blue-600 */
+    --color-info: 96 165 250;
+    /* blue-400 */
+    --color-success: 74 222 128;
+    /* green-400 */
+    --color-warning: 250 204 21;
+    /* yellow-400 */
+    --color-danger: 248 113 113;
+    /* red-400 */
 
     /* Rich Text Editor Colors */
-    --code-inline-bg: 55 65 81; /* gray-700 */
-    --code-inline-text: 251 191 36; /* yellow-400 */
-    --code-block-bg: 31 41 55; /* gray-800 */
-    --code-block-border: 55 65 81; /* gray-700 */
-    --code-block-text: 209 213 219; /* gray-300 */
-    --table-header-bg: 31 41 55; /* gray-800 */
-    --table-cell-bg: 17 24 39; /* gray-900 */
-    --table-border: 55 65 81; /* gray-700 */
-    --blockquote-border: 107 114 128; /* gray-500 */
-    --blockquote-text: 156 163 175; /* gray-400 */
-    --link-color: 96 165 250; /* blue-400 */
-    --link-hover: 147 197 253; /* blue-300 */
-    --heading-color: 249 250 251; /* gray-50 */
+    --code-inline-bg: 55 65 81;
+    /* gray-700 */
+    --code-inline-text: 251 191 36;
+    /* yellow-400 */
+    --code-block-bg: 31 41 55;
+    /* gray-800 */
+    --code-block-border: 55 65 81;
+    /* gray-700 */
+    --code-block-text: 209 213 219;
+    /* gray-300 */
+    --table-header-bg: 31 41 55;
+    /* gray-800 */
+    --table-cell-bg: 17 24 39;
+    /* gray-900 */
+    --table-border: 55 65 81;
+    /* gray-700 */
+    --blockquote-border: 107 114 128;
+    /* gray-500 */
+    --blockquote-text: 156 163 175;
+    /* gray-400 */
+    --link-color: 96 165 250;
+    /* blue-400 */
+    --link-hover: 147 197 253;
+    /* blue-300 */
+    --heading-color: 249 250 251;
+    /* gray-50 */
 
     /* Syntax Highlighting Colors (Dark Mode - GitHub Dark style) */
-    --syntax-comment: 139 148 158; /* gray-500 - comments and docs */
-    --syntax-keyword: 255 123 114; /* red-400 - keywords like const, function */
-    --syntax-string: 165 214 255; /* blue-300 - string literals */
-    --syntax-number: 121 192 255; /* blue-400 - numbers */
-    --syntax-function: 210 168 255; /* purple-400 - function names */
-    --syntax-variable: 255 184 108; /* orange-400 - variables */
-    --syntax-operator: 255 117 127; /* rose-400 - operators */
-    --syntax-punctuation: 201 209 217; /* gray-400 - brackets, commas */
+    --syntax-comment: 139 148 158;
+    /* gray-500 - comments and docs */
+    --syntax-keyword: 255 123 114;
+    /* red-400 - keywords like const, function */
+    --syntax-string: 165 214 255;
+    /* blue-300 - string literals */
+    --syntax-number: 121 192 255;
+    /* blue-400 - numbers */
+    --syntax-function: 210 168 255;
+    /* purple-400 - function names */
+    --syntax-variable: 255 184 108;
+    /* orange-400 - variables */
+    --syntax-operator: 255 117 127;
+    /* rose-400 - operators */
+    --syntax-punctuation: 201 209 217;
+    /* gray-400 - brackets, commas */
   }
 }
 
@@ -153,19 +235,23 @@ select {
 }
 
 .dark select {
-  color-scheme: dark; /* Use dark OS controls in dark mode */
+  color-scheme: dark;
+  /* Use dark OS controls in dark mode */
 }
 
 /* Light mode options */
 select option {
   background-color: #ffffff !important;
-  color: #0f172a !important; /* slate-900 */
+  color: #0f172a !important;
+  /* slate-900 */
 }
 
 /* Dark mode options - use dark backgrounds for better UX */
 .dark select option {
-  background-color: #1f2937 !important; /* gray-800 */
-  color: #f3f4f6 !important; /* gray-100 */
+  background-color: #1f2937 !important;
+  /* gray-800 */
+  color: #f3f4f6 !important;
+  /* gray-100 */
 }
 
 /* Additional browser-specific overrides */
@@ -174,16 +260,19 @@ select::-webkit-scrollbar {
 }
 
 select::-webkit-scrollbar-track {
-  background: #f1f5f9; /* slate-100 */
+  background: #f1f5f9;
+  /* slate-100 */
 }
 
 select::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* slate-300 */
+  background: #cbd5e1;
+  /* slate-300 */
   border-radius: 6px;
 }
 
 select::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* slate-400 */
+  background: #94a3b8;
+  /* slate-400 */
 }
 
 @layer utilities {
@@ -192,16 +281,16 @@ select::-webkit-scrollbar-thumb:hover {
     /* This sets the track to your canvas color and thumb to your muted text color */
     scrollbar-color: rgb(var(--color-text-muted)) transparent;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-muted/40 hover:bg-muted/60 rounded-full border-4 border-solid border-transparent bg-clip-content;
   }
@@ -571,11 +660,13 @@ select::-webkit-scrollbar-thumb:hover {
   background-image:
     linear-gradient(transparent 24px, rgba(59, 130, 246, 0.15) 24px, rgba(59, 130, 246, 0.15) 25px, transparent 25px);
   background-size: 100% 26px;
-  background-color: #ffffff; /* Light mode: white */
+  background-color: #ffffff;
+  /* Light mode: white */
 }
 
 .dark .texture-lined {
-  background-color: #111827; /* Dark mode: bg-gray-900 */
+  background-color: #111827;
+  /* Dark mode: bg-gray-900 */
 }
 
 .texture-texture {
@@ -584,27 +675,31 @@ select::-webkit-scrollbar-thumb:hover {
     linear-gradient(-45deg, rgba(100, 116, 139, 0.05) 25%, transparent 25%, transparent 75%, rgba(100, 116, 139, 0.05) 75%);
   background-size: 8px 8px, 12px 12px;
   background-position: 0 0, 2px 2px;
-  background-color: #ffffff; /* Light mode: white */
+  background-color: #ffffff;
+  /* Light mode: white */
 }
 
 .dark .texture-texture {
   background-image:
     linear-gradient(45deg, rgba(255, 255, 255, 0.015) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.015) 75%),
     linear-gradient(-45deg, rgba(255, 255, 255, 0.010) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.010) 75%);
-  background-color: #111827; /* Dark mode: bg-gray-900 */
+  background-color: #111827;
+  /* Dark mode: bg-gray-900 */
 }
 
 .texture-dots {
   background-image:
     radial-gradient(circle at 1px 1px, rgba(100, 116, 139, 0.15) 1px, transparent 0);
   background-size: 20px 20px;
-  background-color: #ffffff; /* Light mode: white */
+  background-color: #ffffff;
+  /* Light mode: white */
 }
 
 .dark .texture-dots {
   background-image:
     radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
-  background-color: #111827; /* Dark mode: bg-gray-900 */
+  background-color: #111827;
+  /* Dark mode: bg-gray-900 */
 }
 
 .texture-grid {
@@ -612,14 +707,16 @@ select::-webkit-scrollbar-thumb:hover {
     linear-gradient(rgba(100, 116, 139, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(100, 116, 139, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
-  background-color: #ffffff; /* Light mode: white */
+  background-color: #ffffff;
+  /* Light mode: white */
 }
 
 .dark .texture-grid {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-color: #111827; /* Dark mode: bg-gray-900 */
+  background-color: #111827;
+  /* Dark mode: bg-gray-900 */
 }
 
 /* Blurred Content Effect */
