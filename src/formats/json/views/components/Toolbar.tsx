@@ -251,7 +251,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onClick={onUndo}
           disabled={!canUndo}
           className={`p-2 rounded transition-colors ${canUndo
-            ? "hover:bg-element-hover text-secondary"
+            ? "hover:bg-element-hover text-main"
             : "text-muted cursor-not-allowed"
             }`}
           title="Undo"
@@ -262,7 +262,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onClick={onRedo}
           disabled={!canRedo}
           className={`p-2 rounded transition-colors ${canRedo
-            ? "hover:bg-element-hover text-secondary"
+            ? "hover:bg-element-hover text-main"
             : "text-muted cursor-not-allowed"
             }`}
           title="Redo"
@@ -277,7 +277,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onClick={handleCopy}
           className={`p-2 rounded transition-colors border ${isCopied
             ? "bg-success-subtle text-success border-success"
-            : "bg-element hover:bg-element-hover text-secondary border-transparent"
+            : "bg-element hover:bg-element-hover text-main border-transparent"
             }`}
           title={isCopied ? "Copied!" : "Copy JSON"}
         >
@@ -287,7 +287,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onClick={() => togglePanel(tabId)}
           className={`flex items-center space-x-1 px-3 py-1 rounded transition-colors ${isQueryPanelOpen
             ? "bg-primary/20 text-info"
-            : "bg-element hover:bg-element-hover text-secondary"
+            : "bg-element hover:bg-element-hover text-main"
             }`}
           title="Toggle JMESPath Query Panel"
         >
@@ -296,7 +296,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </button>
         <button
           onClick={handleFormat}
-          className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-secondary rounded transition-colors"
+          className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-main rounded transition-colors"
           title="Format JSON"
         >
           <WrapText size={14} />
@@ -304,7 +304,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </button>
         <button
           onClick={handleFixJson}
-          className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-secondary rounded transition-colors"
+          className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-main rounded transition-colors"
           title="Fix JSON - Auto-fix common errors including control characters, missing quotes, commas, and brackets"
         >
           <Sparkles size={14} />

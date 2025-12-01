@@ -47,7 +47,7 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
       {/* Compare Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-secondary rounded transition-colors"
+        className="flex items-center space-x-1 px-3 py-1 bg-element hover:bg-element-hover text-main rounded transition-colors"
         title="Compare options"
       >
         <GitCompare size={14} />
@@ -62,7 +62,7 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
           <div className="py-1 border-b border-base">
             <button
               onClick={() => handleOptionClick(onCompareWithClipboard)}
-              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-secondary hover:bg-element-hover transition-colors"
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-main hover:bg-element-hover transition-colors"
             >
               <Clipboard size={16} className="text-info" />
               <span>With clipboard</span>
@@ -76,7 +76,7 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => handleOptionClick(() => onCompareWithTab(tab.id))}
-                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-secondary hover:bg-element-hover transition-colors"
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                   title={`Compare with ${tab.title}`}
                 >
                   <FileJson size={16} className="text-success flex-shrink-0" />
@@ -90,14 +90,14 @@ export const CompareDropdown: React.FC<CompareDropdownProps> = ({
           <div className="py-1 border-t border-base">
             <button
               onClick={() => handleOptionClick(onCompareStructure)}
-              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-secondary hover:bg-element-hover transition-colors"
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-main hover:bg-element-hover transition-colors"
             >
               <GitCompare size={16} className="text-info" />
               <span>Compare Structure</span>
             </button>
             <button
               onClick={() => handleOptionClick(onEqualityCheck)}
-              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-secondary hover:bg-element-hover transition-colors"
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-main hover:bg-element-hover transition-colors"
             >
               <CheckCheck size={16} className="text-info" />
               <span>Deep Equality Check</span>

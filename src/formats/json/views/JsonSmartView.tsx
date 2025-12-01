@@ -62,10 +62,10 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   // Get query panel state for this specific tab
   const { getStateForTab, setPanelSizes } = useQueryPanelStore();
   const { isOpen: isQueryPanelOpen, panelSizes } = getStateForTab(tabId);
-  
+
   // Get addBackgroundTab function from root store for background tab creation
   const { addBackgroundTab: rootAddBackgroundTab } = useRootStore();
-  
+
   // Create wrapper to match expected signature for modals (creates background tabs)
   const addTab = useCallback((tab: Tab) => {
     rootAddBackgroundTab(tab, false); // Add to left side by default, in background
@@ -86,7 +86,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         // Check if undo/redo actions are enabled by attempting to get their status
         const canUndo = editor.getAction('undo')?.isSupported() ?? false;
         const canRedo = editor.getAction('redo')?.isSupported() ?? false;
-        
+
         setCanUndo(canUndo);
         setCanRedo(canRedo);
       } catch {
@@ -101,7 +101,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
     (editor: monaco.editor.IStandaloneCodeEditor, monaco: typeof import("monaco-editor/esm/vs/editor/editor.api")) => {
       editorRef.current = editor;
       setEditor(editor);
-      
+
       if (isActive) {
         setActiveEditor(side, editor);
       }
@@ -274,7 +274,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
             {/* Navigator Panel */}
             <div className="hidden lg:flex w-96 border-r border-base flex-col bg-surface-secondary">
               <div className="p-3 border-b border-base">
-                <h3 className="text-sm font-medium text-secondary">Navigator</h3>
+                <h3 className="text-sm font-medium text-main">Navigator</h3>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <Navigator
@@ -287,7 +287,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
             {/* Editor Panel */}
             <div className="flex-1 flex flex-col min-w-0 bg-surface">
               <div className="p-3 border-b border-base bg-surface-secondary">
-                <h3 className="text-sm font-medium text-secondary">Editor</h3>
+                <h3 className="text-sm font-medium text-main">Editor</h3>
               </div>
               <div className="flex-1">
                 <Editor
@@ -319,21 +319,19 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
               <div className="flex border-b border-base">
                 <button
                   onClick={() => setActiveRightTab('toolbox')}
-                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                    activeRightTab === 'toolbox'
+                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeRightTab === 'toolbox'
                       ? 'text-info bg-info-subtle border-b-2 border-info'
                       : 'text-muted hover:text-main hover:bg-element-hover'
-                  }`}
+                    }`}
                 >
                   Toolbox
                 </button>
                 <button
                   onClick={() => setActiveRightTab('insights')}
-                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                    activeRightTab === 'insights'
+                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeRightTab === 'insights'
                       ? 'text-info bg-info-subtle border-b-2 border-info'
                       : 'text-muted hover:text-main hover:bg-element-hover'
-                  }`}
+                    }`}
                 >
                   Insights
                 </button>
