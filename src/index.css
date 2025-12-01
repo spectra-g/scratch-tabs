@@ -113,6 +113,14 @@
     /* rose-600 - operators */
     --syntax-punctuation: 36 41 47;
     /* gray-800 - brackets, commas */
+
+    /* Scrollbar Colors */
+    --scrollbar-track: 241 245 249;
+    /* slate-100 */
+    --scrollbar-thumb: 148 163 184;
+    /* slate-400 */
+    --scrollbar-thumb-hover: 100 116 139;
+    /* slate-500 */
   }
 
   .dark {
@@ -222,6 +230,14 @@
     /* rose-400 - operators */
     --syntax-punctuation: 201 209 217;
     /* gray-400 - brackets, commas */
+
+    /* Scrollbar Colors */
+    --scrollbar-track: 17 24 39;
+    /* gray-900 - very dark */
+    --scrollbar-thumb: 55 65 81;
+    /* gray-700 - medium dark */
+    --scrollbar-thumb-hover: 75 85 99;
+    /* gray-600 - slightly lighter */
   }
 }
 
@@ -277,9 +293,8 @@ select::-webkit-scrollbar-thumb:hover {
 
 @layer utilities {
   .custom-scrollbar {
-    /* Replace the hardcoded hex codes with your new semantic variables */
-    /* This sets the track to your canvas color and thumb to your muted text color */
-    scrollbar-color: rgb(var(--color-text-muted)) transparent;
+    /* Use semantic scrollbar colors that adapt to theme */
+    scrollbar-color: rgb(var(--scrollbar-thumb)) rgb(var(--scrollbar-track));
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -288,11 +303,19 @@ select::-webkit-scrollbar-thumb:hover {
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgb(var(--scrollbar-track));
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-muted/40 hover:bg-muted/60 rounded-full border-4 border-solid border-transparent bg-clip-content;
+    background: rgb(var(--scrollbar-thumb));
+    border-radius: 9999px;
+    border: 4px solid transparent;
+    background-clip: content-box;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--scrollbar-thumb-hover));
+    background-clip: content-box;
   }
 }
 
