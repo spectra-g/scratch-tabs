@@ -295,10 +295,10 @@ export const WelcomeScreen: React.FC = () => {
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-surface-glass rounded-lg border border-transparent text-left w-full"
+                    className="flex items-center justify-between p-4 bg-surface-glass/30 rounded-lg border border-transparent text-left w-full"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-element border-none rounded-md">
+                      <div className="p-2 bg-element-active/70 border-none rounded-md">
                         <action.icon size={18} className="text-muted" />
                       </div>
                       <div className="flex-1">
@@ -319,10 +319,10 @@ export const WelcomeScreen: React.FC = () => {
                 <button
                   key={index}
                   onClick={action.onClick}
-                  className="group flex items-center justify-between p-4 bg-surface-glass bg-surface-glass-hover rounded-lg transition-all duration-200 border border-transparent hover:border-base text-left w-full"
+                  className="group flex items-center justify-between p-4 bg-surface-glass/30 hover:bg-surface-glass/50 rounded-lg transition-all duration-200 border border-transparent hover:border-base text-left w-full"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-element border-none rounded-md group-hover:bg-element/70 transition-colors">
+                    <div className="p-2 bg-element-active/70 border-none rounded-md group-hover:bg-element/70 transition-colors">
                       <action.icon size={18} className="text-muted" />
                     </div>
                     <div className="flex-1">

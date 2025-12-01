@@ -16,6 +16,7 @@ export default {
           secondary: 'rgb(var(--color-surface-secondary) / <alpha-value>)',
           highlight: 'rgb(var(--color-surface-highlight) / <alpha-value>)',
           raised: 'rgb(var(--color-surface-raised) / <alpha-value>)',
+          glass: 'rgb(var(--color-surface-glass) / <alpha-value>)',
         },
         element: {
           DEFAULT: 'rgb(var(--color-element) / <alpha-value>)',

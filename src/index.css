@@ -24,6 +24,7 @@
     --color-surface-secondary: 241 245 249; /* slate-100 */
     --color-surface-highlight: 226 232 240; /* slate-200 */
     --color-surface-raised: 255 255 255; /* white */
+    --color-surface-glass: 226 232 240; 
 
     /* Semantic Design Tokens - Elements */
     --color-element: 255 255 255; /* white */
@@ -91,6 +92,7 @@
     --color-surface-secondary: 26 32 44; /* gray-850 */
     --color-surface-highlight: 31 41 55; /* gray-800 */
     --color-surface-raised: 17 24 39; /* gray-900 */
+    --color-surface-glass: 31 41 55; /* gray-800 */
 
     /* Semantic Design Tokens - Elements */
     --color-element: 31 41 55; /* gray-800 */
@@ -186,11 +188,22 @@ select::-webkit-scrollbar-thumb:hover {
 
 @layer utilities {
   .custom-scrollbar {
-    @apply scrollbar-thin scrollbar-thumb-[#4e4e4e] scrollbar-track-[#1e1e1e];
-    /*
-       scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500
-
-       */
+    /* Replace the hardcoded hex codes with your new semantic variables */
+    /* This sets the track to your canvas color and thumb to your muted text color */
+    scrollbar-color: rgb(var(--color-text-muted)) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted/40 hover:bg-muted/60 rounded-full border-4 border-solid border-transparent bg-clip-content;
   }
 }
 
