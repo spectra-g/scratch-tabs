@@ -11,6 +11,7 @@ import { NodeDetails } from './components/NodeDetails';
 import { detectYamlSchema, configureMonacoSchema } from '../utils/schemaStore';
 import { parseYamlWithPositions, YamlDocument, YamlNode, AnchorInfo } from '../utils/yamlParser';
 import { useActiveEditorStore } from '../../../stores/activeEditorStore';
+import { useThemeStore } from '../../../stores/themeStore';
 
 interface YamlSmartViewState {
   documents: YamlDocument[];
@@ -31,6 +32,7 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
   side,
 }) => {
   const { setActiveEditor } = useActiveEditorStore();
+  const { isDarkMode } = useThemeStore();
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   // Add cleanup effect to track unmounting
@@ -392,7 +394,7 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
               height="100%"
               language="yaml"
               value={content}
-              theme="vs-dark"
+              theme={isDarkMode ? "vs-dark" : "vs"}
               onMount={handleEditorDidMount}
               options={{
                 minimap: { enabled: false },
