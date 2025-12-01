@@ -215,7 +215,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   if (!selectedSectionId) {
     // Show all sections overview
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full bg-canvas">
         <div className="p-4 border-b border-base">
           <div className="flex items-center justify-between">
             <div>
@@ -239,7 +239,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
           {/* Add Section Form in All Sections Overview */}
           {showAddSectionForm && onAddSection && (
-            <div className="mt-4 p-4 bg-surface-glass rounded-lg border border-slate-200/50 dark:border-gray-700/50">
+            <div className="mt-4 p-4 bg-surface rounded-lg border border-base">
               <div>
                 <label className="block text-xs text-secondary mb-1">Section Name</label>
                 <input
@@ -286,7 +286,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
             {sections.map(section => (
               <div
                 key={section.id}
-                className="bg-surface-glass rounded-lg p-4 border border-slate-200/50 dark:border-gray-700/50"
+                className="bg-surface rounded-lg p-4 border border-base"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium text-main">
@@ -324,7 +324,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-canvas">
       {/* Header */}
       <div className="p-4 border-b border-base">
         <div className="flex items-center justify-between">
@@ -350,7 +350,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
         {/* Add Key-Value Form */}
         {showAddForm && (
-          <div className="mt-4 p-4 bg-surface-glass rounded-lg border border-slate-200/50 dark:border-gray-700/50">
+          <div className="mt-4 p-4 bg-surface rounded-lg border border-base">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs text-secondary mb-1">Key</label>
@@ -426,11 +426,11 @@ export const IniEditor: React.FC<IniEditorProps> = ({
               return (
                 <div
                   key={line.id}
-                  className={`bg-surface-glass rounded-lg p-3 border transition-colors ${hasError
+                  className={`bg-surface rounded-lg p-3 border transition-colors ${hasError
                     ? 'border-danger/50 bg-danger/5'
                     : hasWarning
                       ? 'border-warning/50 bg-warning/5'
-                      : 'border-slate-200/50 dark:border-gray-700/50 hover:border-slate-200/50 dark:hover:border-gray-700/50'
+                      : 'border-base hover:border-base'
                     }`}
                 >
                   <div className="flex items-center space-x-3">

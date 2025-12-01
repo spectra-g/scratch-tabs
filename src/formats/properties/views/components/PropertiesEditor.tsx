@@ -147,7 +147,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
   }, [editingState]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-canvas">
       {/* Header */}
       <div className="flex-none p-3 border-b border-base flex items-center justify-between">
         <div>
@@ -244,7 +244,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                   key={pair.id}
                   className={`border rounded-lg p-3 transition-colors ${hasIssues
                     ? "border-warning/50 bg-warning/5"
-                    : "border-base bg-surface/30 hover:bg-surface/50"
+                    : "border-base bg-surface hover:bg-element-hover"
                     }`}
                 >
                   {/* Key Row */}
