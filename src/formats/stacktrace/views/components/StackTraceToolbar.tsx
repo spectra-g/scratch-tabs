@@ -49,7 +49,7 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
         <div className="flex items-center space-x-4">
           {/* Language indicator */}
           <div className="flex items-center space-x-2">
-            <FileTerminal size={16} className="text-secondary" />
+            <FileTerminal size={16} className="text-main" />
             <span className="text-sm text-main capitalize">{language}</span>
           </div>
 
@@ -81,7 +81,7 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
             {searchFilter && (
               <button
                 onClick={() => onSearchFilterChange('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-main"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-main hover:text-main"
               >
                 <X size={14} />
               </button>
@@ -104,7 +104,7 @@ export const StackTraceToolbar: React.FC<StackTraceToolbarProps> = ({
       </div>
 
       {/* Bottom row: Statistics */}
-      <div className="flex items-center justify-between text-sm text-secondary">
+      <div className="flex items-center justify-between text-sm text-main">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
             <Bug size={14} />

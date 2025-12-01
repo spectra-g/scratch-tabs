@@ -40,7 +40,7 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
         <div className="flex items-center space-x-4">
           {/* Search input */}
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-main" />
             <input
               type="text"
               value={searchQuery}
@@ -90,7 +90,7 @@ export const YamlToolbar: React.FC<YamlToolbarProps> = ({
         </div>
 
         {/* Right side: Document info and status */}
-        <div className="flex items-center space-x-4 text-sm text-secondary">
+        <div className="flex items-center space-x-4 text-sm text-main">
           {/* Document count */}
           {documentCount > 1 && (
             <div className="flex items-center space-x-1">

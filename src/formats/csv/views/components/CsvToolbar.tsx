@@ -155,7 +155,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
         <div className="flex items-center space-x-2">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={16} className="text-secondary" />
+              <Search size={16} className="text-main" />
             </div>
             <input
               type="text"
@@ -179,7 +179,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 title="Clear search"
               >
-                <X size={14} className="text-secondary hover:text-main" />
+                <X size={14} className="text-main hover:text-main" />
               </button>
             )}
           </div>
@@ -381,7 +381,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
             <button
               onClick={onClearDuplicates}
               title="Clear duplicate analysis"
-              className="p-1 rounded hover:bg-element-hover text-secondary"
+              className="p-1 rounded hover:bg-element-hover text-main"
             >
               <X size={14} />
             </button>
@@ -390,7 +390,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
       </div>
 
       {/* Status Info */}
-      <div className="flex items-center space-x-4 text-sm text-secondary">
+      <div className="flex items-center space-x-4 text-sm text-main">
         <span data-testid="row-column-status">
           {rowCount} rows × {columnCount} columns
         </span>
