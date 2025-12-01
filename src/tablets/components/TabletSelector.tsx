@@ -19,7 +19,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [tablets, setTablets] = useState<TabletMetadata[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -42,7 +42,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
     };
 
     updateResults();
-    setSelectedIndex(0);
+    setSelectedIndex(-1);
   }, [searchQuery]);
 
   // Focus search input when shown
@@ -61,7 +61,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, tablets.length - 1));
+          setSelectedIndex((i) => (i === -1 ? 0 : Math.min(i + 1, tablets.length - 1)));
           break;
         case "ArrowUp":
           e.preventDefault();
@@ -176,14 +176,14 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
             <div
               key={tablet.id}
               className={`px-4 py-4 cursor-pointer transition-colors ${index === selectedIndex
-                ? "bg-blue-500/20 text-blue-600 dark:text-blue-200"
-                : "text-secondary hover:bg-element-hover"
+                ? "bg-blue-500/20"
+                : "hover:bg-primary/5"
                 }`}
               onClick={() => handleTabletSelect(tablet)}
             >
               <div className="flex flex-col">
-                <div className="font-medium text-base">{tablet.label}</div>
-                <div className="text-sm text-muted mt-2">
+                <div className="font-medium text-base text-main">{tablet.label}</div>
+                <div className="text-sm text-secondary mt-2">
                   {tablet.keywords.join(" • ")}
                 </div>
               </div>
