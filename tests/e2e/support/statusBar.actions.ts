@@ -1,7 +1,7 @@
 import { Page, expect } from '@playwright/test';
 
 export class StatusBarActions {
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
   getStatusBarLanguageLabel() {
     return this.page.locator('[data-testid="status-language"]');
@@ -71,14 +71,14 @@ export class StatusBarActions {
   async getStatusBarInfo() {
     const statusBar = this.page.locator('[data-testid="status-bar"]');
     const isVisible = await statusBar.isVisible();
-    
+
     if (!isVisible) {
       return { visible: false };
     }
 
     const language = await this.getStatusBarLanguageLabel().textContent();
     const validationIcon = await this.getStatusBarValidationIcon().isVisible();
-    
+
     return {
       visible: true,
       language,
@@ -94,13 +94,13 @@ export class StatusBarActions {
   async expectLanguageToChange(fromLanguage: string, toLanguage: string) {
     // First verify we start with the expected language
     await this.expectStatusBarLanguage(fromLanguage);
-    
+
     // Wait for change (this would be triggered by some other action)
     await this.page.waitForFunction((expectedLanguage) => {
       const languageElement = document.querySelector('[data-testid="status-language"]');
       return languageElement?.textContent === expectedLanguage;
     }, toLanguage, { timeout: 5000 });
-    
+
     // Verify the change
     await this.expectStatusBarLanguage(toLanguage);
   }
@@ -125,7 +125,7 @@ export class StatusBarActions {
   async clickTableViewButton() {
     const openButton = this.page.locator('[title="Open Table View"]');
     const closeButton = this.page.locator('[title="Close Table View"]');
-    
+
     if (await openButton.isVisible()) {
       await openButton.click();
     } else if (await closeButton.isVisible()) {
@@ -133,7 +133,7 @@ export class StatusBarActions {
     } else {
       throw new Error('Table View button not found');
     }
-    
+
     // Wait for view transition
     await this.page.waitForTimeout(500);
   }
@@ -162,7 +162,7 @@ export class StatusBarActions {
 
   // Format popup search functionality
   getFormatSelectionPopup() {
-    return this.page.locator('.absolute.z-50.bg-themed');
+    return this.page.locator('.absolute.z-50.bg-surface');
   }
 
   getFormatSearchInput() {
@@ -227,7 +227,7 @@ export class StatusBarActions {
     const popup = this.getFormatSelectionPopup();
     const options = popup.locator('button');
     const count = await options.count();
-    
+
     for (let i = 0; i < count; i++) {
       const option = options.nth(i);
       const optionText = await option.textContent();
@@ -242,7 +242,7 @@ export class StatusBarActions {
     const options = popup.locator('button');
     const count = await options.count();
     const optionTexts: string[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       const option = options.nth(i);
       const text = await option.textContent();
@@ -250,7 +250,7 @@ export class StatusBarActions {
         optionTexts.push(text.trim());
       }
     }
-    
+
     return optionTexts;
   }
 
@@ -273,7 +273,7 @@ export class StatusBarActions {
     const richTextToggle = this.getRichTextToggle(side);
     await expect(richTextToggle).toBeVisible();
     await richTextToggle.click();
-    
+
     // Wait for the editor mode to switch
     await this.page.waitForFunction(() => {
       // Wait for DOM changes to stabilize after the toggle

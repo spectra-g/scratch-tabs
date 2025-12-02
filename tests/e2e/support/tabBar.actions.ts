@@ -1,7 +1,7 @@
 import { Page, expect } from '@playwright/test';
 
 export class TabBarActions {
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
   async clickTab(tabTitle: string) {
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
@@ -18,7 +18,7 @@ export class TabBarActions {
     // First check if tab exists at all
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).toBeVisible();
-    
+
     // Then check if it's active using aria-selected
     const activeTab = this.page.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
     await expect(activeTab).toBeVisible();
@@ -28,7 +28,7 @@ export class TabBarActions {
     // First check if the tab exists
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).toBeVisible();
-    
+
     // Then check if it's not active using aria-selected
     const activeTab = this.page.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`);
     await expect(activeTab).not.toBeVisible();
@@ -53,15 +53,15 @@ export class TabBarActions {
 
   async selectTablet(tabletName: string) {
     // Wait for the tablet selector modal to appear - use the actual CSS classes from the component
-    const tabletSelector = this.page.locator('.bg-themed.border.border-themed.rounded-lg');
+    const tabletSelector = this.page.locator('.bg-surface.border-base.rounded-lg');
     await expect(tabletSelector).toBeVisible();
-    
+
     // Click on the tablet with the specified name - use exact text matching to avoid conflicts
     // Find the element with .font-medium.text-base that has exactly the text we want
     const tabletOption = this.page.locator('.font-medium.text-base').filter({ hasText: new RegExp(`^${tabletName}$`) });
     await expect(tabletOption).toBeVisible();
     await tabletOption.click();
-    
+
     // Wait for the modal to close after selection
     await expect(tabletSelector).toBeHidden();
   }
@@ -118,21 +118,21 @@ export class TabBarActions {
   async expectTabsInOrder(expectedOrder: string) {
     // Parse the expected order string (e.g., "Welcome, Scratch 1, Scratch 3, Scratch 2, Scratch 4")
     const expectedTabNames = expectedOrder.split(',').map(name => name.trim());
-    
+
     // Get all visible tabs in order
     const tabs = this.page.locator('[data-testid^="tab-"]');
     const tabCount = await tabs.count();
-    
+
     // Verify we have the expected number of tabs
     expect(tabCount).toBe(expectedTabNames.length);
-    
+
     // For each tab, check its name by getting the tab title
     for (let i = 0; i < tabCount; i++) {
       const tab = tabs.nth(i);
-      
+
       // Get the tab title from the tab element's text content or title attribute
       const tabTitle = await tab.textContent();
-      
+
       // Compare with expected tab name
       expect(tabTitle?.trim()).toBe(expectedTabNames[i]);
     }
@@ -141,7 +141,7 @@ export class TabBarActions {
   async clickCloseButton(tabTitle: string) {
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).toBeVisible();
-    
+
     // Find the close button within the tab - it has an aria-label that starts with "Close tab"
     const closeButton = tab.locator('button[aria-label*="Close tab"]');
     await expect(closeButton).toBeVisible();
@@ -151,7 +151,7 @@ export class TabBarActions {
   async ctrlClickCloseButton(tabTitle: string) {
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).toBeVisible();
-    
+
     // Find the close button within the tab - it has an aria-label that starts with "Close tab"
     const closeButton = tab.locator('button[aria-label*="Close tab"]');
     await expect(closeButton).toBeVisible();
@@ -161,7 +161,7 @@ export class TabBarActions {
   async cmdClickCloseButton(tabTitle: string) {
     const tab = this.page.locator(`[data-testid="tab-${tabTitle}"]`);
     await expect(tab).toBeVisible();
-    
+
     // Find the close button within the tab - it has an aria-label that starts with "Close tab"
     const closeButton = tab.locator('button[aria-label*="Close tab"]');
     await expect(closeButton).toBeVisible();
