@@ -4,6 +4,7 @@ import { initializeFormatProviders } from "./formats";
 import { broadcastManager } from "./stores/broadcastStore";
 import { useThemeStore } from "./stores/themeStore";
 import DragDropOverlay from "./components/DragDropOverlay";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 // Initialize language providers once when the app loads
 initializeFormatProviders();
@@ -19,6 +20,8 @@ const AppLoadingFallback = () => (
 );
 
 function App() {
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+
   useEffect(() => {
     broadcastManager.initialize();
     useThemeStore.getState().initializeTheme();
@@ -29,6 +32,10 @@ function App() {
       // as channel closes when the browser tab closes.
     };
   }, []);
+
+  useEffect(() => {
+    monaco.editor.setTheme(isDarkMode ? "vs-dark" : "vs");
+  }, [isDarkMode]);
 
   return (
     <BrowserRouter>

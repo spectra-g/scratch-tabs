@@ -197,7 +197,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
   }
 
   return (
-    <div className="flex h-full bg-surface text-main" data-testid="curl-smart-view">
+    <div className="flex h-full bg-canvas text-main" data-testid="curl-smart-view">
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Document header */}

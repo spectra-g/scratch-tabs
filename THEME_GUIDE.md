@@ -130,6 +130,17 @@ This is your **single source of truth** for all theming. Memorize these patterns
 | Success Background | `bg-success-subtle` | Replaces `bg-green-900`. |
 | Warning Background | `bg-warning-subtle` | Replaces `bg-yellow-900`. |
 
+#### 7. Hierarchy (Nesting Order)
+
+Understanding the visual layering is critical for depth perception:
+
+1. **Bottom Layer:** `bg-canvas` (The application background)
+2. **Containers/Cards:** `bg-surface` (Main content areas sitting on canvas)
+3. **Sidebars/Panels:** `bg-surface-secondary` (Structural elements inside surface or canvas)
+4. **Items:** `bg-element` (Interactive items inside cards/panels)
+
+*Example:* App Body (`bg-canvas`) -> SmartView (`bg-canvas`) -> Panels (`bg-surface` or `bg-surface-secondary`) -> Items (`bg-element`)
+
 ---
 
 ## How to Refactor Legacy Components

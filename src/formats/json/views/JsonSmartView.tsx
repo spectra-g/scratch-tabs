@@ -246,7 +246,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   }, [navigateToPath]);
 
   return (
-    <div className="flex flex-col h-full bg-surface text-main" data-testid="json-smart-view-container">
+    <div className="flex flex-col h-full bg-canvas text-main" data-testid="json-smart-view-container">
       {/* Toolbar */}
       <Toolbar
         isValid={isValid}
@@ -320,8 +320,8 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                 <button
                   onClick={() => setActiveRightTab('toolbox')}
                   className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeRightTab === 'toolbox'
-                      ? 'text-info bg-info-subtle border-b-2 border-info'
-                      : 'text-muted hover:text-main hover:bg-element-hover'
+                    ? 'text-info bg-info-subtle border-b-2 border-info'
+                    : 'text-muted hover:text-main hover:bg-element-hover'
                     }`}
                 >
                   Toolbox
@@ -329,8 +329,8 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                 <button
                   onClick={() => setActiveRightTab('insights')}
                   className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeRightTab === 'insights'
-                      ? 'text-info bg-info-subtle border-b-2 border-info'
-                      : 'text-muted hover:text-main hover:bg-element-hover'
+                    ? 'text-info bg-info-subtle border-b-2 border-info'
+                    : 'text-muted hover:text-main hover:bg-element-hover'
                     }`}
                 >
                   Insights
