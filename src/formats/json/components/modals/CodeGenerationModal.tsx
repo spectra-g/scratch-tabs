@@ -95,7 +95,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
       <div className="flex flex-col h-[70vh]">
         <div className="flex flex-row justify-between">
           {/* Tabs */}
-          <div className="flex space-x-1 bg-surface-highlight p-2 rounded-t-lg">
+          <div className="flex space-x-1 bg-surface p-2 rounded-t-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
