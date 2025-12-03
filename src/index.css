@@ -43,6 +43,18 @@
     --color-border-focus: 59 130 246;
     /* blue-500 */
 
+    /* Semantic Design Tokens - Data Types (Syntax Highlighting) */
+    --color-token-string: 22 163 74;
+    /* green-600 (matches success) */
+    --color-token-number: 37 99 235;
+    /* blue-600 (matches primary) */
+    --color-token-boolean: 147 51 234;
+    /* purple-600 */
+    --color-token-key: 15 23 42;
+    /* slate-900 (matches text-main) */
+    --color-token-keyword: 220 38 38;
+    /* red-600 (matches danger) */
+
     /* Semantic Design Tokens - Status Colors */
     --color-primary: 37 99 235;
     /* blue-600 */
@@ -56,6 +68,7 @@
     /* red-600 */
 
     /* Semantic Design Tokens - Subtle Backgrounds (New) */
+    --bg-opacity-subtle: 1;
     --color-success-subtle-bg: 220 252 231;
     /* green-100 */
     --color-success-subtle-text: 22 101 52;
@@ -177,6 +190,18 @@
     --color-border-focus: 59 130 246;
     /* blue-500 */
 
+    /* Semantic Design Tokens - Data Types (Syntax Highlighting) */
+    --color-token-string: 74 222 128;
+    /* green-400 (matches success) */
+    --color-token-number: 96 165 250;
+    /* blue-400 (matches info) */
+    --color-token-boolean: 192 132 252;
+    /* purple-400 */
+    --color-token-key: 243 244 246;
+    /* gray-100 (matches text-main) */
+    --color-token-keyword: 248 113 113;
+    /* red-400 (matches danger) */
+
     /* Semantic Design Tokens - Status Colors */
     --color-primary: 37 99 235;
     /* blue-600 */
@@ -190,7 +215,8 @@
     /* red-400 */
 
     /* Semantic Design Tokens - Subtle Backgrounds (New) */
-    --color-success-subtle-bg: 6 78 59;
+    --bg-opacity-subtle: 0.3;
+    --color-success-subtle-bg: 20 83 45;
     /* green-900 with opacity handled via alpha if needed, or solid dark green */
     /* Using solid colors for variables, opacity handled in utility or here. 
        Let's use the values from tailwind config but as RGB triplets for consistency if we want opacity support, 

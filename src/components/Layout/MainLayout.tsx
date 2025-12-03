@@ -394,7 +394,7 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-canvas text-main">
+    <div className="h-screen flex flex-col bg-canvas text-main transition-colors duration-200">
       <div
         ref={containerRef}
         className="flex w-full h-full min-w-0 overflow-hidden"

@@ -263,7 +263,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                         />
                       ) : (
                         <span
-                          className="flex-1 font-mono text-sm text-info cursor-pointer hover:bg-element-hover px-1 py-0.5 rounded"
+                          className="flex-1 font-mono text-sm text-token-key cursor-pointer hover:bg-element-hover px-1 py-0.5 rounded"
                           onClick={() => startEditing(pair.id, 'key', pair.key)}
                           title="Click to edit key"
                         >

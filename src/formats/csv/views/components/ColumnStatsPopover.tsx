@@ -22,22 +22,22 @@ export const ColumnStatsPopover: React.FC<ColumnStatsPopoverProps> = ({
   const getDataTypeIcon = () => {
     switch (stats.dataType) {
       case "number":
-        return <Calculator size={16} className="text-info" />;
+        return <Calculator size={16} className="text-token-number" />;
       case "string":
-        return <Type size={16} className="text-success" />;
+        return <Type size={16} className="text-token-string" />;
       case "mixed":
-        return <Hash size={16} className="text-warning" />;
+        return <Hash size={16} className="text-token-keyword" />;
     }
   };
 
   const getDataTypeColor = () => {
     switch (stats.dataType) {
       case "number":
-        return "text-info";
+        return "text-token-number";
       case "string":
-        return "text-success";
+        return "text-token-string";
       case "mixed":
-        return "text-warning";
+        return "text-token-keyword";
     }
   };
 
@@ -203,7 +203,7 @@ export const ColumnStatsPopover: React.FC<ColumnStatsPopoverProps> = ({
                   </div>
                   <div className="w-full bg-element rounded-full h-1.5">
                     <div
-                      className="bg-info h-1.5 rounded-full transition-all duration-300"
+                      className="bg-primary h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${item.percentage}%` }}
                     />
                   </div>

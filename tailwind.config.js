@@ -20,6 +20,7 @@ export default {
         },
         element: {
           DEFAULT: 'rgb(var(--color-element) / <alpha-value>)',
+
           hover: 'rgb(var(--color-element-hover) / <alpha-value>)',
           active: 'rgb(var(--color-element-active) / <alpha-value>)',
         },
@@ -42,11 +43,57 @@ export default {
         success: 'rgb(var(--color-success) / <alpha-value>)',
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         danger: 'rgb(var(--color-danger) / <alpha-value>)',
+        // 5. DATA TOKENS (Syntax Highlighting)
+        token: {
+          string: 'rgb(var(--color-token-string) / <alpha-value>)',
+          number: 'rgb(var(--color-token-number) / <alpha-value>)',
+          boolean: 'rgb(var(--color-token-boolean) / <alpha-value>)',
+          key: 'rgb(var(--color-token-key) / <alpha-value>)',
+          keyword: 'rgb(var(--color-token-keyword) / <alpha-value>)',
+        },
       },
+      typography: ({ theme }) => ({
+        DEFAULT: {
+          css: {
+            '--tw-prose-body': theme('colors.main'),
+            '--tw-prose-headings': theme('colors.main'),
+            '--tw-prose-lead': theme('colors.secondary'),
+            '--tw-prose-links': theme('colors.primary'),
+            '--tw-prose-bold': theme('colors.main'),
+            '--tw-prose-counters': theme('colors.secondary'),
+            '--tw-prose-bullets': theme('colors.secondary'),
+            '--tw-prose-hr': theme('colors.border.base'),
+            '--tw-prose-quotes': theme('colors.main'),
+            '--tw-prose-quote-borders': theme('colors.border.base'),
+            '--tw-prose-captions': theme('colors.secondary'),
+            '--tw-prose-code': theme('colors.main'),
+            '--tw-prose-pre-code': theme('colors.main'),
+            '--tw-prose-pre-bg': theme('colors.surface.secondary'),
+            '--tw-prose-th-borders': theme('colors.border.base'),
+            '--tw-prose-td-borders': theme('colors.border.base'),
+            // Dark mode overrides are handled automatically if we use the same variables, 
+            // but prose-invert uses --tw-prose-invert-*.
+            // Since we are using CSS variables that switch values, we might not even need prose-invert 
+            // if we map --tw-prose-* to OUR variables.
+            // However, prose-invert sets --tw-prose-body to --tw-prose-invert-body.
+            // So we should map those too or just rely on our variables switching.
+            // If we map --tw-prose-body to theme('colors.main'), and colors.main uses var(--color-text-main),
+            // and var(--color-text-main) switches in .dark, then we don't need prose-invert class at all!
+            // We just need 'prose'.
+          },
+        },
+      }),
     },
   },
   plugins: [
-    require("@tailwindcss/typography"),
+    require("@tailwindcss/typography")({
+      className: 'prose',
+      target: 'legacy', // or 'modern' - default is 'modern' in v3 but let's stick to default or just configure theme
+    }),
+    // Actually, the standard way to configure typography colors is via the theme section, not the plugin require.
+    // But we can also pass options if needed.
+    // The critique said: "Configure the typography plugin in tailwind.config.js to map prose-headings, prose-body, etc., to your CSS variables."
+    // This is done in theme.extend.typography.
     require("tailwind-scrollbar"),
 
     // Composite utility classes for complex styling
@@ -57,46 +104,20 @@ export default {
       addUtilities({
         // SUBTLE BACKGROUND UTILITIES
         '.bg-success-subtle': {
-          'background-color': 'rgb(var(--color-success-subtle-bg) / 0.3)',
-          'color': 'rgb(var(--color-success-subtle-text))',
-          '@media (prefers-color-scheme: light)': {
-            'background-color': 'rgb(var(--color-success-subtle-bg))',
-          }
-        },
-        // Note: We need to handle the dark mode class strategy properly
-        // The above media query is not enough if we use class strategy
-        // Let's use the standard pattern for class-based dark mode
-
-        '.bg-success-subtle': {
-          'background-color': 'rgb(var(--color-success-subtle-bg))',
+          'background-color': 'rgb(var(--color-success-subtle-bg) / var(--bg-opacity-subtle))',
           'color': 'rgb(var(--color-success-subtle-text))',
         },
-        '.dark .bg-success-subtle': {
-          'background-color': 'rgb(var(--color-success-subtle-bg) / 0.3)',
-        },
-
         '.bg-danger-subtle': {
-          'background-color': 'rgb(var(--color-danger-subtle-bg))',
+          'background-color': 'rgb(var(--color-danger-subtle-bg) / var(--bg-opacity-subtle))',
           'color': 'rgb(var(--color-danger-subtle-text))',
         },
-        '.dark .bg-danger-subtle': {
-          'background-color': 'rgb(var(--color-danger-subtle-bg) / 0.3)',
-        },
-
         '.bg-warning-subtle': {
-          'background-color': 'rgb(var(--color-warning-subtle-bg))',
+          'background-color': 'rgb(var(--color-warning-subtle-bg) / var(--bg-opacity-subtle))',
           'color': 'rgb(var(--color-warning-subtle-text))',
         },
-        '.dark .bg-warning-subtle': {
-          'background-color': 'rgb(var(--color-warning-subtle-bg) / 0.3)',
-        },
-
         '.bg-info-subtle': {
-          'background-color': 'rgb(var(--color-info-subtle-bg))',
+          'background-color': 'rgb(var(--color-info-subtle-bg) / var(--bg-opacity-subtle))',
           'color': 'rgb(var(--color-info-subtle-text))',
-        },
-        '.dark .bg-info-subtle': {
-          'background-color': 'rgb(var(--color-info-subtle-bg) / 0.3)',
         },
 
         // COMPOSITE INPUT UTILITY (complex styling with focus rings)

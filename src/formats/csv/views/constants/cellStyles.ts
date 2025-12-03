@@ -19,7 +19,7 @@ export const CELL_STYLES = {
 
   // Text styles
   TEXT: "text-sm truncate text-main",
-  TEXT_EMPTY: "text-muted italic",
+  TEXT_EMPTY: "text-secondary italic",
   TEXT_MASKED: "blur-[3px] hover:blur-none",
 } as const;
 

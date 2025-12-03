@@ -108,7 +108,7 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({
 
         <div className="flex-1 overflow-auto custom-scrollbar bg-surface rounded-md p-4 flex items-center justify-center border border-base shadow-inner">
           {showThinking && !currentError && (
-            <div className="flex items-center justify-center space-x-1 text-blue-400">
+            <div className="flex items-center justify-center space-x-1 text-info">
               <div className="text-shimmer p-1">
                 <span className="text-sm">{thinkingText}</span>
               </div>

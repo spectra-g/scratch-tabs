@@ -11,7 +11,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
     // Apply Tailwind's typography plugin classes for nice default styling.
     // 'prose-invert' is for dark mode themes.
     // Enhanced with Word Count tablet's superior table styling
-    <div className="prose dark:prose-invert max-w-none p-0.5 text-sm [&>h1]:mb-2 [&>h2]:mb-2 [&>h3]:mb-2 [&>h4]:mb-2 [&>h5]:mb-2 [&>h6]:mb-2 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-3 [&>h4]:mt-2 [&>h5]:mt-2 [&>h6]:mt-2 [&>h1]:text-main [&>h2]:text-main [&>h3]:text-main [&>h4]:text-main [&>h5]:text-main [&>h6]:text-main">
+    <div className="prose dark:prose-invert max-w-none p-0.5 text-sm [&>h1]:mb-2 [&>h2]:mb-2 [&>h3]:mb-2 [&>h4]:mb-2 [&>h5]:mb-2 [&>h6]:mb-2 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-3 [&>h4]:mt-2 [&>h5]:mt-2 [&>h6]:mt-2">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

@@ -34,19 +34,19 @@ export const JsonLogStatsModal: React.FC<JsonLogStatsModalProps> = ({
   const getDataTypeIcon = (dataType: ColumnStats["dataType"] | LogColumn["type"]) => {
     switch (dataType) {
       case "number":
-        return <Calculator size={16} className="text-info" />;
+        return <Calculator size={16} className="text-token-number" />;
       case "string":
-        return <Type size={16} className="text-success" />;
+        return <Type size={16} className="text-token-string" />;
       case "boolean":
-        return <Hash size={16} className="text-primary" />;
+        return <Hash size={16} className="text-token-boolean" />;
       case "object":
-        return <Hash size={16} className="text-warning" />;
+        return <Hash size={16} className="text-token-key" />;
       case "array":
-        return <Hash size={16} className="text-info" />;
+        return <Hash size={16} className="text-token-number" />;
       case "null":
-        return <Hash size={16} className="text-muted" />;
+        return <Hash size={16} className="text-token-keyword" />;
       case "mixed":
-        return <Hash size={16} className="text-warning" />;
+        return <Hash size={16} className="text-token-keyword" />;
       default:
         return <Hash size={16} className="text-secondary" />;
     }
@@ -55,17 +55,17 @@ export const JsonLogStatsModal: React.FC<JsonLogStatsModalProps> = ({
   const getDataTypeColor = (dataType: ColumnStats["dataType"]) => {
     switch (dataType) {
       case "number":
-        return "text-info";
+        return "text-token-number";
       case "string":
-        return "text-success";
+        return "text-token-string";
       case "boolean":
-        return "text-primary";
+        return "text-token-boolean";
       case "object":
-        return "text-warning";
+        return "text-token-key";
       case "array":
-        return "text-info";
+        return "text-token-number";
       case "mixed":
-        return "text-warning";
+        return "text-token-keyword";
       default:
         return "text-secondary";
     }
@@ -98,8 +98,8 @@ export const JsonLogStatsModal: React.FC<JsonLogStatsModalProps> = ({
                   key={column.id}
                   onClick={() => setSelectedColumnId(column.id)}
                   className={`w-full text-left p-2 rounded text-sm transition-colors ${selectedColumnId === column.id
-                      ? "bg-primary/20 text-primary"
-                      : "text-main hover:bg-element-hover"
+                    ? "bg-primary/20 text-primary"
+                    : "text-main hover:bg-element-hover"
                     }`}
                 >
                   <div className="flex items-center space-x-2">

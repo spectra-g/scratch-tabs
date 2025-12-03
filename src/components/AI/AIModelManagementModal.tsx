@@ -103,7 +103,7 @@ export const AIModelManagementModal: React.FC = () => {
               <div key={file.file} className="flex items-center space-x-2">
                 <div className="flex-grow bg-element rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-300 ease-out"
+                    className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${file.percent || 0}%` }}
                   />
                 </div>
@@ -131,10 +131,10 @@ export const AIModelManagementModal: React.FC = () => {
 
     if (isModelReady) {
       status = "Ready";
-      icon = <CheckCircle size={16} className="text-green-400" />;
+      icon = <CheckCircle size={16} className="text-success" />;
     } else if (isModelLoading) {
       status = "Downloading...";
-      icon = <Loader2 size={16} className="text-blue-400 animate-spin" />;
+      icon = <Loader2 size={16} className="text-info animate-spin" />;
     }
 
     return (
@@ -250,7 +250,7 @@ export const AIModelManagementModal: React.FC = () => {
 
             <button
               onClick={handleDownloadAll}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
               <Download size={16} />
               <span>Download All Models</span>
@@ -356,7 +356,7 @@ export const AIModelManagementModal: React.FC = () => {
 
             <button
               onClick={handleRetry}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              className="w-full bg-danger hover:bg-danger/90 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
               <Download size={16} />
               <span>Retry Download</span>
