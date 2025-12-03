@@ -3,8 +3,26 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.11.0"
+  - version: "1.12.0"
     type: "latest"
+    draft: false
+    date: "2025-12-03"
+    headline: "🌓 Light/Dark Mode & Editor Enhancements"
+    description: "Major theme system update with Light/Dark mode toggle for editor and smart views, plus critical bug fixes and rich text improvements"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Light/Dark Mode Toggle:** Comprehensive theme system with light and dark modes for editor, smart views, and UI components - seamlessly switch between themes with persistent preference"
+      - name: "🔧 Improvements"
+        changes:
+          - "**Rich Text Bullet Point Indentation:** Enhanced list editing with proper indentation support for nested bullet points"
+      - name: "🐛 Fixed"
+        changes:
+          - "**Clipboard Content Comparison:** Fixed auto-formatting issue when comparing with content from clipboard"
+          - "**Mermaid Diagram Export:** Fixed PNG export functionality for Mermaid diagrams"
+
+  - version: "1.11.0"
+    type: "release"
     draft: false
     date: "2025-11-14"
     headline: "🔍 JSON Query Panel & Navigation"
