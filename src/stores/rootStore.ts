@@ -13,6 +13,7 @@ import { StorageProviderFactory } from "../db";
 import { broadcastManager } from "./broadcastStore";
 import { modelManager } from "../services/modelManager";
 import { useQueryPanelStore } from "../formats/json/stores/useQueryPanelStore";
+import { contentProcessingService } from "../services/contentProcessing";
 
 // The RootStore now primarily holds ACTIONS that coordinate other stores.
 // It does NOT hold mirrored state like `tabs` or `splitView`.
@@ -503,12 +504,20 @@ export const useRootStore = create<RootStore>((set, get) => {
       const language = detectFormat(clipboardContent);
       const shouldLock =
         language !== "plaintext" && !isAmbiguousFormat(clipboardContent);
+
+      // Process clipboard content through content processing pipeline
+      // This handles unstringifying JSON, formatting, etc. for all formats
+      const { content: processedContent } = await contentProcessingService.processClipboardForComparison(
+        clipboardContent,
+        language
+      );
+
       const newTabId = crypto.randomUUID();
       const now = Date.now();
       const newTab: Tab = {
         id: newTabId,
         title: "Clipboard Compare",
-        content: clipboardContent,
+        content: processedContent, // Use processed content instead of raw clipboard
         language,
         languageLocked: shouldLock,
         cursorPosition: { lineNumber: 1, column: 1 },

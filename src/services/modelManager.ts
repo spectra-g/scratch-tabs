@@ -273,16 +273,29 @@ class ModelManager {
       const newDetectedLanguage = potentialMatches.length > 0 ? potentialMatches[0].id : "plaintext";
 
       const additionalFlags = isInitialContent ? { isFromClipboardImport: true } : undefined;
+
+      // Use the newly detected language for content processing
+      // This ensures processors (like JsonContentProcessor) receive the correct language context
       const processingResult = await this.processContent(
         newContent,
         tabId,
-        currentTab.language,
+        newDetectedLanguage,
         currentTab.languageLocked,
         isFromPaste,
         prevContent,
         isInitialContent,
         additionalFlags
       );
+
+      // Trigger smart view callout BEFORE early return
+      // This ensures the callout shows even when content is successfully processed
+      if (isFromPaste && !currentTab.smartViewIndicatorDismissed) {
+        const languageToCheck = processingResult.language || newDetectedLanguage;
+        const availableViews = smartViewRegistry.getViewsForLanguage(languageToCheck);
+        if (availableViews.length > 0) {
+          useCalloutStore.getState().showCallout(tabId, availableViews[0], languageToCheck);
+        }
+      }
 
       if (processingResult.processed) {
         await this.applyProcessedContent(tabId, processingResult, currentTab, isFromPaste);
@@ -336,17 +349,8 @@ class ModelManager {
         }
       }
 
-      // Trigger smart view callout for initial content from paste, even if language didn't change
-      // This handles the case where language was already detected during tab creation
-      if (isFromPaste && !currentTab.smartViewIndicatorDismissed) {
-        // Use the current language if no language change was detected
-        const languageToCheck = shouldUpdate ? newDetectedLanguage : currentTab.language;
-        const availableViews = smartViewRegistry.getViewsForLanguage(languageToCheck);
-        if (availableViews.length > 0) {
-          // Show callout for the first (highest priority) smart view
-          useCalloutStore.getState().showCallout(tabId, availableViews[0], languageToCheck);
-        }
-      }
+      // NOTE: Smart view callout code has been moved earlier (before early return)
+      // to fix Bug 2 - this section is no longer needed
     } catch (error) {
       console.warn(
         `[ModelManager] Failed to handle language detection for tab ${tabId}:`,
