@@ -66,14 +66,14 @@ export const StackTraceViewer: React.FC<SmartViewProps> = ({
     isNested: boolean = false
   ) => {
     const isCollapsed = collapsedSections.has(sectionId);
-    
+
     return (
-      <div key={sectionId} className={`${isNested ? 'ml-4 border-l-2 border-gray-600 pl-4' : ''}`}>
+      <div key={sectionId} className={`${isNested ? 'ml-4 border-l-2 border-base pl-4' : ''}`}>
         {title && (
           <div className="mb-2">
             <button
               onClick={() => handleToggleSection(sectionId)}
-              className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors"
+              className="flex items-center space-x-2 text-danger hover:text-danger/80 transition-colors"
             >
               <span className="text-sm font-medium">{title}</span>
               <span className="text-xs">
@@ -82,7 +82,7 @@ export const StackTraceViewer: React.FC<SmartViewProps> = ({
             </button>
           </div>
         )}
-        
+
         {!isCollapsed && (
           <>
             <ErrorInfoDisplay errorInfo={trace.errorInfo} />
@@ -93,7 +93,7 @@ export const StackTraceViewer: React.FC<SmartViewProps> = ({
             />
           </>
         )}
-        
+
         {/* Recursively render caused by sections */}
         {!isCollapsed && trace.causedBy && (
           <div className="mt-4">
@@ -111,14 +111,14 @@ export const StackTraceViewer: React.FC<SmartViewProps> = ({
 
   if (!content.trim()) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900 text-gray-400">
+      <div className="flex items-center justify-center h-full bg-surface text-secondary">
         <p>No stack trace content to display</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-gray-200" data-testid="stack-trace-viewer">
+    <div className="flex flex-col h-full bg-surface text-main" data-testid="stack-trace-viewer">
       {/* Toolbar */}
       <StackTraceToolbar
         hideLibraryFrames={hideLibraryFrames}

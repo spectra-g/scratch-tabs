@@ -144,7 +144,7 @@ describe("JsonTreeViewModal", () => {
     render(<JsonTreeViewModal {...defaultProps} />);
 
     const modalContainer = screen.getByText("JSON Tree View").closest("div")?.parentElement;
-    expect(modalContainer).toHaveClass("bg-gray-800", "rounded-lg", "shadow-xl");
+    expect(modalContainer).toHaveClass("bg-surface", "rounded-lg", "shadow-xl");
 
     const header = screen.getByText("JSON Tree View").closest("div");
     expect(header).toHaveClass("flex-none", "flex", "items-center", "justify-between");

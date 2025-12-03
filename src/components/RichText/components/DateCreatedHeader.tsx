@@ -31,7 +31,7 @@ export const DateCreatedHeader: React.FC<DateCreatedHeaderProps> = ({
 
   return (
     <div
-      className={`text-xs text-gray-500 py-4 px-6 font-medium tracking-wide text-center border-gray-700 ${className}`}
+      className={`text-xs text-muted py-4 px-6 font-medium tracking-wide text-center border-base ${className}`}
       data-testid="rich-text-date-created"
       role="heading"
       aria-label={`Document created on ${formatDate(dateCreated)}`}

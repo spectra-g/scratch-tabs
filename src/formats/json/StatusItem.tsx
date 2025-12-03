@@ -15,9 +15,9 @@ export const JsonStatusItem: React.FC<StatusItemProps> = ({ content = "", active
       data-testid="status-validation"
     >
       {validation.isValid ? (
-        <CheckCircle2 size={14} className="text-green-400" />
+        <CheckCircle2 size={14} className="text-success" />
       ) : (
-        <XCircle size={14} className="text-red-400" />
+        <XCircle size={14} className="text-danger" />
       )}
     </div>
   );

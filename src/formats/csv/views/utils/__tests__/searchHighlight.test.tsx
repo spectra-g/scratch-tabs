@@ -21,16 +21,16 @@ describe("highlightSearchTerm", () => {
   it("should highlight single match", () => {
     const result = highlightSearchTerm("Hello World", "World");
     const { container } = render(<div>{result}</div>);
-    
+
     expect(container.querySelector("mark")).toBeInTheDocument();
     expect(container.querySelector("mark")).toHaveTextContent("World");
-    expect(container.querySelector("mark")).toHaveClass("bg-yellow-400", "text-black", "px-0.5", "rounded");
+    expect(container.querySelector("mark")).toHaveClass("bg-warning", "text-gray-900", "px-0.5", "rounded");
   });
 
   it("should highlight multiple matches case-insensitively", () => {
     const result = highlightSearchTerm("Hello hello HELLO", "hello");
     const { container } = render(<div>{result}</div>);
-    
+
     const marks = container.querySelectorAll("mark");
     expect(marks).toHaveLength(3);
     expect(marks[0]).toHaveTextContent("Hello");
@@ -41,7 +41,7 @@ describe("highlightSearchTerm", () => {
   it("should handle special regex characters in query", () => {
     const result = highlightSearchTerm("Test (with) special chars", "(with)");
     const { container } = render(<div>{result}</div>);
-    
+
     const mark = container.querySelector("mark");
     expect(mark).toBeInTheDocument();
     expect(mark).toHaveTextContent("(with)");
@@ -50,7 +50,7 @@ describe("highlightSearchTerm", () => {
   it("should preserve text around highlights", () => {
     const result = highlightSearchTerm("Before test after", "test");
     const { container } = render(<div>{result}</div>);
-    
+
     expect(container.textContent).toBe("Before test after");
     expect(container.querySelector("mark")).toHaveTextContent("test");
   });
@@ -58,7 +58,7 @@ describe("highlightSearchTerm", () => {
   it("should handle partial word matches", () => {
     const result = highlightSearchTerm("testing test tested", "test");
     const { container } = render(<div>{result}</div>);
-    
+
     const marks = container.querySelectorAll("mark");
     expect(marks).toHaveLength(3);
     expect(marks[0]).toHaveTextContent("test");

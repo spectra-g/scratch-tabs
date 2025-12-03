@@ -20,6 +20,7 @@ import { UpgradeConfirmationModal } from "../RichText";
 import { useClipboardStore } from "../../stores/clipboardStore";
 import { useCalloutStore } from "../../stores/calloutStore";
 import { SmartViewCalloutWidget } from "./SmartViewCalloutWidget";
+import { useThemeStore } from "../../stores/themeStore";
 
 interface EditorInstanceProps {
   side: "left" | "right";
@@ -108,6 +109,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   // Smart View Callout Store
   const { isVisible: isCalloutVisible, tabId: calloutTabId, view: calloutView, languageId: calloutLanguageId } = useCalloutStore();
 
+  // Theme Store
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+
   // --- Ref to hold the latest activeTab data ---
   const latestActiveTabRef = useRef(activeTab);
   useEffect(() => {
@@ -170,7 +174,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
     const editor = editorRef.current;
     const previousTabId = currentTabIdRef.current;
-    
+
     // Skip if we're not actually switching tabs
     if (previousTabId === activeTabId) {
       return;
@@ -207,7 +211,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         if (newViewState) {
           editor.restoreViewState(newViewState);
         }
-        
+
         // Always check for and apply cursor position from database if available
         // This ensures that debounced cursor position updates are applied even when view state exists
         const dbCursorPos = activeTabWithoutCursor.cursorPosition;
@@ -264,7 +268,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
           if (
             editorRef.current &&
             document.activeElement !==
-              editorRef.current.getDomNode()?.querySelector("textarea")
+            editorRef.current.getDomNode()?.querySelector("textarea")
           ) {
             editorRef.current.focus();
           }
@@ -276,7 +280,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }
   }, [side, activeTabId, activeEditorSide]);
 
-  
+
   useEffect(() => {
     const container = editorContainerRef.current;
     if (!container || !activeTab || activeTab.isRich) return;
@@ -305,12 +309,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
             reader.onload = (e) => {
               const dataUrl = e.target?.result as string;
               setPendingImageData(dataUrl);
-              
+
               // Store cursor position along with image data
               if (cursorPosition) {
                 setPendingImageCursorPosition(cursorPosition);
               }
-              
+
               if (onUpgradeToRich) {
                 setShowUpgradeModal(true);
               }
@@ -427,6 +431,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     };
   }, [editorRef.current, isCalloutVisible, calloutTabId, calloutView, calloutLanguageId, activeTabId]);
 
+
+
   const handleEditorDidMount = (
     editor: Monaco.editor.IStandaloneCodeEditor,
     monaco: typeof Monaco,
@@ -533,16 +539,16 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       // Paste Detection Listener - Use keyboard event to catch paste BEFORE content changes
       editor.onKeyDown((e) => {
         try {
-          
+
           // Detect Ctrl+V (Windows/Linux) or Cmd+V (Mac)
           // Try multiple ways to detect V key
           const isPasteShortcut = (e.ctrlKey || e.metaKey) && (
             e.keyCode === 86 || // KeyCode for 'V'
-            e.browserEvent?.key === 'v' || 
+            e.browserEvent?.key === 'v' ||
             e.browserEvent?.key === 'V' ||
             e.browserEvent?.code === 'KeyV'
           );
-          
+
           if (isPasteShortcut) {
             const currentTab = latestActiveTabRef.current;
             if (currentTab) {
@@ -617,7 +623,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }
   };
 
-  
+
 
   // Upgrade modal handlers
   const handleUpgradeConfirm = () => {
@@ -637,9 +643,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-850">
+    <div className="flex flex-col h-full w-full bg-surface">
       <div
-        className="flex-grow relative overflow-hidden"
+        className="flex-grow relative overflow-hidden border-l border-base"
         ref={editorContainerRef}
         data-testid="monaco-editor-container"
       >
@@ -650,7 +656,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
           <Editor
             height="100%"
             width="100%"
-            theme="vs-dark"
+            theme={isDarkMode ? "vs-dark" : "vs"}
             onMount={handleEditorDidMount}
             key={side} // Key by side to ensure we have two distinct editor instances
             options={{
@@ -666,8 +672,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
                 addExtraSpaceOnTop: false,
               },
             }}
-            // NO `value`, `defaultValue`, `language`, or `onChange` props!
-            // The model manager now controls everything imperatively.
+          // NO `value`, `defaultValue`, `language`, or `onChange` props!
+          // The model manager now controls everything imperatively.
           />
           {showTabletSelector && (
             <div

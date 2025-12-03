@@ -26,11 +26,11 @@ interface JsonLogToolbarProps {
 }
 
 const LOG_LEVELS = [
-  { key: "error", label: "Error", color: "text-red-400 bg-red-500/20" },
-  { key: "warn", label: "Warn", color: "text-yellow-400 bg-yellow-500/20" },
-  { key: "info", label: "Info", color: "text-blue-400 bg-blue-500/20" },
-  { key: "debug", label: "Debug", color: "text-green-400 bg-green-500/20" },
-  { key: "trace", label: "Trace", color: "text-purple-400 bg-purple-500/20" },
+  { key: "error", label: "Error", color: "text-red-600 dark:text-red-400 bg-red-600/20" },
+  { key: "warn", label: "Warn", color: "text-yellow-600 dark:text-yellow-400 bg-yellow-600/20" },
+  { key: "info", label: "Info", color: "text-blue-600 dark:text-blue-400 bg-blue-600/20" },
+  { key: "debug", label: "Debug", color: "text-green-600 dark:text-green-400 bg-green-600/20" },
+  { key: "trace", label: "Trace", color: "text-blue-600 dark:text-blue-400 bg-blue-600/20" },
 ];
 
 export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
@@ -94,24 +94,24 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
   const hiddenColumns = columns.filter(col => !col.isVisible);
 
   return (
-    <div className="flex-none border-b border-gray-700 p-3 bg-gray-800/50">
+    <div className="flex-none border-b border-base p-3 bg-surface-secondary">
       {/* Top Row: Search and Log Levels */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-4">
           {/* Text Search */}
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" />
             <input
               type="text"
               value={filter.textSearch}
               onChange={handleTextSearchChange}
               placeholder="Search logs..."
-              className="pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 w-64"
+              className="pl-10 pr-4 py-2 bg-element border border-base rounded text-sm text-main placeholder-secondary focus:outline-none focus:border-focus w-64"
             />
             {filter.textSearch && (
               <button
                 onClick={() => onFilterChange({ textSearch: "" })}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-main"
               >
                 <X size={14} />
               </button>
@@ -120,16 +120,15 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
 
           {/* Log Level Filters */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-400">Levels:</span>
+            <span className="text-sm text-secondary">Levels:</span>
             {LOG_LEVELS.map((level) => (
               <button
                 key={level.key}
                 onClick={() => handleLogLevelToggle(level.key)}
-                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                  filter.logLevels.has(level.key)
-                    ? level.color
-                    : "text-gray-500 bg-gray-700/50 hover:bg-gray-700"
-                }`}
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors focus:outline-none border border-transparent ${filter.logLevels.has(level.key)
+                  ? level.color
+                  : "text-secondary bg-element/50 hover:bg-element"
+                  }`}
               >
                 {level.label}
                 {stats.logLevelCounts[level.key] && (
@@ -146,7 +145,7 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
         {(filter.textSearch || filter.logLevels.size < 5) && (
           <button
             onClick={handleClearFilters}
-            className="text-sm text-gray-400 hover:text-gray-200 underline"
+            className="text-sm text-secondary hover:text-main underline"
           >
             Clear Filters
           </button>
@@ -160,7 +159,7 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowColumnManager(!showColumnManager)}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-element hover:bg-element-hover rounded text-sm transition-colors"
             >
               <Eye size={14} />
               <span>Columns ({visibleColumns.length}/{columns.length})</span>
@@ -173,39 +172,39 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
                   className="fixed inset-0 z-30"
                   onClick={() => setShowColumnManager(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[250px] max-h-64 overflow-y-auto custom-scrollbar">
+                <div className="absolute top-full left-0 mt-1 bg-surface border border-base rounded-lg shadow-xl z-40 min-w-[250px] max-h-64 overflow-y-auto custom-scrollbar">
                   <div className="p-2">
-                    <div className="text-xs text-gray-400 mb-2 font-medium">Visible Columns</div>
+                    <div className="text-xs text-secondary mb-2 font-medium">Visible Columns</div>
                     {visibleColumns.map((column) => (
                       <label
                         key={column.id}
-                        className="flex items-center space-x-2 p-1 hover:bg-gray-700/50 rounded cursor-pointer"
+                        className="flex items-center space-x-2 p-1 hover:bg-element-hover rounded cursor-pointer"
                       >
                         <input
                           type="checkbox"
                           checked={true}
                           onChange={() => onToggleColumnVisibility(column.id)}
-                          className="rounded border-gray-600 bg-gray-700 text-blue-500"
+                          className="rounded border-base bg-element text-primary"
                         />
-                        <span className="text-sm text-gray-200">{column.name}</span>
+                        <span className="text-sm text-main">{column.name}</span>
                       </label>
                     ))}
-                    
+
                     {hiddenColumns.length > 0 && (
                       <>
-                        <div className="text-xs text-gray-400 mt-3 mb-2 font-medium">Hidden Columns</div>
+                        <div className="text-xs text-secondary mt-3 mb-2 font-medium">Hidden Columns</div>
                         {hiddenColumns.map((column) => (
                           <label
                             key={column.id}
-                            className="flex items-center space-x-2 p-1 hover:bg-gray-700/50 rounded cursor-pointer"
+                            className="flex items-center space-x-2 p-1 hover:bg-element-hover rounded cursor-pointer"
                           >
                             <input
                               type="checkbox"
                               checked={false}
                               onChange={() => onToggleColumnVisibility(column.id)}
-                              className="rounded border-gray-600 bg-gray-700 text-blue-500"
+                              className="rounded border-base bg-element text-primary"
                             />
-                            <span className="text-sm text-gray-400">{column.name}</span>
+                            <span className="text-sm text-secondary">{column.name}</span>
                           </label>
                         ))}
                       </>
@@ -219,7 +218,7 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
           {/* Stats Button */}
           <button
             onClick={onShowStats}
-            className="flex items-center space-x-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+            className="flex items-center space-x-2 px-3 py-1.5 bg-element hover:bg-element-hover rounded text-sm transition-colors"
           >
             <BarChart3 size={14} />
             <span>Column Stats</span>
@@ -229,7 +228,7 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-element hover:bg-element-hover rounded text-sm transition-colors"
             >
               <Download size={14} />
               <span>Export</span>
@@ -242,37 +241,37 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
                   className="fixed inset-0 z-30"
                   onClick={() => setShowExportMenu(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-40 min-w-[220px]">
+                <div className="absolute top-full left-0 mt-1 bg-surface border border-base rounded-lg shadow-xl z-40 min-w-[220px]">
                   <div className="py-1">
                     <button
                       onClick={() => handleExport("ndjson")}
-                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <div className="flex items-center space-x-2">
-                        <Code size={16} className="text-yellow-400" />
+                        <Code size={16} className="text-warning" />
                         <span>NDJSON</span>
                       </div>
-                      <span className="text-xs text-gray-500">log-export.ndjson</span>
+                      <span className="text-xs text-muted">log-export.ndjson</span>
                     </button>
                     <button
                       onClick={() => handleExport("json")}
-                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <div className="flex items-center space-x-2">
-                        <Code size={16} className="text-blue-400" />
+                        <Code size={16} className="text-info" />
                         <span>JSON Array</span>
                       </div>
-                      <span className="text-xs text-gray-500">log-export.json</span>
+                      <span className="text-xs text-muted">log-export.json</span>
                     </button>
                     <button
                       onClick={() => handleExport("csv")}
-                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"
                     >
                       <div className="flex items-center space-x-2">
-                        <FileText size={16} className="text-green-400" />
+                        <FileText size={16} className="text-success" />
                         <span>CSV</span>
                       </div>
-                      <span className="text-xs text-gray-500">log-export.csv</span>
+                      <span className="text-xs text-muted">log-export.csv</span>
                     </button>
                   </div>
                 </div>
@@ -282,12 +281,12 @@ export const JsonLogToolbar: React.FC<JsonLogToolbarProps> = ({
         </div>
 
         {/* Stats Display */}
-        <div className="flex items-center space-x-4 text-sm text-gray-400">
+        <div className="flex items-center space-x-4 text-sm text-secondary">
           <span>
             Showing {filteredCount.toLocaleString()} of {totalCount.toLocaleString()} entries
           </span>
           {stats.invalidEntries > 0 && (
-            <span className="text-yellow-400">
+            <span className="text-warning">
               {stats.invalidEntries} invalid
             </span>
           )}

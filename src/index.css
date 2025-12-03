@@ -4,24 +4,402 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@layer utilities {
-  .custom-scrollbar {
-    @apply scrollbar-thin scrollbar-thumb-[#4e4e4e] scrollbar-track-[#1e1e1e];
-    /*
-       scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800/50 hover:scrollbar-thumb-gray-500
 
-       */
+@layer base {
+  :root {
+    /* Semantic Design Tokens - Surfaces */
+    --color-canvas: 248 250 252;
+    /* slate-50 */
+    --color-surface: 240 244 248;
+    /* white */
+    --color-surface-secondary: 241 245 249;
+    /* slate-100 */
+    --color-surface-highlight: 226 232 240;
+    /* slate-200 */
+    --color-surface-raised: 255 255 255;
+    /* white */
+    --color-surface-glass: 226 232 240;
+
+    /* Semantic Design Tokens - Elements */
+    --color-element: 248 250 252;
+    /* slate-50 - Improved contrast against white surface */
+    --color-element-hover: 241 245 249;
+    /* slate-100 */
+    --color-element-active: 245 249 253;
+
+    /* Semantic Design Tokens - Text */
+    --color-text-main: 15 23 42;
+    /* slate-900 */
+    --color-text-secondary: 71 85 105;
+    /* slate-600 */
+    --color-text-muted: 100 116 139;
+    /* slate-500 - better contrast than 400 */
+    --color-icon-themed: 71 85 105;
+    /* slate-600 */
+
+    /* Semantic Design Tokens - Borders */
+    --color-border-base: 226 232 240;
+    /* slate-200 */
+    --color-border-focus: 59 130 246;
+    /* blue-500 */
+
+    /* Semantic Design Tokens - Data Types (Syntax Highlighting) */
+    --color-token-string: 22 163 74;
+    /* green-600 (matches success) */
+    --color-token-number: 37 99 235;
+    /* blue-600 (matches primary) */
+    --color-token-boolean: 147 51 234;
+    /* purple-600 */
+    --color-token-key: 15 23 42;
+    /* slate-900 (matches text-main) */
+    --color-token-keyword: 220 38 38;
+    /* red-600 (matches danger) */
+
+    /* Semantic Design Tokens - Status Colors */
+    --color-primary: 37 99 235;
+    /* blue-600 */
+    --color-info: 37 99 235;
+    /* blue-600 */
+    --color-success: 22 163 74;
+    /* green-600 */
+    --color-warning: 202 138 4;
+    /* yellow-600 */
+    --color-danger: 220 38 38;
+    /* red-600 */
+
+    /* Semantic Design Tokens - Subtle Backgrounds (New) */
+    --bg-opacity-subtle: 1;
+    --color-success-subtle-bg: 220 252 231;
+    /* green-100 */
+    --color-success-subtle-text: 22 101 52;
+    /* green-800 */
+    --color-danger-subtle-bg: 254 226 226;
+    /* red-100 */
+    --color-danger-subtle-text: 153 27 27;
+    /* red-800 */
+    --color-warning-subtle-bg: 254 249 195;
+    /* yellow-100 */
+    --color-warning-subtle-text: 133 77 14;
+    /* yellow-800 */
+    --color-info-subtle-bg: 219 234 254;
+    /* blue-100 */
+    --color-info-subtle-text: 30 64 175;
+    /* blue-800 */
+
+    /* Semantic Design Tokens - Inputs (New) */
+    --color-input-bg: 255 255 255;
+    /* white */
+    --color-input-border: 203 213 225;
+    /* slate-300 */
+    --color-input-text: 15 23 42;
+    /* slate-900 */
+    --color-input-placeholder: 148 163 184;
+    /* slate-400 */
+
+    /* Rich Text Editor Colors */
+    --code-inline-bg: 241 245 249;
+    /* slate-100 */
+    --code-inline-text: 202 138 4;
+    /* yellow-600 */
+    --code-block-bg: 248 250 252;
+    /* slate-50 */
+    --code-block-border: 226 232 240;
+    /* slate-200 */
+    --code-block-text: 51 65 85;
+    /* slate-700 */
+    --table-header-bg: 241 245 249;
+    /* slate-100 */
+    --table-cell-bg: 255 255 255;
+    /* white */
+    --table-border: 226 232 240;
+    /* slate-200 */
+    --blockquote-border: 148 163 184;
+    /* slate-400 */
+    --blockquote-text: 100 116 139;
+    /* slate-500 */
+    --link-color: 37 99 235;
+    /* blue-600 */
+    --link-hover: 29 78 216;
+    /* blue-700 */
+    --heading-color: 15 23 42;
+    /* slate-900 */
+
+    /* Syntax Highlighting Colors (Light Mode - GitHub style) */
+    --syntax-comment: 87 96 106;
+    /* gray-600 - comments and docs */
+    --syntax-keyword: 207 34 46;
+    /* red-600 - keywords like const, function */
+    --syntax-string: 3 47 98;
+    /* blue-900 - string literals */
+    --syntax-number: 0 92 197;
+    /* blue-700 - numbers */
+    --syntax-function: 102 57 186;
+    /* purple-700 - function names */
+    --syntax-variable: 227 98 9;
+    /* orange-600 - variables */
+    --syntax-operator: 215 58 73;
+    /* rose-600 - operators */
+    --syntax-punctuation: 36 41 47;
+    /* gray-800 - brackets, commas */
+
+    /* Scrollbar Colors */
+    --scrollbar-track: 241 245 249;
+    /* slate-100 */
+    --scrollbar-thumb: 148 163 184;
+    /* slate-400 */
+    --scrollbar-thumb-hover: 100 116 139;
+    /* slate-500 */
+  }
+
+  .dark {
+    /* Semantic Design Tokens - Surfaces */
+    --color-canvas: 17 24 39;
+    /* gray-900 */
+    --color-surface: 31 41 55;
+    /* gray-800 */
+    --color-surface-secondary: 26 32 44;
+    /* gray-850 */
+    --color-surface-highlight: 55 65 81;
+    /* gray-700 - Differentiated from surface */
+    --color-surface-raised: 17 24 39;
+    /* gray-900 */
+    --color-surface-glass: 31 41 55;
+    /* gray-800 */
+
+    /* Semantic Design Tokens - Elements */
+    --color-element: 31 41 55;
+    /* gray-800 */
+    --color-element-hover: 55 65 81;
+    /* gray-700 */
+    --color-element-active: 75 85 99;
+    /* gray-600 */
+
+    /* Semantic Design Tokens - Text */
+    --color-text-main: 243 244 246;
+    /* gray-100 */
+    --color-text-secondary: 156 163 175;
+    /* gray-400 */
+    --color-text-muted: 107 114 128;
+    /* gray-500 */
+    --color-icon-themed: 209 213 219;
+    /* gray-300 */
+
+    /* Semantic Design Tokens - Borders */
+    --color-border-base: 55 65 81;
+    /* gray-700 */
+    --color-border-focus: 59 130 246;
+    /* blue-500 */
+
+    /* Semantic Design Tokens - Data Types (Syntax Highlighting) */
+    --color-token-string: 74 222 128;
+    /* green-400 (matches success) */
+    --color-token-number: 96 165 250;
+    /* blue-400 (matches info) */
+    --color-token-boolean: 192 132 252;
+    /* purple-400 */
+    --color-token-key: 243 244 246;
+    /* gray-100 (matches text-main) */
+    --color-token-keyword: 248 113 113;
+    /* red-400 (matches danger) */
+
+    /* Semantic Design Tokens - Status Colors */
+    --color-primary: 37 99 235;
+    /* blue-600 */
+    --color-info: 96 165 250;
+    /* blue-400 */
+    --color-success: 74 222 128;
+    /* green-400 */
+    --color-warning: 250 204 21;
+    /* yellow-400 */
+    --color-danger: 248 113 113;
+    /* red-400 */
+
+    /* Semantic Design Tokens - Subtle Backgrounds (New) */
+    --bg-opacity-subtle: 0.3;
+    --color-success-subtle-bg: 20 83 45;
+    /* green-900 with opacity handled via alpha if needed, or solid dark green */
+    /* Using solid colors for variables, opacity handled in utility or here. 
+       Let's use the values from tailwind config but as RGB triplets for consistency if we want opacity support, 
+       or just hex/rgb values. 
+       The user asked to define --color-success-subtle-bg. 
+       Tailwind config had: dark:bg-green-900/30. 
+       Let's define the base color and handle opacity in usage or define the result color.
+       To match "rgb(var(...))" pattern, we should store RGB triplets.
+    */
+    --color-success-subtle-bg: 20 83 45;
+    /* green-900ish */
+    --color-success-subtle-text: 187 247 208;
+    /* green-200 */
+    --color-danger-subtle-bg: 127 29 29;
+    /* red-900ish */
+    --color-danger-subtle-text: 254 202 202;
+    /* red-200 */
+    --color-warning-subtle-bg: 113 63 18;
+    /* yellow-900ish */
+    --color-warning-subtle-text: 254 240 138;
+    /* yellow-200 */
+    --color-info-subtle-bg: 30 58 138;
+    /* blue-900ish */
+    --color-info-subtle-text: 191 219 254;
+    /* blue-200 */
+
+    /* Semantic Design Tokens - Inputs (New) */
+    --color-input-bg: 17 24 39;
+    /* gray-900 */
+    --color-input-border: 75 85 99;
+    /* gray-600 */
+    --color-input-text: 243 244 246;
+    /* gray-100 */
+    --color-input-placeholder: 156 163 175;
+    /* gray-400 */
+
+    /* Rich Text Editor Colors */
+    --code-inline-bg: 55 65 81;
+    /* gray-700 */
+    --code-inline-text: 251 191 36;
+    /* yellow-400 */
+    --code-block-bg: 31 41 55;
+    /* gray-800 */
+    --code-block-border: 55 65 81;
+    /* gray-700 */
+    --code-block-text: 209 213 219;
+    /* gray-300 */
+    --table-header-bg: 31 41 55;
+    /* gray-800 */
+    --table-cell-bg: 17 24 39;
+    /* gray-900 */
+    --table-border: 55 65 81;
+    /* gray-700 */
+    --blockquote-border: 107 114 128;
+    /* gray-500 */
+    --blockquote-text: 156 163 175;
+    /* gray-400 */
+    --link-color: 96 165 250;
+    /* blue-400 */
+    --link-hover: 147 197 253;
+    /* blue-300 */
+    --heading-color: 249 250 251;
+    /* gray-50 */
+
+    /* Syntax Highlighting Colors (Dark Mode - GitHub Dark style) */
+    --syntax-comment: 139 148 158;
+    /* gray-500 - comments and docs */
+    --syntax-keyword: 255 123 114;
+    /* red-400 - keywords like const, function */
+    --syntax-string: 165 214 255;
+    /* blue-300 - string literals */
+    --syntax-number: 121 192 255;
+    /* blue-400 - numbers */
+    --syntax-function: 210 168 255;
+    /* purple-400 - function names */
+    --syntax-variable: 255 184 108;
+    /* orange-400 - variables */
+    --syntax-operator: 255 117 127;
+    /* rose-400 - operators */
+    --syntax-punctuation: 201 209 217;
+    /* gray-400 - brackets, commas */
+
+    /* Scrollbar Colors */
+    --scrollbar-track: 17 24 39;
+    /* gray-900 - very dark */
+    --scrollbar-thumb: 55 65 81;
+    /* gray-700 - medium dark */
+    --scrollbar-thumb-hover: 75 85 99;
+    /* gray-600 - slightly lighter */
   }
 }
+
+/* Select and Option Theming */
+/* Use native OS controls for best UX */
+select {
+  color-scheme: light;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+  appearance: auto;
+}
+
+.dark select {
+  color-scheme: dark;
+  /* Use dark OS controls in dark mode */
+}
+
+/* Light mode options */
+select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  /* slate-900 */
+}
+
+/* Dark mode options - use dark backgrounds for better UX */
+.dark select option {
+  background-color: #1f2937 !important;
+  /* gray-800 */
+  color: #f3f4f6 !important;
+  /* gray-100 */
+}
+
+/* Additional browser-specific overrides */
+select::-webkit-scrollbar {
+  width: 12px;
+}
+
+select::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  /* slate-100 */
+}
+
+select::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  /* slate-300 */
+  border-radius: 6px;
+}
+
+select::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  /* slate-400 */
+}
+
+@layer utilities {
+  .custom-scrollbar {
+    /* Use semantic scrollbar colors that adapt to theme */
+    scrollbar-color: rgb(var(--scrollbar-thumb)) rgb(var(--scrollbar-track));
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgb(var(--scrollbar-track));
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(var(--scrollbar-thumb));
+    border-radius: 9999px;
+    border: 4px solid transparent;
+    background-clip: content-box;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--scrollbar-thumb-hover));
+    background-clip: content-box;
+  }
+}
+
 @layer components {
   .search-highlight-line {
-    @apply bg-blue-900 bg-opacity-20; /* Example Tailwind class */
+    @apply bg-blue-900 bg-opacity-20;
+    /* Example Tailwind class */
     /* Or use direct CSS: background-color: rgba(30, 64, 175, 0.2); */
   }
+
   .search-highlight-match {
-    @apply bg-yellow-500 bg-opacity-40 rounded-sm; /* Example Tailwind class */
+    @apply bg-yellow-500 bg-opacity-40 rounded-sm;
+    /* Example Tailwind class */
     /* Or use direct CSS: background-color: rgba(234, 179, 8, 0.4); border-radius: 2px; */
   }
+
   /* Optional: Style for inline decorations if needed */
   .search-match-inline-decoration {
     /* Add styles like text-decoration: underline; */
@@ -38,11 +416,12 @@
 .rich-text-editor .ProseMirror {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   outline: none;
-  color: #d1d5db; /* text-gray-300 */
+  color: rgb(var(--color-text-main));
   line-height: 1.4 !important;
   min-height: 100%;
   padding: 1rem;
-  padding-bottom: 200px; /* Ensure scrollability past tables */
+  padding-bottom: 200px;
+  /* Ensure scrollability past tables */
 }
 
 
@@ -51,7 +430,7 @@
   line-height: 1.4 !important;
 }
 
-.rich-text-editor .ProseMirror.prose > * + * {
+.rich-text-editor .ProseMirror.prose>*+* {
   margin-top: 0.5rem !important;
 }
 
@@ -61,7 +440,7 @@
 .rich-text-editor .ProseMirror h4,
 .rich-text-editor .ProseMirror h5,
 .rich-text-editor .ProseMirror h6 {
-  color: #f9fafb; /* text-gray-50 */
+  color: rgb(var(--heading-color));
   font-weight: 600;
   margin-top: 0.75rem !important;
   margin-bottom: 0.5rem !important;
@@ -79,12 +458,29 @@
   line-height: 1.3 !important;
 }
 
-.rich-text-editor .ProseMirror h1 { font-size: 2rem; }
-.rich-text-editor .ProseMirror h2 { font-size: 1.5rem; }
-.rich-text-editor .ProseMirror h3 { font-size: 1.25rem; }
-.rich-text-editor .ProseMirror h4 { font-size: 1.125rem; }
-.rich-text-editor .ProseMirror h5 { font-size: 1rem; }
-.rich-text-editor .ProseMirror h6 { font-size: 0.875rem; }
+.rich-text-editor .ProseMirror h1 {
+  font-size: 2rem;
+}
+
+.rich-text-editor .ProseMirror h2 {
+  font-size: 1.5rem;
+}
+
+.rich-text-editor .ProseMirror h3 {
+  font-size: 1.25rem;
+}
+
+.rich-text-editor .ProseMirror h4 {
+  font-size: 1.125rem;
+}
+
+.rich-text-editor .ProseMirror h5 {
+  font-size: 1rem;
+}
+
+.rich-text-editor .ProseMirror h6 {
+  font-size: 0.875rem;
+}
 
 .rich-text-editor .ProseMirror p {
   margin-bottom: 0.25rem !important;
@@ -97,7 +493,7 @@
 }
 
 .rich-text-editor .ProseMirror strong {
-  color: #f9fafb; /* text-gray-50 */
+  color: rgb(var(--heading-color));
   font-weight: 600;
 }
 
@@ -107,8 +503,8 @@
 
 .rich-text-editor .ProseMirror code,
 .rich-text-editor .ProseMirror .inline-code {
-  background-color: #374151; /* bg-gray-700 */
-  color: #fbbf24; /* text-yellow-400 */
+  background-color: rgb(var(--code-inline-bg));
+  color: rgb(var(--code-inline-text));
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
@@ -127,18 +523,18 @@
 
 /* Code block styles - each pre element gets full borders since each code block is one pre element */
 .rich-text-editor .ProseMirror pre {
-  background-color: #1f2937 !important; /* bg-gray-800 */
-  border: 1px solid #374151 !important; /* All borders for each code block */
-  border-radius: 0.25rem !important; /* Full border radius */
-  padding: 1rem 1rem !important; /* Added vertical padding for gap above/below content */
+  background-color: rgb(var(--code-block-bg)) !important;
+  border: 1px solid rgb(var(--code-block-border)) !important;
+  border-radius: 0.25rem !important;
+  padding: 1rem 1rem !important;
   overflow-x: auto !important;
   margin: 0 !important;
-  line-height: 1.5 !important; /* Better line spacing for code */
+  line-height: 1.5 !important;
   font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', monospace !important;
   font-size: inherit !important;
   white-space: pre-wrap !important;
   display: block !important;
-  
+
   /* Enable programming ligatures */
   font-variant-ligatures: common-ligatures;
   -webkit-font-feature-settings: "liga" on, "calt" on;
@@ -147,28 +543,94 @@
 
 /* Default text color for code blocks without syntax highlighting */
 .rich-text-editor .ProseMirror pre {
-  color: #d1d5db; /* text-gray-300 - no !important to allow syntax highlighting override */
+  color: rgb(var(--code-block-text));
 }
 
 
 /* Override prose plugin for code blocks */
 .rich-text-editor .ProseMirror.prose pre {
   margin: 0 !important;
-  padding: 1rem 1rem !important; /* Match our main code block padding */
-  line-height: 1.0 !important; /* Match our main line-height */
+  padding: 1rem 1rem !important;
+  /* Match our main code block padding */
+  line-height: 1.0 !important;
+  /* Match our main line-height */
   font-size: inherit !important;
 }
 
 /* Clean up inner code elements */
 .rich-text-editor .ProseMirror pre code {
   background: none !important;
-  color: #d1d5db !important; /* text-gray-300 */
+  color: rgb(var(--code-block-text)) !important;
   padding: 0 !important;
   margin: 0 !important;
   line-height: inherit !important;
   font-size: inherit !important;
   font-family: inherit !important;
   border: none !important;
+}
+
+/* Syntax Highlighting - Using CSS Variables for Theme Support */
+.rich-text-editor .ProseMirror pre .hljs-comment,
+.rich-text-editor .ProseMirror pre .hljs-quote {
+  color: rgb(var(--syntax-comment));
+  font-style: italic;
+}
+
+.rich-text-editor .ProseMirror pre .hljs-keyword,
+.rich-text-editor .ProseMirror pre .hljs-selector-tag,
+.rich-text-editor .ProseMirror pre .hljs-subst {
+  color: rgb(var(--syntax-keyword));
+  font-weight: 600;
+}
+
+.rich-text-editor .ProseMirror pre .hljs-string,
+.rich-text-editor .ProseMirror pre .hljs-attr,
+.rich-text-editor .ProseMirror pre .hljs-regexp,
+.rich-text-editor .ProseMirror pre .hljs-template-tag {
+  color: rgb(var(--syntax-string));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-number,
+.rich-text-editor .ProseMirror pre .hljs-literal {
+  color: rgb(var(--syntax-number));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-title,
+.rich-text-editor .ProseMirror pre .hljs-title.function_,
+.rich-text-editor .ProseMirror pre .hljs-title.class_,
+.rich-text-editor .ProseMirror pre .hljs-function {
+  color: rgb(var(--syntax-function));
+  font-weight: 600;
+}
+
+.rich-text-editor .ProseMirror pre .hljs-variable,
+.rich-text-editor .ProseMirror pre .hljs-params,
+.rich-text-editor .ProseMirror pre .hljs-property {
+  color: rgb(var(--syntax-variable));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-operator,
+.rich-text-editor .ProseMirror pre .hljs-symbol {
+  color: rgb(var(--syntax-operator));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-punctuation,
+.rich-text-editor .ProseMirror pre .hljs-meta {
+  color: rgb(var(--syntax-punctuation));
+}
+
+/* Additional semantic highlights */
+.rich-text-editor .ProseMirror pre .hljs-built_in,
+.rich-text-editor .ProseMirror pre .hljs-class {
+  color: rgb(var(--syntax-function));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-tag {
+  color: rgb(var(--syntax-keyword));
+}
+
+.rich-text-editor .ProseMirror pre .hljs-name {
+  color: rgb(var(--syntax-variable));
 }
 
 .rich-text-editor .ProseMirror ul,
@@ -195,20 +657,20 @@
 }
 
 .rich-text-editor .ProseMirror blockquote {
-  border-left: 4px solid #6b7280; /* border-gray-500 */
+  border-left: 4px solid rgb(var(--blockquote-border));
   padding-left: 1rem;
   margin: 1rem 0;
   font-style: italic;
-  color: #9ca3af; /* text-gray-400 */
+  color: rgb(var(--blockquote-text));
 }
 
 .rich-text-editor .ProseMirror a {
-  color: #60a5fa; /* text-blue-400 */
+  color: rgb(var(--link-color));
   text-decoration: underline;
 }
 
 .rich-text-editor .ProseMirror a:hover {
-  color: #93c5fd; /* text-blue-300 */
+  color: rgb(var(--link-hover));
 }
 
 .rich-text-editor .ProseMirror table {
@@ -217,7 +679,7 @@
   margin: 1rem 0;
   width: auto;
   table-layout: auto;
-  border: 1px solid #374151; /* border-gray-700 */
+  border: 1px solid rgb(var(--table-border));
   border-radius: 0.375rem;
   min-width: 50%;
 }
@@ -226,34 +688,34 @@
 .rich-text-editor .ProseMirror td {
   padding: 0.375rem 0.75rem;
   text-align: left;
-  border: none; /* Start with no borders */
-  border-right: 1px solid #374151; /* Right border for all */
-  border-bottom: 1px solid #374151; /* Bottom border for all */
+  border: none;
+  border-right: 1px solid rgb(var(--table-border));
+  border-bottom: 1px solid rgb(var(--table-border));
   min-width: 120px;
   width: auto;
 }
 
 .rich-text-editor .ProseMirror th {
-  background-color: #1f2937; /* bg-gray-800 */
+  background-color: rgb(var(--table-header-bg));
   font-weight: 500;
-  color: #f3f4f6; /* text-gray-100 */
+  color: rgb(var(--color-text-main));
   font-size: 0.875rem;
 }
 
 .rich-text-editor .ProseMirror td {
-  background-color: #111827; /* bg-gray-900 */
+  background-color: rgb(var(--table-cell-bg));
 }
 
 /* First column gets left border */
 .rich-text-editor .ProseMirror th:first-child,
 .rich-text-editor .ProseMirror td:first-child {
-  border-left: 1px solid #374151;
+  border-left: 1px solid rgb(var(--table-border));
 }
 
 /* First row gets top border */
 .rich-text-editor .ProseMirror tr:first-child th,
 .rich-text-editor .ProseMirror tr:first-child td {
-  border-top: 1px solid #374151;
+  border-top: 1px solid rgb(var(--table-border));
 }
 
 /* Corner radius for edge cells */
@@ -286,34 +748,66 @@
 
 /* Background Textures */
 .texture-lined {
-  background-image: 
+  background-image:
     linear-gradient(transparent 24px, rgba(59, 130, 246, 0.15) 24px, rgba(59, 130, 246, 0.15) 25px, transparent 25px);
   background-size: 100% 26px;
-  background-color: #111827; /* bg-gray-900 */
+  background-color: #ffffff;
+  /* Light mode: white */
+}
+
+.dark .texture-lined {
+  background-color: #111827;
+  /* Dark mode: bg-gray-900 */
 }
 
 .texture-texture {
-  background-image: 
-    linear-gradient(45deg, rgba(255,255,255,0.015) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.015) 75%),
-    linear-gradient(-45deg, rgba(255,255,255,0.010) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.010) 75%);
+  background-image:
+    linear-gradient(45deg, rgba(100, 116, 139, 0.08) 25%, transparent 25%, transparent 75%, rgba(100, 116, 139, 0.08) 75%),
+    linear-gradient(-45deg, rgba(100, 116, 139, 0.05) 25%, transparent 25%, transparent 75%, rgba(100, 116, 139, 0.05) 75%);
   background-size: 8px 8px, 12px 12px;
   background-position: 0 0, 2px 2px;
-  background-color: #111827; /* bg-gray-900 */
+  background-color: #ffffff;
+  /* Light mode: white */
+}
+
+.dark .texture-texture {
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.015) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.015) 75%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.010) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.010) 75%);
+  background-color: #111827;
+  /* Dark mode: bg-gray-900 */
 }
 
 .texture-dots {
-  background-image: 
-    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(100, 116, 139, 0.15) 1px, transparent 0);
   background-size: 20px 20px;
-  background-color: #111827; /* bg-gray-900 */
+  background-color: #ffffff;
+  /* Light mode: white */
+}
+
+.dark .texture-dots {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+  background-color: #111827;
+  /* Dark mode: bg-gray-900 */
 }
 
 .texture-grid {
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-image:
+    linear-gradient(rgba(100, 116, 139, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 116, 139, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
-  background-color: #111827; /* bg-gray-900 */
+  background-color: #ffffff;
+  /* Light mode: white */
+}
+
+.dark .texture-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-color: #111827;
+  /* Dark mode: bg-gray-900 */
 }
 
 /* Blurred Content Effect */
@@ -344,8 +838,10 @@
 
 /* Search Highlight Styles for TipTap */
 .rich-text-editor .ProseMirror mark {
-  background-color: rgba(251, 191, 36, 0.4); /* yellow-400 with opacity */
-  color: #fbbf24; /* text-yellow-400 */
+  background-color: rgba(251, 191, 36, 0.4);
+  /* yellow-400 with opacity */
+  color: #fbbf24;
+  /* text-yellow-400 */
   border-radius: 0.125rem;
   padding: 0.125rem 0.25rem;
 }
@@ -362,7 +858,8 @@
 
 /* Selection Styles */
 .rich-text-editor .ProseMirror .selectedCell:after {
-  background: rgba(59, 130, 246, 0.3); /* blue-500 with opacity */
+  background: rgba(59, 130, 246, 0.3);
+  /* blue-500 with opacity */
   content: "";
   left: 0;
   right: 0;

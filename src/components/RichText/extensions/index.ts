@@ -20,12 +20,11 @@ import css from 'highlight.js/lib/languages/css';
 import markdown from 'highlight.js/lib/languages/markdown';
 import bash from 'highlight.js/lib/languages/bash'; // Shell support
 import python from 'highlight.js/lib/languages/python';
-// DateCreatedNode removed - now rendered as external React component
 import { SearchExtension } from './SearchExtension';
 import { CodeBlockTabExtension } from './CodeBlockTabExtension';
 import { SmartCodeBlockToggle } from './SmartCodeBlockToggle';
+import { IndentListExtension } from './IndentListExtension';
 import 'prosemirror-view/style/prosemirror.css';
-import 'highlight.js/styles/github-dark.css'; // Add syntax highlighting theme
 
 import { Plugin, PluginKey } from 'prosemirror-state';
 
@@ -137,10 +136,11 @@ export const tiptapExtensions = [
   Link.configure({
     openOnClick: false,
     HTMLAttributes: {
-      class: 'text-blue-400 hover:text-blue-300 underline',
+      class: 'text-info hover:text-info-hover underline',
     },
   }),
   SearchExtension,
   CodeBlockTabExtension,
   SmartCodeBlockToggle,
+  IndentListExtension,
 ];

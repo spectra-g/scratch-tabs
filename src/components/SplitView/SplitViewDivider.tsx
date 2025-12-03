@@ -28,7 +28,7 @@ export const SplitViewDivider: React.FC<SplitViewDividerProps> = ({
         // Background colors based on state
         {
           "bg-blue-500": isDragging, // Blue when dragging
-          "bg-gray-700 group-hover:bg-blue-500": !isDragging, // Gray normally, blue on hover
+          "bg-element group-hover:bg-blue-500": !isDragging, // Gray normally, blue on hover
         },
         "transition-colors duration-100 ease-in-out", // Smooth color transition
       )}

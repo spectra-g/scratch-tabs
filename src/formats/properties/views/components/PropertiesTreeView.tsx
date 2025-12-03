@@ -50,16 +50,15 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   return (
     <div>
       <div
-        className={`flex items-center py-1 px-2 cursor-pointer hover:bg-gray-700/50 transition-colors ${
-          isSelected ? "bg-blue-500/20 text-blue-300" : "text-gray-300"
-        }`}
+        className={`flex items-center py-1 px-2 cursor-pointer hover:bg-element-hover transition-colors ${isSelected ? "bg-primary/20 text-primary" : "text-main"
+          }`}
         style={{ paddingLeft: `${8 + indentPx}px` }}
         onClick={handleClick}
       >
         {/* Expand/Collapse Button */}
         <button
           onClick={handleToggleExpand}
-          className="flex-shrink-0 w-4 h-4 flex items-center justify-center mr-1 hover:bg-gray-600/50 rounded"
+          className="flex-shrink-0 w-4 h-4 flex items-center justify-center mr-1 hover:bg-element-hover rounded"
         >
           {hasChildren ? (
             isExpanded ? (
@@ -75,11 +74,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         {/* Icon */}
         <div className="flex-shrink-0 mr-2">
           {node.isLeaf ? (
-            <Key size={14} className="text-gray-400" />
+            <Key size={14} className="text-secondary" />
           ) : isExpanded ? (
-            <FolderOpen size={14} className="text-blue-400" />
+            <FolderOpen size={14} className="text-info" />
           ) : (
-            <Folder size={14} className="text-gray-400" />
+            <Folder size={14} className="text-secondary" />
           )}
         </div>
 
@@ -88,12 +87,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
         {/* Validation Issues */}
         {hasValidationIssues && (
-          <AlertTriangle size={12} className="text-yellow-400 flex-shrink-0 ml-1" />
+          <AlertTriangle size={12} className="text-warning flex-shrink-0 ml-1" />
         )}
 
         {/* Child Count */}
         {!node.isLeaf && node.children.length > 0 && (
-          <span className="text-xs text-gray-500 ml-2">
+          <span className="text-xs text-muted ml-2">
             ({node.children.length})
           </span>
         )}

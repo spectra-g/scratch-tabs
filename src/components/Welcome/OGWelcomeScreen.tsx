@@ -29,55 +29,55 @@ export const OGWelcomeScreen: React.FC = () => {
         {/* Feature Icons */}
         <div className="flex justify-center space-x-16 mb-12">
           <div className="flex flex-col items-center">
-            <div className="p-4 bg-blue-500/20 rounded-full mb-3">
-              <Shield size={32} className="text-blue-400" />
+            <div className="p-4 bg-primary/20 rounded-full mb-3">
+              <Shield size={32} className="text-info" />
             </div>
-            <span className="text-gray-300 text-sm">Privacy-First</span>
+            <span className="text-secondary text-sm">Privacy-First</span>
           </div>
 
           <div className="flex flex-col items-center">
             <div className="p-4 bg-green-500/20 rounded-full mb-3">
               <Database size={32} className="text-green-400" />
             </div>
-            <span className="text-gray-300 text-sm">Local Data</span>
+            <span className="text-secondary text-sm">Local Data</span>
           </div>
 
           <div className="flex flex-col items-center">
             <div className="p-4 bg-purple-500/20 rounded-full mb-3">
               <Code size={32} className="text-purple-400" />
             </div>
-            <span className="text-gray-300 text-sm">Powerful Tools</span>
+            <span className="text-secondary text-sm">Powerful Tools</span>
           </div>
         </div>
 
         {/* Code Snippet Preview (stylized) */}
-        <div className="w-full max-w-lg bg-gray-950 rounded-lg shadow-lg p-4 mb-12 border border-gray-700">
+        <div className="w-full max-w-lg bg-surface rounded-lg shadow-lg p-4 mb-12 border border-base">
           <div className="flex items-center mb-2">
             <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
             <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
           </div>
           <pre className="text-sm">
-            <span className="text-blue-400">{"{"}</span>
+            <span className="text-info">{"{"}</span>
             <br />
-            <span className="text-gray-400 ml-4">"name":</span>{" "}
+            <span className="text-muted ml-4">"name":</span>{" "}
             <span className="text-green-400">"Scratch Tabs"</span>
-            <span className="text-gray-500">,</span>
+            <span className="text-muted">,</span>
             <br />
-            <span className="text-gray-400 ml-4">"features":</span>{" "}
-            <span className="text-blue-400">[</span>
+            <span className="text-muted ml-4">"features":</span>{" "}
+            <span className="text-info">[</span>
             <br />
             <span className="text-green-400 ml-8">"Code Editor"</span>
-            <span className="text-gray-500">,</span>
+            <span className="text-muted">,</span>
             <br />
             <span className="text-green-400 ml-8">"Data Visualization"</span>
-            <span className="text-gray-500">,</span>
+            <span className="text-muted">,</span>
             <br />
             <span className="text-green-400 ml-8">"Privacy"</span>
             <br />
-            <span className="text-blue-400 ml-4">]</span>
+            <span className="text-info ml-4">]</span>
             <br />
-            <span className="text-blue-400">{"}"}</span>
+            <span className="text-info">{"}"}</span>
           </pre>
         </div>
 

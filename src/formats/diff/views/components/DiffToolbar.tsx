@@ -57,19 +57,18 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
   }, [isCopied]);
 
   return (
-    <div className="flex-none border-b border-gray-700 p-3 bg-gray-800/50">
+    <div className="flex-none border-b border-base p-3 bg-surface/50">
       {/* Top row: Main controls */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-4">
           {/* View mode toggle */}
-          <div className="flex items-center bg-gray-700 rounded-lg p-1">
+          <div className="flex items-center bg-element rounded-lg p-1">
             <button
               onClick={() => onViewModeChange('side-by-side')}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                viewMode === 'side-by-side'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
-              }`}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${viewMode === 'side-by-side'
+                  ? 'bg-primary text-white'
+                  : 'text-main hover:text-white hover:bg-element-hover'
+                }`}
               title="Side-by-side view"
             >
               <GitCompare size={14} />
@@ -77,11 +76,10 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
             </button>
             <button
               onClick={() => onViewModeChange('unified')}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                viewMode === 'unified'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
-              }`}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${viewMode === 'unified'
+                  ? 'bg-primary text-white'
+                  : 'text-main hover:text-white hover:bg-element-hover'
+                }`}
               title="Unified view"
             >
               <List size={14} />
@@ -92,11 +90,10 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
           {/* Whitespace toggle */}
           <button
             onClick={() => onToggleWhitespaceChanges(!hideWhitespaceChanges)}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              hideWhitespaceChanges
-                ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${hideWhitespaceChanges
+                ? 'bg-warning/20 text-warning hover:bg-warning/30'
+                : 'bg-element text-main hover:bg-element-hover'
+              }`}
             title={hideWhitespaceChanges ? 'Show whitespace changes' : 'Hide whitespace changes'}
           >
             {hideWhitespaceChanges ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -107,18 +104,18 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
 
           {/* File filter */}
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" />
             <input
               type="text"
               value={fileFilter}
               onChange={(e) => onFileFilterChange(e.target.value)}
               placeholder="Filter files..."
-              className="pl-10 pr-8 py-1.5 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 w-64"
+              className="pl-10 pr-8 py-1.5 bg-element border border-base rounded text-sm text-main placeholder-secondary focus:outline-none focus:border-focus w-64"
             />
             {fileFilter && (
               <button
                 onClick={() => onFileFilterChange('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-main"
               >
                 <X size={14} />
               </button>
@@ -129,11 +126,10 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
         {/* Copy button */}
         <button
           onClick={handleCopyDiff}
-          className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm transition-colors ${
-            isCopied
-              ? "bg-green-500/20 text-green-400"
-              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          }`}
+          className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm transition-colors ${isCopied
+              ? "bg-success/20 text-success"
+              : "bg-element text-main hover:bg-element-hover"
+            }`}
           title={isCopied ? "Copied!" : "Copy filtered diff"}
         >
           {isCopied ? <Check size={14} /> : <Copy size={14} />}
@@ -142,7 +138,7 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
       </div>
 
       {/* Bottom row: Statistics */}
-      <div className="flex items-center justify-between text-sm text-gray-400">
+      <div className="flex items-center justify-between text-sm text-secondary">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
             <FileText size={14} />
@@ -150,30 +146,30 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
               {filteredFiles.length} of {summary.totalFiles} files
             </span>
           </div>
-          
+
           {summary.newFiles > 0 && (
-            <div className="flex items-center space-x-1 text-green-400">
+            <div className="flex items-center space-x-1 text-success">
               <Plus size={14} />
               <span>{summary.newFiles} added</span>
             </div>
           )}
-          
+
           {summary.deletedFiles > 0 && (
-            <div className="flex items-center space-x-1 text-red-400">
+            <div className="flex items-center space-x-1 text-danger">
               <Minus size={14} />
               <span>{summary.deletedFiles} deleted</span>
             </div>
           )}
-          
+
           {summary.modifiedFiles > 0 && (
-            <div className="flex items-center space-x-1 text-yellow-400">
+            <div className="flex items-center space-x-1 text-warning">
               <RotateCcw size={14} />
               <span>{summary.modifiedFiles} modified</span>
             </div>
           )}
-          
+
           {summary.renamedFiles > 0 && (
-            <div className="flex items-center space-x-1 text-blue-400">
+            <div className="flex items-center space-x-1 text-info">
               <RotateCcw size={14} />
               <span>{summary.renamedFiles} renamed</span>
             </div>
@@ -182,10 +178,10 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
 
         {/* Change statistics */}
         <div className="flex items-center space-x-4">
-          <span className="text-green-400">
+          <span className="text-success">
             +{summary.totalAdditions.toLocaleString()}
           </span>
-          <span className="text-red-400">
+          <span className="text-danger">
             -{summary.totalDeletions.toLocaleString()}
           </span>
         </div>

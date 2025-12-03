@@ -44,13 +44,13 @@ export const UnifiedDiffView: React.FC<UnifiedDiffViewProps> = ({
       }
 
       // Add lines
-      const filteredLines = hideWhitespaceChanges 
+      const filteredLines = hideWhitespaceChanges
         ? hunk.lines.filter(line => !line.isWhitespaceOnly)
         : hunk.lines;
 
       filteredLines.forEach((line) => {
-        const lineNumber = line.type === 'deletion' 
-          ? line.originalLineNumber 
+        const lineNumber = line.type === 'deletion'
+          ? line.originalLineNumber
           : line.newLineNumber;
 
         items.push({
@@ -91,13 +91,13 @@ export const UnifiedDiffView: React.FC<UnifiedDiffViewProps> = ({
   const getLineStyle = (line: DiffLine) => {
     switch (line.type) {
       case 'addition':
-        return 'bg-green-500/10 text-green-200 border-l-2 border-green-500';
+        return 'bg-success-subtle text-success border-l-2 border-success';
       case 'deletion':
-        return 'bg-red-500/10 text-red-200 border-l-2 border-red-500';
+        return 'bg-danger-subtle text-danger border-l-2 border-danger';
       case 'context':
-        return 'text-gray-300';
+        return 'text-secondary';
       default:
-        return 'text-gray-300';
+        return 'text-secondary';
     }
   };
 
@@ -113,7 +113,7 @@ export const UnifiedDiffView: React.FC<UnifiedDiffViewProps> = ({
 
   if (file.isBinary) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-secondary">
         <div className="text-center">
           <p className="mb-2">Binary file</p>
           <p className="text-sm">Cannot display binary file changes</p>
@@ -125,8 +125,8 @@ export const UnifiedDiffView: React.FC<UnifiedDiffViewProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex-none border-b border-gray-700 bg-gray-800 p-3">
-        <h3 className="text-sm font-medium text-gray-300">
+      <div className="flex-none border-b border-base bg-surface-highlight p-3">
+        <h3 className="text-sm font-medium text-main">
           {file.fileName}
         </h3>
       </div>
@@ -199,10 +199,10 @@ const VirtualRow: React.FC<{
       }}
     >
       {item.type === 'hunk-header' ? (
-        <div className="flex items-center px-3 py-2 bg-gray-800 border-b border-gray-700">
+        <div className="flex items-center px-3 py-2 bg-surface-highlight border-b border-base">
           <button
             onClick={() => onToggleHunk(item.hunkId)}
-            className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+            className="flex items-center space-x-2 text-info hover:text-info/80 transition-colors"
           >
             {collapsedHunks.has(item.hunkId) ? (
               <ChevronRight size={16} />
@@ -213,14 +213,14 @@ const VirtualRow: React.FC<{
           </button>
         </div>
       ) : (
-        <div className={`flex border-b border-gray-700/30 ${getLineStyle(item.line!)}`}>
+        <div className={`flex border-b border-base/30 ${getLineStyle(item.line!)}`}>
           {/* Line number */}
-          <div className="w-12 flex-shrink-0 text-center text-gray-500 text-xs py-1 border-r border-gray-700/50">
+          <div className="w-12 flex-shrink-0 text-center text-muted text-xs py-1 border-r border-base/50">
             {item.lineNumber}
           </div>
 
           {/* Prefix */}
-          <div className="w-6 flex-shrink-0 text-center text-xs py-1 border-r border-gray-700/50">
+          <div className="w-6 flex-shrink-0 text-center text-xs py-1 border-r border-base/50">
             {getLinePrefix(item.line!)}
           </div>
 
@@ -229,7 +229,7 @@ const VirtualRow: React.FC<{
             <span>{item.line!.content}</span>
             <button
               onClick={() => handleCopyLine(item.line!.content)}
-              className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-700 rounded transition-all"
+              className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:bg-element-hover rounded transition-all"
               title="Copy line"
             >
               <Copy size={12} />

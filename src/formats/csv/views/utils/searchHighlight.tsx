@@ -10,15 +10,15 @@ export const highlightSearchTerm = (text: string, query: string): React.ReactNod
   if (!query || !text || !query.trim()) {
     return text;
   }
-  
+
   // Escape special regex characters in the query
   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const parts = text.split(new RegExp(`(${escapedQuery})`, 'gi'));
-  
+
   return parts.map((part, index) => {
     if (part.toLowerCase() === query.toLowerCase()) {
       return (
-        <mark key={index} className="bg-yellow-400 text-black px-0.5 rounded">
+        <mark key={index} className="bg-warning text-gray-900 dark:text-gray-900 px-0.5 rounded">
           {part}
         </mark>
       );

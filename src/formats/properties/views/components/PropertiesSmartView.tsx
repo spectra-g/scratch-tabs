@@ -64,45 +64,45 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900">
-        <div className="text-gray-400">Loading properties...</div>
+      <div className="flex items-center justify-center h-full bg-surface">
+        <div className="text-secondary">Loading properties...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900">
-        <div className="text-red-400">Error: {error}</div>
+      <div className="flex items-center justify-center h-full bg-surface">
+        <div className="text-danger">Error: {error}</div>
       </div>
     );
   }
 
-  const hasValidationIssues = 
+  const hasValidationIssues =
     validation.duplicateKeys.length > 0 ||
     validation.emptyValues.length > 0 ||
     validation.invalidKeys.length > 0;
 
   return (
-    <div 
-      className="flex h-full bg-gray-900 text-gray-200" 
+    <div
+      className="flex h-full bg-surface text-main"
       data-testid="properties-smart-view"
       key={`properties-view-${tabId}-${side}`}
     >
       {/* Left Panel: Tree Navigation */}
-      <div className="w-80 border-r border-gray-700 flex flex-col">
-        <div className="flex-none p-3 border-b border-gray-700">
-          <h3 className="text-sm font-medium text-gray-300 mb-2">Property Hierarchy</h3>
-          <div className="text-xs text-gray-400">
+      <div className="w-80 border-r border-base flex flex-col">
+        <div className="flex-none p-3 border-b border-base bg-surface-secondary">
+          <h3 className="text-sm font-medium text-main mb-2">Property Hierarchy</h3>
+          <div className="text-xs text-secondary">
             {filteredPairs.length} properties
             {selectedNodeId && selectedNodeId !== 'root' && (
-              <span className="ml-2 text-blue-400">
+              <span className="ml-2 text-info">
                 (filtered by {selectedNodeId})
               </span>
             )}
           </div>
         </div>
-        
+
         <div className="flex-1 overflow-auto custom-scrollbar">
           <PropertiesTreeView
             treeData={treeData}
@@ -114,14 +114,13 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
 
         {/* Validation Panel Toggle */}
         {hasValidationIssues && (
-          <div className="flex-none border-t border-gray-700 p-2">
+          <div className="flex-none border-t border-base p-2">
             <button
               onClick={() => setShowValidation(!showValidation)}
-              className={`w-full text-xs px-2 py-1 rounded transition-colors ${
-                showValidation
-                  ? "bg-yellow-500/20 text-yellow-400"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
+              className={`w-full text-xs px-2 py-1 rounded transition-colors ${showValidation
+                ? "bg-warning/20 text-warning"
+                : "bg-element text-main hover:bg-element-hover"
+                }`}
             >
               {validation.duplicateKeys.length + validation.emptyValues.length + validation.invalidKeys.length} Issues
             </button>
@@ -132,7 +131,7 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Toolbox */}
-        <div className="flex-none border-b border-gray-700">
+        <div className="flex-none border-b border-base">
           <PropertiesToolbox
             onSortKeys={sortKeysAlphabetically}
             onGroupByPrefix={groupByPrefix}
@@ -150,7 +149,7 @@ export const PropertiesSmartView: React.FC<SmartViewProps> = ({
 
         {/* Validation Panel */}
         {showValidation && hasValidationIssues && (
-          <div className="flex-none border-b border-gray-700">
+          <div className="flex-none border-b border-base">
             <PropertiesValidationPanel
               validation={validation}
               onClose={() => setShowValidation(false)}

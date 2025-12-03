@@ -5,21 +5,21 @@
 export const CELL_STYLES = {
   // Base cell styles
   BASE: "h-full min-h-[35px] flex items-center cursor-cell transition-colors relative group",
-  INVALID: "bg-red-900/20",
-  HOVER: "hover:bg-gray-700/20",
-  
+  INVALID: "bg-danger-subtle",
+  HOVER: "hover:bg-element-hover",
+
   // Selection styles
-  SELECTED: "bg-blue-900/30 ring-1 ring-blue-500",
-  MULTI_SELECTED: "bg-purple-900/30 ring-1 ring-purple-400",
-  
+  SELECTED: "bg-info/30 ring-1 ring-info border-info",
+  MULTI_SELECTED: "bg-primary/20 ring-1 ring-primary",
+
   // Search match styles
-  SEARCH_MATCH: "bg-yellow-500/20 ring-1 ring-yellow-400",
-  ACTIVE_SEARCH_MATCH: "bg-orange-500/40 ring-2 ring-orange-400",
-  SELECTED_AND_ACTIVE_SEARCH: "bg-orange-500/50 ring-2 ring-orange-400 shadow-lg",
-  
+  SEARCH_MATCH: "bg-warning/20 ring-1 ring-warning",
+  ACTIVE_SEARCH_MATCH: "bg-warning/40 ring-2 ring-warning",
+  SELECTED_AND_ACTIVE_SEARCH: "bg-warning/50 ring-2 ring-warning shadow-lg",
+
   // Text styles
-  TEXT: "text-sm truncate text-gray-200",
-  TEXT_EMPTY: "text-gray-500 italic",
+  TEXT: "text-sm truncate text-main",
+  TEXT_EMPTY: "text-secondary italic",
   TEXT_MASKED: "blur-[3px] hover:blur-none",
 } as const;
 
@@ -36,9 +36,9 @@ export const getCellClasses = (state: {
   isValid: boolean;
 }): string => {
   const { isSelected, isMultiSelected, isActiveSearchMatch, isSearchMatch, isValid } = state;
-  
+
   let classes = CELL_STYLES.BASE;
-  
+
   // Selection and search state (order matters for priority)
   if (isSelected && isActiveSearchMatch) {
     classes += ` ${CELL_STYLES.SELECTED_AND_ACTIVE_SEARCH}`;
@@ -53,11 +53,11 @@ export const getCellClasses = (state: {
   } else {
     classes += ` ${CELL_STYLES.HOVER}`;
   }
-  
+
   // Invalid state
   if (!isValid) {
     classes += ` ${CELL_STYLES.INVALID}`;
   }
-  
+
   return classes;
 };

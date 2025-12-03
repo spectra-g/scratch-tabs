@@ -27,17 +27,17 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
   } = engine;
 
   return (
-    <div 
-      className="bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden w-full max-w-7xl h-full max-h-[90vh] mx-4"
+    <div
+      className="bg-surface border border-base rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden w-[95vw] max-w-[1800px] h-full max-h-[90vh] mx-4"
       data-testid="diff-modal"
     >
       {/* Header */}
-      <div className="flex items-center justify-between bg-gray-700 px-4 py-2 border-b border-gray-600 flex-wrap">
+      <div className="flex items-center justify-between bg-surface-highlight px-4 py-2 border-b border-base flex-wrap">
         <h2
-          className="text-gray-200 font-medium mr-4 mb-1 sm:mb-0"
+          className="text-main font-medium mr-4 mb-1 sm:mb-0"
           title={`${leftTabTitle} ↔ ${rightTabTitle}`}
         >
-          Compare: {leftTabTitle} <span className="text-gray-400 mx-1">↔</span>{" "}
+          Compare: {leftTabTitle} <span className="text-muted mx-1">↔</span>{" "}
           {rightTabTitle}
         </h2>
         <div className="flex items-center flex-shrink-0">
@@ -50,7 +50,7 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
                   ? "Show Matching Lines"
                   : "Hide Matching Lines (Contextual Diff)"
               }
-              className="mr-4 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white flex items-center"
+              className="mr-4 px-2 py-1 bg-element hover:bg-element-hover rounded text-xs text-main flex items-center transition-colors"
             >
               {hideMatchingLines ? (
                 <Eye size={14} className="mr-1" />
@@ -65,7 +65,7 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
             onClick={handleUndo}
             title="Undo"
             disabled={!canUndo}
-            className="mr-2 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mr-2 px-2 py-1 bg-element hover:bg-element-hover rounded text-xs text-main disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Undo2 size={14} />
           </button>
@@ -73,13 +73,13 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
             onClick={handleRedo}
             title="Redo"
             disabled={!canRedo}
-            className="mr-4 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mr-4 px-2 py-1 bg-element hover:bg-element-hover rounded text-xs text-main disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Redo2 size={14} />
           </button>
           {/* Close Button */}
           <button
-            className="text-gray-400 hover:text-gray-200"
+            className="icon-themed hover:text-main transition-colors"
             onClick={onClose}
             title="Close and Save Changes"
           >
@@ -90,14 +90,14 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
 
       {/* Identical Content Message */}
       {areContentsIdentical && (
-        <div className="bg-green-900 bg-opacity-50 text-green-200 text-sm px-4 py-1 text-center border-b border-gray-600 flex-shrink-0">
+        <div className="bg-success-subtle text-success text-sm px-4 py-1 text-center border-b border-base flex-shrink-0">
           Contents are identical.
         </div>
       )}
 
       {/* Editor Area */}
-      <div 
-        ref={editorContainerRef} 
+      <div
+        ref={editorContainerRef}
         className="flex-1 overflow-hidden"
         data-testid="diff-editor-container"
       >

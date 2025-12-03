@@ -117,12 +117,12 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
     if (!newKey.trim()) return;
 
     // Add prefix if we're in a filtered context
-    const finalKey = selectedNodeId && selectedNodeId !== 'root' 
+    const finalKey = selectedNodeId && selectedNodeId !== 'root'
       ? `${selectedNodeId}.${newKey.trim()}`
       : newKey.trim();
 
     onAddPair(finalKey, newValue.trim(), newComment.trim() || undefined);
-    
+
     setNewKey("");
     setNewValue("");
     setNewComment("");
@@ -147,23 +147,23 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
   }, [editingState]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-canvas">
       {/* Header */}
-      <div className="flex-none p-3 border-b border-gray-700 flex items-center justify-between">
+      <div className="flex-none p-3 border-b border-base flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium text-gray-300">
-            {selectedNodeId === 'root' || !selectedNodeId 
-              ? 'All Properties' 
+          <h3 className="text-sm font-medium text-main">
+            {selectedNodeId === 'root' || !selectedNodeId
+              ? 'All Properties'
               : `Properties: ${selectedNodeId}`}
           </h3>
-          <div className="text-xs text-gray-400 mt-1">
+          <div className="text-xs text-secondary mt-1">
             {pairs.length} key-value pairs
           </div>
         </div>
-        
+
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center space-x-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
+          className="flex items-center space-x-1 px-3 py-1 bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-600/30 transition-colors"
         >
           <Plus size={14} />
           <span>Add Property</span>
@@ -172,41 +172,41 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
 
       {/* Add Form */}
       {showAddForm && (
-        <div className="flex-none p-3 border-b border-gray-700 bg-gray-800/50">
+        <div className="flex-none p-3 border-b border-base bg-surface/50">
           <div className="grid grid-cols-3 gap-2 mb-2">
             <input
               type="text"
               value={newKey}
               onChange={(e) => setNewKey(e.target.value)}
               placeholder="Key"
-              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+              className="bg-element border border-base rounded px-2 py-1 text-sm text-main focus:outline-none focus:border-focus"
             />
             <input
               type="text"
               value={newValue}
               onChange={(e) => setNewValue(e.target.value)}
               placeholder="Value"
-              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+              className="bg-element border border-base rounded px-2 py-1 text-sm text-main focus:outline-none focus:border-focus"
             />
             <input
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Comment (optional)"
-              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+              className="bg-element border border-base rounded px-2 py-1 text-sm text-main focus:outline-none focus:border-focus"
             />
           </div>
           <div className="flex justify-end space-x-2">
             <button
               onClick={() => setShowAddForm(false)}
-              className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+              className="px-2 py-1 text-xs text-secondary hover:text-main"
             >
               Cancel
             </button>
             <button
               onClick={handleAddPair}
               disabled={!newKey.trim()}
-              className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
+              className="px-2 py-1 text-xs bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-600/30 disabled:opacity-50"
             >
               Add
             </button>
@@ -217,12 +217,12 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
       {/* Properties List */}
       <div className="flex-1 overflow-auto custom-scrollbar">
         {pairs.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400">
+          <div className="flex items-center justify-center h-full text-secondary">
             <div className="text-center">
               <Key size={48} className="mx-auto mb-4 opacity-50" />
               <p>No properties found</p>
               <p className="text-sm mt-1">
-                {selectedNodeId && selectedNodeId !== 'root' 
+                {selectedNodeId && selectedNodeId !== 'root'
                   ? `No properties match the filter "${selectedNodeId}"`
                   : "Add a property to get started"
                 }
@@ -242,16 +242,15 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
               return (
                 <div
                   key={pair.id}
-                  className={`border rounded-lg p-3 transition-colors ${
-                    hasIssues
-                      ? "border-yellow-500/50 bg-yellow-500/5"
-                      : "border-gray-700 bg-gray-800/30 hover:bg-gray-800/50"
-                  }`}
+                  className={`border rounded-lg p-3 transition-colors ${hasIssues
+                    ? "border-warning/50 bg-warning/5"
+                    : "border-base bg-surface hover:bg-element-hover"
+                    }`}
                 >
                   {/* Key Row */}
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="flex items-center space-x-1 flex-1">
-                      <Key size={12} className="text-gray-400 flex-shrink-0" />
+                      <Key size={12} className="text-secondary flex-shrink-0" />
                       {editingState?.pairId === pair.id && editingState.field === 'key' ? (
                         <input
                           ref={inputRef}
@@ -260,26 +259,26 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                           onChange={(e) => setEditValue(e.target.value)}
                           onKeyDown={handleKeyDown}
                           onBlur={commitEdit}
-                          className="flex-1 bg-gray-700 border border-blue-500 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none"
+                          className="flex-1 bg-element border border-focus rounded px-2 py-1 text-sm text-main focus:outline-none"
                         />
                       ) : (
                         <span
-                          className="flex-1 font-mono text-sm text-blue-300 cursor-pointer hover:bg-gray-700/30 px-1 py-0.5 rounded"
+                          className="flex-1 font-mono text-sm text-token-key cursor-pointer hover:bg-element-hover px-1 py-0.5 rounded"
                           onClick={() => startEditing(pair.id, 'key', pair.key)}
                           title="Click to edit key"
                         >
                           {pair.key}
                         </span>
                       )}
-                      
+
                       {hasIssues && (
-                        <AlertTriangle size={12} className="text-yellow-400" />
+                        <AlertTriangle size={12} className="text-warning" />
                       )}
                     </div>
 
                     <button
                       onClick={() => onDeletePair(pair.id)}
-                      className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                      className="p-1 text-danger hover:text-danger/80 hover:bg-danger/20 rounded transition-colors"
                       title="Delete property"
                     >
                       <Trash2 size={12} />
@@ -298,17 +297,16 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                           onChange={(e) => setEditValue(e.target.value)}
                           onKeyDown={handleKeyDown}
                           onBlur={commitEdit}
-                          className="flex-1 bg-gray-700 border border-blue-500 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none"
+                          className="flex-1 bg-element border border-focus rounded px-2 py-1 text-sm text-main focus:outline-none"
                         />
                       ) : (
                         <span
-                          className={`flex-1 font-mono text-sm cursor-pointer hover:bg-gray-700/30 px-1 py-0.5 rounded ${
-                            isMasked ? "text-gray-500" : "text-gray-200"
-                          }`}
+                          className={`flex-1 font-mono text-sm cursor-pointer hover:bg-element-hover px-1 py-0.5 rounded ${isMasked ? "text-muted" : "text-main"
+                            }`}
                           onClick={() => startEditing(pair.id, 'value', pair.value)}
                           title="Click to edit value"
                         >
-                          {isMasked ? '••••••••' : (pair.value || <em className="text-gray-500">empty</em>)}
+                          {isMasked ? '••••••••' : (pair.value || <em className="text-muted">empty</em>)}
                         </span>
                       )}
                     </div>
@@ -317,20 +315,19 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                       {isSensitive && (
                         <button
                           onClick={() => toggleMask(pair.key)}
-                          className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded transition-colors"
+                          className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                           title={isMasked ? "Show value" : "Hide value"}
                         >
                           {isMasked ? <Eye size={12} /> : <EyeOff size={12} />}
                         </button>
                       )}
-                      
+
                       <button
                         onClick={() => copyValue(pair.value, pair.id)}
-                        className={`p-1 rounded transition-colors ${
-                          copiedValueId === pair.id
-                            ? "text-green-400 bg-green-500/20"
-                            : "text-gray-400 hover:text-gray-300 hover:bg-gray-700/50"
-                        }`}
+                        className={`p-1 rounded transition-colors ${copiedValueId === pair.id
+                          ? "text-success bg-success/20"
+                          : "text-secondary hover:text-main hover:bg-element-hover"
+                          }`}
                         title={copiedValueId === pair.id ? "Copied!" : "Copy value"}
                       >
                         {copiedValueId === pair.id ? <Check size={12} /> : <Copy size={12} />}
@@ -342,7 +339,7 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                   <div className="flex items-center space-x-2">
                     <div className="w-4" /> {/* Spacer for alignment */}
                     <div className="flex items-center space-x-1 flex-1">
-                      <MessageSquare size={12} className="text-gray-500 flex-shrink-0" />
+                      <MessageSquare size={12} className="text-muted flex-shrink-0" />
                       {editingState?.pairId === pair.id && editingState.field === 'comment' ? (
                         <input
                           ref={inputRef}
@@ -352,15 +349,15 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
                           onKeyDown={handleKeyDown}
                           onBlur={commitEdit}
                           placeholder="Add comment..."
-                          className="flex-1 bg-gray-700 border border-blue-500 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none"
+                          className="flex-1 bg-element border border-focus rounded px-2 py-1 text-sm text-main focus:outline-none"
                         />
                       ) : (
                         <span
-                          className="flex-1 text-sm text-gray-400 cursor-pointer hover:bg-gray-700/30 px-1 py-0.5 rounded"
+                          className="flex-1 text-sm text-secondary cursor-pointer hover:bg-element-hover px-1 py-0.5 rounded"
                           onClick={() => startEditing(pair.id, 'comment', pair.comment || '')}
                           title="Click to edit comment"
                         >
-                          {pair.comment || <em className="text-gray-600">Click to add comment</em>}
+                          {pair.comment || <em className="text-muted">Click to add comment</em>}
                         </span>
                       )}
                     </div>
@@ -368,8 +365,8 @@ export const PropertiesEditor: React.FC<PropertiesEditorProps> = ({
 
                   {/* Validation Issues */}
                   {hasIssues && (
-                    <div className="mt-2 pt-2 border-t border-yellow-500/30">
-                      <div className="flex items-center space-x-1 text-xs text-yellow-400">
+                    <div className="mt-2 pt-2 border-t border-warning/30">
+                      <div className="flex items-center space-x-1 text-xs text-warning">
                         <AlertTriangle size={12} />
                         <span>
                           {isDuplicate && "Duplicate key"}

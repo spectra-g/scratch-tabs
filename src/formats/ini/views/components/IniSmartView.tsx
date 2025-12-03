@@ -63,7 +63,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
   const handleSetSelectedNode = useCallback((nodeId: string | null) => {
     const normalizedNodeId = (!nodeId || nodeId === 'root') ? 'root' : nodeId;
     setSelectedNodeId(normalizedNodeId);
-    
+
     if (normalizedNodeId === 'root') {
       setSelectedSectionId(null);
     } else {
@@ -72,7 +72,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
         if (selectedNode.type === 'section') {
           setSelectedSectionId(selectedNode.id);
         } else if (selectedNode.type === 'key') {
-          setSelectedSectionId(selectedNode.sectionId);
+          setSelectedSectionId(selectedNode.sectionId || null);
         }
       }
     }
@@ -82,10 +82,10 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
     if (!selectedNodeId || selectedNodeId === 'root') {
       return sections;
     }
-    
+
     const selectedNode = findNodeInTree(treeNodes, selectedNodeId);
     if (!selectedNode) return sections;
-    
+
     if (selectedNode.type === 'section') {
       return sections.filter(s => s.id === selectedNode.id);
     } else if (selectedNode.type === 'key') {
@@ -99,7 +99,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
       }
       return [];
     }
-    
+
     return sections;
   }, [selectedNodeId, sections, treeNodes, findNodeInTree]);
 
@@ -135,49 +135,49 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900">
-        <div className="text-gray-400">Loading INI data...</div>
+      <div className="flex items-center justify-center h-full bg-surface">
+        <div className="text-secondary">Loading INI data...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900">
-        <div className="text-red-400">Error: {error}</div>
+      <div className="flex items-center justify-center h-full bg-surface">
+        <div className="text-danger">Error: {error}</div>
       </div>
     );
   }
 
   const hasValidationIssues = validationIssues.length > 0;
-  
+
   const totalKeyCount = sections.reduce((sum, s) => sum + s.lines.filter(l => l.type === 'PAIR').length, 0);
 
   return (
-    <div 
-      className="flex h-full bg-gray-900 text-gray-200" 
+    <div
+      className="flex h-full bg-surface text-main"
       data-testid="ini-smart-view"
       key={`ini-view-${tabId}-${side}`}
     >
       {/* Left Panel: Tree Navigation */}
-      <div className="w-80 border-r border-gray-700 flex flex-col">
-        <div className="flex-none p-3 border-b border-gray-700">
+      <div className="w-80 border-r border-base flex flex-col">
+        <div className="flex-none p-3 border-b border-base bg-surface-secondary">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-300">INI Structure</h3>
+            <h3 className="text-sm font-medium text-main">INI Structure</h3>
             {(!selectedNodeId || selectedNodeId === 'root') && (
               <button
                 onClick={() => setShowAddSectionForm(!showAddSectionForm)}
-                className="p-1 hover:bg-gray-700 rounded transition-colors text-gray-400 hover:text-gray-200"
+                className="p-1 hover:bg-element-hover rounded transition-colors text-secondary hover:text-main"
                 title="Add new section"
               >
                 <Plus size={14} />
               </button>
             )}
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-secondary">
             {totalKeyCount} properties
             {selectedNodeId && selectedNodeId !== 'root' && (
-              <span className="ml-2 text-blue-400">
+              <span className="ml-2 text-info">
                 (filtered by {(() => {
                   const node = findNodeInTree(treeNodes, selectedNodeId);
                   return node ? node.name : selectedNodeId;
@@ -194,7 +194,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
                 value={newSectionName}
                 onChange={(e) => setNewSectionName(e.target.value)}
                 placeholder="Section name"
-                className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                className="w-full bg-element border border-base rounded px-2 py-1 text-sm text-main focus:outline-none focus:border-focus"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleAddSection();
@@ -209,7 +209,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
                 <button
                   onClick={handleAddSection}
                   disabled={!newSectionName.trim()}
-                  className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/30 disabled:opacity-50"
+                  className="px-2 py-1 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30 disabled:opacity-50"
                 >
                   Add
                 </button>
@@ -218,7 +218,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
                     setShowAddSectionForm(false);
                     setNewSectionName("");
                   }}
-                  className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
+                  className="px-2 py-1 bg-element text-main rounded text-xs hover:bg-element-hover"
                 >
                   Cancel
                 </button>
@@ -226,7 +226,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
             </div>
           )}
         </div>
-        
+
         <div className="flex-1 overflow-auto custom-scrollbar">
           <IniTreeView
             treeNodes={treeNodes}
@@ -238,14 +238,13 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
 
         {/* Validation Panel Toggle */}
         {hasValidationIssues && (
-          <div className="flex-none border-t border-gray-700 p-2">
+          <div className="flex-none border-t border-base p-2">
             <button
               onClick={() => setShowValidation(!showValidation)}
-              className={`w-full text-xs px-2 py-1 rounded transition-colors ${
-                showValidation
-                  ? "bg-yellow-500/20 text-yellow-400"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
+              className={`w-full text-xs px-2 py-1 rounded transition-colors ${showValidation
+                ? "bg-warning/20 text-warning"
+                : "bg-element text-main hover:bg-element-hover"
+                }`}
             >
               {validationIssues.length} Issues
             </button>
@@ -256,7 +255,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Toolbox */}
-        <div className="flex-none border-b border-gray-700">
+        <div className="flex-none border-b border-base">
           <IniToolbox
             selectedSectionId={selectedSectionId}
             validationIssues={validationIssues}
@@ -278,7 +277,7 @@ export const IniSmartView: React.FC<SmartViewProps> = ({
 
         {/* Validation Panel */}
         {showValidation && hasValidationIssues && (
-          <div className="flex-none border-b border-gray-700">
+          <div className="flex-none border-b border-base">
             <IniValidationPanel
               issues={validationIssues}
               onClose={() => setShowValidation(false)}

@@ -42,16 +42,16 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   onToggle,
 }) => {
   return (
-    <div className="border-b border-gray-700/50">
+    <div className="border-b border-base">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"
+        className="w-full flex items-center justify-between p-3 hover:bg-element-hover transition-colors"
       >
-        <span className="text-xs font-medium text-gray-300">{title}</span>
+        <span className="text-xs font-medium text-main">{title}</span>
         {isExpanded ? (
-          <ChevronDown size={16} className="text-gray-400" />
+          <ChevronDown size={16} className="text-main" />
         ) : (
-          <ChevronRight size={16} className="text-gray-400" />
+          <ChevronRight size={16} className="text-main" />
         )}
       </button>
       {isExpanded && (
@@ -77,11 +77,10 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
-      disabled
-        ? "text-gray-500 cursor-not-allowed"
-        : "text-gray-300 hover:bg-gray-700/50 hover:text-gray-200"
-    }`}
+    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${disabled
+        ? "text-muted cursor-not-allowed"
+        : "text-main hover:bg-element-hover"
+      }`}
   >
     {children}
   </button>
@@ -307,8 +306,8 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   return (
     <div className="space-y-0">
       {/* Transformations */}
-      <AccordionSection 
-        title="Transformations" 
+      <AccordionSection
+        title="Transformations"
         isExpanded={expandedSection === "Transformations"}
         onToggle={() => setExpandedSection(expandedSection === "Transformations" ? "" : "Transformations")}
       >
@@ -385,7 +384,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       </AccordionSection>
 
       {/* Data Conversion */}
-      <AccordionSection 
+      <AccordionSection
         title="Data Conversion"
         isExpanded={expandedSection === "Data Conversion"}
         onToggle={() => setExpandedSection(expandedSection === "Data Conversion" ? "" : "Data Conversion")}
@@ -402,7 +401,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       </AccordionSection>
 
       {/* Schema & Utilities */}
-      <AccordionSection 
+      <AccordionSection
         title="Schema & Utilities"
         isExpanded={expandedSection === "Schema & Utilities"}
         onToggle={() => setExpandedSection(expandedSection === "Schema & Utilities" ? "" : "Schema & Utilities")}

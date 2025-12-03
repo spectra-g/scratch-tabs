@@ -89,13 +89,13 @@ export const MacroUI: React.FC<MacroUIProps> = ({ editor, engine }) => {
 
   // --- Style Classes ---
   const commonButtonClass =
-    "rounded hover:bg-gray-700 disabled:opacity-50 disabled:hover:bg-transparent p-0.5 flex items-center justify-center"; // Ensure centering
-  const activeRecordClass = "text-red-500";
-  const inactiveClass = "text-gray-600";
-  const activeClass = "text-gray-400";
+    "rounded hover:bg-element-hover disabled:opacity-50 disabled:hover:bg-transparent p-0.5 flex items-center justify-center"; // Ensure centering
+  const activeRecordClass = "text-danger";
+  const inactiveClass = "text-muted";
+  const activeClass = "text-secondary";
 
   return (
-    <div className="flex items-center space-x-2 px-2 h-6 bg-gray-800 text-xs">
+    <div className="flex items-center space-x-2 px-2 h-6 bg-transparent text-xs">
       {/* Record Button */}
       <button
         className={`${commonButtonClass} ${status === "recording" ? activeRecordClass : editor ? activeClass : inactiveClass}`}
@@ -159,7 +159,7 @@ export const MacroUI: React.FC<MacroUIProps> = ({ editor, engine }) => {
       </button>
 
       {/* Status Display */}
-      <span className="text-gray-500 truncate flex-1 overflow-hidden whitespace-nowrap pl-1">
+      <span className="text-muted truncate flex-1 overflow-hidden whitespace-nowrap pl-1">
         {getStatusText()}
       </span>
     </div>

@@ -4,6 +4,7 @@ import { Editor } from "@monaco-editor/react";
 import { Tab } from "../../../../types";
 import { Copy, ExternalLink, Check } from "lucide-react";
 import { useWorkspaceStore } from "../../../../stores/workspaceStore";
+import { useThemeStore } from "../../../../stores/themeStore";
 
 interface CodeTab {
   id: string;
@@ -30,6 +31,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
   const [copiedTabId, setCopiedTabId] = useState<string | null>(null);
   const [openedTabId, setOpenedTabId] = useState<string | null>(null);
   const { activeWorkspaceId } = useWorkspaceStore();
+  const { isDarkMode } = useThemeStore();
 
   const handleCopyContent = async (tabId: string) => {
     const tab = tabs.find((t) => t.id === tabId);
@@ -93,7 +95,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
       <div className="flex flex-col h-[70vh]">
         <div className="flex flex-row justify-between">
           {/* Tabs */}
-          <div className="flex space-x-1 bg-gray-800 p-2 rounded-t-lg">
+          <div className="flex space-x-1 bg-surface p-2 rounded-t-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -104,8 +106,8 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                   px-4 py-2 rounded-md text-sm font-medium transition-colors
                   ${
                     activeTabId === tab.id
-                      ? "bg-gray-700 text-gray-200"
-                      : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+                      ? "bg-element text-main"
+                      : "text-secondary hover:bg-element-hover"
                   }
                 `}
               >
@@ -117,7 +119,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
             <div className="flex items-center justify-end space-x-2 px-4 py-2">
               <button
                 onClick={() => handleCopyContent(activeTab.id)}
-                className={`p-2 rounded-md transition-colors ${copiedTabId === activeTab.id ? "text-green-400" : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                className={`p-2 rounded-md transition-colors ${copiedTabId === activeTab.id ? "text-success" : "text-secondary hover:text-main hover:bg-element-hover"}`}
                 title="Copy to clipboard"
               >
                 {copiedTabId === activeTab.id ? (
@@ -128,7 +130,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
               </button>
               <button
                 onClick={() => handleOpenInNewTab(activeTab)}
-                className={`p-2 rounded-md transition-colors ${openedTabId === activeTab.id ? "text-green-400" : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                className={`p-2 rounded-md transition-colors ${openedTabId === activeTab.id ? "text-success" : "text-secondary hover:text-main hover:bg-element-hover"}`}
                 title="Open in new tab"
               >
                 {openedTabId === activeTab.id ? (
@@ -142,7 +144,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 bg-gray-800 rounded-b-lg overflow-hidden">
+        <div className="flex-1 bg-surface rounded-b-lg overflow-hidden">
           {activeTab && (
             <div className="h-full flex flex-col">
               {/* Editor */}
@@ -151,7 +153,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                   height="100%"
                   language={activeTab.language}
                   value={displayContent}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     readOnly: true,
                     minimap: { enabled: false },

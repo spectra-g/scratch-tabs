@@ -102,20 +102,20 @@ export const FontSizeControls: React.FC<FontSizeControlsProps> = ({
       {/* Main Font Size Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1 px-2 py-1 hover:bg-gray-700/50 rounded transition-colors group"
+        className="flex items-center space-x-1 px-2 py-1 hover:bg-element/50 rounded transition-colors group"
         title="Font Size"
       >
-        <Type size={12} className="text-gray-400 group-hover:text-gray-300" />
-        <span className="text-xs font-mono text-gray-300">{currentFontSize}</span>
+        <Type size={12} className="text-slate-600 dark:text-muted group-hover:text-slate-900 dark:group-hover:text-secondary" />
+        <span className="text-xs font-mono text-slate-700 dark:text-secondary">{currentFontSize}</span>
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute bottom-full right-0 mb-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 min-w-[200px]">
+        <div className="absolute bottom-full right-0 mb-1 bg-surface border border-base rounded-md shadow-lg z-50 min-w-[200px]">
           {/* Header */}
-          <div className="px-3 py-2 border-b border-gray-700">
+          <div className="px-3 py-2 border-b border-base">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-300">Font Size</span>
+              <span className="text-xs font-medium text-secondary">Font Size</span>
               <button
                 onClick={handleReset}
                 className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
@@ -126,25 +126,25 @@ export const FontSizeControls: React.FC<FontSizeControlsProps> = ({
           </div>
 
           {/* Quick Controls */}
-          <div className="px-3 py-2 border-b border-gray-700">
+          <div className="px-3 py-2 border-b border-base">
             <div className="flex items-center justify-between">
               <button
                 onClick={handleDecrease}
                 disabled={currentFontSize <= 8}
-                className="p-1 hover:bg-gray-700/50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1 hover:bg-element/50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Decrease font size"
               >
                 <Minus size={12} />
               </button>
               
-              <span className="text-xs font-mono text-gray-300 px-2">
+              <span className="text-xs font-mono text-secondary px-2">
                 {currentFontSize}px
               </span>
               
               <button
                 onClick={handleIncrease}
                 disabled={currentFontSize >= 24}
-                className="p-1 hover:bg-gray-700/50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1 hover:bg-element/50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Increase font size"
               >
                 <Plus size={12} />
@@ -162,7 +162,7 @@ export const FontSizeControls: React.FC<FontSizeControlsProps> = ({
                   className={`px-2 py-1 text-xs rounded transition-colors ${
                     currentFontSize === size
                       ? 'bg-blue-500/20 text-blue-400'
-                      : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/50'
+                      : 'text-muted hover:text-secondary hover:bg-element/50'
                   }`}
                 >
                   {size}px

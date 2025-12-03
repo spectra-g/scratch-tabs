@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { useThemeStore } from "../../stores/themeStore";
 
 // Define the structure for a history entry
 export interface ChangeHistoryEntry {
@@ -53,6 +54,9 @@ export const useDiffEditor = (
 
   const [areContentsIdentical, setAreContentsIdentical] = useState(false);
   const [hideMatchingLines, setHideMatchingLines] = useState(false);
+
+  // Get theme from store
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
 
   useEffect(() => {
     historyIndexRef.current = currentHistoryIndex;
@@ -152,7 +156,7 @@ export const useDiffEditor = (
     editor = monaco.editor.createDiffEditor(editorContainerRef.current, {
       originalEditable: true,
       renderSideBySide: true,
-      theme: "vs-dark",
+      theme: isDarkMode ? "vs-dark" : "vs",
       automaticLayout: true,
       enableSplitViewResizing: true,
       readOnly: false,
@@ -213,6 +217,7 @@ export const useDiffEditor = (
     rightContent,
     language,
     recordChangeActual,
+    isDarkMode,
   ]);
 
   // Effect to Update Editor Options (like hiding lines)

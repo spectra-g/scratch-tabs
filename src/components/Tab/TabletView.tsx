@@ -123,7 +123,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
             if (!props.state || props.state.type !== tabletType) {
               return (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-red-500">Invalid tablet state</div>
+                  <div className="text-danger">Invalid tablet state</div>
                 </div>
               );
             }
@@ -180,7 +180,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     return () => {
       isMounted = false;
     };
- }, [tabletType, tab.id]); // Removed tab.tabletState to prevent unnecessary re-renders that cause cache issues
+  }, [tabletType, tab.id]); // Removed tab.tabletState to prevent unnecessary re-renders that cause cache issues
 
   // Error boundary recovery functions
   const handleCloseTab = () => {
@@ -204,24 +204,24 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
   }
 
   if (!state) {
-    return <div className="p-4 text-red-500">Invalid tablet state</div>;
+    return <div className="p-4 text-danger">Invalid tablet state</div>;
   }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400">Loading tablet...</div>
+        <div className="text-muted">Loading tablet...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 text-red-500">
+      <div className="p-4 text-danger">
         Error loading tablet: {error}
         <button
           onClick={handleRetry}
-          className="ml-2 px-2 py-1 bg-blue-500 text-white rounded text-sm"
+          className="ml-2 px-2 py-1 bg-primary text-white rounded text-sm"
         >
           Retry
         </button>
@@ -231,7 +231,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
 
   if (!ActiveTabletComponent) {
     return (
-      <div className="p-4 text-red-500">Unknown tablet type: {tabletType}</div>
+      <div className="p-4 text-danger">Unknown tablet type: {tabletType}</div>
     );
   }
 

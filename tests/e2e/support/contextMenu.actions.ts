@@ -1,7 +1,7 @@
 import { Page, expect } from '@playwright/test';
 
 export class ContextMenuActions {
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
   async selectContextMenuOption(optionText: string) {
     await this.page.getByRole('menuitem', { name: optionText }).click();
@@ -9,14 +9,14 @@ export class ContextMenuActions {
 
   async selectFromContextMenu(menuItem: string) {
     // Wait for context menu to appear - look for the custom context menu div
-    await this.page.waitForSelector('.bg-gray-700.border.border-gray-600.rounded.shadow-lg.z-50.py-1', { state: 'visible' });
-    
+    await this.page.waitForSelector('.bg-surface.border.border-base.rounded.shadow-lg.z-50.py-1', { state: 'visible' });
+
     // Use exact text match to avoid confusion between "Download" and "Download all tabs"
     const menuItemElement = this.page.getByRole('button', { name: menuItem, exact: true });
-    
+
     // Wait for the menu item to be visible
     await expect(menuItemElement).toBeVisible();
-    
+
     // Click the menu item
     await menuItemElement.click();
   }
@@ -25,25 +25,25 @@ export class ContextMenuActions {
     // First, find and hover over the parent menu item to open submenu
     const parentMenuSelector = `button:has-text("${parentItem}")`;
     const parentElement = this.page.locator(parentMenuSelector);
-    
+
     await expect(parentElement).toBeVisible();
     await parentElement.hover();
-    
+
     // Wait for the specific submenu item to appear instead of relying on CSS classes
     const subMenuElement = this.page.getByRole('button', { name: subItem, exact: true });
     await expect(subMenuElement).toBeVisible();
-    
+
     // Click the submenu item
     await subMenuElement.click();
   }
 
   async expectContextMenuIsVisible() {
-    const contextMenu = this.page.locator('.bg-gray-700.border.border-gray-600.rounded.shadow-lg.z-50.py-1');
+    const contextMenu = this.page.locator('.bg-surface.border.border-base.rounded.shadow-lg.z-50.py-1');
     await expect(contextMenu).toBeVisible();
   }
 
   async expectContextMenuIsNotVisible() {
-    const contextMenu = this.page.locator('.bg-gray-700.border.border-gray-600.rounded.shadow-lg.z-50.py-1');
+    const contextMenu = this.page.locator('.bg-surface.border.border-base.rounded.shadow-lg.z-50.py-1');
     await expect(contextMenu).not.toBeVisible();
   }
 

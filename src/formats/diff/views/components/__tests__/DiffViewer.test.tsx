@@ -210,7 +210,7 @@ index 1234567..abcdefg 100644
 
     // First file should be selected and highlighted
     const fileButtons = screen.getAllByTestId('file-item');
-    expect(fileButtons[0]).toHaveClass('bg-blue-500/20');
+    expect(fileButtons[0]).toHaveClass('bg-element-active');
   });
 
   it('should show statistics in toolbar', () => {
@@ -226,16 +226,16 @@ index 1234567..abcdefg 100644
 
     expect(screen.getByText('1 added')).toBeInTheDocument();
     expect(screen.getByText('1 modified')).toBeInTheDocument();
-    
+
     // Check for the overall addition/deletion statistics
     const additionElements = screen.getAllByText('+4');
     const deletionElements = screen.getAllByText('-1');
-    
+
     expect(additionElements.length).toBeGreaterThan(0);
     expect(deletionElements.length).toBeGreaterThan(0);
-    
+
     // At least one of each should have the correct styling classes
-    expect(additionElements.some(el => el.classList.contains('text-green-400'))).toBe(true);
-    expect(deletionElements.some(el => el.classList.contains('text-red-400'))).toBe(true);
+    expect(additionElements.some(el => el.classList.contains('text-success'))).toBe(true);
+    expect(deletionElements.some(el => el.classList.contains('text-danger'))).toBe(true);
   });
 });

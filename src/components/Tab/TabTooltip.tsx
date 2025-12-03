@@ -40,34 +40,34 @@ export const TabTooltip: React.FC<TabTooltipProps> = ({
   return (
     <div
       style={style}
-      className="bg-gray-900 text-gray-200 text-xs rounded-md shadow-lg border border-gray-700 whitespace-nowrap overflow-hidden" // Added overflow-hidden for clean corners
+      className="bg-surface text-secondary text-xs rounded-md shadow-lg border border-base whitespace-nowrap overflow-hidden" // Added overflow-hidden for clean corners
       role="tooltip"
     >
       <div className="px-3 pt-2 pb-1.5">
-        <div className="font-semibold text-center mb-1.5 text-gray-100">
+        <div className="font-semibold text-center mb-1.5 text-main">
           {content.title}
         </div>
 
         <div className="space-y-0.5">
           {content.lineCount !== undefined && (
             <div>
-              <span className="text-gray-400 mr-1">Lines:</span>
-              <span className="text-gray-100 font-medium">
+              <span className="text-muted mr-1">Lines:</span>
+              <span className="text-main font-medium">
                 {content.lineCount}
               </span>{" "}
               {/* Brighter Value */}
             </div>
           )}
           <div>
-            <span className="text-gray-400 mr-1">Created:</span>
-            <span className="text-gray-100 font-medium">
+            <span className="text-muted mr-1">Created:</span>
+            <span className="text-main font-medium">
               {formatDate(content.dateCreated)}
             </span>{" "}
             {/* Brighter Value */}
           </div>
           <div>
-            <span className="text-gray-400 mr-1">Modified:</span>
-            <span className="text-gray-100 font-medium">
+            <span className="text-muted mr-1">Modified:</span>
+            <span className="text-main font-medium">
               {formatDate(content.lastModified)}
             </span>{" "}
             {/* Brighter Value */}
@@ -76,8 +76,8 @@ export const TabTooltip: React.FC<TabTooltipProps> = ({
       </div>
 
       {content.language && (
-        <div className="bg-gray-800 px-3 py-1 text-center border-t border-gray-700">
-          <span className="text-gray-300 font-medium">{content.language}</span>
+        <div className="bg-surface-highlight px-3 py-1 text-center border-t border-base">
+          <span className="icon-themed font-medium">{content.language}</span>
         </div>
       )}
     </div>

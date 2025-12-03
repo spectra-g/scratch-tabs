@@ -82,7 +82,7 @@ export function parseDiff(text: string): ParsedDiff {
       currentHunkIndex = -1;
 
       const [, originalPath, newPath] = gitDiffMatch;
-      
+
       files.push({
         id: `file-${currentFileIndex}`,
         fileName: newPath,
@@ -130,9 +130,9 @@ export function parseDiff(text: string): ParsedDiff {
     }
 
     // Check for index, ---, +++ lines
-    if (line.startsWith('index ') || 
-        line.startsWith('--- ') || 
-        line.startsWith('+++ ')) {
+    if (line.startsWith('index ') ||
+      line.startsWith('--- ') ||
+      line.startsWith('+++ ')) {
       currentFile.headerLines.push(line);
       continue;
     }
@@ -141,8 +141,8 @@ export function parseDiff(text: string): ParsedDiff {
     const hunkMatch = line.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$/);
     if (hunkMatch) {
       currentHunkIndex++;
-      const [, origStart, origCount, newStart, newCount ] = hunkMatch;
-      
+      const [, origStart, origCount, newStart, newCount] = hunkMatch;
+
       currentFile.hunks.push({
         id: `hunk-${currentFileIndex}-${currentHunkIndex}`,
         header: line,
@@ -180,10 +180,10 @@ export function parseDiff(text: string): ParsedDiff {
       }
 
       // Calculate line numbers
-      const contextAndDeletions = currentHunk.lines.filter(l => 
+      const contextAndDeletions = currentHunk.lines.filter(l =>
         l.type === 'context' || l.type === 'deletion'
       ).length;
-      const contextAndAdditions = currentHunk.lines.filter(l => 
+      const contextAndAdditions = currentHunk.lines.filter(l =>
         l.type === 'context' || l.type === 'addition'
       ).length;
 
@@ -220,7 +220,7 @@ export function parseDiff(text: string): ParsedDiff {
     file.hunks.forEach(hunk => {
       // Group lines by their trimmed content to find whitespace-only changes
       const linesByTrimmedContent = new Map<string, DiffLine[]>();
-      
+
       hunk.lines.forEach(line => {
         if (line.type !== 'context') {
           const trimmed = line.content.trim();
@@ -230,22 +230,22 @@ export function parseDiff(text: string): ParsedDiff {
           linesByTrimmedContent.get(trimmed)!.push(line);
         }
       });
-      
+
       // Mark lines as whitespace-only if they have the same trimmed content
       // but different types (addition vs deletion)
       linesByTrimmedContent.forEach((lines, trimmedContent) => {
         if (lines.length > 1) {
           const hasAddition = lines.some(l => l.type === 'addition');
           const hasDeletion = lines.some(l => l.type === 'deletion');
-          
+
           if (hasAddition && hasDeletion) {
             // Check if the actual content differs only in whitespace
             const additionLine = lines.find(l => l.type === 'addition');
             const deletionLine = lines.find(l => l.type === 'deletion');
-            
-            if (additionLine && deletionLine && 
-                additionLine.content.trim() === deletionLine.content.trim() &&
-                additionLine.content !== deletionLine.content) {
+
+            if (additionLine && deletionLine &&
+              additionLine.content.trim() === deletionLine.content.trim() &&
+              additionLine.content !== deletionLine.content) {
               additionLine.isWhitespaceOnly = true;
               deletionLine.isWhitespaceOnly = true;
             }
@@ -285,43 +285,43 @@ export function reconstructDiff(
   } = {}
 ): string {
   const { includeFile = () => true, includeHunk = () => true, hideWhitespaceChanges = false } = options;
-  
+
   const lines: string[] = [];
-  
+
   // Add preamble
   lines.push(...parsedDiff.preamble);
-  
+
   // Add files
   parsedDiff.files.forEach(file => {
     if (!includeFile(file)) return;
-    
+
     // Add git diff header
     lines.push(`diff --git a/${file.originalPath} b/${file.newPath}`);
-    
+
     // Add file headers
     lines.push(...file.headerLines);
-    
+
     // Add hunks
     file.hunks.forEach(hunk => {
       if (!includeHunk(hunk)) return;
-      
+
       lines.push(hunk.header);
-      
+
       hunk.lines.forEach(diffLine => {
         // Skip whitespace-only changes if option is enabled
         if (hideWhitespaceChanges && diffLine.isWhitespaceOnly) {
           return;
         }
-        
+
         let prefix = ' ';
         if (diffLine.type === 'addition') prefix = '+';
         else if (diffLine.type === 'deletion') prefix = '-';
-        
+
         lines.push(prefix + diffLine.content);
       });
     });
   });
-  
+
   return lines.join('\n');
 }
 
@@ -354,7 +354,7 @@ export function getDiffSummary(parsedDiff: ParsedDiff): {
     else if (file.isDeletedFile) summary.deletedFiles++;
     else if (file.isRename) summary.renamedFiles++;
     else summary.modifiedFiles++;
-    
+
     if (file.isBinary) summary.binaryFiles++;
   });
 
@@ -393,9 +393,9 @@ export function getFileStatusBadge(file: FileDiff): string {
  * Get the status color for a file
  */
 export function getFileStatusColor(file: FileDiff): string {
-  if (file.isNewFile) return 'text-green-400 bg-green-500/20';
-  if (file.isDeletedFile) return 'text-red-400 bg-red-500/20';
-  if (file.isRename) return 'text-blue-400 bg-blue-500/20';
-  if (file.isBinary) return 'text-purple-400 bg-purple-500/20';
-  return 'text-yellow-400 bg-yellow-500/20';
+  if (file.isNewFile) return 'text-success bg-success/20';
+  if (file.isDeletedFile) return 'text-danger bg-danger/20';
+  if (file.isRename) return 'text-info bg-info/20';
+  if (file.isBinary) return 'text-primary bg-primary/20';
+  return 'text-warning bg-warning/20';
 }

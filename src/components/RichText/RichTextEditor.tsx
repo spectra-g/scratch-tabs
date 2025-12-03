@@ -44,7 +44,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onTableContextMenu: handleTableContextMenu,
   });
 
-  
+
 
   // Image paste detection is now handled in EditorInstance for plain text mode
 
@@ -107,7 +107,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         />
 
         {/* Toolbar - Conditional rendering */}
-        <div className="flex-shrink-0 border-b border-gray-700 bg-gray-900 z-20">
+        <div className="flex-shrink-0 border-b border-base bg-surface z-20">
           <RichTextToolbar
             editor={editor}
             activeTab={tab}

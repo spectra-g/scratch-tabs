@@ -8,6 +8,8 @@ interface BaseModalProps {
   // Optional: Allow overriding max width/height for specific modals
   maxWidthClass?: string;
   maxHeightClass?: string;
+  // Optional: Responsive width class for viewport-based sizing
+  widthClass?: string;
 }
 
 export const BaseModal: React.FC<BaseModalProps> = ({
@@ -16,6 +18,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   children,
   maxWidthClass = "max-w-4xl", // Default max width
   maxHeightClass = "max-h-[85vh]", // Default max height
+  widthClass = "w-full", // Default viewport width
 }) => {
   return (
     // --- Backdrop ---
@@ -24,16 +27,14 @@ export const BaseModal: React.FC<BaseModalProps> = ({
       {/* --- Modal Container --- */}
       {/* Slightly lighter dark bg, refined border, larger shadow, constrained width/height */}
       <div
-        className={`bg-gray-850 rounded-lg shadow-xl w-full ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-gray-700/60`}
+        className={`bg-surface rounded-lg shadow-xl ${widthClass} ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-base`}
       >
         {/* --- Modal Header --- */}
-        <div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/60 bg-gradient-to-b from-gray-800 to-gray-850">
-          {" "}
-          {/* Subtle gradient */}
-          <h2 className="text-lg font-medium text-gray-100">{title}</h2>
+        <div className="flex-none flex items-center justify-between p-3 border-b border-base bg-surface">
+          <h2 className="text-lg font-medium text-main">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/70 rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-850"
+            className="p-1.5 text-secondary hover:text-main hover:bg-element-hover rounded-full transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:border-focus"
             aria-label="Close modal"
           >
             <X size={20} />

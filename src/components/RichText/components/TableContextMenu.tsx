@@ -39,7 +39,7 @@ export const TableContextMenu: React.FC<TableContextMenuProps> = ({
     <div
       ref={menuRef}
       data-testid="table-context-menu"
-      className="absolute bg-gray-700 border border-gray-600 rounded shadow-lg z-50 py-1"
+      className="absolute bg-element border border-base rounded shadow-lg z-50 py-1"
       style={{
         top: `${position.y}px`,
         left: `${position.x}px`,
@@ -52,7 +52,7 @@ export const TableContextMenu: React.FC<TableContextMenuProps> = ({
           return (
             <div
               key={item.id}
-              className="border-t border-gray-600 my-1 mx-1"
+              className="border-t border-base my-1 mx-1"
             />
           );
         }

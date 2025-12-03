@@ -97,7 +97,8 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({
     <BaseModal
       title="Tab Management"
       onClose={handleBaseModalClose}
-      maxWidthClass="max-w-6xl"
+      widthClass="w-[95vw]"
+      maxWidthClass="max-w-[1600px]"
       maxHeightClass="max-h-[90vh]"
     >
       <DndContext
@@ -107,16 +108,16 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({
       >
         <div ref={modalContentRef} className="flex h-[70vh]">
           {/* Left sidebar - Workspaces */}
-          <div className="w-64 border-r border-gray-700/50 flex flex-col">
-            <div className="p-3 border-b border-gray-700/50">
-              <h3 className="text-sm font-medium text-gray-300 mb-2">
+          <div className="w-64 border-r border-base bg-surface-highlight flex flex-col">
+            <div className="p-3 border-b border-base">
+              <h3 className="text-sm font-medium text-secondary mb-2">
                 Workspaces
               </h3>
 
               {/* Create workspace button */}
               <button
                 onClick={() => setIsCreatingWorkspace(true)}
-                className="w-full flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
+                className="w-full flex items-center justify-center space-x-1 px-3 py-1.5 bg-primary/10 text-info rounded-md hover:bg-primary/20 transition-colors text-sm"
               >
                 <FolderPlus size={14} />
                 <span>New Workspace</span>

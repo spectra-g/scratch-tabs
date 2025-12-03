@@ -1,10 +1,10 @@
-import { 
-  parseDiff, 
-  reconstructDiff, 
-  getDiffSummary, 
-  getFileDisplayName, 
+import {
+  parseDiff,
+  reconstructDiff,
+  getDiffSummary,
+  getFileDisplayName,
   getFileStatusBadge,
-  getFileStatusColor 
+  getFileStatusColor
 } from '../parser';
 
 describe('Diff Parser', () => {
@@ -22,7 +22,7 @@ index 1234567..abcdefg 100644
  line 3`;
 
       const result = parseDiff(diffText);
-      
+
       expect(result.files).toHaveLength(1);
       expect(result.files[0].fileName).toBe('test.txt');
       expect(result.files[0].hunks).toHaveLength(1);
@@ -49,7 +49,7 @@ index 2345678..bcdefgh 100644
 -remove this`;
 
       const result = parseDiff(diffText);
-      
+
       expect(result.files).toHaveLength(2);
       expect(result.files[0].fileName).toBe('file1.txt');
       expect(result.files[1].fileName).toBe('file2.txt');
@@ -67,7 +67,7 @@ index 0000000..1234567
 +second line`;
 
       const result = parseDiff(diffText);
-      
+
       expect(result.files).toHaveLength(1);
       expect(result.files[0].isNewFile).toBe(true);
       expect(result.files[0].stats.additions).toBe(2);
@@ -84,7 +84,7 @@ index 1234567..0000000
 -second line`;
 
       const result = parseDiff(diffText);
-      
+
       expect(result.files).toHaveLength(1);
       expect(result.files[0].isDeletedFile).toBe(true);
       expect(result.files[0].stats.deletions).toBe(2);
@@ -97,7 +97,7 @@ rename from oldname.txt
 rename to newname.txt`;
 
       const result = parseDiff(diffText);
-      
+
       expect(result.files).toHaveLength(1);
       expect(result.files[0].isRename).toBe(true);
       expect(result.files[0].originalPath).toBe('oldname.txt');
@@ -110,7 +110,7 @@ index 1234567..abcdefg 100644
 Binary files a/image.png and b/image.png differ`;
 
       const result = parseDiff(diffText);
-      
+
       expect(result.files).toHaveLength(1);
       expect(result.files[0].isBinary).toBe(true);
     });
@@ -126,18 +126,18 @@ index 1234567..abcdefg 100644
  normal line`;
 
       const result = parseDiff(diffText);
-      
+
       const hunk = result.files[0].hunks[0];
       const deletionLine = hunk.lines.find(l => l.type === 'deletion');
       const additionLine = hunk.lines.find(l => l.type === 'addition');
-      
+
       expect(deletionLine?.isWhitespaceOnly).toBe(true);
       expect(additionLine?.isWhitespaceOnly).toBe(true);
     });
 
     it('should handle empty diff', () => {
       const result = parseDiff('');
-      
+
       expect(result.files).toHaveLength(0);
       expect(result.preamble).toHaveLength(0);
       expect(result.stats.totalFiles).toBe(0);
@@ -149,7 +149,7 @@ Some random text
 More random text`;
 
       const result = parseDiff(diffText);
-      
+
       expect(result.files).toHaveLength(0);
       expect(result.preamble).toHaveLength(3);
     });
@@ -168,7 +168,7 @@ index 1234567..abcdefg 100644
 
     it('should reconstruct original diff', () => {
       const reconstructed = reconstructDiff(sampleDiff);
-      
+
       expect(reconstructed).toContain('diff --git a/test.txt b/test.txt');
       expect(reconstructed).toContain('@@ -1,3 +1,3 @@');
       expect(reconstructed).toContain('-line 2');
@@ -179,7 +179,7 @@ index 1234567..abcdefg 100644
       const reconstructed = reconstructDiff(sampleDiff, {
         includeFile: (file) => file.fileName !== 'test.txt'
       });
-      
+
       expect(reconstructed).not.toContain('diff --git a/test.txt b/test.txt');
     });
 
@@ -196,7 +196,7 @@ index 1234567..abcdefg 100644
       const reconstructed = reconstructDiff(diffWithWhitespace, {
         hideWhitespaceChanges: true
       });
-      
+
       expect(reconstructed).not.toContain('line with spaces');
       expect(reconstructed).toContain('normal');
     });
@@ -229,7 +229,7 @@ index 1234567..abcdefg 100644
 
       const parsed = parseDiff(diffText);
       const summary = getDiffSummary(parsed);
-      
+
       expect(summary.totalFiles).toBe(3);
       expect(summary.newFiles).toBe(1);
       expect(summary.deletedFiles).toBe(1);
@@ -266,8 +266,8 @@ index 1234567..abcdefg 100644
     });
 
     it('should get correct status color', () => {
-      expect(getFileStatusColor(mockFile)).toContain('text-blue-400');
-      expect(getFileStatusColor({ ...mockFile, isNewFile: true, isRename: false })).toContain('text-green-400');
+      expect(getFileStatusColor(mockFile)).toContain('text-info');
+      expect(getFileStatusColor({ ...mockFile, isNewFile: true, isRename: false })).toContain('text-success');
     });
   });
 });

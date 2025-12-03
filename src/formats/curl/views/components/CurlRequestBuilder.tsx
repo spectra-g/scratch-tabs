@@ -80,26 +80,25 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
   return (
     <div className="space-y-4">
       {/* Tab navigation */}
-      <div className="flex space-x-1 bg-gray-700/30 rounded-lg p-1">
+      <div className="flex space-x-1 bg-element rounded-lg p-1">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:text-white hover:bg-gray-600'
-            }`}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
+              ? 'bg-primary text-white'
+              : 'text-main hover:text-white hover:bg-element-hover'
+              }`}
           >
             <tab.icon size={14} />
             <span>{tab.label}</span>
             {tab.count !== undefined && tab.count > 0 && (
-              <span className="bg-gray-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+              <span className="bg-muted text-white text-xs px-1.5 py-0.5 rounded-full">
                 {tab.count}
               </span>
             )}
             {tab.hasContent && (
-              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+              <span className="w-2 h-2 bg-success rounded-full"></span>
             )}
           </button>
         ))}
@@ -111,19 +110,19 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.2 }}
-        className="bg-gray-800/50 rounded-lg p-4"
+        className="bg-surface/50 rounded-lg p-4"
       >
         {activeTab === 'url' && (
           <div className="space-y-4">
             {/* Method selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-main mb-2">
                 HTTP Method
               </label>
               <select
                 value={request.method}
                 onChange={(e) => handleMethodChange(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:border-blue-500"
+                className="w-full bg-surface-secondary border border-base rounded-lg px-3 py-2 text-main focus:outline-none focus:border-focus"
               >
                 {methods.map((method) => (
                   <option key={method} value={method}>
@@ -135,7 +134,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
 
             {/* URL input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-main mb-2">
                 URL
               </label>
               <input
@@ -143,7 +142,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                 value={request.url}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://api.example.com/endpoint"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full bg-surface-secondary border border-base rounded-lg px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
               />
             </div>
           </div>
@@ -152,10 +151,10 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
         {activeTab === 'headers' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-300">Request Headers</h3>
+              <h3 className="text-sm font-medium text-main">Request Headers</h3>
               <button
                 onClick={handleAddHeader}
-                className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors"
+                className="flex items-center space-x-1 px-2 py-1 bg-primary hover:bg-primary/90 text-white rounded text-xs transition-colors"
               >
                 <Plus size={12} />
                 <span>Add Header</span>
@@ -170,27 +169,27 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                     value={header.key}
                     onChange={(e) => handleHeaderChange(index, e.target.value, header.value)}
                     placeholder="Header name"
-                    className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    className="flex-1 bg-surface-secondary border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
                   />
-                  <span className="text-gray-500">:</span>
+                  <span className="text-muted">:</span>
                   <input
                     type="text"
                     value={header.value}
                     onChange={(e) => handleHeaderChange(index, header.key, e.target.value)}
                     placeholder="Header value"
-                    className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    className="flex-1 bg-surface-secondary border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
                   />
                   <button
                     onClick={() => handleRemoveHeader(index)}
-                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                    className="p-2 text-danger hover:text-danger hover:bg-danger/20 rounded transition-colors"
                   >
                     <Minus size={14} />
                   </button>
                 </div>
               ))}
-              
+
               {request.headers.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted">
                   <Key size={24} className="mx-auto mb-2 opacity-50" />
                   <p>No headers configured</p>
                   <p className="text-xs">Click "Add Header" to get started</p>
@@ -203,16 +202,16 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
         {activeTab === 'body' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-300">Request Body</h3>
+              <h3 className="text-sm font-medium text-main">Request Body</h3>
               <div className="flex items-center space-x-2">
                 {request.body && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted">
                     {request.body.length} characters
                   </span>
                 )}
                 <button
                   onClick={() => handleBodyChange('')}
-                  className="text-xs text-red-400 hover:text-red-300"
+                  className="text-xs text-danger hover:text-danger"
                   disabled={!request.body}
                 >
                   Clear
@@ -220,7 +219,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
               </div>
             </div>
 
-            <div className="border border-gray-600 rounded-lg overflow-hidden">
+            <div className="border border-base rounded-lg overflow-hidden">
               <Editor
                 height="200px"
                 language="json"
@@ -242,10 +241,10 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
         {activeTab === 'options' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-300">Curl Options</h3>
+              <h3 className="text-sm font-medium text-main">Curl Options</h3>
               <button
                 onClick={handleAddOption}
-                className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors"
+                className="flex items-center space-x-1 px-2 py-1 bg-primary hover:bg-primary/90 text-white rounded text-xs transition-colors"
               >
                 <Plus size={12} />
                 <span>Add Option</span>
@@ -260,26 +259,26 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                     value={option.flag}
                     onChange={(e) => handleOptionChange(index, e.target.value, option.value)}
                     placeholder="--flag"
-                    className="w-32 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    className="w-32 bg-surface-secondary border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
                   />
                   <input
                     type="text"
                     value={option.value || ''}
                     onChange={(e) => handleOptionChange(index, option.flag, e.target.value)}
                     placeholder="value (optional)"
-                    className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    className="flex-1 bg-surface-secondary border border-base rounded px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
                   />
                   <button
                     onClick={() => handleRemoveOption(index)}
-                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                    className="p-2 text-danger hover:text-danger hover:bg-danger/20 rounded transition-colors"
                   >
                     <Minus size={14} />
                   </button>
                 </div>
               ))}
-              
+
               {request.otherOptions.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted">
                   <Settings size={24} className="mx-auto mb-2 opacity-50" />
                   <p>No additional options configured</p>
                   <p className="text-xs">Click "Add Option" to add Curl flags</p>

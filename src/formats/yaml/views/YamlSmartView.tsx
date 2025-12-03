@@ -1,22 +1,23 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { SmartViewProps } from '../../../views/registry';
 import { YamlTreeView } from './components/YamlTreeView';
 import { YamlToolbar } from './components/YamlToolbar';
 import { AnchorNavigator } from './components/AnchorNavigator';
 import { DocumentTabs } from './components/DocumentTabs';
+import { NodeDetails } from './components/NodeDetails';
 import { detectYamlSchema, configureMonacoSchema } from '../utils/schemaStore';
 import { parseYamlWithPositions, YamlDocument, YamlNode, AnchorInfo } from '../utils/yamlParser';
 import { useActiveEditorStore } from '../../../stores/activeEditorStore';
+import { useThemeStore } from '../../../stores/themeStore';
 
 interface YamlSmartViewState {
   documents: YamlDocument[];
   activeDocumentIndex: number;
   selectedNodePath: string | null;
   anchors: Map<string, AnchorInfo>;
-  showComments: boolean;
-  showPaths: boolean;
   searchQuery: string;
   error: string | null;
   canUndo: boolean;
@@ -31,6 +32,7 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
   side,
 }) => {
   const { setActiveEditor } = useActiveEditorStore();
+  const { isDarkMode } = useThemeStore();
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   // Add cleanup effect to track unmounting
@@ -52,8 +54,6 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
     activeDocumentIndex: 0,
     selectedNodePath: null,
     anchors: new Map(),
-    showComments: true,
-    showPaths: false,
     searchQuery: '',
     error: null,
     canUndo: false,
@@ -126,7 +126,7 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
         if (editor.getAction && typeof editor.getAction === 'function') {
           const canUndo = editor.getAction('undo')?.isSupported() ?? false;
           const canRedo = editor.getAction('redo')?.isSupported() ?? false;
-          
+
           setState(prev => ({ ...prev, canUndo, canRedo }));
         } else {
           // Fallback for test environment
@@ -190,7 +190,7 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
 
         const lineNumber = e.position.lineNumber;
         const nodePath = findNodePathByLine(activeDocument.nodes, lineNumber);
-        
+
         if (nodePath !== state.selectedNodePath) {
           setState(prev => ({ ...prev, selectedNodePath: nodePath }));
         }
@@ -219,7 +219,7 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
       if (editorRef.current.setPosition && typeof editorRef.current.setPosition === 'function') {
         editorRef.current.setPosition({ lineNumber: node.line, column: 1 });
       }
-      
+
       // Highlight the range if available (with safety checks for tests)
       if (node.endLine !== undefined && editorRef.current.setSelection && typeof editorRef.current.setSelection === 'function') {
         const range = new monaco.Range(node.line, 1, node.endLine, 1);
@@ -243,9 +243,9 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
         editorRef.current.revealLineInCenter(anchorInfo.definitionLine);
       }
       if (editorRef.current.setPosition && typeof editorRef.current.setPosition === 'function') {
-        editorRef.current.setPosition({ 
-          lineNumber: anchorInfo.definitionLine, 
-          column: anchorInfo.definitionColumn || 1 
+        editorRef.current.setPosition({
+          lineNumber: anchorInfo.definitionLine,
+          column: anchorInfo.definitionColumn || 1
         });
       }
     } else {
@@ -256,9 +256,9 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
           editorRef.current.revealLineInCenter(firstUsage.line);
         }
         if (editorRef.current.setPosition && typeof editorRef.current.setPosition === 'function') {
-          editorRef.current.setPosition({ 
-            lineNumber: firstUsage.line, 
-            column: firstUsage.column || 1 
+          editorRef.current.setPosition({
+            lineNumber: firstUsage.line,
+            column: firstUsage.column || 1
           });
         }
       }
@@ -267,20 +267,11 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
 
   // Handle document switching
   const handleDocumentChange = useCallback((index: number) => {
-    setState(prev => ({ 
-      ...prev, 
+    setState(prev => ({
+      ...prev,
       activeDocumentIndex: index,
       selectedNodePath: null,
     }));
-  }, []);
-
-  // Handle view toggles
-  const handleToggleComments = useCallback(() => {
-    setState(prev => ({ ...prev, showComments: !prev.showComments }));
-  }, []);
-
-  const handleTogglePaths = useCallback(() => {
-    setState(prev => ({ ...prev, showPaths: !prev.showPaths }));
   }, []);
 
   const handleSearchChange = useCallback((query: string) => {
@@ -310,12 +301,12 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
   const showFailsafeUI = state.error !== null;
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-gray-200" data-testid="yaml-smart-view">
+    <div className="flex flex-col h-full bg-surface text-main" data-testid="yaml-smart-view">
       {/* Error notification bar */}
       {showFailsafeUI && (
-        <div className="flex items-center justify-between px-4 py-2 bg-red-900/20 border-b border-red-500/30 text-red-300">
+        <div className="flex items-center justify-between px-4 py-2 bg-danger-subtle border-b border-danger text-danger">
           <div className="flex items-center space-x-2">
-            <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
@@ -328,11 +319,7 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
 
       {/* Toolbar */}
       <YamlToolbar
-        showComments={state.showComments}
-        showPaths={state.showPaths}
         searchQuery={state.searchQuery}
-        onToggleComments={handleToggleComments}
-        onTogglePaths={handleTogglePaths}
         onSearchChange={handleSearchChange}
         documentCount={state.documents.length}
         activeDocument={activeDocument}
@@ -353,63 +340,83 @@ export const YamlSmartView: React.FC<SmartViewProps> = ({
       )}
 
       {/* Main content area */}
-      <div className="flex flex-1 min-h-0">
+      <PanelGroup direction="horizontal" className="flex-1 min-h-0">
         {/* Left pane: Tree view */}
-        <div className="w-2/5 border-r border-gray-700 flex flex-col">
-          {showFailsafeUI ? (
-            <div className="flex items-center justify-center h-full text-gray-400 p-4">
-              <div className="text-center">
-                <svg className="w-12 h-12 text-gray-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-sm">Tree view unavailable</p>
-                <p className="text-xs text-gray-500 mt-1">Fix YAML syntax to see structure</p>
+        <Panel defaultSize={25} minSize={15} maxSize={50}>
+          <PanelGroup direction="vertical">
+            {/* Tree view */}
+            <Panel defaultSize={70} minSize={30}>
+              <div className="border-r border-base flex flex-col h-full">
+                {showFailsafeUI ? (
+                  <div className="flex items-center justify-center h-full text-secondary p-4">
+                    <div className="text-center">
+                      <svg className="w-12 h-12 text-muted mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p className="text-sm">Tree view unavailable</p>
+                      <p className="text-xs text-muted mt-1">Fix YAML syntax to see structure</p>
+                    </div>
+                  </div>
+                ) : activeDocument ? (
+                  <YamlTreeView
+                    nodes={activeDocument.nodes}
+                    selectedPath={state.selectedNodePath}
+                    searchQuery={state.searchQuery}
+                    onNodeSelect={handleNodeSelect}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-secondary">
+                    <p className="text-sm">No YAML content</p>
+                  </div>
+                )}
               </div>
-            </div>
-          ) : activeDocument ? (
-            <YamlTreeView
-              nodes={activeDocument.nodes}
-              selectedPath={state.selectedNodePath}
-              showPaths={state.showPaths}
-              showComments={state.showComments}
-              searchQuery={state.searchQuery}
-              onNodeSelect={handleNodeSelect}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              <p className="text-sm">No YAML content</p>
-            </div>
-          )}
-        </div>
+            </Panel>
+
+            {/* Resize handle */}
+            <PanelResizeHandle className="h-1 bg-element hover:bg-info transition-colors cursor-row-resize" />
+
+            {/* Node details panel */}
+            <Panel defaultSize={30} minSize={20}>
+              <div className="border-r border-base border-t border-base h-full overflow-auto custom-scrollbar bg-surface-secondary">
+                <NodeDetails selectedNode={findNodeByPath(activeDocument?.nodes || [], state.selectedNodePath)} />
+              </div>
+            </Panel>
+          </PanelGroup>
+        </Panel>
+
+        {/* Resize handle */}
+        <PanelResizeHandle className="w-1 bg-element hover:bg-info transition-colors cursor-col-resize" />
 
         {/* Right pane: Monaco editor */}
-        <div className="flex-1 flex flex-col">
-          <Editor
-            height="100%"
-            language="yaml"
-            value={content}
-            theme="vs-dark"
-            onMount={handleEditorDidMount}
-            options={{
-              minimap: { enabled: false },
-              wordWrap: 'on',
-              scrollBeyondLastLine: false,
-              renderWhitespace: 'boundary',
-              folding: true,
-              lineNumbers: 'on',
-              glyphMargin: true,
-              fontSize: 14,
-              automaticLayout: true,
-              copyWithSyntaxHighlighting: false,
-              formatOnPaste: true,
-              formatOnType: true,
-              find: {
-                addExtraSpaceOnTop: false,
-              },
-            }}
-          />
-        </div>
-      </div>
+        <Panel minSize={30}>
+          <div className="flex-1 flex flex-col h-full">
+            <Editor
+              height="100%"
+              language="yaml"
+              value={content}
+              theme={isDarkMode ? "vs-dark" : "vs"}
+              onMount={handleEditorDidMount}
+              options={{
+                minimap: { enabled: false },
+                wordWrap: 'on',
+                scrollBeyondLastLine: false,
+                renderWhitespace: 'boundary',
+                folding: true,
+                lineNumbers: 'on',
+                glyphMargin: true,
+                fontSize: 14,
+                automaticLayout: true,
+                copyWithSyntaxHighlighting: false,
+                formatOnPaste: true,
+                formatOnType: true,
+                find: {
+                  addExtraSpaceOnTop: false,
+                },
+              }}
+            />
+          </div>
+        </Panel>
+      </PanelGroup>
 
       {/* Anchor Navigator (bottom panel) */}
       {!showFailsafeUI && state.anchors.size > 0 && (
@@ -428,7 +435,7 @@ function findNodePathByLine(nodes: YamlNode[], lineNumber: number): string | nul
     if (node.line === lineNumber || (node.endLine && lineNumber >= node.line && lineNumber <= node.endLine)) {
       return node.path;
     }
-    
+
     if (node.children) {
       const childPath = findNodePathByLine(node.children, lineNumber);
       if (childPath) return childPath;
@@ -437,12 +444,14 @@ function findNodePathByLine(nodes: YamlNode[], lineNumber: number): string | nul
   return null;
 }
 
-function findNodeByPath(nodes: YamlNode[], targetPath: string): YamlNode | null {
+function findNodeByPath(nodes: YamlNode[], targetPath: string | null): YamlNode | null {
+  if (!targetPath) return null;
+
   for (const node of nodes) {
     if (node.path === targetPath) {
       return node;
     }
-    
+
     if (node.children) {
       const childNode = findNodeByPath(node.children, targetPath);
       if (childNode) return childNode;

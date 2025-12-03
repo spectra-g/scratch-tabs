@@ -103,9 +103,9 @@ describe('RichTextControls', () => {
     it('should update lastModified timestamp when toggling', () => {
       const tab = createMockTab(false);
       const beforeTime = Date.now();
-      
+
       render(<RichTextControls activeTab={tab} />);
-      
+
       const button = screen.getByRole('button');
       fireEvent.click(button);
 
@@ -145,7 +145,7 @@ describe('RichTextControls', () => {
       render(<RichTextControls activeTab={tab} />);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:bg-gray-700/50');
+      expect(button).toHaveClass('hover:bg-element/50');
       expect(button).toHaveClass('transition-colors');
     });
   });
@@ -156,7 +156,7 @@ describe('RichTextControls', () => {
       const tab2 = { ...createMockTab(true), id: 'tab-2' };
 
       const { rerender } = render(<RichTextControls activeTab={tab1} />);
-      
+
       fireEvent.click(screen.getByRole('button'));
       expect(mockUpdateTabState).toHaveBeenCalledWith('tab-1', expect.any(Object));
 
@@ -172,14 +172,14 @@ describe('RichTextControls', () => {
       render(<RichTextControls activeTab={tab} />);
 
       const button = screen.getByRole('button');
-      
+
       // Simulate rapid clicking
       fireEvent.click(button);
       fireEvent.click(button);
       fireEvent.click(button);
 
       expect(mockUpdateTabState).toHaveBeenCalledTimes(3);
-      
+
       // Each call should toggle based on the original tab state (false), 
       // since the component doesn't update the prop between renders
       const calls = mockUpdateTabState.mock.calls;

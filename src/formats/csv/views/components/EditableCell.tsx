@@ -176,10 +176,10 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(({
 
     if (isEditing) {
       return (
-        <div className="h-full w-full flex items-center bg-gray-800">
+        <div className="h-full w-full flex items-center bg-surface">
           <input
             ref={inputRef}
-            className="w-full h-full bg-transparent border-none outline-none text-sm text-white px-2 focus:outline-none focus:ring-0"
+            className="w-full h-full bg-transparent border-none outline-none text-sm text-main px-2 focus:outline-none focus:ring-0"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -210,7 +210,7 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(({
         >
           <span
             ref={textRef}
-            className={`text-sm truncate w-full text-gray-200 px-2 transition-all duration-150 ${
+            className={`text-sm truncate w-full text-main px-2 transition-all duration-150 ${
               isHovered ? "pr-16" : "pr-2"
             }`}
           >
@@ -221,7 +221,7 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(({
                 value
               )
             ) : (
-              <span className="text-gray-500 italic">Empty</span>
+              <span className="text-muted italic">Empty</span>
             )}
           </span>
           <div
@@ -230,8 +230,8 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(({
             }`}
           >
             <button
-              className={`p-1 rounded hover:bg-gray-600 hover:opacity-100 transition-all ${
-                copySuccess ? 'text-green-400' : ''
+              className={`p-1 rounded hover:bg-element-hover hover:opacity-100 transition-all ${
+                copySuccess ? 'text-success' : ''
               }`}
               onClick={handleCopyClick}
               title="Copy cell value"
@@ -239,7 +239,7 @@ export const EditableCell: React.FC<EditableCellProps> = React.memo(({
               {copySuccess ? <Check size={12} /> : <Copy size={12} />}
             </button>
             <button
-              className="p-1 rounded hover:bg-gray-600 hover:opacity-100 transition-all"
+              className="p-1 rounded hover:bg-element-hover hover:opacity-100 transition-all"
               onClick={handleEditClick}
               title="Edit cell"
             >

@@ -17,7 +17,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
 }) => {
   const [parsedDoc, setParsedDoc] = useState<ParsedDocument>([]);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
-  
+
   const [showOptionsPalette, setShowOptionsPalette] = useState(false);
   const isInternalUpdateRef = useRef(false);
 
@@ -28,11 +28,11 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
       isInternalUpdateRef.current = false;
       return;
     }
-    
+
     try {
       const parsed = parseCurlDocument(content);
       setParsedDoc(parsed);
-      
+
       // Auto-select first curl command if none selected
       if (!activeCardId) {
         const firstCurlBlock = parsed.find(block => block.type === 'curl');
@@ -50,27 +50,27 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
   const summary = useMemo(() => getCurlDocumentSummary(parsedDoc), [parsedDoc]);
 
   // Get curl blocks for rendering
-  const curlBlocks = useMemo(() => 
+  const curlBlocks = useMemo(() =>
     parsedDoc.filter(block => block.type === 'curl') as Array<ParsedBlock & { type: 'curl' }>
-  , [parsedDoc]);
+    , [parsedDoc]);
 
   // Get active block
-  const activeBlock = useMemo(() => 
+  const activeBlock = useMemo(() =>
     parsedDoc.find(block => block.id === activeCardId)
-  , [parsedDoc, activeCardId]);
+    , [parsedDoc, activeCardId]);
 
   // Handle request changes from the builder
   const handleRequestChange = useCallback((newRequest: any) => {
     if (!activeCardId) {
       return;
     }
-    
+
     const updatedDoc = updateCurlBlockInDocument(parsedDoc, activeCardId, newRequest);
     setParsedDoc(updatedDoc);
-    
+
     // Mark this as an internal update to prevent reparsing
     isInternalUpdateRef.current = true;
-    
+
     // Sync back to content
     const newContent = compileCurlDocument(updatedDoc);
     onContentChange(newContent);
@@ -84,10 +84,10 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
         targetTablet: 'restclient',
         action: 'new-tab',
         payload: activeBlock.request,
-        source: { 
+        source: {
           titleHint: `API: ${activeBlock.request.method} ${activeBlock.request.url}`,
           tabId,
-          side 
+          side
         },
       });
     }
@@ -102,18 +102,18 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
       body: undefined,
       otherOptions: [],
     };
-    
+
     const newBlock: ParsedBlock = {
       type: 'curl',
       request: newRequest,
       raw: 'curl https://api.example.com',
       id: `curl-new-${Date.now()}`,
     };
-    
+
     const updatedDoc = [...parsedDoc, newBlock];
     setParsedDoc(updatedDoc);
     setActiveCardId(newBlock.id);
-    
+
     // Sync back to content
     const newContent = compileCurlDocument(updatedDoc);
     onContentChange(newContent);
@@ -123,12 +123,12 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
   const handleDeleteCommand = useCallback((blockId: string) => {
     const updatedDoc = parsedDoc.filter(block => block.id !== blockId);
     setParsedDoc(updatedDoc);
-    
+
     // If we deleted the active block, clear the active card
     if (activeCardId === blockId) {
       setActiveCardId(null);
     }
-    
+
     // Sync back to content
     const newContent = compileCurlDocument(updatedDoc);
     onContentChange(newContent);
@@ -140,7 +140,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
     if (!blockToDuplicate || blockToDuplicate.type !== 'curl') {
       return;
     }
-    
+
     // Create a new block with duplicated request
     const duplicatedBlock: ParsedBlock = {
       type: 'curl',
@@ -148,7 +148,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
       raw: blockToDuplicate.raw,
       id: `curl-duplicate-${Date.now()}`,
     };
-    
+
     // Insert the duplicated block right after the original
     const originalIndex = parsedDoc.findIndex(block => block.id === blockId);
     const updatedDoc = [
@@ -156,10 +156,10 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
       duplicatedBlock,
       ...parsedDoc.slice(originalIndex + 1)
     ];
-    
+
     setParsedDoc(updatedDoc);
     setActiveCardId(duplicatedBlock.id);
-    
+
     // Sync back to content
     const newContent = compileCurlDocument(updatedDoc);
     onContentChange(newContent);
@@ -167,14 +167,14 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
 
   if (!content.trim()) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900 text-gray-400">
+      <div className="flex items-center justify-center h-full bg-surface text-secondary">
         <div className="text-center">
-          <Terminal size={48} className="mx-auto mb-4 text-gray-600" />
+          <Terminal size={48} className="mx-auto mb-4 text-muted" />
           <p className="text-lg mb-2">No Curl commands found</p>
           <p className="text-sm mb-4">Add a Curl command to get started</p>
           <button
             onClick={handleAddNewCommand}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors"
           >
             <Plus size={16} />
             <span>Add Curl Command</span>
@@ -186,9 +186,9 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
 
   if (curlBlocks.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-900 text-gray-400">
+      <div className="flex items-center justify-center h-full bg-surface text-secondary">
         <div className="text-center">
-          <FileText size={48} className="mx-auto mb-4 text-gray-600" />
+          <FileText size={48} className="mx-auto mb-4 text-muted" />
           <p className="text-lg mb-2">No valid Curl commands detected</p>
           <p className="text-sm">This document contains text but no parseable Curl commands</p>
         </div>
@@ -197,11 +197,11 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
   }
 
   return (
-    <div className="flex h-full bg-gray-900 text-gray-200" data-testid="curl-smart-view">
+    <div className="flex h-full bg-canvas text-main" data-testid="curl-smart-view">
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Document header */}
-        <CurlDocumentHeader 
+        <CurlDocumentHeader
           summary={summary}
           onAddCommand={handleAddNewCommand}
           onToggleOptionsPalette={() => setShowOptionsPalette(!showOptionsPalette)}
@@ -210,27 +210,24 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
 
         {/* Command cards */}
         <div className="flex-1 overflow-auto custom-scrollbar p-4 space-y-4">
-          <AnimatePresence>
-            {curlBlocks.map((block) => (
-              <motion.div
-                key={block.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <CurlCard
-                  request={block.request}
-                  isExpanded={activeCardId === block.id}
-                  onClick={() => setActiveCardId(activeCardId === block.id ? null : block.id)}
-                  onRequestChange={handleRequestChange}
-                  onOpenInRestClient={handleOpenInRestClient}
-                  onDelete={() => handleDeleteCommand(block.id)}
-                  onDuplicate={() => handleDuplicateCommand(block.id)}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {curlBlocks.map((block) => (
+            <motion.div
+              key={block.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <CurlCard
+                request={block.request}
+                isExpanded={activeCardId === block.id}
+                onClick={() => setActiveCardId(activeCardId === block.id ? null : block.id)}
+                onRequestChange={handleRequestChange}
+                onOpenInRestClient={handleOpenInRestClient}
+                onDelete={() => handleDeleteCommand(block.id)}
+                onDuplicate={() => handleDuplicateCommand(block.id)}
+              />
+            </motion.div>
+          ))}
         </div>
       </div>
 
@@ -242,14 +239,14 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
             animate={{ width: 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-l border-gray-700 bg-gray-800/50 overflow-hidden"
+            className="border-l border-base bg-surface-secondary overflow-hidden"
           >
             <CurlOptionsPalette
               onAddOption={(option) => {
                 // Add option to active request
                 if (activeBlock?.type === 'curl') {
                   const updatedRequest = { ...activeBlock.request };
-                  
+
                   // Handle different option types
                   if (option.category === 'headers') {
                     updatedRequest.headers.push({ key: option.flag.replace('-H', '').trim(), value: '' });
@@ -258,7 +255,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
                   } else {
                     updatedRequest.otherOptions.push({ flag: option.flag, value: option.defaultValue });
                   }
-                  
+
                   handleRequestChange(updatedRequest);
                 }
               }}

@@ -77,33 +77,33 @@ export const FullValuePopup: React.FC<FullValuePopupProps> = ({
       {/* Popup */}
       <div
         ref={popupRef}
-        className="fixed z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl max-w-2xl"
+        className="fixed z-50 bg-surface border border-base rounded-lg shadow-2xl max-w-2xl"
         style={{
           left: position.x,
           top: position.y,
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700">
-          <span className="text-sm font-medium text-gray-300">Full Value</span>
+        <div className="flex items-center justify-between px-3 py-2 border-b border-base">
+          <span className="text-sm font-medium text-main">Full Value</span>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-700 rounded transition-colors"
+            className="p-1 hover:bg-element-hover rounded transition-colors"
             title="Close (Esc)"
           >
-            <X size={14} className="text-gray-400" />
+            <X size={14} className="text-secondary" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-3 max-h-96 overflow-auto custom-scrollbar">
-          <div className="text-sm text-gray-200 break-words whitespace-pre-wrap font-mono">
+          <div className="text-sm text-main break-words whitespace-pre-wrap font-mono">
             {value}
           </div>
         </div>
 
         {/* Footer with character count */}
-        <div className="px-3 py-2 border-t border-gray-700 text-xs text-gray-500">
+        <div className="px-3 py-2 border-t border-base text-xs text-muted">
           {value.length} characters
         </div>
       </div>

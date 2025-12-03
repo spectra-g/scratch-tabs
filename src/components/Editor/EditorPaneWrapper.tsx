@@ -23,11 +23,11 @@ interface EditorPaneWrapperProps {
 }
 
 const PreviewLoadingFallback = () => (
-  <div className="text-gray-400 p-4 animate-pulse">Loading Preview...</div>
+  <div className="text-muted p-4 animate-pulse">Loading Preview...</div>
 );
 
 const RichTextLoadingFallback = () => (
-  <div className="h-full flex items-center justify-center text-gray-400">
+  <div className="h-full flex items-center justify-center text-muted">
     <div className="text-center">
       <div className="animate-pulse">Loading Editor...</div>
     </div>
@@ -95,7 +95,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
 
   const handleRichContentChange = (richContent: any) => {
     if (!activeTabId) return;
-    updateTabState(activeTabId, { 
+    updateTabState(activeTabId, {
       richContent,
       lastModified: Date.now(),
     });
@@ -206,7 +206,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
               />
             )
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-400">
+            <div className="h-full flex items-center justify-center text-muted">
               <p>No tab selected</p>
             </div>
           )}
@@ -238,10 +238,10 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         <div
           data-testid="preview-pane"
           style={previewStyle}
-          className="h-full flex flex-col overflow-hidden border-l border-gray-700"
+          className="h-full flex flex-col overflow-hidden border-l border-base"
         >
           <div
-            className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-gray-850"
+            className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-element"
             style={{ padding: "1rem" }}
           >
             <Suspense fallback={<PreviewLoadingFallback />}>

@@ -3,6 +3,7 @@ import { Editor } from "@monaco-editor/react"; // Import Monaco type directly fr
 import type * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"; // Keep for specific types if needed
 import { Tab } from "../../types";
 import { SearchResult } from "../../stores/searchStore";
+import { useThemeStore } from "../../stores/themeStore";
 
 interface SearchPreviewPaneProps {
   tab: Tab | null | undefined;
@@ -16,6 +17,7 @@ export const SearchPreviewPane: React.FC<SearchPreviewPaneProps> = ({
   tab,
   selectedResult,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const editorRef = useRef<monacoEditor.editor.IStandaloneCodeEditor | null>(
     null,
   );
@@ -93,7 +95,7 @@ export const SearchPreviewPane: React.FC<SearchPreviewPaneProps> = ({
                 range: new currentMonaco.Range(lineNumber, 1, lineNumber, 1),
                 options: {
                   isWholeLine: true,
-                  className: "search-highlight-line bg-blue-900/20",
+                  className: "search-highlight-line bg-info/10",
                   overviewRuler: {
                     color: "rgba(0, 122, 204, 0.7)",
                     position: currentMonaco.editor.OverviewRulerLane.Center,
@@ -108,7 +110,7 @@ export const SearchPreviewPane: React.FC<SearchPreviewPaneProps> = ({
                   Math.max(1, matchIndex + matchLength + 1),
                 ),
                 options: {
-                  className: "search-highlight-match bg-yellow-500/40",
+                  className: "search-highlight-match bg-yellow-300/40 dark:bg-yellow-500/40",
                   inlineClassName: "search-match-inline-decoration",
                   stickiness:
                     currentMonaco.editor.TrackedRangeStickiness
@@ -154,7 +156,7 @@ export const SearchPreviewPane: React.FC<SearchPreviewPaneProps> = ({
       key={selectedResult?.tabId || tab?.id || "no-preview-tab"} // Key off selectedResult first
       language={selectedResult?.language ?? tab?.language ?? "plaintext"}
       value={selectedResult?.tabContent ?? tab?.content ?? ""}
-      theme="vs-dark"
+      theme={isDarkMode ? "vs-dark" : "vs"}
       onMount={handleEditorDidMount} // Pass the updated handler
       options={{
         readOnly: true,

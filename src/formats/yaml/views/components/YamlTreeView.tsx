@@ -6,8 +6,6 @@ import { YamlNode } from '../../utils/yamlParser';
 interface YamlTreeViewProps {
   nodes: YamlNode[];
   selectedPath: string | null;
-  showPaths: boolean;
-  showComments: boolean;
   searchQuery: string;
   onNodeSelect: (path: string) => void;
 }
@@ -22,8 +20,6 @@ interface TreeItem {
 export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
   nodes,
   selectedPath,
-  showPaths,
-  showComments,
   searchQuery,
   onNodeSelect,
 }) => {
@@ -33,11 +29,11 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
   // Flatten tree structure for virtualization
   const flattenedItems = useMemo(() => {
     const items: TreeItem[] = [];
-    
+
     const traverse = (nodeList: YamlNode[], depth: number = 0) => {
       nodeList.forEach(node => {
         const isExpanded = expandedNodes.has(node.path);
-        const isVisible = !searchQuery || 
+        const isVisible = !searchQuery ||
           node.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
           JSON.stringify(node.value).toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -64,7 +60,7 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
   const rowVirtualizer = useVirtualizer({
     count: flattenedItems.length,
     getScrollElement: () => containerRef.current,
-    estimateSize: () => 32,
+    estimateSize: () => 36, // Reduced from 48 since we're using tooltips
     overscan: 10,
   });
 
@@ -90,13 +86,13 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
   // Get type icon
   const getTypeIcon = (type: YamlNode['type']) => {
     switch (type) {
-      case 'object': return <Braces size={14} className="text-blue-400" />;
-      case 'array': return <List size={14} className="text-green-400" />;
-      case 'string': return <Type size={14} className="text-yellow-400" />;
-      case 'number': return <Hash size={14} className="text-purple-400" />;
-      case 'boolean': return <Binary size={14} className="text-orange-400" />;
-      case 'null': return <div className="w-3.5 h-3.5 rounded-full bg-gray-500" />;
-      default: return <Type size={14} className="text-gray-400" />;
+      case 'object': return <Braces size={14} className="text-info" />;
+      case 'array': return <List size={14} className="text-success" />;
+      case 'string': return <Type size={14} className="text-warning" />;
+      case 'number': return <Hash size={14} className="text-info" />;
+      case 'boolean': return <Binary size={14} className="text-warning" />;
+      case 'null': return <div className="w-3.5 h-3.5 rounded-full bg-muted" />;
+      default: return <Type size={14} className="text-secondary" />;
     }
   };
 
@@ -105,28 +101,28 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
     if (node.isAlias) {
       return `*${node.aliasName}`;
     }
-    
+
     if (node.type === 'object') {
       const keys = Object.keys(node.value || {});
       return `{${keys.length} ${keys.length === 1 ? 'key' : 'keys'}}`;
     }
-    
+
     if (node.type === 'array') {
       const length = Array.isArray(node.value) ? node.value.length : 0;
       return `[${length} ${length === 1 ? 'item' : 'items'}]`;
     }
-    
+
     if (node.type === 'string') {
       const str = String(node.value || '');
       return str.length > 50 ? `"${str.substring(0, 47)}..."` : `"${str}"`;
     }
-    
+
     return String(node.value);
   };
 
   if (flattenedItems.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-secondary">
         <p>
           {searchQuery ? `No nodes match "${searchQuery}"` : 'No YAML structure found'}
         </p>
@@ -136,10 +132,10 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-2 border-b border-gray-700">
-        <h3 className="text-sm font-medium text-gray-300">Structure</h3>
+      <div className="p-2 border-b border-base">
+        <h3 className="text-sm font-medium text-main">Structure</h3>
       </div>
-      
+
       <div
         ref={containerRef}
         className="flex-1 overflow-auto custom-scrollbar"
@@ -171,81 +167,53 @@ export const YamlTreeView: React.FC<YamlTreeViewProps> = ({
                 }}
               >
                 <div
-                  className={`flex items-center px-2 py-1 cursor-pointer hover:bg-gray-800/50 transition-colors ${
-                    isSelected ? 'bg-blue-500/20 border-l-2 border-blue-400' : ''
-                  }`}
-                  style={{ paddingLeft: `${depth * 16 + 8}px` }}
+                  className={`flex items-center px-3 py-2 cursor-pointer hover:bg-element-hover transition-colors ${isSelected ? 'bg-primary/20 border-l-2 border-info' : ''
+                    }`}
+                  style={{ paddingLeft: `${depth * 20 + 12}px` }}
                   onClick={() => handleNodeClick(node.path)}
                   data-testid="yaml-tree-node"
                 >
                   {/* Expand/collapse button */}
-                  <div className="w-4 flex justify-center">
+                  <div className="w-5 flex justify-center flex-shrink-0">
                     {hasChildren ? (
                       <button
                         onClick={(e) => handleToggleExpand(node.path, e)}
-                        className="text-gray-400 hover:text-gray-200"
+                        className="text-secondary hover:text-main transition-colors"
                       >
                         {isExpanded ? (
-                          <ChevronDown size={12} />
+                          <ChevronDown size={14} />
                         ) : (
-                          <ChevronRight size={12} />
+                          <ChevronRight size={14} />
                         )}
                       </button>
                     ) : null}
                   </div>
 
                   {/* Type icon */}
-                  <div className="mr-2">
+                  <div className="mr-2.5 flex-shrink-0">
                     {getTypeIcon(node.type)}
                   </div>
 
                   {/* Node content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      {/* Key name */}
-                      <span className={`font-medium text-sm truncate ${
-                        node.isAnchor ? 'text-green-400' : 
-                        node.isAlias ? 'text-blue-400' : 
-                        'text-gray-200'
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    {/* Key name */}
+                    <span className={`font-medium text-sm truncate ${node.isAnchor ? 'text-success' :
+                      node.isAlias ? 'text-info' :
+                        'text-main'
                       }`}>
-                        {node.isAnchor && '&'}{node.key}
-                      </span>
+                      {node.isAnchor && '&'}{node.key}
+                    </span>
 
-                      {/* Value preview */}
-                      <span className="text-xs text-gray-400 truncate">
-                        {formatValuePreview(node)}
-                      </span>
-                    </div>
-
-                    {/* Full path (if enabled) */}
-                    {showPaths && (
-                      <div className="text-xs text-gray-500 truncate mt-0.5">
-                        {node.path}
-                      </div>
-                    )}
-
-                    {/* Comments (if enabled) */}
-                    {showComments && (node.commentBefore || node.comment) && (
-                      <div className="text-xs text-green-400 mt-0.5">
-                        {node.commentBefore && (
-                          <div className="italic">
-                            # {node.commentBefore}
-                          </div>
-                        )}
-                        {node.comment && (
-                          <div className="italic">
-                            # {node.comment}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Value preview */}
+                    <span className="text-xs text-secondary truncate flex-shrink">
+                      {formatValuePreview(node)}
+                    </span>
                   </div>
 
                   {/* Anchor/alias indicator */}
                   {(node.isAnchor || node.isAlias) && (
-                    <div className={`text-xs px-1.5 py-0.5 rounded ${
-                      node.isAnchor ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
-                    }`}>
+                    <div className={`text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${node.isAnchor ? 'bg-success/20 text-success' : 'bg-info/20 text-info'
+                      }`}>
                       {node.isAnchor ? 'anchor' : 'alias'}
                     </div>
                   )}

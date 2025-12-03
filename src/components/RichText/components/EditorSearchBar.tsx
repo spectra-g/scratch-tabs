@@ -85,8 +85,8 @@ export const EditorSearchBar: React.FC<EditorSearchBarProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="flex items-center bg-gray-800 border border-gray-600 rounded-md p-2 shadow-lg">
-      <Search size={16} className="text-gray-400 mr-2" />
+    <div className="flex items-center bg-surface border border-base rounded-md p-2 shadow-lg">
+      <Search size={16} className="text-muted mr-2" />
       
       <input
         ref={inputRef}
@@ -95,18 +95,18 @@ export const EditorSearchBar: React.FC<EditorSearchBarProps> = ({
         onChange={(e) => handleSearch(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Search in document..."
-        className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-500 outline-none"
+        className="flex-1 bg-transparent text-sm text-main placeholder-muted outline-none"
       />
       
       {totalMatches > 0 && (
         <div className="flex items-center space-x-2 ml-3">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted">
             {currentIndex} of {totalMatches}
           </span>
           
           <button
             onClick={handlePrevious}
-            className="p-1 hover:bg-gray-700 rounded transition-colors"
+            className="p-1 hover:bg-element rounded transition-colors"
             title="Previous match"
           >
             <ChevronUp size={14} />
@@ -114,7 +114,7 @@ export const EditorSearchBar: React.FC<EditorSearchBarProps> = ({
           
           <button
             onClick={handleNext}
-            className="p-1 hover:bg-gray-700 rounded transition-colors"
+            className="p-1 hover:bg-element rounded transition-colors"
             title="Next match"
           >
             <ChevronDown size={14} />
@@ -124,7 +124,7 @@ export const EditorSearchBar: React.FC<EditorSearchBarProps> = ({
       
       <button
         onClick={handleClose}
-        className="p-1 hover:bg-gray-700 rounded transition-colors ml-2"
+        className="p-1 hover:bg-element rounded transition-colors ml-2"
         title="Close search"
       >
         <X size={14} />

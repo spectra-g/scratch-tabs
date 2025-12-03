@@ -19,7 +19,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [tablets, setTablets] = useState<TabletMetadata[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -42,7 +42,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
     };
 
     updateResults();
-    setSelectedIndex(0);
+    setSelectedIndex(-1);
   }, [searchQuery]);
 
   // Focus search input when shown
@@ -61,7 +61,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, tablets.length - 1));
+          setSelectedIndex((i) => (i === -1 ? 0 : Math.min(i + 1, tablets.length - 1)));
           break;
         case "ArrowUp":
           e.preventDefault();
@@ -138,15 +138,15 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
   return (
     <div
       ref={selectorRef}
-      className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg w-96 md:w-[600px] lg:w-[700px] max-h-96 md:max-h-[500px] lg:max-h-[600px] overflow-hidden"
+      className="bg-surface border-base rounded-lg shadow-lg w-96 md:w-[600px] lg:w-[700px] max-h-96 md:max-h-[500px] lg:max-h-[600px] overflow-hidden"
     >
       {/* Search Input */}
       {showSearch && (
-        <div className="p-3 border-b border-gray-700">
+        <div className="p-3 border-b border-base">
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary"
             />
             <input
               ref={searchInputRef}
@@ -154,7 +154,7 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
               placeholder="Search tablets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              className="w-full pl-10 pr-3 py-2 input-themed rounded-md"
             />
           </div>
         </div>
@@ -166,25 +166,24 @@ export const TabletSelector: React.FC<TabletSelectorProps> = ({
         className="max-h-80 md:max-h-[420px] lg:max-h-[520px] overflow-y-auto custom-scrollbar"
       >
         {isLoading ? (
-          <div className="p-4 text-center text-gray-400">
+          <div className="p-4 text-center text-muted">
             Loading tablets...
           </div>
         ) : tablets.length === 0 ? (
-          <div className="p-4 text-center text-gray-400">No tablets found</div>
+          <div className="p-4 text-center text-muted">No tablets found</div>
         ) : (
           tablets.map((tablet, index) => (
             <div
               key={tablet.id}
-              className={`px-4 py-4 cursor-pointer transition-colors ${
-                index === selectedIndex
-                  ? "bg-blue-500/20 text-blue-200"
-                  : "text-gray-200 hover:bg-gray-700/50"
-              }`}
+              className={`px-4 py-4 cursor-pointer transition-colors ${index === selectedIndex
+                ? "bg-blue-500/20"
+                : "hover:bg-primary/5"
+                }`}
               onClick={() => handleTabletSelect(tablet)}
             >
               <div className="flex flex-col">
-                <div className="font-medium text-base">{tablet.label}</div>
-                <div className="text-sm text-gray-400 mt-2">
+                <div className="font-medium text-base text-main">{tablet.label}</div>
+                <div className="text-sm text-secondary mt-2">
                   {tablet.keywords.join(" • ")}
                 </div>
               </div>

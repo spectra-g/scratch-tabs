@@ -19,23 +19,23 @@ export const PropertiesValidationPanel: React.FC<PropertiesValidationPanelProps>
     }
   };
 
-  const totalIssues = 
-    validation.duplicateKeys.length + 
-    validation.emptyValues.length + 
+  const totalIssues =
+    validation.duplicateKeys.length +
+    validation.emptyValues.length +
     validation.invalidKeys.length;
 
   return (
-    <div className="p-3 bg-yellow-500/5 border-yellow-500/30">
+    <div className="p-3 bg-warning/5 border-warning/30">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <AlertTriangle size={16} className="text-yellow-400" />
-          <h3 className="text-sm font-medium text-yellow-300">
+          <AlertTriangle size={16} className="text-warning" />
+          <h3 className="text-sm font-medium text-warning">
             Validation Issues ({totalIssues})
           </h3>
         </div>
         <button
           onClick={onClose}
-          className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+          className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
         >
           <X size={14} />
         </button>
@@ -45,24 +45,24 @@ export const PropertiesValidationPanel: React.FC<PropertiesValidationPanelProps>
         {/* Duplicate Keys */}
         {validation.duplicateKeys.length > 0 && (
           <div>
-            <h4 className="text-xs font-medium text-red-400 mb-2 uppercase tracking-wide">
+            <h4 className="text-xs font-medium text-danger mb-2 uppercase tracking-wide">
               Duplicate Keys ({validation.duplicateKeys.length})
             </h4>
             <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
               {validation.duplicateKeys.map((key, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between bg-red-500/10 border border-red-500/30 rounded px-2 py-1"
+                  className="flex items-center justify-between bg-danger/10 border border-danger/30 rounded px-2 py-1"
                 >
                   <div className="flex items-center space-x-1 flex-1 min-w-0">
-                    <Key size={10} className="text-red-400 flex-shrink-0" />
-                    <span className="text-xs font-mono text-red-300 truncate">
+                    <Key size={10} className="text-danger flex-shrink-0" />
+                    <span className="text-xs font-mono text-danger truncate">
                       {key}
                     </span>
                   </div>
                   <button
                     onClick={() => copyKey(key)}
-                    className="p-0.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                    className="p-0.5 text-danger hover:text-danger/80 hover:bg-danger/20 rounded transition-colors"
                     title="Copy key"
                   >
                     <Copy size={10} />
@@ -76,24 +76,24 @@ export const PropertiesValidationPanel: React.FC<PropertiesValidationPanelProps>
         {/* Empty Values */}
         {validation.emptyValues.length > 0 && (
           <div>
-            <h4 className="text-xs font-medium text-yellow-400 mb-2 uppercase tracking-wide">
+            <h4 className="text-xs font-medium text-warning mb-2 uppercase tracking-wide">
               Empty Values ({validation.emptyValues.length})
             </h4>
             <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
               {validation.emptyValues.map((key, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between bg-yellow-500/10 border border-yellow-500/30 rounded px-2 py-1"
+                  className="flex items-center justify-between bg-warning/10 border border-warning/30 rounded px-2 py-1"
                 >
                   <div className="flex items-center space-x-1 flex-1 min-w-0">
-                    <Key size={10} className="text-yellow-400 flex-shrink-0" />
-                    <span className="text-xs font-mono text-yellow-300 truncate">
+                    <Key size={10} className="text-warning flex-shrink-0" />
+                    <span className="text-xs font-mono text-warning truncate">
                       {key}
                     </span>
                   </div>
                   <button
                     onClick={() => copyKey(key)}
-                    className="p-0.5 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/20 rounded transition-colors"
+                    className="p-0.5 text-warning hover:text-warning/80 hover:bg-warning/20 rounded transition-colors"
                     title="Copy key"
                   >
                     <Copy size={10} />
@@ -107,24 +107,24 @@ export const PropertiesValidationPanel: React.FC<PropertiesValidationPanelProps>
         {/* Invalid Keys */}
         {validation.invalidKeys.length > 0 && (
           <div>
-            <h4 className="text-xs font-medium text-orange-400 mb-2 uppercase tracking-wide">
+            <h4 className="text-xs font-medium text-warning mb-2 uppercase tracking-wide">
               Invalid Keys ({validation.invalidKeys.length})
             </h4>
             <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
               {validation.invalidKeys.map((key, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between bg-orange-500/10 border border-orange-500/30 rounded px-2 py-1"
+                  className="flex items-center justify-between bg-warning/10 border border-warning/30 rounded px-2 py-1"
                 >
                   <div className="flex items-center space-x-1 flex-1 min-w-0">
-                    <Key size={10} className="text-orange-400 flex-shrink-0" />
-                    <span className="text-xs font-mono text-orange-300 truncate">
+                    <Key size={10} className="text-warning flex-shrink-0" />
+                    <span className="text-xs font-mono text-warning truncate">
                       {key}
                     </span>
                   </div>
                   <button
                     onClick={() => copyKey(key)}
-                    className="p-0.5 text-orange-400 hover:text-orange-300 hover:bg-orange-500/20 rounded transition-colors"
+                    className="p-0.5 text-warning hover:text-warning/80 hover:bg-warning/20 rounded transition-colors"
                     title="Copy key"
                   >
                     <Copy size={10} />
@@ -137,7 +137,7 @@ export const PropertiesValidationPanel: React.FC<PropertiesValidationPanelProps>
       </div>
 
       {totalIssues === 0 && (
-        <div className="flex items-center justify-center py-4 text-green-400">
+        <div className="flex items-center justify-center py-4 text-success">
           <CheckCircle size={16} className="mr-2" />
           <span className="text-sm">No validation issues found</span>
         </div>

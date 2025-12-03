@@ -98,22 +98,22 @@ The tablet should render normally without breaking the entire application.
       const githubUrl = this.generateGitHubIssueUrl();
 
       return (
-        <div className="h-full bg-gray-900 text-gray-100 p-6 overflow-y-auto custom-scrollbar">
+        <div className="h-full bg-surface text-main p-6 overflow-y-auto custom-scrollbar">
           <div className="max-w-2xl mx-auto flex flex-col justify-center min-h-full">
             <div className="flex items-center gap-3 mb-6">
-              <AlertTriangle className="text-red-400" size={32} />
+              <AlertTriangle className="text-danger" size={32} />
               <div>
-                <h2 className="text-xl font-semibold text-red-400">
+                <h2 className="text-xl font-semibold text-danger">
                   Tablet Error
                 </h2>
-                <p className="text-gray-300">
+                <p className="text-secondary">
                   Something went wrong with this {this.props.tabletType} tablet
                 </p>
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
-              <p className="text-gray-300 leading-relaxed">
+            <div className="bg-surface rounded-lg p-4 mb-6 border border-base">
+              <p className="text-secondary leading-relaxed">
                 We apologize for the inconvenience. This tablet encountered an
                 error and couldn't render properly. To help us fix this issue
                 and prevent it from happening again, please consider reporting
@@ -122,7 +122,7 @@ The tablet should render normally without breaking the entire application.
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-200">
+              <h3 className="text-lg font-medium text-main">
                 Recovery Options:
               </h3>
 
@@ -130,12 +130,12 @@ The tablet should render normally without breaking the entire application.
                 {this.props.onRetry && (
                   <button
                     onClick={this.handleRetry}
-                    className="flex items-center gap-3 w-full p-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                    className="flex items-center gap-3 w-full p-3 bg-primary hover:bg-primary-hover rounded-lg transition-colors"
                   >
                     <RefreshCw size={18} />
                     <div className="text-left">
                       <div className="font-medium">Try Again</div>
-                      <div className="text-sm text-blue-200">
+                      <div className="text-sm text-info">
                         Attempt to reload this tablet
                       </div>
                     </div>
@@ -186,11 +186,11 @@ The tablet should render normally without breaking the entire application.
                 )}
               </div>
 
-              <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
-                <h4 className="font-medium text-gray-200 mb-2">
+              <div className="mt-6 p-4 bg-surface rounded-lg border border-base">
+                <h4 className="font-medium text-main mb-2">
                   What happens next?
                 </h4>
-                <ul className="text-sm text-gray-400 space-y-1">
+                <ul className="text-sm text-muted space-y-1">
                   <li>
                     • If you report the issue, our team will investigate and
                     provide a fix
@@ -207,10 +207,10 @@ The tablet should render normally without breaking the entire application.
 
               {this.state.error && (
                 <details className="mt-4">
-                  <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-300">
+                  <summary className="cursor-pointer text-sm text-muted hover:text-secondary">
                     Technical Details (for debugging)
                   </summary>
-                  <div className="mt-2 p-3 bg-gray-800 rounded border border-gray-700 text-xs font-mono text-gray-400">
+                  <div className="mt-2 p-3 bg-surface rounded border border-base text-xs font-mono text-muted">
                     <div>
                       <strong>Error:</strong> {this.state.error.message}
                     </div>

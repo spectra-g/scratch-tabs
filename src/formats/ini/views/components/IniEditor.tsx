@@ -48,13 +48,13 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   const [showAddSectionForm, setShowAddSectionForm] = useState(false);
   const [newSectionName, setNewSectionName] = useState("");
 
-  const displayLines = selectedSection 
+  const displayLines = selectedSection
     ? selectedSection.lines.filter(line => line.type === 'PAIR')
-    : sections.flatMap(section => 
-        section.lines
-          .filter(line => line.type === 'PAIR')
-          .map(line => ({ ...line, sectionName: section.name }))
-      );
+    : sections.flatMap(section =>
+      section.lines
+        .filter(line => line.type === 'PAIR')
+        .map(line => ({ ...line, sectionName: section.name }))
+    );
 
   const startEditing = useCallback((lineId: string, field: 'key' | 'value' | 'comment', currentValue: string) => {
     setEditingState({ lineId, field, value: currentValue });
@@ -69,11 +69,11 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
     if (selectedSectionId && selectedSection) {
       // Look in the specific selected section
-      line = selectedSection.lines.find(l => l.id === editingState.lineId);
+      line = selectedSection.lines.find(l => l.id === editingState.lineId) || null;
     } else {
       // Look across all sections to find the line
       for (const section of sections) {
-        line = section.lines.find(l => l.id === editingState.lineId);
+        line = section.lines.find(l => l.id === editingState.lineId) || null;
         if (line) {
           targetSectionId = section.id;
           break;
@@ -88,7 +88,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
       onUpdateKeyValue(targetSectionId, editingState.lineId, updatedKey, updatedValue, updatedComment);
     }
-    
+
     setEditingState(null);
   }, [editingState, selectedSection, selectedSectionId, sections, onUpdateKeyValue]);
 
@@ -108,7 +108,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
     if (!newKey.trim()) return;
 
     let targetSectionId = selectedSectionId;
-    
+
     if (!targetSectionId) {
       if (sections.length > 0) {
         targetSectionId = sections[0].id;
@@ -175,15 +175,14 @@ export const IniEditor: React.FC<IniEditorProps> = ({
             onChange={(e) => setEditingState(prev => prev ? { ...prev, value: e.target.value } : null)}
             onBlur={saveEdit}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-gray-800 border border-blue-500 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none"
+            className="flex-1 bg-element border border-focus rounded px-2 py-1 text-sm text-main focus:outline-none"
             autoFocus
           />
         ) : (
           <span
             onClick={() => startEditing(line.id, 'value', line.value || '')}
-            className={`flex-1 text-sm cursor-pointer hover:bg-gray-700/30 px-2 py-1 rounded transition-colors truncate ${
-              hasError ? 'text-red-400' : 'text-gray-200'
-            }`}
+            className={`flex-1 text-sm cursor-pointer hover:bg-element-hover px-2 py-1 rounded transition-colors truncate ${hasError ? 'text-danger' : 'text-main'
+              }`}
             title={isMasked ? 'Click to edit (value is masked)' : 'Click to edit'}
           >
             {displayValue}
@@ -194,7 +193,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
         {isSensitive && (
           <button
             onClick={() => toggleMask(line.key!)}
-            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+            className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
             title={isMasked ? 'Show value' : 'Hide value'}
           >
             {isMasked ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -204,7 +203,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
         {/* Copy button */}
         <button
           onClick={() => copyValue(line.value || '')}
-          className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+          className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
           title="Copy value"
         >
           <Copy size={12} />
@@ -216,12 +215,12 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   if (!selectedSectionId) {
     // Show all sections overview
     return (
-      <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-gray-700">
+      <div className="flex flex-col h-full bg-canvas">
+        <div className="p-4 border-b border-base">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium text-gray-200">All Sections Overview</h3>
-              <p className="text-sm text-gray-400 mt-1">
+              <h3 className="text-lg font-medium text-main">All Sections Overview</h3>
+              <p className="text-sm text-secondary mt-1">
                 Select a section from the left panel to edit its contents
               </p>
             </div>
@@ -229,7 +228,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
             {onAddSection && (
               <button
                 onClick={() => setShowAddSectionForm(!showAddSectionForm)}
-                className="flex items-center space-x-2 px-3 py-2 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-green-600/20 text-green-600 dark:text-green-400 rounded hover:bg-green-600/30 transition-colors"
                 title="Add new section"
               >
                 <Plus size={14} />
@@ -240,15 +239,15 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
           {/* Add Section Form in All Sections Overview */}
           {showAddSectionForm && onAddSection && (
-            <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+            <div className="mt-4 p-4 bg-surface rounded-lg border border-base">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Section Name</label>
+                <label className="block text-xs text-secondary mb-1">Section Name</label>
                 <input
                   type="text"
                   value={newSectionName}
                   onChange={(e) => setNewSectionName(e.target.value)}
                   placeholder="section_name"
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-green-500"
+                  className="w-full bg-element border border-base rounded px-2 py-1 text-sm text-main focus:outline-none focus:border-success"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       handleAddSection();
@@ -264,7 +263,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                 <button
                   onClick={handleAddSection}
                   disabled={!newSectionName.trim()}
-                  className="px-3 py-1 bg-green-500/20 text-green-400 rounded text-sm hover:bg-green-500/30 disabled:opacity-50"
+                  className="px-3 py-1 bg-green-600/20 text-green-600 dark:text-green-400 rounded text-sm hover:bg-green-600/30 disabled:opacity-50"
                 >
                   Add Section
                 </button>
@@ -273,7 +272,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                     setShowAddSectionForm(false);
                     setNewSectionName("");
                   }}
-                  className="px-3 py-1 bg-gray-700 text-gray-300 rounded text-sm hover:bg-gray-600"
+                  className="px-3 py-1 bg-element text-main rounded text-sm hover:bg-element-hover"
                 >
                   Cancel
                 </button>
@@ -281,37 +280,37 @@ export const IniEditor: React.FC<IniEditorProps> = ({
             </div>
           )}
         </div>
-        
+
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
           <div className="space-y-4">
             {sections.map(section => (
               <div
                 key={section.id}
-                className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50"
+                className="bg-surface rounded-lg p-4 border border-base"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium text-gray-200">
+                  <h4 className="font-medium text-main">
                     [{section.name || 'Global'}]
                   </h4>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted">
                     {section.lines.filter(l => l.type === 'PAIR').length} keys
                   </span>
                 </div>
-                
+
                 {section.comment && (
-                  <p className="text-sm text-gray-400 mb-2">
+                  <p className="text-sm text-secondary mb-2">
                     {section.comment}
                   </p>
                 )}
-                
-                <div className="text-sm text-gray-500">
+
+                <div className="text-sm text-muted">
                   {section.lines.filter(l => l.type === 'PAIR').slice(0, 3).map(line => (
                     <div key={line.id} className="truncate">
                       {line.key} = {line.value}
                     </div>
                   ))}
                   {section.lines.filter(l => l.type === 'PAIR').length > 3 && (
-                    <div className="text-gray-600">
+                    <div className="text-secondary">
                       ... and {section.lines.filter(l => l.type === 'PAIR').length - 3} more
                     </div>
                   )}
@@ -325,23 +324,23 @@ export const IniEditor: React.FC<IniEditorProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-canvas">
       {/* Header */}
-      <div className="p-4 border-b border-gray-700">
+      <div className="p-4 border-b border-base">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-medium text-gray-200">
+            <h3 className="text-lg font-medium text-main">
               [{selectedSection?.name || 'Global'}]
             </h3>
             {selectedSection?.comment && (
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-secondary mt-1">
                 {selectedSection.comment}
               </p>
             )}
           </div>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
+            className="flex items-center space-x-2 px-3 py-2 bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-600/30 transition-colors"
             title="Add key-value pair"
           >
             <Plus size={14} />
@@ -351,36 +350,36 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
         {/* Add Key-Value Form */}
         {showAddForm && (
-          <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+          <div className="mt-4 p-4 bg-surface rounded-lg border border-base">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Key</label>
+                <label className="block text-xs text-secondary mb-1">Key</label>
                 <input
                   type="text"
                   value={newKey}
                   onChange={(e) => setNewKey(e.target.value)}
                   placeholder="key_name"
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-element border border-base rounded px-2 py-1 text-sm text-main focus:outline-none focus:border-focus"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Value</label>
+                <label className="block text-xs text-secondary mb-1">Value</label>
                 <input
                   type="text"
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   placeholder="value"
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-element border border-base rounded px-2 py-1 text-sm text-main focus:outline-none focus:border-focus"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Comment (optional)</label>
+                <label className="block text-xs text-secondary mb-1">Comment (optional)</label>
                 <input
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="comment"
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-element border border-base rounded px-2 py-1 text-sm text-main focus:outline-none focus:border-focus"
                 />
               </div>
             </div>
@@ -388,7 +387,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
               <button
                 onClick={handleAddKeyValue}
                 disabled={!newKey.trim()}
-                className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-sm hover:bg-blue-500/30 disabled:opacity-50"
+                className="px-3 py-1 bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded text-sm hover:bg-blue-600/30 disabled:opacity-50"
               >
                 Add
               </button>
@@ -399,7 +398,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                   setNewValue("");
                   setNewComment("");
                 }}
-                className="px-3 py-1 bg-gray-700 text-gray-300 rounded text-sm hover:bg-gray-600"
+                className="px-3 py-1 bg-element text-main rounded text-sm hover:bg-element-hover"
               >
                 Cancel
               </button>
@@ -412,7 +411,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
       {/* Key-Value List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {displayLines.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="flex flex-col items-center justify-center h-full text-secondary">
             <Settings size={48} className="mb-4 opacity-50" />
             <p className="text-lg font-medium">No keys in this section</p>
             <p className="text-sm">Click "Add Key" to create your first key-value pair</p>
@@ -427,18 +426,17 @@ export const IniEditor: React.FC<IniEditorProps> = ({
               return (
                 <div
                   key={line.id}
-                  className={`bg-gray-800/50 rounded-lg p-3 border transition-colors ${
-                    hasError 
-                      ? 'border-red-500/50 bg-red-500/5' 
-                      : hasWarning 
-                      ? 'border-yellow-500/50 bg-yellow-500/5'
-                      : 'border-gray-700/50 hover:border-gray-600/50'
-                  }`}
+                  className={`bg-surface rounded-lg p-3 border transition-colors ${hasError
+                    ? 'border-danger/50 bg-danger/5'
+                    : hasWarning
+                      ? 'border-warning/50 bg-warning/5'
+                      : 'border-base hover:border-base'
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     {/* Key */}
                     <div className="flex-1 min-w-0">
-                      <label className="block text-xs text-gray-400 mb-1">Key</label>
+                      <label className="block text-xs text-secondary mb-1">Key</label>
                       {editingState?.lineId === line.id && editingState.field === 'key' ? (
                         <input
                           type="text"
@@ -446,15 +444,14 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                           onChange={(e) => setEditingState(prev => prev ? { ...prev, value: e.target.value } : null)}
                           onBlur={saveEdit}
                           onKeyDown={handleKeyDown}
-                          className="w-full bg-gray-700 border border-blue-500 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none"
+                          className="w-full bg-element border border-focus rounded px-2 py-1 text-sm text-main focus:outline-none"
                           autoFocus
                         />
                       ) : (
                         <div
                           onClick={() => startEditing(line.id, 'key', line.key || '')}
-                          className={`text-sm cursor-pointer hover:bg-gray-700/30 px-2 py-1 rounded transition-colors font-medium ${
-                            hasError ? 'text-red-400' : 'text-blue-300'
-                          }`}
+                          className={`text-sm cursor-pointer hover:bg-element-hover px-2 py-1 rounded transition-colors font-medium ${hasError ? 'text-danger' : 'text-info'
+                            }`}
                         >
                           {line.key}
                         </div>
@@ -463,13 +460,13 @@ export const IniEditor: React.FC<IniEditorProps> = ({
 
                     {/* Value */}
                     <div className="flex-1 min-w-0">
-                      <label className="block text-xs text-gray-400 mb-1">Value</label>
+                      <label className="block text-xs text-secondary mb-1">Value</label>
                       {renderValue(line)}
                     </div>
 
                     {/* Comment */}
                     <div className="flex-1 min-w-0">
-                      <label className="block text-xs text-gray-400 mb-1">Comment</label>
+                      <label className="block text-xs text-secondary mb-1">Comment</label>
                       {editingState?.lineId === line.id && editingState.field === 'comment' ? (
                         <input
                           type="text"
@@ -477,13 +474,13 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                           onChange={(e) => setEditingState(prev => prev ? { ...prev, value: e.target.value } : null)}
                           onBlur={saveEdit}
                           onKeyDown={handleKeyDown}
-                          className="w-full bg-gray-700 border border-blue-500 rounded px-2 py-1 text-sm text-gray-200 focus:outline-none"
+                          className="w-full bg-element border border-focus rounded px-2 py-1 text-sm text-main focus:outline-none"
                           autoFocus
                         />
                       ) : (
                         <div
                           onClick={() => startEditing(line.id, 'comment', line.comment || '')}
-                          className="text-sm cursor-pointer hover:bg-gray-700/30 px-2 py-1 rounded transition-colors text-gray-400 min-h-[28px] flex items-center"
+                          className="text-sm cursor-pointer hover:bg-element-hover px-2 py-1 rounded transition-colors text-secondary min-h-[28px] flex items-center"
                         >
                           {line.comment ? (
                             <span className="flex items-center">
@@ -491,7 +488,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                               {line.comment}
                             </span>
                           ) : (
-                            <span className="italic text-gray-600">Add comment...</span>
+                            <span className="italic text-muted">Add comment...</span>
                           )}
                         </div>
                       )}
@@ -505,9 +502,9 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                           className="p-1"
                           title={lineIssues.map(issue => issue.message).join(', ')}
                         >
-                          <AlertTriangle 
-                            size={14} 
-                            className={hasError ? "text-red-400" : "text-yellow-400"} 
+                          <AlertTriangle
+                            size={14}
+                            className={hasError ? "text-danger" : "text-warning"}
                           />
                         </div>
                       )}
@@ -515,7 +512,7 @@ export const IniEditor: React.FC<IniEditorProps> = ({
                       {/* Delete button */}
                       <button
                         onClick={() => selectedSectionId && onDeleteKeyValue(selectedSectionId, line.id)}
-                        className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
+                        className="p-1 text-secondary hover:text-danger hover:bg-danger/20 rounded transition-colors"
                         title="Delete key-value pair"
                       >
                         <Trash2 size={14} />

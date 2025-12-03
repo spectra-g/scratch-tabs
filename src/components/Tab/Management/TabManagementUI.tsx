@@ -87,7 +87,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
   activeWorkspaceTabs,
   activeWorkspaceId,
 }) => (
-  <div className="p-3 border-b border-gray-700/50">
+  <div className="p-3 border-b border-base bg-surface-highlight">
     <div className="flex flex-wrap gap-3">
       {/* Search */}
       <div className="relative flex-grow max-w-md">
@@ -96,11 +96,11 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search tabs..."
-          className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-9 pr-3 py-1.5 text-sm text-gray-200"
+          className="w-full bg-element text-main border border-base rounded-md pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:border-focus"
         />
         <Search
           size={16}
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
         />
       </div>
 
@@ -112,7 +112,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
             const selectedLang = e.target.value;
             setLanguageFilter(selectedLang ? [selectedLang] : []);
           }}
-          className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
+          className="bg-element text-main border border-base rounded-md px-3 py-1.5 text-sm appearance-none pr-8"
         >
           <option value="">All Languages</option>
           {availableLanguages.map((lang: string) => (
@@ -125,7 +125,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
         </select>
         <Filter
           size={14}
-          className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none"
+          className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-muted pointer-events-none"
         />
       </div>
 
@@ -134,7 +134,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
         <select
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value as SortOption)}
-          className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
+          className="bg-element text-main border border-base rounded-md px-3 py-1.5 text-sm appearance-none pr-8"
         >
           <option value={SORT_OPTIONS.CURRENT}>Current</option>
           <option value={SORT_OPTIONS.TITLE_ASC}>Title A-Z</option>
@@ -152,12 +152,12 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
         {sortOption.includes("asc") ? (
           <ArrowDownAZ
             size={14}
-            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none"
+            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-muted pointer-events-none"
           />
         ) : (
           <ArrowUpZA
             size={14}
-            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none"
+            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-muted pointer-events-none"
           />
         )}
       </div>
@@ -167,14 +167,14 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
         <select
           value={groupOption}
           onChange={(e) => setGroupOption(e.target.value as GroupOption)}
-          className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 appearance-none pr-8"
+          className="bg-element text-main border border-base rounded-md px-3 py-1.5 text-sm appearance-none pr-8"
         >
           <option value={GROUP_OPTIONS.NONE}>No Grouping</option>
           <option value={GROUP_OPTIONS.LANGUAGE}>Group by Language</option>
         </select>
         <Layers
           size={14}
-          className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none"
+          className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-muted pointer-events-none"
         />
       </div>
     </div>
@@ -182,7 +182,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
     {/* Selection info and actions */}
     <div className="flex items-center justify-between mt-3">
       <div className="flex items-center space-x-3">
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-muted">
           {selectedTabIds.size > 0
             ? `${selectedTabIds.size} tab(s) selected`
             : `${filteredTabs.length} tab(s) found`}
@@ -192,7 +192,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
           <div className="flex items-center space-x-1">
             <button
               onClick={handleDeselectAll}
-              className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
+              className="px-2 py-0.5 text-xs text-muted hover:text-secondary"
             >
               Deselect All
             </button>
@@ -203,14 +203,14 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={handleSelectAll}
-              className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
+              className="px-2 py-0.5 text-xs text-muted hover:text-secondary"
             >
               Select All
             </button>
             {sortOption !== "current" && (
               <button
                 onClick={handleApplyCurrentOrder}
-                className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-300"
+                className="px-2 py-0.5 text-xs text-muted hover:text-secondary"
               >
                 Apply Current Order
               </button>
@@ -228,19 +228,19 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={handleTogglePinSelectedTabs}
-              className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+              className="flex items-center space-x-1 px-2 py-1 text-xs bg-surface-highlight hover:bg-element-hover rounded-md transition-colors"
               title="Toggle pin status for selected"
             >
-              <Pin size={14} className="text-gray-400" />
+              <Pin size={14} className="text-muted" />
               <span>Toggle Pin</span>
             </button>
 
             <button
               onClick={handleDuplicateTabs}
-              className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+              className="flex items-center space-x-1 px-2 py-1 text-xs bg-surface-highlight hover:bg-element-hover rounded-md transition-colors"
               title="Duplicate selected tabs with (copy) suffix"
             >
-              <Copy size={14} className="text-gray-400" />
+              <Copy size={14} className="text-muted" />
               <span>Duplicate</span>
             </button>
 
@@ -248,25 +248,25 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
               <div className="relative">
                 <button
                   onClick={() => setShowRenameOptions(!showRenameOptions)}
-                  className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+                  className="flex items-center space-x-1 px-2 py-1 text-xs bg-surface-highlight hover:bg-element-hover rounded-md transition-colors"
                   title="Rename selected tabs with pattern"
                 >
-                  <Edit size={14} className="text-gray-400" />
+                  <Edit size={14} className="text-muted" />
                   <span>Rename</span>
                 </button>
 
                 {showRenameOptions && (
-                  <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
-                    <div className="text-xs text-gray-300 mb-2">Base Name</div>
+                  <div className="absolute right-0 top-full mt-1 bg-surface border border-base rounded-md shadow-lg z-10 p-3 w-64">
+                    <div className="text-xs text-secondary mb-2">Base Name</div>
                     <input
                       type="text"
                       value={renameBasePattern}
                       onChange={(e) => setRenameBasePattern(e.target.value)}
                       placeholder="e.g. My Tab"
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+                      className="w-full bg-surface-highlight border border-base rounded px-2 py-1 text-sm text-main mb-2"
                     />
 
-                    <div className="text-xs text-gray-300 mb-2">
+                    <div className="text-xs text-secondary mb-2">
                       Suffix Pattern
                     </div>
                     <input
@@ -274,10 +274,10 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
                       value={renameSuffixPattern}
                       onChange={(e) => setRenameSuffixPattern(e.target.value)}
                       placeholder=" {d}"
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+                      className="w-full bg-surface-highlight border border-base rounded px-2 py-1 text-sm text-main mb-2"
                     />
 
-                    <div className="text-xs text-gray-500 mb-3">
+                    <div className="text-xs text-muted mb-3">
                       The {"{d}"} placeholder will be replaced with the tab
                       number
                     </div>
@@ -285,14 +285,14 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={() => setShowRenameOptions(false)}
-                        className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+                        className="px-2 py-1 text-xs text-muted hover:text-secondary"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleBulkRename}
                         disabled={!renameBasePattern.trim()}
-                        className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
+                        className="px-2 py-1 text-xs bg-primary/10 text-info rounded hover:bg-primary/20 disabled:opacity-50"
                       >
                         Rename
                       </button>
@@ -306,22 +306,22 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
               <div className="relative">
                 <button
                   onClick={() => setShowMergeOptions(!showMergeOptions)}
-                  className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md transition-colors"
+                  className="flex items-center space-x-1 px-2 py-1 text-xs bg-surface-highlight hover:bg-element-hover rounded-md transition-colors"
                   title="Merge selected tabs"
                 >
-                  <Merge size={14} className="text-gray-400" />
+                  <Merge size={14} className="text-muted" />
                   <span>Merge</span>
                 </button>
 
                 {showMergeOptions && (
-                  <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3 w-64">
-                    <div className="text-xs text-gray-300 mb-2">
+                  <div className="absolute right-0 top-full mt-1 bg-surface border border-base rounded-md shadow-lg z-10 p-3 w-64">
+                    <div className="text-xs text-secondary mb-2">
                       Delimiter Between Contents
                     </div>
                     <select
                       value={mergeDelimiter}
                       onChange={(e) => setMergeDelimiter(e.target.value)}
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-3"
+                      className="w-full bg-surface-highlight border border-base rounded px-2 py-1 text-sm text-main mb-3"
                     >
                       <option value="\n\n">Double Line Break</option>
                       <option value="\n">Single Line Break</option>
@@ -331,13 +331,13 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={() => setShowMergeOptions(false)}
-                        className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+                        className="px-2 py-1 text-xs text-muted hover:text-secondary"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleMergeTabs}
-                        className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
+                        className="px-2 py-1 text-xs bg-primary/10 text-info rounded hover:bg-primary/20"
                       >
                         Merge Tabs
                       </button>
@@ -349,7 +349,7 @@ export const TabManagementToolbar: React.FC<TabManagementToolbarProps> = ({
 
             <button
               onClick={handleCloseTabs}
-              className="flex items-center space-x-1 px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-md hover:bg-red-500/30 transition-colors"
+              className="flex items-center space-x-1 px-2 py-1 text-xs bg-red-500/20 text-danger rounded-md hover:bg-red-500/30 transition-colors"
               title="Close selected tabs"
             >
               <X size={14} />
@@ -379,26 +379,26 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({
   handleRename,
   onCancel,
 }) => (
-  <div className="mt-3 p-3 bg-gray-800/50 rounded-md">
+  <div className="mt-3 p-3 bg-surface-highlight rounded-md">
     <input
       type="text"
       value={workspaceName}
       onChange={(e) => setWorkspaceName(e.target.value)}
       placeholder="Workspace name"
-      className="w-full bg-gray-700/50 border border-gray-600/50 rounded px-2 py-1 text-sm text-gray-200 mb-2"
+      className="w-full bg-element text-main border border-base rounded px-2 py-1 text-sm mb-2 focus:outline-none focus:ring-2 focus:border-focus"
       autoFocus
     />
     <div className="flex justify-end space-x-2">
       <button
         onClick={onCancel}
-        className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300"
+        className="px-2 py-1 text-xs text-muted hover:text-secondary"
       >
         Cancel
       </button>
       <button
         onClick={isCreating ? handleCreate : handleRename}
         disabled={!workspaceName.trim()}
-        className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50"
+        className="px-2 py-1 text-xs bg-primary/10 text-info rounded hover:bg-primary/20 disabled:opacity-50"
       >
         {isCreating ? "Create" : "Rename"}
       </button>
@@ -452,7 +452,7 @@ export const TabsContent: React.FC<TabsContentProps> = ({
         </div>
         <button
           onClick={handleRemoveDuplicates}
-          className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30 transition-colors"
+          className="px-2 py-1 text-xs bg-yellow-500/10 text-yellow-500 rounded hover:bg-yellow-500/20 transition-colors"
         >
           Remove Duplicates
         </button>
@@ -460,16 +460,16 @@ export const TabsContent: React.FC<TabsContentProps> = ({
     )}
 
     {emptyTabs.length > 1 && (
-      <div className="m-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md flex items-center justify-between">
+      <div className="m-3 p-3 bg-primary/10 border border-info/30 rounded-md flex items-center justify-between">
         <div className="flex items-center">
-          <AlertTriangle size={16} className="text-blue-500 mr-2" />
+          <AlertTriangle size={16} className="text-info mr-2" />
           <span className="text-sm text-blue-200">
             Found {emptyTabs.length} empty tabs
           </span>
         </div>
         <button
           onClick={handleRemoveEmptyTabs}
-          className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
+          className="px-2 py-1 text-xs bg-primary/10 text-info rounded hover:bg-primary/20 transition-colors"
         >
           Remove All
         </button>
@@ -477,7 +477,7 @@ export const TabsContent: React.FC<TabsContentProps> = ({
     )}
 
     {filteredTabs.length === 0 ? (
-      <div className="flex flex-col items-center justify-center h-full text-gray-400">
+      <div className="flex flex-col items-center justify-center h-full text-muted">
         <p>No tabs found matching your criteria</p>
       </div>
     ) : (
@@ -519,12 +519,12 @@ export const DragOverlayUI: React.FC<DragOverlayUIProps> = ({
       <div className="pointer-events-none">
         {draggedTabIds.size === 1 ? (
           // Compact representation for single tab
-          <div className="bg-gray-800 text-gray-200 text-xs px-3 py-1.5 rounded-md shadow-lg border border-gray-700 inline-block">
+          <div className="bg-surface text-main text-xs px-3 py-1.5 rounded-md shadow-lg border border-base inline-block">
             {activeDragItemData.title}
           </div>
         ) : (
           // Compact representation for multiple tabs
-          <div className="bg-gray-800 text-gray-200 text-xs px-3 py-1.5 rounded-md shadow-lg border border-gray-700 inline-block">
+          <div className="bg-surface text-main text-xs px-3 py-1.5 rounded-md shadow-lg border border-base inline-block">
             {draggedTabIds.size} tabs
           </div>
         )}

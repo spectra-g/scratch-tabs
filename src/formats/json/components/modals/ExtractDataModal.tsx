@@ -6,6 +6,7 @@ import { Tab } from "../../../../types";
 import { createTab } from "../../../../utils/tabUtils";
 import { useDebounce } from "../../../../hooks/useDebounce";
 import { extractData } from "../../utils/jsonQuery";
+import { useThemeStore } from "../../../../stores/themeStore";
 
 interface ExtractDataModalProps {
   jsonString: string;
@@ -18,6 +19,7 @@ export const ExtractDataModal: React.FC<ExtractDataModalProps> = ({
   onClose,
   addTab,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [arrayPath, setArrayPath] = useState("");
   const [propertyToExtract, setPropertyToExtract] = useState("");
   const [condition, setCondition] = useState("");
@@ -64,7 +66,7 @@ export const ExtractDataModal: React.FC<ExtractDataModalProps> = ({
         {/* Input Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-secondary mb-1">
               Path to Array
             </label>
             <input
@@ -72,11 +74,11 @@ export const ExtractDataModal: React.FC<ExtractDataModalProps> = ({
               value={arrayPath}
               onChange={(e) => setArrayPath(e.target.value)}
               placeholder="e.g., users or data.items[0].tags"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 bg-element text-main border border-base rounded text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:border-focus"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-secondary mb-1">
               Property to Extract
             </label>
             <input
@@ -84,12 +86,12 @@ export const ExtractDataModal: React.FC<ExtractDataModalProps> = ({
               value={propertyToExtract}
               onChange={(e) => setPropertyToExtract(e.target.value)}
               placeholder="e.g., id or user.profile.name"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 bg-element text-main border border-base rounded text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:border-focus"
             />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-secondary mb-1">
             Filter Condition (optional)
           </label>
           <input
@@ -97,21 +99,21 @@ export const ExtractDataModal: React.FC<ExtractDataModalProps> = ({
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
             placeholder="e.g., age >= 18 or status == 'active'"
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-element text-main border border-base rounded text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:border-focus"
           />
         </div>
 
         {/* Results Preview */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-secondary mb-2">
             Preview ({results.length} item{results.length !== 1 ? 's' : ''} found)
           </label>
-          <div className="h-64 border border-gray-700/50 rounded-lg overflow-hidden relative">
+          <div className="h-64 border border-base rounded-lg overflow-hidden relative">
             <Editor
               height="100%"
               language="json"
               value={error ? `// Error: ${error}` : resultsString}
-              theme="vs-dark"
+              theme={isDarkMode ? "vs-dark" : "vs"}
               options={{
                 readOnly: true,
                 minimap: { enabled: false },
@@ -123,15 +125,15 @@ export const ExtractDataModal: React.FC<ExtractDataModalProps> = ({
               <button
                 onClick={handleCopy}
                 disabled={results.length === 0 || !!error}
-                className="p-2 bg-gray-900/50 rounded-md transition-colors text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 disabled:opacity-50"
+                className="p-2 bg-surface rounded-md transition-colors text-secondary hover:text-main hover:bg-element-hover disabled:opacity-50"
                 title="Copy to clipboard"
               >
-                {isCopied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                {isCopied ? <Check size={16} className="text-success" /> : <Copy size={16} />}
               </button>
               <button
                 onClick={handleOpenInNewTab}
                 disabled={results.length === 0 || !!error}
-                className="p-2 bg-gray-900/50 rounded-md transition-colors text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 disabled:opacity-50"
+                className="p-2 bg-surface rounded-md transition-colors text-secondary hover:text-main hover:bg-element-hover disabled:opacity-50"
                 title="Open in new tab"
               >
                 <ExternalLink size={16} />
