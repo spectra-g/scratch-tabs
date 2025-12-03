@@ -149,7 +149,7 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
         tabIndex={-1}
       >
         {/* Top Controls */}
-        <div className="flex-none p-3 border-b border-base bg-surface-highlight space-y-3">
+        <div className="flex-none p-3 border-b border-base bg-surface space-y-3">
           {/* Search Input & History */}
           <div className="flex items-center space-x-2 relative">
             <Search

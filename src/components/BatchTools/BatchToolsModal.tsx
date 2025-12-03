@@ -89,7 +89,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="bg-surface rounded-lg shadow-2xl w-[95vw] h-[90vh] max-w-[1800px] flex flex-col border border-base">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-base bg-surface-highlight">
+        <div className="flex items-center justify-between p-4 border-b border-base bg-surface">
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
               <Wrench className="w-5 h-5 text-secondary" />
@@ -165,7 +165,7 @@ export const BatchToolsModal: React.FC<BatchToolsModalProps> = ({
           </div>
 
           {/* Right Panel - Preview */}
-          <div className="flex-1 flex flex-col min-h-0 bg-surface-highlight">
+          <div className="flex-1 flex flex-col min-h-0 bg-surface">
             <div className="p-4 border-b border-base flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-main">Preview</h3>

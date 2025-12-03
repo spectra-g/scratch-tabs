@@ -30,7 +30,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
         className={`bg-surface rounded-lg shadow-xl ${widthClass} ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-base`}
       >
         {/* --- Modal Header --- */}
-        <div className="flex-none flex items-center justify-between p-3 border-b border-base bg-surface-highlight">
+        <div className="flex-none flex items-center justify-between p-3 border-b border-base bg-surface">
           <h2 className="text-lg font-medium text-main">{title}</h2>
           <button
             onClick={onClose}

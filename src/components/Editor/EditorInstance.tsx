@@ -431,13 +431,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     };
   }, [editorRef.current, isCalloutVisible, calloutTabId, calloutView, calloutLanguageId, activeTabId]);
 
-  // Update Monaco theme when app theme changes
-  useEffect(() => {
-    if (editorRef.current && monacoRef.current && monacoRef.current.editor?.setTheme) {
-      const theme = isDarkMode ? 'vs-dark' : 'vs';
-      monacoRef.current.editor.setTheme(theme);
-    }
-  }, [isDarkMode]);
+
 
   const handleEditorDidMount = (
     editor: Monaco.editor.IStandaloneCodeEditor,

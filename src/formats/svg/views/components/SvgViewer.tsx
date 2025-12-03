@@ -343,8 +343,16 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
       // Scale the context for high-DPI displays
       ctx.scale(devicePixelRatio * scaleFactor, devicePixelRatio * scaleFactor);
 
-      // Set white background
-      ctx.fillStyle = 'white';
+      // Get background color from theme
+      const computedStyle = getComputedStyle(document.documentElement);
+      const isDark = document.documentElement.classList.contains('dark');
+
+      // Use canvas color for background (matches the preview)
+      // We need to parse the RGB values from the CSS variable
+      const canvasColorVar = computedStyle.getPropertyValue('--color-canvas').trim();
+      const [r, g, b] = canvasColorVar.split(' ').map(c => parseInt(c));
+
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
       ctx.fillRect(0, 0, width, height);
 
       // Create an image from the SVG

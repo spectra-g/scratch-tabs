@@ -7,22 +7,10 @@
 
 @layer base {
   :root {
-    /* Light Mode - Legacy variables (keep for backwards compatibility) */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f3f4f6;
-    --bg-tertiary: #e5e7eb;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #64748b;
-    /* slate-500 - improved contrast from gray-400 */
-    --border-color: #e5e7eb;
-    --input-bg: #ffffff;
-    --input-border: #d1d5db;
-
     /* Semantic Design Tokens - Surfaces */
     --color-canvas: 248 250 252;
     /* slate-50 */
-    --color-surface: 255 255 255;
+    --color-surface: 240 244 248;
     /* white */
     --color-surface-secondary: 241 245 249;
     /* slate-100 */
@@ -33,12 +21,11 @@
     --color-surface-glass: 226 232 240;
 
     /* Semantic Design Tokens - Elements */
-    --color-element: 255 255 255;
-    /* white */
+    --color-element: 248 250 252;
+    /* slate-50 - Improved contrast against white surface */
     --color-element-hover: 241 245 249;
     /* slate-100 */
-    --color-element-active: 255 255 255;
-    /* white */
+    --color-element-active: 245 249 253;
 
     /* Semantic Design Tokens - Text */
     --color-text-main: 15 23 42;
@@ -67,6 +54,34 @@
     /* yellow-600 */
     --color-danger: 220 38 38;
     /* red-600 */
+
+    /* Semantic Design Tokens - Subtle Backgrounds (New) */
+    --color-success-subtle-bg: 220 252 231;
+    /* green-100 */
+    --color-success-subtle-text: 22 101 52;
+    /* green-800 */
+    --color-danger-subtle-bg: 254 226 226;
+    /* red-100 */
+    --color-danger-subtle-text: 153 27 27;
+    /* red-800 */
+    --color-warning-subtle-bg: 254 249 195;
+    /* yellow-100 */
+    --color-warning-subtle-text: 133 77 14;
+    /* yellow-800 */
+    --color-info-subtle-bg: 219 234 254;
+    /* blue-100 */
+    --color-info-subtle-text: 30 64 175;
+    /* blue-800 */
+
+    /* Semantic Design Tokens - Inputs (New) */
+    --color-input-bg: 255 255 255;
+    /* white */
+    --color-input-border: 203 213 225;
+    /* slate-300 */
+    --color-input-text: 15 23 42;
+    /* slate-900 */
+    --color-input-placeholder: 148 163 184;
+    /* slate-400 */
 
     /* Rich Text Editor Colors */
     --code-inline-bg: 241 245 249;
@@ -124,17 +139,6 @@
   }
 
   .dark {
-    /* Dark Mode - Legacy variables (keep for backwards compatibility) */
-    --bg-primary: #111827;
-    --bg-secondary: #1f2937;
-    --bg-tertiary: #374151;
-    --text-primary: #f9fafb;
-    --text-secondary: #d1d5db;
-    --text-muted: #9ca3af;
-    --border-color: #374151;
-    --input-bg: #1f2937;
-    --input-border: #4b5563;
-
     /* Semantic Design Tokens - Surfaces */
     --color-canvas: 17 24 39;
     /* gray-900 */
@@ -142,8 +146,8 @@
     /* gray-800 */
     --color-surface-secondary: 26 32 44;
     /* gray-850 */
-    --color-surface-highlight: 31 41 55;
-    /* gray-800 */
+    --color-surface-highlight: 55 65 81;
+    /* gray-700 - Differentiated from surface */
     --color-surface-raised: 17 24 39;
     /* gray-900 */
     --color-surface-glass: 31 41 55;
@@ -184,6 +188,44 @@
     /* yellow-400 */
     --color-danger: 248 113 113;
     /* red-400 */
+
+    /* Semantic Design Tokens - Subtle Backgrounds (New) */
+    --color-success-subtle-bg: 6 78 59;
+    /* green-900 with opacity handled via alpha if needed, or solid dark green */
+    /* Using solid colors for variables, opacity handled in utility or here. 
+       Let's use the values from tailwind config but as RGB triplets for consistency if we want opacity support, 
+       or just hex/rgb values. 
+       The user asked to define --color-success-subtle-bg. 
+       Tailwind config had: dark:bg-green-900/30. 
+       Let's define the base color and handle opacity in usage or define the result color.
+       To match "rgb(var(...))" pattern, we should store RGB triplets.
+    */
+    --color-success-subtle-bg: 20 83 45;
+    /* green-900ish */
+    --color-success-subtle-text: 187 247 208;
+    /* green-200 */
+    --color-danger-subtle-bg: 127 29 29;
+    /* red-900ish */
+    --color-danger-subtle-text: 254 202 202;
+    /* red-200 */
+    --color-warning-subtle-bg: 113 63 18;
+    /* yellow-900ish */
+    --color-warning-subtle-text: 254 240 138;
+    /* yellow-200 */
+    --color-info-subtle-bg: 30 58 138;
+    /* blue-900ish */
+    --color-info-subtle-text: 191 219 254;
+    /* blue-200 */
+
+    /* Semantic Design Tokens - Inputs (New) */
+    --color-input-bg: 17 24 39;
+    /* gray-900 */
+    --color-input-border: 75 85 99;
+    /* gray-600 */
+    --color-input-text: 243 244 246;
+    /* gray-100 */
+    --color-input-placeholder: 156 163 175;
+    /* gray-400 */
 
     /* Rich Text Editor Colors */
     --code-inline-bg: 55 65 81;
@@ -348,7 +390,7 @@ select::-webkit-scrollbar-thumb:hover {
 .rich-text-editor .ProseMirror {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   outline: none;
-  color: var(--text-primary);
+  color: rgb(var(--color-text-main));
   line-height: 1.4 !important;
   min-height: 100%;
   padding: 1rem;

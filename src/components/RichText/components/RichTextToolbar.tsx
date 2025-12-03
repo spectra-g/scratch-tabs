@@ -207,7 +207,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor, active
   );
 
   return (
-    <div className="flex items-center space-x-1 bg-surface-highlight p-2 border-b border-base">
+    <div className="flex items-center space-x-1 bg-surface p-2 border-b border-base">
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         isActive={editor.isActive('heading', { level: 1 })}

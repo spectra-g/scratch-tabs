@@ -55,23 +55,67 @@ export default {
     // Only define utilities here that combine multiple properties or need special logic
     function ({ addUtilities }) {
       addUtilities({
-        // SUBTLE BACKGROUND UTILITIES (kept here due to complex light/dark combinations)
+        // SUBTLE BACKGROUND UTILITIES
         '.bg-success-subtle': {
-          '@apply bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200': {},
+          'background-color': 'rgb(var(--color-success-subtle-bg) / 0.3)',
+          'color': 'rgb(var(--color-success-subtle-text))',
+          '@media (prefers-color-scheme: light)': {
+            'background-color': 'rgb(var(--color-success-subtle-bg))',
+          }
         },
+        // Note: We need to handle the dark mode class strategy properly
+        // The above media query is not enough if we use class strategy
+        // Let's use the standard pattern for class-based dark mode
+
+        '.bg-success-subtle': {
+          'background-color': 'rgb(var(--color-success-subtle-bg))',
+          'color': 'rgb(var(--color-success-subtle-text))',
+        },
+        '.dark .bg-success-subtle': {
+          'background-color': 'rgb(var(--color-success-subtle-bg) / 0.3)',
+        },
+
         '.bg-danger-subtle': {
-          '@apply bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200': {},
+          'background-color': 'rgb(var(--color-danger-subtle-bg))',
+          'color': 'rgb(var(--color-danger-subtle-text))',
         },
+        '.dark .bg-danger-subtle': {
+          'background-color': 'rgb(var(--color-danger-subtle-bg) / 0.3)',
+        },
+
         '.bg-warning-subtle': {
-          '@apply bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200': {},
+          'background-color': 'rgb(var(--color-warning-subtle-bg))',
+          'color': 'rgb(var(--color-warning-subtle-text))',
         },
+        '.dark .bg-warning-subtle': {
+          'background-color': 'rgb(var(--color-warning-subtle-bg) / 0.3)',
+        },
+
         '.bg-info-subtle': {
-          '@apply bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200': {},
+          'background-color': 'rgb(var(--color-info-subtle-bg))',
+          'color': 'rgb(var(--color-info-subtle-text))',
+        },
+        '.dark .bg-info-subtle': {
+          'background-color': 'rgb(var(--color-info-subtle-bg) / 0.3)',
         },
 
         // COMPOSITE INPUT UTILITY (complex styling with focus rings)
         '.input-themed': {
-          '@apply bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-600 text-slate-900 dark:text-gray-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent': {},
+          'background-color': 'rgb(var(--color-input-bg))',
+          'border-color': 'rgb(var(--color-input-border))',
+          'color': 'rgb(var(--color-input-text))',
+          'border-width': '1px',
+          '&::placeholder': {
+            'color': 'rgb(var(--color-input-placeholder))',
+          },
+          '&:focus': {
+            'outline': 'none',
+            '--tw-ring-offset-shadow': 'var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
+            '--tw-ring-shadow': 'var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color)',
+            'box-shadow': 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
+            '--tw-ring-color': 'rgb(var(--color-border-focus))',
+            'border-color': 'transparent',
+          },
         },
 
         // LEGACY COMPATIBILITY / INTERACTIVE ELEMENT UTILITIES

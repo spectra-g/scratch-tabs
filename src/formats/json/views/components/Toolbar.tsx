@@ -201,7 +201,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   }, [editor]);
 
   return (
-    <div className="flex items-center justify-between p-3 border-b border-base bg-surface-raised">
+    <div className="flex items-center justify-between p-3 border-b border-base bg-surface-secondary">
       {/* Left Section: Validation Status */}
       <div className="flex items-center space-x-3">
         <div className="flex items-center space-x-2">

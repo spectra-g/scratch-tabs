@@ -85,13 +85,13 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
   const style =
     transform && !isDraggingOverlay
       ? {
-          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-          zIndex: isDragging ? 1000 : "auto",
-          opacity: isDragging ? 0 : 1,
-        }
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: isDragging ? 1000 : "auto",
+        opacity: isDragging ? 0 : 1,
+      }
       : {
-          opacity: isDragging && !isDraggingOverlay ? 0 : 1,
-        };
+        opacity: isDragging && !isDraggingOverlay ? 0 : 1,
+      };
 
   const [editingTitle, setEditingTitle] = useState(tab.title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -145,7 +145,7 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
       case "markdown":
         return "bg-indigo-500/20 text-indigo-300";
       default:
-        return "bg-slate-500/20 dark:bg-element/20 text-slate-300 dark:text-secondary";
+        return "bg-surface-secondary text-secondary";
     }
   };
 
@@ -254,11 +254,10 @@ export const DraggableTabItem: React.FC<DraggableTabItemProps> = ({
           {/* Split view position indicator */}
           {useSplitViewStore.getState().splitView.isSplit && (
             <span
-              className={`px-1.5 py-0.5 rounded ${
-                useSplitViewStore.getState().splitView.leftTabs.includes(tab.id)
+              className={`px-1.5 py-0.5 rounded ${useSplitViewStore.getState().splitView.leftTabs.includes(tab.id)
                   ? "bg-primary/10 text-info"
                   : "bg-purple-500/10 text-purple-500"
-              }`}
+                }`}
             >
               {useSplitViewStore.getState().splitView.leftTabs.includes(tab.id)
                 ? "Left"
