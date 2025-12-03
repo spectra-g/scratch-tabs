@@ -73,30 +73,22 @@ export const AIStatusIcon: React.FC = () => {
   };
 
   // Determine icon color, animation, and title based on state
-  let iconColor = "text-main"; // Default to main for not ready states
-  let hoverColor = "hover:text-secondary";
+  let iconColor = "text-secondary"; // Default to main for not ready states
   let animationClass = "";
   let title = "Open AI Model Management";
 
   if (isReady && isCodegenReady) {
     // Both models ready - use same color as nearby icons
     iconColor = "text-muted";
-    hoverColor = "hover:text-main";
     title = "AI Ready - Click to manage models";
   } else if (error || codegenError) {
-    iconColor = "text-main"; // Blue for error states instead of red
-    hoverColor = "hover:text-secondary";
     title = "AI Error - Click to manage models";
   } else if (isLoading || isCodegenLoading) {
     // Check both loading states for pulse
-    iconColor = "text-main";
-    hoverColor = "hover:text-secondary";
     animationClass = "animate-pulse"; // Pulse when either model is loading
     title = "AI Downloading - Click to view progress";
   } else if (isReady && !isCodegenReady) {
     // Summary ready, codegen not ready
-    iconColor = "text-main"; // Blue for partial readiness instead of yellow
-    hoverColor = "hover:text-secondary";
     title = "AI Partially Ready - Click to manage models";
   }
   // All other states use blue as default
@@ -110,7 +102,7 @@ export const AIStatusIcon: React.FC = () => {
       <button
         ref={buttonRef}
         onClick={handleClick}
-        className={`p-1 rounded transition-colors ${iconColor} ${hoverColor}`}
+        className={`p-1 rounded transition-colors ${iconColor}`}
         title={title}
         aria-describedby={tooltipVisible ? "ai-tooltip-content" : undefined}
       >
