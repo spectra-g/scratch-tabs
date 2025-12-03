@@ -72,7 +72,7 @@ export const AITooltip: React.FC<AITooltipProps> = ({
               <div key={file.file} className="flex items-center space-x-2">
                 <div className="flex-grow bg-element rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-300 ease-out"
+                    className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${file.percent || 0}%` }}
                   ></div>
                 </div>
@@ -86,7 +86,7 @@ export const AITooltip: React.FC<AITooltipProps> = ({
           <>
             <div className="w-full bg-element rounded-full h-1.5 mt-1.5 mb-1 overflow-hidden">
               <div
-                className="bg-blue-500 h-1.5 rounded-full transition-all duration-300 ease-out"
+                className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -101,15 +101,15 @@ export const AITooltip: React.FC<AITooltipProps> = ({
   if (error) {
     content = (
       <>
-        <div className="font-semibold text-red-400">Error</div>
-        <div className="text-xs mt-1 text-red-300">{error}</div>
+        <div className="font-semibold text-danger">Error</div>
+        <div className="text-xs mt-1 text-danger">{error}</div>
       </>
     );
   } else if (codegenError) {
     content = (
       <>
-        <div className="font-semibold text-red-400">Codegen Error</div>
-        <div className="text-xs mt-1 text-red-300">{codegenError}</div>
+        <div className="font-semibold text-danger">Codegen Error</div>
+        <div className="text-xs mt-1 text-danger">{codegenError}</div>
       </>
     );
   } else if (
@@ -117,7 +117,7 @@ export const AITooltip: React.FC<AITooltipProps> = ({
     (codegenStatus === "ready" || !codegenStatus)
   ) {
     content = (
-      <div className="text-center font-semibold text-green-200">AI Ready</div>
+      <div className="text-center font-semibold text-success">AI Ready</div>
     );
   } else {
     content = (
