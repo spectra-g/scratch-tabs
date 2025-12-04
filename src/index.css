@@ -20,6 +20,12 @@
     /* white */
     --color-surface-glass: 226 232 240;
 
+    /* Semantic Design Tokens - Tabs */
+    --color-surface-tab-bar: 226 232 240;
+    /* slate-200 - Darker than surface for contrast */
+    --color-element-tab-active: 255 255 255;
+    /* white - Pops out against tab bar */
+
     /* Semantic Design Tokens - Elements */
     --color-element: 248 250 252;
     /* slate-50 - Improved contrast against white surface */
@@ -165,6 +171,12 @@
     /* gray-900 */
     --color-surface-glass: 31 41 55;
     /* gray-800 */
+
+    /* Semantic Design Tokens - Tabs */
+    --color-surface-tab-bar: 31 41 55;
+    /* gray-800 - Matches surface */
+    --color-element-tab-active: 75 85 99;
+    /* gray-600 - Matches element-active */
 
     /* Semantic Design Tokens - Elements */
     --color-element: 31 41 55;

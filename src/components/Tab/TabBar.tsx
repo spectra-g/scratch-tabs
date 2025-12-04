@@ -619,7 +619,7 @@ export const TabBar: React.FC<TabBarProps> = ({
     <>
       <div
         ref={tabBarRef}
-        className="flex bg-surface text-main w-full h-8 overflow-hidden"
+        className="flex bg-surface-tab-bar text-main w-full h-8 overflow-hidden"
         onMouseEnter={handleTabBarMouseEnter}
         onMouseLeave={handleTabBarMouseLeave}
         key={tabsKey}
