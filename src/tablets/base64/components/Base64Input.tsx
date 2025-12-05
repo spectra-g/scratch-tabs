@@ -61,18 +61,17 @@ export const Base64Input: React.FC<Base64InputProps> = ({
   return (
     <div
       {...getRootProps()}
-      className={`relative flex-1 min-h-[200px] ${isDragActive ? "bg-blue-500/10 border-blue-500/50" : ""}`}
+      className={`relative flex-1 min-h-[200px] ${isDragActive ? "bg-primary/10 border-info/50" : ""}`}
     >
       <textarea
         ref={textareaRef}
         value={value}
         onChange={handleTextareaChange}
         placeholder={placeholder}
-        className={`w-full h-full min-h-[200px] bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-500 focus:outline-none transition-colors resize-none font-mono ${
-          error
-            ? "border-red-500/50 focus:border-red-500"
-            : "focus:border-blue-500/50"
-        } ${isFocused ? "border-blue-500/50" : ""}`}
+        className={`w-full h-full min-h-[200px] bg-surface border border-base rounded-lg p-3 text-sm text-main placeholder-muted focus:outline-none transition-colors resize-none font-mono ${error
+          ? "border-error/50 focus:border-error"
+          : "focus:border-focus/50"
+          } ${isFocused ? "border-focus/50" : ""}`}
         onFocus={() => setIsFocused(true)}
         onBlur={() => {
           setIsFocused(false);
@@ -88,14 +87,14 @@ export const Base64Input: React.FC<Base64InputProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10"
+          className="absolute inset-0 bg-canvas/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10"
         >
           <div className="text-center">
-            <FileUp size={48} className="mx-auto mb-2 text-blue-400" />
-            <p className="text-gray-200 text-lg font-medium">
+            <FileUp size={48} className="mx-auto mb-2 text-info" />
+            <p className="text-main text-lg font-medium">
               Drop file to {mode === "decode" ? "decode" : "encode"}
             </p>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-secondary text-sm mt-1">
               The file content will replace the current input
             </p>
           </div>
@@ -104,14 +103,14 @@ export const Base64Input: React.FC<Base64InputProps> = ({
 
       {/* Error message */}
       {error && (
-        <div className="absolute bottom-3 right-3 left-3 bg-red-900/80 text-red-200 text-xs p-2 rounded">
+        <div className="absolute bottom-3 right-3 left-3 bg-error text-red-200 text-xs p-2 rounded">
           {error}
         </div>
       )}
 
       {/* Upload hint */}
       {!isDragActive && !value && (
-        <div className="absolute bottom-3 right-3 text-gray-500 text-xs flex items-center">
+        <div className="absolute bottom-3 right-3 text-muted text-xs flex items-center">
           <Upload size={12} className="mr-1" />
           <span>Drag & drop a file</span>
         </div>

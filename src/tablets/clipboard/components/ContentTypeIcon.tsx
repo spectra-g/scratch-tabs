@@ -17,7 +17,7 @@ export const ContentTypeIcon: React.FC<ContentTypeIconProps> = React.memo(({ typ
       return <Palette size={size} className="text-pink-400" />;
     case "text":
     default:
-      return <FileText size={size} className="text-gray-400" />;
+      return <FileText size={size} className="text-secondary" />;
   }
 });
 

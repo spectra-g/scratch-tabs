@@ -57,6 +57,7 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
         isPinned: false,
         usageCount: 0,
         lastUsedTimestamp: Date.now(),
+        order: 0, // Placeholder - will be set properly during import
       }),
     );
   }, [parseResult.items]);

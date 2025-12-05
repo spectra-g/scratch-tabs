@@ -517,7 +517,7 @@ const Base64TabletUI: React.FC<{
 
   return (
     <div
-      className="h-full flex flex-col bg-gray-900 text-gray-200"
+      className="h-full flex flex-col bg-canvas text-main"
       data-tablet-id={tabletId}
     >
       {/* Hidden file input */}
@@ -596,7 +596,7 @@ const Base64TabletUI: React.FC<{
       </div>
 
       {/* Stats Footer */}
-      <div className="p-3 border-t border-gray-700/50">
+      <div className="p-3 border-t border-base">
         <AnimatePresence>
           {stats && input && output && (
             <Base64Stats stats={stats} mode={mode} />

@@ -81,9 +81,9 @@ describe('ChecksumTablet', () => {
       const crc32Button = screen.getByText('CRC32').closest('button');
       const md5Button = screen.getByText('MD5').closest('button');
 
-      expect(sha256Button).toHaveClass('border-blue-500');
-      expect(crc32Button).toHaveClass('border-blue-500');
-      expect(md5Button).not.toHaveClass('border-blue-500');
+      expect(sha256Button).toHaveClass('border-info');
+      expect(crc32Button).toHaveClass('border-info');
+      expect(md5Button).not.toHaveClass('border-info');
     });
   });
 
@@ -136,7 +136,7 @@ describe('ChecksumTablet', () => {
         selectedAlgorithms: ['SHA-256'] // Only one selected
       });
       render(<ChecksumTablet state={state} onChange={mockOnChange} />);
-      
+
       // Clear any onChange calls from effects during render
       mockOnChange.mockClear();
 
@@ -197,7 +197,7 @@ describe('ChecksumTablet', () => {
 
       expect(screen.getByText('Processing SHA-512')).toBeInTheDocument();
       expect(screen.getByText('75%')).toBeInTheDocument();
-      
+
       const progressBar = screen.getByRole('progressbar', { hidden: true });
       expect(progressBar).toHaveStyle('width: 75%');
     });

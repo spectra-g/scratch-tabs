@@ -26,6 +26,7 @@ export default {
           jsx: "react-jsx",
           resolveJsonModule: true,
           esModuleInterop: true,
+          types: ["jest", "@testing-library/jest-dom", "node"],
         },
       },
     ],

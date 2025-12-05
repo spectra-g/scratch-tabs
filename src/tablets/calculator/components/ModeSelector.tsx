@@ -10,7 +10,7 @@ interface ModeSelectorProps {
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({ engine, currentMode }) => {
   return (
-    <div className="flex items-center space-x-1 bg-gray-800/50 p-1 rounded-lg">
+    <div className="flex items-center space-x-1 bg-element p-1 rounded-lg">
       <CalculatorButton
         value={<Bot size={16} />}
         onClick={() => engine.handleModeChange("standard")}

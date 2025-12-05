@@ -124,12 +124,12 @@ const ItemPreview: React.FC<{ item: ClipboardItem; viewMode: ViewMode }> =
       case "link":
         return (
           <div className="flex items-center space-x-2 p-2">
-            <Link2 size={16} className="text-blue-400 flex-shrink-0" />
+            <Link2 size={16} className="text-info flex-shrink-0" />
             <a
               href={item.content}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 hover:underline truncate"
+              className="text-info hover:underline truncate"
             >
               {item.content}
             </a>
@@ -138,7 +138,7 @@ const ItemPreview: React.FC<{ item: ClipboardItem; viewMode: ViewMode }> =
       case "text":
       default:
         return (
-          <pre className="text-xs text-gray-300 whitespace-pre-wrap break-all p-2">
+          <pre className="text-xs text-secondary whitespace-pre-wrap break-all p-2">
             {item.content}
           </pre>
         );
@@ -156,7 +156,7 @@ const ContentTypeIcon: React.FC<{ type: ContentType }> = React.memo(
         return <Palette size={14} className="text-pink-400" />;
       case "text":
       default:
-        return <FileText size={14} className="text-gray-400" />;
+        return <FileText size={14} className="text-secondary" />;
     }
   },
 );
@@ -182,7 +182,7 @@ const ExpiryCountdown: React.FC<{ item: ClipboardItem }> = ({ item }) => {
 
   if (item.isPinned) {
     return (
-      <div 
+      <div
         className="flex items-center space-x-1 text-xs text-yellow-500"
         title="This item is pinned and will not expire"
       >
@@ -193,13 +193,13 @@ const ExpiryCountdown: React.FC<{ item: ClipboardItem }> = ({ item }) => {
   }
 
   const isExpired = remaining <= 0;
-  const tooltipText = isExpired 
+  const tooltipText = isExpired
     ? "This item has expired and will be removed"
     : "This item will expire when the timer finishes. Pin to keep it permanently.";
 
   return (
-    <div 
-      className="flex items-center space-x-1 text-xs text-gray-500"
+    <div
+      className="flex items-center space-x-1 text-xs text-muted"
       title={tooltipText}
     >
       <Clock size={12} />
@@ -382,10 +382,10 @@ const ClipboardTabletComponent: React.FC<{
       items: items.map((item) =>
         item.id === id
           ? {
-              ...item,
-              isPinned: !item.isPinned,
-              expiresAt: now + TWENTY_FOUR_HOURS_MS,
-            }
+            ...item,
+            isPinned: !item.isPinned,
+            expiresAt: now + TWENTY_FOUR_HOURS_MS,
+          }
           : item,
       ),
     });
@@ -437,39 +437,39 @@ const ClipboardTabletComponent: React.FC<{
     <div className="flex flex-col p-4 space-y-6 h-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Clipboard className="text-gray-400" size={20} />
-          <h2 className="text-lg font-semibold text-gray-100">Clipboard</h2>
+          <Clipboard className="text-secondary" size={20} />
+          <h2 className="text-lg font-semibold text-main">Clipboard</h2>
         </div>
         {isMobile && (
-          <button onClick={() => setSidebarOpen(false)} className="p-1 text-gray-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="p-1 text-secondary hover:text-main">
             <X size={20} />
           </button>
         )}
       </div>
       <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => updateData({ searchQuery: e.target.value })}
           placeholder="Search clipboard..."
-          className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500"
+          className="input-themed w-full rounded-md pl-10 pr-3 py-2 text-sm"
         />
       </div>
       <div className="flex-grow overflow-y-auto space-y-4">
         <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Filters</h3>
+          <h3 className="text-xs font-semibold text-secondary uppercase mb-2">Filters</h3>
           <div className="space-y-1">
             <button
               onClick={() => updateData({ filterType: null, showFavorites: false })}
-              className={`w-full flex items-center p-2 rounded-md text-sm ${!filterType && !showFavorites ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
+              className={`w-full flex items-center p-2 rounded-md text-sm ${!filterType && !showFavorites ? "bg-primary/20 text-info" : "text-secondary hover:bg-element-hover"}`}
             >
               <List size={16} className="mr-2" />
               All Items
             </button>
             <button
               onClick={() => updateData({ showFavorites: !showFavorites, filterType: null })}
-              className={`w-full flex items-center p-2 rounded-md text-sm ${showFavorites ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
+              className={`w-full flex items-center p-2 rounded-md text-sm ${showFavorites ? "bg-primary/20 text-info" : "text-secondary hover:bg-element-hover"}`}
             >
               <Star size={16} className="mr-2" />
               Favorites
@@ -477,13 +477,13 @@ const ClipboardTabletComponent: React.FC<{
           </div>
         </div>
         <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Content Types</h3>
+          <h3 className="text-xs font-semibold text-secondary uppercase mb-2">Content Types</h3>
           <div className="space-y-1">
             {["text", "image", "link", "color"].map((type) => (
               <button
                 key={type}
                 onClick={() => updateData({ filterType: type as ContentType })}
-                className={`w-full flex items-center p-2 rounded-md text-sm ${filterType === type ? "bg-blue-500/20 text-blue-300" : "text-gray-300 hover:bg-gray-800"}`}
+                className={`w-full flex items-center p-2 rounded-md text-sm ${filterType === type ? "bg-primary/20 text-info" : "text-secondary hover:bg-element-hover"}`}
               >
                 <ContentTypeIcon type={type as ContentType} />
                 <span className="ml-2 capitalize">{type}</span>
@@ -495,12 +495,12 @@ const ClipboardTabletComponent: React.FC<{
       <div className="mt-auto space-y-2 flex-shrink-0">
         <button
           onClick={handlePaste}
-          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors text-sm"
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-primary/20 text-info rounded-md hover:bg-primary/30 transition-colors text-sm"
         >
           <ClipboardPaste size={16} />
           <span>Paste from Clipboard</span>
         </button>
-        <div className="text-xs text-gray-500 text-center flex items-center justify-center gap-1">
+        <div className="text-xs text-muted text-center flex items-center justify-center gap-1">
           <Keyboard size={14} />
           <span>Up/Down, Enter to copy, CTRL+V to paste.</span>
         </div>
@@ -509,7 +509,7 @@ const ClipboardTabletComponent: React.FC<{
   );
 
   return (
-    <div className="h-full bg-gray-900 flex relative overflow-hidden">
+    <div className="h-full bg-canvas flex relative overflow-hidden">
       <AnimatePresence>
         {isSidebarOpen && isMobile && (
           <motion.div
@@ -517,44 +517,43 @@ const ClipboardTabletComponent: React.FC<{
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="z-20 absolute top-0 left-0 h-full bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50 w-64"
+            className="z-20 absolute top-0 left-0 h-full bg-surface-secondary/95 backdrop-blur-sm border-r border-base w-64"
           >
             <SidebarContent />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {!isMobile && (
-          <div className="w-64 flex-shrink-0 border-r border-gray-700/50">
-              <SidebarContent />
-          </div>
-      )}
+      {!isMobile && <div className="w-64 flex-shrink-0 border-r border-base bg-surface-secondary">
+        <SidebarContent />
+      </div>}
+
 
       {!isSidebarOpen && isMobile && (
         <div className="absolute top-0 left-0 z-30 p-2">
-          <button onClick={() => setSidebarOpen(true)} className="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-md">
+          <button onClick={() => setSidebarOpen(true)} className="p-2 text-secondary hover:text-main bg-element rounded-md">
             <Menu size={20} />
           </button>
         </div>
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-none p-4 border-b border-gray-700/50 flex items-center justify-between">
-          <div className="text-sm text-gray-400">
+        <div className="flex-none p-4 border-b border-base flex items-center justify-between">
+          <div className="text-sm text-secondary">
             {filteredItems.length} of {items.length} items showing
           </div>
           <div className="flex items-center space-x-2">
-            <div className="flex items-center bg-gray-800/50 border border-gray-700/50 rounded-md">
+            <div className="flex items-center bg-element border border-base rounded-md">
               <button
                 onClick={() => updateData({ viewMode: "list" })}
-                className={`p-1.5 rounded-l-md ${viewMode === "list" ? "bg-blue-500/20 text-blue-300" : "text-gray-400 hover:bg-gray-700/50"}`}
+                className={`p-1.5 rounded-l-md ${viewMode === "list" ? "bg-primary/20 text-info" : "text-secondary hover:bg-element-hover"}`}
                 title="List View"
               >
                 <List size={16} />
               </button>
               <button
                 onClick={() => updateData({ viewMode: "card" })}
-                className={`p-1.5 rounded-r-md ${viewMode === "card" ? "bg-blue-500/20 text-blue-300" : "text-gray-400 hover:bg-gray-700/50"}`}
+                className={`p-1.5 rounded-r-md ${viewMode === "card" ? "bg-primary/20 text-info" : "text-secondary hover:bg-element-hover"}`}
                 title="Card View"
               >
                 <Grid size={16} />
@@ -568,7 +567,7 @@ const ClipboardTabletComponent: React.FC<{
           onClick={() => setActiveIndex(-1)}
         >
           {filteredItems.length === 0 ? (
-            <div className="text-center text-gray-400 mt-8">
+            <div className="text-center text-secondary mt-8">
               <Filter size={40} className="mx-auto mb-3 opacity-50" />
               <p className="text-base">No items match your filters</p>
               <p className="text-sm mt-1">Try adjusting your search or filters</p>
@@ -584,7 +583,7 @@ const ClipboardTabletComponent: React.FC<{
                   exit={{ opacity: 0, scale: 0.9 }}
                 >
                   <div
-                    className={`bg-gray-800/50 border rounded-lg overflow-hidden transition-all duration-200 group ${activeIndex === index ? "ring-2 ring-blue-400" : "border-gray-700/50 hover:border-gray-600/50"}`}
+                    className={`bg-element border rounded-lg overflow-hidden transition-all duration-200 group ${activeIndex === index ? "ring-2 ring-focus" : "border-base hover:border-focus"}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setActiveIndex(index);
@@ -594,40 +593,40 @@ const ClipboardTabletComponent: React.FC<{
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <ContentTypeIcon type={item.type} />
-                          <p className="text-sm font-medium text-gray-200 truncate">{item.title}</p>
+                          <p className="text-sm font-medium text-main truncate">{item.title}</p>
                         </div>
                         <div className="flex items-center space-x-1">
                           <button
                             onClick={() => handleToggleFavorite(item.id)}
-                            className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                            className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-muted hover:text-main hover:bg-element-hover"}`}
                           >
                             <Star size={14} className={item.isFavorite ? "fill-current" : ""} />
                           </button>
                           <button
                             onClick={() => handleTogglePin(item.id)}
-                            className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                            className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-muted hover:text-main hover:bg-element-hover"}`}
                           >
                             <Pin size={14} className={item.isPinned ? "fill-current" : ""} />
                           </button>
                         </div>
                       </div>
-                      <div className="h-28 flex items-center justify-center p-2 bg-black/20 rounded-md overflow-hidden">
+                      <div className="h-28 flex items-center justify-center p-2 bg-surface-secondary rounded-md overflow-hidden">
                         <ItemPreview item={item} viewMode="card" />
                       </div>
                     </div>
-                    <div className="px-3 py-2 border-t border-gray-700/50 flex justify-between items-center">
+                    <div className="px-3 py-2 border-t border-base flex justify-between items-center">
                       <ExpiryCountdown item={item} />
                       <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleCopy(item.id, item.content, item.type)}
-                          className="p-1 rounded hover:bg-gray-700/50"
+                          className="p-1 rounded hover:bg-element-hover"
                           title="Copy"
                         >
-                          {copiedItemId === item.id ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                          {copiedItemId === item.id ? <Check size={14} className="text-success" /> : <Copy size={14} />}
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-1 rounded hover:bg-gray-700/50"
+                          className="p-1 rounded hover:bg-element-hover"
                           title="Delete"
                         >
                           <Trash2 size={14} />
@@ -649,7 +648,7 @@ const ClipboardTabletComponent: React.FC<{
                   exit={{ opacity: 0, scale: 0.9 }}
                 >
                   <div
-                    className={`bg-gray-800/50 border rounded-lg transition-all duration-200 group flex items-start p-3 space-x-4 ${activeIndex === index ? "ring-2 ring-blue-400" : "border-gray-700/50 hover:border-gray-600/50"}`}
+                    className={`bg-element border rounded-lg transition-all duration-200 group flex items-start p-3 space-x-4 cursor-pointer ${activeIndex === index ? "ring-2 ring-focus" : "border-base hover:border-focus"}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setActiveIndex(index);
@@ -659,37 +658,37 @@ const ClipboardTabletComponent: React.FC<{
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <ContentTypeIcon type={item.type} />
-                          <p className="text-sm font-medium text-gray-200 truncate">{item.title}</p>
+                          <p className="text-sm font-medium text-main truncate">{item.title}</p>
                         </div>
                         <ExpiryCountdown item={item} />
                       </div>
-                      <div className="max-h-48 overflow-y-auto custom-scrollbar rounded-md bg-black/20 p-2">
+                      <div className="max-h-48 overflow-y-auto custom-scrollbar rounded-md bg-surface-secondary p-2">
                         <ItemPreview item={item} viewMode="list" />
                       </div>
                     </div>
                     <div className="flex flex-col items-center space-y-2">
                       <button
                         onClick={() => handleCopy(item.id, item.content, item.type)}
-                        className="p-1.5 rounded hover:bg-gray-700/50"
+                        className="p-1.5 rounded hover:bg-element-hover"
                         title="Copy"
                       >
-                        {copiedItemId === item.id ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                        {copiedItemId === item.id ? <Check size={16} className="text-success" /> : <Copy size={16} />}
                       </button>
                       <button
                         onClick={() => handleToggleFavorite(item.id)}
-                        className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                        className={`p-1.5 rounded transition-colors ${item.isFavorite ? "text-yellow-400 hover:bg-yellow-500/20" : "text-muted hover:text-main hover:bg-element-hover"}`}
                       >
                         <Star size={16} className={item.isFavorite ? "fill-current" : ""} />
                       </button>
                       <button
                         onClick={() => handleTogglePin(item.id)}
-                        className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-gray-700/50"}`}
+                        className={`p-1.5 rounded transition-colors ${item.isPinned ? "text-yellow-400 hover:bg-yellow-500/20" : "text-muted hover:text-main hover:bg-element-hover"}`}
                       >
                         <Pin size={16} className={item.isPinned ? "fill-current" : ""} />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="p-1.5 rounded hover:bg-gray-700/50"
+                        className="p-1.5 rounded hover:bg-element-hover"
                         title="Delete"
                       >
                         <Trash2 size={16} />
@@ -735,20 +734,20 @@ export const ClipboardTablet: Tablet = {
       if (parsed.type === "clipboard" && parsed.data) {
         const items = Array.isArray(parsed.data.items)
           ? parsed.data.items.map((item: ClipboardItem) => ({
-              id: item.id || crypto.randomUUID(),
-              content: item.content || "",
-              type: item.type || detectContentType(item.content || ""),
-              title:
-                item.title ||
-                generateTitle(
-                  item.content || "",
-                  item.type || detectContentType(item.content || ""),
-                ),
-              isFavorite: !!item.isFavorite,
-              isPinned: !!item.isPinned,
-              timestamp: item.timestamp || Date.now(),
-              expiresAt: item.expiresAt || Date.now() + TWENTY_FOUR_HOURS_MS,
-            }))
+            id: item.id || crypto.randomUUID(),
+            content: item.content || "",
+            type: item.type || detectContentType(item.content || ""),
+            title:
+              item.title ||
+              generateTitle(
+                item.content || "",
+                item.type || detectContentType(item.content || ""),
+              ),
+            isFavorite: !!item.isFavorite,
+            isPinned: !!item.isPinned,
+            timestamp: item.timestamp || Date.now(),
+            expiresAt: item.expiresAt || Date.now() + TWENTY_FOUR_HOURS_MS,
+          }))
           : [];
 
         return {
