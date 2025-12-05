@@ -156,7 +156,7 @@ export const tabletMetadata: TabletMetadata[] = [
   },
   {
     id: "vault",
-    label: "Knowledge Vault",
+    label: "Command Vault",
     keywords: [
       "vault",
       "snippets",

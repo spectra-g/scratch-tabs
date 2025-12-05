@@ -4,7 +4,7 @@ describe('VaultTablet', () => {
   describe('tablet interface', () => {
     it('should have correct tablet properties', () => {
       expect(VaultTablet.id).toBe('vault');
-      expect(VaultTablet.label).toBe('Knowledge Vault');
+      expect(VaultTablet.label).toBe('Command Vault');
       expect(VaultTablet.keywords).toEqual([
         'vault',
         'snippets',

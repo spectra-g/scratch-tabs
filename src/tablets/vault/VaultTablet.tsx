@@ -10,7 +10,7 @@ import { VaultItem, VaultTabletState } from "./types";
 
 export const VaultTablet: Tablet = {
   id: "vault",
-  label: "Knowledge Vault",
+  label: "Command Vault",
   keywords: [
     "vault",
     "snippets",
