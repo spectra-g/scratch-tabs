@@ -16,9 +16,9 @@ export const ItemPreview: React.FC<ItemPreviewProps> = React.memo(({ item, viewM
   switch (item.type) {
     case "image":
       return (
-        <img 
-          src={item.content} 
-          alt={item.title} 
+        <img
+          src={item.content}
+          alt={item.title}
           className={className}
           onError={(e) => {
             console.error('Failed to load image:', item.content);
@@ -37,12 +37,12 @@ export const ItemPreview: React.FC<ItemPreviewProps> = React.memo(({ item, viewM
     case "link":
       return (
         <div className="flex items-center space-x-2 p-2">
-          <Link2 size={16} className="text-blue-400 flex-shrink-0" />
+          <Link2 size={16} className="text-info flex-shrink-0" />
           <a
             href={item.content}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 hover:underline truncate"
+            className="text-info hover:underline truncate"
             onClick={(e) => e.stopPropagation()}
           >
             {item.content}
@@ -52,7 +52,7 @@ export const ItemPreview: React.FC<ItemPreviewProps> = React.memo(({ item, viewM
     case "text":
     default:
       return (
-        <pre className="text-xs text-gray-300 whitespace-pre-wrap break-all p-2">
+        <pre className="text-xs text-secondary whitespace-pre-wrap break-all p-2">
           {item.content}
         </pre>
       );

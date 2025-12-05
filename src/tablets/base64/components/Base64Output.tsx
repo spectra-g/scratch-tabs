@@ -29,9 +29,8 @@ export const Base64Output: React.FC<Base64OutputProps> = ({
         ref={textareaRef}
         value={value}
         readOnly
-        className={`w-full h-full min-h-[200px] bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors resize-none font-mono ${
-          !isValid && mode === "decode" ? "border-yellow-500/50" : ""
-        }`}
+        className={`w-full h-full min-h-[200px] bg-surface border border-base rounded-lg p-3 text-sm text-main focus:outline-none focus:border-focus/50 transition-colors resize-none font-mono ${!isValid && mode === "decode" ? "border-warning/50" : ""
+          }`}
         spellCheck={false}
       />
 
@@ -41,7 +40,7 @@ export const Base64Output: React.FC<Base64OutputProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="absolute bottom-3 right-3 left-3 bg-yellow-900/80 text-yellow-200 text-xs p-2 rounded flex items-center"
+          className="absolute bottom-3 right-3 left-3 bg-warning text-yellow-900 text-xs p-2 rounded flex items-center"
         >
           <AlertTriangle size={12} className="mr-1.5 flex-shrink-0" />
           <span>

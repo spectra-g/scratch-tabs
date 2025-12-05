@@ -39,12 +39,12 @@ export const ClipboardManager: React.FC<ClipboardManagerProps> = ({ state, onCha
   }, [isMobile]);
 
   // Setup clipboard operations
-  const { 
-    handlePaste, 
-    handleCopy: handleCopyOperation, 
-    handleDelete, 
-    handleTogglePin, 
-    handleToggleFavorite 
+  const {
+    handlePaste,
+    handleCopy: handleCopyOperation,
+    handleDelete,
+    handleTogglePin,
+    handleToggleFavorite
   } = useClipboardOperations(data, updateData);
 
   // Setup auto-expiry
@@ -69,11 +69,11 @@ export const ClipboardManager: React.FC<ClipboardManagerProps> = ({ state, onCha
   );
 
   // Setup keyboard navigation
-  const { 
-    activeIndex, 
-    setActiveIndex, 
-    listRef, 
-    resetActiveIndex 
+  const {
+    activeIndex,
+    setActiveIndex,
+    listRef,
+    resetActiveIndex
   } = useKeyboardNavigation(filteredItems, handleCopy);
 
   // Handle paste events
@@ -113,7 +113,7 @@ export const ClipboardManager: React.FC<ClipboardManagerProps> = ({ state, onCha
   );
 
   return (
-    <div className="h-full bg-gray-900 flex relative overflow-hidden">
+    <div className="h-full bg-canvas flex relative overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && isMobile && (
@@ -122,7 +122,7 @@ export const ClipboardManager: React.FC<ClipboardManagerProps> = ({ state, onCha
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="z-20 absolute top-0 left-0 h-full bg-gray-900/95 backdrop-blur-sm border-r border-gray-700/50 w-64"
+            className="z-20 absolute top-0 left-0 h-full bg-surface-secondary/95 backdrop-blur-sm border-r border-base w-64"
           >
             <SidebarContent />
           </motion.div>
@@ -131,7 +131,7 @@ export const ClipboardManager: React.FC<ClipboardManagerProps> = ({ state, onCha
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div className="w-64 flex-shrink-0 border-r border-gray-700/50">
+        <div className="w-64 flex-shrink-0 border-r border-base bg-surface-secondary">
           <SidebarContent />
         </div>
       )}
@@ -139,9 +139,9 @@ export const ClipboardManager: React.FC<ClipboardManagerProps> = ({ state, onCha
       {/* Mobile Menu Button */}
       {!isSidebarOpen && isMobile && (
         <div className="absolute top-0 left-0 z-30 p-2">
-          <button 
-            onClick={() => setSidebarOpen(true)} 
-            className="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-md"
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 text-secondary hover:text-main bg-element rounded-md"
             title="Open sidebar"
           >
             <Menu size={20} />

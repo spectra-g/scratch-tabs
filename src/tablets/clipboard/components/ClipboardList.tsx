@@ -34,7 +34,7 @@ export const ClipboardList: React.FC<ClipboardListProps> = ({
   if (items.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center text-gray-400">
+        <div className="text-center text-muted">
           <Filter size={40} className="mx-auto mb-3 opacity-50" />
           <p className="text-base">No items match your filters</p>
           <p className="text-sm mt-1">Try adjusting your search or filters</p>
