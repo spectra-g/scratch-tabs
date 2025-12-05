@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Tablet, TabletState } from "../types";
 import { useTabletBridge } from "../bridge";
 import { BottomSearchBar } from "./components/BottomSearchBar";
@@ -120,6 +120,7 @@ export const VaultTablet: Tablet = {
 
   render(state: VaultTabletState, onChange) {
     const bridge = useTabletBridge();
+    const containerRef = useRef<HTMLDivElement>(null);
 
     // Local state
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
@@ -146,8 +147,18 @@ export const VaultTablet: Tablet = {
       return counts;
     }, [state.data.items]);
 
-    // Keyboard shortcut for search bar (Ctrl+R)
+    // Auto-focus container on mount so keyboard shortcuts work
     useEffect(() => {
+      if (containerRef.current) {
+        containerRef.current.focus();
+      }
+    }, []);
+
+    // Keyboard shortcut for search bar (Ctrl+R) - only when this tablet is focused
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
       const handleKeyDown = (e: KeyboardEvent) => {
         if ((e.ctrlKey || e.metaKey) && e.key === "r") {
           e.preventDefault();
@@ -161,8 +172,8 @@ export const VaultTablet: Tablet = {
         }
       };
 
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
+      container.addEventListener("keydown", handleKeyDown);
+      return () => container.removeEventListener("keydown", handleKeyDown);
     }, [state, onChange]);
 
     // Handlers
@@ -343,10 +354,10 @@ export const VaultTablet: Tablet = {
         const updatedItems = state.data.items.map((i) =>
           i.id === id
             ? {
-                ...i,
-                usageCount: i.usageCount + 1,
-                lastUsedTimestamp: now,
-              }
+              ...i,
+              usageCount: i.usageCount + 1,
+              lastUsedTimestamp: now,
+            }
             : i
         );
 
@@ -387,11 +398,11 @@ export const VaultTablet: Tablet = {
         const updatedItems = state.data.items.map((i) =>
           i.id === id
             ? {
-                ...i,
-                content,
-                title,
-                modifiedTimestamp: now,
-              }
+              ...i,
+              content,
+              title,
+              modifiedTimestamp: now,
+            }
             : i
         );
 
@@ -489,11 +500,11 @@ export const VaultTablet: Tablet = {
       const updatedItems = state.data.items.map((item) =>
         item.id === state.data.scratchpadSourceItemId
           ? {
-              ...item,
-              content: state.data.scratchpadContent,
-              title: state.data.scratchpadContent.substring(0, 50),
-              modifiedTimestamp: now,
-            }
+            ...item,
+            content: state.data.scratchpadContent,
+            title: state.data.scratchpadContent.substring(0, 50),
+            modifiedTimestamp: now,
+          }
           : item
       );
 
@@ -529,10 +540,10 @@ export const VaultTablet: Tablet = {
         const updatedItems = state.data.items.map((i) =>
           i.id === item.id
             ? {
-                ...i,
-                usageCount: i.usageCount + 1,
-                lastUsedTimestamp: now,
-              }
+              ...i,
+              usageCount: i.usageCount + 1,
+              lastUsedTimestamp: now,
+            }
             : i
         );
 
@@ -591,7 +602,11 @@ export const VaultTablet: Tablet = {
     );
 
     return (
-      <div className="h-full flex flex-col bg-canvas overflow-hidden">
+      <div
+        ref={containerRef}
+        tabIndex={0}
+        className="h-full flex flex-col bg-canvas overflow-hidden outline-none"
+      >
         <div className="flex-1 flex overflow-hidden">
           {/* Sidebar */}
           <VaultSidebarCanvas
