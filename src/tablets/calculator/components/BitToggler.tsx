@@ -94,12 +94,12 @@ export const BitToggler: React.FC<BitTogglerProps> = ({
   };
 
   return (
-    <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
+    <div className="p-3 bg-element rounded-lg border border-base">
       <div className="flex items-center justify-between mb-2">
-        <div className="text-xs text-gray-400 font-semibold">
+        <div className="text-xs text-secondary font-semibold">
           BIT TOGGLER ({bitWidth}-BIT)
         </div>
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-muted">
           Click bits to toggle
         </div>
       </div>
@@ -113,7 +113,7 @@ export const BitToggler: React.FC<BitTogglerProps> = ({
           return (
             <div key={byteIndex} className="flex items-center gap-2">
               {/* Byte label */}
-              <div className="text-xs text-gray-500 font-mono w-16 text-right">
+              <div className="text-xs text-muted font-mono w-16 text-right">
                 B{bytesCount - 1 - byteIndex}: {byteValue.toString(16).toUpperCase().padStart(2, "0")}
               </div>
 
@@ -130,10 +130,9 @@ export const BitToggler: React.FC<BitTogglerProps> = ({
                       className={`
                         w-7 h-7 rounded font-mono text-xs font-bold
                         transition-all duration-150
-                        ${
-                          bit
-                            ? "bg-blue-500 text-white hover:bg-blue-600 shadow-md"
-                            : "bg-gray-700 text-gray-400 hover:bg-gray-600"
+                        ${bit
+                          ? "bg-primary text-info hover:bg-primary-hover shadow-md"
+                          : "bg-surface text-secondary hover:bg-element-hover border border-base"
                         }
                         active:scale-95
                       `}
@@ -155,20 +154,20 @@ export const BitToggler: React.FC<BitTogglerProps> = ({
       </div>
 
       {/* Summary info */}
-      <div className="mt-2 pt-2 border-t border-gray-700 flex gap-3 text-xs">
+      <div className="mt-2 pt-2 border-t border-base flex gap-3 text-xs">
         <div>
-          <span className="text-gray-500">DEC:</span>{" "}
-          <span className="text-blue-400 font-mono">{decimalValue}</span>
+          <span className="text-muted">DEC:</span>{" "}
+          <span className="text-info font-mono">{decimalValue}</span>
         </div>
         <div>
-          <span className="text-gray-500">HEX:</span>{" "}
-          <span className="text-purple-400 font-mono">
+          <span className="text-muted">HEX:</span>{" "}
+          <span className="text-warning font-mono">
             0x{fromDecimal(decimalValue, "HEX")}
           </span>
         </div>
         <div>
-          <span className="text-gray-500">Bits set:</span>{" "}
-          <span className="text-green-400 font-mono">
+          <span className="text-muted">Bits set:</span>{" "}
+          <span className="text-success font-mono">
             {bits.filter(Boolean).length}/{bitWidth}
           </span>
         </div>

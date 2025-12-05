@@ -19,16 +19,16 @@ export const CalculatorDisplay: React.FC<CalculatorDisplayProps> = ({
   const simpleHumanized = shouldShowHumanized ? humanizeExpressionSimple(expression) : expression;
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 text-right overflow-hidden">
+    <div className="bg-surface border border-base rounded-lg p-4 text-right overflow-hidden shadow-inner">
       <div
-        className="h-5 text-sm text-gray-400 font-mono truncate"
+        className="h-5 text-sm text-secondary font-mono truncate"
         aria-live="polite"
         title={expression}
       >
         {simpleHumanized}
       </div>
       <div
-        className={`font-mono ${getDisplayFontSize(display)} text-gray-100 break-all h-10 flex items-center justify-end`}
+        className={`font-mono ${getDisplayFontSize(display)} text-main break-all h-10 flex items-center justify-end font-semibold`}
         title={display}
       >
         {display || "0"}

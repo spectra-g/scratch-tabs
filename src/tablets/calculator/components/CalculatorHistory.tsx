@@ -9,13 +9,13 @@ interface CalculatorHistoryProps {
 const getModeIcon = (mode: CalculatorMode) => {
   switch (mode) {
     case "standard":
-      return <Bot size={12} className="text-gray-400" />;
+      return <Bot size={12} className="text-secondary" />;
     case "scientific":
-      return <Sigma size={12} className="text-blue-400" />;
+      return <Sigma size={12} className="text-info" />;
     case "programmer":
-      return <Code size={12} className="text-green-400" />;
+      return <Code size={12} className="text-success" />;
     default:
-      return <Bot size={12} className="text-gray-400" />;
+      return <Bot size={12} className="text-secondary" />;
   }
 };
 
@@ -25,12 +25,12 @@ export const CalculatorHistory: React.FC<CalculatorHistoryProps> = ({ engine }) 
   return (
     <div className="mb-4 flex-shrink-0">
       <div className="flex items-center space-x-2 mb-2 px-1">
-        <History className="text-gray-400" size={18} />
-        <h3 className="text-base font-medium text-gray-200">History</h3>
+        <History className="text-secondary" size={18} />
+        <h3 className="text-base font-medium text-main">History</h3>
       </div>
-      <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 h-40 overflow-y-auto custom-scrollbar">
+      <div className="bg-element border border-base rounded-lg p-3 h-40 overflow-y-auto custom-scrollbar">
         {!data.history || data.history.length === 0 ? (
-          <div className="text-gray-500 text-sm italic text-center mt-4">
+          <div className="text-muted text-sm italic text-center mt-4">
             No history yet
           </div>
         ) : (
@@ -39,17 +39,17 @@ export const CalculatorHistory: React.FC<CalculatorHistoryProps> = ({ engine }) 
               <button
                 key={i}
                 onClick={() => engine.handleHistoryClick(entry)}
-                className="w-full text-left p-1.5 rounded hover:bg-gray-700/50 transition-colors"
+                className="w-full text-left p-1.5 rounded hover:bg-element-hover transition-colors"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <div className="font-mono text-xs text-gray-400 truncate flex-1">
+                  <div className="font-mono text-xs text-secondary truncate flex-1">
                     {entry.expression}
                   </div>
                   <div className="ml-2 flex-shrink-0">
                     {getModeIcon(entry.mode)}
                   </div>
                 </div>
-                <div className="font-mono text-sm text-gray-200 text-right truncate">
+                <div className="font-mono text-sm text-main text-right truncate">
                   = {entry.result}
                 </div>
               </button>
