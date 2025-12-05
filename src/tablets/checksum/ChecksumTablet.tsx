@@ -23,7 +23,7 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
   // Keep refs current
   onChangeRef.current = onChange;
   stateRef.current = state;
-  
+
   // Sync textarea value when state changes externally (like file upload)
   useEffect(() => {
     if (textareaRef.current && textareaRef.current.value !== state.inputText) {
@@ -51,19 +51,19 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
     const timeoutId = setTimeout(async () => {
       try {
         const processingStart = Date.now();
-        
+
         const hashes = await hashText(state.inputText, selectedAlgorithms);
-        
+
         const processingEnd = Date.now();
         const processingDuration = processingEnd - processingStart;
-        
+
         onChange({
           ...state,
           calculatedHashes: hashes,
           isProcessing: false,
           lastProcessedAt: processingEnd,
         });
-        
+
         // Store the processing duration for display
         setLastProcessingDuration(processingDuration);
       } catch (error) {
@@ -89,7 +89,7 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
       return;
     }
 
-    const hasMatch = Object.values(state.calculatedHashes).some(hash => 
+    const hasMatch = Object.values(state.calculatedHashes).some(hash =>
       hash && compareHashes(hash, state.expectedChecksum)
     );
 
@@ -103,7 +103,7 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
 
   const handleFileSelected = useCallback(async (file: File, fileInfo: FileInfo) => {
     setCurrentFile(file);
-    
+
     const currentState = stateRef.current;
     const initialState = {
       ...currentState,
@@ -168,12 +168,12 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
   const handleAlgorithmToggle = useCallback((algorithm: HashAlgorithm) => {
     const currentState = stateRef.current;
     const isCurrentlySelected = currentState.selectedAlgorithms.includes(algorithm);
-    
+
     // Don't allow deselecting the last algorithm
     if (isCurrentlySelected && currentState.selectedAlgorithms.length === 1) {
       return;
     }
-    
+
     const newAlgorithms = isCurrentlySelected
       ? currentState.selectedAlgorithms.filter(alg => alg !== algorithm)
       : [...currentState.selectedAlgorithms, algorithm];
@@ -188,20 +188,20 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
   const allAlgorithms: HashAlgorithm[] = ['MD5', 'SHA-1', 'SHA-256', 'SHA-384', 'SHA-512', 'CRC32'];
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-gray-200">
+    <div className="h-full flex flex-col bg-canvas text-main">
       {/* Header */}
-      <div className="flex-shrink-0 p-6 border-b border-gray-700">
+      <div className="flex-shrink-0 p-6 border-b border-base bg-surface-secondary">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Shield size={28} className="text-blue-400" />
+            <Shield size={28} className="text-info" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-100">Secure Checksum Calculator</h1>
-              <p className="text-gray-400 mt-1">
+              <h1 className="text-2xl font-bold text-main">Secure Checksum Calculator</h1>
+              <p className="text-secondary mt-1">
                 Calculate file and text hashes securely
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {/* Processing Status */}
             {state.isProcessing && (
@@ -214,14 +214,14 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
                 </div>
               </div>
             )}
-            
+
             {/* Privacy Panel - Far Right */}
-            <div className="bg-green-900/20 border border-green-700 rounded-md p-2">
+            <div className="bg-success-subtle border border-success/30 rounded-md p-2">
               <div className="flex items-start space-x-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full mt-1 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-success rounded-full mt-1 flex-shrink-0"></div>
                 <div>
-                  <div className="text-green-300 text-xs font-medium">Privacy Guaranteed</div>
-                  <div className="text-green-400/80 text-xs mt-0.5">
+                  <div className="text-success text-xs font-medium">Privacy Guaranteed</div>
+                  <div className="text-success/80 text-xs mt-0.5">
                     Your files are never uploaded. All calculations happen locally in your browser.
                   </div>
                 </div>
@@ -235,11 +235,11 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
       <div className="flex-1 overflow-auto">
         <div className="p-6 space-y-6">
           {/* Algorithm Selection */}
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-2.5">
+          <div className="bg-surface-secondary border border-base rounded-lg p-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Settings size={14} />
-                <h3 className="text-sm font-medium text-gray-200">Hash Algorithms</h3>
+                <Settings size={14} className="text-secondary" />
+                <h3 className="text-sm font-medium text-main">Hash Algorithms</h3>
               </div>
               <div className="flex items-center space-x-1.5">
                 {allAlgorithms.map((algorithm) => (
@@ -248,14 +248,13 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
                     type="button"
                     onClick={() => handleAlgorithmToggle(algorithm)}
                     disabled={state.isProcessing}
-                    className={`flex items-center space-x-1 px-2.5 py-1.5 rounded border transition-colors text-xs ${
-                      state.selectedAlgorithms.includes(algorithm)
-                        ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                        : 'border-gray-600 hover:border-gray-500 text-gray-300 hover:bg-gray-700/50'
-                    } ${state.isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`flex items-center space-x-1 px-2.5 py-1.5 rounded border transition-colors text-xs ${state.selectedAlgorithms.includes(algorithm)
+                        ? 'border-info bg-primary/20 text-info'
+                        : 'border-base hover:border-gray-500 text-secondary hover:bg-element-hover'
+                      } ${state.isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <CheckSquare size={10} className={
-                      state.selectedAlgorithms.includes(algorithm) ? 'text-blue-400' : 'text-gray-500'
+                      state.selectedAlgorithms.includes(algorithm) ? 'text-info' : 'text-muted'
                     } />
                     <span className="font-medium">{algorithm}</span>
                   </button>
@@ -269,10 +268,10 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
             {/* Text Input */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Type size={18} />
-                <h3 className="font-semibold text-gray-200">Text Input</h3>
+                <Type size={18} className="text-secondary" />
+                <h3 className="font-semibold text-main">Text Input</h3>
               </div>
-              
+
               <div className="space-y-3">
                 <textarea
                   ref={textareaRef}
@@ -280,11 +279,11 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
                   onChange={(e) => handleTextChange(e.target.value)}
                   placeholder="Type or paste text here to calculate hashes in real-time..."
                   disabled={state.isProcessing}
-                  className="w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50"
+                  className="w-full h-32 px-3 py-2 bg-surface border border-base rounded-md text-main placeholder-muted focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent resize-none disabled:opacity-50"
                 />
-                
+
                 {state.inputText && (
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-secondary">
                     {state.inputText.length.toLocaleString()} characters
                   </div>
                 )}
@@ -294,10 +293,10 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
             {/* File Input */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Upload size={18} />
-                <h3 className="font-semibold text-gray-200">File Input</h3>
+                <Upload size={18} className="text-secondary" />
+                <h3 className="font-semibold text-main">File Input</h3>
               </div>
-              
+
               <div className="space-y-3">
                 <FileDropzone
                   onFileSelected={handleFileSelected}
@@ -310,18 +309,18 @@ export const ChecksumTablet: React.FC<ChecksumTabletProps> = ({
 
           {/* Progress Bar */}
           {state.isProcessing && state.processingProgress > 0 && (
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+            <div className="bg-element border border-base rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-300">
+                <span className="text-sm font-medium text-main">
                   Processing {state.processingAlgorithm}
                 </span>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-secondary">
                   {state.processingProgress}%
                 </span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-surface-raised rounded-full h-2">
                 <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-primary h-2 rounded-full transition-all duration-300"
                   style={{ width: `${state.processingProgress}%` }}
                   role="progressbar"
                   aria-valuenow={state.processingProgress}
@@ -363,11 +362,11 @@ const createChecksumInitialState = (payload?: any) => ({
 export default {
   id: 'checksum',
   label: 'Checksum',
-  
+
   createInitialState: createChecksumInitialState,
-  
+
   serializeState: (state: any) => JSON.stringify(state),
-  
+
   deserializeState: (serialized: string) => {
     try {
       return JSON.parse(serialized);
@@ -375,7 +374,7 @@ export default {
       return createChecksumInitialState();
     }
   },
-  
-  render: (state: any, onChange: (newState: any) => void) => 
+
+  render: (state: any, onChange: (newState: any) => void) =>
     React.createElement(ChecksumTablet, { state, onChange }),
 };

@@ -29,7 +29,7 @@ describe('ContentTypeIcon', () => {
     const { container } = render(<ContentTypeIcon type="text" />);
     const icon = container.querySelector('svg');
     expect(icon).toBeInTheDocument();
-    expect(icon).toHaveClass('text-gray-400');
+    expect(icon).toHaveClass('text-secondary');
   });
 
   it('should use custom size', () => {
