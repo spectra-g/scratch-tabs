@@ -5,6 +5,7 @@ describe("VaultScratchpad", () => {
   const mockOnContentChange = jest.fn();
   const mockOnClose = jest.fn();
   const mockOnCopy = jest.fn();
+  const mockOnSave = jest.fn();
   const mockOnSaveAsNew = jest.fn();
 
   beforeEach(() => {
@@ -19,6 +20,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />
@@ -36,6 +39,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />
@@ -52,6 +57,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />
@@ -71,6 +78,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />
@@ -90,6 +99,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />
@@ -109,6 +120,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={true}
       />
@@ -125,6 +138,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />
@@ -144,6 +159,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />
@@ -164,6 +181,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />
@@ -184,6 +203,8 @@ describe("VaultScratchpad", () => {
         onContentChange={mockOnContentChange}
         onClose={mockOnClose}
         onCopy={mockOnCopy}
+        onSave={mockOnSave}
+        hasSourceItem={false}
         onSaveAsNew={mockOnSaveAsNew}
         isCopied={false}
       />

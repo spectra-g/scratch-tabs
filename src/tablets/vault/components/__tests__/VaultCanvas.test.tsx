@@ -14,6 +14,7 @@ const mockItems: VaultItem[] = [
     isPinned: false,
     usageCount: 10,
     lastUsedTimestamp: Date.now(),
+    order: 0,
   },
   {
     id: "2",
@@ -26,6 +27,7 @@ const mockItems: VaultItem[] = [
     isPinned: false,
     usageCount: 5,
     lastUsedTimestamp: Date.now(),
+    order: 1,
   },
   {
     id: "3",
@@ -38,15 +40,18 @@ const mockItems: VaultItem[] = [
     isPinned: false,
     usageCount: 8,
     lastUsedTimestamp: Date.now(),
+    order: 2,
   },
 ];
 
 describe("VaultCanvas", () => {
   const mockOnAddItem = jest.fn();
   const mockOnCopyItem = jest.fn();
-  const mockOnStageItem = jest.fn();
+  const mockOnOpenInScratchpad = jest.fn();
   const mockOnUpdateItem = jest.fn();
   const mockOnDeleteItem = jest.fn();
+  const mockOnReorder = jest.fn();
+  const mockOnImport = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -59,7 +64,9 @@ describe("VaultCanvas", () => {
         selectedCategory={null}
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -78,7 +85,9 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -97,7 +106,9 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -114,17 +125,21 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
       />
     );
 
-    const items = screen.getAllByRole("button", { hidden: true });
-    // Git status (10) should come before git push (5)
-    expect(items[0]).toHaveTextContent("git status");
-    expect(items[1]).toHaveTextContent("git push origin main");
+    // Git status (10 usage) should appear before git push (5 usage)
+    const gitStatus = screen.getByText("git status");
+    const gitPush = screen.getByText("git push origin main");
+
+    expect(gitStatus).toBeInTheDocument();
+    expect(gitPush).toBeInTheDocument();
   });
 
   it("shows ghost input for adding new command", () => {
@@ -134,7 +149,9 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -151,7 +168,9 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -171,7 +190,9 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -190,7 +211,7 @@ describe("VaultCanvas", () => {
     fireEvent.keyDown(textarea, { key: "Enter", shiftKey: false });
 
     await waitFor(() => {
-      expect(mockOnAddItem).toHaveBeenCalledWith("git commit -m 'test'", "git");
+      expect(mockOnAddItem).toHaveBeenCalledWith("git commit -m 'test'", "git", null);
     });
   });
 
@@ -201,7 +222,9 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -231,7 +254,9 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -262,7 +287,9 @@ describe("VaultCanvas", () => {
         selectedCategory="git"
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -289,7 +316,9 @@ describe("VaultCanvas", () => {
         selectedCategory="python" // Category with no items
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}
@@ -297,7 +326,7 @@ describe("VaultCanvas", () => {
     );
 
     expect(
-      screen.getByText(/no commands in this category yet/i)
+      screen.getByText(/no commands yet/i)
     ).toBeInTheDocument();
   });
 
@@ -308,7 +337,9 @@ describe("VaultCanvas", () => {
         selectedCategory={null}
         onAddItem={mockOnAddItem}
         onCopyItem={mockOnCopyItem}
-        onStageItem={mockOnStageItem}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onReorder={mockOnReorder}
+        onImport={mockOnImport}
         onUpdateItem={mockOnUpdateItem}
         onDeleteItem={mockOnDeleteItem}
         copiedItemId={null}

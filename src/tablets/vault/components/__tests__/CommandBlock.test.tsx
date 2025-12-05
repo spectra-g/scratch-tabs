@@ -13,11 +13,13 @@ const mockItem: VaultItem = {
   isPinned: false,
   usageCount: 5,
   lastUsedTimestamp: Date.now(),
+  order: 0,
 };
 
 describe("CommandBlock", () => {
   const mockOnCopy = jest.fn();
-  const mockOnStage = jest.fn();
+  const mockOnOpenInScratchpad = jest.fn();
+  const mockOnInsertAfter = jest.fn();
   const mockOnSave = jest.fn();
   const mockOnDelete = jest.fn();
 
@@ -30,7 +32,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -46,7 +49,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -62,7 +66,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -80,7 +85,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -97,7 +103,7 @@ describe("CommandBlock", () => {
 
     // Click save
     const saveButton = screen.getByTitle(/save/i);
-    fireEvent.click(saveButton);
+    fireEvent.mouseDown(saveButton);
 
     await waitFor(() => {
       expect(mockOnSave).toHaveBeenCalledWith("git status -s", "git status -s");
@@ -109,7 +115,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -137,7 +144,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -165,7 +173,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -183,7 +192,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={true}
@@ -194,22 +204,23 @@ describe("CommandBlock", () => {
     expect(screen.getByTitle(/copy to clipboard/i)).toHaveClass("text-success");
   });
 
-  it("calls onStage when stage button is clicked", () => {
+  it("calls onOpenInScratchpad when scratchpad button is clicked", () => {
     render(
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
       />
     );
 
-    const stageButton = screen.getByTitle(/stage in scratchpad/i);
-    fireEvent.click(stageButton);
+    const scratchpadButton = screen.getByTitle(/open in scratchpad/i);
+    fireEvent.click(scratchpadButton);
 
-    expect(mockOnStage).toHaveBeenCalled();
+    expect(mockOnOpenInScratchpad).toHaveBeenCalled();
   });
 
   it("shows delete confirmation dialog", () => {
@@ -217,7 +228,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -235,7 +247,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -258,7 +271,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}
@@ -282,7 +296,8 @@ describe("CommandBlock", () => {
       <CommandBlock
         item={mockItem}
         onCopy={mockOnCopy}
-        onStage={mockOnStage}
+        onOpenInScratchpad={mockOnOpenInScratchpad}
+        onInsertAfter={mockOnInsertAfter}
         onSave={mockOnSave}
         onDelete={mockOnDelete}
         isCopied={false}

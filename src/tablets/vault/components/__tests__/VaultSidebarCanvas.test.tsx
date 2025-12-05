@@ -3,6 +3,8 @@ import { VaultSidebarCanvas } from "../VaultSidebarCanvas";
 
 describe("VaultSidebarCanvas", () => {
   const mockOnSelectCategory = jest.fn();
+  const mockOnAddCategory = jest.fn();
+  const mockOnDeleteCategory = jest.fn();
 
   const mockCategories = ["git", "docker", "kubernetes"];
   const mockItemCounts = {
@@ -21,6 +23,8 @@ describe("VaultSidebarCanvas", () => {
         categories={mockCategories}
         selectedCategory={null}
         onSelectCategory={mockOnSelectCategory}
+        onAddCategory={mockOnAddCategory}
+        onDeleteCategory={mockOnDeleteCategory}
         itemCounts={mockItemCounts}
       />
     );
@@ -36,6 +40,8 @@ describe("VaultSidebarCanvas", () => {
         categories={mockCategories}
         selectedCategory={null}
         onSelectCategory={mockOnSelectCategory}
+        onAddCategory={mockOnAddCategory}
+        onDeleteCategory={mockOnDeleteCategory}
         itemCounts={mockItemCounts}
       />
     );
@@ -51,12 +57,15 @@ describe("VaultSidebarCanvas", () => {
         categories={mockCategories}
         selectedCategory="git"
         onSelectCategory={mockOnSelectCategory}
+        onAddCategory={mockOnAddCategory}
+        onDeleteCategory={mockOnDeleteCategory}
         itemCounts={mockItemCounts}
       />
     );
 
     const gitButton = screen.getByRole("button", { name: /git/i });
-    expect(gitButton).toHaveClass("bg-element-active");
+    // The parent div has the bg-element-active class, not the button itself
+    expect(gitButton.parentElement).toHaveClass("bg-element-active");
   });
 
   it("calls onSelectCategory when category is clicked", () => {
@@ -65,6 +74,8 @@ describe("VaultSidebarCanvas", () => {
         categories={mockCategories}
         selectedCategory={null}
         onSelectCategory={mockOnSelectCategory}
+        onAddCategory={mockOnAddCategory}
+        onDeleteCategory={mockOnDeleteCategory}
         itemCounts={mockItemCounts}
       />
     );
@@ -81,6 +92,8 @@ describe("VaultSidebarCanvas", () => {
         categories={[]}
         selectedCategory={null}
         onSelectCategory={mockOnSelectCategory}
+        onAddCategory={mockOnAddCategory}
+        onDeleteCategory={mockOnDeleteCategory}
         itemCounts={{}}
       />
     );
@@ -94,12 +107,14 @@ describe("VaultSidebarCanvas", () => {
         categories={mockCategories}
         selectedCategory={null}
         onSelectCategory={mockOnSelectCategory}
+        onAddCategory={mockOnAddCategory}
+        onDeleteCategory={mockOnDeleteCategory}
         itemCounts={mockItemCounts}
       />
     );
 
     expect(screen.getByText("Ctrl+R")).toBeInTheDocument();
-    expect(screen.getByText("Search all")).toBeInTheDocument();
+    expect(screen.getByText(/to search/i)).toBeInTheDocument();
   });
 
   it("renders category icons", () => {
@@ -108,13 +123,17 @@ describe("VaultSidebarCanvas", () => {
         categories={mockCategories}
         selectedCategory={null}
         onSelectCategory={mockOnSelectCategory}
+        onAddCategory={mockOnAddCategory}
+        onDeleteCategory={mockOnDeleteCategory}
         itemCounts={mockItemCounts}
       />
     );
 
-    // Icons should be rendered for each category
-    const buttons = screen.getAllByRole("button");
-    expect(buttons.length).toBe(mockCategories.length);
+    // Filter to only category buttons (exclude Add Category button)
+    const categoryButtons = screen.getAllByRole("button").filter(button =>
+      mockCategories.some(cat => button.textContent?.includes(cat))
+    );
+    expect(categoryButtons.length).toBe(mockCategories.length);
   });
 
   it("sorts categories alphabetically", () => {
@@ -125,12 +144,16 @@ describe("VaultSidebarCanvas", () => {
         categories={unsortedCategories}
         selectedCategory={null}
         onSelectCategory={mockOnSelectCategory}
+        onAddCategory={mockOnAddCategory}
+        onDeleteCategory={mockOnDeleteCategory}
         itemCounts={{ zsh: 1, bash: 2, docker: 3 }}
       />
     );
 
-    const buttons = screen.getAllByRole("button");
-    // Since categories are sorted in the parent, we just verify they're all rendered
-    expect(buttons.length).toBe(3);
+    // Filter to only category buttons (exclude Add Category button)
+    const categoryButtons = screen.getAllByRole("button").filter(button =>
+      unsortedCategories.some(cat => button.textContent?.includes(cat))
+    );
+    expect(categoryButtons.length).toBe(3);
   });
 });
