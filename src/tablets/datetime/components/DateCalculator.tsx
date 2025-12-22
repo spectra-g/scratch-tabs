@@ -38,7 +38,7 @@ export const DateCalculator: React.FC<DateCalculatorProps> = ({
     if (!isValidDateValue(parsedDate)) {
       return;
     }
-    
+
     const validDate = ensureDate(parsedDate);
     if (!validDate) {
       return;
@@ -69,29 +69,29 @@ export const DateCalculator: React.FC<DateCalculatorProps> = ({
     }
   };
 
-  const NumberInput: React.FC<{ 
-    label: string; 
-    value: number; 
+  const NumberInput: React.FC<{
+    label: string;
+    value: number;
     onChange: (value: number) => void;
     unit: string;
   }> = ({ label, value, onChange, unit }) => (
     <div className="flex items-center space-x-2">
-      <label className="text-sm text-gray-400 w-16">{label}:</label>
+      <label className="text-sm text-secondary w-16">{label}:</label>
       <input
         type="number"
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-        className="w-20 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="input-themed w-20 px-2 py-1 text-sm focus:ring-1 focus:ring-primary"
         min="0"
       />
-      <span className="text-xs text-gray-500">{unit}</span>
+      <span className="text-xs text-muted">{unit}</span>
     </div>
   );
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden">
-      <div className="bg-gray-700 px-4 py-3 border-b border-gray-600">
-        <h3 className="text-lg font-semibold text-gray-200 flex items-center">
+    <div className="bg-surface-secondary rounded-lg overflow-hidden border border-base">
+      <div className="bg-surface-highlight/50 px-4 py-3 border-b border-base">
+        <h3 className="text-lg font-semibold text-main flex items-center">
           <Calculator size={18} className="mr-2" />
           Date Calculator
         </h3>
@@ -108,11 +108,10 @@ export const DateCalculator: React.FC<DateCalculatorProps> = ({
             <button
               key={key}
               onClick={() => updateField('operation', key)}
-              className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
-                calculatorState.operation === key
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
+              className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${calculatorState.operation === key
+                  ? 'bg-primary text-white'
+                  : 'bg-element text-secondary hover:bg-element-hover'
+                }`}
             >
               <Icon size={14} className="mr-1" />
               {label}
@@ -165,7 +164,7 @@ export const DateCalculator: React.FC<DateCalculatorProps> = ({
             <button
               onClick={performCalculation}
               disabled={!parsedDate}
-              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md transition-colors"
+              className="w-full px-4 py-2 bg-primary hover:opacity-90 disabled:bg-element-disabled disabled:text-muted disabled:cursor-not-allowed text-white rounded-md transition-colors"
             >
               Calculate {calculatorState.operation === 'add' ? 'Addition' : 'Subtraction'}
             </button>
@@ -175,35 +174,35 @@ export const DateCalculator: React.FC<DateCalculatorProps> = ({
         {calculatorState.operation === 'duration' && (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Second Date/Time</label>
+              <label className="block text-sm text-secondary mb-2">Second Date/Time</label>
               <input
                 type="text"
                 value={calculatorState.secondDate}
                 onChange={(e) => updateField('secondDate', e.target.value)}
                 placeholder="Enter second date/time..."
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-themed w-full px-3 py-2 text-main placeholder-secondary"
               />
             </div>
 
             <button
               onClick={performCalculation}
               disabled={!parsedDate || !calculatorState.secondDate}
-              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md transition-colors"
+              className="w-full px-4 py-2 bg-primary hover:opacity-90 disabled:bg-element-disabled disabled:text-muted disabled:cursor-not-allowed text-white rounded-md transition-colors"
             >
               Calculate Duration
             </button>
 
             {/* Duration result */}
             {calculatorState.durationResult && (
-              <div className="bg-gray-700 rounded-md p-3 mt-3">
-                <h4 className="text-sm font-medium text-gray-300 mb-2">Duration</h4>
+              <div className="bg-surface-highlight/30 rounded-md p-3 mt-3 border border-base">
+                <h4 className="text-sm font-medium text-main mb-2">Duration</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="text-gray-400">Years: <span className="text-gray-200">{calculatorState.durationResult.years}</span></div>
-                  <div className="text-gray-400">Months: <span className="text-gray-200">{calculatorState.durationResult.months}</span></div>
-                  <div className="text-gray-400">Days: <span className="text-gray-200">{calculatorState.durationResult.days}</span></div>
-                  <div className="text-gray-400">Hours: <span className="text-gray-200">{calculatorState.durationResult.hours}</span></div>
+                  <div className="text-secondary">Years: <span className="text-main">{calculatorState.durationResult.years}</span></div>
+                  <div className="text-secondary">Months: <span className="text-main">{calculatorState.durationResult.months}</span></div>
+                  <div className="text-secondary">Days: <span className="text-main">{calculatorState.durationResult.days}</span></div>
+                  <div className="text-secondary">Hours: <span className="text-main">{calculatorState.durationResult.hours}</span></div>
                 </div>
-                <div className="mt-2 pt-2 border-t border-gray-600 text-xs text-gray-500">
+                <div className="mt-2 pt-2 border-t border-base text-xs text-muted">
                   Total: {calculatorState.durationResult.totalDays} days, {calculatorState.durationResult.totalHours} hours
                 </div>
               </div>
@@ -213,8 +212,8 @@ export const DateCalculator: React.FC<DateCalculatorProps> = ({
 
         {!parsedDate && (
           <div className="text-center py-4">
-            <Calculator size={32} className="mx-auto text-gray-600 mb-2" />
-            <p className="text-gray-400">Enter a valid date to use calculator</p>
+            <Calculator size={32} className="mx-auto text-muted mb-2" />
+            <p className="text-secondary">Enter a valid date to use calculator</p>
           </div>
         )}
       </div>

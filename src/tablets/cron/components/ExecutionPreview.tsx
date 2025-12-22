@@ -32,17 +32,17 @@ export const ExecutionPreview: React.FC<ExecutionPreviewProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-      <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+    <div className="bg-surface-secondary rounded-lg border border-base overflow-hidden">
+      <div className="p-4 border-b border-base flex items-center justify-between">
         <div className="flex items-center">
-          <Calendar size={16} className="text-blue-400 mr-2" />
-          <h3 className="text-sm font-medium text-gray-300">
+          <Calendar size={16} className="text-primary mr-2" />
+          <h3 className="text-sm font-medium text-main">
             Execution Preview
           </h3>
         </div>
 
         <div className="flex items-center space-x-2">
-          <div className="text-xs text-gray-400 flex items-center">
+          <div className="text-xs text-muted flex items-center">
             <Clock size={12} className="mr-1" />
             <span>{timezone.name}</span>
           </div>
@@ -50,7 +50,7 @@ export const ExecutionPreview: React.FC<ExecutionPreviewProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowExportOptions(!showExportOptions)}
-              className="p-1.5 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+              className="p-1.5 rounded hover:bg-element-hover text-secondary hover:text-main"
               title="Export executions"
             >
               <Download size={16} />
@@ -62,16 +62,16 @@ export const ExecutionPreview: React.FC<ExecutionPreviewProps> = ({
                   className="fixed inset-0 z-10"
                   onClick={() => setShowExportOptions(false)}
                 />
-                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-20 w-48">
+                <div className="absolute right-0 top-full mt-1 bg-surface-secondary border border-base rounded-md shadow-lg z-20 w-48">
                   <div className="py-1">
                     <button
                       onClick={() => {
                         onExportToICS();
                         setShowExportOptions(false);
                       }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-700"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-element-hover text-main"
                     >
-                      <Calendar size={14} className="mr-2 text-blue-400" />
+                      <Calendar size={14} className="mr-2 text-primary" />
                       <span>Export to Calendar (ICS)</span>
                     </button>
                     <button
@@ -79,9 +79,9 @@ export const ExecutionPreview: React.FC<ExecutionPreviewProps> = ({
                         onExportToCSV();
                         setShowExportOptions(false);
                       }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-700"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-element-hover text-main"
                     >
-                      <Download size={14} className="mr-2 text-green-400" />
+                      <Download size={14} className="mr-2 text-success" />
                       <span>Export to CSV</span>
                     </button>
                     <button
@@ -89,9 +89,9 @@ export const ExecutionPreview: React.FC<ExecutionPreviewProps> = ({
                         onExportToJSON();
                         setShowExportOptions(false);
                       }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-700"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-element-hover text-main"
                     >
-                      <Download size={14} className="mr-2 text-yellow-400" />
+                      <Download size={14} className="mr-2 text-warning" />
                       <span>Export to JSON</span>
                     </button>
                   </div>
@@ -102,11 +102,11 @@ export const ExecutionPreview: React.FC<ExecutionPreviewProps> = ({
 
           <button
             onClick={handleCopyAllTimes}
-            className="p-1.5 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+            className="p-1.5 rounded hover:bg-element-hover text-secondary hover:text-main"
             title="Copy all times"
           >
             {copied ? (
-              <Check size={16} className="text-green-500" />
+              <Check size={16} className="text-success" />
             ) : (
               <Copy size={16} />
             )}
@@ -116,7 +116,7 @@ export const ExecutionPreview: React.FC<ExecutionPreviewProps> = ({
 
       <div className="max-h-96 overflow-y-auto custom-scrollbar">
         {executions.length === 0 ? (
-          <div className="p-4 text-center text-gray-400">
+          <div className="p-4 text-center text-muted">
             <p>No executions to display.</p>
             <p className="text-xs mt-1">
               Check your cron expression for errors.
@@ -124,38 +124,38 @@ export const ExecutionPreview: React.FC<ExecutionPreviewProps> = ({
           </div>
         ) : (
           <table className="w-full border-collapse">
-            <thead className="bg-gray-700">
+            <thead className="bg-surface-highlight/50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                   #
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                   Time
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                   Day
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700">
+            <tbody className="divide-y divide-base">
               {executions.map((execution, index) => (
                 <tr
                   key={index}
-                  className={index % 2 === 0 ? "bg-gray-800" : "bg-gray-750"}
+                  className={index % 2 === 0 ? "bg-surface" : "bg-surface-secondary"}
                 >
-                  <td className="px-4 py-2 text-sm text-gray-400">
+                  <td className="px-4 py-2 text-sm text-muted">
                     {index + 1}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-200">
+                  <td className="px-4 py-2 text-sm text-main">
                     {format(execution.date, "yyyy-MM-dd")}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-200">
+                  <td className="px-4 py-2 text-sm text-main">
                     {format(execution.date, "HH:mm:ss")}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-200">
+                  <td className="px-4 py-2 text-sm text-main">
                     {format(execution.date, "EEEE")}
                   </td>
                 </tr>

@@ -252,10 +252,10 @@ export const TextConversion: React.FC<Props> = ({
               {Object.entries(results[converter.id] || {}).map(
                 ([label, value]) => (
                   <div key={label}>
-                    <div className="text-xs font-semibold text-blue-300 mb-1 uppercase tracking-wider">
+                    <div className="text-xs font-semibold text-primary mb-1 uppercase tracking-wider">
                       {label}:
                     </div>
-                    <div className="font-mono text-sm bg-gray-900/60 border border-gray-700/50 text-gray-100 px-3 py-2 rounded-md break-all relative group">
+                    <div className="font-mono text-sm bg-surface-secondary/60 border border-base text-main px-3 py-2 rounded-md break-all relative group">
                       <pre className="whitespace-pre-wrap break-words">
                         {value}
                       </pre>
@@ -267,7 +267,7 @@ export const TextConversion: React.FC<Props> = ({
             </div>
           ) : (
             inputs[converter.id] && (
-              <div className="text-sm text-gray-500 italic mt-2">
+              <div className="text-sm text-secondary italic mt-2">
                 Processing...
               </div>
             )
@@ -276,7 +276,7 @@ export const TextConversion: React.FC<Props> = ({
       ))}
 
       {filteredConverters.length === 0 && (
-        <div className="col-span-full text-gray-400 text-center py-6">
+        <div className="col-span-full text-secondary text-center py-6">
           No matching text converters found for "{searchQuery}".
         </div>
       )}

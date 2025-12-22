@@ -203,18 +203,17 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
   ] as const;
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-gray-200">
+    <div className="h-full flex flex-col bg-surface text-main">
       {/* Header */}
-      <div className="flex-shrink-0 p-4 border-b border-gray-700">
+      <div className="flex-shrink-0 p-4 border-b border-base">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-white">Colour Palette</h1>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-secondary">
               Extract, create, and test colour palettes with accessibility insights
             </p>
           </div>
           {state.error && (
-            <div className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded text-red-400 text-xs">
+            <div className="px-3 py-1 bg-danger-subtle border border-danger/30 rounded text-danger text-xs">
               {state.error}
             </div>
           )}
@@ -223,16 +222,15 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
 
       {/* Tab Navigation */}
       <div className="flex-shrink-0 px-4 pt-4">
-        <div className="flex space-x-1 bg-gray-800 rounded-lg p-1">
+        <div className="flex space-x-1 bg-surface-secondary rounded-lg p-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-              }`}
+              className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
+                ? 'bg-primary text-white'
+                : 'text-secondary hover:text-main hover:bg-element-hover'
+                }`}
             >
               <span className="mr-2">{tab.icon}</span>
               {tab.label}
@@ -263,17 +261,16 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
 
             {/* Generated Colors Preview */}
             {state.colors.length > 0 && (
-              <div className={`space-y-3 border rounded-lg p-4 transition-all duration-300 ${
-                colorsUpdated
-                  ? 'border-green-400 bg-green-800/20 shadow-lg shadow-green-400/20'
-                  : 'border-gray-600 bg-gray-800/30'
-              }`}>
+              <div className={`space-y-3 border rounded-lg p-4 transition-all duration-300 ${colorsUpdated
+                  ? 'border-success bg-success-subtle shadow-lg shadow-success/20'
+                  : 'border-base bg-surface-secondary/30'
+                }`}>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-300">
+                  <h3 className="text-sm font-medium text-main">
                     Generated Palette
-                    {colorsUpdated && <span className="ml-2 text-green-400 animate-pulse">● Updated</span>}
+                    {colorsUpdated && <span className="ml-2 text-success animate-pulse">● Updated</span>}
                   </h3>
-                  <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
+                  <span className="text-xs text-secondary bg-surface-highlight px-2 py-1 rounded">
                     {state.colors.length} colors
                   </span>
                 </div>
@@ -284,13 +281,13 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
                       className="group relative"
                     >
                       <div
-                        className="w-full h-12 rounded-lg border border-gray-600 cursor-pointer transition-all duration-200 hover:scale-105 hover:border-blue-400"
+                        className="w-full h-12 rounded-lg border border-base cursor-pointer transition-all duration-200 hover:scale-105 hover:border-primary"
                         style={{ backgroundColor: color.hex }}
                         title={`${color.hex} • ${color.name || 'Unnamed'}`}
                         onClick={() => setActiveTab('palette')}
                       />
                       <div className="mt-1 text-center">
-                        <span className="text-xs font-mono text-gray-400">{color.hex}</span>
+                        <span className="text-xs font-mono text-secondary">{color.hex}</span>
                       </div>
                     </div>
                   ))}
@@ -298,7 +295,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
                 <div className="text-center">
                   <button
                     onClick={() => setActiveTab('palette')}
-                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors underline"
+                    className="text-xs text-info hover:text-info/80 transition-colors underline"
                   >
                     View in Palette tab for editing →
                   </button>
@@ -341,8 +338,8 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
       </div>
 
       {/* Footer Stats */}
-      <div className="flex-shrink-0 px-4 py-2 border-t border-gray-700 bg-gray-800/50">
-        <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex-shrink-0 px-4 py-2 border-t border-base bg-surface-secondary/50">
+        <div className="flex items-center justify-between text-xs text-muted">
           <span>{state.colors.length} colors in palette</span>
           <span>100% client-side processing</span>
         </div>
@@ -371,16 +368,16 @@ const createColourPaletteInitialState = (): ColourPaletteState => ({
 export default {
   id: 'colourpalette',
   label: 'Colour Palette',
-  
+
   createInitialState: createColourPaletteInitialState,
-  
+
   serializeState: (state: ColourPaletteState) => {
     // Exclude non-serializable ImageData from state persistence
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sourceImageData, ...serializableState } = state;
     return JSON.stringify(serializableState);
   },
-  
+
   deserializeState: (serialized: string): ColourPaletteState => {
     try {
       const parsed = JSON.parse(serialized);
@@ -390,7 +387,7 @@ export default {
       return createColourPaletteInitialState();
     }
   },
-  
+
   render: (state: ColourPaletteState, onChange: (newState: ColourPaletteState) => void) =>
     React.createElement(ColourPaletteTablet, { state, onChange }),
 };

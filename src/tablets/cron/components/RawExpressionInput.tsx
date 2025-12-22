@@ -61,8 +61,8 @@ export const RawExpressionInput: React.FC<RawExpressionInputProps> = ({
   );
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-sm font-medium text-gray-300 mb-4">
+    <div className="bg-surface-secondary rounded-lg p-4 border border-base">
+      <h3 className="text-sm font-medium text-main mb-4">
         Raw Cron Expression
       </h3>
 
@@ -73,22 +73,21 @@ export const RawExpressionInput: React.FC<RawExpressionInputProps> = ({
             value={localExpression}
             onChange={handleExpressionChange}
             onBlur={handleBlur}
-            className={`w-full bg-gray-700 border rounded-md px-3 py-2 text-gray-200 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              globalError ? "border-red-500" : "border-gray-600"
-            }`}
+            className={`input-themed w-full bg-surface text-main font-mono ${globalError ? "border-danger" : ""
+              }`}
             placeholder={`Enter cron expression (e.g., "0 0 * * *" for daily at midnight)`}
           />
 
           {globalError ? (
             <div
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-danger"
               title={globalError.message}
             >
               <AlertTriangle size={16} />
             </div>
           ) : validationErrors.length === 0 && expression.trim() ? (
             <div
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-success"
               title="Valid expression"
             >
               <Check size={16} />
@@ -97,7 +96,7 @@ export const RawExpressionInput: React.FC<RawExpressionInputProps> = ({
         </div>
 
         {detectedDialect && (
-          <div className="bg-yellow-900/30 border border-yellow-900/50 rounded-md p-2 text-xs text-yellow-400 flex items-center">
+          <div className="bg-warning-subtle border border-warning/30 rounded-md p-2 text-xs text-warning flex items-center">
             <MagicWand size={12} className="mr-1" />
             <span>
               Detected {detectedDialect} dialect. Consider switching dialects
@@ -106,32 +105,32 @@ export const RawExpressionInput: React.FC<RawExpressionInputProps> = ({
           </div>
         )}
 
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-muted">
           <p>
-            <span className="font-medium text-gray-300">
+            <span className="font-medium text-secondary">
               Format for {dialect}:
             </span>{" "}
             {getFormatForDialect(dialect)}
           </p>
           <p className="mt-1">
-            <span className="font-medium text-gray-300">
+            <span className="font-medium text-secondary">
               Special characters:
             </span>{" "}
             * (any), , (list), - (range), / (step), ? (any/no specific value,
             Quartz only)
           </p>
           <p className="mt-1">
-            <span className="font-medium text-gray-300">Examples:</span>{" "}
-            <code className="bg-gray-700 px-1 rounded">0 0 * * *</code> (daily
+            <span className="font-medium text-secondary">Examples:</span>{" "}
+            <code className="bg-surface px-1 rounded border border-base">0 0 * * *</code> (daily
             at midnight),{" "}
-            <code className="bg-gray-700 px-1 rounded">*/15 * * * *</code>{" "}
+            <code className="bg-surface px-1 rounded border border-base">*/15 * * * *</code>{" "}
             (every 15 minutes)
           </p>
         </div>
 
         {globalError && (
-          <div className="p-3 bg-red-900/20 border border-red-900/30 rounded-md">
-            <p className="text-xs text-red-400 flex items-start">
+          <div className="p-3 bg-danger-subtle border border-danger/30 rounded-md">
+            <p className="text-xs text-danger flex items-start">
               <AlertTriangle size={12} className="mr-1 mt-0.5 flex-shrink-0" />
               <span>{globalError.message}</span>
             </p>

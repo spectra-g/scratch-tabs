@@ -151,7 +151,7 @@ export const Hashing: React.FC<Props> = ({
         {/* Message if filtering hides all panels */}
         {/* Ensure this message spans the full width of *this* grid */}
         {filteredHashFunctions.length === 0 && (
-          <div className="col-span-full text-gray-400 text-center py-4">
+          <div className="col-span-full text-secondary text-center py-4">
             No matching hash functions found for "{searchQuery}".
           </div>
         )}

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Copy, Download, Check, FileCode, ExternalLink } from '../../../components/Icons';
 import { ColorInfo, ExportFormat } from '../types';
-import { 
-  generateCssVariables, 
-  generateScssVariables, 
-  generateTailwindConfig, 
-  generateJsonArray 
+import {
+  generateCssVariables,
+  generateScssVariables,
+  generateTailwindConfig,
+  generateJsonArray
 } from '../utils/colourUtils';
 
 interface ExportPanelProps {
@@ -92,8 +92,8 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
   if (colors.length === 0) {
     return (
       <div className="text-center py-8">
-        <FileCode size={32} className="text-gray-500 mx-auto mb-2" />
-        <p className="text-sm text-gray-500">Generate a palette to see export options</p>
+        <FileCode size={32} className="text-secondary mx-auto mb-2" />
+        <p className="text-sm text-secondary">Generate a palette to see export options</p>
       </div>
     );
   }
@@ -101,8 +101,8 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-300">Export Palette</h3>
-        <div className="text-xs text-gray-500">{colors.length} colors</div>
+        <h3 className="text-sm font-medium text-main">Export Palette</h3>
+        <div className="text-xs text-secondary">{colors.length} colors</div>
       </div>
 
       {/* Format Selection */}
@@ -111,11 +111,10 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
           <button
             key={format.extension}
             onClick={() => setSelectedFormat(format.extension)}
-            className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-              selectedFormat === format.extension
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
+            className={`px-3 py-2 rounded text-sm font-medium transition-colors ${selectedFormat === format.extension
+                ? 'bg-primary text-white'
+                : 'bg-element text-secondary hover:bg-element-hover'
+              }`}
           >
             {format.name}
           </button>
@@ -124,22 +123,22 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
 
       {/* Code Preview */}
       <div className="relative">
-        <pre className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-xs text-gray-300 font-mono overflow-x-auto max-h-48 overflow-y-auto custom-scrollbar">
+        <pre className="bg-surface-secondary border border-base rounded-lg p-3 text-xs text-main font-mono overflow-x-auto max-h-48 overflow-y-auto custom-scrollbar">
           <code className={`language-${getLanguageForFormat(selectedFormat)}`}>
             {generatedCode}
           </code>
         </pre>
-        
+
         {/* Copy Button Overlay */}
         <button
           onClick={() => handleCopy(selectedFormat, generatedCode)}
-          className="absolute top-2 right-2 p-1.5 bg-gray-800/80 hover:bg-gray-700 rounded transition-colors"
+          className="absolute top-2 right-2 p-1.5 bg-element/80 hover:bg-element-hover rounded transition-colors"
           title="Copy to clipboard"
         >
           {copiedFormat === selectedFormat ? (
-            <Check size={14} className="text-green-400" />
+            <Check size={14} className="text-success" />
           ) : (
-            <Copy size={14} className="text-gray-400" />
+            <Copy size={14} className="text-secondary" />
           )}
         </button>
       </div>
@@ -148,28 +147,28 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
       <div className="grid grid-cols-3 gap-2">
         <button
           onClick={() => handleCopy(selectedFormat, generatedCode)}
-          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+          className="px-3 py-2 bg-element hover:bg-element-hover text-main rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
         >
           {copiedFormat === selectedFormat ? (
-            <Check size={14} className="text-green-400" />
+            <Check size={14} className="text-success" />
           ) : (
             <Copy size={14} />
           )}
           <span>Copy</span>
         </button>
-        
+
         <button
           onClick={() => handleDownload(currentFormat, generatedCode)}
-          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+          className="px-3 py-2 bg-element hover:bg-element-hover text-main rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
         >
           <Download size={14} />
           <span>Download</span>
         </button>
-        
+
         {onCreateNewTab && (
           <button
             onClick={handleCreateTab}
-            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+            className="px-3 py-2 bg-primary hover:bg-primary/90 text-white rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
             title="Create new tab with this code"
           >
             <ExternalLink size={14} />
@@ -179,7 +178,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
       </div>
 
       {/* Format Info */}
-      <div className="text-xs text-gray-500 text-center">
+      <div className="text-xs text-secondary text-center">
         Ready-to-use {currentFormat.name.toLowerCase()} for your project
       </div>
     </div>

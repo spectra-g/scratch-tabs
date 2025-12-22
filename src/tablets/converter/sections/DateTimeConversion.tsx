@@ -52,19 +52,6 @@ export const DateTimeConversion: React.FC<Props> = ({
   // Get list of available timezones - remains the same
   const timezones = (Intl as any).supportedValuesOf?.("timeZone") || [];
 
-  const updateData = () => {
-    onDataChange?.({
-      inputs: {
-        timestamp,
-        dateString,
-        calculatorDate,
-        calculatorAmount,
-        calculatorUnit,
-        timezone,
-        targetTimezone,
-      },
-    });
-  };
 
   const handleTimestampChange = (value: string) => {
     setTimestamp(value);
@@ -237,10 +224,10 @@ export const DateTimeConversion: React.FC<Props> = ({
               {Object.entries(handleTimestampConversion()).map(
                 ([label, value]) => (
                   <div key={label}>
-                    <div className="text-sm font-medium text-gray-400 mb-1">
+                    <div className="text-sm font-medium text-secondary mb-1">
                       {label}:
                     </div>
-                    <div className="font-mono text-sm bg-gray-900/50 text-gray-200 px-3 py-2 rounded-md break-words">
+                    <div className="font-mono text-sm bg-surface-secondary/50 text-main px-3 py-2 rounded-md break-words border border-base">
                       {value}
                     </div>
                   </div>
@@ -249,7 +236,7 @@ export const DateTimeConversion: React.FC<Props> = ({
             </div>
           )}
           {timestamp && isNaN(parseInt(timestamp)) && (
-            <div className="mt-4 text-red-400 text-sm">
+            <div className="mt-4 text-danger text-sm">
               Invalid number entered.
             </div>
           )}
@@ -274,10 +261,10 @@ export const DateTimeConversion: React.FC<Props> = ({
               {Object.entries(handleDateStringConversion()).map(
                 ([label, value]) => (
                   <div key={label}>
-                    <div className="text-sm font-medium text-gray-400 mb-1">
+                    <div className="text-sm font-medium text-secondary mb-1">
                       {label}:
                     </div>
-                    <div className="font-mono text-sm bg-gray-900/50 text-gray-200 px-3 py-2 rounded-md break-words">
+                    <div className="font-mono text-sm bg-surface-secondary/50 text-main px-3 py-2 rounded-md break-words border border-base">
                       {value}
                     </div>
                   </div>
@@ -286,7 +273,7 @@ export const DateTimeConversion: React.FC<Props> = ({
             </div>
           )}
           {dateString && isNaN(new Date(dateString).getTime()) && (
-            <div className="mt-4 text-red-400 text-sm">
+            <div className="mt-4 text-danger text-sm">
               Could not parse date string.
             </div>
           )}
@@ -301,7 +288,7 @@ export const DateTimeConversion: React.FC<Props> = ({
         <>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Start Date:
               </label>
               {/* Using datetime-local which is generally well-supported */}
@@ -309,13 +296,13 @@ export const DateTimeConversion: React.FC<Props> = ({
                 type="datetime-local"
                 value={calculatorDate}
                 onChange={(e) => handleCalculatorDateChange(e.target.value)}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                // Add pattern for better mobile support if needed, though datetime-local handles format
+                className="input-themed w-full px-3 py-2"
+              // Add pattern for better mobile support if needed, though datetime-local handles format
               />
             </div>
             <div className="flex space-x-2">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-400 mb-1">
+                <label className="block text-sm font-medium text-secondary mb-1">
                   Amount:
                 </label>
                 <input
@@ -323,11 +310,11 @@ export const DateTimeConversion: React.FC<Props> = ({
                   value={calculatorAmount}
                   onChange={(e) => handleCalculatorAmountChange(e.target.value)}
                   placeholder="e.g., 5, -3"
-                  className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="input-themed w-full px-3 py-2"
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-400 mb-1">
+                <label className="block text-sm font-medium text-secondary mb-1">
                   Unit:
                 </label>
                 <select
@@ -335,7 +322,7 @@ export const DateTimeConversion: React.FC<Props> = ({
                   onChange={(e) =>
                     handleCalculatorUnitChange(e.target.value as any)
                   }
-                  className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="input-themed w-full px-3 py-2"
                 >
                   <option value="days">Days</option>
                   <option value="weeks">Weeks</option>
@@ -354,10 +341,10 @@ export const DateTimeConversion: React.FC<Props> = ({
                 {Object.entries(handleDateCalculation()).map(
                   ([label, value]) => (
                     <div key={label}>
-                      <div className="text-sm font-medium text-gray-400 mb-1">
+                      <div className="text-sm font-medium text-secondary mb-1">
                         {label}:
                       </div>
-                      <div className="font-mono text-sm bg-gray-900/50 text-gray-200 px-3 py-2 rounded-md break-words">
+                      <div className="font-mono text-sm bg-surface-secondary/50 text-main px-3 py-2 rounded-md break-words border border-base">
                         {value}
                       </div>
                     </div>
@@ -367,10 +354,10 @@ export const DateTimeConversion: React.FC<Props> = ({
             )}
           {((calculatorDate && isNaN(new Date(calculatorDate).getTime())) ||
             (calculatorAmount && isNaN(parseInt(calculatorAmount)))) && (
-            <div className="mt-4 text-red-400 text-sm">
-              Invalid start date or amount.
-            </div>
-          )}
+              <div className="mt-4 text-danger text-sm">
+                Invalid start date or amount.
+              </div>
+            )}
         </>
       ),
     },
@@ -382,13 +369,13 @@ export const DateTimeConversion: React.FC<Props> = ({
         <>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Timezone 1:
               </label>
               <select
                 value={timezone}
                 onChange={(e) => handleTimezoneChange(e.target.value)}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="input-themed w-full px-3 py-2"
               >
                 <option value="">Select timezone...</option>
                 {/* Filter out potentially problematic zones if needed, but usually fine */}
@@ -400,13 +387,13 @@ export const DateTimeConversion: React.FC<Props> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Timezone 2:
               </label>
               <select
                 value={targetTimezone}
                 onChange={(e) => handleTargetTimezoneChange(e.target.value)}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="input-themed w-full px-3 py-2"
               >
                 <option value="">Select timezone...</option>
                 {timezones.map((tz: string) => (
@@ -423,10 +410,10 @@ export const DateTimeConversion: React.FC<Props> = ({
               {Object.entries(handleTimezoneConversion()).map(
                 ([label, value]) => (
                   <div key={label}>
-                    <div className="text-sm font-medium text-gray-400 mb-1">
+                    <div className="text-sm font-medium text-secondary mb-1">
                       {label}:
                     </div>
-                    <div className="font-mono text-sm bg-gray-900/50 text-gray-200 px-3 py-2 rounded-md break-words">
+                    <div className="font-mono text-sm bg-surface-secondary/50 text-main px-3 py-2 rounded-md break-words border border-base">
                       {value}
                     </div>
                   </div>
@@ -458,7 +445,7 @@ export const DateTimeConversion: React.FC<Props> = ({
         </ConversionPanel>
       ))}
       {filteredPanels.length === 0 && (
-        <div className="text-gray-400 text-center py-8">
+        <div className="text-secondary text-center py-8">
           No matching converters found.
         </div>
       )}

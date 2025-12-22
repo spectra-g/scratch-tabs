@@ -93,25 +93,25 @@ export const TabbedInput: React.FC<TabbedInputProps> = ({
   // Update all input fields when parsedDate changes from external sources
   // Use a ref to track if we're in the middle of handling user input
   const isHandlingUserInput = useRef(false);
-  
+
   useEffect(() => {
     // Don't override inputs if we're currently handling user input
     if (isHandlingUserInput.current) {
       isHandlingUserInput.current = false;
       return;
     }
-    
+
     if (isValidDateValue(parsedDate)) {
       const validDate = ensureDate(parsedDate);
       if (validDate) {
         const newInputValues: Record<TabType, string> = { ...inputValues };
-        
+
         tabs.forEach(tab => {
           if (tab.key !== 'natural') { // Don't override natural language input
             newInputValues[tab.key] = tab.formatDate(validDate);
           }
         });
-        
+
         setInputValues(newInputValues);
       }
     }
@@ -120,7 +120,7 @@ export const TabbedInput: React.FC<TabbedInputProps> = ({
   const handleInputChange = useCallback((value: string) => {
     // Set flag to prevent useEffect from overriding this change
     isHandlingUserInput.current = true;
-    
+
     // Update the current tab's input value
     setInputValues(prev => ({
       ...prev,
@@ -159,10 +159,10 @@ export const TabbedInput: React.FC<TabbedInputProps> = ({
       unixMs: '',
       unixS: ''
     });
-    
+
     // Switch to natural language tab
     setActiveTab('natural');
-    
+
     // Parse "now" and update the date
     const parsed = intelligentParse('now');
     onDateChange(parsed, null);
@@ -175,25 +175,24 @@ export const TabbedInput: React.FC<TabbedInputProps> = ({
   return (
     <div className="space-y-3">
       {/* Tab Navigation */}
-      <div className="flex flex-wrap gap-1 bg-gray-800 p-1 rounded-lg">
+      <div className="flex flex-wrap gap-1 bg-surface-secondary/50 p-1 rounded-lg border border-base">
         {tabs.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-              activeTab === tab.key
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:text-gray-200 hover:bg-gray-700'
-            }`}
+            className={`px-3 py-2 text-sm font-medium rounded-md transition-all whitespace-nowrap ${activeTab === tab.key
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-secondary hover:text-main hover:bg-element-hover'
+              }`}
           >
             {tab.label}
           </button>
         ))}
-        
+
         {/* Reset Button */}
         <button
           onClick={handleReset}
-          className="px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap text-gray-300 hover:text-gray-200 hover:bg-gray-700 flex items-center gap-1 ml-1 border-l border-gray-600 pl-3"
+          className="px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap text-secondary hover:text-main hover:bg-element-hover flex items-center gap-1 ml-1 border-l border-base pl-3"
           title="Reset to 'now'"
         >
           <RotateCcw size={14} />
@@ -203,44 +202,43 @@ export const TabbedInput: React.FC<TabbedInputProps> = ({
 
       {/* Input Field */}
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-300">
+        <label className="block text-sm font-medium text-main">
           {activeTabConfig?.label}
         </label>
-        <div className={`relative flex items-center transition-all duration-200 border rounded-lg ${
-          error ? 'border-red-500 bg-red-500/5' : 'border-gray-600 bg-gray-800'
-        }`}>
-          <div className="absolute left-3 flex items-center">
-            <Calendar size={20} className="text-gray-400" />
+        <div className="relative flex items-center group">
+          <div className="absolute left-3 flex items-center pointer-events-none">
+            <Calendar size={20} className="text-secondary group-focus-within:text-primary transition-colors" />
           </div>
-          
+
           <input
             type="text"
             value={currentValue}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder={activeTabConfig?.placeholder}
-            className="w-full pl-12 pr-12 py-3 bg-transparent text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+            className={`input-themed w-full pl-12 pr-12 py-3 text-base ${error ? 'border-danger bg-danger-subtle/20' : ''
+              }`}
             autoComplete="off"
             spellCheck={false}
           />
-          
+
           {currentValue && (
             <button
               onClick={handleClear}
-              className="absolute right-3 p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              className="absolute right-3 p-1 text-secondary hover:text-main transition-colors"
               title="Clear input"
             >
               <X size={16} />
             </button>
           )}
         </div>
-        
+
         {/* Error or Help Text */}
         <div className="min-h-[1rem] flex items-center">
           {error ? (
-            <p className="text-red-400 text-sm">{error}</p>
+            <p className="text-danger text-sm">{error}</p>
           ) : (
-            <p className="text-gray-500 text-sm">
-              {activeTab === 'natural' 
+            <p className="text-muted text-sm">
+              {activeTab === 'natural'
                 ? 'Try: now, yesterday, 3 days ago, next Monday, 2023-01-01'
                 : `Enter ${activeTabConfig?.label.toLowerCase()}`
               }

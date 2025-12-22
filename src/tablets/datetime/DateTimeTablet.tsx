@@ -29,19 +29,19 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   children
 }) => {
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden">
+    <div className="bg-surface-secondary rounded-lg overflow-hidden border border-base">
       <button
         onClick={() => onToggle(id)}
-        className="w-full bg-gray-750 px-4 py-3 border-b border-gray-600 flex items-center justify-between hover:bg-gray-700 transition-colors"
+        className="w-full bg-surface-highlight/50 px-4 py-3 border-b border-base flex items-center justify-between hover:bg-element-hover transition-colors"
       >
         <div className="text-left">
-          <h3 className="font-medium text-gray-200">{title}</h3>
-          <p className="text-sm text-gray-400 mt-1">{description}</p>
+          <h3 className="font-medium text-main">{title}</h3>
+          <p className="text-sm text-secondary mt-1">{description}</p>
         </div>
         {isExpanded ? (
-          <ChevronDown size={20} className="text-gray-400 flex-shrink-0" />
+          <ChevronDown size={20} className="text-secondary flex-shrink-0" />
         ) : (
-          <ChevronRight size={20} className="text-gray-400 flex-shrink-0" />
+          <ChevronRight size={20} className="text-secondary flex-shrink-0" />
         )}
       </button>
       {isExpanded && (
@@ -124,11 +124,11 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
   const handleAccordionToggle = useCallback((sectionId: string) => {
     const expandedSections = state.data.expandedAccordionSections || [];
     const isCurrentlyExpanded = expandedSections.includes(sectionId);
-    
+
     const newExpandedSections = isCurrentlyExpanded
       ? expandedSections.filter(id => id !== sectionId)
       : [...expandedSections, sectionId];
-    
+
     onChange({
       ...state,
       data: {
@@ -163,25 +163,25 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
   }, [onChange, state]);
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-gray-200">
+    <div className="h-full flex flex-col bg-surface text-main">
       {/* Live Header */}
       <LiveHeader />
 
       {/* Main Content: Two-Column Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Column: Input & Conversions */}
-        <div className="w-1/2 border-r border-gray-700 flex flex-col">
-          <div className="flex-shrink-0 p-6 border-b border-gray-700">
+        <div className="w-1/2 border-r border-base flex flex-col">
+          <div className="flex-shrink-0 p-6 border-b border-base">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-100 mb-2">
+              <h1 className="text-2xl font-bold text-main mb-2">
                 Date & Time Input
               </h1>
-              <p className="text-gray-400">
+              <p className="text-secondary">
                 Enter a date/time in any format using the tabs below
               </p>
             </div>
-            
-            <TabbedInput 
+
+            <TabbedInput
               parsedDate={state.data.parsedDate}
               onDateChange={handleDateChange}
             />
@@ -189,10 +189,10 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
 
           <div className="flex-1 overflow-auto p-6 custom-scrollbar">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-200 mb-2">
+              <h2 className="text-lg font-semibold text-main mb-2">
                 Conversions
               </h2>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-secondary">
                 All possible formats for your date
               </p>
             </div>
@@ -202,11 +202,11 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
 
         {/* Right Column: Tools */}
         <div className="w-1/2 flex flex-col">
-          <div className="flex-shrink-0 p-6 border-b border-gray-700">
-            <h1 className="text-2xl font-bold text-gray-100 mb-2">
+          <div className="flex-shrink-0 p-6 border-b border-base">
+            <h1 className="text-2xl font-bold text-main mb-2">
               Tools & Analysis
             </h1>
-            <p className="text-gray-400">
+            <p className="text-secondary">
               Advanced tools for working with your date
             </p>
           </div>
@@ -268,7 +268,7 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
               <HistoryPanel
                 history={state.data.history}
                 onHistoryChange={handleHistoryChange}
-                onSelectDate={(date, input) => handleSelectDate(date)}
+                onSelectDate={(date) => handleSelectDate(date)}
                 currentInput=""
                 parsedDate={state.data.parsedDate}
               />
@@ -323,7 +323,7 @@ export const DateTimeTablet: Tablet = {
       if (parsed.type === "datetime" && parsed.data) {
         // Merge with defaults to ensure all fields are present
         const data = { ...defaultState.data, ...parsed.data };
-        
+
         // Convert parsedDate string back to Date object if it exists
         if (data.parsedDate && typeof data.parsedDate === 'string') {
           try {
@@ -336,7 +336,7 @@ export const DateTimeTablet: Tablet = {
             data.parsedDate = null;
           }
         }
-        
+
         // Convert history dates back to Date objects
         if (data.history && Array.isArray(data.history)) {
           data.history = data.history.map((item: any) => ({
@@ -344,7 +344,7 @@ export const DateTimeTablet: Tablet = {
             date: item.date && typeof item.date === 'string' ? new Date(item.date) : item.date
           }));
         }
-        
+
         return { type: "datetime", data };
       }
     } catch {

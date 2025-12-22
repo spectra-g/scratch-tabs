@@ -64,18 +64,18 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <h3 className="text-sm font-medium text-gray-300">Live UI Preview</h3>
+          <h3 className="text-sm font-medium text-main">Live UI Preview</h3>
           {colors.length > 0 && (
-            <span className="text-xs px-2 py-1 bg-gray-700 text-gray-400 rounded">
+            <span className="text-xs px-2 py-1 bg-surface-highlight text-secondary rounded">
               Style {currentPresetIndex + 1}/8
             </span>
           )}
         </div>
-        <div className="text-xs text-gray-500">Drag colors to elements</div>
+        <div className="text-xs text-secondary">Drag colors to elements</div>
       </div>
 
       {/* Color Swatches */}
-      <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+      <div className="flex items-center gap-3 p-3 bg-surface-secondary/50 rounded-lg border border-base">
         <div className="flex flex-wrap gap-2 flex-1">
           {colors.map((color, index) => (
             <ColorSwatch
@@ -90,7 +90,7 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
         {colors.length > 0 && (
           <button
             onClick={cycleMappingPreset}
-            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors flex items-center space-x-1 whitespace-nowrap"
+            className="px-3 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-medium rounded transition-colors flex items-center space-x-1 whitespace-nowrap"
             title="Cycle through different color mapping styles"
           >
             <span>🔄</span>
@@ -229,26 +229,25 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
 
       {/* Color Mapping Legend with Lock Controls */}
       <div className="space-y-2">
-        <h4 className="text-xs font-medium text-gray-400">Color Assignments</h4>
+        <h4 className="text-xs font-medium text-secondary">Color Assignments</h4>
         <div className="grid grid-cols-1 gap-2 text-xs">
           {Object.entries(mapping).map(([key, value]) => (
-            <div key={key} className="flex items-center justify-between p-2 bg-gray-800/30 rounded border border-gray-700">
+            <div key={key} className="flex items-center justify-between p-2 bg-surface-secondary/30 rounded border border-base">
               <div className="flex items-center space-x-2">
                 <div
-                  className="w-4 h-4 rounded border border-gray-600"
+                  className="w-4 h-4 rounded border border-base"
                   style={{ backgroundColor: value }}
                 />
-                <span className="text-gray-300 capitalize font-medium">{key}</span>
-                <span className="text-gray-500 font-mono">{value}</span>
+                <span className="text-main capitalize font-medium">{key}</span>
+                <span className="text-secondary font-mono">{value}</span>
               </div>
 
               <button
                 onClick={() => toggleLock(key as keyof UIPreviewMapping)}
-                className={`p-1 rounded transition-colors ${
-                  lockedElements.has(key as keyof UIPreviewMapping)
-                    ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'
-                }`}
+                className={`p-1 rounded transition-colors ${lockedElements.has(key as keyof UIPreviewMapping)
+                    ? 'text-warning bg-warning-subtle hover:bg-warning-subtle/80'
+                    : 'text-secondary hover:text-main hover:bg-element-hover'
+                  }`}
                 title={
                   lockedElements.has(key as keyof UIPreviewMapping)
                     ? `Unlock ${key} (will change on remix)`
@@ -266,7 +265,7 @@ export const LiveUIPreview: React.FC<LiveUIPreviewProps> = ({
         </div>
 
         {lockedElements.size > 0 && (
-          <div className="text-xs text-yellow-400/80 bg-yellow-400/5 border border-yellow-400/20 rounded p-2">
+          <div className="text-xs text-warning bg-warning-subtle border border-warning/20 rounded p-2">
             🔒 {lockedElements.size} element{lockedElements.size > 1 ? 's' : ''} locked - will not change on remix
           </div>
         )}

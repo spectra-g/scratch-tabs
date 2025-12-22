@@ -19,7 +19,7 @@ export const ConversionInput: React.FC<ConversionInputProps> = ({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 placeholder-gray-500 font-mono text-sm resize-none custom-scrollbar"
+      className="input-themed w-full px-3 py-2 font-mono text-sm resize-none"
     />
   );
 };
