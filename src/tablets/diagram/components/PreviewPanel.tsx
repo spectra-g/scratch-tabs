@@ -15,7 +15,7 @@ interface PreviewPanelProps {
 const isErrorSvg = (svg: string): boolean => {
   const hasErrorAria = svg.includes('aria-roledescription="error"');
   const hasErrorText = svg.includes('Syntax error') || svg.includes('Parse error');
-  
+
   return hasErrorAria || hasErrorText;
 };
 
@@ -31,7 +31,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [selectedElement, setSelectedElement] = useState<ClickableElement | null>(null);
   const [inspectorPosition, setInspectorPosition] = useState({ x: 0, y: 0 });
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<HTMLDivElement>(null);
 
@@ -127,7 +127,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
     const clickedElement = onElementClick(event);
     if (clickedElement) {
       setSelectedElement(clickedElement);
-      
+
       // Position inspector near the click
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect) {
@@ -152,37 +152,37 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   }, []);
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="relative h-full bg-white overflow-hidden min-h-0"
+      className="relative h-full bg-[#fcfcfc] overflow-hidden min-h-0"
       onWheel={handleWheel}
     >
       {/* Zoom Controls */}
-      <div className="absolute top-4 left-4 z-10 flex items-center space-x-1 bg-gray-800 rounded-md shadow-lg">
+      <div className="absolute top-4 left-4 z-10 flex items-center space-x-1 bg-surface-secondary rounded-md shadow-lg border border-base">
         <button
           onClick={() => handleZoom('out')}
           disabled={zoom <= 10}
-          className="p-2 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-200"
+          className="p-2 hover:bg-element-hover disabled:opacity-50 disabled:cursor-not-allowed text-main"
           title="Zoom out"
         >
           <Minus size={16} />
         </button>
-        
-        <div className="px-3 py-2 text-sm font-mono text-gray-200 min-w-[60px] text-center">
+
+        <div className="px-3 py-2 text-sm font-mono text-main min-w-[60px] text-center">
           {zoom}%
         </div>
-        
+
         <button
           onClick={() => handleZoom('in')}
           disabled={zoom >= 500}
-          className="p-2 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-200"
+          className="p-2 hover:bg-element-hover disabled:opacity-50 disabled:cursor-not-allowed text-main"
           title="Zoom in"
         >
           <PlusCircle size={16} />
         </button>
-        
-        <div className="w-px h-6 bg-gray-600" />
-        
+
+        <div className="w-px h-6 bg-base" />
+
         <button
           onClick={() => handleZoom('reset')}
           className="p-2 hover:bg-gray-700 text-gray-200"
@@ -193,20 +193,19 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
       </div>
 
       {/* Main content area */}
-      <div 
-        className={`w-full h-full cursor-grab active:cursor-grabbing p-4 min-h-0 ${
-          (isRendering || !svgContent || isErrorSvg(svgContent || '')) 
-            ? 'flex items-center justify-center' 
-            : ''
-        }`}
+      <div
+        className={`w-full h-full cursor-grab active:cursor-grabbing p-4 min-h-0 ${(isRendering || !svgContent || isErrorSvg(svgContent || ''))
+          ? 'flex items-center justify-center'
+          : ''
+          }`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
         {isRendering ? (
-          <div className="flex flex-col items-center space-y-3 text-gray-600">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="flex flex-col items-center space-y-3 text-muted">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <span className="text-sm">Rendering diagram...</span>
           </div>
         ) : svgContent && !isErrorSvg(svgContent) ? (
@@ -221,9 +220,9 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
             dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         ) : (
-          <div className="text-center text-gray-500">
+          <div className="text-center text-muted">
             <div className="text-4xl mb-2">📊</div>
-            <p className="text-lg font-medium">No diagram to display</p>
+            <p className="text-lg font-medium text-main">No diagram to display</p>
             <p className="text-sm">Enter Mermaid code in the editor to see your diagram</p>
           </div>
         )}
@@ -232,7 +231,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
       {/* Element Inspector */}
       {selectedElement && (
         <div
-          className="absolute bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-4 max-w-sm z-20"
+          className="absolute bg-surface-raised border border-base rounded-lg shadow-xl p-4 max-w-sm z-20"
           style={{
             left: Math.min(inspectorPosition.x, (containerRef.current?.clientWidth || 400) - 300),
             top: Math.min(inspectorPosition.y, (containerRef.current?.clientHeight || 300) - 200)
@@ -240,12 +239,12 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <Info size={16} className="text-blue-400" />
-              <h3 className="text-sm font-semibold text-gray-200">Element Inspector</h3>
+              <Info size={16} className="text-info" />
+              <h3 className="text-sm font-semibold text-main">Element Inspector</h3>
             </div>
             <button
               onClick={closeInspector}
-              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-gray-200"
+              className="p-1 hover:bg-element-hover rounded text-muted hover:text-main"
             >
               <X size={14} />
             </button>
@@ -253,27 +252,27 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
           <div className="space-y-2">
             <div>
-              <span className="text-xs text-gray-400">Element:</span>
-              <span className="ml-2 text-sm font-mono text-blue-400">
+              <span className="text-xs text-muted">Element:</span>
+              <span className="ml-2 text-sm font-mono text-info">
                 &lt;{selectedElement.elementType}&gt;
               </span>
             </div>
-            
+
             <div>
-              <span className="text-xs text-gray-400">Line:</span>
-              <span className="ml-2 text-sm font-mono text-green-400">
+              <span className="text-xs text-muted">Line:</span>
+              <span className="ml-2 text-sm font-mono text-success">
                 {selectedElement.lineNumber}
               </span>
             </div>
 
             {Object.keys(selectedElement.attributes).length > 0 && (
               <div>
-                <span className="text-xs text-gray-400 block mb-1">Attributes:</span>
+                <span className="text-xs text-muted block mb-1">Attributes:</span>
                 <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
                   {Object.entries(selectedElement.attributes).map(([key, value]) => (
                     <div key={key} className="flex items-start space-x-2 text-xs">
-                      <span className="text-yellow-400 font-mono">{key}:</span>
-                      <span className="text-gray-300 font-mono break-all">{value}</span>
+                      <span className="text-warning font-mono">{key}:</span>
+                      <span className="text-secondary font-mono break-all">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -285,11 +284,11 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
       {/* Instructions overlay when no content */}
       {!svgContent && !isRendering && (
-        <div className="absolute bottom-4 left-4 right-4 bg-gray-800/90 backdrop-blur-sm rounded-lg p-4 text-center">
-          <p className="text-sm text-gray-300 mb-2">
+        <div className="absolute bottom-4 left-4 right-4 bg-surface-secondary/90 backdrop-blur-sm border border-base rounded-lg p-4 text-center">
+          <p className="text-sm text-secondary mb-2">
             <strong>Pro Tips:</strong>
           </p>
-          <div className="text-xs text-gray-400 space-y-1">
+          <div className="text-xs text-muted space-y-1">
             <p>• Click any diagram element to highlight its code</p>
             <p>• Use Ctrl+Scroll to zoom, drag to pan</p>
             <p>• Browse templates for quick starts</p>

@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  Download, 
-  Copy, 
+import {
+  Download,
+  Copy,
   Check,
-  RefreshCw, 
-  Settings, 
+  RefreshCw,
+  Settings,
   FileDown,
   Code,
   Palette,
@@ -75,11 +75,11 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
       title={title}
       className={`
         flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
-        ${variant === 'primary' 
-          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+        ${variant === 'primary'
+          ? 'bg-primary hover:bg-opacity-90 text-white'
           : variant === 'success'
-          ? 'bg-green-600 hover:bg-green-700 text-white'
-          : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+            ? 'bg-success hover:bg-opacity-90 text-white'
+            : 'bg-element hover:bg-element-hover text-main'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       `}
@@ -89,7 +89,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
   );
 
   return (
-    <div className="flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
+    <div className="flex items-center justify-between p-3 bg-surface-raised border-b border-base">
       {/* Left side - Main actions */}
       <div className="flex items-center space-x-2">
         <ToolbarButton
@@ -127,7 +127,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
 
       {/* Center - Statistics */}
       {statistics && (
-        <div className="flex items-center space-x-4 text-xs text-gray-400">
+        <div className="flex items-center space-x-4 text-xs text-muted">
           <span>{statistics.codeLines} lines</span>
           <span>{statistics.totalElements} elements</span>
           <span>{(statistics.codeSize / 1024).toFixed(1)}KB</span>
@@ -147,7 +147,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
           </ToolbarButton>
 
           {showThemeMenu && (
-            <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 min-w-[120px]">
+            <div className="absolute top-full right-0 mt-1 bg-surface border border-base rounded-md shadow-lg z-50 min-w-[120px]">
               {THEMES.map(({ value, label }) => (
                 <button
                   key={value}
@@ -156,8 +156,8 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
                     setShowThemeMenu(false);
                   }}
                   className={`
-                    w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors
-                    ${theme === value ? 'bg-gray-700 text-blue-400' : 'text-gray-200'}
+                    w-full text-left px-3 py-2 text-sm hover:bg-element-hover transition-colors
+                    ${theme === value ? 'bg-element-active text-info' : 'text-main'}
                   `}
                 >
                   {label}
@@ -188,13 +188,13 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
           </ToolbarButton>
 
           {showExportMenu && (
-            <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 min-w-[140px]">
+            <div className="absolute top-full right-0 mt-1 bg-surface border border-base rounded-md shadow-lg z-50 min-w-[140px]">
               <button
                 onClick={() => {
                   onExportSvg();
                   setShowExportMenu(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors text-gray-200 flex items-center space-x-2"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-element-hover transition-colors text-main flex items-center space-x-2"
               >
                 <FileDown size={14} />
                 <span>Export as SVG</span>
@@ -204,18 +204,18 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
                   onExportPng();
                   setShowExportMenu(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors text-gray-200 flex items-center space-x-2"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-element-hover transition-colors text-main flex items-center space-x-2"
               >
                 <FileDown size={14} />
                 <span>Export as PNG</span>
               </button>
-              <div className="border-t border-gray-700 my-1"></div>
+              <div className="border-t border-base my-1"></div>
               <button
                 onClick={() => {
                   onCopyOptimized();
                   setShowExportMenu(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors text-gray-200 flex items-center space-x-2"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-element-hover transition-colors text-main flex items-center space-x-2"
               >
                 <Code size={14} />
                 <span>Copy Optimized</span>
@@ -227,14 +227,14 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
 
       {/* Click outside handlers */}
       {showExportMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setShowExportMenu(false)}
         />
       )}
       {showThemeMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setShowThemeMenu(false)}
         />
       )}
