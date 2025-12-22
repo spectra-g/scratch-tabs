@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Code, CheckCircle, XCircle, Copy } from '../../../components/Icons';
+import { Code, CheckCircle, XCircle, Copy, Check } from '../../../components/Icons';
 import { ParseResult } from '../types';
 import { simulateCrossPlatformParsing, isValidDateValue, ensureDate } from '../utils/dateUtils';
 
@@ -42,7 +42,18 @@ export const ParseInspector: React.FC<ParseInspectorProps> = ({
       setCopiedCode(language);
       setTimeout(() => setCopiedCode(null), 2000);
     } catch {
-      // Silently handle copy failures
+      const textArea = document.createElement("textarea");
+      textArea.value = code;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopiedCode(language);
+        setTimeout(() => setCopiedCode(null), 2000);
+      } catch (err) {
+        console.error('Copy failed', err);
+      }
+      document.body.removeChild(textArea);
     }
   };
 
@@ -102,7 +113,7 @@ export const ParseInspector: React.FC<ParseInspectorProps> = ({
                 title="Copy code"
               >
                 {copiedCode === result.language ? (
-                  <CheckCircle size={14} className="text-success" />
+                  <Check size={14} className="text-success" />
                 ) : (
                   <Copy size={14} />
                 )}

@@ -79,8 +79,10 @@ describe('ColourPaletteTablet', () => {
         />
       );
 
-      expect(screen.getByText('Colour Palette')).toBeInTheDocument();
-      
+      // The main component doesn't have "Colour Palette" in the header
+      // It's in the description text instead
+      expect(screen.getByText(/Extract, create, and test colour palettes/i)).toBeInTheDocument();
+
       // Should initialize with default colors
       await waitFor(() => {
         expect(mockOnChange).toHaveBeenCalledWith(
@@ -523,7 +525,7 @@ describe('ColourPaletteTablet', () => {
       );
 
       // Should render normally with image generation method
-      expect(screen.getByText('Colour Palette')).toBeInTheDocument();
+      expect(screen.getByText(/Extract, create, and test colour palettes/i)).toBeInTheDocument();
     });
   });
 
