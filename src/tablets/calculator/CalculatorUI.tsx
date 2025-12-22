@@ -46,16 +46,16 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({
   return (
     <div
       ref={calculatorRef}
-      className="flex flex-col md:flex-row h-full bg-gray-900 text-gray-200"
+      className="flex flex-col md:flex-row h-full bg-canvas text-main"
       tabIndex={-1}
       style={{ outline: "none" }}
       data-calculator-id={tabletId}
     >
-      <div className="w-full md:w-8/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-gray-700/50 overflow-y-auto custom-scrollbar">
+      <div className="w-full md:w-8/12 p-4 flex flex-col border-b md:border-b-0 md:border-r border-base overflow-y-auto custom-scrollbar bg-surface-secondary">
         <div className="flex items-center justify-between mb-4 px-2 flex-shrink-0">
           <div className="flex items-center space-x-2">
-            <Calculator className="text-gray-400" size={20} />
-            <h2 className="text-lg font-semibold text-gray-100">Calculator</h2>
+            <Calculator className="text-secondary" size={20} />
+            <h2 className="text-lg font-semibold text-main">Calculator</h2>
           </div>
           <ModeSelector engine={engine} currentMode={data.mode} />
         </div>
@@ -69,7 +69,7 @@ export const CalculatorUI: React.FC<CalculatorUIProps> = ({
         </div>
 
         {/* New dedicated space for the detailed humanized text */}
-        <div className="h-12 flex items-center justify-center text-center p-2 mb-4 text-gray-400 text-sm italic flex-shrink-0">
+        <div className="h-12 flex items-center justify-center text-center p-2 mb-4 text-secondary text-sm italic flex-shrink-0">
           <span>{hybridHumanized}</span>
         </div>
 

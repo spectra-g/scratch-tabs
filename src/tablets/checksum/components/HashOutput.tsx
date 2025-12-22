@@ -29,7 +29,7 @@ export const HashOutput: React.FC<HashOutputProps> = ({
 
   const getComparisonIcon = (hash: string) => {
     if (!state.expectedChecksum.trim()) return null;
-    
+
     const matches = compareHashes(hash, state.expectedChecksum);
     return matches ? (
       <CheckCircle size={16} className="text-green-400" />
@@ -39,24 +39,24 @@ export const HashOutput: React.FC<HashOutputProps> = ({
   };
 
   const getComparisonBorder = (hash: string) => {
-    if (!state.expectedChecksum.trim()) return 'border-gray-700';
-    
+    if (!state.expectedChecksum.trim()) return 'border-base';
+
     const matches = compareHashes(hash, state.expectedChecksum);
     return matches ? 'border-green-500/50' : 'border-red-500/50';
   };
 
   const hasAnyHashes = Object.values(state.calculatedHashes).some(hash => hash && hash.length > 0);
-  const visibleAlgorithms = showAllHashes 
-    ? state.selectedAlgorithms 
+  const visibleAlgorithms = showAllHashes
+    ? state.selectedAlgorithms
     : state.selectedAlgorithms.filter(alg => state.calculatedHashes[alg]);
 
   return (
     <div className="space-y-6">
       {/* Expected Checksum Input */}
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-300">
+        <label className="block text-sm font-medium text-secondary">
           Expected Checksum (Optional)
-          <span className="text-xs text-gray-500 ml-2">Paste a checksum to verify</span>
+          <span className="text-xs text-muted ml-2">Paste a checksum to verify</span>
         </label>
         <div className="relative">
           <input
@@ -64,7 +64,7 @@ export const HashOutput: React.FC<HashOutputProps> = ({
             value={state.expectedChecksum}
             onChange={(e) => onExpectedChecksumChange(e.target.value)}
             placeholder="Paste expected checksum here for comparison..."
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-surface text-main border border-base rounded-md placeholder-muted focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent"
           />
           {state.expectedChecksum && (
             <button
@@ -84,18 +84,18 @@ export const HashOutput: React.FC<HashOutputProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <h3 className="text-lg font-semibold text-gray-200">Calculated Hashes</h3>
+              <h3 className="text-lg font-semibold text-main">Calculated Hashes</h3>
               {/* Source Indicator */}
-              <div className="flex items-center space-x-1 px-2 py-1 bg-gray-700/50 rounded-md">
+              <div className="flex items-center space-x-1 px-2 py-1 bg-surface-raised rounded-md border border-base">
                 {state.fileInfo ? (
                   <>
-                    <File size={14} className="text-blue-400" />
-                    <span className="text-xs text-gray-300">{state.fileInfo.name}</span>
+                    <File size={14} className="text-info" />
+                    <span className="text-xs text-secondary">{state.fileInfo.name}</span>
                   </>
                 ) : (
                   <>
-                    <Type size={14} className="text-green-400" />
-                    <span className="text-xs text-gray-300">Text Input</span>
+                    <Type size={14} className="text-success" />
+                    <span className="text-xs text-secondary">Text Input</span>
                   </>
                 )}
               </div>
@@ -121,17 +121,17 @@ export const HashOutput: React.FC<HashOutputProps> = ({
               const hash = state.calculatedHashes[algorithm];
               const isEmpty = !hash || hash.length === 0;
               const isError = hash && hash.startsWith('Error:');
-              
+
               return (
                 <div
                   key={algorithm}
-                  className={`bg-gray-800 border rounded-lg p-4 transition-colors ${getComparisonBorder(hash)}`}
+                  className={`bg-surface border rounded-lg p-4 transition-colors ${getComparisonBorder(hash)}`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium text-gray-200">{algorithm}</span>
+                      <span className="font-medium text-main">{algorithm}</span>
                       {algorithm === 'MD5' && (
-                        <span className="text-xs bg-amber-900/20 text-amber-400 border border-amber-700/50 px-2 py-0.5 rounded-md font-medium">
+                        <span className="text-xs bg-warning-subtle text-warning border border-warning/50 px-2 py-0.5 rounded-md font-medium">
                           ⚠️ Legacy Only
                         </span>
                       )}
@@ -140,11 +140,10 @@ export const HashOutput: React.FC<HashOutputProps> = ({
                     {hash && !isEmpty && !isError && (
                       <button
                         onClick={() => handleCopyHash(algorithm, hash)}
-                        className={`flex items-center space-x-1 px-2 py-1 text-xs rounded transition-colors ${
-                          copiedHash === algorithm 
-                            ? 'bg-green-700/20 border border-green-600 text-green-400' 
-                            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                        }`}
+                        className={`flex items-center space-x-1 px-2 py-1 text-xs rounded transition-colors ${copiedHash === algorithm
+                            ? 'bg-success-subtle border border-success text-success'
+                            : 'bg-element hover:bg-element-hover text-secondary'
+                          }`}
                       >
                         {copiedHash === algorithm ? (
                           <CheckCircle size={12} className="text-green-400" />
@@ -155,16 +154,16 @@ export const HashOutput: React.FC<HashOutputProps> = ({
                       </button>
                     )}
                   </div>
-                  
+
                   <div className="font-mono text-sm break-all">
                     {isEmpty ? (
-                      <span className="text-gray-500 italic">
+                      <span className="text-muted italic">
                         {state.isProcessing ? 'Calculating...' : 'Not calculated'}
                       </span>
                     ) : isError ? (
-                      <span className="text-red-400">{hash}</span>
+                      <span className="text-danger">{hash}</span>
                     ) : (
-                      <span className="text-gray-300">{hash}</span>
+                      <span className="text-main">{hash}</span>
                     )}
                   </div>
                 </div>
@@ -174,14 +173,14 @@ export const HashOutput: React.FC<HashOutputProps> = ({
 
           {/* Security Warning for MD5 */}
           {state.selectedAlgorithms.includes('MD5') && state.calculatedHashes['MD5'] && !state.calculatedHashes['MD5'].startsWith('Error:') && (
-            <div className="bg-amber-900/10 border border-amber-700/30 rounded-lg p-4">
+            <div className="bg-warning-subtle border border-warning/30 rounded-lg p-4">
               <div className="flex items-start space-x-2">
-                <span className="text-amber-400 font-semibold">⚠️</span>
+                <span className="text-warning font-semibold">⚠️</span>
                 <div>
-                  <h4 className="font-medium text-amber-300 mb-1">Security Notice</h4>
-                  <p className="text-sm text-amber-200/80">
-                    MD5 is cryptographically broken and should not be used for security purposes. 
-                    It's provided only for legacy compatibility with existing checksums. 
+                  <h4 className="font-medium text-warning mb-1">Security Notice</h4>
+                  <p className="text-sm text-warning/80">
+                    MD5 is cryptographically broken and should not be used for security purposes.
+                    It's provided only for legacy compatibility with existing checksums.
                     For new applications, use SHA-256 or higher.
                   </p>
                 </div>
@@ -191,15 +190,15 @@ export const HashOutput: React.FC<HashOutputProps> = ({
 
           {/* Comparison Summary */}
           {state.expectedChecksum.trim() && hasAnyHashes && (
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-              <h4 className="font-medium text-gray-200 mb-3">Verification Results</h4>
+            <div className="bg-surface-secondary border border-base rounded-lg p-4">
+              <h4 className="font-medium text-main mb-3">Verification Results</h4>
               <div className="space-y-2">
                 {state.selectedAlgorithms
                   .filter(alg => state.calculatedHashes[alg] && !state.calculatedHashes[alg].startsWith('Error:'))
                   .map((algorithm) => {
                     const hash = state.calculatedHashes[algorithm];
                     const matches = compareHashes(hash, state.expectedChecksum);
-                    
+
                     return (
                       <div key={algorithm} className="flex items-center justify-between">
                         <span className="text-sm text-gray-300">{algorithm}</span>

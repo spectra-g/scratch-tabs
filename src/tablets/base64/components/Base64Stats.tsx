@@ -22,37 +22,37 @@ export const Base64Stats: React.FC<Base64StatsProps> = ({ stats, mode }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-2 text-xs"
+      className="bg-surface-secondary border border-base rounded-lg p-2 text-xs"
     >
-      <div className="flex items-center space-x-1 mb-1.5 text-gray-400">
+      <div className="flex items-center space-x-1 mb-1.5 text-secondary">
         <BarChart size={14} />
         <span>Base64 Statistics</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-gray-700/30 rounded p-1.5">
-          <div className="text-gray-500 mb-0.5">Original Size</div>
-          <div className="text-gray-200 font-medium">
+        <div className="bg-element rounded p-1.5">
+          <div className="text-muted mb-0.5">Original Size</div>
+          <div className="text-main font-medium">
             {formatFileSize(stats.originalSize)}
           </div>
         </div>
-        <div className="bg-gray-700/30 rounded p-1.5">
-          <div className="text-gray-500 mb-0.5">
+        <div className="bg-element rounded p-1.5">
+          <div className="text-muted mb-0.5">
             {isEncoding ? "Encoded" : "Decoded"} Size
           </div>
-          <div className="text-gray-200 font-medium">
+          <div className="text-main font-medium">
             {formatFileSize(stats.encodedSize)}
           </div>
         </div>
-        <div className="bg-gray-700/30 rounded p-1.5">
-          <div className="text-gray-500 mb-0.5">Size Ratio</div>
-          <div className="text-gray-200 font-medium">
+        <div className="bg-element rounded p-1.5">
+          <div className="text-muted mb-0.5">Size Ratio</div>
+          <div className="text-main font-medium">
             {stats.ratio.toFixed(2)}x
           </div>
         </div>
-        <div className="bg-gray-700/30 rounded p-1.5">
-          <div className="text-gray-500 mb-0.5">Size Change</div>
+        <div className="bg-element rounded p-1.5">
+          <div className="text-muted mb-0.5">Size Change</div>
           <div
-            className={`font-medium flex items-center ${isIncrease ? "text-yellow-400" : "text-green-400"}`}
+            className={`font-medium flex items-center ${isIncrease ? "text-warning" : "text-success"}`}
           >
             {isIncrease ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
             <span>{changePercentage}%</span>

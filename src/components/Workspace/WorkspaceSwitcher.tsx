@@ -190,7 +190,7 @@ export const WorkspaceSwitcher: React.FC = () => {
               {workspaces.map((workspace) => (
                 <div
                   key={workspace.id}
-                  className={`group relative flex items-center justify-between px-3 py-2 bg-element-hover transition-colors cursor-pointer ${workspace.id === activeWorkspaceId ? "bg-surface-highlight" : ""
+                  className={`group relative flex items-center justify-between px-3 py-2 hover:bg-element-hover transition-colors cursor-pointer ${workspace.id === activeWorkspaceId ? "bg-element-active" : ""
                     }`}
                   onClick={() => handleSwitchWorkspace(workspace.id)}
                 >
@@ -355,7 +355,7 @@ export const WorkspaceSwitcher: React.FC = () => {
               );
               setShowContextMenu(null);
             }}
-            className="w-full text-left px-3 py-1.5 text-sm text-main bg-element-hover flex items-center space-x-2"
+            className="w-full text-left px-3 py-1.5 text-sm text-main hover:bg-element-hover flex items-center space-x-2"
           >
             <Pencil size={14} />
             <span>Rename</span>
@@ -365,7 +365,7 @@ export const WorkspaceSwitcher: React.FC = () => {
               e.stopPropagation();
               handleDeleteWorkspace(showContextMenu.id);
             }}
-            className="w-full text-left px-3 py-1.5 text-sm text-danger bg-element-hover flex items-center space-x-2"
+            className="w-full text-left px-3 py-1.5 text-sm text-danger hover:bg-element-hover flex items-center space-x-2"
           >
             <Trash2 size={14} />
             <span>Delete</span>

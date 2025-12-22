@@ -30,37 +30,37 @@ describe("CalculatorButton", () => {
   it("should apply default variant styles", () => {
     render(<CalculatorButton value="5" onClick={mockOnClick} />);
     const button = screen.getByText("5");
-    expect(button).toHaveClass("bg-gray-700/50");
+    expect(button).toHaveClass("bg-element");
   });
 
   it("should apply operator variant styles", () => {
     render(<CalculatorButton value="+" onClick={mockOnClick} variant="operator" />);
     const button = screen.getByText("+");
-    expect(button).toHaveClass("bg-blue-500/20");
+    expect(button).toHaveClass("bg-primary/20");
   });
 
   it("should apply action variant styles", () => {
     render(<CalculatorButton value="AC" onClick={mockOnClick} variant="action" />);
     const button = screen.getByText("AC");
-    expect(button).toHaveClass("bg-gray-600/60");
+    expect(button).toHaveClass("bg-surface-raised");
   });
 
   it("should apply equals variant styles", () => {
     render(<CalculatorButton value="=" onClick={mockOnClick} variant="equals" />);
     const button = screen.getByText("=");
-    expect(button).toHaveClass("bg-green-500/30");
+    expect(button).toHaveClass("bg-success/20");
   });
 
   it("should apply mode variant styles when active", () => {
     render(<CalculatorButton value="STD" onClick={mockOnClick} variant="mode" isActive={true} />);
     const button = screen.getByText("STD");
-    expect(button).toHaveClass("bg-blue-500/20");
+    expect(button).toHaveClass("bg-primary/20");
   });
 
   it("should apply mode variant styles when inactive", () => {
     render(<CalculatorButton value="STD" onClick={mockOnClick} variant="mode" isActive={false} />);
     const button = screen.getByText("STD");
-    expect(button).toHaveClass("bg-gray-800/50");
+    expect(button).toHaveClass("bg-element");
   });
 
   it("should apply custom className", () => {

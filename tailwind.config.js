@@ -17,12 +17,14 @@ export default {
           highlight: 'rgb(var(--color-surface-highlight) / <alpha-value>)',
           raised: 'rgb(var(--color-surface-raised) / <alpha-value>)',
           glass: 'rgb(var(--color-surface-glass) / <alpha-value>)',
+          'tab-bar': 'rgb(var(--color-surface-tab-bar) / <alpha-value>)',
         },
         element: {
           DEFAULT: 'rgb(var(--color-element) / <alpha-value>)',
 
           hover: 'rgb(var(--color-element-hover) / <alpha-value>)',
           active: 'rgb(var(--color-element-active) / <alpha-value>)',
+          'tab-active': 'rgb(var(--color-element-tab-active) / <alpha-value>)',
         },
 
         // 2. TEXT COLORS

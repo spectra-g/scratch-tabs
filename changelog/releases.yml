@@ -25,6 +25,23 @@ releases:
   - version: "1.12.0"
     type: "release"
     draft: false
+    date: "2025-12-05"
+    headline: "🗂️ Command Vault Complete Rework"
+    description: "Complete redesign of Command Vault focused on command management with categories, search, scratchpad for temporary edits, and improved workflow"
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Command Vault Redesign:** Complete rework with category-based organization, making it easier to manage and find your command snippets"
+          - "**Command Search (Ctrl+R):** Quick search across all commands with instant filtering and copy-on-select"
+          - "**Scratchpad:** Temporary editing space for modifying commands before copying or saving as new entries"
+          - "**Category Management:** Create, organize, and delete categories to keep your commands structured"
+          - "**Inline Command Editing:** Click any command to edit in place with auto-save on blur"
+          - "**Drag-and-Drop Reordering:** Rearrange commands within categories to prioritize frequently used items"
+          - "**Import/Export:** Bulk import commands from you terminal history with automatic category assignment"
+
+  - version: "1.12.0"
+    type: "release"
+    draft: false
     date: "2025-12-03"
     headline: "🌓 Light/Dark Mode & Editor Enhancements"
     description: "Major theme system update with Light/Dark mode toggle for editor and smart views, plus critical bug fixes and rich text improvements"

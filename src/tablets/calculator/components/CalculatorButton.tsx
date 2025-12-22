@@ -22,14 +22,14 @@ export const CalculatorButton: React.FC<CalculatorButtonProps> = ({
 
   const variantMap = {
     operator:
-      "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/50 focus:ring-blue-500",
+      "bg-primary/20 hover:bg-primary/30 text-info border-info/50 focus:ring-focus",
     action:
-      "bg-gray-600/60 hover:bg-gray-500/60 text-gray-200 border-gray-600/50 focus:ring-gray-400",
+      "bg-surface-raised hover:bg-element-hover text-main border-base focus:ring-focus",
     equals:
-      "bg-green-500/30 hover:bg-green-500/40 text-green-300 border-green-500/50 focus:ring-green-500",
-    mode: `border-gray-600/50 ${isActive ? "bg-blue-500/20 text-blue-300" : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"}`,
+      "bg-success/20 hover:bg-success/30 text-success border-success/50 focus:ring-success",
+    mode: `border-base ${isActive ? "bg-primary/20 text-info" : "bg-element text-muted hover:bg-element-hover hover:text-main"}`,
     default:
-      "bg-gray-700/50 hover:bg-gray-600/50 text-gray-100 border-gray-600/50 focus:ring-gray-500",
+      "bg-element hover:bg-element-hover text-main border-base focus:ring-gray-500",
   };
 
   return (
