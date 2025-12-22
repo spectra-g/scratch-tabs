@@ -7,20 +7,20 @@ releases:
     type: "latest"
     draft: true
     date: "2025-12-22"
-    headline: "⌚ Date/Time \"Command Center\" Overhaul"
-    description: "Major transformation of the Date/Time tablet into a high-performance productivity tool with natural language arithmetic, multi-zone comparison, and developer-centric dashboarding."
+    headline: "⌚ Date/Time \"Command Center\" & Smart Inputs"
+    description: "Major transformation of the Date/Time tablet into a high-performance productivity tool with command-line inputs, natural language arithmetic, and multi-zone comparison."
     categories:
       - name: "✨ New Features"
         changes:
+          - "**Smart Command Inputs:** Control the tablet via the input field using `> [City]` to add timezones (e.g., `> Tokyo`), `> diff [date]` for duration analysis, or `> next friday` to jump dates."
           - "**\"Command Center\" Layout:** Complete redesign into a multi-column interface optimized for developer workflows, featuring persistent history, grouped conversions, and real-time dashboarding."
-          - "**Natural Language Date Arithmetic:** Intelligent parsing engine supporting human-friendly math (e.g., `now + 5d`, `yesterday - 2w`) and cross-platform simulation (JS, Python, Java)."
-          - "**Timezone Explorer:** Compare your entered date/time across multiple configurable timezones with live DST indicators."
-          - "**Set to Input:** Push live UTC or Epoch values directly into the omni-input with a single click for rapid capture and conversion."
+          - "**Natural Language Date Arithmetic:** Intelligent parsing engine supporting human-friendly math (e.g., `now + 5d`, `yesterday - 2w`)."
+          - "**Timezone Explorer:** Compare your entered date/time across multiple configurable timezones with live DST indicators and smart city matching (e.g. \"NYC\", \"London\")."
       - name: "🔧 Improvements"
         changes:
           - "**Standardized Copy Feedback:** Implementation of the \"Green Tick\" pattern with robust fallback mechanisms for different clipboard environments."
           - "**Controlled State Management:** Fully refactored input architecture for seamless synchronization between historical selection, live updates, and manual editing."
-          - "**Codebase Optimization:** Removed obsolete components and achieved 100% unit test pass rate across the entire Date/Time module."
+          - "**Codebase Optimization:** Removed obsolete components and achieved 100% unit test pass rate."
 
   - version: "1.12.0"
     type: "release"
