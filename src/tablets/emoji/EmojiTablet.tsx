@@ -7,14 +7,9 @@ import {
   X,
   Star,
   Clock,
-  Grid3X3,
   Palette,
-  Code,
-  Download,
-  Heart,
   Trash2,
   Eye,
-  Info,
 } from "lucide-react";
 import { Tablet, TabletState } from "../types";
 import { emojiData, categories, skinTones, CompactEmoji } from "./emojiData";
@@ -45,10 +40,7 @@ interface EmojiTabletState extends TabletState {
   };
 }
 
-interface EmojiFormatResult {
-  format: string;
-  result: string;
-}
+
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -157,22 +149,22 @@ const generateId = (): string => {
 
 const generateSequenceLabel = (sequence: string): string => {
   if (!sequence) return "Empty";
-  
+
   // If single emoji, find its name
   if (sequence.length <= 2) { // Account for multi-byte emojis
     const emoji = emojiData.find(e => e.c === sequence);
     return emoji ? emoji.n : sequence;
   }
-  
+
   // For sequences, create a descriptive label
   const firstEmoji = emojiData.find(e => e.c === sequence[0]);
   const emojiCount = [...sequence].length;
-  
+
   if (emojiCount === 2) {
     const secondEmoji = emojiData.find(e => e.c === sequence[sequence.length - 1]);
     return `${firstEmoji?.n || sequence[0]} + ${secondEmoji?.n || sequence[sequence.length - 1]}`;
   }
-  
+
   return `${firstEmoji?.n || sequence[0]} + ${emojiCount - 1} more`;
 };
 
@@ -198,19 +190,19 @@ const SearchBar: React.FC<{
       <div className="relative">
         <Search
           size={16}
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
         />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search emojis by name, shortcode, or keywords..."
-          className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+          className="w-full bg-surface-secondary border border-base rounded-md pl-10 pr-3 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-focus"
         />
         {searchQuery && (
           <button
             onClick={() => onSearchChange("")}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted hover:text-main"
           >
             <X size={14} />
           </button>
@@ -222,11 +214,10 @@ const SearchBar: React.FC<{
           <button
             key={category}
             onClick={() => onCategoryChange(category)}
-            className={`px-3 py-1 text-xs rounded-md transition-colors ${
-              selectedCategory === category
-                ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                : "bg-gray-800/50 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 border border-transparent"
-            }`}
+            className={`px-3 py-1 text-xs rounded-md transition-colors ${selectedCategory === category
+              ? "bg-primary-subtle text-primary border border-primary/50"
+              : "bg-surface-secondary text-secondary hover:text-main hover:bg-element-hover border border-transparent"
+              }`}
           >
             {category}
           </button>
@@ -267,198 +258,197 @@ const SequenceBuilder: React.FC<{
   showFormatPopover,
   onToggleFormatPopover,
 }) => {
-  const popoverRef = useRef<HTMLDivElement>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
 
-  const formatOptions = [
-    { key: "char" as const, label: "Literal", desc: "Raw emoji characters" },
-    { key: "shortcode" as const, label: "Shortcode", desc: ":emoji_name:" },
-    { key: "html" as const, label: "HTML Entity", desc: "&#128640;" },
-    { key: "css" as const, label: "CSS Content", desc: "\\1F680" },
-    { key: "js" as const, label: "JS Escape", desc: "\\u{1F680}" },
-    { key: "datauri" as const, label: "Data URI (PNG)", desc: "data:image/png;base64..." },
-  ];
+    const formatOptions = [
+      { key: "char" as const, label: "Literal", desc: "Raw emoji characters" },
+      { key: "shortcode" as const, label: "Shortcode", desc: ":emoji_name:" },
+      { key: "html" as const, label: "HTML Entity", desc: "&#128640;" },
+      { key: "css" as const, label: "CSS Content", desc: "\\1F680" },
+      { key: "js" as const, label: "JS Escape", desc: "\\u{1F680}" },
+      { key: "datauri" as const, label: "Data URI (PNG)", desc: "data:image/png;base64..." },
+    ];
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-        onToggleFormatPopover();
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+          onToggleFormatPopover();
+        }
+      };
+
+      if (showFormatPopover) {
+        document.addEventListener("mousedown", handleClickOutside);
       }
-    };
 
-    if (showFormatPopover) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [showFormatPopover, onToggleFormatPopover]);
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showFormatPopover, onToggleFormatPopover]);
-
-  return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-300">Sequence Builder</h3>
-        <div className="flex items-center space-x-2">
-          <label className="flex items-center space-x-2 text-xs text-gray-400">
-            <input
-              type="checkbox"
-              checked={sequenceMode}
-              onChange={onToggleSequenceMode}
-              className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900"
-            />
-            <span>Sequence Mode</span>
-          </label>
-          <span className="text-xs text-gray-400">
-            Format: {formatOptions.find((f) => f.key === selectedFormat)?.label}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex items-center space-x-2 mb-3">
-        <div className="flex-1 bg-gray-900/50 border border-gray-600/50 rounded-md p-3 min-h-[2.5rem] font-mono text-sm text-gray-200 break-all">
-          {sequence || (
-            <span className="text-gray-500 italic">
-              {sequenceMode ? "Click emojis to build a sequence..." : "Click an emoji to select it..."}
+    return (
+      <div className="bg-surface border border-base rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-secondary">Sequence Builder</h3>
+          <div className="flex items-center space-x-2">
+            <label className="flex items-center space-x-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={sequenceMode}
+                onChange={onToggleSequenceMode}
+                className="rounded border-base bg-element text-primary focus:ring-primary focus:ring-offset-surface"
+              />
+              <span>Sequence Mode</span>
+            </label>
+            <span className="text-xs text-muted">
+              Format: {formatOptions.find((f) => f.key === selectedFormat)?.label}
             </span>
-          )}
+          </div>
         </div>
-        <button
-          onClick={onClear}
-          disabled={!sequence}
-          className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Clear sequence"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
 
-      <div className="flex items-center space-x-2">
-        <div className="relative">
-          <div className="flex">
-            <button
-              onClick={onCopy}
-              disabled={!sequence}
-              className="px-4 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-l-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              <Copy size={16} />
-              <span>Copy</span>
-            </button>
-            <button
-              onClick={onToggleFormatPopover}
-              className="px-2 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-r-md border-l border-blue-500/30 transition-colors"
-            >
-              <ChevronDown size={16} />
-            </button>
+        <div className="flex items-center space-x-2 mb-3">
+          <div className="flex-1 bg-surface-raised border border-base rounded-md p-3 min-h-[2.5rem] font-mono text-sm text-main break-all">
+            {sequence || (
+              <span className="text-muted italic">
+                {sequenceMode ? "Click emojis to build a sequence..." : "Click an emoji to select it..."}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={onClear}
+            disabled={!sequence}
+            className="p-2 text-muted hover:text-danger hover:bg-element-hover rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Clear sequence"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <div className="flex">
+              <button
+                onClick={onCopy}
+                disabled={!sequence}
+                className="px-4 py-2 bg-primary-subtle text-primary hover:bg-primary-subtle/80 rounded-l-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <Copy size={16} />
+                <span>Copy</span>
+              </button>
+              <button
+                onClick={onToggleFormatPopover}
+                className="px-2 py-2 bg-primary-subtle text-primary hover:bg-primary-subtle/80 rounded-r-md border-l border-primary/30 transition-colors"
+              >
+                <ChevronDown size={16} />
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {showFormatPopover && (
+                <motion.div
+                  ref={popoverRef}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 mt-2 bg-surface-raised border border-base rounded-lg shadow-xl z-20 min-w-[280px]"
+                >
+                  <div className="p-2">
+                    {formatOptions.map((option) => (
+                      <button
+                        key={option.key}
+                        onClick={() => {
+                          onFormatSelect(option.key);
+                          onToggleFormatPopover();
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-md transition-colors ${selectedFormat === option.key
+                          ? "bg-primary-subtle text-primary"
+                          : "text-secondary hover:bg-element-hover"
+                          }`}
+                      >
+                        <div className="font-medium">{option.label}</div>
+                        <div className="text-xs text-muted">{option.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <AnimatePresence>
-            {showFormatPopover && (
-            <motion.div
-              ref={popoverRef}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 min-w-[280px]"
-            >
-              <div className="p-2">
-                {formatOptions.map((option) => (
-                  <button
-                    key={option.key}
-                    onClick={() => {
-                      onFormatSelect(option.key);
-                      onToggleFormatPopover();
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                      selectedFormat === option.key
-                        ? "bg-blue-500/20 text-blue-400"
-                        : "text-gray-300 hover:bg-gray-700/50"
-                    }`}
-                  >
-                    <div className="font-medium">{option.label}</div>
-                    <div className="text-xs text-gray-400">{option.desc}</div>
-                  </button>
-                ))}
-              </div>
-              </motion.div>
+          {/* Add to Favourites Button */}
+          <button
+            onClick={onAddToFavorites}
+            disabled={!sequence}
+            className="px-4 py-2 bg-warning-subtle text-warning hover:bg-warning-subtle/80 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            title="Add current sequence to favorites"
+          >
+            <Star size={16} />
+            <span>Add to Favorites</span>
+          </button>
+
+          {/* Character count and Quick Access items */}
+          <div className="flex items-center space-x-4 text-xs text-muted">
+            {sequence && (
+              <span>
+                {sequence.length} character{sequence.length !== 1 ? "s" : ""}
+              </span>
             )}
-          </AnimatePresence>
-        </div>
 
-        {/* Add to Favourites Button */}
-        <button
-          onClick={onAddToFavorites}
-          disabled={!sequence}
-          className="px-4 py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-          title="Add current sequence to favorites"
-        >
-          <Star size={16} />
-          <span>Add to Favorites</span>
-        </button>
-
-        {/* Character count and Quick Access items */}
-        <div className="flex items-center space-x-4 text-xs text-gray-400">
-          {sequence && (
-            <span>
-              {sequence.length} character{sequence.length !== 1 ? "s" : ""}
-            </span>
-          )}
-          
-          {/* Recent Favorites inline */}
-          {((favorites || []).slice(-5).reverse()).length > 0 && (
-            <div className="flex items-center space-x-1">
-              <Star size={10} className="text-yellow-400" />
-              <span>Recent Favourites:</span>
-              <div className="flex space-x-1">
-                {(favorites || []).slice(-5).reverse().map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={async () => {
-                      const formatted = formatEmoji(item.sequence, selectedFormat);
-                      const success = await copyToClipboard(formatted);
-                      if (success) {
-                        onQuickSelect(item.sequence);
-                      }
-                    }}
-                    className="hover:bg-yellow-500/20 rounded px-1 transition-colors"
-                    title={`${item.label} - Click to copy and update sequence`}
-                  >
-                    <span>{item.sequence}</span>
-                  </button>
-                ))}
+            {/* Recent Favorites inline */}
+            {((favorites || []).slice(-5).reverse()).length > 0 && (
+              <div className="flex items-center space-x-1">
+                <Star size={10} className="text-warning" />
+                <span>Recent Favourites:</span>
+                <div className="flex space-x-1">
+                  {(favorites || []).slice(-5).reverse().map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={async () => {
+                        const formatted = formatEmoji(item.sequence, selectedFormat);
+                        const success = await copyToClipboard(formatted);
+                        if (success) {
+                          onQuickSelect(item.sequence);
+                        }
+                      }}
+                      className="hover:bg-warning-subtle rounded px-1 transition-colors"
+                      title={`${item.label} - Click to copy and update sequence`}
+                    >
+                      <span>{item.sequence}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Recent Items inline */}
-          {((recents || []).slice(0, 5)).length > 0 && (
-            <div className="flex items-center space-x-1">
-              <Clock size={10} className="text-blue-400" />
-              <span>Recent:</span>
-              <div className="flex space-x-1">
-                {(recents || []).slice(0, 5).map((item, index) => (
-                  <button
-                    key={`${item.sequence}-${item.timestamp}-${index}`}
-                    onClick={async () => {
-                      const formatted = formatEmoji(item.sequence, selectedFormat);
-                      const success = await copyToClipboard(formatted);
-                      if (success) {
-                        onQuickSelect(item.sequence);
-                      }
-                    }}
-                    className="hover:bg-blue-500/20 rounded px-1 transition-colors"
-                    title={`${generateSequenceLabel(item.sequence)} - Click to copy and update sequence`}
-                  >
-                    <span>{item.sequence}</span>
-                  </button>
-                ))}
+            {/* Recent Items inline */}
+            {((recents || []).slice(0, 5)).length > 0 && (
+              <div className="flex items-center space-x-1">
+                <Clock size={10} className="text-info" />
+                <span>Recent:</span>
+                <div className="flex space-x-1">
+                  {(recents || []).slice(0, 5).map((item, index) => (
+                    <button
+                      key={`${item.sequence}-${item.timestamp}-${index}`}
+                      onClick={async () => {
+                        const formatted = formatEmoji(item.sequence, selectedFormat);
+                        const success = await copyToClipboard(formatted);
+                        if (success) {
+                          onQuickSelect(item.sequence);
+                        }
+                      }}
+                      className="hover:bg-primary-subtle rounded px-1 transition-colors"
+                      title={`${generateSequenceLabel(item.sequence)} - Click to copy and update sequence`}
+                    >
+                      <span>{item.sequence}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 // Component: Skin Tone Selector
 const SkinToneSelector: React.FC<{
@@ -486,7 +476,7 @@ const SkinToneSelector: React.FC<{
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="fixed bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-30 p-2"
+      className="fixed bg-surface-raised border border-base rounded-lg shadow-xl z-30 p-2"
       style={{
         left: Math.min(position.x, window.innerWidth - 200),
         top: Math.min(position.y, window.innerHeight - 100),
@@ -500,7 +490,7 @@ const SkinToneSelector: React.FC<{
               onSelect(baseEmoji.c + tone.modifier);
               onClose();
             }}
-            className="w-8 h-8 flex items-center justify-center hover:bg-gray-700/50 rounded transition-colors"
+            className="w-8 h-8 flex items-center justify-center hover:bg-element-hover rounded transition-colors"
             title={tone.name}
           >
             <span className="text-lg">{baseEmoji.c + tone.modifier}</span>
@@ -520,11 +510,11 @@ const InspectorPanel: React.FC<{
 }> = ({ hoveredEmoji, isSelected, onClearSelection, onShowCopyToast }) => {
   if (!hoveredEmoji) {
     return (
-      <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[200px]">
+      <div className="bg-surface border border-base rounded-lg p-4 min-h-[200px]">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-300">Inspector</h3>
+          <h3 className="text-sm font-medium text-secondary">Inspector</h3>
         </div>
-        <div className="flex items-center justify-center h-32 text-gray-500">
+        <div className="flex items-center justify-center h-32 text-muted">
           <div className="text-center">
             <Eye size={32} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm">Click or hover over an emoji to inspect</p>
@@ -537,91 +527,91 @@ const InspectorPanel: React.FC<{
   const unicodeInfo = getUnicodeInfo(hoveredEmoji.c);
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[200px]">
+    <div className="bg-surface border border-base rounded-lg p-4 min-h-[200px]">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-300">
-          Inspector {isSelected && <span className="text-xs text-blue-400">(Selected)</span>}
+        <h3 className="text-sm font-medium text-secondary">
+          Inspector {isSelected && <span className="text-xs text-info">(Selected)</span>}
         </h3>
         {isSelected && (
           <button
             onClick={onClearSelection}
-            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+            className="p-1 text-muted hover:text-main hover:bg-element-hover rounded transition-colors"
             title="Clear selection"
           >
             <X size={14} />
           </button>
         )}
       </div>
-      
+
       <div className="flex items-center space-x-3 mb-4">
         <span className="text-3xl">{hoveredEmoji.c}</span>
         <div>
-          <h3 className="text-sm font-medium text-gray-200">{hoveredEmoji.n}</h3>
-          <p className="text-xs text-gray-400">:{hoveredEmoji.s}:</p>
+          <h3 className="text-sm font-medium text-main">{hoveredEmoji.n}</h3>
+          <p className="text-xs text-secondary">:{hoveredEmoji.s}:</p>
         </div>
       </div>
 
       {unicodeInfo && (
         <div className="space-y-2 text-xs">
           <div className="flex justify-between">
-            <span className="text-gray-400">Unicode:</span>
+            <span className="text-muted">Unicode:</span>
             <button
               onClick={async () => {
                 const success = await copyToClipboard(unicodeInfo.codepoint);
                 if (success) onShowCopyToast();
               }}
-              className="font-mono text-gray-200 min-w-[80px] text-right hover:text-blue-400 hover:bg-gray-700/50 px-1 py-0.5 rounded transition-colors"
+              className="font-mono text-main min-w-[80px] text-right hover:text-info hover:bg-element-hover px-1 py-0.5 rounded transition-colors"
               title="Click to copy Unicode value"
             >
               {unicodeInfo.codepoint}
             </button>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">UTF-8:</span>
+            <span className="text-muted">UTF-8:</span>
             <button
               onClick={async () => {
                 const success = await copyToClipboard(unicodeInfo.utf8);
                 if (success) onShowCopyToast();
               }}
-              className="font-mono text-gray-200 min-w-[80px] text-right hover:text-blue-400 hover:bg-gray-700/50 px-1 py-0.5 rounded transition-colors"
+              className="font-mono text-main min-w-[80px] text-right hover:text-info hover:bg-element-hover px-1 py-0.5 rounded transition-colors"
               title="Click to copy UTF-8 value"
             >
               {unicodeInfo.utf8}
             </button>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">JS Escape:</span>
+            <span className="text-muted">JS Escape:</span>
             <button
               onClick={async () => {
                 const success = await copyToClipboard(unicodeInfo.jsEscape);
                 if (success) onShowCopyToast();
               }}
-              className="font-mono text-gray-200 min-w-[80px] text-right hover:text-blue-400 hover:bg-gray-700/50 px-1 py-0.5 rounded transition-colors"
+              className="font-mono text-main min-w-[80px] text-right hover:text-info hover:bg-element-hover px-1 py-0.5 rounded transition-colors"
               title="Click to copy JS Escape value"
             >
               {unicodeInfo.jsEscape}
             </button>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">Category:</span>
-            <span className="text-gray-200 min-w-[80px] text-right">{hoveredEmoji.cat}</span>
+            <span className="text-muted">Category:</span>
+            <span className="text-main min-w-[80px] text-right">{hoveredEmoji.cat}</span>
           </div>
           {hoveredEmoji.t && (
             <div className="flex justify-between">
-              <span className="text-gray-400">Skin Tones:</span>
-              <span className="text-green-400 min-w-[80px] text-right">Supported</span>
+              <span className="text-muted">Skin Tones:</span>
+              <span className="text-success min-w-[80px] text-right">Supported</span>
             </div>
           )}
         </div>
       )}
 
-      <div className="mt-3 pt-3 border-t border-gray-700/50">
-        <p className="text-xs text-gray-400 mb-1">Keywords:</p>
+      <div className="mt-3 pt-3 border-t border-base">
+        <p className="text-xs text-muted mb-1">Keywords:</p>
         <div className="flex flex-wrap gap-1">
           {hoveredEmoji.k.map((keyword, index) => (
             <span
               key={index}
-              className="px-2 py-0.5 bg-gray-700/50 text-gray-300 rounded text-xs"
+              className="px-2 py-0.5 bg-surface-secondary text-secondary rounded text-xs"
             >
               {keyword}
             </span>
@@ -647,7 +637,7 @@ const EmojiGrid: React.FC<{
       if (!gridRef.current?.contains(document.activeElement)) return;
 
       const cols = Math.floor(gridRef.current.offsetWidth / 48); // Approximate button width
-      const rows = Math.ceil(emojis.length / cols);
+
 
       switch (e.key) {
         case "ArrowRight":
@@ -684,10 +674,10 @@ const EmojiGrid: React.FC<{
 
   if (emojis.length === 0) {
     return (
-      <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-8 text-center">
-        <Search size={32} className="mx-auto mb-2 text-gray-600" />
-        <p className="text-gray-400">No emojis found</p>
-        <p className="text-sm text-gray-500 mt-1">Try adjusting your search or category filter</p>
+      <div className="bg-surface border border-base rounded-lg p-8 text-center">
+        <Search size={32} className="mx-auto mb-2 text-secondary" />
+        <p className="text-muted">No emojis found</p>
+        <p className="text-sm text-muted mt-1">Try adjusting your search or category filter</p>
       </div>
     );
   }
@@ -695,7 +685,7 @@ const EmojiGrid: React.FC<{
   return (
     <div
       ref={gridRef}
-      className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 max-h-64 overflow-y-auto custom-scrollbar"
+      className="bg-surface border border-base rounded-lg p-4 max-h-64 overflow-y-auto custom-scrollbar"
       tabIndex={0}
     >
       <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 lg:grid-cols-16 gap-1">
@@ -716,9 +706,8 @@ const EmojiGrid: React.FC<{
             onMouseEnter={() => onEmojiHover(emoji)}
             onMouseLeave={() => onEmojiHover(null)}
             onFocus={() => setFocusedIndex(index)}
-            className={`w-10 h-10 flex items-center justify-center text-lg hover:bg-gray-700/50 rounded transition-colors ${
-              focusedIndex === index ? "ring-2 ring-blue-500" : ""
-            } ${emoji.t ? "relative" : ""}`}
+            className={`w-10 h-10 flex items-center justify-center text-lg hover:bg-gray-700/50 rounded transition-colors ${focusedIndex === index ? "ring-2 ring-blue-500" : ""
+              } ${emoji.t ? "relative" : ""}`}
             title={`${emoji.n} (${emoji.s})${emoji.t ? " - Shift+click for skin tones" : ""}`}
           >
             {emoji.c}
@@ -739,18 +728,18 @@ const FavoritesPanel: React.FC<{
   onRemoveFavorite: (id: string) => void;
 }> = ({ favorites = [], onEmojiClick, onRemoveFavorite }) => {
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[120px]">
+    <div className="bg-surface border border-base rounded-lg p-4 min-h-[120px]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <Star size={16} className="text-yellow-400" />
-          <h3 className="text-sm font-medium text-gray-300">Favorites</h3>
-          <span className="text-xs text-gray-500">({favorites?.length || 0})</span>
+          <Star size={16} className="text-warning" />
+          <h3 className="text-sm font-medium text-secondary">Favorites</h3>
+          <span className="text-xs text-muted">({favorites?.length || 0})</span>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2 min-h-[2.5rem] max-h-[80px] overflow-y-auto custom-scrollbar">
         {!favorites || favorites.length === 0 ? (
-          <div className="flex items-center justify-center w-full text-gray-500 text-sm min-h-[2.5rem]">
+          <div className="flex items-center justify-center w-full text-muted text-sm min-h-[2.5rem]">
             No favorites yet
           </div>
         ) : (
@@ -758,11 +747,11 @@ const FavoritesPanel: React.FC<{
             <div key={item.id} className="relative group">
               <button
                 onClick={() => onEmojiClick(item.sequence)}
-                className="flex flex-col items-center p-2 hover:bg-gray-700/50 rounded transition-colors min-w-[60px]"
+                className="flex flex-col items-center p-2 hover:bg-element-hover rounded transition-colors min-w-[60px]"
                 title={`${item.label} - Click to add to sequence`}
               >
                 <span className="text-lg mb-1">{item.sequence}</span>
-                <span className="text-xs text-gray-400 text-center leading-tight">
+                <span className="text-xs text-muted text-center leading-tight">
                   {item.label && item.label.length > 10 ? item.label.substring(0, 10) + "..." : item.label}
                 </span>
               </button>
@@ -771,7 +760,7 @@ const FavoritesPanel: React.FC<{
                   e.stopPropagation();
                   onRemoveFavorite(item.id);
                 }}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                className="absolute -top-1 -right-1 w-5 h-5 bg-danger text-main rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                 title="Remove from favorites"
               >
                 <X size={10} />
@@ -791,17 +780,17 @@ const RecentsPanel: React.FC<{
   onClearRecents: () => void;
 }> = ({ recents = [], onEmojiClick, onClearRecents }) => {
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 min-h-[120px]">
+    <div className="bg-surface border border-base rounded-lg p-4 min-h-[120px]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <Clock size={16} className="text-blue-400" />
-          <h3 className="text-sm font-medium text-gray-300">Recent</h3>
-          <span className="text-xs text-gray-500">({recents?.length || 0})</span>
+          <Clock size={16} className="text-info" />
+          <h3 className="text-sm font-medium text-secondary">Recent</h3>
+          <span className="text-xs text-muted">({recents?.length || 0})</span>
         </div>
         {recents && recents.length > 0 && (
           <button
             onClick={onClearRecents}
-            className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-xs text-muted hover:text-main transition-colors"
             title="Clear all recent items"
           >
             Clear
@@ -811,7 +800,7 @@ const RecentsPanel: React.FC<{
 
       <div className="flex flex-wrap gap-2 min-h-[2.5rem] max-h-[80px] overflow-y-auto custom-scrollbar">
         {!recents || recents.length === 0 ? (
-          <div className="flex items-center justify-center w-full text-gray-500 text-sm min-h-[2.5rem]">
+          <div className="flex items-center justify-center w-full text-muted text-sm min-h-[2.5rem]">
             No recent emojis
           </div>
         ) : (
@@ -819,7 +808,7 @@ const RecentsPanel: React.FC<{
             <div key={`${item.sequence}-${item.timestamp}-${index}`} className="group">
               <button
                 onClick={() => onEmojiClick(item.sequence)}
-                className="flex flex-col items-center p-2 hover:bg-gray-700/50 rounded transition-colors min-w-[50px]"
+                className="flex flex-col items-center p-2 hover:bg-element-hover rounded transition-colors min-w-[50px]"
                 title={`${generateSequenceLabel(item.sequence)} - Click to add to sequence`}
               >
                 <span className="text-lg">{item.sequence}</span>
@@ -951,7 +940,7 @@ const EmojiUI: React.FC<{
     (emoji: string) => {
       // In sequence mode, append. In replace mode, replace.
       const newSequence = data.sequenceMode ? data.sequence + emoji : emoji;
-      
+
       // Add to recents (avoid duplicates, limit to 20)
       const newRecentItem: RecentItem = {
         sequence: emoji,
@@ -962,17 +951,17 @@ const EmojiUI: React.FC<{
         newRecentItem,
         ...recents.filter((r) => r.sequence !== emoji)
       ].slice(0, 20);
-      
+
       // Find and set the selected emoji for the inspector panel
       const matchedEmoji = emojiData.find((e) => e.c === emoji);
       if (matchedEmoji) {
         setSelectedEmoji(matchedEmoji);
       }
-      
+
       // Update both sequence and recents in a single call
-      updateData({ 
+      updateData({
         sequence: newSequence,
-        recents: newRecents 
+        recents: newRecents
       });
     },
     [data.sequence, data.sequenceMode, data.recents, updateData]
@@ -1025,7 +1014,7 @@ const EmojiUI: React.FC<{
     try {
       const formatted = formatEmoji(data.sequence, data.selectedFormat);
       await navigator.clipboard.writeText(formatted);
-      
+
       // Add current sequence to recents
       const newRecentItem: RecentItem = {
         sequence: data.sequence,
@@ -1036,7 +1025,7 @@ const EmojiUI: React.FC<{
         newRecentItem,
         ...recents.filter((r) => r.sequence !== data.sequence)
       ].slice(0, 20);
-      
+
       updateData({ recents: newRecents });
       setCopiedFeedback(true);
       setTimeout(() => setCopiedFeedback(false), 1500);
@@ -1048,7 +1037,7 @@ const EmojiUI: React.FC<{
   const handleFormatSelect = useCallback(
     async (format: EmojiTabletState["data"]["selectedFormat"]) => {
       updateData({ selectedFormat: format });
-      
+
       if (data.sequence) {
         try {
           const formatted = formatEmoji(data.sequence, format);
@@ -1067,14 +1056,14 @@ const EmojiUI: React.FC<{
   const inspectorEmoji = selectedEmoji || hoveredEmoji;
 
   return (
-    <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
+    <div className="h-full bg-canvas text-main flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-none border-b border-gray-700/50 p-4">
+      <div className="flex-none border-b border-base p-4">
         <div className="flex items-center space-x-3 mb-4">
           <Palette className="text-yellow-400" size={24} />
           <div>
-            <h2 className="text-xl font-semibold text-gray-100">Emoji as Data</h2>
-            <p className="text-sm text-gray-400">
+            <h2 className="text-xl font-semibold text-main">Emoji as Data</h2>
+            <p className="text-sm text-secondary">
               Developer-focused emoji picker and formatter
             </p>
           </div>
@@ -1121,8 +1110,8 @@ const EmojiUI: React.FC<{
 
           {/* Right Column - Inspector & Favorites */}
           <div className="space-y-4 w-full">
-            <InspectorPanel 
-              hoveredEmoji={inspectorEmoji} 
+            <InspectorPanel
+              hoveredEmoji={inspectorEmoji}
               isSelected={!!selectedEmoji}
               onClearSelection={() => setSelectedEmoji(null)}
               onShowCopyToast={() => {
@@ -1165,7 +1154,7 @@ const EmojiUI: React.FC<{
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-4 right-4 bg-green-500/20 text-green-400 px-4 py-2 rounded-lg border border-green-500/50 z-50"
+            className="fixed bottom-4 right-4 bg-success-subtle text-success px-4 py-2 rounded-lg border border-success/50 z-50"
           >
             <div className="flex items-center space-x-2">
               <Copy size={16} />
@@ -1227,8 +1216,8 @@ export const EmojiTablet: Tablet = {
               ? parsed.data.selectedCategory
               : "Smileys & Emotion",
             // Ensure sequenceMode is valid
-            sequenceMode: typeof parsed.data.sequenceMode === "boolean" 
-              ? parsed.data.sequenceMode 
+            sequenceMode: typeof parsed.data.sequenceMode === "boolean"
+              ? parsed.data.sequenceMode
               : false,
           },
         };
