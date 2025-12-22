@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Copy, Pause, Play, Check, ArrowDown } from '../../../components/Icons';
+import { useClipboard } from '../hooks/useClipboard';
 
 interface CounterItemProps {
   label: string;
@@ -40,7 +41,7 @@ interface LiveHeaderProps {
 export const LiveHeader: React.FC<LiveHeaderProps> = ({ onSetInput }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isFrozen, setIsFrozen] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { copy, copiedId } = useClipboard();
 
   useEffect(() => {
     if (isFrozen) return;
@@ -51,27 +52,6 @@ export const LiveHeader: React.FC<LiveHeaderProps> = ({ onSetInput }) => {
 
     return () => clearInterval(interval);
   }, [isFrozen]);
-
-  const handleCopy = useCallback(async (text: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setCopiedId(id);
-        setTimeout(() => setCopiedId(null), 2000);
-      } catch (err) {
-        console.error('Copy failed', err);
-      }
-      document.body.removeChild(textArea);
-    }
-  }, []);
 
   const epochSeconds = Math.floor(currentTime.getTime() / 1000);
   const epochMs = currentTime.getTime();
@@ -106,10 +86,10 @@ export const LiveHeader: React.FC<LiveHeaderProps> = ({ onSetInput }) => {
 
         <div className="flex-1 flex justify-center overflow-x-auto no-scrollbar">
           <div className="flex items-center">
-            <CounterItem label="Epoch (s)" value={epochSeconds} id="epoch-s" copiedId={copiedId} onCopy={handleCopy} onSetInput={onSetInput} />
-            <CounterItem label="Epoch (ms)" value={epochMs} id="epoch-ms" copiedId={copiedId} onCopy={handleCopy} onSetInput={onSetInput} />
-            <CounterItem label="UTC" value={utcTime} id="utc" copiedId={copiedId} onCopy={handleCopy} onSetInput={onSetInput} />
-            <CounterItem label="Local" value={localTimeISO} id="local" copiedId={copiedId} onCopy={handleCopy} onSetInput={onSetInput} />
+            <CounterItem label="Epoch (s)" value={epochSeconds} id="epoch-s" copiedId={copiedId} onCopy={copy} onSetInput={onSetInput} />
+            <CounterItem label="Epoch (ms)" value={epochMs} id="epoch-ms" copiedId={copiedId} onCopy={copy} onSetInput={onSetInput} />
+            <CounterItem label="UTC" value={utcTime} id="utc" copiedId={copiedId} onCopy={copy} onSetInput={onSetInput} />
+            <CounterItem label="Local" value={localTimeISO} id="local" copiedId={copiedId} onCopy={copy} onSetInput={onSetInput} />
           </div>
         </div>
 

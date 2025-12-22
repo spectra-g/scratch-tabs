@@ -8,7 +8,7 @@ import { TimezoneExplorer } from './components/TimezoneExplorer';
 import { QuickAdjustPanel } from './components/QuickAdjustPanel';
 import { ParseInspector } from './components/ParseInspector';
 import { HistorySidebar } from './components/HistorySidebar';
-import { formatForAllOutputs, isValidDateValue, ensureDate, performDateArithmetic, intelligentParse } from './utils/dateUtils';
+import { formatForAllOutputs, isValidDateValue, ensureDate, performDateArithmetic, intelligentParse, calculateDuration } from './utils/dateUtils';
 import { formatDistanceToNow, startOfDay } from 'date-fns';
 import { Info, Globe, Shield, Braces } from '../../components/Icons';
 
@@ -23,26 +23,6 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
         try {
           const formats = formatForAllOutputs(validDate);
           setConversionFormats(formats);
-
-          // Add to history automatically if it's a new valid date
-          const dateStr = validDate.toISOString();
-          const exists = state.data.history.some(h => ensureDate(h.date)?.toISOString() === dateStr);
-          if (!exists) {
-            const newItem: PinnedDate = {
-              id: Math.random().toString(36).substring(2, 9),
-              label: '',
-              date: validDate,
-              originalInput: state.data.parsedDate instanceof Date ? state.data.parsedDate.toISOString() : String(state.data.parsedDate || ''),
-              pinnedAt: Date.now()
-            };
-            onChange({
-              ...state,
-              data: {
-                ...state.data,
-                history: [newItem, ...state.data.history.slice(0, 49)]
-              }
-            });
-          }
         } catch {
           setConversionFormats(null);
         }
@@ -52,17 +32,95 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
     } else {
       setConversionFormats(null);
     }
-  }, [state.data.parsedDate, state.data.history.length]);
+  }, [state.data.parsedDate]);
 
   const handleSmartInputChange = useCallback((inputValue: string, parsedDate: Date | null, error: string | null) => {
+    let newData = { ...state.data, inputValue, parsedDate, error };
+
+    // Check for Command Result (passed via error field as stringified JSON hack)
+    if (error && error.startsWith('{"type":"COMMAND"')) {
+      try {
+        const commandObj = JSON.parse(error);
+        const commandResult = commandObj.result;
+        newData.error = null; // Clear the error since it was a command
+
+        if (commandResult.type === 'ADD_TIMEZONE') {
+          // Check if timezone already exists
+          if (!newData.selectedTimezones.includes(commandResult.payload)) {
+            newData.selectedTimezones = [...newData.selectedTimezones, commandResult.payload];
+          }
+          // Keep the current date visible!
+          newData.parsedDate = state.data.parsedDate || new Date();
+        } else if (commandResult.type === 'JUMP_DATE') {
+          newData.parsedDate = ensureDate(commandResult.payload);
+          // We don't change input value for Jump, or do we?
+          // Requirement: "overrides the current date without needing to delete the existing math"
+          // That implies the input stays as "> 2026-01-01"? 
+          // Or we replace the input? 
+          // "overrides the current parsed date" -> So parsedDate updates. Input stays as is.
+        } else if (commandResult.type === 'SHOW_DIFF') {
+          // Determine diff against what?
+          // If parsedDate is null (because it's a command), we might want to diff against "Now" OR
+          // maybe the user wants to see the diff between parsedDate and "Now"?
+          // The requirement is: "calculate the duration between the current parsed date and this new value".
+          // Since this replaces the input, "current parsed date" is effectively just the previous state.
+          // But the previous state is lost in this callback.
+          // However, we can use state.data.parsedDate from the closure! (Wait, closure capture?)
+          // Yes, `state` is in dependency array.
+
+          const baseDate = ensureDate(state.data.parsedDate) || new Date();
+          const targetDate = ensureDate(commandResult.payload);
+
+          if (targetDate) {
+            // We need to display this diff. 
+            // Where? "Return this as a specialized result to be displayed in the Analysis column."
+            // We can stick it in `calculatorState` or a new field.
+            // Let's use `calculatorState.durationResult` and set operation to 'duration'.
+            const duration = calculateDuration(baseDate, targetDate);
+            newData.calculatorState = {
+              ...newData.calculatorState,
+              operation: 'duration',
+              secondDate: targetDate.toISOString(),
+              durationResult: duration
+            } as any;
+            // Also expand the calculator section so they see it
+            if (!newData.expandedAccordionSections?.includes('calculator')) {
+              newData.expandedAccordionSections = [...(newData.expandedAccordionSections || []), 'calculator'];
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore JSON parse errors
+      }
+    }
+
+    // History Logic: Add ONLY if valid date and meaningful change
+    // We check against the LATEST history item in state.data.history
+    if (isValidDateValue(newData.parsedDate) && inputValue !== 'now') { // Don't add simple "now" updates
+      const validDate = ensureDate(newData.parsedDate);
+      if (validDate) {
+        const dateStr = validDate.toISOString();
+        const lastItem = state.data.history[0];
+
+        // Add if history is empty OR date is different from last item
+        const lastDateStr = lastItem ? ensureDate(lastItem.date)?.toISOString() : null;
+
+        if (!lastItem || lastDateStr !== dateStr) {
+          const newItem: PinnedDate = {
+            id: Math.random().toString(36).substring(2, 9),
+            label: '',
+            date: validDate,
+            originalInput: inputValue,
+            pinnedAt: Date.now()
+          };
+          newData.history = [newItem, ...state.data.history.slice(0, 49)];
+        }
+      }
+    }
+
     onChange({
       ...state,
-      data: {
-        ...state.data,
-        inputValue,
-        parsedDate,
-        error
-      }
+      data: newData
     });
   }, [onChange, state]);
 
@@ -165,6 +223,40 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
                     <p className="text-lg font-medium text-main leading-tight">
                       This is approximately <span className="text-primary font-bold">{formatDistanceToNow(ensureDate(state.data.parsedDate) || new Date(), { addSuffix: true })}</span>.
                     </p>
+                  </div>
+                )}
+
+                {/* Calculator Results */}
+                {state.data.calculatorState?.durationResult && (
+                  <div className="bg-accent/5 p-4 rounded-xl border border-accent/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Braces size={14} className="text-accent" />
+                      <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Time Difference</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-sm text-secondary">
+                        Compared to: <span className="font-mono text-main">{state.data.calculatorState.secondDate.split('T')[0]}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-surface rounded p-2 border border-base">
+                          <div className="text-[9px] uppercase text-muted">Total Days</div>
+                          <div className="text-lg font-mono text-main">{Math.abs(state.data.calculatorState.durationResult.totalDays)}d</div>
+                        </div>
+                        <div className="bg-surface rounded p-2 border border-base">
+                          <div className="text-[9px] uppercase text-muted">Total Hours</div>
+                          <div className="text-lg font-mono text-main">{Math.abs(state.data.calculatorState.durationResult.totalHours)}h</div>
+                        </div>
+                      </div>
+                      <div className="text-xs font-mono text-main pt-1">
+                        {state.data.calculatorState.durationResult.years > 0 && `${state.data.calculatorState.durationResult.years}y `}
+                        {state.data.calculatorState.durationResult.months > 0 && `${state.data.calculatorState.durationResult.months}mo `}
+                        {state.data.calculatorState.durationResult.days > 0 && `${state.data.calculatorState.durationResult.days}d `}
+                        {state.data.calculatorState.durationResult.hours > 0 && `${state.data.calculatorState.durationResult.hours}h `}
+                        {state.data.calculatorState.durationResult.minutes > 0 && `${state.data.calculatorState.durationResult.minutes}m `}
+                        {state.data.calculatorState.durationResult.seconds > 0 && `${state.data.calculatorState.durationResult.seconds}s`}
+                        {state.data.calculatorState.durationResult.totalSeconds === 0 && "No difference"}
+                      </div>
+                    </div>
                   </div>
                 )}
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Code, CheckCircle, XCircle, Copy, Check } from '../../../components/Icons';
 import { ParseResult } from '../types';
 import { simulateCrossPlatformParsing, isValidDateValue, ensureDate } from '../utils/dateUtils';
+import { useClipboard } from '../hooks/useClipboard';
 
 interface ParseInspectorProps {
   inputValue: string;
@@ -12,7 +13,7 @@ export const ParseInspector: React.FC<ParseInspectorProps> = ({
   inputValue,
   parsedDate
 }) => {
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const { copy, copiedId: copiedCode } = useClipboard();
   const [parseResults, setParseResults] = useState<ParseResult[]>([]);
 
   React.useEffect(() => {
@@ -35,27 +36,6 @@ export const ParseInspector: React.FC<ParseInspectorProps> = ({
       setParseResults([]);
     }
   }, [inputValue, parsedDate]);
-
-  const copyCode = async (code: string, language: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCode(language);
-      setTimeout(() => setCopiedCode(null), 2000);
-    } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = code;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setCopiedCode(language);
-        setTimeout(() => setCopiedCode(null), 2000);
-      } catch (err) {
-        console.error('Copy failed', err);
-      }
-      document.body.removeChild(textArea);
-    }
-  };
 
   // Show empty state only if we have neither a valid parsed date nor input value
   // Use the same validation utilities as TabbedInput to handle serialized dates
@@ -108,7 +88,7 @@ export const ParseInspector: React.FC<ParseInspectorProps> = ({
               </div>
 
               <button
-                onClick={() => copyCode(result.code, result.language)}
+                onClick={() => copy(result.code, result.language)}
                 className="p-1 hover:bg-element-hover rounded transition-colors text-secondary hover:text-main"
                 title="Copy code"
               >

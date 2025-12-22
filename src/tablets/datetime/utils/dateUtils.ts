@@ -29,12 +29,18 @@ import {
 } from 'date-fns-tz';
 import { ConversionFormats, DurationResult, TimezoneInfo, ParseResult } from '../types';
 
-export type DetectedFormat = 'Unix Seconds' | 'Unix Milliseconds' | 'ISO 8601' | 'SQL Datetime' | 'Natural Language' | 'Custom Format' | 'Arithmetic';
+export type DetectedFormat = 'Unix Seconds' | 'Unix Milliseconds' | 'ISO 8601' | 'SQL Datetime' | 'Natural Language' | 'Custom Format' | 'Arithmetic' | 'Command';
 
 export interface IntelligentParseResult {
   date: Date | null;
   format: DetectedFormat | null;
   arithmetic?: string;
+  warning?: string;
+  commandResult?: {
+    type: 'ADD_TIMEZONE' | 'SHOW_DIFF' | 'JUMP_DATE';
+    payload: any;
+    message?: string;
+  };
 }
 
 /**
@@ -90,6 +96,63 @@ export function intelligentParse(input: string): IntelligentParseResult {
     return { date: null, format: null };
   }
 
+
+
+  // Strategy -1: Command Handling
+  if (trimmed.startsWith('>')) {
+    const commandContent = trimmed.substring(1).trim();
+
+    // Command: > diff [value]
+    if (commandContent.toLowerCase().startsWith('diff ')) {
+      const diffValue = commandContent.substring(5).trim();
+      const diffTargetResult = intelligentParse(diffValue);
+
+      if (diffTargetResult.date) {
+        return {
+          date: null,
+          format: 'Command',
+          commandResult: {
+            type: 'SHOW_DIFF',
+            payload: diffTargetResult.date,
+            message: `Showing difference against ${diffTargetResult.format}`
+          }
+        };
+      }
+    }
+
+    // Command: > [timezone]
+    // Check if the content is a valid timezone or city
+    const resolvedTz = resolveTimezone(commandContent);
+    if (resolvedTz) {
+      return {
+        date: null,
+        format: 'Command',
+        commandResult: {
+          type: 'ADD_TIMEZONE',
+          payload: resolvedTz,
+          message: `Added timezone: ${resolvedTz}`
+        }
+      };
+    }
+
+    // Command: > [natural language/date] (Jump to date)
+    // Try to parse the content as a date
+    const jumpResult = intelligentParse(commandContent);
+    if (jumpResult.date) {
+      return {
+        date: jumpResult.date,
+        format: 'Command', // It's a command that resulted in a date
+        commandResult: {
+          type: 'JUMP_DATE',
+          payload: jumpResult.date
+        }
+      };
+    }
+
+    // Fallback for unknown commands
+    return { date: null, format: 'Command', warning: 'Unknown command' };
+  }
+
   try {
     // Strategy 0: Handle arithmetic (e.g., now + 5d)
     const arithmeticMatch = trimmed.match(/^(.+?)\s*([+-])\s*(.+)$/);
@@ -125,9 +188,16 @@ export function intelligentParse(input: string): IntelligentParseResult {
       // Heuristic: if > 1e12, it's likely milliseconds; otherwise seconds
       const isMs = timestamp > 1e12;
       const date = isMs ? new Date(timestamp) : new Date(timestamp * 1000);
+      // Alt interpretation: Treat 13 digits as Seconds. new Date(timestamp * 1000).
 
-      if (isValid(date) && date.getFullYear() > 1970 && date.getFullYear() < 2100) {
-        return { date, format: isMs ? 'Unix Milliseconds' : 'Unix Seconds' };
+      // isMs = false (10 digits). const date = new Date(timestamp * 1000).
+      // Alt interpretation: Treat 10 digits as Milliseconds. new Date(timestamp).
+
+      if (isValid(date) && date.getFullYear() > 1900 && date.getFullYear() < 3000) {
+        return {
+          date,
+          format: isMs ? 'Unix Milliseconds' : 'Unix Seconds'
+        };
       }
     }
 
@@ -599,6 +669,75 @@ export function getPopularTimezones(): string[] {
     'Australia/Sydney',
     'Pacific/Auckland'
   ];
+}
+
+/**
+ * Resolve a timezone string from a city name or partial match
+ */
+export function resolveTimezone(input: string): string | null {
+  const normalized = input.trim();
+
+  // Direct match
+  if (isValidTimezone(normalized)) {
+    return normalized;
+  }
+
+  // Common city mappings
+  const cityMap: Record<string, string> = {
+    'tokyo': 'Asia/Tokyo',
+    'new york': 'America/New_York',
+    'nyc': 'America/New_York',
+    'london': 'Europe/London',
+    'paris': 'Europe/Paris',
+    'berlin': 'Europe/Berlin',
+    'los angeles': 'America/Los_Angeles',
+    'la': 'America/Los_Angeles',
+    'san francisco': 'America/Los_Angeles',
+    'chicago': 'America/Chicago',
+    'denver': 'America/Denver',
+    'shanghai': 'Asia/Shanghai',
+    'beijing': 'Asia/Shanghai',
+    'kolkata': 'Asia/Kolkata',
+    'delhi': 'Asia/Kolkata',
+    'mumbai': 'Asia/Kolkata',
+    'sydney': 'Australia/Sydney',
+    'melbourne': 'Australia/Melbourne',
+    'auckland': 'Pacific/Auckland',
+    'utc': 'UTC',
+    'gmt': 'UTC',
+    'est': 'America/New_York',
+    'pst': 'America/Los_Angeles',
+    'cst': 'America/Chicago',
+    'mst': 'America/Denver',
+    'ist': 'Asia/Kolkata',
+    'cet': 'Europe/Berlin',
+    'jst': 'Asia/Tokyo'
+  };
+
+  const lower = normalized.toLowerCase();
+
+  if (cityMap[lower]) {
+    return cityMap[lower];
+  }
+
+  // Try to find a timezone that ends with the input (case-insensitive)
+  // We can check against a fuller list, but for now let's check against popular ones + strict validity check if we constructed one
+
+  // Attempt to construct common prefixes
+  const prefixes = ['Asia/', 'America/', 'Europe/', 'Australia/', 'Pacific/', 'Africa/'];
+  for (const prefix of prefixes) {
+    // Simple Title Case: "tokyo" -> "Tokyo"
+    const titleCased = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+    const probe = prefix + titleCased;
+    if (isValidTimezone(probe)) return probe;
+
+    // Handle "New_York" from "new york"
+    const snakeCased = titleCased.replace(/ /g, '_');
+    const probeSnake = prefix + snakeCased;
+    if (isValidTimezone(probeSnake)) return probeSnake;
+  }
+
+  return null;
 }
 
 /**

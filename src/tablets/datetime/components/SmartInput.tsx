@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { X, RotateCcw, Zap, Calendar, Copy, Check } from '../../../components/Icons';
 import { intelligentParse, DetectedFormat, ensureDate } from '../utils/dateUtils';
+import { useClipboard } from '../hooks/useClipboard';
 
 interface SmartInputProps {
     inputValue: string;
@@ -16,31 +17,15 @@ export const SmartInput: React.FC<SmartInputProps> = ({
     const [detectedFormat, setDetectedFormat] = useState<DetectedFormat | null>(null);
     const [arithmetic, setArithmetic] = useState<string | undefined>(undefined);
     const [error, setError] = useState<string | null>(null);
-    const [isCopied, setIsCopied] = useState(false);
+    const { copy, copiedId } = useClipboard();
+    const isCopied = copiedId === 'smart-input-date';
     const isHandlingUserInput = useRef(false);
 
-    const handleCopy = useCallback(async () => {
+    const handleCopy = useCallback(() => {
         if (!parsedDate) return;
         const text = ensureDate(parsedDate)?.toISOString() || '';
-        try {
-            await navigator.clipboard.writeText(text);
-            setIsCopied(true);
-            setTimeout(() => setIsCopied(false), 2000);
-        } catch {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                setIsCopied(true);
-                setTimeout(() => setIsCopied(false), 2000);
-            } catch (err) {
-                console.error('Copy failed', err);
-            }
-            document.body.removeChild(textArea);
-        }
-    }, [parsedDate]);
+        copy(text, 'smart-input-date');
+    }, [parsedDate, copy]);
 
     // Parse initial "now" value
     useEffect(() => {
@@ -61,6 +46,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
         if (!inputValue || !inputValue.trim()) {
             setDetectedFormat(null);
             setArithmetic(undefined);
+            // Removed setWarning
             return;
         }
 
@@ -68,6 +54,9 @@ export const SmartInput: React.FC<SmartInputProps> = ({
         if (result.date) {
             setDetectedFormat(result.format);
             setArithmetic(result.arithmetic);
+        } else if (result.format === 'Command') {
+            setDetectedFormat('Command');
+            setArithmetic(undefined);
         } else {
             setDetectedFormat(null);
             setArithmetic(undefined);
@@ -82,14 +71,26 @@ export const SmartInput: React.FC<SmartInputProps> = ({
             onUpdate(value, null, null);
             setDetectedFormat(null);
             setArithmetic(undefined);
+            // Removed setWarning
             return;
         }
 
         const result = intelligentParse(value);
         if (result.date) {
+            // Normal date parsing
             onUpdate(value, result.date, null);
             setDetectedFormat(result.format);
             setArithmetic(result.arithmetic);
+        } else if (result.format === 'Command' && result.commandResult) {
+            // Command handling
+            onUpdate(value, null, JSON.stringify({ type: 'COMMAND', result: result.commandResult }));
+            setDetectedFormat('Command');
+            setArithmetic(undefined);
+        } else if (result.format === 'Command') {
+            // Invalid/Unknown command
+            onUpdate(value, null, null); // Don't error, just don't set a date
+            setDetectedFormat('Command');
+            setArithmetic(undefined);
         } else {
             onUpdate(value, null, 'Unable to parse date/time');
             setDetectedFormat(null);
@@ -102,6 +103,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
         setDetectedFormat(null);
         setArithmetic(undefined);
         setError(null);
+        // Removed setWarning
     }, [onUpdate]);
 
     const handleReset = useCallback(() => {
@@ -110,6 +112,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
         setDetectedFormat(result.format);
         setArithmetic(undefined);
         setError(null);
+        // Removed setWarning
     }, [onUpdate]);
 
     const getFormatBadgeColor = (format: DetectedFormat) => {
@@ -120,6 +123,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
             case 'ISO 8601': return 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30';
             case 'SQL Datetime': return 'bg-blue-500/20 text-blue-500 border-blue-500/30';
             case 'Natural Language': return 'bg-purple-500/20 text-purple-500 border-purple-500/30';
+            case 'Command': return 'bg-accent/20 text-accent border-accent/30';
             default: return 'bg-surface-secondary text-secondary border-base';
         }
     };
@@ -140,7 +144,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
                         type="text"
                         value={inputValue}
                         onChange={(e) => handleInternalInputChange(e.target.value)}
-                        placeholder="e.g., now + 5d, 1734876439, 2025-12-22"
+                        placeholder="e.g., now + 5d, 1734876439, > Tokyo, > diff 123"
                         autoFocus
                         className={`input-themed w-full pl-12 pr-24 py-4 text-lg font-mono tracking-tight shadow-sm transition-all focus:ring-2 focus:ring-primary/20 ${error ? 'border-danger bg-danger-subtle/10' : ''
                             }`}
@@ -164,7 +168,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
                                 className="p-1 text-secondary hover:text-main transition-colors"
                                 title="Clear input"
                             >
-                                <X size={18} />
+                                {isCopied ? <X size={18} /> : <X size={18} />}
                             </button>
                         )}
                         <button

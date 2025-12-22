@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Copy, Check, Terminal, Database, Globe, Hash, Zap } from '../../../components/Icons';
 import { ConversionFormats } from '../types';
+import { useClipboard } from '../hooks/useClipboard';
 
 interface ConversionDashboardProps {
   formats: ConversionFormats | null;
@@ -51,28 +52,7 @@ const FormatSection: React.FC<FormatSectionProps> = ({ title, icon: Icon, items,
 );
 
 export const ConversionDashboard: React.FC<ConversionDashboardProps> = ({ formats }) => {
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-
-  const copyToClipboard = async (text: string, fieldName: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(fieldName);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setCopiedField(fieldName);
-        setTimeout(() => setCopiedField(null), 2000);
-      } catch (err) {
-        console.error('Copy failed', err);
-      }
-      document.body.removeChild(textArea);
-    }
-  };
+  const { copy, copiedId: copiedField } = useClipboard();
 
   if (!formats) {
     return (
@@ -93,7 +73,7 @@ export const ConversionDashboard: React.FC<ConversionDashboardProps> = ({ format
         <div className="bg-surface-raised/40 p-4 rounded-xl border border-base">
           <div className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1 flex justify-between">
             Human Readable
-            <button onClick={() => copyToClipboard(formats.humanReadable, 'human')} className="hover:text-primary transition-colors">
+            <button onClick={() => copy(formats.humanReadable, 'human')} className="hover:text-primary transition-colors">
               {copiedField === 'human' ? <Check size={12} className="text-success" /> : <Copy size={12} />}
             </button>
           </div>
@@ -105,7 +85,7 @@ export const ConversionDashboard: React.FC<ConversionDashboardProps> = ({ format
         <div className="bg-surface-raised/40 p-4 rounded-xl border border-base">
           <div className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2 flex justify-between">
             ISO 8601 (UTC)
-            <button onClick={() => copyToClipboard(formats.iso8601, 'iso')} className="hover:text-primary transition-colors">
+            <button onClick={() => copy(formats.iso8601, 'iso')} className="hover:text-primary transition-colors">
               {copiedField === 'iso' ? <Check size={12} className="text-success" /> : <Copy size={12} />}
             </button>
           </div>
@@ -124,7 +104,7 @@ export const ConversionDashboard: React.FC<ConversionDashboardProps> = ({ format
               { label: 'Go (RFC3339)', value: formats.programming.go, id: 'go' },
             ]}
             copiedField={copiedField}
-            onCopy={copyToClipboard}
+            onCopy={copy}
           />
           <FormatSection
             title="Database"
@@ -134,7 +114,7 @@ export const ConversionDashboard: React.FC<ConversionDashboardProps> = ({ format
               { label: 'Mongo ObjectID', value: formats.database.mongo, id: 'mongo' },
             ]}
             copiedField={copiedField}
-            onCopy={copyToClipboard}
+            onCopy={copy}
           />
         </div>
 
@@ -178,7 +158,7 @@ export const ConversionDashboard: React.FC<ConversionDashboardProps> = ({ format
               { label: 'RSS / Atom', value: formats.web.rss, id: 'rss' },
             ]}
             copiedField={copiedField}
-            onCopy={copyToClipboard}
+            onCopy={copy}
           />
         </div>
       </div>
