@@ -118,10 +118,10 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
       .filter(([_, metrics]) => metrics.length > 0)
       .map(([type, metrics]) => (
         <div key={type} className="mb-4">
-          <div className="text-sm font-medium text-gray-300 mb-2 flex items-center">
+          <div className="text-sm font-medium text-secondary mb-2 flex items-center">
             <TypeIcon type={type} />
             <span className="capitalize ml-1">{type}</span>
-            <span className="text-gray-500 ml-2">({metrics.length})</span>
+            <span className="text-muted ml-2">({metrics.length})</span>
           </div>
           <div className="space-y-1 pl-2">
             {metrics.map((metric) => renderMetric(metric))}
@@ -147,16 +147,16 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
     return (
       <div key={metric.name} className="mb-2">
         <div
-          className="flex items-center py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
+          className="flex items-center py-1 px-2 hover:bg-surface-raised rounded cursor-pointer"
           onClick={() => toggleMetricExpanded(metric.name)}
         >
           {isExpanded ? (
-            <ChevronDown size={16} className="text-gray-400 mr-1" />
+            <ChevronDown size={16} className="text-muted mr-1" />
           ) : (
-            <ChevronRight size={16} className="text-gray-400 mr-1" />
+            <ChevronRight size={16} className="text-muted mr-1" />
           )}
           <span className="text-sm font-mono">{metric.name}</span>
-          <span className="text-xs text-gray-500 ml-2">
+          <span className="text-xs text-muted ml-2">
             ({metric.samples.length})
           </span>
           <TypeBadge type={metric.type} />
@@ -165,10 +165,10 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
         {isExpanded && (
           <div className="pl-6 mt-1 space-y-1">
             {metric.help && (
-              <div className="flex items-start text-xs text-gray-400 mb-1">
+              <div className="flex items-start text-xs text-muted mb-1">
                 <Info
                   size={12}
-                  className="text-gray-500 mr-1 mt-0.5 flex-shrink-0"
+                  className="text-muted mr-1 mt-0.5 flex-shrink-0"
                 />
                 <span>{metric.help}</span>
               </div>
@@ -182,7 +182,7 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
               </div>
             ) : (
               <div
-                className="text-xs text-gray-400 py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
+                className="text-xs text-muted py-1 px-2 hover:bg-surface-raised rounded cursor-pointer"
                 onClick={() => onSelectMetric(metric.name)}
               >
                 <span className="font-mono">{metric.name}</span>
@@ -203,17 +203,17 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
     return (
       <div key={`${metric.name}:${labelKey}`}>
         <div
-          className="flex items-center py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
+          className="flex items-center py-1 px-2 hover:bg-surface-raised rounded cursor-pointer"
           onClick={() => toggleLabelExpanded(`${metric.name}:${labelKey}`)}
         >
           {isExpanded ? (
-            <ChevronDown size={14} className="text-gray-400 mr-1" />
+            <ChevronDown size={14} className="text-muted mr-1" />
           ) : (
-            <ChevronRight size={14} className="text-gray-400 mr-1" />
+            <ChevronRight size={14} className="text-muted mr-1" />
           )}
-          <Tag size={12} className="text-gray-500 mr-1" />
+          <Tag size={12} className="text-muted mr-1" />
           <span className="text-xs font-mono">{labelKey}</span>
-          <span className="text-xs text-gray-500 ml-2">
+          <span className="text-xs text-muted ml-2">
             ({labelValues.length})
           </span>
         </div>
@@ -229,14 +229,14 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
               return samples.map((sample) => (
                 <div
                   key={`${metric.name}:${labelKey}:${value}:${JSON.stringify(sample.labels)}`}
-                  className="text-xs py-1 px-2 hover:bg-gray-800 rounded cursor-pointer"
+                  className="text-xs py-1 px-2 hover:bg-surface-raised rounded cursor-pointer"
                   onClick={() => onSelectMetric(metric.name, sample.labels)}
                 >
                   <div className="flex items-center">
-                    <span className="font-mono text-blue-400">{value}</span>
-                    <span className="ml-2 text-gray-300">{sample.value}</span>
+                    <span className="font-mono text-primary">{value}</span>
+                    <span className="ml-2 text-secondary">{sample.value}</span>
                     {sample.timestamp && (
-                      <span className="ml-2 text-gray-500 flex items-center">
+                      <span className="ml-2 text-muted flex items-center">
                         <Clock size={10} className="mr-1" />
                         {new Date(sample.timestamp).toLocaleTimeString()}
                       </span>
@@ -245,7 +245,7 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
                   {Object.entries(sample.labels)
                     .filter(([k]) => k !== labelKey)
                     .map(([k, v]) => (
-                      <div key={k} className="pl-4 text-gray-500">
+                      <div key={k} className="pl-4 text-muted">
                         {k}="{v}"
                       </div>
                     ))}
@@ -260,13 +260,13 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-3 border-b border-gray-700">
+      <div className="p-3 border-b border-base">
         <input
           type="text"
           placeholder="Search metrics, labels, or values..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+          className="w-full bg-surface-raised border border-base rounded px-3 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-primary"
         />
       </div>
 
@@ -281,7 +281,7 @@ export const MetricsExplorer: React.FC<MetricsExplorerProps> = ({
 const TypeIcon: React.FC<{ type: string | undefined }> = ({ type }) => {
   switch (type) {
     case "counter":
-      return <Hash size={16} className="text-blue-400" />;
+      return <Hash size={16} className="text-primary" />;
     case "gauge":
       return <BarChart size={16} className="text-green-400" />;
     case "histogram":
@@ -289,7 +289,7 @@ const TypeIcon: React.FC<{ type: string | undefined }> = ({ type }) => {
     case "summary":
       return <BarChart size={16} className="text-yellow-400" />;
     default:
-      return <BarChart size={16} className="text-gray-400" />;
+      return <BarChart size={16} className="text-muted" />;
   }
 };
 
@@ -299,7 +299,7 @@ const TypeBadge: React.FC<{ type: string | undefined }> = ({ type }) => {
   const getTypeColor = (type: string) => {
     switch (type) {
       case "counter":
-        return "bg-blue-500/20 text-blue-400";
+        return "bg-primary/20 text-primary";
       case "gauge":
         return "bg-green-500/20 text-green-400";
       case "histogram":
@@ -307,7 +307,7 @@ const TypeBadge: React.FC<{ type: string | undefined }> = ({ type }) => {
       case "summary":
         return "bg-yellow-500/20 text-yellow-400";
       default:
-        return "bg-gray-500/20 text-gray-400";
+        return "bg-surface-secondary/20 text-muted";
     }
   };
 

@@ -32,14 +32,14 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
   }, [metricNames, searchTerm]);
 
   return (
-    <div className="p-3 border-b border-gray-700">
+    <div className="p-3 border-b border-base">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3">
         <div className="mb-2 md:mb-0">
-          <h3 className="text-sm font-medium text-gray-300">
+          <h3 className="text-sm font-medium text-secondary">
             Chart Configuration
           </h3>
           {selectedMetricName && (
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-muted mt-1">
               {selectedMetricName}
             </div>
           )}
@@ -48,21 +48,21 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
         <div className="flex items-center space-x-2">
           <button
             onClick={() => onSetChartType("bar")}
-            className={`p-2 rounded ${chartType === "bar" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
+            className={`p-2 rounded ${chartType === "bar" ? "bg-primary/20 text-primary" : "text-muted hover:bg-surface-secondary"}`}
             title="Bar Chart"
           >
             <BarChart size={16} />
           </button>
           <button
             onClick={() => onSetChartType("line")}
-            className={`p-2 rounded ${chartType === "line" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
+            className={`p-2 rounded ${chartType === "line" ? "bg-primary/20 text-primary" : "text-muted hover:bg-surface-secondary"}`}
             title="Line Chart"
           >
             <LineChart size={16} />
           </button>
           <button
             onClick={() => onSetChartType("pie")}
-            className={`p-2 rounded ${chartType === "pie" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
+            className={`p-2 rounded ${chartType === "pie" ? "bg-primary/20 text-primary" : "text-muted hover:bg-surface-secondary"}`}
             title="Pie Chart"
           >
             <PieChart size={16} />
@@ -73,35 +73,35 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
       <div className="flex flex-col md:flex-row md:space-x-4">
         {/* Metric selector */}
         <div className="w-full md:w-1/3 mb-3 md:mb-0">
-          <div className="text-xs text-gray-400 mb-1">Select Metric</div>
+          <div className="text-xs text-muted mb-1">Select Metric</div>
           <div className="relative">
             <input
               type="text"
               placeholder="Search metrics..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-surface-raised border border-base rounded px-3 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-primary"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-secondary"
               >
                 <X size={14} />
               </button>
             )}
           </div>
-          <div className="mt-2 max-h-32 overflow-y-auto custom-scrollbar bg-gray-800 border border-gray-700 rounded">
+          <div className="mt-2 max-h-32 overflow-y-auto custom-scrollbar bg-surface-raised border border-base rounded">
             {filteredMetricNames.length === 0 ? (
-              <div className="p-2 text-sm text-gray-500">No metrics found</div>
+              <div className="p-2 text-sm text-muted">No metrics found</div>
             ) : (
               filteredMetricNames.map((name) => (
                 <div
                   key={name}
-                  className={`p-2 text-sm cursor-pointer hover:bg-gray-700 ${
+                  className={`p-2 text-sm cursor-pointer hover:bg-surface-secondary ${
                     name === selectedMetricName
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "text-gray-300"
+                      ? "bg-primary/20 text-primary"
+                      : "text-secondary"
                   }`}
                   onClick={() => onSelectMetric(name)}
                 >
@@ -115,8 +115,8 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
         {/* Group by selector */}
         {selectedMetricName && availableLabelKeys.length > 0 && (
           <div className="w-full md:w-1/3">
-            <div className="text-xs text-gray-400 mb-1">Group By Labels</div>
-            <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
+            <div className="text-xs text-muted mb-1">Group By Labels</div>
+            <div className="bg-surface-raised border border-base rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
               {availableLabelKeys.map((labelKey) => (
                 <div
                   key={labelKey}
@@ -131,9 +131,9 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
                   />
                   <label
                     htmlFor={`group-by-${labelKey}`}
-                    className="text-sm text-gray-300 flex items-center"
+                    className="text-sm text-secondary flex items-center"
                   >
-                    <Tag size={12} className="mr-1 text-gray-500" />
+                    <Tag size={12} className="mr-1 text-muted" />
                     {labelKey}
                   </label>
                 </div>

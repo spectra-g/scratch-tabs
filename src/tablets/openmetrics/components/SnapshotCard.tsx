@@ -28,13 +28,12 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
 
   return (
     <div
-      className={`p-3 rounded-lg border transition-colors ${
-        isActive
-          ? "bg-blue-500/20 border-blue-500/30"
+      className={`p-3 rounded-lg border transition-colors ${isActive
+          ? "bg-primary/20 border-primary/30"
           : isCompare
             ? "bg-purple-500/20 border-purple-500/30"
-            : "border-gray-700 hover:border-gray-600"
-      }`}
+            : "border-base hover:border-base"
+        }`}
     >
       <div className="flex items-center justify-between mb-2">
         <div
@@ -47,7 +46,7 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
         {!isActive && !isCompare && (
           <button
             onClick={onDelete}
-            className="p-1 text-gray-500 hover:text-red-400 rounded"
+            className="p-1 text-muted hover:text-red-400 rounded"
             title="Delete snapshot"
           >
             <Trash2 size={14} />
@@ -55,23 +54,22 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
         )}
       </div>
 
-      <div className="flex items-center text-xs text-gray-500 mb-2">
+      <div className="flex items-center text-xs text-muted mb-2">
         <Clock size={12} className="mr-1" />
         {formatTimestamp(snapshot.createdAt)}
       </div>
 
-      <div className="text-xs text-gray-500 mb-3">
+      <div className="text-xs text-muted mb-3">
         {snapshot.metrics.length} metrics
       </div>
 
       <div className="flex items-center justify-between">
         <button
           onClick={onSelect}
-          className={`px-2 py-1 text-xs rounded ${
-            isActive
-              ? "bg-blue-500/30 text-blue-300"
-              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          }`}
+          className={`px-2 py-1 text-xs rounded ${isActive
+              ? "bg-primary/30 text-primary"
+              : "bg-surface-secondary text-secondary hover:bg-element-hover"
+            }`}
         >
           {isActive ? "Active" : "Select"}
         </button>
@@ -79,11 +77,10 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
         {!disableCompare && !isActive && (
           <button
             onClick={onToggleCompare}
-            className={`px-2 py-1 text-xs rounded flex items-center ${
-              isCompare
+            className={`px-2 py-1 text-xs rounded flex items-center ${isCompare
                 ? "bg-purple-500/30 text-purple-300"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-            }`}
+                : "bg-surface-secondary text-secondary hover:bg-gray-600"
+              }`}
           >
             <ArrowRightLeft size={12} className="mr-1" />
             {isCompare ? "Comparing" : "Compare"}

@@ -72,11 +72,11 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
     if (mostRecentSnapshot && mostRecentSnapshot.metrics.length === parseResult.metrics.length) {
       const isDuplicate = mostRecentSnapshot.metrics.every((metric, index) => {
         const newMetric = parseResult.metrics[index];
-        return metric.name === newMetric.name && 
-               metric.value === newMetric.value &&
-               JSON.stringify(metric.labels) === JSON.stringify(newMetric.labels);
+        return metric.name === newMetric.name &&
+          metric.value === newMetric.value &&
+          JSON.stringify(metric.labels) === JSON.stringify(newMetric.labels);
       });
-      
+
       if (isDuplicate) {
         return; // Don't create duplicate
       }
@@ -91,7 +91,7 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
 
     // Add new snapshot to the beginning of the array (most recent first)
     const updatedSnapshots = [newSnapshot, ...state.snapshots];
-    
+
     onChange({
       ...state,
       snapshots: updatedSnapshots,
@@ -163,7 +163,7 @@ export const OpenMetricsUI: React.FC<OpenMetricsUIProps> = ({
     : null;
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-gray-200">
+    <div className="h-full flex flex-col bg-canvas text-main">
       <Tabs
         activeTab={state.activeTab}
         onTabChange={handleTabChange}

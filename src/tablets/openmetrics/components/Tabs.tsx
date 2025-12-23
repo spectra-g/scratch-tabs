@@ -36,15 +36,15 @@ export const Tabs: React.FC<TabsProps> = ({
   ] as const;
 
   return (
-    <div className="border-b border-gray-700 bg-gray-800">
+    <div className="border-b border-base bg-surface-raised">
       <div className="flex items-center">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             className={`px-4 py-3 text-sm font-medium flex items-center space-x-2 border-b-2 transition-colors ${
               activeTab === tab.id
-                ? "border-blue-500 text-blue-400"
-                : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-secondary hover:border-base"
             }`}
             onClick={() => onTabChange(tab.id)}
           >
@@ -55,7 +55,7 @@ export const Tabs: React.FC<TabsProps> = ({
 
         <div className="ml-auto flex items-center px-4">
           {isLoading ? (
-            <div className="flex items-center text-blue-400">
+            <div className="flex items-center text-primary">
               <Loader size={14} className="animate-spin mr-2" />
               <span className="text-xs">Parsing...</span>
             </div>
@@ -65,7 +65,7 @@ export const Tabs: React.FC<TabsProps> = ({
               <span className="text-xs">Error</span>
             </div>
           ) : parseResult ? (
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted">
               {parseResult.stats.uniqueMetricNames} metrics,{" "}
               {parseResult.stats.totalMetrics} samples
             </div>

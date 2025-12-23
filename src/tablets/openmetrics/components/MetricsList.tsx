@@ -49,7 +49,7 @@ export const MetricsList: React.FC<MetricsListProps> = ({
         .filter(([_, metrics]) => metrics.length > 0)
         .map(([type, metrics]) => (
           <div key={type} className="mb-6">
-            <h3 className="text-sm font-medium text-gray-300 mb-3 capitalize">
+            <h3 className="text-sm font-medium text-secondary mb-3 capitalize">
               {type} Metrics ({metrics.length})
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
