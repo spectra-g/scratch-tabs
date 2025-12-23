@@ -3,6 +3,7 @@ import { Tablet, TabletState } from "../types";
 import { Editor } from "@monaco-editor/react";
 import { Users, Copy, RotateCw, Check, ExternalLink } from "lucide-react";
 import { useTabletTabCreation } from "../bridge";
+import { useThemeStore } from "../../stores/themeStore";
 
 interface GenerationResult {
   timestamp: number;
@@ -89,6 +90,7 @@ export const RandomUserTablet: Tablet = {
     const containerRef = useRef<HTMLDivElement>(null);
     const { createBackgroundTab } = useTabletTabCreation();
     const [error, setError] = useState<string | null>(null);
+    const isDarkMode = useThemeStore((state) => state.isDarkMode);
 
     const generateUsers = async () => {
       setIsGenerating(true);
@@ -475,7 +477,7 @@ export const RandomUserTablet: Tablet = {
               height="100%"
               language={selectedResult?.format || "plaintext"}
               value={selectedResult?.content || ""}
-              theme="vs-dark"
+              theme={isDarkMode ? "vs-dark" : "light"}
               options={{
                 readOnly: true,
                 minimap: { enabled: false },
