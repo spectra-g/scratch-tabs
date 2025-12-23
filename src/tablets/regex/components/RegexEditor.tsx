@@ -31,7 +31,7 @@ export function RegexEditor({ value, onChange, error }: RegexEditorProps) {
   return (
     <div className="relative">
       <div className="flex items-center">
-        <div className="flex-shrink-0 text-gray-400 font-mono text-sm pr-2">
+        <div className="flex-shrink-0 text-muted font-mono text-sm pr-2">
           /
         </div>
         <input
@@ -40,17 +40,17 @@ export function RegexEditor({ value, onChange, error }: RegexEditorProps) {
           onChange={handleChange}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className={`flex-1 bg-gray-900/50 border rounded-md px-3 py-2 font-mono text-sm text-gray-200 focus:outline-none transition-colors ${
+          className={`flex-1 bg-canvas/50 border rounded-md px-3 py-2 font-mono text-sm text-main focus:outline-none transition-colors ${
             error
               ? "border-red-500/50 focus:border-red-500/70"
               : focused
-                ? "border-blue-500/50"
-                : "border-gray-700/50 hover:border-gray-600/50"
+                ? "border-primary/50"
+                : "border-base/50 hover:border-base/50"
           }`}
           placeholder="Enter regex pattern..."
           spellCheck={false}
         />
-        <div className="flex-shrink-0 text-gray-400 font-mono text-sm pl-2 flex items-center gap-1">
+        <div className="flex-shrink-0 text-muted font-mono text-sm pl-2 flex items-center gap-1">
           /
           {value && (
             <button
@@ -58,7 +58,7 @@ export function RegexEditor({ value, onChange, error }: RegexEditorProps) {
               className={`p-1 rounded transition-colors ${
                 copied
                   ? "text-green-400"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                  : "text-muted hover:text-main hover:bg-surface-secondary/50"
               }`}
               title="Copy regex pattern"
             >

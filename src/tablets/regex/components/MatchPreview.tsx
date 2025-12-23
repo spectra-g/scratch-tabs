@@ -10,7 +10,7 @@ interface MatchPreviewProps {
 }
 
 const GROUP_COLORS = [
-  "bg-blue-500/20 border-blue-500/50",
+  "bg-primary/20 border-primary/50",
   "bg-green-500/20 border-green-500/50",
   "bg-yellow-500/20 border-yellow-500/50",
   "bg-purple-500/20 border-purple-500/50",
@@ -27,7 +27,7 @@ export function MatchPreview({
   const highlightMatches = () => {
     if (!testString || matches.length === 0) {
       return (
-        <span className="text-gray-400 font-mono text-sm">
+        <span className="text-muted font-mono text-sm">
           {testString || "No test string provided"}
         </span>
       );
@@ -40,7 +40,7 @@ export function MatchPreview({
       // Add text before match
       if (match.index > lastIndex) {
         elements.push(
-          <span key={`before-${matchIndex}`} className="text-gray-300">
+          <span key={`before-${matchIndex}`} className="text-secondary">
             {testString.slice(lastIndex, match.index)}
           </span>,
         );
@@ -63,7 +63,7 @@ export function MatchPreview({
     // Add remaining text
     if (lastIndex < testString.length) {
       elements.push(
-        <span key="after" className="text-gray-300">
+        <span key="after" className="text-secondary">
           {testString.slice(lastIndex)}
         </span>,
       );
@@ -76,16 +76,16 @@ export function MatchPreview({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden custom-scrollbar">
-      <div className="flex items-center justify-between p-3 border-b border-gray-700/50">
-        <div className="text-sm font-medium text-gray-300">
+      <div className="flex items-center justify-between p-3 border-b border-base/50">
+        <div className="text-sm font-medium text-secondary">
           Matches ({matches.length})
         </div>
       </div>
 
       {/* Highlighted Text */}
-      <div className="flex-shrink-0 p-3 border-b border-gray-700/50 bg-gray-800/20">
-        <div className="text-xs text-gray-400 mb-2">Highlighted Text:</div>
-        <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-3 max-h-32 overflow-y-auto overflow-x-auto custom-scrollbar">
+      <div className="flex-shrink-0 p-3 border-b border-base/50 bg-surface-raised/20">
+        <div className="text-xs text-muted mb-2">Highlighted Text:</div>
+        <div className="bg-canvas/50 border border-base/50 rounded-md p-3 max-h-32 overflow-y-auto overflow-x-auto custom-scrollbar">
           {highlightMatches()}
         </div>
       </div>
@@ -93,7 +93,7 @@ export function MatchPreview({
       {/* Match Details */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {matches.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+          <div className="flex items-center justify-center h-full text-muted text-sm">
             No matches found
           </div>
         ) : (
@@ -101,10 +101,10 @@ export function MatchPreview({
             {matches.map((match, index) => (
               <div
                 key={index}
-                className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-3 overflow-x-auto custom-scrollbar"
+                className="bg-surface-raised/30 border border-base/50 rounded-lg p-3 overflow-x-auto custom-scrollbar"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-gray-200">
+                  <div className="text-sm font-medium text-main">
                     Match {index + 1}
                   </div>
                   <button
@@ -112,7 +112,7 @@ export function MatchPreview({
                     className={`p-1 rounded transition-colors ${
                       copiedId === `match-${index}`
                         ? "text-green-400"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                        : "text-muted hover:text-main hover:bg-surface-secondary/50"
                     }`}
                     title="Copy match"
                   >
@@ -126,15 +126,15 @@ export function MatchPreview({
 
                 <div className="space-y-2 text-xs">
                   <div className="flex gap-4">
-                    <div className="text-gray-400">Match:</div>
-                    <div className="font-mono text-gray-200 bg-gray-900/50 px-2 py-1 rounded">
+                    <div className="text-muted">Match:</div>
+                    <div className="font-mono text-main bg-canvas/50 px-2 py-1 rounded">
                       "{match.match}"
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="text-gray-400">Position:</div>
-                    <div className="text-gray-300">
+                    <div className="text-muted">Position:</div>
+                    <div className="text-secondary">
                       {match.index} - {match.lastIndex - 1}
                     </div>
                   </div>
@@ -142,7 +142,7 @@ export function MatchPreview({
                   {/* Groups */}
                   {match.groups.length > 0 && (
                     <div className="mt-3">
-                      <div className="text-gray-400 mb-2">Capture Groups:</div>
+                      <div className="text-muted mb-2">Capture Groups:</div>
                       <div className="space-y-1">
                         {match.groups.map((group, groupIndex) => (
                           <div
@@ -159,7 +159,7 @@ export function MatchPreview({
                                 :
                               </div>
                               <div className="font-mono">"{group.match}"</div>
-                              <div className="text-gray-400">
+                              <div className="text-muted">
                                 [{group.start}-{group.end - 1}]
                               </div>
                             </div>
@@ -173,7 +173,7 @@ export function MatchPreview({
                               className={`p-1 rounded transition-colors ${
                                 copiedId === `group-${index}-${groupIndex}`
                                   ? "text-green-400"
-                                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                                  : "text-muted hover:text-main hover:bg-surface-secondary/50"
                               }`}
                               title="Copy group"
                             >
@@ -192,7 +192,7 @@ export function MatchPreview({
                   {/* Named Groups */}
                   {Object.keys(match.namedGroups).length > 0 && (
                     <div className="mt-3">
-                      <div className="text-gray-400 mb-2">Named Groups:</div>
+                      <div className="text-muted mb-2">Named Groups:</div>
                       <div className="space-y-1">
                         {Object.entries(match.namedGroups).map(
                           ([name, value], namedIndex) => (
@@ -213,7 +213,7 @@ export function MatchPreview({
                                 className={`p-1 rounded transition-colors ${
                                   copiedId === `named-${index}-${name}`
                                     ? "text-green-400"
-                                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                                    : "text-muted hover:text-main hover:bg-surface-secondary/50"
                                 }`}
                                 title="Copy named group"
                               >

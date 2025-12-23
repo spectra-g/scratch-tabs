@@ -123,7 +123,7 @@ describe("ExplanationView", () => {
       const literalTokens = screen.getAllByText("a");
       const patternBreakdownToken = literalTokens[0]; // First one is in pattern breakdown
       expect(patternBreakdownToken).toHaveClass("bg-gray-500/20");
-      expect(patternBreakdownToken).toHaveClass("text-gray-300");
+      expect(patternBreakdownToken).toHaveClass("text-secondary");
     });
 
     it("should highlight quantifier tokens", () => {
@@ -152,8 +152,8 @@ describe("ExplanationView", () => {
       // Get the first element (pattern breakdown) for group tokens
       const groupTokens = screen.getAllByText("(test)");
       const patternBreakdownToken = groupTokens[0]; // First one is in pattern breakdown
-      expect(patternBreakdownToken).toHaveClass("bg-blue-500/20");
-      expect(patternBreakdownToken).toHaveClass("text-blue-300");
+      expect(patternBreakdownToken).toHaveClass("bg-primary/20");
+      expect(patternBreakdownToken).toHaveClass("text-primary");
     });
 
     it("should highlight anchor tokens", () => {
@@ -358,7 +358,7 @@ describe("ExplanationView", () => {
       const header = screen.getByText("Pattern Explanation");
       expect(header).toHaveClass("text-sm");
       expect(header).toHaveClass("font-medium");
-      expect(header).toHaveClass("text-gray-300");
+      expect(header).toHaveClass("text-secondary");
     });
 
     it("should apply correct explanation item classes", () => {
@@ -366,13 +366,13 @@ describe("ExplanationView", () => {
       
       // Check for the detailed breakdown container classes
       const detailedBreakdown = screen.getByText("Detailed Breakdown:").closest("div");
-      const explanationItems = detailedBreakdown?.querySelectorAll('[class*="bg-gray-800/30"]');
+      const explanationItems = detailedBreakdown?.querySelectorAll('[class*="bg-surface-raised/30"]');
       
       if (explanationItems) {
         explanationItems.forEach((item) => {
-          expect(item).toHaveClass("bg-gray-800/30");
+          expect(item).toHaveClass("bg-surface-raised/30");
           expect(item).toHaveClass("border");
-          expect(item).toHaveClass("border-gray-700/50");
+          expect(item).toHaveClass("border-base/50");
         });
       }
     });
@@ -392,7 +392,7 @@ describe("ExplanationView", () => {
       // Check that descriptions are readable
       const descriptions = screen.getAllByText(/Literal|One or more|Any character/);
       descriptions.forEach(description => {
-        expect(description).toHaveClass("text-gray-200");
+        expect(description).toHaveClass("text-main");
       });
     });
   });

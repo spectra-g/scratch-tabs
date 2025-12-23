@@ -8,8 +8,8 @@ interface ExplanationViewProps {
 }
 
 const TYPE_COLORS = {
-  literal: "bg-gray-500/20 border-gray-500/50 text-gray-300",
-  group: "bg-blue-500/20 border-blue-500/50 text-blue-300",
+  literal: "bg-surface-secondary/20 border-base/50 text-secondary",
+  group: "bg-primary/20 border-primary/50 text-primary",
   quantifier: "bg-green-500/20 border-green-500/50 text-green-300",
   assertion: "bg-purple-500/20 border-purple-500/50 text-purple-300",
   "character-class": "bg-yellow-500/20 border-yellow-500/50 text-yellow-300",
@@ -24,7 +24,7 @@ export function ExplanationView({
   const renderPatternWithHighlight = () => {
     if (!pattern || explanation.length === 0) {
       return (
-        <span className="font-mono text-gray-400">
+        <span className="font-mono text-muted">
           {pattern || "No pattern to explain"}
         </span>
       );
@@ -37,7 +37,7 @@ export function ExplanationView({
       // Add any characters before this explanation
       if (exp.start > lastIndex) {
         elements.push(
-          <span key={`before-${index}`} className="text-gray-300">
+          <span key={`before-${index}`} className="text-secondary">
             {pattern.slice(lastIndex, exp.start)}
           </span>,
         );
@@ -60,7 +60,7 @@ export function ExplanationView({
     // Add any remaining characters
     if (lastIndex < pattern.length) {
       elements.push(
-        <span key="after" className="text-gray-300">
+        <span key="after" className="text-secondary">
           {pattern.slice(lastIndex)}
         </span>,
       );
@@ -138,9 +138,9 @@ export function ExplanationView({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 p-3 border-b border-gray-700/50">
-        <Book size={16} className="text-gray-400" />
-        <div className="text-sm font-medium text-gray-300">
+      <div className="flex items-center gap-2 p-3 border-b border-base/50">
+        <Book size={16} className="text-muted" />
+        <div className="text-sm font-medium text-secondary">
           Pattern Explanation
         </div>
       </div>
@@ -148,21 +148,21 @@ export function ExplanationView({
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
         {/* Highlighted Pattern */}
         <div>
-          <h3 className="text-sm font-medium text-gray-200 mb-2">
+          <h3 className="text-sm font-medium text-main mb-2">
             Pattern Breakdown:
           </h3>
-          <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-3 max-h-40 overflow-y-auto custom-scrollbar">
+          <div className="bg-canvas/50 border border-base/50 rounded-md p-3 max-h-40 overflow-y-auto custom-scrollbar">
             {renderPatternWithHighlight()}
           </div>
         </div>
 
         {/* Human Readable */}
         <div>
-          <h3 className="text-sm font-medium text-gray-200 mb-2">
+          <h3 className="text-sm font-medium text-main mb-2">
             Plain English:
           </h3>
-          <div className="bg-gray-800/30 border border-gray-700/50 rounded-md p-3">
-            <p className="text-gray-300 text-sm leading-relaxed capitalize">
+          <div className="bg-surface-raised/30 border border-base/50 rounded-md p-3">
+            <p className="text-secondary text-sm leading-relaxed capitalize">
               {generateHumanReadable()}
             </p>
           </div>
@@ -171,14 +171,14 @@ export function ExplanationView({
         {/* Detailed Breakdown */}
         {explanation.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-200 mb-2">
+            <h3 className="text-sm font-medium text-main mb-2">
               Detailed Breakdown:
             </h3>
             <div className="space-y-2">
               {explanation.map((exp, index) => (
                 <div
                   key={index}
-                  className="bg-gray-800/30 border border-gray-700/50 rounded-md p-3 flex items-start gap-3"
+                  className="bg-surface-raised/30 border border-base/50 rounded-md p-3 flex items-start gap-3"
                 >
                   <div
                     className={`px-2 py-1 rounded text-xs font-mono flex-shrink-0 ${TYPE_COLORS[exp.type]}`}
@@ -186,10 +186,10 @@ export function ExplanationView({
                     {exp.value}
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm text-gray-200">
+                    <div className="text-sm text-main">
                       {exp.description}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-muted mt-1">
                       Type: {exp.type} • Position: {exp.start}-{exp.end - 1}
                     </div>
                   </div>
@@ -201,12 +201,12 @@ export function ExplanationView({
 
         {/* Legend */}
         <div>
-          <h3 className="text-sm font-medium text-gray-200 mb-2">Legend:</h3>
+          <h3 className="text-sm font-medium text-main mb-2">Legend:</h3>
           <div className="grid grid-cols-2 gap-2 text-xs">
             {Object.entries(TYPE_COLORS).map(([type, colorClass]) => (
               <div key={type} className="flex items-center gap-2">
                 <div className={`w-3 h-3 rounded border ${colorClass}`}></div>
-                <span className="text-gray-400 capitalize">
+                <span className="text-muted capitalize">
                   {type.replace("-", " ")}
                 </span>
               </div>

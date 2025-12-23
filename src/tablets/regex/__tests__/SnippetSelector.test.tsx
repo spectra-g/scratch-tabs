@@ -207,12 +207,12 @@ describe("SnippetSelector", () => {
       // Find the snippet button in the dropdown (not the main button)
       const snippetButtons = screen.getAllByText("Email (Basic)");
       const dropdownButton = snippetButtons.find(el => 
-        el.closest("button")?.className.includes("border-blue-500/50")
+        el.closest("button")?.className.includes("border-primary/50")
       );
       
       expect(dropdownButton).toBeTruthy();
       const selectedButton = dropdownButton?.closest("button");
-      expect(selectedButton).toHaveClass("border-blue-500/50");
+      expect(selectedButton).toHaveClass("border-primary/50");
       expect(selectedButton).toHaveClass("bg-blue-500/10");
     });
 
@@ -224,12 +224,12 @@ describe("SnippetSelector", () => {
       fireEvent.click(button);
       
       const categoryButton = screen.getByText("Email").closest("button");
-      expect(categoryButton).toHaveClass("hover:bg-gray-700/50");
+      expect(categoryButton).toHaveClass("hover:bg-surface-secondary/50");
       expect(categoryButton).toHaveClass("transition-colors");
       
       // Check that the text element has the correct classes
       const categoryText = screen.getByText("Email");
-      expect(categoryText).toHaveClass("text-gray-200");
+      expect(categoryText).toHaveClass("text-main");
     });
   });
 

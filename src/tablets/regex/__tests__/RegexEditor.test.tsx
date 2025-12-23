@@ -44,7 +44,7 @@ describe("RegexEditor", () => {
       
       const input = screen.getByPlaceholderText("Enter regex pattern...");
       expect(input).not.toHaveClass("border-red-500/50");
-      expect(input).toHaveClass("border-gray-700/50");
+      expect(input).toHaveClass("border-base/50");
     });
 
     it("should render error indicator when error has position", () => {
@@ -118,11 +118,11 @@ describe("RegexEditor", () => {
       
       // Test focus
       fireEvent.focus(input);
-      expect(input).toHaveClass("border-blue-500/50");
+      expect(input).toHaveClass("border-primary/50");
       
       // Test blur
       fireEvent.blur(input);
-      expect(input).toHaveClass("border-gray-700/50");
+      expect(input).toHaveClass("border-base/50");
     });
 
     it("should maintain focus styling when error is present", () => {
@@ -204,12 +204,12 @@ describe("RegexEditor", () => {
       const input = screen.getByPlaceholderText("Enter regex pattern...");
       
       // Default state
-      expect(input).toHaveClass("border-gray-700/50");
-      expect(input).toHaveClass("hover:border-gray-600/50");
+      expect(input).toHaveClass("border-base/50");
+      expect(input).toHaveClass("hover:border-base/50");
       
       // Focused state
       fireEvent.focus(input);
-      expect(input).toHaveClass("border-blue-500/50");
+      expect(input).toHaveClass("border-primary/50");
       
       // Error state
       const error: RegexError = {
@@ -232,7 +232,7 @@ describe("RegexEditor", () => {
       render(<RegexEditor value="" onChange={mockOnChange} />);
       
       const input = screen.getByPlaceholderText("Enter regex pattern...");
-      expect(input).toHaveClass("bg-gray-900/50");
+      expect(input).toHaveClass("bg-canvas/50");
     });
   });
 
