@@ -119,16 +119,16 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-[95vw] max-w-[1600px] max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50 p-4">
+      <div className="bg-surface rounded-lg shadow-xl w-[95vw] max-w-[1600px] max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
-          <h2 className="text-xl font-semibold text-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-base">
+          <h2 className="text-xl font-semibold text-main">
             Test Mapping: {mapping.name}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-secondary hover:text-main transition-colors"
           >
             <X size={24} />
           </button>
@@ -142,11 +142,11 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
               {/* Input */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-gray-300">
+                  <label className="block text-sm font-medium text-secondary">
                     Input JSON
                   </label>
                   <div className="flex space-x-2">
-                    <label className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors cursor-pointer">
+                    <label className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors cursor-pointer">
                       <Upload size={14} />
                       <span>Load File</span>
                       <input
@@ -159,7 +159,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                     <button
                       onClick={handleCopyInput}
                       disabled={!input}
-                      className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
+                      className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-secondary transition-colors"
                     >
                       {inputCopied ? <Check size={14} /> : <Copy size={14} />}
                       <span>{inputCopied ? "Copied!" : "Copy"}</span>
@@ -167,7 +167,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                   </div>
                 </div>
                 <div
-                  className={`border rounded-md overflow-hidden ${error ? "border-red-500/50" : "border-gray-700/50"}`}
+                  className={`border rounded-md overflow-hidden ${error ? "border-danger" : "border-base"}`}
                 >
                   <Editor
                     height="400px"
@@ -183,13 +183,13 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                     }}
                   />
                 </div>
-                {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+                {error && <p className="mt-1 text-xs text-danger">{error}</p>}
               </div>
 
               {/* Output */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-gray-300">
+                  <label className="block text-sm font-medium text-secondary">
                     Transformed JSON
                   </label>
                   <div className="flex space-x-2">
@@ -197,14 +197,14 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                       <>
                         <button
                           onClick={handleDownloadOutput}
-                          className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                          className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors"
                         >
                           <Download size={14} />
                           <span>Download</span>
                         </button>
                         <button
                           onClick={handleCopyOutput}
-                          className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                          className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors"
                         >
                           {outputCopied ? (
                             <Check size={14} />
@@ -217,7 +217,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                     )}
                   </div>
                 </div>
-                <div className="border border-gray-700/50 rounded-md overflow-hidden">
+                <div className="border border-base rounded-md overflow-hidden">
                   <Editor
                     height="400px"
                     language="json"
@@ -238,16 +238,15 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end px-6 py-4 border-t border-gray-700/50">
+        <div className="flex justify-end px-6 py-4 border-t border-base">
           <button
             onClick={handleTransform}
             disabled={!input || isTransforming}
             className={`
               flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium
-              ${
-                !input || isTransforming
-                  ? "bg-gray-700/50 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+              ${!input || isTransforming
+                ? "bg-action-disabled text-disabled cursor-not-allowed"
+                : "bg-surface-secondary text-primary hover:bg-element-hover"
               }
               transition-colors
             `}
