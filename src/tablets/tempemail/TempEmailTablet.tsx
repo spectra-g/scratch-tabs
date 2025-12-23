@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Tablet, TabletState } from "../types";
 import { Mail, RefreshCw, X, Loader2, Copy, Check } from "lucide-react";
+import { useThemeStore } from "../../stores/themeStore";
 
 interface Email {
   id: string;
@@ -26,6 +27,8 @@ interface EmailModalProps {
 }
 
 const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
+  const theme = useThemeStore((state) => state.theme);
+
   // State for copy-from feedback
   const [copiedFrom, setCopiedFrom] = useState(false);
   const handleCopyFrom = async () => {
@@ -43,15 +46,15 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-8 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between bg-gray-700 px-4 py-3 border-b border-gray-600">
+    <div className="fixed inset-8 bg-surface border border-base rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between bg-surface-raised px-4 py-3 border-b border-base">
         <div>
-          <h3 className="text-gray-200 font-medium">{email.subject}</h3>
+          <h3 className="text-main font-medium">{email.subject}</h3>
           <div className="flex items-center space-x-2">
-            <p className="text-sm text-gray-400">From: {email.from}</p>
+            <p className="text-sm text-secondary">From: {email.from}</p>
             <button
               onClick={handleCopyFrom}
-              className={`p-1 rounded transition-colors ${copiedFrom ? "text-green-400" : "text-gray-400 hover:text-gray-300"}`}
+              className={`p-1 rounded transition-colors ${copiedFrom ? "text-green-400" : "text-secondary hover:bg-element-hover"}`}
               title={copiedFrom ? "Copied!" : "Copy sender address"}
             >
               {copiedFrom ? <Check size={16} /> : <Copy size={16} />}
@@ -61,14 +64,14 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
         <div className="flex items-center space-x-2">
           <button
             onClick={handleCopyBody}
-            className={`p-1 rounded transition-colors ${copiedBody ? "text-green-400" : "text-gray-400 hover:text-gray-200"}`}
+            className={`p-1 rounded transition-colors ${copiedBody ? "text-green-400" : "text-secondary hover:bg-element-hover"}`}
             title={copiedBody ? "Copied!" : "Copy email body"}
           >
             {copiedBody ? <Check size={16} /> : <Copy size={16} />}
           </button>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-secondary hover:bg-element-hover transition-colors"
           >
             <X size={20} />
           </button>
@@ -76,7 +79,7 @@ const EmailModal: React.FC<EmailModalProps> = ({ email, onClose }) => {
       </div>
       <div className="flex-1 p-6 overflow-auto custom-scrollbar">
         <div
-          className="prose prose-invert max-w-none"
+          className={`prose max-w-none ${theme === "dark" ? "prose-invert" : ""}`}
           dangerouslySetInnerHTML={{ __html: email.body || "" }}
         />
       </div>
@@ -215,14 +218,14 @@ const TempEmailTabletUI: React.FC<{
   }, [state.data.emailToken, checkEmails]);
 
   return (
-    <div className="h-full bg-gray-900 flex flex-col">
+    <div className="h-full bg-canvas flex flex-col">
       {/* Header */}
-      <div className="border-b border-gray-700/50">
+      <div className="border-b border-base">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Mail className="text-gray-400" size={24} />
-              <h2 className="text-xl font-semibold text-gray-100">
+              <Mail className="text-secondary" size={24} />
+              <h2 className="text-xl font-semibold text-main">
                 Temporary Email
               </h2>
             </div>
@@ -230,14 +233,14 @@ const TempEmailTabletUI: React.FC<{
               <button
                 onClick={() => checkEmails()}
                 disabled={isChecking}
-                className="flex items-center space-x-2 px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-md transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 text-sm bg-element hover:bg-element-hover rounded-md transition-colors"
               >
                 {isChecking ? (
-                  <Loader2 size={16} className="animate-spin text-gray-400" />
+                  <Loader2 size={16} className="animate-spin text-secondary" />
                 ) : (
-                  <RefreshCw size={16} className="text-gray-400" />
+                  <RefreshCw size={16} className="text-secondary" />
                 )}
-                <span className="text-gray-200">Check Now</span>
+                <span className="text-main">Check Now</span>
               </button>
             )}
           </div>
@@ -258,17 +261,17 @@ const TempEmailTabletUI: React.FC<{
               )}
             </button>
           ) : (
-            <div className="mt-4 bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
+            <div className="mt-4 bg-surface-secondary border border-base rounded-lg p-4">
               <div className="flex items-center justify-between">
-                <div className="font-mono text-gray-200 break-all flex-1 mr-3">
+                <div className="font-mono text-main break-all flex-1 mr-3">
                   {state.data.emailAddress}
                 </div>
                 <button
                   onClick={handleCopyEmail}
                   className={`p-2 rounded transition-colors ${
-                    copiedEmail 
-                      ? "text-green-400 bg-green-400/10" 
-                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                    copiedEmail
+                      ? "text-green-400 bg-green-400/10"
+                      : "text-secondary hover:bg-element-hover"
                   }`}
                   title={copiedEmail ? "Copied!" : "Copy email address"}
                 >
@@ -278,7 +281,7 @@ const TempEmailTabletUI: React.FC<{
             </div>
           )}
 
-          {error && <div className="mt-4 text-sm text-red-400">{error}</div>}
+          {error && <div className="mt-4 text-sm text-danger">{error}</div>}
         </div>
       </div>
 
@@ -286,21 +289,21 @@ const TempEmailTabletUI: React.FC<{
       <div className="flex-1 overflow-auto custom-scrollbar">
         {state.data.emailAddress ? (
           state.data.emails && state.data.emails.length > 0 ? (
-            <div className="divide-y divide-gray-700/50">
+            <div className="divide-y divide-base">
               {state.data.emails.map((email) => (
                 <button
                   key={email.id}
                   onClick={() => fetchEmailBody(email.id)}
-                  className="w-full px-6 py-4 text-left hover:bg-gray-800/50 transition-colors"
+                  className="w-full px-6 py-4 text-left hover:bg-element-hover transition-colors"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-gray-200 font-medium">
+                      <h3 className="text-main font-medium">
                         {email.subject || "(no subject)"}
                       </h3>
-                      <p className="text-sm text-gray-400 mt-1">{email.from}</p>
+                      <p className="text-sm text-secondary mt-1">{email.from}</p>
                     </div>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted">
                       {new Date(email.timestamp * 1000).toLocaleTimeString()}
                     </span>
                   </div>
@@ -308,7 +311,7 @@ const TempEmailTabletUI: React.FC<{
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
+            <div className="flex items-center justify-center h-full text-secondary">
               <div className="text-center">
                 <Mail size={48} className="mx-auto mb-4 opacity-50" />
                 <p>No emails yet</p>
@@ -319,7 +322,7 @@ const TempEmailTabletUI: React.FC<{
             </div>
           )
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
+          <div className="flex items-center justify-center h-full text-secondary">
             <div className="text-center">
               <Mail size={48} className="mx-auto mb-4 opacity-50" />
               <p>Generate an email address to start receiving emails</p>
