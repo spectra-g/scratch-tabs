@@ -118,7 +118,7 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
       return (
         <Alert variant="info" title="Verifying...">
           <div className="flex items-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-info mr-2"></div>
             <span>Verifying token signature...</span>
           </div>
         </Alert>
@@ -162,7 +162,7 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
             <div>
               <span>The token signature is valid.</span>
               {verificationWarning && (
-                <div className="mt-1 text-amber-400">{verificationWarning}</div>
+                <div className="mt-1 text-warning">{verificationWarning}</div>
               )}
             </div>
           </div>
@@ -190,18 +190,18 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
     <div className="p-6 space-y-6">
       {/* Token Info */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-300">Token Information</h3>
-        <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
+        <h3 className="text-sm font-medium text-secondary">Token Information</h3>
+        <div className="bg-surface-raised border border-base rounded-md p-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-400">Algorithm</p>
-              <p className="text-sm font-medium text-gray-200">
+              <p className="text-sm text-muted">Algorithm</p>
+              <p className="text-sm font-medium text-main">
                 {algorithm || "Unknown"}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Key Type</p>
-              <p className="text-sm font-medium text-gray-200">
+              <p className="text-sm text-muted">Key Type</p>
+              <p className="text-sm font-medium text-main">
                 {isAsymmetric
                   ? "Asymmetric (Public/Private Key)"
                   : "Symmetric (Secret)"}
@@ -229,8 +229,8 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
       {/* Stored Keys */}
       {filteredStoredKeys.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-300">Stored Keys</h3>
-          <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
+          <h3 className="text-sm font-medium text-secondary">Stored Keys</h3>
+          <div className="bg-surface-raised border border-base rounded-md p-3">
             <div className="space-y-2">
               {filteredStoredKeys.map((key) => (
                 <div
@@ -238,10 +238,10 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
                   className="flex items-center justify-between"
                 >
                   <div>
-                    <p className="text-sm font-medium text-gray-200">
+                    <p className="text-sm font-medium text-main">
                       {key.name}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted">
                       {key.algorithm || "Any"} • {key.type}
                     </p>
                   </div>
@@ -262,7 +262,7 @@ export const JwtVerifier: React.FC<JwtVerifierProps> = ({
 
       {/* Verification Status */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-300">
+        <h3 className="text-sm font-medium text-secondary">
           Verification Status
         </h3>
         {renderVerificationStatus()}

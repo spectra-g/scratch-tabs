@@ -236,12 +236,12 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
     <div className="p-6 space-y-6">
       {/* Key Generation Section */}
       <div className="space-y-4 border-b border-gray-700/50 pb-6">
-        <h3 className="text-sm font-medium text-gray-300 mb-2">
+        <h3 className="text-sm font-medium text-secondary mb-2">
           Generate Keys
         </h3>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-300">
+          <label className="block text-sm font-medium text-secondary">
             Algorithm
           </label>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
@@ -269,8 +269,8 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
           >
             {isGenerating ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
-                Generating...
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary-foreground mr-2"></div>
+                Generating Keys...
               </>
             ) : (
               "Generate Key Pair"
@@ -311,7 +311,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
         {generatedPublicKey && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-300">Public Key</h4>
+              <h4 className="text-sm font-medium text-secondary">Public Key</h4>
               <div className="flex items-center space-x-2">
                 <Button
                   onClick={() => handleCopyKey(generatedPublicKey)}
@@ -358,8 +358,8 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
                 </Button>
               </div>
             </div>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
-              <pre className="font-mono text-xs text-gray-300 whitespace-pre-wrap break-all">
+            <div className="bg-surface-raised border border-base rounded-md p-3">
+              <pre className="font-mono text-xs text-main whitespace-pre-wrap break-all">
                 {generatedPublicKey}
               </pre>
             </div>
@@ -369,7 +369,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
         {generatedPrivateKey && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-300">Private Key</h4>
+              <h4 className="text-sm font-medium text-secondary">Private Key</h4>
               <div className="flex items-center space-x-2">
                 <Button
                   onClick={() => handleCopyKey(generatedPrivateKey)}
@@ -416,8 +416,8 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
                 </Button>
               </div>
             </div>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
-              <pre className="font-mono text-xs text-gray-300 whitespace-pre-wrap break-all">
+            <div className="bg-surface-raised border border-base rounded-md p-3">
+              <pre className="font-mono text-xs text-main whitespace-pre-wrap break-all">
                 {generatedPrivateKey}
               </pre>
             </div>
@@ -436,7 +436,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
         {generatedSecret && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-300">Secret</h4>
+              <h4 className="text-sm font-medium text-secondary">Secret</h4>
               <div className="flex items-center space-x-2">
                 <Button
                   onClick={() => handleCopyKey(generatedSecret)}
@@ -481,8 +481,8 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
                 </Button>
               </div>
             </div>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
-              <div className="font-mono text-sm text-gray-300 break-all">
+            <div className="bg-surface-raised border border-base rounded-md p-3">
+              <div className="font-mono text-sm text-main break-all">
                 {generatedSecret}
               </div>
             </div>
@@ -492,11 +492,11 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
 
       {/* Manual Key Entry Section */}
       <div className="space-y-4 pt-2">
-        <h3 className="text-sm font-medium text-gray-300 mb-2">Store Key</h3>
+        <h3 className="text-sm font-medium text-secondary mb-2">Store Key</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">
+            <label className="block text-sm font-medium text-secondary">
               Key Name
             </label>
             <input
@@ -504,12 +504,12 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
               value={keyName}
               onChange={(e) => setKeyName(e.target.value)}
               placeholder="Enter a name for this key"
-              className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+              className="w-full bg-surface-secondary border border-base rounded-md px-3 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-primary/50 transition-colors"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-300">
+            <label className="block text-sm font-medium text-secondary">
               Algorithm (Optional)
             </label>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
@@ -537,40 +537,37 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-300">
+            <label className="block text-sm font-medium text-secondary">
               Key Value
             </label>
             <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={() => setKeyType("text")}
-                className={`px-2 py-1 text-xs rounded-md ${
-                  keyType === "text"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
-                }`}
+                className={`px-2 py-1 text-xs rounded-md ${keyType === "text"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-surface-secondary text-secondary hover:bg-element-hover"
+                  }`}
               >
                 Text
               </button>
               <button
                 type="button"
                 onClick={() => setKeyType("base64")}
-                className={`px-2 py-1 text-xs rounded-md ${
-                  keyType === "base64"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
-                }`}
+                className={`px-2 py-1 text-xs rounded-md ${keyType === "base64"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-surface-secondary text-secondary hover:bg-element-hover"
+                  }`}
               >
                 Base64
               </button>
               <button
                 type="button"
                 onClick={() => setKeyType("pem")}
-                className={`px-2 py-1 text-xs rounded-md ${
-                  keyType === "pem"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
-                }`}
+                className={`px-2 py-1 text-xs rounded-md ${keyType === "pem"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-surface-secondary text-secondary hover:bg-element-hover"
+                  }`}
               >
                 PEM
               </button>
@@ -581,7 +578,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
             onChange={(e) => setKeyValue(e.target.value)}
             placeholder="Enter key value..."
             rows={5}
-            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+            className="w-full bg-surface-secondary border border-base rounded-md px-3 py-2 text-sm text-main font-mono placeholder-muted focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
 
@@ -591,9 +588,9 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
             id="isPublic"
             checked={isPublic}
             onChange={(e) => setIsPublic(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-600 text-blue-500 focus:ring-blue-500/50 bg-gray-700"
+            className="h-4 w-4 rounded border-base text-primary focus:ring-primary/50 bg-surface-secondary"
           />
-          <label htmlFor="isPublic" className="ml-2 text-sm text-gray-300">
+          <label htmlFor="isPublic" className="ml-2 text-sm text-secondary">
             This is a public key
           </label>
         </div>
@@ -616,7 +613,7 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
       {/* Stored Keys Section */}
       <div className="space-y-4 mt-8 pt-4 border-t border-gray-700/50">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-300">Stored Keys</h3>
+          <h3 className="text-sm font-medium text-secondary">Stored Keys</h3>
           {storedKeys.length > 0 && (
             <Button
               onClick={onClearKeys}
@@ -630,22 +627,22 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
         </div>
 
         {storedKeys.length === 0 ? (
-          <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-4 text-center">
-            <p className="text-sm text-gray-400">No keys stored yet</p>
+          <div className="bg-surface-raised border border-base rounded-md p-4 text-center">
+            <p className="text-sm text-muted">No keys stored yet</p>
           </div>
         ) : (
           <div className="space-y-2">
             {storedKeys.map((key) => (
               <div
                 key={key.name}
-                className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3"
+                className="bg-surface-raised border border-base rounded-md p-3"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-200">
+                    <h4 className="text-sm font-medium text-main">
                       {key.name}
                     </h4>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted">
                       {key.algorithm || "Any"} • {key.type} •{" "}
                       {key.isPublic ? "Public" : "Private/Secret"}
                     </p>
@@ -653,20 +650,20 @@ export const JwtKeyManager: React.FC<JwtKeyManagerProps> = ({
                     {!key.isPublic && (
                       <div className="mt-1 group relative">
                         <span
-                          className="block text-xs text-gray-500 font-mono break-all truncate filter blur-sm group-hover:blur-none transition-all duration-200 ease-in-out cursor-default"
+                          className="block text-xs text-muted font-mono break-all truncate filter blur-sm group-hover:blur-none transition-all duration-200 ease-in-out cursor-default"
                           title="Hover to reveal secret/private key"
                         >
                           {key.value}
                         </span>
                         <Eye
                           size={12}
-                          className="absolute top-0.5 right-0 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          className="absolute top-0.5 right-0 text-muted opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         />
                       </div>
                     )}
                     {key.isPublic && (
                       <div className="mt-1">
-                        <span className="block text-xs text-gray-500 font-mono break-all truncate">
+                        <span className="block text-xs text-muted font-mono break-all truncate">
                           {key.value}
                         </span>
                       </div>

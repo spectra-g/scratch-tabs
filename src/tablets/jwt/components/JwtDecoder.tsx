@@ -7,6 +7,7 @@ import { CopyButton } from "./ui/CopyButton";
 import { Alert } from "./ui/Alert";
 import { Button } from "./ui/Button";
 import { useDebounce } from "../../../hooks/useDebounce";
+import { useThemeStore } from "../../../stores/themeStore";
 
 interface JwtDecoderProps {
   token: string;
@@ -34,6 +35,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   warning,
   onTokenChange,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [localToken, setLocalToken] = useState(token);
 
   // Update local token when prop changes
@@ -137,7 +139,7 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
       {/* Token Input */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-300">
+          <label className="block text-sm font-medium text-secondary">
             JWT Token
           </label>
           <div className="flex items-center space-x-2">
@@ -166,25 +168,24 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
 
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-md transition-colors ${
-            isDragActive
-              ? "border-blue-500 bg-blue-500/10"
-              : "border-gray-700 hover:border-gray-600"
-          }`}
+          className={`border-2 border-dashed rounded-md transition-colors ${isDragActive
+              ? "border-primary bg-primary/10"
+              : "border-base hover:border-muted"
+            }`}
         >
           <textarea
             value={localToken}
             onChange={handleTokenChange}
             placeholder="Paste your JWT token here or drop a file..."
             rows={4}
-            className="w-full bg-transparent px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none custom-scrollbar"
+            className="w-full bg-transparent px-3 py-2 text-sm text-main font-mono placeholder-muted focus:outline-none custom-scrollbar"
             onClick={(e) => e.stopPropagation()}
             onFocus={(e) => e.stopPropagation()}
           />
           <input {...getInputProps()} />
 
-          <div className="px-3 py-2 text-center border-t border-gray-700">
-            <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
+          <div className="px-3 py-2 text-center border-t border-base">
+            <div className="flex items-center justify-center space-x-2 text-sm text-muted">
               <FileUp size={16} />
               <span>Drop a JWT file here, or click to select a file</span>
             </div>
@@ -212,18 +213,18 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
           {/* Header */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-300">Header</h3>
+              <h3 className="text-sm font-medium text-secondary">Header</h3>
               <CopyButton
                 text={JSON.stringify(header, null, 2)}
                 label="Copy Header"
               />
             </div>
-            <div className="border border-gray-700/50 rounded-md overflow-hidden">
+            <div className="border border-base rounded-md overflow-hidden">
               <Editor
                 height="150px"
-                language="json"
+                defaultLanguage="json"
                 value={JSON.stringify(header, null, 2)}
-                theme="vs-dark"
+                theme={isDarkMode ? "vs-dark" : "vs"}
                 options={{
                   readOnly: true,
                   minimap: { enabled: false },
@@ -238,18 +239,18 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
           {/* Payload */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-300">Payload</h3>
+              <h3 className="text-sm font-medium text-secondary">Payload</h3>
               <CopyButton
                 text={JSON.stringify(payload, null, 2)}
                 label="Copy Payload"
               />
             </div>
-            <div className="border border-gray-700/50 rounded-md overflow-hidden">
+            <div className="border border-base rounded-md overflow-hidden">
               <Editor
                 height="250px"
-                language="json"
+                defaultLanguage="json"
                 value={JSON.stringify(payload, null, 2)}
-                theme="vs-dark"
+                theme={isDarkMode ? "vs-dark" : "vs"}
                 options={{
                   readOnly: true,
                   minimap: { enabled: false },
@@ -264,11 +265,11 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
           {/* Signature */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-300">Signature</h3>
+              <h3 className="text-sm font-medium text-secondary">Signature</h3>
               <CopyButton text={signature} label="Copy Signature" />
             </div>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
-              <div className="font-mono text-sm text-gray-300 break-all">
+            <div className="bg-surface-raised border border-base rounded-md p-3">
+              <div className="font-mono text-sm text-main break-all ml-1">
                 {signature}
               </div>
             </div>

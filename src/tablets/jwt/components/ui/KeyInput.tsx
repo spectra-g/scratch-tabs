@@ -30,18 +30,17 @@ export const KeyInput: React.FC<KeyInputProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-300">
+        <label className="block text-sm font-medium text-secondary">
           {label}
         </label>
         <div className="flex items-center space-x-2">
           <button
             type="button"
             onClick={() => onTypeChange("text")}
-            className={`px-2 py-1 text-xs rounded-md ${
-              type === "text"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
-            }`}
+            className={`px-2 py-1 text-xs rounded-md ${type === "text"
+              ? "bg-primary text-primary-foreground"
+              : "bg-surface-secondary text-muted hover:bg-element-hover"
+              }`}
             title="Plain text"
           >
             <Key size={12} className="inline mr-1" />
@@ -50,11 +49,10 @@ export const KeyInput: React.FC<KeyInputProps> = ({
           <button
             type="button"
             onClick={() => onTypeChange("base64")}
-            className={`px-2 py-1 text-xs rounded-md ${
-              type === "base64"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
-            }`}
+            className={`px-2 py-1 text-xs rounded-md ${type === "base64"
+              ? "bg-primary text-primary-foreground"
+              : "bg-surface-secondary text-muted hover:bg-element-hover"
+              }`}
             title="Base64 encoded"
           >
             <Database size={12} className="inline mr-1" />
@@ -63,11 +61,10 @@ export const KeyInput: React.FC<KeyInputProps> = ({
           <button
             type="button"
             onClick={() => onTypeChange("pem")}
-            className={`px-2 py-1 text-xs rounded-md ${
-              type === "pem"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
-            }`}
+            className={`px-2 py-1 text-xs rounded-md ${type === "pem"
+              ? "bg-primary text-primary-foreground"
+              : "bg-surface-secondary text-muted hover:bg-element-hover"
+              }`}
             title="PEM format"
           >
             <FileText size={12} className="inline mr-1" />
@@ -78,7 +75,7 @@ export const KeyInput: React.FC<KeyInputProps> = ({
 
       <div className={`relative ${isPrivate ? "group" : ""}`}>
         {isPrivate && !showKey && (
-          <div className="absolute right-10 top-2 text-xs text-gray-500">
+          <div className="absolute right-10 top-2 text-xs text-muted">
             <span className="opacity-70 group-hover:opacity-0 transition-opacity duration-200">
               Hover to reveal
             </span>
@@ -89,18 +86,17 @@ export const KeyInput: React.FC<KeyInputProps> = ({
           onChange={(e) => onChange(e.target.value, type)}
           placeholder={placeholder}
           rows={5}
-          className={`w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-all duration-200 ${
-            isPrivate && !showKey
+          className={`w-full bg-surface-secondary border border-base rounded-md px-3 py-2 text-sm text-main font-mono placeholder-muted focus:outline-none focus:border-primary/50 transition-all duration-200 ${isPrivate && !showKey
               ? "filter blur-sm group-hover:blur-none focus:blur-none"
               : ""
-          }`}
+            }`}
         />
 
         {isPrivate && (
           <button
             type="button"
             onClick={toggleShowKey}
-            className="absolute right-2 top-2 p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded-md transition-colors"
+            className="absolute right-2 top-2 p-1 text-muted hover:text-main hover:bg-element-hover rounded-md transition-colors"
             title={showKey ? "Hide key" : "Show key"}
           >
             {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
